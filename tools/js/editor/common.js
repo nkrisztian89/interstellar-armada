@@ -12,14 +12,18 @@
 
 /**
  * @param utils Used for converting between float / hex colors
+ * @param resources Used for obtaining resource references
+ * @param classes Used for obtaining class references
  */
 define([
-    "utils/utils"
-], function (utils) {
+    "utils/utils",
+    "modules/media-resources",
+    "armada/classes"
+], function (utils, resources, classes) {
     "use strict";
     /**
      * @typedef {Object} Editor~Item
-     * @property {String} (enum ItemType) type
+     * @property {String} type (enum ItemType)
      * @property {String} name
      * @property {String} category
      * @property {GenericResource|GenericClass} reference
@@ -34,8 +38,20 @@ define([
      */
     var
             // ------------------------------------------------------------------------------
-            // Constants
-            LABEL_CLASS = "label",
+            // Enums
+            /**
+             * Selectable items must be one of these types
+             * @enum {String}
+             * @type Object
+             */
+            ItemType = {
+                NONE: "none",
+                RESOURCE: "resource",
+                CLASS: "class"
+            },
+    // ------------------------------------------------------------------------------
+    // Constants
+    LABEL_CLASS = "label",
             NUMERIC_INPUT_CLASS = "numericInput",
             COLOR_COMPONENT_CLASS = "colorComponent",
             COLOR_PICKER_CLASS = "colorPicker",
@@ -63,6 +79,22 @@ define([
             _maxZIndex;
     // ------------------------------------------------------------------------------
     // Public functions
+    /**
+     * Returns the game class (resource / class) the passed item references
+     * @param {Editor~Item} item
+     * @returns {GenericResource|GenericClass}
+     */
+    function getItemReference(item) {
+        switch (item.type) {
+            case ItemType.RESOURCE:
+                return resources.getResource(item.category, item.name);
+            case ItemType.CLASS:
+                return classes.getClass(item.category, item.name);
+            default:
+                document.crash();
+        }
+        return null;
+    }
     /**
      * Creates and returns a simple label - a span with a style and the given text content
      * @param {String} text
@@ -448,6 +480,8 @@ define([
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
+        ItemType: ItemType,
+        getItemReference: getItemReference,
         createLabel: createLabel,
         createBooleanInput: createBooleanInput,
         createNumericInput: createNumericInput,

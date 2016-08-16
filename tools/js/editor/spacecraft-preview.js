@@ -82,6 +82,7 @@ define([
              * @type String[]
              */
             REFRESH_PROPERTIES = [
+                "basedOn",
                 "model", "shader", "texture",
                 "factionColor", "defaultLuminosityFactors",
                 "bodies",

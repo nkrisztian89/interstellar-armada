@@ -282,6 +282,44 @@ define(function () {
         return true;
     };
     /**
+     * Returns a deep copy (recursive copy by values) of the passed data
+     * @param {} data Any type of data
+     * @returns {}
+     */
+    exports.deepCopy = function (data) {
+        var result, i, propertyNames;
+        if (typeof data === "object") {
+            if (data instanceof Array) {
+                result = [];
+                for (i = 0; i < data.length; i++) {
+                    result.push(exports.deepCopy(data[i]));
+                }
+                return result;
+            }
+            result = {};
+            propertyNames = Object.keys(data);
+            for (i = 0; i < propertyNames.length; i++) {
+                result[propertyNames[i]] = exports.deepCopy(data[propertyNames[i]]);
+            }
+            return result;
+        }
+        return data;
+    };
+    /**
+     * Removes the passed element from the passed array, if it is a part of it
+     * @param {Array} array
+     * @param {} element
+     * @returns {Boolean} Whether the element was found and removed
+     */
+    exports.removeFromArray = function (array, element) {
+        var index = array.indexOf(element);
+        if (index >= 0) {
+            array.splice(index, 1);
+            return true;
+        }
+        return false;
+    };
+    /**
      * Returns a value that is guaranteed to be among the possible values of an enumeration object.
      * @param {Object} enumObject
      * @param {any} value

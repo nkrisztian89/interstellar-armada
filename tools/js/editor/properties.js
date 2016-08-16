@@ -12,6 +12,7 @@
 /**
  * @param utils Used for enum handling
  * @param resources Used to obtain the list of available resources for resource reference property selectors
+ * @param config Used to obtain configuration settings
  * @param classes Used to obtain the list of available classes for class reference property selectors
  * @param descriptors Used to obtain the appropriate properties description object
  * @param common Used to create selectors
@@ -19,10 +20,11 @@
 define([
     "utils/utils",
     "modules/media-resources",
+    "armada/configuration",
     "armada/classes",
     "editor/descriptors",
     "editor/common"
-], function (utils, resources, classes, descriptors, common) {
+], function (utils, resources, config, classes, descriptors, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -34,32 +36,67 @@ define([
             TEXT_AREA_ROWS = 5,
             TEXT_AREA_COLS = 100,
             LONG_TEXT_PREVIEW_LENGTH = 16,
+            INHERITED_PROPERTY_TEXT = "inherited",
+            DEFAULT_PROPERTY_TEXT = "default",
+            DERIVED_PROPERTY_TEXT = "derived",
+            UNSET_PROPERTY_TEXT = "unset",
+            UNKNOWN_PROPERTY_TEXT = "unknown",
+            SET_PROPERTY_BUTTON_TEXT = "set",
             // ------------------------------------------------------------------------------
             // Private variables
+            /**
+             * A reference to the element within which the property editor controls are created
+             * @type Element
+             */
+            _element,
             /**
              * A reference to the selected item the properties of which are displayed
              * @type Editor~Item
              */
             _item,
             /**
-             * 
-             * @type Boolean
+             * A reference to the resource / class that the selected item is based on (references)
+             * @type GenericResource|GenericClass
              */
-            _isDerived,
+            _basedOn,
             /**
              * The module providing the Preview for the item the properties of which are displayed
              * @type Editor~Preview
              */
             _preview,
+            /**
+             * A reference to the function to execute whenever the name property of the selected item is changed
+             * @type Function
+             */
+            _nameChangeHandler,
             // ------------------------------------------------------------------------------
             // Private functions
-            _createControl, _createProperties;
+            _createControl, _createProperties, createProperties;
+    /**
+     * Updates the reference to the base of the displayed item 
+     * @returns {Boolean} Whether the reference has been changed
+     */
+    function _updateBasedOn() {
+        var newBasedOn = _item.data[descriptors.BASED_ON_PROPERTY_NAME] ?
+                common.getItemReference({type: _item.type, category: _item.category, name: _item.data[descriptors.BASED_ON_PROPERTY_NAME]}) :
+                null;
+        if (newBasedOn !== _basedOn) {
+            _basedOn = newBasedOn;
+            return true;
+        }
+        return false;
+
+    }
     /**
      * Reinitializes the item the properties of which are edited, and notifies the preview module of the change
      * @param {String} name The name of the property that changed
      */
     function _updateData(name) {
         _item.reference.reloadData();
+        if (_updateBasedOn()) {
+            _element.innerHTML = "";
+            createProperties(_element, _item, _preview, _nameChangeHandler);
+        }
         if (_preview) {
             _preview.handleDataChanged(name);
         }
@@ -104,14 +141,18 @@ define([
      * @param {String} data The starting value
      * @param {Object} [parent] See _changeData
      * @param {String} [name] See _changeData
+     * @param {Function} [onChange] A function to execute every time after the value of the string was changed using this control
      * @returns {Element}
      */
-    function _createStringControl(topName, data, parent, name) {
+    function _createStringControl(topName, data, parent, name, onChange) {
         var result = document.createElement("input");
         result.type = "text";
         result.value = data;
         result.onchange = function () {
             _changeData(topName, result.value, parent, name);
+            if (onChange) {
+                onChange(result.value);
+            }
         };
         return result;
     }
@@ -212,46 +253,16 @@ define([
         return result;
     }
     /**
-     * Creates and returns a control that can be used to edit resource reference properties.
-     * @param {String} topName Name of the top property being edited
-     * @param {String} resourceCategory Name of the resource category of the property
-     * @param {String} data The starting value
-     * @param {Object} [parent] See _changeData
-     * @param {String} [name] See _changeData
-     * @returns {Element}
-     */
-    function _createResourceReferenceControl(topName, resourceCategory, data, parent, name) {
-        var result = common.createSelector(resources.getResourceNames(resourceCategory), data, false, function () {
-            _changeData(topName, result.value, parent, name);
-        });
-        return result;
-    }
-    /**
-     * Creates and returns a control that can be used to edit class reference properties.
-     * @param {String} topName Name of the top property being edited
-     * @param {String} classCategory Name of the class category of the property
-     * @param {String} data The starting value
-     * @param {Object} [parent] See _changeData
-     * @param {String} [name] See _changeData
-     * @returns {Element}
-     */
-    function _createClassReferenceControl(topName, classCategory, data, parent, name) {
-        var result = common.createSelector(classes.getClassNames(classCategory), data, false, function () {
-            _changeData(topName, result.value, parent, name);
-        });
-        return result;
-    }
-    /**
      * Creates and returns a control that can be used to edit enum properties.
      * @param {String} topName Name of the top property being edited
-     * @param {Object} values The object defining the enum values
+     * @param {String[]} values The list of possible values
      * @param {String} data The starting value
      * @param {Object} [parent] See _changeData
      * @param {String} [name] See _changeData
      * @returns {Element}
      */
     function _createEnumControl(topName, values, data, parent, name) {
-        var result = common.createSelector(utils.getEnumValues(values), data, false, function () {
+        var result = common.createSelector(values, data, false, function () {
             _changeData(topName, result.value, parent, name);
         });
         return result;
@@ -307,6 +318,9 @@ define([
                 type = new descriptors.Type(typeDescriptor),
                 hasName = type.hasNameProperty(),
                 header, indices, indexLabel, indexSelector, propertiesTable,
+                nameChangeHandler = function (index, newName) {
+                    indexSelector.options[index].text = newName;
+                },
                 indexChangeHandler = function () {
                     var index = indexSelector.selectedIndex;
                     if (_preview && !parentPopup) {
@@ -314,7 +328,7 @@ define([
                     }
                     popup.hideChildren();
                     popup.getElement().removeChild(propertiesTable);
-                    propertiesTable = _createProperties(popup.getElement(), data[index], typeDescriptor.properties, topName, popup);
+                    propertiesTable = _createProperties(popup.getElement(), data[index], typeDescriptor.properties, topName, popup, hasName ? nameChangeHandler.bind(this, index) : null);
                     popup.alignPosition();
                 };
         // for arrays: adding a selector at the top of the popup, using which the instance to modify within the array can be selected
@@ -322,7 +336,7 @@ define([
             // if the array elements have a "name" property, use the values of that instead of indices for selection
             indices = [];
             while (indices.length < data.length) {
-                indices.push(hasName ? data[indices.length].name : indices.length.toString());
+                indices.push(hasName ? data[indices.length][descriptors.NAME_PROPERTY_NAME] : indices.length.toString());
             }
             indexLabel = common.createLabel(typeDescriptor.name + (hasName ? ":" : " index:"));
             indexSelector = common.createSelector(indices, indices[0], false, indexChangeHandler);
@@ -332,7 +346,7 @@ define([
             header.appendChild(indexSelector);
             popup.getElement().appendChild(header);
         }
-        propertiesTable = _createProperties(popup.getElement(), isArray ? (data[0] || {}) : data, typeDescriptor.properties, topName, popup);
+        propertiesTable = _createProperties(popup.getElement(), isArray ? (data[0] || {}) : data, typeDescriptor.properties, topName, popup, (hasName && isArray) ? nameChangeHandler.bind(this, 0) : null);
         popup.addToPage();
         // create a button using which the popup can be opened
         button.type = "button";
@@ -604,6 +618,105 @@ define([
     function _createDefaultControl(data) {
         var result = document.createElement("span");
         result.innerHTML = data.toString();
+        result.classList.add(CONTROL_CLASS);
+        return result;
+    }
+    /**
+     * Returns the appropriate default value for the property described by the passed descriptor object
+     * @param {Editor~PropertyDescriptor} propertyDescriptor
+     * @param {GenericResource|GenericClass} basedOn If the resource / class the property of which is considered has a reference to
+     * another object as a base (inheriting undefined properties from it), that base resource / class needs to be given here
+     * @param {Object} parent The object itself the data of which is considered (see _changeData)
+     * @returns {}
+     */
+    function _getDefaultValue(propertyDescriptor, basedOn, parent) {
+        var result, type, propertyDescriptors, propertyDescriptorNames, i;
+        if (basedOn) {
+            result = utils.deepCopy(basedOn.getData()[propertyDescriptor.name]);
+            if (result === undefined) {
+                return _getDefaultValue(propertyDescriptor, basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME] ?
+                        common.getItemReference({type: _item.type, category: _item.category, name: basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME]}) :
+                        null);
+            }
+            return result;
+        }
+        if (propertyDescriptor.defaultValue) {
+            return utils.deepCopy(propertyDescriptor.defaultValue);
+        }
+        if (propertyDescriptor.globalDefault && propertyDescriptor.settingName) {
+            return utils.deepCopy(config.getSetting(propertyDescriptor.settingName));
+        }
+        type = new descriptors.Type(propertyDescriptor.type);
+        switch (type.getBaseType()) {
+            case descriptors.BaseType.BOOLEAN:
+                return false;
+            case descriptors.BaseType.NUMBER:
+                return 0;
+            case descriptors.BaseType.STRING:
+                return "";
+            case descriptors.BaseType.ARRAY:
+            case descriptors.BaseType.PAIRS:
+            case descriptors.BaseType.ROTATIONS:
+            case descriptors.BaseType.SET:
+                return [];
+            case descriptors.BaseType.OBJECT:
+                result = {};
+                propertyDescriptors = type.getProperties();
+                propertyDescriptorNames = Object.keys(propertyDescriptors);
+                for (i = 0; i < propertyDescriptorNames.length; i++) {
+                    result[propertyDescriptors[propertyDescriptorNames[i]].name] = _getDefaultValue(propertyDescriptors[propertyDescriptorNames[i]], null, result);
+                }
+                return result;
+            case descriptors.BaseType.ENUM:
+                return descriptors.getPropertyValues(propertyDescriptor, parent)[0];
+            case descriptors.BaseType.COLOR3:
+            case descriptors.BaseType.VECTOR33:
+                return [0, 0, 0];
+            case descriptors.BaseType.COLOR4:
+                return [0, 0, 0, 1];
+            case descriptors.BaseType.RANGE:
+                return [0, 0];
+            case descriptors.BaseType.CONFINES:
+                return [[0, 0], [0, 0], [0, 0]];
+        }
+        document.crash();
+    }
+    /**
+     * Creates and returns a control that can be used to initialize unset properties
+     * @param {Editor~PropertyDescriptor} propertyDescriptor
+     * @param {String} topName See _changeData
+     * @param {Object} parent See _changeData
+     * @param {Popup} [parentPopup] If this property editor is displayed within a popup, give a reference to that popup here
+     * @param {Function} [nameChangeHandler] If special operations need to be executed in case this control changes the name property of the 
+     * item, the function executing those operations needs to be given here
+     * @returns {Element}
+     */
+    function _createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler) {
+        var result = document.createElement("div"),
+                label, button;
+        if (!topName && _basedOn) {
+            label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
+        } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault) {
+            label = _createDefaultControl(DEFAULT_PROPERTY_TEXT);
+        } else if (propertyDescriptor.defaultDerived) {
+            label = _createDefaultControl(DERIVED_PROPERTY_TEXT);
+        } else if (propertyDescriptor.optional) {
+            label = _createDefaultControl(UNSET_PROPERTY_TEXT);
+        } else {
+            label = _createDefaultControl(UNKNOWN_PROPERTY_TEXT);
+        }
+        result.appendChild(label);
+        button = document.createElement("button");
+        button.type = "button";
+        button.innerHTML = SET_PROPERTY_BUTTON_TEXT;
+        button.onclick = function () {
+            var value = _getDefaultValue(propertyDescriptor, _basedOn, parent),
+                    parentNode = result.parentNode;
+            parentNode.removeChild(result);
+            parentNode.appendChild(_createControl(propertyDescriptor, value, topName, parent, parentPopup, nameChangeHandler));
+            _changeData(topName, value, parent, propertyDescriptor.name);
+        };
+        result.appendChild(button);
         return result;
     }
     /**
@@ -616,22 +729,14 @@ define([
      * @param {Object} [parent] If the property to edit resides below another property of the main edited item, the parent object of the
      * edited property must be given here
      * @param {Popup} [parentPopup] If this property editor is displayed within a popup, give a reference to that popup here
+     * @param {Function} nameChangeHandler If special operations need to be executed in case this control changes the name property of the 
+     * item, the function executing those operations needs to be given here
      * @returns {Element}
      */
-    _createControl = function (propertyDescriptor, data, topName, parent, parentPopup) {
+    _createControl = function (propertyDescriptor, data, topName, parent, parentPopup, nameChangeHandler) {
         var result, type = new descriptors.Type(propertyDescriptor.type), elementType;
         if (data === undefined) {
-            if (!topName && _isDerived) {
-                result = _createDefaultControl("inherited");
-            } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault) {
-                result = _createDefaultControl("default");
-            } else if (propertyDescriptor.defaultDerived) {
-                result = _createDefaultControl("derived");
-            } else if (propertyDescriptor.optional) {
-                result = _createDefaultControl("unset");
-            } else {
-                result = _createDefaultControl("unknown");
-            }
+            result = _createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler);
         } else {
             topName = topName || propertyDescriptor.name;
             switch (type.getBaseType()) {
@@ -642,20 +747,18 @@ define([
                     result = _createNumberControl(topName, data, true, null, parent, propertyDescriptor.name);
                     break;
                 case descriptors.BaseType.STRING:
-                    if (type.getResourceReference()) {
-                        result = _createResourceReferenceControl(topName, type.getResourceReference(), data, parent, propertyDescriptor.name);
-                    } else if (type.getClassReference()) {
-                        result = _createClassReferenceControl(topName, type.getClassReference(), data, parent, propertyDescriptor.name);
-                    } else if (type.isLong()) {
+                    if (type.isLong()) {
                         result = _createLongStringControl(topName, data, parent, propertyDescriptor.name, parentPopup);
                     } else {
-                        result = _createStringControl(topName, data, parent, propertyDescriptor.name);
+                        result = _createStringControl(topName, data, parent, propertyDescriptor.name, (propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) ?
+                                nameChangeHandler : null);
                     }
                     break;
                 case descriptors.BaseType.ENUM:
-                    result = _createEnumControl(topName, propertyDescriptor.type.values, data, parent, propertyDescriptor.name);
+                    result = _createEnumControl(topName, descriptors.getPropertyValues(propertyDescriptor, parent), data, parent, propertyDescriptor.name);
                     break;
-                case descriptors.BaseType.COLOR:
+                case descriptors.BaseType.COLOR3:
+                case descriptors.BaseType.COLOR4:
                     result = _createColorControl(topName, data);
                     break;
                 case descriptors.BaseType.VECTOR3:
@@ -702,9 +805,11 @@ define([
      * controls
      * @param {String} [topName] See _changeData or _createControl
      * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
+     * @param {Function} nameChangeHandler If special operations need to be executed one of the created controls changes the name property 
+     * of the item, the function executing those operations needs to be given here
      * @returns {Element} The element that houses the properties and was added to the parent element
      */
-    _createProperties = function (element, data, itemDescriptor, topName, parentPopup) {
+    _createProperties = function (element, data, itemDescriptor, topName, parentPopup, nameChangeHandler) {
         var
                 table, row, nameCell, valueCell, properties, i;
         table = document.createElement("table");
@@ -717,27 +822,32 @@ define([
             nameCell.innerHTML = itemDescriptor[properties[i]].name;
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
-            valueCell.appendChild(_createControl(itemDescriptor[properties[i]], data[itemDescriptor[properties[i]].name], topName, data, parentPopup));
+            valueCell.appendChild(_createControl(itemDescriptor[properties[i]], data[itemDescriptor[properties[i]].name], topName, data, parentPopup, nameChangeHandler));
             row.appendChild(valueCell);
             table.appendChild(row);
         }
         element.appendChild(table);
         return table;
     };
+    /**
+     * Creates the content for the Properties window - the list of available properties and controls to edit their values.
+     * @param {Element} element The parent HTML element to add the created content to
+     * @param {Editor~Item} item The item for which to display the property values
+     * @param {Editor~Preview} preview The module providing the Preview window for the item
+     * @param {Function} nameChangeHandler If special operations need to be executed one of the created controls changes the name property 
+     * of the item, the function executing those operations needs to be given here
+     */
+    createProperties = function (element, item, preview, nameChangeHandler) {
+        _element = element;
+        _item = item;
+        _preview = preview;
+        _nameChangeHandler = nameChangeHandler;
+        _updateBasedOn();
+        _createProperties(element, item.data, descriptors.itemDescriptors[item.category], null, null, nameChangeHandler);
+    };
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
-        /**
-         * Creates the content for the Properties window - the list of available properties and controls to edit their values.
-         * @param {Element} element The parent HTML element to add the created content to
-         * @param {Editor~Item} item The item for which to display the property values
-         * @param {Editor~Preview} preview The module providing the Preview window for the item
-         */
-        createProperties: function (element, item, preview) {
-            _item = item;
-            _isDerived = !!item.data.basedOn;
-            _preview = preview;
-            _createProperties(element, item.data, descriptors.itemDescriptors[item.category]);
-        }
+        createProperties: createProperties
     };
 });

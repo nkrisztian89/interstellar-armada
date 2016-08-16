@@ -38,20 +38,8 @@ define([
     "use strict";
     var
             // ------------------------------------------------------------------------------
-            // Enums
-            /**
-             * Selectable items must be one of these types
-             * @enum {String}
-             * @type Object
-             */
-            ItemType = {
-                NONE: "none",
-                RESOURCE: "resource",
-                CLASS: "class"
-            },
-    // ------------------------------------------------------------------------------
-    // Constants
-    RESOURCES_WINDOW_ID = "resources",
+            // Constants
+            RESOURCES_WINDOW_ID = "resources",
             CLASSES_WINDOW_ID = "classes",
             PREVIEW_WINDOW_ID = "preview",
             PROPERTIES_WINDOW_ID = "properties",
@@ -87,7 +75,7 @@ define([
              * @type Editor~Item
              */
             _selectedItem = {
-                type: ItemType.NONE,
+                type: common.ItemType.NONE,
                 name: "",
                 category: "",
                 reference: null,
@@ -140,7 +128,7 @@ define([
                 previewOptions = previewWindowContent.querySelector("div#" + PREVIEW_OPTIONS_ID),
                 previewCanvas = document.getElementById(PREVIEW_CANVAS_ID),
                 previewInfo = document.getElementById(PREVIEW_INFO_ID);
-        if (_selectedItem.type === ItemType.NONE) {
+        if (_selectedItem.type === common.ItemType.NONE) {
             previewCanvas.hidden = true;
             previewOptions.hidden = true;
             previewInfo.hidden = true;
@@ -160,17 +148,24 @@ define([
         }
     }
     /**
+     * A function to execute whenever the name property of the selected item is changed
+     * @param {String} newName
+     */
+    function _handleNameChange(newName) {
+        _selectedItemElement.innerHTML = newName;
+    }
+    /**
      * Loads the content of the Properties window for the currently selected element.
      */
     function _loadProperties() {
         var windowContent = document.getElementById(PROPERTIES_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS);
         windowContent.innerHTML = "";
-        if (_selectedItem.type === ItemType.NONE) {
+        if (_selectedItem.type === common.ItemType.NONE) {
             windowContent.appendChild(_createLabel(NO_ITEM_SELECTED_TEXT));
         } else if (!descriptors.itemDescriptors[_selectedItem.category]) {
             windowContent.appendChild(_createLabel(NO_PROPERTIES_TEXT));
         } else {
-            properties.createProperties(windowContent, _selectedItem, _previews[_selectedItem.category]);
+            properties.createProperties(windowContent, _selectedItem, _previews[_selectedItem.category], _handleNameChange);
         }
     }
     /**
@@ -185,16 +180,7 @@ define([
             _selectedItem.type = type;
             _selectedItem.name = name;
             _selectedItem.category = category;
-            switch (_selectedItem.type) {
-                case ItemType.RESOURCE:
-                    _selectedItem.reference = resources.getResource(_selectedItem.category, _selectedItem.name);
-                    break;
-                case ItemType.CLASS:
-                    _selectedItem.reference = classes.getClass(_selectedItem.category, _selectedItem.name);
-                    break;
-                default:
-                    application.crash();
-            }
+            _selectedItem.reference = common.getItemReference(_selectedItem);
             _selectedItem.data = _selectedItem.reference.getData();
             common.removePopups();
             _loadProperties();
@@ -249,7 +235,7 @@ define([
                 resourceSpan.classList.add(ELEMENT_CLASS);
                 resourceSpan.innerHTML = resourcesOfType[j];
                 resourceElement.appendChild(resourceSpan);
-                resourceSpan.onclick = _createElementClickHandler(resourceSpan, ItemType.RESOURCE, resourcesOfType[j], resourceTypes[i]);
+                resourceSpan.onclick = _createElementClickHandler(resourceSpan, common.ItemType.RESOURCE, resourcesOfType[j], resourceTypes[i]);
                 resourceList.appendChild(resourceElement);
                 resourceList.hidden = true;
             }
@@ -286,7 +272,7 @@ define([
                 classSpan.classList.add(ELEMENT_CLASS);
                 classSpan.innerHTML = classesOfCategory[j];
                 classElement.appendChild(classSpan);
-                classSpan.onclick = _createElementClickHandler(classSpan, ItemType.CLASS, classesOfCategory[j], classCategories[i]);
+                classSpan.onclick = _createElementClickHandler(classSpan, common.ItemType.CLASS, classesOfCategory[j], classCategories[i]);
                 classList.appendChild(classElement);
                 classList.hidden = true;
             }

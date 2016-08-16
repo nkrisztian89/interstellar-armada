@@ -11,13 +11,19 @@
 /*jslint white: true, plusplus: true, nomen: true */
 
 /**
+ * @param utils Used to handle enums
  * @param budaScene Used to access enums
- * @param classes Used to access enums
+ * @param resources Used to retrieve resource name lists
+ * @param config Used for configuration (setting) key strings
+ * @param classes Used to access enums and retrieve class name lists
  */
 define([
+    "utils/utils",
     "modules/buda-scene",
+    "modules/media-resources",
+    "armada/configuration",
     "armada/classes"
-], function (budaScene, classes) {
+], function (utils, budaScene, resources, config, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -29,7 +35,8 @@ define([
                 ARRAY: "array",
                 OBJECT: "object",
                 ENUM: "enum",
-                COLOR: "color",
+                COLOR3: "color3", // RGB
+                COLOR4: "color4", // RGBA
                 VECTOR3: "vector3",
                 RANGE: "range",
                 PAIRS: "pairs",
@@ -63,113 +70,116 @@ define([
     },
     // ------------------------------------------------------------------------------
     // Constants
-    /**
-     * @typedef {Object} Editor~TypeDescriptor
-     * @property {String} baseType (enum BaseType)
-     * @property {Boolean} [long=false] For BaseType.STRING
-     * @property {String} [resourceReference] For BaseType.STRING and BaseType.SET
-     * @property {String} [classReference] For BaseType.STRING and BaseType.SET
-     * @property {String} [name] For BaseType.OBJECT and BaseType.SET
-     * @property {Editor~ItemDescriptor} [properties] For BaseType.OBJECT
-     * @property {Object} [values] For BaseType.ENUM and BaseType.SET
-     * @property {Editor~PropertyDescriptor} [first] For BaseType.PAIRS
-     * @property {Editor~PropertyDescriptor} [second] For BaseType.PAIRS
-     */
-    /**
-     * @typedef {Object} Editor~PropertyDescriptor
-     * @property {String} name
-     * @property {String|Editor~TypeDescriptor} type (if string: enum BaseType)
-     * @property {String|Editor~TypeDescriptor} [elementType] given only if baseType is BaseType.ARRAY - same format as type
-     * @property {Boolean} [optional=false] Whether undefined / null (= unset) is actually a valid value for this property
-     * @property {} [defaultValue] If the value is undefined, it means the property will be taken as having this value
-     * @property {Boolean} [defaultDerived] If the value is undefined, the value of the property will be derived (calculated) from other properties
-     * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
-     */
-    /**
-     * @typedef {Object.<String, PropertyDescriptor>} Editor~ItemDescriptor
-     */
-    /**
-     * @type Editor~TypeDescriptor
-     */
-    LONG_STRING = {
-        baseType: BaseType.STRING,
-        long: true
-    },
+    NAME_PROPERTY_NAME = "name",
+            BASED_ON_PROPERTY_NAME = "basedOn",
+            /**
+             * @typedef {Object} Editor~TypeDescriptor
+             * @property {String} baseType (enum BaseType)
+             * @property {Boolean} [long=false] For BaseType.STRING
+             * @property {String} [resourceReference] For BaseType.ENUM and BaseType.SET
+             * @property {String} [classReference] For BaseType.ENUM and BaseType.SET
+             * @property {String} [name] For BaseType.OBJECT and BaseType.SET
+             * @property {Editor~ItemDescriptor} [properties] For BaseType.OBJECT
+             * @property {Object} [values] For BaseType.ENUM and BaseType.SET
+             * @property {Editor~PropertyDescriptor} [first] For BaseType.PAIRS
+             * @property {Editor~PropertyDescriptor} [second] For BaseType.PAIRS
+             */
+            /**
+             * @typedef {Object} Editor~PropertyDescriptor
+             * @property {String} name
+             * @property {String|Editor~TypeDescriptor} type (if string: enum BaseType)
+             * @property {String|Editor~TypeDescriptor} [elementType] given only if baseType is BaseType.ARRAY - same format as type
+             * @property {Boolean} [optional=false] Whether undefined / null (= unset) is actually a valid value for this property
+             * @property {} [defaultValue] If the value is undefined, it means the property will be taken as having this value
+             * @property {Boolean} [defaultDerived] If the value is undefined, the value of the property will be derived (calculated) from other properties
+             * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
+             * @property {String} [settingName] If globalDefault is true, the name of the setting from where the default value is retrieved from can be given here
+             */
+            /**
+             * @typedef {Object.<String, PropertyDescriptor>} Editor~ItemDescriptor
+             */
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            LONG_STRING = {
+                baseType: BaseType.STRING,
+                long: true
+            },
     /**
      * @type Editor~TypeDescriptor
      */
     MODEL_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         resourceReference: "models"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     SHADER_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         resourceReference: "shaders"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     TEXTURE_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         resourceReference: "textures"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     CUBEMAP_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         resourceReference: "cubemaps"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     SOUND_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         resourceReference: "soundEffects"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     SPACECRAFT_TYPE_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         classReference: "spacecraftTypes"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     SPACECRAFT_CLASS_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         classReference: "spacecraftClasses"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     EXPLOSION_CLASS_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         classReference: "explosionClasses"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     PROJECTILE_CLASS_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         classReference: "projectileClasses"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     WEAPON_CLASS_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         classReference: "weaponClasses"
     },
     /**
      * @type Editor~TypeDescriptor
      */
     PROPULSION_CLASS_REFERENCE = {
-        baseType: BaseType.STRING,
+        baseType: BaseType.ENUM,
         classReference: "propulsionClasses"
     },
     /**
@@ -232,7 +242,7 @@ define([
             },
             COLOR: {
                 name: "color",
-                type: BaseType.COLOR
+                type: BaseType.COLOR4
             }
         }
     },
@@ -247,7 +257,7 @@ define([
         },
         LIGHT_COLOR: {
             name: "lightColor",
-            type: BaseType.COLOR
+            type: BaseType.COLOR3
         },
         LAYERS: {
             name: "layers",
@@ -278,7 +288,7 @@ define([
         },
         COLOR: {
             name: "color",
-            type: BaseType.COLOR
+            type: BaseType.COLOR4
         }
     },
     /**
@@ -297,7 +307,7 @@ define([
         properties: {
             COLOR: {
                 name: "color",
-                type: BaseType.COLOR
+                type: BaseType.COLOR4
             },
             SIZE: {
                 name: "size",
@@ -376,7 +386,7 @@ define([
         properties: {
             COLOR: {
                 name: "color",
-                type: BaseType.COLOR
+                type: BaseType.COLOR3
             },
             INTENSITY: {
                 name: "intensity",
@@ -425,7 +435,7 @@ define([
             },
             COLOR: {
                 name: "color",
-                type: BaseType.COLOR
+                type: BaseType.COLOR4
             },
             SIZE: {
                 name: "size",
@@ -506,7 +516,7 @@ define([
         },
         LIGHT_COLOR: {
             name: "lightColor",
-            type: BaseType.COLOR
+            type: BaseType.COLOR3
         },
         LIGHT_INTENSITY: {
             name: "lightIntensity",
@@ -661,7 +671,7 @@ define([
         },
         COLOR: {
             name: "color",
-            type: BaseType.COLOR
+            type: BaseType.COLOR4
         },
         GRADE: {
             name: "grade",
@@ -914,22 +924,26 @@ define([
             FOV: {
                 name: "fov",
                 type: BaseType.NUMBER,
-                globalDefault: true
+                globalDefault: true,
+                settingName: config.CAMERA_SETTINGS.DEFAULT_FOV
             },
             FOV_RANGE: {
                 name: "fovRange",
                 type: BaseType.RANGE,
-                globalDefault: true
+                globalDefault: true,
+                settingName: config.CAMERA_SETTINGS.DEFAULT_FOV_RANGE
             },
             SPAN: {
                 name: "span",
                 type: BaseType.NUMBER,
-                globalDefault: true
+                globalDefault: true,
+                settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN
             },
             SPAN_RANGE: {
                 name: "spanRange",
                 type: BaseType.RANGE,
-                globalDefault: true
+                globalDefault: true,
+                settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN_RANGE
             },
             FPS: {
                 name: "fps",
@@ -1099,7 +1113,7 @@ define([
             },
             COLOR: {
                 name: "color",
-                type: BaseType.COLOR
+                type: BaseType.COLOR3
             },
             INTENSITY: {
                 name: "intensity",
@@ -1219,7 +1233,7 @@ define([
         },
         FACTION_COLOR: {
             name: "factionColor",
-            type: BaseType.COLOR
+            type: BaseType.COLOR4
         },
         DEFAULT_LUMINOSITY_FACTORS: {
             name: "defaultLuminosityFactors",
@@ -1318,7 +1332,7 @@ define([
         }
         props = Object.keys(this._descriptor.properties);
         for (i = 0; i < props.length; i++) {
-            if (this._descriptor.properties[props[i]].name === "name") {
+            if (this._descriptor.properties[props[i]].name === NAME_PROPERTY_NAME) {
                 return true;
             }
         }
@@ -1375,11 +1389,51 @@ define([
     Type.prototype.isLong = function () {
         return this._descriptor.long;
     };
+    /**
+     * For enum and set types, returns the list of possible values
+     * @returns {String[]}
+     */
+    Type.prototype.getValues = function () {
+        if (this._descriptor.values) {
+            return utils.getEnumValues(this._descriptor.values);
+        }
+        if (this._descriptor.resourceReference) {
+            return resources.getResourceNames(this._descriptor.resourceReference);
+        }
+        if (this._descriptor.classReference) {
+            return classes.getClassNames(this._descriptor.classReference);
+        }
+        document.crash();
+    };
+    /**
+     * For object types, returns the object storing the property descriptors
+     * @returns {Object}
+     */
+    Type.prototype.getProperties = function () {
+        return this._descriptor.properties;
+    };
+    // ------------------------------------------------------------------------------
+    // Public functions
+    /**
+     * 
+     * @param {Editor~PropertyDescriptor} propertyDescriptor
+     * @param {Object} parent
+     * @returns {String[]}
+     */
+    function getPropertyValues(propertyDescriptor, parent) {
+        var values = new Type(propertyDescriptor.type).getValues();
+        if (propertyDescriptor.name === BASED_ON_PROPERTY_NAME) {
+            utils.removeFromArray(values, parent[NAME_PROPERTY_NAME]);
+        }
+        return values;
+    }
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
         BaseType: BaseType,
         ThrusterUse: ThrusterUse,
+        NAME_PROPERTY_NAME: NAME_PROPERTY_NAME,
+        BASED_ON_PROPERTY_NAME: BASED_ON_PROPERTY_NAME,
         AXIS: AXIS,
         /**
          * @type Object.<String, Editor~ItemDescriptor>
@@ -1395,6 +1449,7 @@ define([
             "spacecraftTypes": SPACECRAFT_TYPE,
             "spacecraftClasses": SPACECRAFT_CLASS
         },
-        Type: Type
+        Type: Type,
+        getPropertyValues: getPropertyValues
     };
 });
