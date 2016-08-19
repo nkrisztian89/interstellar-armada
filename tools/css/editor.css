@@ -13,6 +13,16 @@ body {
     padding: 0;
     overflow: hidden;
     color: #cccccc;
+    
+    font-size: 12px; /* for em units */ 
+}
+
+button {
+    font-size: 0.8vw;
+}
+
+input {
+    font-size: 0.8vw;
 }
 
 input[type="text"] {
@@ -26,6 +36,8 @@ textarea {
 }
 
 select {
+    font-size: 0.8vw;
+    
     max-width: 12em;
 }
 
@@ -33,7 +45,7 @@ select {
 /* general: common */
 
 .label {
-    font-size: 12px;
+    font-size: 0.8vw;
     padding-left: 0.5em;
     padding-right: 0.5em;
 }
@@ -43,16 +55,16 @@ select {
 }
 
 .colorComponent, .vectorComponent {
-    margin-right: 0.3em;
+    margin-right: 0.28em;
     margin-top: 0;
 }
 
 .colorComponent {
-    width: 1.9em;
+    width: 1.8em;
 }
 
 .vectorComponent {
-    width: 2.4em;
+    width: 2.2em;
 }
 
 .colorPicker {
@@ -61,10 +73,10 @@ select {
 
 .colorPreview {
     display: inline-block;
-    width: 1.2em;
+    width: 1.1em;
     height: 1.4em;
     margin-bottom: 0;
-    margin-right: 0.3em;
+    margin-right: 0.28em;
 }
 
 .rangeCheckbox {
@@ -105,11 +117,13 @@ div.windowTitle {
     padding: 2px;
     border: 2px solid #888888;
     text-align: center;
+    vertical-align: middle;
     color: #222222;
 
     font-weight: bold;
+    font-size: 1.2vw;
 
-    height: 20px;
+    height: 1.5vw;
 }
 
 div.windowContent {
@@ -166,6 +180,15 @@ div#properties {
     width: 20%;
 }
 
+div#properties > div.windowContent {
+    width: calc(100% + 17px);
+    
+    padding-bottom: 4em;
+    
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
 /* -------------------------------------------------------------------- */
 /* resources / classes */
 
@@ -190,6 +213,7 @@ li.category {
 }
 
 span.category {
+    font-size: 1.1vw;
     font-weight: bold;
 }
 
@@ -203,6 +227,10 @@ span.category:hover, span.element:hover {
 
 span.category:hover, span.element:hover {
     color: #44aaff;
+}
+
+span.element {
+    font-size: 1.0vw;
 }
 
 span.element.selected {
@@ -247,10 +275,11 @@ span.element.selected {
 
 .setting {
     display: inline-block;
+    margin-bottom: 0.6em;
 }
 
 span.settingLabel {
-    font-size: 10px;
+    font-size: 0.8vw;
     padding-left: 0.5em;
     padding-right: 0.5em;
 }
@@ -276,12 +305,15 @@ td {
 }
 
 .propertyName {
-    font-size: 12px;
+    font-size: 0.8vw;
     padding-left: 0.5em;
+    
+    max-width: 11em;
+    overflow-x: hidden;
 }
 
 span.propertyControl {
-    font-size: 12px;
+    font-size: 0.8vw;
     margin-right: 0.5em;
 }
 
