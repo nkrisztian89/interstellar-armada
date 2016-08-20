@@ -13,7 +13,7 @@ body {
     padding: 0;
     overflow: hidden;
     color: #cccccc;
-    
+
     font-size: 12px; /* for em units */ 
 }
 
@@ -37,7 +37,7 @@ textarea {
 
 select {
     font-size: 0.8vw;
-    
+
     max-width: 12em;
 }
 
@@ -182,9 +182,9 @@ div#properties {
 
 div#properties > div.windowContent {
     width: calc(100% + 17px);
-    
+
     padding-bottom: 4em;
-    
+
     overflow-x: hidden;
     overflow-y: scroll;
 }
@@ -307,7 +307,7 @@ td {
 .propertyName {
     font-size: 0.8vw;
     padding-left: 0.5em;
-    
+
     max-width: 11em;
     overflow-x: hidden;
 }
@@ -332,4 +332,8 @@ div.propertyControl {
 div.propertyEditorHeader {
     background-color: #545454;
     border: 2px solid #444444;
+}
+
+button.propertyEditorHeaderButton {
+    margin-left: 0.5em;
 }

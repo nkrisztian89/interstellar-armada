@@ -107,6 +107,19 @@ define([
         return result;
     }
     /**
+     * Creates and returns a button.
+     * @param {String} caption The text to show on the button (innerHTML)
+     * @param {Function} clickHandler The handler for the click event on the button
+     * @returns {Element}
+     */
+    function createButton(caption, clickHandler) {
+        var result = document.createElement("button");
+        result.innerHTML = caption;
+        result.type = "button";
+        result.onclick = clickHandler;
+        return result;
+    }
+    /**
      * Creates and returns a control that can be used to edit boolean values.
      * @param {Boolean} data The starting value
      * @param {Function} [changeHandler] The function that should be run on the change event
@@ -483,6 +496,7 @@ define([
         ItemType: ItemType,
         getItemReference: getItemReference,
         createLabel: createLabel,
+        createButton: createButton,
         createBooleanInput: createBooleanInput,
         createNumericInput: createNumericInput,
         createSelector: createSelector,

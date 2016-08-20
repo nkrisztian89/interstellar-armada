@@ -33,6 +33,7 @@ define([
             PROPERTY_CLASS = "propertyName",
             CONTROL_CLASS = "propertyControl",
             PROPERTY_EDITOR_HEADER_CLASS = "propertyEditorHeader",
+            PROPERTY_EDITOR_HEADER_BUTTON_CLASS = "propertyEditorHeaderButton",
             TEXT_AREA_ROWS = 5,
             TEXT_AREA_COLS = 100,
             LONG_TEXT_PREVIEW_LENGTH = 16,
@@ -41,7 +42,8 @@ define([
             DERIVED_PROPERTY_TEXT = "derived",
             UNSET_PROPERTY_TEXT = "unset",
             UNKNOWN_PROPERTY_TEXT = "unknown",
-            SET_PROPERTY_BUTTON_TEXT = "set",
+            SET_PROPERTY_BUTTON_CAPTION = "set",
+            ADD_BUTTON_CAPTION = "+",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -85,7 +87,6 @@ define([
             return true;
         }
         return false;
-
     }
     /**
      * Reinitializes the item the properties of which are edited, and notifies the preview module of the change
@@ -205,17 +206,15 @@ define([
      */
     function _createLongStringControl(topName, data, parent, name, parentPopup) {
         var
-                button = document.createElement("button"),
                 textarea = document.createElement("textarea"),
-                popup = _createPopup(button, parentPopup, topName, null, function () {
-                    _changeData(topName, textarea.value, parent, name);
-                    button.innerHTML = _getStringPreview(textarea.value);
-                });
-        button.type = "button";
-        button.innerHTML = _getStringPreview(data);
-        button.onclick = function () {
+                button, popup;
+        button = common.createButton(_getStringPreview(data), function () {
             popup.toggle();
-        };
+        });
+        popup = _createPopup(button, parentPopup, topName, null, function () {
+            _changeData(topName, textarea.value, parent, name);
+            button.innerHTML = _getStringPreview(textarea.value);
+        });
         textarea.value = data;
         textarea.cols = TEXT_AREA_COLS;
         textarea.rows = TEXT_AREA_ROWS;
@@ -301,342 +300,29 @@ define([
         });
     }
     /**
-     * Creates and returns a control that can be used to edit object properties. (by opening a popup to edit the properties of that object)
-     * Can create editors for arrays of objects (of the same type)
-     * @param {String} topName Name of the top property being edited (under which this object resides)
-     * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object, with BaseType.OBJECT basetype, that describes the properties
-     * @param {Object|Array} data The data itself to be modified (an instance of the object the type of which is described, or an array of
-     * such objects)
-     * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
-     * @returns {Element}
-     */
-    function _createObjectControl(topName, typeDescriptor, data, parentPopup) {
-        var
-                button = document.createElement("button"),
-                popup = _createPopup(button, parentPopup, topName),
-                isArray = (data instanceof Array),
-                type = new descriptors.Type(typeDescriptor),
-                hasName = type.hasNameProperty(),
-                header, indices, indexLabel, indexSelector, propertiesTable,
-                nameChangeHandler = function (index, newName) {
-                    indexSelector.options[index].text = newName;
-                },
-                indexChangeHandler = function () {
-                    var index = indexSelector.selectedIndex;
-                    if (_preview && !parentPopup) {
-                        _preview.handleStartEdit(topName, index);
-                    }
-                    popup.hideChildren();
-                    popup.getElement().removeChild(propertiesTable);
-                    propertiesTable = _createProperties(popup.getElement(), data[index], typeDescriptor.properties, topName, popup, hasName ? nameChangeHandler.bind(this, index) : null);
-                    popup.alignPosition();
-                };
-        // for arrays: adding a selector at the top of the popup, using which the instance to modify within the array can be selected
-        if (isArray) {
-            // if the array elements have a "name" property, use the values of that instead of indices for selection
-            indices = [];
-            while (indices.length < data.length) {
-                indices.push(hasName ? data[indices.length][descriptors.NAME_PROPERTY_NAME] : indices.length.toString());
-            }
-            indexLabel = common.createLabel(typeDescriptor.name + (hasName ? ":" : " index:"));
-            indexSelector = common.createSelector(indices, indices[0], false, indexChangeHandler);
-            header = document.createElement("div");
-            header.classList.add(PROPERTY_EDITOR_HEADER_CLASS);
-            header.appendChild(indexLabel);
-            header.appendChild(indexSelector);
-            popup.getElement().appendChild(header);
-        }
-        propertiesTable = _createProperties(popup.getElement(), isArray ? (data[0] || {}) : data, typeDescriptor.properties, topName, popup, (hasName && isArray) ? nameChangeHandler.bind(this, 0) : null);
-        popup.addToPage();
-        // create a button using which the popup can be opened
-        button.type = "button";
-        button.innerHTML = typeDescriptor.name;
-        if (isArray) {
-            button.innerHTML += " (" + data.length + ")";
-        }
-        button.onclick = function () {
-            if (isArray) {
-                indexSelector.selectedIndex = 0;
-                indexChangeHandler();
-            }
-            popup.toggle();
-        };
-        return button;
-    }
-    /**
-     * Creates and returns a control that can be used to edit array properties. (by opening a popup to edit the elements of that array)
-     * @param {String} topName Name of the top property being edited (under which this array resides)
-     * @param {Editor~TypeDescriptor} elementTypeDescriptor The descriptor object describing the type of the elements of the array
-     * @param {Array} data The array itself that the control should edit
-     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
-     * @returns {Element}
-     */
-    function _createArrayControl(topName, elementTypeDescriptor, data, parentPopup) {
-        var
-                button = document.createElement("button"),
-                popup = _createPopup(button, parentPopup, topName),
-                elementDescriptor, table, row, cell, indexLabel, propertyEditor, i;
-        table = document.createElement("table");
-        for (i = 0; i < data.length; i++) {
-            indexLabel = common.createLabel(i.toString());
-            elementDescriptor = {name: i, type: elementTypeDescriptor};
-            propertyEditor = _createControl(elementDescriptor, data[i], topName, data, parentPopup);
-            row = document.createElement("tr");
-            cell = document.createElement("td");
-            cell.appendChild(indexLabel);
-            row.appendChild(cell);
-            cell = document.createElement("td");
-            cell.appendChild(propertyEditor);
-            row.appendChild(cell);
-            table.appendChild(row);
-        }
-        popup.getElement().appendChild(table);
-        popup.addToPage();
-        // create a button using which the popup can be opened
-        button.type = "button";
-        button.innerHTML = new descriptors.Type(elementTypeDescriptor).getDisplayName() + " (" + data.length + ")";
-        button.onclick = function () {
-            popup.toggle();
-        };
-        return button;
-    }
-    /**
-     * Creates and returns a control that can be used to edit set properties. (by opening a popup to toggle the elements of that set)
-     * @param {String} topName Name of the top property being edited (under which this array resides)
-     * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object describing the set type
-     * @param {Array} data The set itself that the control should edit
-     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
-     * @returns {Element}
-     */
-    function _createSetControl(topName, typeDescriptor, data, parentPopup) {
-        var
-                button = document.createElement("button"),
-                popup = _createPopup(button, parentPopup, topName),
-                values = typeDescriptor.values ?
-                utils.getEnumValues(typeDescriptor.values) :
-                (typeDescriptor.resourceReference ?
-                        resources.getResourceNames(typeDescriptor.resourceReference) :
-                        (typeDescriptor.classReference ? classes.getClassNames(typeDescriptor.classReference) : [])),
-                table, row, cell, propertyEditor, i,
-                typeName = new descriptors.Type(typeDescriptor).getDisplayName(),
-                updateButton = function () {
-                    button.innerHTML = typeName + " (" + data.length + "/" + values.length + ")";
-                    if (parentPopup) {
-                        parentPopup.alignPosition();
-                    }
-                },
-                elementChangeHandler = function (index, value) {
-                    var elementIndex = data.indexOf(values[index]);
-                    if (value) {
-                        if (elementIndex === -1) {
-                            data.push(values[index]);
-                        }
-                    } else {
-                        if (elementIndex >= 0) {
-                            data.splice(elementIndex, 1);
-                        }
-                    }
-                    _updateData(topName);
-                    updateButton();
-                };
-        table = document.createElement("table");
-        for (i = 0; i < values.length; i++) {
-            propertyEditor = common.createBooleanInput(data.indexOf(values[i]) >= 0, elementChangeHandler.bind(this, i));
-            row = document.createElement("tr");
-            cell = document.createElement("td");
-            cell.appendChild(common.createLabel(values[i].toString()));
-            row.appendChild(cell);
-            cell = document.createElement("td");
-            cell.appendChild(propertyEditor);
-            row.appendChild(cell);
-            table.appendChild(row);
-        }
-        popup.getElement().appendChild(table);
-        popup.addToPage();
-        // create a button using which the popup can be opened
-        button.type = "button";
-        updateButton();
-        button.onclick = function () {
-            popup.toggle();
-        };
-        return button;
-    }
-    /**
-     * Creates and returns a control that can be used to array of pairs type properties. (by opening a popup to edit the pairs in the
-     * array)
-     * @param {String} topName Name of the top property being edited (under which this array resides)
-     * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object describing the pair array type
-     * @param {Array} data The array itself that the control should edit
-     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
-     * @returns {Element}
-     */
-    function _createPairsControl(topName, typeDescriptor, data, parentPopup) {
-        var
-                button = document.createElement("button"),
-                popup = _createPopup(button, parentPopup, topName),
-                table, row, cell, propertyEditor, i;
-        table = document.createElement("table");
-        row = document.createElement("tr");
-        cell = document.createElement("td");
-        cell.appendChild(common.createLabel(typeDescriptor.first.name));
-        row.appendChild(cell);
-        cell = document.createElement("td");
-        cell.appendChild(common.createLabel(":"));
-        row.appendChild(cell);
-        cell = document.createElement("td");
-        cell.appendChild(common.createLabel(typeDescriptor.second.name));
-        row.appendChild(cell);
-        table.appendChild(row);
-        for (i = 0; i < data.length; i++) {
-            row = document.createElement("tr");
-            propertyEditor = _createControl({name: 0, type: typeDescriptor.first.type}, data[i][0], topName, data[i], parentPopup);
-            cell = document.createElement("td");
-            cell.appendChild(propertyEditor);
-            row.appendChild(cell);
-            cell = document.createElement("td");
-            cell.appendChild(common.createLabel(":"));
-            row.appendChild(cell);
-            cell = document.createElement("td");
-            propertyEditor = _createControl({name: 1, type: typeDescriptor.second.type}, data[i][1], topName, data[i], parentPopup);
-            cell.appendChild(propertyEditor);
-            row.appendChild(cell);
-            table.appendChild(row);
-        }
-        popup.getElement().appendChild(table);
-        popup.addToPage();
-        // create a button using which the popup can be opened
-        button.type = "button";
-        button.innerHTML = new descriptors.Type(typeDescriptor).getDisplayName() + " (" + data.length + ")";
-        button.onclick = function () {
-            popup.toggle();
-        };
-        return button;
-    }
-    /**
-     * Creates and returns a control that can be used to array of rotations type properties. (by opening a popup to edit the rotations in 
-     * the array)
-     * @param {String} topName Name of the top property being edited (under which this array resides)
-     * @param {Array} data The array itself that the control should edit
-     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
-     * @returns {Element}
-     */
-    function _createRotationsControl(topName, data, parentPopup) {
-        var
-                button = document.createElement("button"),
-                popup = _createPopup(button, parentPopup, topName),
-                table, row, cell, propertyEditor, i;
-        table = document.createElement("table");
-        row = document.createElement("tr");
-        cell = document.createElement("td");
-        cell.appendChild(common.createLabel("axis"));
-        row.appendChild(cell);
-        cell = document.createElement("td");
-        cell.appendChild(common.createLabel(":"));
-        row.appendChild(cell);
-        cell = document.createElement("td");
-        cell.appendChild(common.createLabel("degrees"));
-        row.appendChild(cell);
-        table.appendChild(row);
-        for (i = 0; i < data.length; i++) {
-            row = document.createElement("tr");
-            propertyEditor = _createControl({name: "axis", type: descriptors.AXIS}, data[i].axis, topName, data[i], parentPopup);
-            cell = document.createElement("td");
-            cell.appendChild(propertyEditor);
-            row.appendChild(cell);
-            cell = document.createElement("td");
-            cell.appendChild(common.createLabel(":"));
-            row.appendChild(cell);
-            cell = document.createElement("td");
-            propertyEditor = _createControl({name: "degrees", type: descriptors.BaseType.NUMBER}, data[i].degrees, topName, data[i], parentPopup);
-            cell.appendChild(propertyEditor);
-            row.appendChild(cell);
-            table.appendChild(row);
-        }
-        popup.getElement().appendChild(table);
-        popup.addToPage();
-        // create a button using which the popup can be opened
-        button.type = "button";
-        button.innerHTML = "rotations (" + data.length + ")";
-        button.onclick = function () {
-            popup.toggle();
-        };
-        return button;
-    }
-    /**
-     * Creates and returns a control that can be used to edit confines type properties. (by opening a popup to edit the ranges)
-     * @param {String} topName Name of the top property being edited (under which this array resides)
-     * @param {Array} data The array itself that the control should edit
-     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
-     * @returns {Element}
-     */
-    function _createConfinesControl(topName, data, parentPopup) {
-        var
-                button = document.createElement("button"),
-                popup = _createPopup(button, parentPopup, topName),
-                table, row, cell, axisLabel, propertyEditor, i, axis;
-        table = document.createElement("table");
-        for (i = 0; i < data.length; i++) {
-            switch (i) {
-                case 0:
-                    axis = "X";
-                    break;
-                case 1:
-                    axis = "Y";
-                    break;
-                case 2:
-                    axis = "Z";
-                    break;
-                default:
-                    axis = i.toString();
-            }
-            axisLabel = common.createLabel(axis);
-            propertyEditor = _createRangeControl(topName, data[i]);
-            row = document.createElement("tr");
-            cell = document.createElement("td");
-            cell.appendChild(axisLabel);
-            row.appendChild(cell);
-            cell = document.createElement("td");
-            cell.appendChild(propertyEditor);
-            row.appendChild(cell);
-            table.appendChild(row);
-        }
-        popup.getElement().appendChild(table);
-        popup.addToPage();
-        // create a button using which the popup can be opened
-        button.type = "button";
-        button.innerHTML = "Confines";
-        button.onclick = function () {
-            popup.toggle();
-        };
-        return button;
-    }
-    /**
-     * Creates and returns an element that can be used to display the value of properties the type of which is not identified.
-     * @param {} data The value of the property to display
-     * @returns {Element}
-     */
-    function _createDefaultControl(data) {
-        var result = document.createElement("span");
-        result.innerHTML = data.toString();
-        result.classList.add(CONTROL_CLASS);
-        return result;
-    }
-    /**
      * Returns the appropriate default value for the property described by the passed descriptor object
      * @param {Editor~PropertyDescriptor} propertyDescriptor
      * @param {GenericResource|GenericClass} basedOn If the resource / class the property of which is considered has a reference to
      * another object as a base (inheriting undefined properties from it), that base resource / class needs to be given here
      * @param {Object} parent The object itself the data of which is considered (see _changeData)
+     * @param {Boolean} [undefinedIfOptional=false] If true, the function will return undefined for properties marked as optional and does
+     * not have a default value set
      * @returns {}
      */
-    function _getDefaultValue(propertyDescriptor, basedOn, parent) {
+    function _getDefaultValue(propertyDescriptor, basedOn, parent, undefinedIfOptional) {
         var result, type, propertyDescriptors, propertyDescriptorNames, i;
+        if (undefinedIfOptional && propertyDescriptor.optional && (propertyDescriptor.defaultValue === undefined)) {
+            return undefined;
+        }
         if (basedOn) {
             result = utils.deepCopy(basedOn.getData()[propertyDescriptor.name]);
             if (result === undefined) {
-                return _getDefaultValue(propertyDescriptor, basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME] ?
-                        common.getItemReference({type: _item.type, category: _item.category, name: basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME]}) :
-                        null);
+                return _getDefaultValue(
+                        propertyDescriptor,
+                        (basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME] ?
+                                common.getItemReference({type: _item.type, category: _item.category, name: basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME]}) :
+                                null),
+                        null, undefinedIfOptional);
             }
             return result;
         }
@@ -664,13 +350,17 @@ define([
                 propertyDescriptors = type.getProperties();
                 propertyDescriptorNames = Object.keys(propertyDescriptors);
                 for (i = 0; i < propertyDescriptorNames.length; i++) {
-                    result[propertyDescriptors[propertyDescriptorNames[i]].name] = _getDefaultValue(propertyDescriptors[propertyDescriptorNames[i]], null, result);
+                    result[propertyDescriptors[propertyDescriptorNames[i]].name] = _getDefaultValue(
+                            propertyDescriptors[propertyDescriptorNames[i]],
+                            null,
+                            result,
+                            undefinedIfOptional);
                 }
                 return result;
             case descriptors.BaseType.ENUM:
                 return descriptors.getPropertyValues(propertyDescriptor, parent)[0];
             case descriptors.BaseType.COLOR3:
-            case descriptors.BaseType.VECTOR33:
+            case descriptors.BaseType.VECTOR3:
                 return [0, 0, 0];
             case descriptors.BaseType.COLOR4:
                 return [0, 0, 0, 1];
@@ -680,6 +370,381 @@ define([
                 return [[0, 0], [0, 0], [0, 0]];
         }
         document.crash();
+    }
+    /**
+     * Adds a header (div element) to the element representing the passed Popup with the appropriate CSS class,
+     * containing the element and buttons passed. The buttons also get the appropriate CSS class.
+     * @param {Popup} popup
+     * @param {Element[]} elements
+     * @param {Element[]} buttons
+     */
+    function _addPropertyEditorHeader(popup, elements, buttons) {
+        var i, result = document.createElement("div");
+        result.classList.add(PROPERTY_EDITOR_HEADER_CLASS);
+        for (i = 0; i < elements.length; i++) {
+            result.appendChild(elements[i]);
+        }
+        for (i = 0; i < buttons.length; i++) {
+            buttons[i].classList.add(PROPERTY_EDITOR_HEADER_BUTTON_CLASS);
+            result.appendChild(buttons[i]);
+        }
+        popup.getElement().appendChild(result);
+    }
+    /**
+     * Creates and returns a control that can be used to edit object properties. (by opening a popup to edit the properties of that object)
+     * Can create editors for arrays of objects (of the same type)
+     * @param {String} topName Name of the top property being edited (under which this object resides)
+     * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object, with BaseType.OBJECT basetype, that describes the properties
+     * @param {Object|Array} data The data itself to be modified (an instance of the object the type of which is described, or an array of
+     * such objects)
+     * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createObjectControl(topName, typeDescriptor, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                isArray = (data instanceof Array),
+                type = new descriptors.Type(typeDescriptor),
+                hasName = type.hasNameProperty(),
+                indices, indexLabel, indexSelector, addElementButton, propertiesTable,
+                nameChangeHandler = function (index, newName) {
+                    indexSelector.options[index].text = newName;
+                },
+                indexChangeHandler = function () {
+                    var index = indexSelector.selectedIndex;
+                    if (_preview && !parentPopup) {
+                        _preview.handleStartEdit(topName, index);
+                    }
+                    popup.hideChildren();
+                    popup.getElement().removeChild(propertiesTable);
+                    propertiesTable = _createProperties(popup.getElement(), data[index], typeDescriptor.properties, topName, popup, hasName ? nameChangeHandler.bind(this, index) : null);
+                    popup.alignPosition();
+                },
+                updateButtonText = function () {
+                    button.innerHTML = typeDescriptor.name + (isArray ? (" (" + data.length + ")") : "");
+                    if (parentPopup) {
+                        parentPopup.alignPosition();
+                    }
+                };
+        // for arrays: adding a selector at the top of the popup, using which the instance to modify within the array can be selected
+        if (isArray) {
+            // if the array elements have a "name" property, use the values of that instead of indices for selection
+            indices = [];
+            while (indices.length < data.length) {
+                indices.push(hasName ? data[indices.length][descriptors.NAME_PROPERTY_NAME] : indices.length.toString());
+            }
+            indexLabel = common.createLabel(typeDescriptor.name + (hasName ? ":" : " index:"));
+            indexSelector = common.createSelector(indices, indices[0], false, indexChangeHandler);
+            addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+                var newIndex;
+                data.push(_getDefaultValue({type: typeDescriptor}, null, null, true));
+                updateButtonText();
+                newIndex = document.createElement("option");
+                newIndex.value = hasName ? "" : (data.length - 1).toString();
+                newIndex.text = newIndex.value;
+                indexSelector.add(newIndex);
+                _updateData(topName);
+                indexSelector.selectedIndex = data.length - 1;
+                indexChangeHandler();
+            });
+            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], [addElementButton]);
+        }
+        propertiesTable = _createProperties(popup.getElement(), isArray ? (data[0] || {}) : data, typeDescriptor.properties, topName, popup, (hasName && isArray) ? nameChangeHandler.bind(this, 0) : null);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        button.type = "button";
+        updateButtonText();
+        button.onclick = function () {
+            if (isArray) {
+                indexSelector.selectedIndex = 0;
+                indexChangeHandler();
+            }
+            popup.toggle();
+        };
+        return button;
+    }
+    /**
+     * Adds a new row at the bottom of the passed table that has one cell for each of the elements in the passed
+     * array, housing the element itself
+     * @param {Element} table A HTML table element
+     * @param {Element[]} elements The list of elements for the row contain
+     */
+    function _addRow(table, elements) {
+        var row, cell, i;
+        row = document.createElement("tr");
+        for (i = 0; i < elements.length; i++) {
+            cell = document.createElement("td");
+            cell.appendChild(elements[i]);
+            row.appendChild(cell);
+        }
+        table.appendChild(row);
+    }
+    /**
+     * Sets up the passed button element to toggle the passed popup on click.
+     * @param {Element} button A HTML button element
+     * @param {String} caption The caption to show on the button (innerHTML)
+     * @param {Popup} popup The popup the button should toggle
+     */
+    function _setPopupTogglerButton(button, caption, popup) {
+        button.type = "button";
+        button.innerHTML = caption;
+        button.onclick = function () {
+            popup.toggle();
+        };
+    }
+    /**
+     * Creates and returns a control that can be used to edit array properties. (by opening a popup to edit the elements of that array)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {Editor~TypeDescriptor} elementTypeDescriptor The descriptor object describing the type of the elements of the array
+     * @param {Array} data The array itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createArrayControl(topName, elementTypeDescriptor, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                table, addElementButton, i,
+                addElementEditor = function (index) {
+                    _addRow(table, [
+                        common.createLabel(index.toString()),
+                        _createControl({name: index, type: elementTypeDescriptor}, data[index], topName, data, parentPopup)
+                    ]);
+                },
+                updateButtonText = function () {
+                    button.innerHTML = new descriptors.Type(elementTypeDescriptor).getDisplayName() + " (" + data.length + ")";
+                    if (parentPopup) {
+                        parentPopup.alignPosition();
+                    }
+                };
+        addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+            data.push(_getDefaultValue({type: elementTypeDescriptor}, null, null, true));
+            updateButtonText();
+            addElementEditor(data.length - 1);
+            popup.alignPosition();
+            _updateData(topName);
+        });
+        _addPropertyEditorHeader(popup, [], [addElementButton]);
+        table = document.createElement("table");
+        for (i = 0; i < data.length; i++) {
+            addElementEditor(i);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        _setPopupTogglerButton(button, "", popup);
+        updateButtonText();
+        return button;
+    }
+    /**
+     * Creates and returns a control that can be used to edit set properties. (by opening a popup to toggle the elements of that set)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object describing the set type
+     * @param {Array} data The set itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createSetControl(topName, typeDescriptor, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                values = (typeDescriptor.values ?
+                        utils.getEnumValues(typeDescriptor.values) :
+                        (typeDescriptor.resourceReference ?
+                                resources.getResourceNames(typeDescriptor.resourceReference) :
+                                (typeDescriptor.classReference ?
+                                        classes.getClassNames(typeDescriptor.classReference) :
+                                        []))),
+                table, i,
+                typeName = new descriptors.Type(typeDescriptor).getDisplayName(),
+                updateButtonText = function () {
+                    button.innerHTML = typeName + " (" + data.length + "/" + values.length + ")";
+                    if (parentPopup) {
+                        parentPopup.alignPosition();
+                    }
+                },
+                elementChangeHandler = function (index, value) {
+                    var elementIndex = data.indexOf(values[index]);
+                    if (value) {
+                        if (elementIndex === -1) {
+                            data.push(values[index]);
+                        }
+                    } else {
+                        if (elementIndex >= 0) {
+                            data.splice(elementIndex, 1);
+                        }
+                    }
+                    _updateData(topName);
+                    updateButtonText();
+                };
+        table = document.createElement("table");
+        for (i = 0; i < values.length; i++) {
+            _addRow(table, [
+                common.createLabel(values[i].toString()),
+                common.createBooleanInput(data.indexOf(values[i]) >= 0, elementChangeHandler.bind(this, i))
+            ]);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        _setPopupTogglerButton(button, "", popup);
+        updateButtonText();
+        return button;
+    }
+    /**
+     * Adds a new row at the bottom of the passed table element containing the passed two element in separate cells,
+     * with a third cell in between them displaying a colon.
+     * @param {Element} table
+     * @param {Element} firstElement
+     * @param {Element} secondElement
+     */
+    function _addPairRow(table, firstElement, secondElement) {
+        _addRow(table, [
+            firstElement,
+            common.createLabel(":"),
+            secondElement
+        ]);
+    }
+    /**
+     * Creates and returns a control that can be used to array of pairs type properties. (by opening a popup to edit the pairs in the
+     * array)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object describing the pair array type
+     * @param {Array} data The array itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createPairsControl(topName, typeDescriptor, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                table, i, addPairButton,
+                addPairEditor = function (index) {
+                    _addPairRow(table,
+                            _createControl({name: 0, type: typeDescriptor.first.type}, data[index][0], topName, data[index], parentPopup),
+                            _createControl({name: 1, type: typeDescriptor.second.type}, data[index][1], topName, data[index], parentPopup));
+                },
+                updateButtonText = function () {
+                    button.innerHTML = new descriptors.Type(typeDescriptor).getDisplayName() + " (" + data.length + ")";
+                    if (parentPopup) {
+                        parentPopup.alignPosition();
+                    }
+                };
+        addPairButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+            data.push([
+                _getDefaultValue({type: typeDescriptor.first.type}),
+                _getDefaultValue({type: typeDescriptor.second.type})]);
+            updateButtonText();
+            addPairEditor(data.length - 1);
+            popup.alignPosition();
+            _updateData(topName);
+        });
+        _addPropertyEditorHeader(popup, [], [addPairButton]);
+        table = document.createElement("table");
+        _addPairRow(table, common.createLabel(typeDescriptor.first.name), common.createLabel(typeDescriptor.second.name));
+        for (i = 0; i < data.length; i++) {
+            addPairEditor(i);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        _setPopupTogglerButton(button, "", popup);
+        updateButtonText();
+        return button;
+    }
+    /**
+     * Creates and returns a control that can be used to array of rotations type properties. (by opening a popup to edit the rotations in 
+     * the array)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {Array} data The array itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createRotationsControl(topName, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                table, i, addRotationButton,
+                addRotationEditor = function (index) {
+                    _addPairRow(table,
+                            _createControl({name: "axis", type: descriptors.AXIS}, data[index].axis, topName, data[index], parentPopup),
+                            _createControl({name: "degrees", type: descriptors.BaseType.NUMBER}, data[index].degrees, topName, data[index], parentPopup));
+                },
+                updateButtonText = function () {
+                    button.innerHTML = "rotations (" + data.length + ")";
+                    if (parentPopup) {
+                        parentPopup.alignPosition();
+                    }
+                };
+        addRotationButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+            data.push({
+                axis: _getDefaultValue({type: descriptors.AXIS}),
+                degrees: _getDefaultValue({type: descriptors.BaseType.NUMBER})
+            });
+            updateButtonText();
+            addRotationEditor(data.length - 1);
+            popup.alignPosition();
+            _updateData(topName);
+        });
+        _addPropertyEditorHeader(popup, [], [addRotationButton]);
+        table = document.createElement("table");
+        _addPairRow(table, common.createLabel("axis"), common.createLabel("degrees"));
+        for (i = 0; i < data.length; i++) {
+            addRotationEditor(i);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        _setPopupTogglerButton(button, "", popup);
+        updateButtonText();
+        return button;
+    }
+    /**
+     * Creates and returns a control that can be used to edit confines type properties. (by opening a popup to edit the ranges)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {Array} data The array itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createConfinesControl(topName, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                table, i, axis;
+        table = document.createElement("table");
+        for (i = 0; i < data.length; i++) {
+            switch (i) {
+                case 0:
+                    axis = "X";
+                    break;
+                case 1:
+                    axis = "Y";
+                    break;
+                case 2:
+                    axis = "Z";
+                    break;
+                default:
+                    axis = i.toString();
+            }
+            _addRow(table, [common.createLabel(axis), _createRangeControl(topName, data[i])]);
+        }
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        _setPopupTogglerButton(button, "Confines", popup);
+        return button;
+    }
+    /**
+     * Creates and returns an element that can be used to display the value of properties the type of which is not identified.
+     * @param {} data The value of the property to display
+     * @returns {Element}
+     */
+    function _createDefaultControl(data) {
+        var result = document.createElement("span");
+        result.innerHTML = data.toString();
+        result.classList.add(CONTROL_CLASS);
+        return result;
     }
     /**
      * Creates and returns a control that can be used to initialize unset properties
@@ -696,7 +761,7 @@ define([
                 label, button;
         if (!topName && _basedOn) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
-        } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault) {
+        } else if (!propertyDescriptor.optional && ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault)) {
             label = _createDefaultControl(DEFAULT_PROPERTY_TEXT);
         } else if (propertyDescriptor.defaultDerived) {
             label = _createDefaultControl(DERIVED_PROPERTY_TEXT);
@@ -708,7 +773,7 @@ define([
         result.appendChild(label);
         button = document.createElement("button");
         button.type = "button";
-        button.innerHTML = SET_PROPERTY_BUTTON_TEXT;
+        button.innerHTML = SET_PROPERTY_BUTTON_CAPTION;
         button.onclick = function () {
             var value = _getDefaultValue(propertyDescriptor, _basedOn, parent),
                     parentNode = result.parentNode;

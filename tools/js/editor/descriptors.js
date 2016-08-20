@@ -779,7 +779,8 @@ define([
             POSITION: {
                 name: "position",
                 type: BaseType.VECTOR3,
-                optional: true
+                optional: true,
+                defaultValue: [0, 0, 0]
             },
             ARRAY: {
                 name: "array",
@@ -808,7 +809,9 @@ define([
             },
             MAX_GRADE: {
                 name: "maxGrade",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                optional: false,
+                defaultValue: 1
             }
         }
     },
@@ -1422,7 +1425,7 @@ define([
      */
     function getPropertyValues(propertyDescriptor, parent) {
         var values = new Type(propertyDescriptor.type).getValues();
-        if (propertyDescriptor.name === BASED_ON_PROPERTY_NAME) {
+        if (parent && (propertyDescriptor.name === BASED_ON_PROPERTY_NAME)) {
             utils.removeFromArray(values, parent[NAME_PROPERTY_NAME]);
         }
         return values;
