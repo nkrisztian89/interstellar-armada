@@ -21,7 +21,9 @@
         </div>
 
         <div id="classes" class="window">
-            <div class="windowTitle">Classes</div>
+            <div class="windowTitle">Classes
+                <button type="button" id="exportClasses">Export</button>
+            </div>
             <div class="windowContent scrollable">
                 <div class="windowLabel">loading...</div>
             </div>
@@ -42,6 +44,21 @@
             <div class="windowTitle">Properties</div>
             <div class="windowContent">
                 <div class="windowLabel">no content selected</div>
+            </div>
+        </div>
+
+        <div id="classesExportDialog" class="dialog" hidden>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Name:</span>
+                <input type="text" id="classesExportName" value="classes"/>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Author:</span>
+                <input type="text" id="classesExportAuthor" value="Krisztián Nagy"/>
+            </div>
+            <div class="dialogButtonRow">
+                <button type="button" id="classesExportExport">Export</button>
+                <button type="button" id="classesExportCancel">Cancel</button>
             </div>
         </div>
 

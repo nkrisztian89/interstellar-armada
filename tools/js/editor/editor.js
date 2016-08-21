@@ -6,7 +6,7 @@
  * @version 1.0
  */
 
-/*global define, document, localStorage, require */
+/*global define, document, localStorage, require, Blob, window */
 /*jslint white: true, nomen: true, plusplus: true */
 
 /**
@@ -43,6 +43,12 @@ define([
             CLASSES_WINDOW_ID = "classes",
             PREVIEW_WINDOW_ID = "preview",
             PROPERTIES_WINDOW_ID = "properties",
+            EXPORT_CLASSES_BUTTON_ID = "exportClasses",
+            CLASSES_EXPORT_DIALOG_ID = "classesExportDialog",
+            CLASSES_EXPORT_NAME_ID = "classesExportName",
+            CLASSES_EXPORT_AUTHOR_ID = "classesExportAuthor",
+            CLASSES_EXPORT_EXPORT_BUTTON_ID = "classesExportExport",
+            CLASSES_EXPORT_CANCEL_BUTTON_ID = "classesExportCancel",
             WINDOW_LABEL_CLASS = "windowLabel",
             WINDOW_CONTENT_CLASS = "windowContent",
             SELECTED_CLASS = "selected",
@@ -246,11 +252,82 @@ define([
         resourcesWindowContent.appendChild(typeList);
     }
     /**
+     * Returns the stringified info object that can be embedded at the beginning of exported files (e.g. classes)
+     * @param {String} name The name to be included in the info
+     * @param {String} author The author to be included in the info
+     * @returns {String}
+     */
+    function _getInfoString(name, author) {
+        var info = {
+            name: name,
+            author: author,
+            comment: "Created by Interstellar Armada editor",
+            version: application.getVersion(),
+            creationTime: new Date().toString()
+        };
+        return JSON.stringify(info);
+    }
+    /**
+     * Returns the string that can be used as the content of the exported classes file 
+     * @param {String} name The name to be included in the info section of the file
+     * @param {String} author The author to be included in the info section of the file
+     * @returns {String}
+     */
+    function _getClassesString(name, author) {
+        var i, j, classCategories = classes.getClassCategories(), classesOfCategory, result;
+        result = '{"info":' + _getInfoString(name, author);
+        for (i = 0; i < classCategories.length; i++) {
+            result += ',"' + classCategories[i] + '":[';
+            classesOfCategory = classes.getClassNames(classCategories[i]);
+            for (j = 0; j < classesOfCategory.length; j++) {
+                result += ((j > 0) ? ',' : '') + JSON.stringify(classes.getClass(classCategories[i], classesOfCategory[j]).getData());
+            }
+            result += ']';
+        }
+        result += "}";
+        return result;
+    }
+    /**
+     * Exports the class settings into a JSON file the download of which is then triggered
+     * @param {String} name The name to be included in the info section of the file
+     * @param {String} author The author to be included in the info section of the file
+     */
+    function _exportClasses(name, author) {
+        var
+                blob = new Blob([_getClassesString(name, author)], {type: "text/json"}),
+                e = document.createEvent("MouseEvents"),
+                a = document.createElement("a");
+        a.download = name + ".json";
+        a.href = window.URL.createObjectURL(blob);
+        a.dataset.downloadurl = ["text/json", a.download, a.href].join(":");
+        e.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        a.dispatchEvent(e);
+    }
+    /**
+     * Sets up the event handlers for the elements in the classes export dialog
+     */
+    function _loadClassesExportDialog() {
+        var
+                classesExportDialog = document.getElementById(CLASSES_EXPORT_DIALOG_ID),
+                classesExportName = document.getElementById(CLASSES_EXPORT_NAME_ID),
+                classesExportAuthor = document.getElementById(CLASSES_EXPORT_AUTHOR_ID),
+                classesExportExport = document.getElementById(CLASSES_EXPORT_EXPORT_BUTTON_ID),
+                classesExportCancel = document.getElementById(CLASSES_EXPORT_CANCEL_BUTTON_ID);
+        classesExportExport.onclick = function () {
+            _exportClasses(classesExportName.value, classesExportAuthor.value);
+            classesExportDialog.hidden = true;
+        };
+        classesExportCancel.onclick = function () {
+            classesExportDialog.hidden = true;
+        };
+    }
+    /**
      * Loads the content of the Classes window - the collapsable list of game classes. Call after the class configuration has been loaded.
      */
     function _loadClasses() {
         var
                 classesWindowContent = document.getElementById(CLASSES_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS),
+                classesExportDialog = document.getElementById(CLASSES_EXPORT_DIALOG_ID),
                 classCategories = classes.getClassCategories(), classesOfCategory,
                 categoryList, categoryElement, categorySpan, classList, classElement, classSpan,
                 i, j;
@@ -281,6 +358,10 @@ define([
             categoryList.appendChild(categoryElement);
         }
         classesWindowContent.appendChild(categoryList);
+        document.getElementById(EXPORT_CLASSES_BUTTON_ID).onclick = function () {
+            classesExportDialog.hidden = !classesExportDialog.hidden;
+        };
+        _loadClassesExportDialog();
     }
     /**
      * Sends an asynchronous request to get the JSON file describing the game settings and sets the callback function to set them and

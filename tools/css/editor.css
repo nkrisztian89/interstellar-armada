@@ -90,15 +90,27 @@ select {
 .popup {
     position: absolute;
 
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.popup, .dialog {
     border: 2px solid #666666;
     background-color: #444444;
     box-shadow: 0 0 1em 0 #222222;
 
     padding-top: 0.2em;
     padding-bottom: 0.2em;
+}
 
-    overflow-x: hidden;
-    overflow-y: auto;
+.dialog {
+    position: absolute;
+}
+
+.dialogLabel {
+    display: inline-block;
+    width: 50px;
+    text-align: left;
 }
 
 /* -------------------------------------------------------------------- */
@@ -109,6 +121,7 @@ div.window {
     border: 2px solid #666666;
     margin: 0;
     padding: 0;
+    text-align: left;
 }
 
 div.windowTitle {
@@ -187,6 +200,35 @@ div#properties > div.windowContent {
 
     overflow-x: hidden;
     overflow-y: scroll;
+}
+
+/* -------------------------------------------------------------------- */
+/* dialogs */
+
+#classesExportDialog {
+    width: 250px;
+    height: 90px;
+    left: calc(50% - 125px);
+    top: calc(50% - 45px);
+
+    padding-top: 0.9em;
+}
+
+div.dialogEntry {
+    text-align: center;
+    margin-bottom: 0.9em;
+}
+
+div.dialogEntry > input {
+    font-size: 1em;
+}
+
+div.dialogButtonRow {
+    text-align: center;
+}
+
+div.dialogButtonRow > button {
+    font-size: 1em;
 }
 
 /* -------------------------------------------------------------------- */
