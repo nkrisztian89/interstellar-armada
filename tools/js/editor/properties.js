@@ -44,6 +44,7 @@ define([
             UNKNOWN_PROPERTY_TEXT = "unknown",
             SET_PROPERTY_BUTTON_CAPTION = "set",
             ADD_BUTTON_CAPTION = "+",
+            REMOVE_BUTTON_CAPTION = "x",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -407,18 +408,35 @@ define([
                 isArray = (data instanceof Array),
                 type = new descriptors.Type(typeDescriptor),
                 hasName = type.hasNameProperty(),
-                indices, indexLabel, indexSelector, addElementButton, propertiesTable,
+                indices, indexLabel, indexSelector,
+                addElementButton, removeElementButton,
+                propertiesTable,
                 nameChangeHandler = function (index, newName) {
                     indexSelector.options[index].text = newName;
                 },
+                addPropertiesTable = function (index) {
+                    propertiesTable = _createProperties(popup.getElement(), (index === undefined) ? data : data[index], typeDescriptor.properties, topName, popup, hasName ? nameChangeHandler.bind(this, index) : null);
+                },
                 indexChangeHandler = function () {
                     var index = indexSelector.selectedIndex;
-                    if (_preview && !parentPopup) {
-                        _preview.handleStartEdit(topName, index);
-                    }
                     popup.hideChildren();
-                    popup.getElement().removeChild(propertiesTable);
-                    propertiesTable = _createProperties(popup.getElement(), data[index], typeDescriptor.properties, topName, popup, hasName ? nameChangeHandler.bind(this, index) : null);
+                    if (propertiesTable) {
+                        popup.getElement().removeChild(propertiesTable);
+                        propertiesTable = null;
+                    }
+                    if (index >= 0) {
+                        if (_preview && !parentPopup) {
+                            _preview.handleStartEdit(topName, index);
+                        }
+                        addPropertiesTable(index);
+                        indexLabel.hidden = false;
+                        indexSelector.hidden = false;
+                        removeElementButton.hidden = false;
+                    } else {
+                        indexLabel.hidden = true;
+                        indexSelector.hidden = true;
+                        removeElementButton.hidden = true;
+                    }
                     popup.alignPosition();
                 },
                 updateButtonText = function () {
@@ -448,9 +466,24 @@ define([
                 indexSelector.selectedIndex = data.length - 1;
                 indexChangeHandler();
             });
-            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], [addElementButton]);
+            removeElementButton = common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                data.splice(indexSelector.selectedIndex, 1);
+                updateButtonText();
+                _updateData(topName);
+                indexSelector.remove(hasName ? indexSelector.selectedIndex : data.length);
+                indexChangeHandler();
+            });
+            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], [addElementButton, removeElementButton]);
+            if (data.length > 0) {
+                addPropertiesTable(0);
+            } else {
+                indexLabel.hidden = true;
+                indexSelector.hidden = true;
+                removeElementButton.hidden = true;
+            }
+        } else {
+            addPropertiesTable();
         }
-        propertiesTable = _createProperties(popup.getElement(), isArray ? (data[0] || {}) : data, typeDescriptor.properties, topName, popup, (hasName && isArray) ? nameChangeHandler.bind(this, 0) : null);
         popup.addToPage();
         // create a button using which the popup can be opened
         button.type = "button";
@@ -468,15 +501,18 @@ define([
      * Adds a new row at the bottom of the passed table that has one cell for each of the elements in the passed
      * array, housing the element itself
      * @param {Element} table A HTML table element
-     * @param {Element[]} elements The list of elements for the row contain
+     * @param {Element[]} elements The list of elements for the row contain. Can contain null / undefined (falsy) 
+     * elements, which will be simply skipped
      */
     function _addRow(table, elements) {
         var row, cell, i;
         row = document.createElement("tr");
         for (i = 0; i < elements.length; i++) {
-            cell = document.createElement("td");
-            cell.appendChild(elements[i]);
-            row.appendChild(cell);
+            if (elements[i]) {
+                cell = document.createElement("td");
+                cell.appendChild(elements[i]);
+                row.appendChild(cell);
+            }
         }
         table.appendChild(row);
     }
@@ -506,18 +542,32 @@ define([
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
                 table, addElementButton, i,
-                addElementEditor = function (index) {
-                    _addRow(table, [
-                        common.createLabel(index.toString()),
-                        _createControl({name: index, type: elementTypeDescriptor}, data[index], topName, data, parentPopup)
-                    ]);
-                },
                 updateButtonText = function () {
                     button.innerHTML = new descriptors.Type(elementTypeDescriptor).getDisplayName() + " (" + data.length + ")";
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }
+                },
+                refreshTable,
+                addElementEditor = function (index) {
+                    _addRow(table, [
+                        common.createLabel(index.toString()),
+                        _createControl({name: index, type: elementTypeDescriptor}, data[index], topName, data, parentPopup),
+                        common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                            data.splice(index, 1);
+                            updateButtonText();
+                            refreshTable();
+                            popup.alignPosition();
+                            _updateData(topName);
+                        })
+                    ]);
                 };
+        refreshTable = function () {
+            table.innerHTML = "";
+            for (i = 0; i < data.length; i++) {
+                addElementEditor(i);
+            }
+        };
         addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
             data.push(_getDefaultValue({type: elementTypeDescriptor}, null, null, true));
             updateButtonText();
@@ -527,9 +577,7 @@ define([
         });
         _addPropertyEditorHeader(popup, [], [addElementButton]);
         table = document.createElement("table");
-        for (i = 0; i < data.length; i++) {
-            addElementEditor(i);
-        }
+        refreshTable();
         popup.getElement().appendChild(table);
         popup.addToPage();
         // create a button using which the popup can be opened
@@ -598,12 +646,14 @@ define([
      * @param {Element} table
      * @param {Element} firstElement
      * @param {Element} secondElement
+     * @param {Element} [removeButton] The button to put next to the pair that should remove this pair from an array of pairs
      */
-    function _addPairRow(table, firstElement, secondElement) {
+    function _addPairRow(table, firstElement, secondElement, removeButton) {
         _addRow(table, [
             firstElement,
             common.createLabel(":"),
-            secondElement
+            secondElement,
+            removeButton
         ]);
     }
     /**
@@ -620,17 +670,32 @@ define([
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
                 table, i, addPairButton,
-                addPairEditor = function (index) {
-                    _addPairRow(table,
-                            _createControl({name: 0, type: typeDescriptor.first.type}, data[index][0], topName, data[index], parentPopup),
-                            _createControl({name: 1, type: typeDescriptor.second.type}, data[index][1], topName, data[index], parentPopup));
-                },
+                refreshTable,
                 updateButtonText = function () {
                     button.innerHTML = new descriptors.Type(typeDescriptor).getDisplayName() + " (" + data.length + ")";
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }
+                },
+                addPairEditor = function (index) {
+                    _addPairRow(table,
+                            _createControl({name: 0, type: typeDescriptor.first.type}, data[index][0], topName, data[index], parentPopup),
+                            _createControl({name: 1, type: typeDescriptor.second.type}, data[index][1], topName, data[index], parentPopup),
+                            common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                                data.splice(index, 1);
+                                updateButtonText();
+                                refreshTable();
+                                popup.alignPosition();
+                                _updateData(topName);
+                            }));
                 };
+        refreshTable = function () {
+            table.innerHTML = "";
+            _addPairRow(table, common.createLabel(typeDescriptor.first.name), common.createLabel(typeDescriptor.second.name));
+            for (i = 0; i < data.length; i++) {
+                addPairEditor(i);
+            }
+        };
         addPairButton = common.createButton(ADD_BUTTON_CAPTION, function () {
             data.push([
                 _getDefaultValue({type: typeDescriptor.first.type}),
@@ -642,10 +707,7 @@ define([
         });
         _addPropertyEditorHeader(popup, [], [addPairButton]);
         table = document.createElement("table");
-        _addPairRow(table, common.createLabel(typeDescriptor.first.name), common.createLabel(typeDescriptor.second.name));
-        for (i = 0; i < data.length; i++) {
-            addPairEditor(i);
-        }
+        refreshTable();
         popup.getElement().appendChild(table);
         popup.addToPage();
         // create a button using which the popup can be opened
@@ -666,17 +728,32 @@ define([
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
                 table, i, addRotationButton,
-                addRotationEditor = function (index) {
-                    _addPairRow(table,
-                            _createControl({name: "axis", type: descriptors.AXIS}, data[index].axis, topName, data[index], parentPopup),
-                            _createControl({name: "degrees", type: descriptors.BaseType.NUMBER}, data[index].degrees, topName, data[index], parentPopup));
-                },
+                refreshTable,
                 updateButtonText = function () {
                     button.innerHTML = "rotations (" + data.length + ")";
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }
+                },
+                addRotationEditor = function (index) {
+                    _addPairRow(table,
+                            _createControl({name: "axis", type: descriptors.AXIS}, data[index].axis, topName, data[index], parentPopup),
+                            _createControl({name: "degrees", type: descriptors.BaseType.NUMBER}, data[index].degrees, topName, data[index], parentPopup),
+                            common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                                data.splice(index, 1);
+                                updateButtonText();
+                                refreshTable();
+                                popup.alignPosition();
+                                _updateData(topName);
+                            }));
                 };
+        refreshTable = function () {
+            table.innerHTML = "";
+            _addPairRow(table, common.createLabel("axis"), common.createLabel("degrees"));
+            for (i = 0; i < data.length; i++) {
+                addRotationEditor(i);
+            }
+        };
         addRotationButton = common.createButton(ADD_BUTTON_CAPTION, function () {
             data.push({
                 axis: _getDefaultValue({type: descriptors.AXIS}),
@@ -689,10 +766,7 @@ define([
         });
         _addPropertyEditorHeader(popup, [], [addRotationButton]);
         table = document.createElement("table");
-        _addPairRow(table, common.createLabel("axis"), common.createLabel("degrees"));
-        for (i = 0; i < data.length; i++) {
-            addRotationEditor(i);
-        }
+        refreshTable();
         popup.getElement().appendChild(table);
         popup.addToPage();
         // create a button using which the popup can be opened

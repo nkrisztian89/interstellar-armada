@@ -566,13 +566,11 @@ define([
             _elements.canvas.onmousedown = _handleMouseDown;
             _elements.canvas.onwheel = _handleWheel;
             _context.executeWhenReady(function () {
-                utils.executeAsync(function () {
-                    _updateForRenderMode();
-                    _updateForLOD();
-                    _updateThrusters();
-                    _updateForHitboxState();
-                    _requestRender();
-                });
+                _updateForRenderMode();
+                _updateForLOD();
+                _updateThrusters();
+                _updateForHitboxState();
+                _requestRender();
             });
         });
         resources.requestResourceLoad();

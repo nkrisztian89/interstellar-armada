@@ -294,10 +294,14 @@ span.settingLabel {
     margin-top: 0;
     margin-left: auto;
     margin-right: auto;
-    margin-bottom: 0;
+    margin-bottom: 6em;
     padding: 0;
 
     background-color: #444444;
+}
+
+.popup > .propertiesTable {
+    margin-bottom: 0;
 }
 
 td {
