@@ -15,7 +15,7 @@
  * @param constants Used for accessing the previously run version number in the local storage
  * @param config Used to load game configuration and settings from file
  * @param graphics Used to load the graphics settings from file
- * @param classes Used to display the class structure in the Classes window and access the selected class for preview and properties
+ * @param classes Used to display the class structure in the Items window and access the selected class for preview and properties
  * @param logic Used to load the environments 
  * @param common Used for clearing open popups
  * @param spacecraftPreview Used to create previews for spacecraft classes
@@ -39,16 +39,15 @@ define([
     var
             // ------------------------------------------------------------------------------
             // Constants
-            RESOURCES_WINDOW_ID = "resources",
-            CLASSES_WINDOW_ID = "classes",
+            ITEMS_WINDOW_ID = "items",
             PREVIEW_WINDOW_ID = "preview",
             PROPERTIES_WINDOW_ID = "properties",
-            EXPORT_CLASSES_BUTTON_ID = "exportClasses",
-            CLASSES_EXPORT_DIALOG_ID = "classesExportDialog",
-            CLASSES_EXPORT_NAME_ID = "classesExportName",
-            CLASSES_EXPORT_AUTHOR_ID = "classesExportAuthor",
-            CLASSES_EXPORT_EXPORT_BUTTON_ID = "classesExportExport",
-            CLASSES_EXPORT_CANCEL_BUTTON_ID = "classesExportCancel",
+            EXPORT_BUTTON_ID = "exportButton",
+            EXPORT_DIALOG_ID = "classesExportDialog",
+            EXPORT_NAME_ID = "classesExportName",
+            EXPORT_AUTHOR_ID = "classesExportAuthor",
+            EXPORT_EXPORT_BUTTON_ID = "classesExportExport",
+            EXPORT_CANCEL_BUTTON_ID = "classesExportCancel",
             WINDOW_LABEL_CLASS = "windowLabel",
             WINDOW_CONTENT_CLASS = "windowContent",
             SELECTED_CLASS = "selected",
@@ -58,7 +57,7 @@ define([
             PREVIEW_OPTIONS_ID = "previewOptions",
             PREVIEW_CANVAS_ID = "previewCanvas",
             PREVIEW_INFO_ID = "previewInfo",
-            NO_ITEM_SELECTED_TEXT = "no item selected",
+            NO_ITEM_SELECTED_TEXT = "select an item from the left",
             NO_PREVIEW_TEXT = "preview not available for this type of item",
             NO_PROPERTIES_TEXT = "properties not available for this type of item",
             // ------------------------------------------------------------------------------
@@ -214,44 +213,6 @@ define([
         };
     }
     /**
-     * Loads the content of the Resources window - the collapsable list of game media resources. Call after the resource configuration has
-     * been loaded.
-     */
-    function _loadResources() {
-        var
-                resourcesWindowContent = document.getElementById(RESOURCES_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS),
-                resourceTypes = resources.getResourceTypes(), resourcesOfType,
-                typeList, typeElement, typeSpan, resourceList, resourceElement, resourceSpan,
-                i, j;
-        _hideLabel(resourcesWindowContent);
-        typeList = document.createElement("ul");
-        for (i = 0; i < resourceTypes.length; i++) {
-            typeElement = document.createElement("li");
-            typeElement.classList.add(CATEGORY_CLASS);
-            typeSpan = document.createElement("span");
-            typeSpan.classList.add(CATEGORY_CLASS);
-            typeSpan.innerHTML = resourceTypes[i];
-            typeElement.appendChild(typeSpan);
-            resourceList = document.createElement("ul");
-            resourceList.classList.add(ELEMENT_LIST_CLASS);
-            resourcesOfType = resources.getResourceNames(resourceTypes[i]);
-            for (j = 0; j < resourcesOfType.length; j++) {
-                resourceElement = document.createElement("li");
-                resourceSpan = document.createElement("span");
-                resourceSpan.classList.add(ELEMENT_CLASS);
-                resourceSpan.innerHTML = resourcesOfType[j];
-                resourceElement.appendChild(resourceSpan);
-                resourceSpan.onclick = _createElementClickHandler(resourceSpan, common.ItemType.RESOURCE, resourcesOfType[j], resourceTypes[i]);
-                resourceList.appendChild(resourceElement);
-                resourceList.hidden = true;
-            }
-            typeElement.appendChild(resourceList);
-            typeSpan.onclick = _toggleList.bind(this, resourceList);
-            typeList.appendChild(typeElement);
-        }
-        resourcesWindowContent.appendChild(typeList);
-    }
-    /**
      * Returns the stringified info object that can be embedded at the beginning of exported files (e.g. classes)
      * @param {String} name The name to be included in the info
      * @param {String} author The author to be included in the info
@@ -308,11 +269,11 @@ define([
      */
     function _loadClassesExportDialog() {
         var
-                classesExportDialog = document.getElementById(CLASSES_EXPORT_DIALOG_ID),
-                classesExportName = document.getElementById(CLASSES_EXPORT_NAME_ID),
-                classesExportAuthor = document.getElementById(CLASSES_EXPORT_AUTHOR_ID),
-                classesExportExport = document.getElementById(CLASSES_EXPORT_EXPORT_BUTTON_ID),
-                classesExportCancel = document.getElementById(CLASSES_EXPORT_CANCEL_BUTTON_ID);
+                classesExportDialog = document.getElementById(EXPORT_DIALOG_ID),
+                classesExportName = document.getElementById(EXPORT_NAME_ID),
+                classesExportAuthor = document.getElementById(EXPORT_AUTHOR_ID),
+                classesExportExport = document.getElementById(EXPORT_EXPORT_BUTTON_ID),
+                classesExportCancel = document.getElementById(EXPORT_CANCEL_BUTTON_ID);
         classesExportExport.onclick = function () {
             _exportClasses(classesExportName.value, classesExportAuthor.value);
             classesExportDialog.hidden = true;
@@ -322,50 +283,70 @@ define([
         };
     }
     /**
-     * Loads the content of the Classes window - the collapsable list of game classes. Call after the class configuration has been loaded.
+     * Creates and returns a collapsable list (<ul> tag) containing the categories of the game items belonging to the passed type.
+     * @param {String} itemType (enum ItemType)
+     * @returns {Element}
      */
-    function _loadClasses() {
-        var
-                classesWindowContent = document.getElementById(CLASSES_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS),
-                classesExportDialog = document.getElementById(CLASSES_EXPORT_DIALOG_ID),
-                classCategories = classes.getClassCategories(), classesOfCategory,
-                categoryList, categoryElement, categorySpan, classList, classElement, classSpan,
-                i, j;
-        _hideLabel(classesWindowContent);
+    function _createCategoryList(itemType) {
+        var categories, categoryList, categoryElement, categorySpan, items, itemList, itemElement, itemSpan, i, j, getItems;
+        switch (itemType) {
+            case common.ItemType.RESOURCE:
+                categories = resources.getResourceTypes();
+                getItems = resources.getResourceNames;
+                break;
+            case common.ItemType.CLASS:
+                categories = classes.getClassCategories();
+                getItems = classes.getClassNames;
+                break;
+            default:
+                application.crash();
+        }
         categoryList = document.createElement("ul");
-        for (i = 0; i < classCategories.length; i++) {
+        for (i = 0; i < categories.length; i++) {
             categoryElement = document.createElement("li");
             categoryElement.classList.add(CATEGORY_CLASS);
             categorySpan = document.createElement("span");
             categorySpan.classList.add(CATEGORY_CLASS);
-            categorySpan.innerHTML = classCategories[i];
+            categorySpan.innerHTML = categories[i];
             categoryElement.appendChild(categorySpan);
-            classList = document.createElement("ul");
-            classList.classList.add(ELEMENT_LIST_CLASS);
-            classesOfCategory = classes.getClassNames(classCategories[i]);
-            for (j = 0; j < classesOfCategory.length; j++) {
-                classElement = document.createElement("li");
-                classSpan = document.createElement("span");
-                classSpan.classList.add(ELEMENT_CLASS);
-                classSpan.innerHTML = classesOfCategory[j];
-                classElement.appendChild(classSpan);
-                classSpan.onclick = _createElementClickHandler(classSpan, common.ItemType.CLASS, classesOfCategory[j], classCategories[i]);
-                classList.appendChild(classElement);
-                classList.hidden = true;
+            itemList = document.createElement("ul");
+            itemList.classList.add(ELEMENT_LIST_CLASS);
+            items = getItems(categories[i]);
+            for (j = 0; j < items.length; j++) {
+                itemElement = document.createElement("li");
+                itemSpan = document.createElement("span");
+                itemSpan.classList.add(ELEMENT_CLASS);
+                itemSpan.innerHTML = items[j];
+                itemElement.appendChild(itemSpan);
+                itemSpan.onclick = _createElementClickHandler(itemSpan, itemType, items[j], categories[i]);
+                itemList.appendChild(itemElement);
             }
-            categoryElement.appendChild(classList);
-            categorySpan.onclick = _toggleList.bind(this, classList);
+            itemList.hidden = true;
+            categoryElement.appendChild(itemList);
+            categorySpan.onclick = _toggleList.bind(this, itemList);
             categoryList.appendChild(categoryElement);
         }
-        classesWindowContent.appendChild(categoryList);
-        document.getElementById(EXPORT_CLASSES_BUTTON_ID).onclick = function () {
-            classesExportDialog.hidden = !classesExportDialog.hidden;
+        return categoryList;
+    }
+    /**
+     * Loads the content of the Items window - collapsable lists of game items of each category. Call after the configuration has been 
+     * loaded.
+     */
+    function _loadItems() {
+        var
+                windowContent = document.getElementById(ITEMS_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS),
+                exportDialog = document.getElementById(EXPORT_DIALOG_ID);
+        _hideLabel(windowContent);
+        windowContent.appendChild(_createCategoryList(common.ItemType.RESOURCE));
+        windowContent.appendChild(_createCategoryList(common.ItemType.CLASS));
+        document.getElementById(EXPORT_BUTTON_ID).onclick = function () {
+            exportDialog.hidden = !exportDialog.hidden;
         };
         _loadClassesExportDialog();
     }
     /**
      * Sends an asynchronous request to get the JSON file describing the game settings and sets the callback function to set them and
-     * load the content of the Resources and Classes windows
+     * load the content of the Items window
      * @param {{folder: String, filename: String}} settingsFileDescriptor
      */
     function _requestSettingsLoad(settingsFileDescriptor) {
@@ -381,8 +362,9 @@ define([
                     application.log("Game settings loaded.", 1);
                     localStorage[constants.VERSION_LOCAL_STORAGE_ID] = application.getVersion();
                     application.log("Initialization completed.");
-                    _loadResources();
-                    _loadClasses();
+                    _setLabel(document.getElementById(PREVIEW_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
+                    _setLabel(document.getElementById(PROPERTIES_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
+                    _loadItems();
                 });
             });
         });

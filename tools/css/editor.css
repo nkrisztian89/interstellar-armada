@@ -14,7 +14,7 @@ body {
     overflow: hidden;
     color: #cccccc;
 
-    font-size: 12px; /* for em units */ 
+    font-size: 0.9vw; /* for em units */ 
 }
 
 button {
@@ -109,7 +109,7 @@ select {
 
 .dialogLabel {
     display: inline-block;
-    width: 50px;
+    width: 5em;
     text-align: left;
 }
 
@@ -118,7 +118,6 @@ select {
 
 div.window {
     position: fixed;
-    border: 2px solid #666666;
     margin: 0;
     padding: 0;
     text-align: left;
@@ -126,9 +125,16 @@ div.window {
 
 div.windowTitle {
     position: relative;
-    background-color: #bbbbbb;
-    padding: 2px;
-    border: 2px solid #888888;
+    background-color: #aaaaaa;
+
+    background-image:
+        -webkit-linear-gradient(
+        top, 
+        #dddddd,
+        #aaaaaa
+        );
+
+    padding: 0.2em;
     text-align: center;
     vertical-align: middle;
     color: #222222;
@@ -139,19 +145,25 @@ div.windowTitle {
     height: 1.5vw;
 }
 
+div.windowToolbar {
+    position: relative;
+    height: 1.5vw;
+
+    vertical-align: middle;
+
+    padding: 0.3em;
+
+    background-color: #505050;
+}
+
 div.windowContent {
     position: relative;
-    left: 0;
-    height: calc(100% - 28px);
+    width: 100%; 
+    height: calc(100% - 1.5vw - 0.4em); /* subtract title (height + padding) */
     margin: 0;
     padding: 0;
 
     background-color: #444444;
-}
-
-div.windowContent.scrollable {
-    overflow-y: scroll;
-    width: calc(100% - 2px);
 }
 
 div.windowLabel {
@@ -160,41 +172,44 @@ div.windowLabel {
     text-align: center;
 }
 
+.toolbarButton {
+    height: 1.5vw;
+}
+
 /* -------------------------------------------------------------------- */
 /* window layout */
 
-div#resources {
+div#items {
     left: 0;
+    width: 20%;
+    height: 100%;
     top: 0;
-    width: 20%;
-    bottom: 50%;
-}
-
-div#classes {
-    left: 0;
-    top: 50%;
-    bottom: 0;
-    width: 20%;
 }
 
 div#preview {
-    margin: 0;
-    padding: 0;
     left: 20%;
     top: 0;
-    bottom: 0;
     width: 60%;
+    height: 100%;
 }
 
 div#properties {
     right: 0;
     top: 0;
-    bottom: 0;
     width: 20%;
+    height: 100%;
 }
 
-div#properties > div.windowContent {
-    width: calc(100% + 17px);
+div#items > div.windowContent {
+    height: calc(100% - 3vw - 1em); /* subtract title + toolbar */
+}
+
+div#preview > div.windowContent {
+    background-color: #3d3d3d;
+}
+
+div#items > div.windowContent, div#properties > div.windowContent {
+    width: calc(100% + 17px); /* hiding scrollbar */
 
     padding-bottom: 4em;
 
@@ -206,10 +221,10 @@ div#properties > div.windowContent {
 /* dialogs */
 
 #classesExportDialog {
-    width: 250px;
-    height: 90px;
-    left: calc(50% - 125px);
-    top: calc(50% - 45px);
+    width: 20em;
+    height: 7em;
+    left: calc(50% - 10em);
+    top: calc(50% - 3.5em);
 
     padding-top: 0.9em;
 }
@@ -286,18 +301,16 @@ span.element.selected {
     position: relative;
     top: 0;
     left: 0;
-    width: calc(100% - 10px);
-    height: 50px;
     margin: 0;
-    padding: 3px;
-
-    border: 2px solid #666666;
+    padding-top: 0.6em;
+    padding-left: 0.6em;
+    padding-right: 0.6em;
+    padding-bottom: 0;
 }
 
 #previewCanvas {
     position: relative;
-    width: calc(100% - 6px);
-    height: calc(100% - 95px);
+    width: 100%;
 
     padding: 0;
     border: 0;
@@ -305,14 +318,13 @@ span.element.selected {
 
 #previewInfo {
     position: relative;
-    bottom: 2px;
+    bottom: 0.3em;
     left: 0;
-    width: calc(100% - 10px);
-    height: 25px;
     margin: 0;
-    padding: 3px;
-
-    border: 2px solid #666666;
+    padding-top: 0.6em;
+    padding-bottom: 0.6em;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .setting {
@@ -365,7 +377,6 @@ span.propertyControl {
 
 .propertyControl {
     position: relative;
-    max-width: calc(100%-4px);
 
     text-align: left;
 }

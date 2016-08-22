@@ -6,7 +6,7 @@
  * @version 1.0
  */
 
-/*global define, document */
+/*global define, document, window */
 /*jslint white: true, nomen: true, plusplus: true */
 
 /**
@@ -414,6 +414,23 @@ define([
         _elements.info.hidden = false;
     }
     /**
+     * Updates both the calculated CSS size for the canvas as well as sets the size attributes according to the rendered (client) size.
+     */
+    function _updateCanvasSize() {
+        _elements.canvas.style.height = (_elements.canvas.parentNode.clientHeight - (_elements.options.clientHeight + _elements.info.clientHeight)) + "px";
+        _elements.canvas.width = _elements.canvas.clientWidth;
+        _elements.canvas.height = _elements.canvas.clientHeight;
+    }
+    /**
+     * Call this whenever a resize event occurs on the window to update the canvas
+     */
+    function _handleResize() {
+        if (_scene) {
+            _updateCanvasSize();
+            _requestRender();
+        }
+    }
+    /**
      * @typedef {Object} refreshParams
      * @property {Boolean} preserve Whether to preserve the existing settings (e.g. spacecraft and camera orientation)
      * @property {Boolean} reload Whether to force-reload the spacecraft (even if the settings are set to be preserved)
@@ -537,11 +554,11 @@ define([
         }
         _environmentName = params.environmentName;
         _context = _context || new managedGL.ManagedGLContext(MANAGED_CONTEXT_NAME, _elements.canvas, graphics.getAntialiasing(), true, graphics.getFiltering());
-        _elements.canvas.hidden = false;
-        _elements.canvas.width = _elements.canvas.clientWidth;
-        _elements.canvas.height = _elements.canvas.clientHeight;
         resources.executeWhenReady(function () {
             var view, distance;
+            _elements.canvas.hidden = false;
+            _updateInfo();
+            _updateCanvasSize();
             _scene.addToContext(_context);
             _context.setup();
             if (shouldReload) {
@@ -570,7 +587,6 @@ define([
                     _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(orientationMatrix, true);
                 }
             }
-            _updateInfo();
             _elements.canvas.onmousedown = _handleMouseDown;
             _elements.canvas.onwheel = _handleWheel;
             _context.executeWhenReady(function () {
@@ -745,6 +761,7 @@ define([
         _clearSettingsForNewItem();
         _createOptions();
         _updateCanvas(params);
+        window.addEventListener("resize", _handleResize);
     }
     /**
      * Updates the preview (refreshes if needed) in case the property with the given name changed
