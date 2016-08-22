@@ -96,6 +96,31 @@ define([
         return null;
     }
     /**
+     * Returns the game items (resources / classes / ...) that are in the same category as the passed item
+     * @param {Editor~Item} item
+     * @returns {(GenericResource|GenericClass)[]}
+     */
+    function getItemReferencesOfSameCategory(item) {
+        var names, result = [], i;
+        switch (item.type) {
+            case ItemType.RESOURCE:
+                names = resources.getResourceNames(item.category);
+                for (i = 0; i < names.length; i++) {
+                    result.push(resources.getResource(item.category, names[i]));
+                }
+                break;
+            case ItemType.CLASS:
+                names = classes.getClassNames(item.category);
+                for (i = 0; i < names.length; i++) {
+                    result.push(classes.getClass(item.category, names[i]));
+                }
+                break;
+            default:
+                document.crash();
+        }
+        return result;
+    }
+    /**
      * Creates and returns a simple label - a span with a style and the given text content
      * @param {String} text
      * @returns {Element}
@@ -173,8 +198,10 @@ define([
             s += '<option value="' + options[i] + '">' + options[i] + '</option>';
         }
         result.innerHTML = s;
-        if (selected) {
+        if (selected && (options.indexOf(selected) >= 0)) {
             result.value = selected;
+        } else {
+            result.selectedIndex = 0;
         }
         result.onchange = onchange;
         return result;
@@ -495,6 +522,7 @@ define([
     return {
         ItemType: ItemType,
         getItemReference: getItemReference,
+        getItemReferencesOfSameCategory: getItemReferencesOfSameCategory,
         createLabel: createLabel,
         createButton: createButton,
         createBooleanInput: createBooleanInput,

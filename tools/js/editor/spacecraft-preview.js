@@ -78,10 +78,10 @@ define([
             FOV = 45,
             HITBOX_HIGHLIGHT_COLOR = [0.8, 0.4, 0.3, 0.5],
             /**
-             * The names of properties the changing of which should trigger a refresh of the preview
+             * The names of properties the change of which should trigger an update of the preview canvas
              * @type String[]
              */
-            REFRESH_PROPERTIES = [
+            CANVAS_UPDATE_PROPERTIES = [
                 "basedOn",
                 "model", "shader", "texture",
                 "factionColor", "defaultLuminosityFactors",
@@ -89,6 +89,14 @@ define([
                 "weaponSlots", "thrusterSlots",
                 "equipmentProfiles",
                 "lights", "blinkers"],
+            /**
+             * The names of the properties the change of which should trigger a refresh of the preview options
+             * @type String[]
+             */
+            OPTION_REFRESH_PROPERIES = [
+                "basedOn",
+                "equipmentProfiles"
+            ],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -743,7 +751,10 @@ define([
      * @param {String} name
      */
     function handleDataChanged(name) {
-        if (REFRESH_PROPERTIES.indexOf(name) >= 0) {
+        if (OPTION_REFRESH_PROPERIES.indexOf(name) >= 0) {
+            _createOptions();
+        }
+        if (CANVAS_UPDATE_PROPERTIES.indexOf(name) >= 0) {
             _updateCanvas({
                 preserve: true,
                 reload: true,

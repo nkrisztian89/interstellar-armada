@@ -2755,6 +2755,8 @@ define([
                 time = this._blinks[i] + this._particle.getDuration();
                 result.push(new budaScene.ParticleState(this._particle.getColor(), 0, (i < (this._blinks.length - 1)) ? (this._blinks[i + 1] - time) : (this._period - time)));
             }
+        } else {
+            result.push(new budaScene.ParticleState(this._particle.getColor(), 0, 0));
         }
         return result;
     };
@@ -2795,6 +2797,12 @@ define([
                     timeToReach: (i < (this._blinks.length - 1)) ? (this._blinks[i + 1] - time) : (this._period - time)
                 });
             }
+        } else {
+            result.push({
+                color: this.getLightColor(),
+                intensity: 0,
+                timeToReach: 0
+            });
         }
         return result;
     };

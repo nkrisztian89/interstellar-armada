@@ -427,7 +427,8 @@ define([
         properties: {
             SHADER: {
                 name: "shader",
-                type: SHADER_REFERENCE
+                type: SHADER_REFERENCE,
+                defaultValue: "particle"
             },
             TEXTURE: {
                 name: "texture",
@@ -435,11 +436,13 @@ define([
             },
             COLOR: {
                 name: "color",
-                type: BaseType.COLOR4
+                type: BaseType.COLOR4,
+                defaultValue: [1, 1, 1, 1]
             },
             SIZE: {
                 name: "size",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                defaultValue: 1
             },
             DURATION: {
                 name: "duration",
@@ -1120,7 +1123,8 @@ define([
             },
             INTENSITY: {
                 name: "intensity",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                defaultValue: 1
             },
             SPOT_DIRECTION: {
                 name: "spotDirection",
@@ -1156,7 +1160,8 @@ define([
             },
             PERIOD: {
                 name: "period",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                defaultValue: 1
             },
             BLINKS: {
                 name: "blinks",
@@ -1165,7 +1170,8 @@ define([
             },
             INTENSITY: {
                 name: "intensity",
-                type: BaseType.NUMBER
+                type: BaseType.NUMBER,
+                defaultValue: 1
             }
         }
     },

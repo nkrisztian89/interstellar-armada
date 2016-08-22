@@ -94,11 +94,21 @@ define([
      * @param {String} name The name of the property that changed
      */
     function _updateData(name) {
+        var references, i;
         _item.reference.reloadData();
+        // we need to reload the items that are based on the modified item
+        references = common.getItemReferencesOfSameCategory(_item);
+        for (i = 0; i < references.length; i++) {
+            if (references[i].getData()[descriptors.BASED_ON_PROPERTY_NAME] === _item.data[descriptors.NAME_PROPERTY_NAME]) {
+                references[i].reloadData();
+            }
+        }
+        // if we changed the basedon property, refresh the property editors, as all inherited properties might change
         if (_updateBasedOn()) {
             _element.innerHTML = "";
             createProperties(_element, _item, _preview, _nameChangeHandler);
         }
+        // signal the preview about the change
         if (_preview) {
             _preview.handleDataChanged(name);
         }
