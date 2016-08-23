@@ -51,9 +51,12 @@ define([
             WINDOW_LABEL_CLASS = "windowLabel",
             WINDOW_CONTENT_CLASS = "windowContent",
             SELECTED_CLASS = "selected",
+            ITEM_TYPE_LABEL_CLASS = "itemType",
             CATEGORY_CLASS = "category",
             ELEMENT_LIST_CLASS = "elementList",
             ELEMENT_CLASS = "element",
+            ENVIRONMENTS_CATEGORY = "environments",
+            LEVELS_CATEGORY = "levels",
             PREVIEW_OPTIONS_ID = "previewOptions",
             PREVIEW_CANVAS_ID = "previewCanvas",
             PREVIEW_INFO_ID = "previewInfo",
@@ -288,7 +291,11 @@ define([
      * @returns {Element}
      */
     function _createCategoryList(itemType) {
-        var categories, categoryList, categoryElement, categorySpan, items, itemList, itemElement, itemSpan, i, j, getItems;
+        var result = document.createElement("div"),
+                itemTypeLabel,
+                categories, categoryList, categoryElement, categorySpan,
+                items, itemList, itemElement, itemSpan,
+                i, j, getItems;
         switch (itemType) {
             case common.ItemType.RESOURCE:
                 categories = resources.getResourceTypes();
@@ -298,9 +305,21 @@ define([
                 categories = classes.getClassCategories();
                 getItems = classes.getClassNames;
                 break;
+            case common.ItemType.ENVIRONMENT:
+                categories = [ENVIRONMENTS_CATEGORY];
+                getItems = logic.getEnvironmentNames;
+                break;
+            case common.ItemType.LEVEL:
+                categories = [LEVELS_CATEGORY];
+                getItems = config.getLevelFileNames;
+                break;
             default:
                 application.crash();
         }
+        itemTypeLabel = document.createElement("div");
+        itemTypeLabel.classList.add(ITEM_TYPE_LABEL_CLASS);
+        itemTypeLabel.textContent = itemType;
+        result.appendChild(itemTypeLabel);
         categoryList = document.createElement("ul");
         for (i = 0; i < categories.length; i++) {
             categoryElement = document.createElement("li");
@@ -326,7 +345,8 @@ define([
             categorySpan.onclick = _toggleList.bind(this, itemList);
             categoryList.appendChild(categoryElement);
         }
-        return categoryList;
+        result.appendChild(categoryList);
+        return result;
     }
     /**
      * Loads the content of the Items window - collapsable lists of game items of each category. Call after the configuration has been 
@@ -339,6 +359,8 @@ define([
         _hideLabel(windowContent);
         windowContent.appendChild(_createCategoryList(common.ItemType.RESOURCE));
         windowContent.appendChild(_createCategoryList(common.ItemType.CLASS));
+        windowContent.appendChild(_createCategoryList(common.ItemType.ENVIRONMENT));
+        windowContent.appendChild(_createCategoryList(common.ItemType.LEVEL));
         document.getElementById(EXPORT_BUTTON_ID).onclick = function () {
             exportDialog.hidden = !exportDialog.hidden;
         };

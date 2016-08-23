@@ -247,11 +247,13 @@ div.dialogButtonRow > button {
 }
 
 /* -------------------------------------------------------------------- */
-/* resources / classes */
+/* items */
 
 ul {
     margin-top: 0;
-    padding: 1em;
+    padding-left: 1em;
+    padding-top: 0.2em;
+    padding-bottom: 0.4em;
 
     list-style-type: none;
 
@@ -267,6 +269,16 @@ ul.elementList {
 }
 
 li.category {
+}
+
+.itemType {
+    border-top: 3px solid #3d3d3d;
+    
+    padding-left: 0.5em;
+    
+    font-size: 1.2vw;
+    font-weight: bold;
+    color: #aaaaaa;
 }
 
 span.category {

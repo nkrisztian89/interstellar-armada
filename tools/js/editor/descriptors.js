@@ -143,6 +143,27 @@ define([
     /**
      * @type Editor~TypeDescriptor
      */
+    SKYBOX_CLASS_REFERENCE = {
+        baseType: BaseType.ENUM,
+        classReference: "skyboxClasses"
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    BACKGROUND_OBJECT_CLASS_REFERENCE = {
+        baseType: BaseType.ENUM,
+        classReference: "backgroundObjectClasses"
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    DUST_CLOUD_CLASS_REFERENCE = {
+        baseType: BaseType.ENUM,
+        classReference: "dustCloudClasses"
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
     SPACECRAFT_TYPE_REFERENCE = {
         baseType: BaseType.ENUM,
         classReference: "spacecraftTypes"
@@ -1317,6 +1338,92 @@ define([
             type: BaseType.ARRAY,
             elementType: BLINKER
         }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    SKYBOX = {
+        baseType: BaseType.OBJECT,
+        name: "Skybox",
+        properties: {
+            CLASS: {
+                name: "class",
+                type: SKYBOX_CLASS_REFERENCE
+            }
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    BACKGROUND_OBJECT_POSITION = {
+        baseType: BaseType.OBJECT,
+        name: "BackgroundObjectPosition",
+        properties: {
+            ANGLE_ALPHA: {
+                name: "angleAlpha",
+                type: BaseType.NUMBER
+            },
+            ANGLE_BETA: {
+                name: "angleBeta",
+                type: BaseType.NUMBER
+            },
+            ANGLE_GAMMA: {
+                name: "angleGamma",
+                type: BaseType.NUMBER,
+                defaultValue: 0
+            }
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    BACKGROUND_OBJECT = {
+        baseType: BaseType.OBJECT,
+        name: "BackgroundObject",
+        properties: {
+            CLASS: {
+                name: "class",
+                type: BACKGROUND_OBJECT_CLASS_REFERENCE
+            },
+            POSITION: {
+                name: "position",
+                type: BACKGROUND_OBJECT_POSITION
+            }
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    DUST_CLOUD = {
+        baseType: BaseType.OBJECT,
+        name: "DustCloud",
+        properties: {
+            CLASS: {
+                name: "class",
+                type: DUST_CLOUD_CLASS_REFERENCE
+            }
+        }
+    },
+    /**
+     * The descriptor object for spacecraft classes, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    ENVIRONMENT = {
+        SKYBOXES: {
+            name: "skyboxes",
+            type: BaseType.ARRAY,
+            elementType: SKYBOX
+        },
+        BACKGROUND_OBJECTS: {
+            name: "backgroundObjects",
+            type: BaseType.ARRAY,
+            elementType: BACKGROUND_OBJECT
+        },
+        DUST_CLOUDS: {
+            name: "dustClouds",
+            type: BaseType.ARRAY,
+            elementType: DUST_CLOUD
+        }
     };
     /**
      * @class
@@ -1456,7 +1563,8 @@ define([
             "weaponClasses": WEAPON_CLASS,
             "propulsionClasses": PROPULSION_CLASS,
             "spacecraftTypes": SPACECRAFT_TYPE,
-            "spacecraftClasses": SPACECRAFT_CLASS
+            "spacecraftClasses": SPACECRAFT_CLASS,
+            "environments": ENVIRONMENT
         },
         Type: Type,
         getPropertyValues: getPropertyValues

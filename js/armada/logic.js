@@ -557,6 +557,11 @@ define([
          * @type Camera
          */
         this._camera = null;
+        /**
+         * Stores the object this environment was initialized from.
+         * @type Object
+         */
+        this._dataJSON = null;
         // if given, load the data from the JSON object
         if (dataJSON !== undefined) {
             this.loadFromJSON(dataJSON);
@@ -569,6 +574,7 @@ define([
      */
     Environment.prototype.loadFromJSON = function (dataJSON) {
         var i;
+        this._dataJSON = dataJSON;
         this._skyboxes = [];
         for (i = 0; i < dataJSON.skyboxes.length; i++) {
             this._skyboxes.push(new Skybox(classes.getSkyboxClass(dataJSON.skyboxes[i].class)));
@@ -588,6 +594,20 @@ define([
         for (i = 0; i < dataJSON.dustClouds.length; i++) {
             this._dustClouds.push(new DustCloud(classes.getDustCloudClass(dataJSON.dustClouds[i].class)));
         }
+    };
+    /**
+     * Returns the object this environment was initialized from
+     * @returns {Object}
+     */
+    Environment.prototype.getData = function () {
+        return this._dataJSON;
+    };
+    /**
+     * Reinitializes the properties of the environment from the initialization object (use in case the object
+     * has been changed - e.g. edited in a development tool - do not use within the game itself!)
+     */
+    Environment.prototype.reloadData = function () {
+        this.loadFromJSON(this._dataJSON);
     };
     /**
      * Adds renderable objects representing all visual elements of the 
