@@ -758,9 +758,21 @@ define([
      * @param {refreshParams} params Additional parameters 
      */
     function refresh(elements, spacecraftClass, params) {
+        var sameClass = (_spacecraftClass === spacecraftClass);
         _elements = elements;
         _spacecraftClass = spacecraftClass;
-        _clearSettingsForNewItem();
+        if (sameClass) {
+            if (!params) {
+                params = {
+                    environmentName: _environmentName,
+                    equipmentProfileName: _equipmentProfileName,
+                    preserve: true,
+                    reload: true
+                };
+            }
+        } else {
+            _clearSettingsForNewItem();
+        }
         _createOptions();
         _updateCanvas(params);
         window.addEventListener("resize", _handleResize);
