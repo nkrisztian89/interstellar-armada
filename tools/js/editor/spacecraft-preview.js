@@ -77,6 +77,8 @@ define([
             OBJECT_VIEW_NAME = "standard",
             FOV = 45,
             HITBOX_HIGHLIGHT_COLOR = [0.8, 0.4, 0.3, 0.5],
+            ENGINE_STATE_NO_PROPULSION = "no propulsion",
+            ENGINE_STATE_OFF = "off",
             /**
              * The names of properties the change of which should trigger an update of the preview canvas
              * @type String[]
@@ -431,6 +433,24 @@ define([
         }
     }
     /**
+     * Updates the engine state editor control in the preview options panel according to the current possibilities and settings.
+     */
+    function _updateEngineStateEditor() {
+        var i, checkboxes;
+        _optionElements.engineStateEditor.disabled = !_spacecraft.getPropulsion();
+        if (_optionElements.engineStateEditor.disabled) {
+            _activeEngineUses = [];
+            checkboxes = _optionElements.engineStatePopup.getElement().querySelectorAll('input[type="checkbox"]');
+            for (i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = false;
+            }
+            _optionElements.engineStatePopup.hide();
+        }
+        _optionElements.engineStateEditor.innerHTML = _activeEngineUses.length > 0 ?
+                (_activeEngineUses[0] + ((_activeEngineUses.length > 1) ? "..." : "")) :
+                (_spacecraft.getPropulsion() ? ENGINE_STATE_OFF : ENGINE_STATE_NO_PROPULSION);
+    }
+    /**
      * @typedef {Object} refreshParams
      * @property {Boolean} preserve Whether to preserve the existing settings (e.g. spacecraft and camera orientation)
      * @property {Boolean} reload Whether to force-reload the spacecraft (even if the settings are set to be preserved)
@@ -553,6 +573,7 @@ define([
             logic.getEnvironment(params.environmentName).addToScene(_scene);
         }
         _environmentName = params.environmentName;
+        _updateEngineStateEditor();
         _context = _context || new managedGL.ManagedGLContext(MANAGED_CONTEXT_NAME, _elements.canvas, graphics.getAntialiasing(), true, graphics.getFiltering());
         resources.executeWhenReady(function () {
             var view, distance;
@@ -618,24 +639,6 @@ define([
         _showHitbox = false;
     }
     /**
-     * Updates the engine state editor control in the preview options panel according to the current possibilities and settings.
-     */
-    function _updateEngineStateEditor() {
-        var i, checkboxes;
-        _optionElements.engineStateEditor.disabled = !_spacecraft.getPropulsion();
-        if (_optionElements.engineStateEditor.disabled) {
-            _activeEngineUses = [];
-            checkboxes = _optionElements.engineStatePopup.getElement().querySelectorAll('input[type="checkbox"]');
-            for (i = 0; i < checkboxes.length; i++) {
-                checkboxes[i].checked = false;
-            }
-            _optionElements.engineStatePopup.hide();
-        }
-        _optionElements.engineStateEditor.innerHTML = _activeEngineUses.length > 0 ?
-                (_activeEngineUses[0] + ((_activeEngineUses.length > 1) ? "..." : "")) :
-                "off";
-    }
-    /**
      * Creates and returns the control that can be used to set the engine state for the preview. Also sets the reference for the 
      * corresponding popup.
      * @returns {Element}
@@ -678,7 +681,6 @@ define([
         _optionElements.engineStatePopup = popup;
         // create a button using which the popup can be opened
         button.type = "button";
-        button.innerHTML = "off";
         button.disabled = true;
         button.onclick = function () {
             popup.toggle();

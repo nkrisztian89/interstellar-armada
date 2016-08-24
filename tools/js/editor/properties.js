@@ -45,6 +45,7 @@ define([
             SET_PROPERTY_BUTTON_CAPTION = "set",
             ADD_BUTTON_CAPTION = "+",
             REMOVE_BUTTON_CAPTION = "x",
+            NEW_OBJECT_NAME_PREFIX = "new",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -318,10 +319,14 @@ define([
      * @param {Object} parent The object itself the data of which is considered (see _changeData)
      * @param {Boolean} [undefinedIfOptional=false] If true, the function will return undefined for properties marked as optional and does
      * not have a default value set
+     * @param {String} [typeName] The name of the type of the object this property is part of
      * @returns {}
      */
-    function _getDefaultValue(propertyDescriptor, basedOn, parent, undefinedIfOptional) {
+    function _getDefaultValue(propertyDescriptor, basedOn, parent, undefinedIfOptional, typeName) {
         var result, type, propertyDescriptors, propertyDescriptorNames, i;
+        if ((propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) && typeName) {
+            return NEW_OBJECT_NAME_PREFIX + typeName;
+        }
         if (undefinedIfOptional && propertyDescriptor.optional && (propertyDescriptor.defaultValue === undefined)) {
             return undefined;
         }
@@ -365,7 +370,8 @@ define([
                             propertyDescriptors[propertyDescriptorNames[i]],
                             null,
                             result,
-                            undefinedIfOptional);
+                            undefinedIfOptional,
+                            type.getName());
                 }
                 return result;
             case descriptors.BaseType.ENUM:
@@ -469,7 +475,7 @@ define([
                 data.push(_getDefaultValue({type: typeDescriptor}, null, null, true));
                 updateButtonText();
                 newIndex = document.createElement("option");
-                newIndex.value = hasName ? "" : (data.length - 1).toString();
+                newIndex.value = hasName ? data[data.length - 1][descriptors.NAME_PROPERTY_NAME] : (data.length - 1).toString();
                 newIndex.text = newIndex.value;
                 indexSelector.add(newIndex);
                 _updateData(topName);
