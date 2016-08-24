@@ -44,6 +44,18 @@ define([
                 SET: "set",
                 CONFINES: "confines"
             },
+    Unit = {
+        TIMES: "x",
+        METERS: "m",
+        METERS_PER_SECOND: "m/s",
+        METERS_PER_SECOND_SQUARED: "m/s^2",
+        SECONDS: "s",
+        MILLISECONDS: "ms",
+        DEGREES: "degrees",
+        DEGREES_PER_SECOND: "deg/s",
+        DEGREES_PER_SECOND_SQUARED: "deg/s^2",
+        KILOGRAMS: "kg"
+    },
     /**
      * The possible axes for rotations
      * @enum {String}
@@ -75,6 +87,7 @@ define([
             /**
              * @typedef {Object} Editor~TypeDescriptor
              * @property {String} baseType (enum BaseType)
+             * @property {String} [unit] For BaseType.NUMBER
              * @property {Boolean} [long=false] For BaseType.STRING
              * @property {String} [resourceReference] For BaseType.ENUM and BaseType.SET
              * @property {String} [classReference] For BaseType.ENUM and BaseType.SET
@@ -105,6 +118,42 @@ define([
                 baseType: BaseType.STRING,
                 long: true
             },
+    SCALE = {
+        baseType: BaseType.NUMBER,
+        unit: Unit.TIMES
+    },
+    METERS = {
+        baseType: BaseType.NUMBER,
+        unit: Unit.METERS
+    },
+    METERS_PER_SECOND = {
+        baseType: BaseType.NUMBER,
+        unit: Unit.METERS_PER_SECOND
+    },
+    METERS_PER_SECOND_SQUARED = {
+        baseType: BaseType.NUMBER,
+        unit: Unit.METERS_PER_SECOND_SQUARED
+    },
+    MILLISECONDS = {
+        baseType: BaseType.NUMBER,
+        unit: Unit.MILLISECONDS
+    },
+    DEGREES = {
+        baseType: BaseType.NUMBER,
+        unit: Unit.DEGREES
+    },
+    DEGREES_PER_SECOND = {
+        baseType: BaseType.NUMBER,
+        unit: Unit.DEGREES_PER_SECOND
+    },
+    DEGREES_PER_SECOND_SQUARED = {
+        baseType: BaseType.NUMBER,
+        unit: Unit.DEGREES_PER_SECOND_SQUARED
+    },
+    KILOGRAMS = {
+        baseType: BaseType.NUMBER,
+        unit: Unit.KILOGRAMS
+    },
     /**
      * @type Editor~TypeDescriptor
      */
@@ -251,7 +300,7 @@ define([
         properties: {
             SIZE: {
                 name: "size",
-                type: BaseType.NUMBER
+                type: SCALE
             },
             SHADER: {
                 name: "shader",
@@ -305,7 +354,7 @@ define([
         },
         RANGE: {
             name: "range",
-            type: BaseType.NUMBER
+            type: METERS
         },
         COLOR: {
             name: "color",
@@ -336,7 +385,7 @@ define([
             },
             TIME_TO_REACH: {
                 name: "timeToReach",
-                type: BaseType.NUMBER
+                type: MILLISECONDS
             }
         }
     },
@@ -357,15 +406,15 @@ define([
             },
             DIRECTION_SPREAD: {
                 name: "directionSpread",
-                type: BaseType.NUMBER
+                type: DEGREES
             },
             VELOCITY: {
                 name: "velocity",
-                type: BaseType.NUMBER
+                type: METERS_PER_SECOND
             },
             VELOCITY_SPREAD: {
                 name: "velocitySpread",
-                type: BaseType.NUMBER
+                type: METERS_PER_SECOND
             },
             INITIAL_NUMBER: {
                 name: "initialNumber",
@@ -377,11 +426,11 @@ define([
             },
             SPAWN_TIME: {
                 name: "spawnTime",
-                type: BaseType.NUMBER
+                type: MILLISECONDS
             },
             DURATION: {
                 name: "duration",
-                type: BaseType.NUMBER
+                type: MILLISECONDS
             },
             SHADER: {
                 name: "shader",
@@ -415,7 +464,7 @@ define([
             },
             TIME_TO_REACH: {
                 name: "timeToReach",
-                type: BaseType.NUMBER
+                type: MILLISECONDS
             }
         }
     },
@@ -462,12 +511,12 @@ define([
             },
             SIZE: {
                 name: "size",
-                type: BaseType.NUMBER,
+                type: SCALE,
                 defaultValue: 1
             },
             DURATION: {
                 name: "duration",
-                type: BaseType.NUMBER
+                type: MILLISECONDS
             }
         }
     },
@@ -515,15 +564,15 @@ define([
         },
         SIZE: {
             name: "size",
-            type: BaseType.NUMBER
+            type: SCALE
         },
         MASS: {
             name: "mass",
-            type: BaseType.NUMBER
+            type: KILOGRAMS
         },
         DURATION: {
             name: "duration",
-            type: BaseType.NUMBER
+            type: MILLISECONDS
         },
         INTERSECTION_POSITIONS: {
             name: "intersectionPositions",
@@ -568,7 +617,7 @@ define([
             },
             PROJECTILE_VELOCITY: {
                 name: "projectileVelocity",
-                type: BaseType.NUMBER
+                type: METERS_PER_SECOND
             },
             POSITION: {
                 name: "position",
@@ -604,11 +653,11 @@ define([
             },
             DEFAULT_ANGLE: {
                 name: "defaultAngle",
-                type: BaseType.NUMBER
+                type: DEGREES
             },
             ROTATION_RATE: {
                 name: "rotationRate",
-                type: BaseType.NUMBER
+                type: DEGREES_PER_SECOND
             },
             TRANSFORM_GROUP_INDEX: {
                 name: "transformGroupIndex",
@@ -647,7 +696,7 @@ define([
         },
         COOLDOWN: {
             name: "cooldown",
-            type: BaseType.NUMBER
+            type: MILLISECONDS
         },
         BARRELS: {
             name: "barrels",
@@ -703,15 +752,15 @@ define([
         },
         REFERENCE_MASS: {
             name: "referenceMass",
-            type: BaseType.NUMBER
+            type: KILOGRAMS
         },
         THRUST: {
             name: "thrust",
-            type: BaseType.NUMBER
+            type: METERS_PER_SECOND_SQUARED
         },
         ANGULAR_THRUST: {
             name: "angularThrust",
-            type: BaseType.NUMBER
+            type: DEGREES_PER_SECOND_SQUARED
         },
         MAX_MOVE_BURN_LEVEL: {
             name: "maxMoveBurnLevel",
@@ -852,7 +901,7 @@ define([
             },
             SIZE: {
                 name: "size",
-                type: BaseType.NUMBER
+                type: SCALE
             }
         }
     },
@@ -907,7 +956,7 @@ define([
             },
             SIZE: {
                 name: "size",
-                type: BaseType.NUMBER,
+                type: SCALE,
                 optional: true
             }
         }
@@ -950,7 +999,7 @@ define([
             },
             FOV: {
                 name: "fov",
-                type: BaseType.NUMBER,
+                type: DEGREES,
                 globalDefault: true,
                 settingName: config.CAMERA_SETTINGS.DEFAULT_FOV
             },
@@ -962,7 +1011,7 @@ define([
             },
             SPAN: {
                 name: "span",
-                type: BaseType.NUMBER,
+                type: METERS,
                 globalDefault: true,
                 settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN
             },
@@ -1154,12 +1203,12 @@ define([
             },
             SPOT_CUTOFF_ANGLE: {
                 name: "spotCutoffAngle",
-                type: BaseType.NUMBER,
+                type: DEGREES,
                 optional: true
             },
             SPOT_FULL_INTENSITY_ANGLE: {
                 name: "spotFullIntensityAngle",
-                type: BaseType.NUMBER,
+                type: DEGREES,
                 optional: true
             }
         }
@@ -1181,7 +1230,7 @@ define([
             },
             PERIOD: {
                 name: "period",
-                type: BaseType.NUMBER,
+                type: MILLISECONDS,
                 defaultValue: 1
             },
             BLINKS: {
@@ -1246,7 +1295,7 @@ define([
         },
         ATTACK_THRESHOLD_ANGLE: {
             name: "attackThresholdAngle",
-            type: BaseType.NUMBER,
+            type: DEGREES,
             defaultValue: 0
         },
         MODEL: {
@@ -1272,7 +1321,7 @@ define([
         },
         MASS: {
             name: "mass",
-            type: BaseType.NUMBER
+            type: KILOGRAMS
         },
         BODIES: {
             name: "bodies",
@@ -1361,15 +1410,15 @@ define([
         properties: {
             ANGLE_ALPHA: {
                 name: "angleAlpha",
-                type: BaseType.NUMBER
+                type: DEGREES
             },
             ANGLE_BETA: {
                 name: "angleBeta",
-                type: BaseType.NUMBER
+                type: DEGREES
             },
             ANGLE_GAMMA: {
                 name: "angleGamma",
-                type: BaseType.NUMBER,
+                type: DEGREES,
                 defaultValue: 0
             }
         }
@@ -1483,6 +1532,13 @@ define([
      */
     Type.prototype.getBaseType = function () {
         return this._descriptor.baseType;
+    };
+    /**
+     * For number types, returns the unit of measurement
+     * @returns {String}
+     */
+    Type.prototype.getUnit = function () {
+        return this._descriptor.unit;
     };
     /**
      * For resource reference string types, returns the category of resources the type refers to

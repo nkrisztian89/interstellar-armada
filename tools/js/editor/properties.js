@@ -251,16 +251,22 @@ define([
      * checking the value to be a number
      * @param {Object} [parent] See _changeData
      * @param {String} [name] See _changeData
+     * @param {String} [unit] The unit of measurement using which the number is to be interpreted 
      * @returns {Element}
      */
-    function _createNumberControl(topName, data, allowFloats, changeHandler, parent, name) {
-        var result = common.createNumericInput(data, allowFloats, function (value) {
-            if (changeHandler) {
-                changeHandler(value);
-            } else {
-                _changeData(topName, value, parent, name);
-            }
-        });
+    function _createNumberControl(topName, data, allowFloats, changeHandler, parent, name, unit) {
+        var result = document.createElement("div"),
+                input = common.createNumericInput(data, allowFloats, function (value) {
+                    if (changeHandler) {
+                        changeHandler(value);
+                    } else {
+                        _changeData(topName, value, parent, name);
+                    }
+                });
+        result.appendChild(input);
+        if (unit) {
+            result.appendChild(common.createLabel(unit));
+        }
         return result;
     }
     /**
@@ -899,7 +905,7 @@ define([
                     result = _createBooleanControl(topName, data, parent, propertyDescriptor.name);
                     break;
                 case descriptors.BaseType.NUMBER:
-                    result = _createNumberControl(topName, data, true, null, parent, propertyDescriptor.name);
+                    result = _createNumberControl(topName, data, true, null, parent, propertyDescriptor.name, type.getUnit());
                     break;
                 case descriptors.BaseType.STRING:
                     if (type.isLong()) {
