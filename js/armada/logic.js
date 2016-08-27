@@ -3702,36 +3702,13 @@ define([
      * @returns {CameraConfiguration} The created camera configuration.
      */
     Spacecraft.prototype.createCameraConfigurationForView = function (view) {
-        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(view.getOrientationMatrix());
-        positionConfiguration = new budaScene.CameraPositionConfiguration(
-                !view.isMovable(),
-                view.turnsAroundObjects(),
-                view.movesRelativeToObject(),
-                view.getPositionFollowedObjectsForObject(this._visualModel),
-                view.startsWithRelativePosition(),
-                mat.matrix4(view.getPositionMatrix()),
-                view.getDistanceRange(),
-                view.getConfines(),
-                view.resetsWhenLeavingConfines());
-        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
-                !view.isTurnable(),
-                view.pointsTowardsObjects(),
-                view.isFPS(),
-                view.getOrientationFollowedObjectsForObject(this._visualModel),
-                mat.matrix4(view.getOrientationMatrix()),
-                Math.degrees(angles.yaw), Math.degrees(angles.pitch),
-                view.getAlphaRange(),
-                view.getBetaRange(),
-                view.getBaseOrientation() || config.getDefaultCameraBaseOrientation(),
-                view.getPointToFallback() || config.getDefaultCameraPointToFallback());
-        return new budaScene.CameraConfiguration(
-                view.getName(),
-                positionConfiguration, orientationConfiguration,
-                view.getFOV() || config.getDefaultCameraFOV(),
-                view.getFOVRange() || config.getDefaultCameraFOVRange(),
-                view.getSpan() || config.getDefaultCameraSpan(),
-                view.getSpanRange() || config.getDefaultCameraSpanRange(),
-                view.resetsOnFocusChange());
+        return view.createCameraConfiguration(this._visualModel,
+                config.getDefaultCameraBaseOrientation(),
+                config.getDefaultCameraPointToFallback(),
+                config.getDefaultCameraFOV(),
+                config.getDefaultCameraFOVRange(),
+                config.getDefaultCameraSpan(),
+                config.getDefaultCameraSpanRange());
     };
     /**
      * Adds camera configuration objects that correspond to the views defined for this 
@@ -4294,7 +4271,7 @@ define([
             this._hitbox.markAsReusable();
         }
         this._hitbox = null;
-        if (this._visualModel && this._visualModel.getNode()) {
+        if (this._visualModel && this._visualModel.getNode() && !this._visualModel.getNode().canBeReused()) {
             this._visualModel.getNode().markAsReusable();
         }
         this._visualModel = null;
@@ -5169,6 +5146,7 @@ define([
         getDebugInfo: getDebugInfo,
         getEnvironment: _context.getEnvironment.bind(_context),
         getEnvironmentNames: _context.getEnvironmentNames.bind(_context),
+        Skybox: Skybox,
         Spacecraft: Spacecraft,
         Level: Level
     };

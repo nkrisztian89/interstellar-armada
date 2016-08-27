@@ -5422,6 +5422,9 @@ define([
          * @type Camera
          */
         this._combinedExtendedCamera = null;
+        // update to have appropriate starting values
+        this._updateFOV();
+        this._updateSpan();
     }
     /**
      * @enum {Number}
@@ -6043,6 +6046,9 @@ define([
      */
     Camera.prototype._getTransitionProgress = function () {
         var result;
+        if (this._transitionDuration === 0) {
+            return 0;
+        }
         switch (this._transitionStyle) {
             case this.TransitionStyle.LINEAR:
                 return this._transitionElapsedTime / this._transitionDuration;
@@ -7886,7 +7892,9 @@ define([
         }
         // -----------------------------------------------------------------------
         // rendering the queues storing front (close) main objects
-        if (frontQueuesNotEmpty) {
+        // the background objects are rendered within _renderMainObjects so it needs to be called here even
+        // if there are no main objects in the scene at all 
+        if (frontQueuesNotEmpty || !distanceQueuesNotEmpty) {
             // filling the arrays storing the light source data for uniforms that need it
             this._updateDynamicLightUniformData(this._shouldAnimate ? dt : 0);
             if (context.getCurrentShader()) {

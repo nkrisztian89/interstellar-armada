@@ -2485,6 +2485,54 @@ define([
         return this._resetsOnFocusChange;
     };
     /**
+     * Creates and returns a camera configuration set up for following the passed object according to the view's parameters.
+     * Specify the default values to use for those settings which are not obligatory to set for views!
+     * The configuration module stores values for these defaults, but that module itself builds on the classes module.
+     * For specific game objects (e.g. Spacecrafts), use the method of that object that will create the camera 
+     * configuration with the proper defaults.
+     * @param {RenderableObject3D} model
+     * @param {String} defaultCameraBaseOrientation (enum CameraOrientationConfiguration.prototype.BaseOrientation)
+     * @param {String} defaultCameraPointToFallback (enum CameraOrientationConfiguration.prototype.PointToFallback)
+     * @param {Number} defaultFOV
+     * @param {Number[2]} defaultFOVRange
+     * @param {Number} defaultSpan
+     * @param {Number[2]} defaultSpanRange
+     * @returns {CameraConfiguration} The created camera configuration.
+     */
+    ObjectView.prototype.createCameraConfiguration = function (model, defaultCameraBaseOrientation,
+            defaultCameraPointToFallback, defaultFOV, defaultFOVRange, defaultSpan, defaultSpanRange) {
+        var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this.getOrientationMatrix());
+        positionConfiguration = new budaScene.CameraPositionConfiguration(
+                !this.isMovable(),
+                this.turnsAroundObjects(),
+                this.movesRelativeToObject(),
+                this.getPositionFollowedObjectsForObject(model),
+                this.startsWithRelativePosition(),
+                mat.matrix4(this.getPositionMatrix()),
+                this.getDistanceRange(),
+                this.getConfines(),
+                this.resetsWhenLeavingConfines());
+        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
+                !this.isTurnable(),
+                this.pointsTowardsObjects(),
+                this.isFPS(),
+                this.getOrientationFollowedObjectsForObject(model),
+                mat.matrix4(this.getOrientationMatrix()),
+                Math.degrees(angles.yaw), Math.degrees(angles.pitch),
+                this.getAlphaRange(),
+                this.getBetaRange(),
+                this.getBaseOrientation() || defaultCameraBaseOrientation,
+                this.getPointToFallback() || defaultCameraPointToFallback);
+        return new budaScene.CameraConfiguration(
+                this.getName(),
+                positionConfiguration, orientationConfiguration,
+                this.getFOV() || defaultFOV,
+                this.getFOVRange() || defaultFOVRange,
+                this.getSpan() || defaultSpan,
+                this.getSpanRange() || defaultSpanRange,
+                this.resetsOnFocusChange());
+    };
+    /**
      * @override
      */
     ObjectView.prototype.destroy = function () {
