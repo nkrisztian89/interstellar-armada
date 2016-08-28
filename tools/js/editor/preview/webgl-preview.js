@@ -64,6 +64,8 @@ define([
             MAX_DISTANCE_FACTOR = 100,
             OBJECT_VIEW_NAME = "standard",
             FOV = 45,
+            WIREFRAME_SHADER_NAME = "oneColor",
+            WIREFRAME_COLOR = [1, 1, 1, 1],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -114,6 +116,13 @@ define([
                 lodSelector: null
             };
     /**
+     * @typedef {Object} Editor~WebGLPreviewParams
+     * @property {Boolean} renderModeSetting
+     * @property {Boolean} lodSetting
+     * @property {String[]} canvasUpdateProperties
+     * @property {String[]} optionRefreshProperties
+     */
+    /**
      * @typedef {Object} Editor~WebGLPreviewFunctions
      * @property {Function} clear
      * @property {Function} load
@@ -123,19 +132,14 @@ define([
      */
     /**
      * @class
-     * @param {Array} canvasUpdateProperties
-     * @param {Array} optionRefreshProperties
+     * @param {Editor~WebGLPreviewParams} params
      * @param {Editor~WebGLPreviewFunctions} functions
      */
-    function WebGLPreviewContext(canvasUpdateProperties, optionRefreshProperties, functions) {
+    function WebGLPreviewContext(params, functions) {
         /**
-         * @type String[]
+         * @type Editor~WebGLPreviewParams
          */
-        this.canvasUpdateProperties = canvasUpdateProperties;
-        /**
-         * @type String[]
-         */
-        this.optionRefreshProperties = optionRefreshProperties;
+        this.params = params;
         /**
          * @type Editor~WebGLPreviewFunctions
          */
@@ -162,11 +166,20 @@ define([
     function getScene() {
         return _scene;
     }
+    function getWireframeShaderName() {
+        return WIREFRAME_SHADER_NAME;
+    }
     function setModel(value) {
         _model = value;
     }
+    function setupWireframeModel(model) {
+        model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
+            return WIREFRAME_COLOR;
+        });
+    }
     function setWireframeModel(value) {
         _wireframeModel = value;
+        setupWireframeModel(value);
     }
     /**
      * Called when a change happens as the result of which the preview scene should rendered again (if it is not rendered continuously)
@@ -363,7 +376,7 @@ define([
                     "triangles: " + _model.getModel().getNumTriangles(graphics.getLOD(_lod)) +
                     ", lines: " + _model.getModel().getNumLines(graphics.getLOD(_lod))));
         }
-        _elements.info.hidden = false;
+        _elements.info.hidden = (_elements.info.innerHTML === "");
     }
     /**
      * Updates both the calculated CSS size for the canvas as well as sets the size attributes according to the rendered (client) size.
@@ -517,22 +530,26 @@ define([
     function createOptions() {
         _elements.options.innerHTML = "";
         // render mode selector
-        _optionElements.renderModeSelector = common.createSelector(utils.getEnumValues(RenderMode), _renderMode, false, function () {
-            _renderMode = _optionElements.renderModeSelector.value;
-            _updateForRenderMode();
-            requestRender();
-        });
-        _elements.options.appendChild(createSetting("Render mode:", _optionElements.renderModeSelector));
-        // LOD selector
-        _optionElements.lodSelector = common.createSelector(graphics.getLODLevels(), _lod, false, function () {
-            _lod = _optionElements.lodSelector.value;
-            _updateForLOD();
-            requestRender();
-            _updateInfo();
-        });
-        _elements.options.appendChild(createSetting("LOD:", _optionElements.lodSelector));
+        if (_currentContext.params.renderModeSetting) {
+            _optionElements.renderModeSelector = common.createSelector(utils.getEnumValues(RenderMode), _renderMode, false, function () {
+                _renderMode = _optionElements.renderModeSelector.value;
+                _updateForRenderMode();
+                requestRender();
+            });
+            _elements.options.appendChild(createSetting("Render mode:", _optionElements.renderModeSelector));
+        }
+        if (_currentContext.params.lodSetting) {
+            // LOD selector
+            _optionElements.lodSelector = common.createSelector(graphics.getLODLevels(), _lod, false, function () {
+                _lod = _optionElements.lodSelector.value;
+                _updateForLOD();
+                requestRender();
+                _updateInfo();
+            });
+            _elements.options.appendChild(createSetting("LOD:", _optionElements.lodSelector));
+        }
         _currentContext.functions.createOptions();
-        _elements.options.hidden = false;
+        _elements.options.hidden = (_elements.options.innerHTML === "");
     }
     // ----------------------------------------------------------------------
     // Public Functions
@@ -557,10 +574,10 @@ define([
      * @param {String} name
      */
     function handleDataChanged(name) {
-        if (_currentContext.optionRefreshProperties.indexOf(name) >= 0) {
+        if (_currentContext.params.optionRefreshProperties.indexOf(name) >= 0) {
             createOptions();
         }
-        if (_currentContext.canvasUpdateProperties.indexOf(name) >= 0) {
+        if (_currentContext.params.canvasUpdateProperties.indexOf(name) >= 0) {
             updateCanvas({
                 preserve: true,
                 reload: true
@@ -573,8 +590,10 @@ define([
         WebGLPreviewContext: WebGLPreviewContext,
         setContext: setContext,
         getScene: getScene,
+        getWireframeShaderName: getWireframeShaderName,
         setModel: setModel,
         setWireframeModel: setWireframeModel,
+        setupWireframeModel: setupWireframeModel,
         requestRender: requestRender,
         createSetting: createSetting,
         clearSettingsForNewItem: clearSettingsForNewItem,

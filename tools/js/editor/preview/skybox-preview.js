@@ -133,7 +133,12 @@ define([
     }
     // ----------------------------------------------------------------------
     // Initialization
-    _previewContext = new preview.WebGLPreviewContext(CANVAS_UPDATE_PROPERTIES, OPTION_REFRESH_PROPERIES, {
+    _previewContext = new preview.WebGLPreviewContext({
+        renderModeSetting: false,
+        lodSetting: false,
+        canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
+        optionRefreshProperties: OPTION_REFRESH_PROPERIES
+    }, {
         clear: _clear,
         load: _load,
         updateForRefresh: _updateForRefresh,

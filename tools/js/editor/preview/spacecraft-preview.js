@@ -37,8 +37,6 @@ define([
                     direction: [1, 0, 1]
                 }
             ],
-            WIREFRAME_SHADER_NAME = "oneColor",
-            WIREFRAME_COLOR = [1, 1, 1, 1],
             HITBOX_HIGHLIGHT_COLOR = [0.8, 0.4, 0.3, 0.5],
             ENGINE_STATE_NO_PROPULSION = "no propulsion",
             ENGINE_STATE_OFF = "off",
@@ -272,20 +270,15 @@ define([
                 {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
-                    shaderName: WIREFRAME_SHADER_NAME
+                    shaderName: preview.getWireframeShaderName()
                 },
         (environmentChanged || shouldReload) ?
                 function (model) {
-                    model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
-                        return WIREFRAME_COLOR;
-                    });
                     preview.setWireframeModel(model);
                 } :
                 null,
                 function (model) {
-                    model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
-                        return WIREFRAME_COLOR;
-                    });
+                    preview.setupWireframeModel(model);
                 });
         if (params.environmentName && (environmentChanged || shouldReload)) {
             logic.getEnvironment(params.environmentName).addToScene(preview.getScene());
@@ -452,7 +445,12 @@ define([
     }
     // ----------------------------------------------------------------------
     // Initialization
-    _previewContext = new preview.WebGLPreviewContext(CANVAS_UPDATE_PROPERTIES, OPTION_REFRESH_PROPERIES, {
+    _previewContext = new preview.WebGLPreviewContext({
+        renderModeSetting: true,
+        lodSetting: true,
+        canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
+        optionRefreshProperties: OPTION_REFRESH_PROPERIES
+    }, {
         clear: _clear,
         load: _load,
         updateForRefresh: _updateForRefresh,
