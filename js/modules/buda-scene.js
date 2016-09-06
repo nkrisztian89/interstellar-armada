@@ -7243,6 +7243,13 @@ define([
         }
     };
     /**
+     * 
+     * @returns {RenderableNode}
+     */
+    Scene.prototype.getRootNode = function () {
+        return this._rootNode;
+    };
+    /**
      * Returns the camera that is used when rendering this scene.
      * @returns {Camera}
      */

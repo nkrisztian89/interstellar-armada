@@ -99,10 +99,15 @@ define([
     // ------------------------------------------------------------------------------
     // constants
     /**
-     * In the class description file, skybox classes will be initialized from the array with this name
+     * Classes that are initialized without a name will be initialized with this name
      * @type String
      */
-    SKYBOX_CLASS_ARRAY_NAME = "skyboxClasses",
+    UNNAMED_CLASS_NAME = "unnamed",
+            /**
+             * In the class description file, skybox classes will be initialized from the array with this name
+             * @type String
+             */
+            SKYBOX_CLASS_ARRAY_NAME = "skyboxClasses",
             /**
              * In the class description file, background object classes will be initialized from the array with this name
              * @type String
@@ -416,10 +421,11 @@ define([
     /**
      * @class
      * @augments GenericResource
-     * @param {object} dataJSON
+     * @param {Object} dataJSON
+     * @param {Boolean} [nameIsOptional=false] If true, no error message will be given in case there is no name defined in the data JSON
      */
-    function GenericClass(dataJSON) {
-        resourceManager.GenericResource.call(this, dataJSON ? (dataJSON.name || _showMissingPropertyError(this, "name")) : null);
+    function GenericClass(dataJSON, nameIsOptional) {
+        resourceManager.GenericResource.call(this, dataJSON ? (dataJSON.name || (nameIsOptional && UNNAMED_CLASS_NAME) || _showMissingPropertyError(this, "name")) : null);
         /**
          * @type String
          */
@@ -498,9 +504,10 @@ define([
      * @class
      * @augments GenericClass
      * @param {Object} dataJSON
+     * @param {Boolean} [nameIsOptional=false]
      */
-    function ShadedClass(dataJSON) {
-        GenericClass.call(this, dataJSON);
+    function ShadedClass(dataJSON, nameIsOptional) {
+        GenericClass.call(this, dataJSON, nameIsOptional);
     }
     ShadedClass.prototype = new GenericClass();
     ShadedClass.prototype.constructor = ShadedClass;
@@ -601,9 +608,10 @@ define([
      * @class
      * @augments ShadedClass
      * @param {Object} dataJSON
+     * @param {Boolean} [nameIsOptional=false]
      */
-    function ShadedModelClass(dataJSON) {
-        ShadedClass.call(this, dataJSON);
+    function ShadedModelClass(dataJSON, nameIsOptional) {
+        ShadedClass.call(this, dataJSON, nameIsOptional);
     }
     ShadedModelClass.prototype = new ShadedClass();
     ShadedModelClass.prototype.constructor = ShadedModelClass;
@@ -715,9 +723,10 @@ define([
      * @class
      * @augments ShadedModelClass
      * @param {Object} dataJSON
+     * @param {Boolean} [nameIsOptional=false]
      */
-    function TexturedModelClass(dataJSON) {
-        ShadedModelClass.call(this, dataJSON);
+    function TexturedModelClass(dataJSON, nameIsOptional) {
+        ShadedModelClass.call(this, dataJSON, nameIsOptional);
     }
     TexturedModelClass.prototype = new ShadedModelClass();
     TexturedModelClass.prototype.constructor = TexturedModelClass;
@@ -831,7 +840,7 @@ define([
      * @param {Object} [dataJSON] 
      */
     function ParticleDescriptor(dataJSON) {
-        TexturedModelClass.call(this, dataJSON);
+        TexturedModelClass.call(this, dataJSON, true);
     }
     ParticleDescriptor.prototype = new TexturedModelClass();
     ParticleDescriptor.prototype.constructor = ParticleDescriptor;
@@ -902,7 +911,7 @@ define([
      * @returns {Boolean}
      */
     BackgroundObjectClass.prototype._loadData = function (dataJSON) {
-        var i, descriptorJSON;
+        var i;
         GenericClass.prototype._loadData.call(this, dataJSON);
         /**
          * The color of the light this object emits. A directional light source with
@@ -920,9 +929,7 @@ define([
         if (dataJSON) {
             if (dataJSON.layers) {
                 for (i = 0; i < dataJSON.layers.length; i++) {
-                    descriptorJSON = dataJSON.layers[i];
-                    descriptorJSON.name = "-";
-                    this._layers.push(new ParticleDescriptor(descriptorJSON));
+                    this._layers.push(new ParticleDescriptor(dataJSON.layers[i]));
                 }
             } else {
                 _showMissingPropertyError(this, "layers");
@@ -1036,7 +1043,7 @@ define([
      */
     function ParticleEmitterDescriptor(dataJSON) {
         // this will call the overridden _loadData function and thus initialize all fields
-        TexturedModelClass.call(this, dataJSON);
+        TexturedModelClass.call(this, dataJSON, true);
     }
     ParticleEmitterDescriptor.prototype = new TexturedModelClass();
     ParticleEmitterDescriptor.prototype.constructor = ParticleEmitterDescriptor;
@@ -1212,7 +1219,6 @@ define([
         if (dataJSON && dataJSON.particleEmitters) {
             this._particleEmitterDescriptors = [];
             for (i = 0; i < dataJSON.particleEmitters.length; i++) {
-                dataJSON.particleEmitters[i].name = "-";
                 this._particleEmitterDescriptors.push(new ParticleEmitterDescriptor(dataJSON.particleEmitters[i]));
             }
         }
@@ -1356,7 +1362,6 @@ define([
         this._muzzleFlash = null;
         if (dataJSON) {
             if (dataJSON.muzzleFlash) {
-                dataJSON.muzzleFlash.name = "-";
                 this._muzzleFlash = new ParticleDescriptor(dataJSON.muzzleFlash);
             } else {
                 _showMissingPropertyError(this, "muzzleFlash");
@@ -2712,7 +2717,6 @@ define([
          */
         this._particle = null;
         if (dataJSON.particle) {
-            dataJSON.particle.name = "-";
             this._particle = new ParticleDescriptor(dataJSON.particle);
         } else {
             _showMissingPropertyError(this, "particle");

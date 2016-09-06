@@ -1261,12 +1261,12 @@ define([
      */
     Weapon.prototype.getOrigoPositionMatrix = function () {
         this._origoPositionMatrix = this._origoPositionMatrix || mat.translatedByVector(
-                this._slot.positionMatrix,
+                this._slot ? this._slot.positionMatrix : mat.IDENTITY4,
                 vec.mulVec3Mat4(
                         vec.scaled3(this._class.getAttachmentPoint(), -1),
                         mat.prod3x3SubOf4(
-                                mat.scaling4(this._class.getModel().getScale() / this._spacecraft.getPhysicalScalingMatrix()[0]),
-                                this._slot.orientationMatrix)));
+                                mat.scaling4(this._class.getModel().getScale() / (this._spacecraft ? this._spacecraft.getPhysicalScalingMatrix()[0] : 1)),
+                                this._slot ? this._slot.orientationMatrix : mat.IDENTITY4)));
         return this._origoPositionMatrix;
     };
     /**
@@ -1319,6 +1319,11 @@ define([
         this._class.acquireResources(params);
     };
     /**
+     * @typedef {Object} Weapon~AddToSceneParams
+     * @property {String} [shaderName] If given, the original shader of this weapon will be substituted by the shader with this name.
+     * @property {Float32Array} [orientationMatrix]
+     */
+    /**
      * @typedef {Function} logic~addToSceneCallback
      * @param {ParameterizedMesh} model
      */
@@ -1332,14 +1337,14 @@ define([
      * value is given, all available LODs will be loaded for dynamic rendering.
      * @param {Boolean} wireframe Whether to add the model in wireframe rendering
      * mode.
-     * @param {String} [shaderName] If given, the original shader of this weapon will be substituted by the shader with this name.
+     * @param {Weapon~AddToSceneParams} [params] 
      * @param {logic~addToSceneCallback} [callback]
      */
-    Weapon.prototype.addToScene = function (parentNode, lod, wireframe, shaderName, callback) {
+    Weapon.prototype.addToScene = function (parentNode, lod, wireframe, params, callback) {
         var i, n;
-        this.acquireResources({omitShader: !!shaderName});
-        if (shaderName) {
-            graphics.getShader(shaderName);
+        this.acquireResources({omitShader: !!params.shaderName});
+        if (params.shaderName) {
+            graphics.getShader(params.shaderName);
         }
         resources.executeWhenReady(function () {
             var visualModel, scale, parameterArrays = {};
@@ -1352,10 +1357,10 @@ define([
             }
             visualModel = new budaScene.ParameterizedMesh(
                     this._class.getModel(),
-                    shaderName ? graphics.getManagedShader(shaderName) : this._class.getShader(),
+                    params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
                     this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                    this.getOrigoPositionMatrix(),
-                    this._slot.orientationMatrix,
+                    this._slot ? this.getOrigoPositionMatrix() : mat.identity4(),
+                    params.orientationMatrix || (this._slot ? this._slot.orientationMatrix : mat.identity4()),
                     mat.scaling4(scale),
                     (wireframe === true),
                     lod,
@@ -3626,7 +3631,7 @@ define([
             // add the weapons
             if (addSupplements.weapons === true) {
                 for (i = 0; i < this._weapons.length; i++) {
-                    this._weapons[i].addToScene(node, lod, wireframe, params.shaderName, weaponCallback);
+                    this._weapons[i].addToScene(node, lod, wireframe, {shaderName: params.shaderName}, weaponCallback);
                 }
             }
             // add the thruster particles
@@ -5147,6 +5152,7 @@ define([
         getEnvironment: _context.getEnvironment.bind(_context),
         getEnvironmentNames: _context.getEnvironmentNames.bind(_context),
         Skybox: Skybox,
+        Weapon: Weapon,
         Spacecraft: Spacecraft,
         Level: Level
     };

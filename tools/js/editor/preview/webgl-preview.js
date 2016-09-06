@@ -153,9 +153,9 @@ define([
          */
         this.cameraOrientationMatrix = mat.identity4();
         /**
-         * @type Float32Array
+         * @type Number
          */
-        this.cameraDistance = mat.identity4();
+        this.cameraDistance = 0;
     }
     function setContext(value) {
         if (_currentContext) {

@@ -387,6 +387,9 @@ define([
         _optionElements.engineStateEditor = _createEngineEditor();
         _elements.options.appendChild(preview.createSetting("Engine:", _optionElements.engineStateEditor));
     }
+    /**
+     * 
+     */
     function _updateForRefresh() {
         _updateForHitboxState();
         _updateThrusters();

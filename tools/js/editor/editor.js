@@ -19,6 +19,7 @@
  * @param logic Used to load the environments 
  * @param common Used for clearing open popups
  * @param skyboxPreview Used to create previews for skybox classes
+ * @param weaponPreview Used to create previews for weapon classes
  * @param spacecraftPreview Used to create previews for spacecraft classes
  * @param descriptors Used to determine whether the descriptor for a specific resource / class category is available
  * @param properties Used to generate the content of the Properties window
@@ -33,10 +34,11 @@ define([
     "armada/logic",
     "editor/common",
     "editor/preview/skybox-preview",
+    "editor/preview/weapon-preview",
     "editor/preview/spacecraft-preview",
     "editor/descriptors",
     "editor/properties"
-], function (application, resources, constants, config, graphics, classes, logic, common, skyboxPreview, spacecraftPreview, descriptors, properties) {
+], function (application, resources, constants, config, graphics, classes, logic, common, skyboxPreview, weaponPreview, spacecraftPreview, descriptors, properties) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -74,6 +76,7 @@ define([
              */
             _previews = {
                 "skyboxClasses": skyboxPreview,
+                "weaponClasses": weaponPreview,
                 "spacecraftClasses": spacecraftPreview
             },
     /**
