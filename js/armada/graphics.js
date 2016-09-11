@@ -2100,6 +2100,8 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        SHADER_VARIANT_WITHOUT_SHADOWS_NAME: SHADER_VARIANT_WITHOUT_SHADOWS_NAME,
+        SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME: SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
         loadSettingsFromLocalStorage: _context.loadFromLocalStorage.bind(_context),

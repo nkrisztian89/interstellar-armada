@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
+ * Copyright 2014-2016 Krisztián Nagy
  * @file 
  * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
  * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
@@ -22,12 +22,27 @@ define([
     "modules/application"
 ], function (vec, application) {
     "use strict";
+    var
+            // ------------------------------------------------------------------------------
+            // enums
+            VertexAttributeRole = {
+                POSITION: "position",
+                TEXTURE_COORDINATES: "texCoord",
+                NORMAL: "normal",
+                COLOR: "color",
+                GROUP_INDICES: "groupIndices",
+                TRIANGLE_INDEX: "triangleIndex"
+            },
+    // ------------------------------------------------------------------------------
+    // private variables
     /**
      * The list of EgomModel versions that can be loaded from file.
      * @type String[]
      */
-    var _supportedVersions = ["2.0", "2.1", "2.2", "3.0"];
-
+    _supportedVersions = ["2.0", "2.1", "2.2", "3.0"];
+    // freezing enum objects
+    Object.freeze(VertexAttributeRole);
+    // ############################################################################################
     /**
      * @class Represents a vertex in 3D space.
      * @param {Number[3]} position Position vector.
@@ -62,7 +77,6 @@ define([
          */
         this.v = texCoords[1];
     }
-
     /**
      * Returns the texture coordinates associated with this vertex.
      * @returns {Number[2]}
@@ -70,7 +84,6 @@ define([
     Vertex.prototype.getTexCoords = function () {
         return [this.u, this.v];
     };
-
     /**
      * Sets the X coordinate of the vertex.
      * @param {Number} x
@@ -78,7 +91,6 @@ define([
     Vertex.prototype.setX = function (x) {
         this.x = x;
     };
-
     /**
      * Sets the Y coordinate of the vertex.
      * @param {Number} y
@@ -86,7 +98,6 @@ define([
     Vertex.prototype.setY = function (y) {
         this.y = y;
     };
-
     /**
      * Sets the Z coordinate of the vertex.
      * @param {Number} z
@@ -94,7 +105,7 @@ define([
     Vertex.prototype.setZ = function (z) {
         this.z = z;
     };
-
+    // ############################################################################################
     /**
      * @class Represents a line connecting two vertices in a model.
      * @param {Number} a The index of the starting vertex of the line.
@@ -124,7 +135,7 @@ define([
          */
         this.normal = normal;
     }
-
+    // ############################################################################################
     /**
      * @class Represents a triangular face between 3 vertices of a model.
      * @param {Mesh} model The model to which this triangle is added.
@@ -185,7 +196,6 @@ define([
          */
         this.groupIndices = groupIndices || [0, 0];
     }
-
     /**
      * Returns the normal vector belonging to one of the vertices of this triangle.
      * @param {Number} index The index of the vertex (within the triangle: 0,1 or 2)
@@ -194,7 +204,7 @@ define([
     Triangle.prototype.getNormal = function (index) {
         return (this._normals[index] || this._normals[0]);
     };
-
+    // ############################################################################################
     /**
      * @class Stores the attributes that a mesh has associated with a managed
      * WebGL context.
@@ -219,7 +229,7 @@ define([
          */
         this.bufferStartTransparent = 0;
     }
-
+    // ############################################################################################
     /**
      * @class A single, specific mesh consisting of lines (for wireframe rendering) and 
      * triangles (for solid rendering) that connect 3D vertices. Multiple such
@@ -415,7 +425,6 @@ define([
             this._minZ = this._vertices[index].z;
         }
     };
-
     /**
      * Adds a new vertex to the first available index.
      * @param {Number[3]} position
@@ -424,14 +433,12 @@ define([
     Mesh.prototype.appendVertex = function (position, texCoords) {
         this.setVertex(this._vertices.length, new Vertex(position, texCoords));
     };
-
     /**
      * Deletes the lines of the mesh.
      */
     Mesh.prototype.resetLines = function () {
         this._lines = [];
     };
-
     /**
      * Adds a new line to the mesh. Does not check if the same line already
      * exists.
@@ -440,7 +447,6 @@ define([
     Mesh.prototype.addLine = function (line) {
         this._lines.push(line);
     };
-
     /**
      * Replaces the line stored at the given index with a new one.
      * @param {Number} index
@@ -449,7 +455,6 @@ define([
     Mesh.prototype.setLine = function (index, line) {
         this._lines[index] = line;
     };
-
     /**
      * Deletes the triangles of the mesh and resets related properties.
      */
@@ -458,7 +463,6 @@ define([
         this._nOpaqueTriangles = 0;
         this._nTransparentTriangles = 0;
     };
-
     /**
      * Returns a vector pointing from one vertex to the other.
      * @param {Vertex} vertex1Index The index of the vertex that is at the origin of
@@ -473,7 +477,6 @@ define([
             this._vertices[vertex2Index].y - this._vertices[vertex1Index].y,
             this._vertices[vertex2Index].z - this._vertices[vertex1Index].z];
     };
-
     /**
      * Adds a new triangle to the mesh. Does not check if the same triangle
      * already exists. Also adds 3 lines corresponding to the edges of the 
@@ -534,7 +537,6 @@ define([
         this.addTriangle(triangle, params.withoutLines);
         return triangle;
     };
-
     /**
      * Adds two triangles forming a quadrilateral between 4 vertices.
      * @param {Number} a The index of the first vertex of the quad.
@@ -589,7 +591,6 @@ define([
             this._lines.push(new Line(d, a, color, normals));
         }
     };
-
     /**
      * Returns the size of the model, which is calculated as the double of the
      * farthest (X,Y or Z) vertex coordinate to be found in the model.
@@ -598,7 +599,6 @@ define([
     Mesh.prototype.getSize = function () {
         return this._size;
     };
-
     /**
      * Returns the greatest positive X vertex coordinate to be found in the model.
      * @returns {Number}
@@ -606,7 +606,6 @@ define([
     Mesh.prototype.getMaxX = function () {
         return this._maxX;
     };
-
     /**
      * Returns the greatest negative X vertex coordinate to be found in the model.
      * @returns {Number}
@@ -614,7 +613,6 @@ define([
     Mesh.prototype.getMinX = function () {
         return this._minX;
     };
-
     /**
      * Returns the greatest positive Y vertex coordinate to be found in the model.
      * @returns {Number}
@@ -622,7 +620,6 @@ define([
     Mesh.prototype.getMaxY = function () {
         return this._maxY;
     };
-
     /**
      * Returns the greatest negative Y vertex coordinate to be found in the model.
      * @returns {Number}
@@ -630,7 +627,6 @@ define([
     Mesh.prototype.getMinY = function () {
         return this._minY;
     };
-
     /**
      * Returns the greatest positive Z vertex coordinate to be found in the model.
      * @returns {Number}
@@ -638,7 +634,6 @@ define([
     Mesh.prototype.getMaxZ = function () {
         return this._maxZ;
     };
-
     /**
      * Returns the greatest negative Z vertex coordinate to be found in the model.
      * @returns {Number}
@@ -646,7 +641,6 @@ define([
     Mesh.prototype.getMinZ = function () {
         return this._minZ;
     };
-
     /**
      * Returns the width of the model, which is calculated as the difference
      * between the smallest and greatest X coordinates found among the vertices.
@@ -655,7 +649,6 @@ define([
     Mesh.prototype.getWidth = function () {
         return this._maxX - this._minX;
     };
-
     /**
      * Returns the height of the model, which is calculated as the difference
      * between the smallest and greatest Y coordinates found among the vertices.
@@ -664,7 +657,6 @@ define([
     Mesh.prototype.getHeight = function () {
         return this._maxY - this._minY;
     };
-
     /**
      * Returns the depth of the model, which is calculated as the difference
      * between the smallest and greatest Z coordinates found among the vertices.
@@ -673,7 +665,6 @@ define([
     Mesh.prototype.getDepth = function () {
         return this._maxZ - this._minZ;
     };
-
     /**
      * Returns the vertex buffer data for this model, organized in an associative
      * array by the roles of the different data (e.g. position, texCoord)
@@ -692,7 +683,7 @@ define([
     Mesh.prototype.getBufferData = function (wireframe, startIndex) {
         var i, j, nLines, nTriangles, ix, index,
                 vertexData, texCoordData, normalData, colorData,
-                groupIndexData, triangleIndexData;
+                groupIndexData, triangleIndexData, result;
         startIndex = startIndex || 0;
         if (wireframe === true) {
             nLines = this._lines.length;
@@ -836,18 +827,16 @@ define([
                 triangleIndexData[i * 12 + 11] = index[3];
             }
         }
-
-        return {
-            "position": vertexData,
-            "texCoord": texCoordData,
-            "normal": normalData,
-            "color": colorData,
-            "groupIndices": groupIndexData,
-            "triangleIndex": triangleIndexData,
-            "dataSize": (wireframe ? this._lines.length * 2 : this._triangles.length * 3)
-        };
+        result = {};
+        result[VertexAttributeRole.POSITION] = vertexData;
+        result[VertexAttributeRole.TEXTURE_COORDINATES] = texCoordData;
+        result[VertexAttributeRole.NORMAL] = normalData;
+        result[VertexAttributeRole.COLOR] = colorData;
+        result[VertexAttributeRole.GROUP_INDICES] = groupIndexData;
+        result[VertexAttributeRole.TRIANGLE_INDEX] = triangleIndexData;
+        result.dataSize = (wireframe ? this._lines.length * 2 : this._triangles.length * 3);
+        return result;
     };
-
     /**
      * Returns the size of the vertex buffer data (number of vertices) that this
      * mesh has for the specified context.
@@ -858,7 +847,6 @@ define([
     Mesh.prototype.getBufferSize = function (wireframe, solid) {
         return (wireframe ? this._lines.length * 2 : 0) + (solid ? this._triangles.length * 3 : 0);
     };
-
     /**
      * Loads the model's vertex data into the vertex buffer objects of the specified
      * context. Data for wireframe and solid rendering is added based on whether
@@ -892,7 +880,6 @@ define([
         this._contextProperties[context.getName()] = props;
         return dataSize;
     };
-
     /**
      * Renders the model within the passed context, with the specified rendering
      * mode (wireframe or solid).
@@ -953,7 +940,6 @@ define([
             }
         }
     };
-
     /**
      * Adds a cuboid geometry to the object. (both vertices and faces)
      * @param {Number} x The X coordinate of the center of the cuboid.
@@ -1021,7 +1007,6 @@ define([
         }
 
     };
-
     /**
      * Returns 2D coordinates of a point within a specified rectangular area 
      * based on the relative position of the point within that rectangle.
@@ -1041,7 +1026,6 @@ define([
         result[1] = bottom + (top - bottom) * relativeY;
         return result;
     }
-
     /**
      * Adds vertices and triangles that form a sphere (UV sphere).
      * @param {Number} x The X coordinate of the center.
@@ -1144,7 +1128,7 @@ define([
             }
         }
     };
-
+    // ############################################################################################
     /**
      * @struct Stores the attributes that a model has associated with a managed
      * WebGL context.
@@ -1176,7 +1160,7 @@ define([
          */
         this.maxLOD = 0;
     }
-
+    // ############################################################################################
     /**
      * @class Combines different Mesh object into one, multi-LOD 3D model and
      * provides functionality for loading these different LODs from a single or
@@ -2223,10 +2207,10 @@ define([
             }
         }
     };
-
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        VertexAttributeRole: VertexAttributeRole,
         Model: Model,
         /**
          * Sets up and returns a simple model that is suitable to be used for

@@ -30,10 +30,19 @@ define([
     "modules/async-resource"
 ], function (utils, application, asyncResource) {
     "use strict";
+    // ------------------------------------------------------------------------------
+    // constants
+    var
+            /**
+             * Classes that are initialized without a name will be initialized with this name
+             * @type String
+             */
+            UNNAMED_RESOURCE_NAME = "unnamed";
+    // ##############################################################################
     /**
      * @class
      * To subclass, implement requiresReload(), _requestFiles() and _loadData() methods.
-     * @augments AsyncResource
+     * @extends AsyncResource
      * @param {String} name
      */
     function GenericResource(name) {
@@ -179,6 +188,83 @@ define([
     GenericResource.prototype.getData = function () {
         return null;
     };
+    // ##############################################################################
+    /**
+     * @class A generic asynchronous resource that can be initialized using a JSON object passed to the constructor
+     * @extends GenericResource
+     * @param {Object} [dataJSON] The object storing the data (/configuration) based on which the resource should be initialized (optional
+     * so that the class can be subclassed)
+     * @param {String} [sourceFolder] The ID of the folder from where to load the source JSON file for deferred initialization
+     * @param {Boolean} [nameIsOptional=false] If true, no error message will be given in case there is no name defined in the data JSON
+     */
+    function JSONResource(dataJSON, sourceFolder, nameIsOptional) {
+        GenericResource.call(this, dataJSON ?
+                (dataJSON.name || (nameIsOptional && UNNAMED_RESOURCE_NAME) || application.showError("Cannot initialize instance of " + this.constructor.name + ": a name is required!")) :
+                null);
+        /**
+         * @type String
+         */
+        this._source = dataJSON ? (dataJSON.source || null) : null;
+        /**
+         * @type String
+         */
+        this._sourceFolder = sourceFolder;
+        /**
+         * Stores a reference to the object from which this class was initialized.
+         * @type String
+         */
+        this._dataJSON = dataJSON;
+        if (dataJSON) {
+            if (!this._source) {
+                this._loadData(dataJSON);
+                this.setToReady();
+            }
+        }
+    }
+    JSONResource.prototype = new GenericResource();
+    JSONResource.prototype.constructor = JSONResource;
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    JSONResource.prototype.requiresReload = function () {
+        if (this.isRequested()) {
+            return false;
+        }
+        return !this.isLoaded();
+    };
+    /**
+     * @override
+     */
+    JSONResource.prototype._requestFiles = function () {
+        application.requestTextFile(this._sourceFolder, this._source, function (responseText) {
+            this._onFilesLoad(true, JSON.parse(responseText));
+        }.bind(this));
+    };
+    /**
+     * @override
+     * @param {Object} dataJSON
+     * @returns {Boolean}
+     */
+    JSONResource.prototype._loadData = function (dataJSON) {
+        this._source = this._source || "";
+        this._dataJSON = dataJSON;
+        return true;
+    };
+    /**
+     * Returns the object this resource was initialized from.
+     * @returns {Object}
+     */
+    JSONResource.prototype.getData = function () {
+        return this._dataJSON;
+    };
+    /**
+     * Reinitializes the resource based on the stored data object. (can be used to modify a resource by modifying its data object and then calling
+     * this - only to be used by the editor, not by the game!
+     */
+    JSONResource.prototype.reloadData = function () {
+        this._loadData(this._dataJSON);
+    };
     // ############################################################################################x
     /**
      * @class
@@ -192,9 +278,15 @@ define([
          */
         this._resourceType = resourceType;
         /**
+         * To quickly access resources
          * @type Object.<String, GenericResource>
          */
         this._resources = {};
+        /**
+         * To maintain the order of resource
+         * @type String[]
+         */
+        this._resourceNames = [];
         /**
          * @type Number
          */
@@ -217,8 +309,14 @@ define([
      * @returns {GenericResource}
      */
     ResourceHolder.prototype.addResource = function (resource) {
-        this._resources[resource.getName()] = resource;
-        return this._resources[resource.getName()];
+        var resourceName = resource.getName();
+        if (this._resources[resourceName]) {
+            application.showError("Attemtping to add a resource named '" + resourceName + "' that already exists! Data will be overwritten.");
+        } else {
+            this._resourceNames.push(resourceName);
+        }
+        this._resources[resourceName] = resource;
+        return this._resources[resourceName];
     };
     /**
      * @param {String} resourceName
@@ -266,7 +364,20 @@ define([
      * @returns {String[]}
      */
     ResourceHolder.prototype.getResourceNames = function () {
-        return Object.keys(this._resources);
+        return this._resourceNames;
+    };
+    /**
+     * Changes the key at which a resource is stored (does not alter the configuration of the resource), maintaining its position in the
+     * order of resources
+     * @param {String} oldName
+     * @param {String} newName
+     */
+    ResourceHolder.prototype.renameResource = function (oldName, newName) {
+        if (oldName !== newName) {
+            this._resources[newName] = this._resources[oldName];
+            delete this._resources[oldName];
+            this._resourceNames[this._resourceNames.indexOf(oldName)] = newName;
+        }
     };
     // ############################################################################################x
     /**
@@ -497,6 +608,16 @@ define([
         }
         return this._resourceHolders[resourceType].getResourceNames();
     };
+    /**
+     * Changes the key at which a resource is stored (does not alter the configuration of the resource), maintaining its position in the
+     * order of resources
+     * @param {String} resourceType The type of resource to be renamed
+     * @param {String} oldName
+     * @param {String} newName
+     */
+    ResourceManager.prototype.renameResource = function (resourceType, oldName, newName) {
+        this._resourceHolders[resourceType].renameResource(oldName, newName);
+    };
 
     /**
      * Executes the given callback function for all the stored resources (of all types), passing each resource to it as its only parameter.
@@ -507,13 +628,14 @@ define([
         for (i = 0; i < resourceTypes.length; i++) {
             resourceNames = this._resourceHolders[resourceTypes[i]].getResourceNames();
             for (j = 0; j < resourceNames.length; j++) {
-                callback(this._resourceHolders[resourceTypes[i]].getResource(resourceNames[j]));
+                callback(this._resourceHolders[resourceTypes[i]].getResource(resourceNames[j]), resourceTypes[i]);
             }
         }
     };
 
     return {
         GenericResource: GenericResource,
+        JSONResource: JSONResource,
         ResourceManager: ResourceManager
     };
 });

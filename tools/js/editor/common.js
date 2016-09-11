@@ -48,10 +48,10 @@ define([
              */
             ItemType = {
                 NONE: "none",
-                RESOURCE: "resource",
-                CLASS: "class",
-                ENVIRONMENT: "environment",
-                LEVEL: "level"
+                RESOURCE: "resources",
+                CLASS: "classes",
+                ENVIRONMENT: "environments",
+                LEVEL: "levels"
             },
     // ------------------------------------------------------------------------------
     // Constants
@@ -324,7 +324,7 @@ define([
             }
         });
         minCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
-        minEditor = createNumericInput(data[0] || 0, function (value) {
+        minEditor = createNumericInput(data[0] || 0, true, function (value) {
             data[0] = minCheckbox.checked ? value : undefined;
             if (changeHandler) {
                 changeHandler();
@@ -342,7 +342,7 @@ define([
             }
         });
         maxCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
-        maxEditor = createNumericInput(data[1] || 0, function (value) {
+        maxEditor = createNumericInput(data[1] || 0, true, function (value) {
             data[1] = maxCheckbox.checked ? value : undefined;
             if (changeHandler) {
                 changeHandler();
@@ -424,9 +424,10 @@ define([
     };
     /**
      * If the popup does not fit on the screen, tries to reposition it.
+     * @param {Boolean} [recursive=false] If true, all children of the popup are aligned recursively
      */
-    Popup.prototype.alignPosition = function () {
-        var rect, left;
+    Popup.prototype.alignPosition = function (recursive) {
+        var rect, left, i;
         if (this.isVisible()) {
             rect = this._invoker.getBoundingClientRect();
             this._element.style.left = rect.left + "px";
@@ -452,6 +453,11 @@ define([
                 this._element.style.width = ((rect.right - rect.left) + 16) + "px";
             }
             rect = this._element.getBoundingClientRect();
+            if (recursive) {
+                for (i = 0; i < this._childPopups.length; i++) {
+                    this._childPopups[i].alignPosition();
+                }
+            }
         }
     };
     /**
@@ -537,6 +543,15 @@ define([
         _popups = [];
         _maxZIndex = POPUP_START_Z_INDEX;
     }
+    /**
+     * Aligns the position of all popups
+     */
+    function alignPopups() {
+        var i;
+        for (i = 0; i < _popups.length; i++) {
+            _popups[i].alignPosition(true);
+        }
+    }
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -553,6 +568,7 @@ define([
         createVectorEditor: createVectorEditor,
         createRangeEditor: createRangeEditor,
         Popup: Popup,
-        removePopups: removePopups
+        removePopups: removePopups,
+        alignPopups: alignPopups
     };
 });

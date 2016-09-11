@@ -1,6 +1,12 @@
 {
-    "textures": [
-        {
+    "info": {
+        "name": "resources",
+        "author": "Krisztián Nagy",
+        "comment": "Created by Interstellar Armada editor",
+        "version": "0.4.0:366 (2016.09.08.)",
+        "creationTime": "Sat Sep 10 2016 01:54:16 GMT+0200 (CEST)"
+    },
+    "textures": [{
             "name": "white",
             "basepath": "white",
             "format": "png",
@@ -15,8 +21,7 @@
                 "low": "",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "flare",
             "basepath": "effect/flare",
             "format": "png",
@@ -30,8 +35,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "brownPlanet",
             "basepath": "planet/brownPlanet",
             "format": "png",
@@ -45,8 +49,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "bluePlanet",
             "basepath": "planet/bluePlanet",
             "format": "png",
@@ -60,8 +63,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "grayPlanet",
             "basepath": "planet/grayPlanet",
             "format": "png",
@@ -75,8 +77,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "blueGasGiant",
             "basepath": "planet/blueGasGiant",
             "format": "png",
@@ -90,8 +91,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "blueGasGiant_backLight",
             "basepath": "planet/blueGasGiant_backLight",
             "format": "png",
@@ -105,8 +105,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "explosion",
             "basepath": "effect/explosion",
             "format": "png",
@@ -118,8 +117,7 @@
                 "low": "",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "trainingProjectile",
             "basepath": "projectile/trainingProjectile",
             "format": "png",
@@ -131,8 +129,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "plasma",
             "basepath": "projectile/plasma_full",
             "format": "png",
@@ -144,8 +141,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "heavyPlasma",
             "basepath": "projectile/heavyPlasma_full",
             "format": "png",
@@ -157,8 +153,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "proton",
             "basepath": "projectile/proton_full",
             "format": "png",
@@ -170,8 +165,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "ion",
             "basepath": "projectile/ion_full",
             "format": "png",
@@ -183,8 +177,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "falcon",
             "basepath": "spacecraft/falcon",
             "format": "png",
@@ -198,8 +191,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "viper",
             "basepath": "spacecraft/viper",
             "format": "png",
@@ -213,8 +205,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "aries",
             "basepath": "spacecraft/aries",
             "format": "png",
@@ -228,8 +219,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "taurus",
             "basepath": "spacecraft/taurus",
             "format": "png",
@@ -243,8 +233,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "libra",
             "basepath": "spacecraft/libra",
             "format": "png",
@@ -258,8 +247,7 @@
                 "low": "_256",
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "center",
             "basepath": "hud/center",
             "format": "png",
@@ -270,8 +258,7 @@
             "qualitySuffixes": {
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "crosshair",
             "basepath": "hud/crosshair",
             "format": "png",
@@ -282,8 +269,7 @@
             "qualitySuffixes": {
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "target",
             "basepath": "hud/target",
             "format": "png",
@@ -294,8 +280,7 @@
             "qualitySuffixes": {
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "arrow",
             "basepath": "hud/arrow",
             "format": "png",
@@ -306,8 +291,7 @@
             "qualitySuffixes": {
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "cursor-still",
             "basepath": "hud/cursor-still",
             "format": "png",
@@ -318,8 +302,7 @@
             "qualitySuffixes": {
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "cursor-turn",
             "basepath": "hud/cursor-turn",
             "format": "png",
@@ -330,8 +313,7 @@
             "qualitySuffixes": {
                 "normal": ""
             }
-        },
-        {
+        }, {
             "name": "drift-arrow",
             "basepath": "hud/drift-arrow",
             "format": "png",
@@ -342,10 +324,8 @@
             "qualitySuffixes": {
                 "normal": ""
             }
-        }
-    ],
-    "cubemaps": [
-        {
+        }],
+    "cubemaps": [{
             "name": "stars_sparse",
             "basepath": "background/",
             "format": "jpg",
@@ -362,8 +342,7 @@
                 "medium": "_1024",
                 "high": "_2048"
             }
-        },
-        {
+        }, {
             "name": "stars_medium",
             "basepath": "background/",
             "format": "jpg",
@@ -380,8 +359,7 @@
                 "medium": "_1024",
                 "high": "_2048"
             }
-        },
-        {
+        }, {
             "name": "stars_dense",
             "basepath": "background/",
             "format": "jpg",
@@ -398,8 +376,7 @@
                 "medium": "_1024",
                 "high": "_2048"
             }
-        },
-        {
+        }, {
             "name": "stars_veryDense",
             "basepath": "background/",
             "format": "jpg",
@@ -416,8 +393,7 @@
                 "medium": "_1024",
                 "high": "_2048"
             }
-        },
-        {
+        }, {
             "name": "blueNebula_sparse",
             "basepath": "background/",
             "format": "jpg",
@@ -434,8 +410,7 @@
                 "medium": "_1024",
                 "high": "_2048"
             }
-        },
-        {
+        }, {
             "name": "blueNebula_medium",
             "basepath": "background/",
             "format": "jpg",
@@ -452,8 +427,7 @@
                 "medium": "_1024",
                 "high": "_2048"
             }
-        },
-        {
+        }, {
             "name": "redNebula_medium",
             "basepath": "background/",
             "format": "jpg",
@@ -470,8 +444,7 @@
                 "medium": "_1024",
                 "high": "_2048"
             }
-        },
-        {
+        }, {
             "name": "redNebula_dense",
             "basepath": "background/",
             "format": "jpg",
@@ -488,8 +461,7 @@
                 "medium": "_1024",
                 "high": "_2048"
             }
-        },
-        {
+        }, {
             "name": "crescentNebula_veryDense",
             "basepath": "background/",
             "format": "jpg",
@@ -506,10 +478,8 @@
                 "medium": "_1024",
                 "high": "_2048"
             }
-        }
-    ],
-    "shaders": [
-        {
+        }],
+    "shaders": [{
             "name": "oneColor",
             "vertexShaderSource": "mesh/oneColor.vert",
             "fragmentShaderSource": "mesh/oneColor.frag",
@@ -518,8 +488,7 @@
                 "a_position": "position",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "colored",
             "vertexShaderSource": "mesh/colored.vert",
             "fragmentShaderSource": "mesh/colored.frag",
@@ -529,8 +498,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "textured",
             "vertexShaderSource": "mesh/textured.vert",
             "fragmentShaderSource": "mesh/textured.frag",
@@ -541,8 +509,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "lambert",
             "vertexShaderSource": "mesh/lambert.vert",
             "fragmentShaderSource": "mesh/lambert.frag",
@@ -554,8 +521,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "oneColorReveal",
             "variants": {
                 "veryLow": "oneColor",
@@ -568,8 +534,7 @@
                 "a_position": "position",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "ship",
             "variants": {
                 "veryLow": "lambert",
@@ -588,8 +553,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "ship-low",
             "vertexShaderSource": "mesh/ship-low.vert",
             "fragmentShaderSource": "mesh/ship-low.frag",
@@ -601,8 +565,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "ship-veryHigh",
             "variants": {
                 "withoutDynamicLights": "ship-no-dynamic-lights",
@@ -618,8 +581,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "ship-no-dynamic-lights",
             "variants": {
                 "withoutShadows": "ship-no-advanced-lighting"
@@ -634,8 +596,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "ship-no-shadows",
             "variants": {
                 "withoutDynamicLights": "ship-no-advanced-lighting"
@@ -650,8 +611,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "ship-no-advanced-lighting",
             "vertexShaderSource": "mesh/ship-no-advanced-lighting.vert",
             "fragmentShaderSource": "mesh/ship-no-advanced-lighting.frag",
@@ -663,8 +623,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "ship-veryHigh-no-shadows",
             "variants": {
                 "withoutDynamicLights": "ship-no-advanced-lighting"
@@ -679,8 +638,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "reveal",
             "variants": {
                 "veryLow": "lambert",
@@ -698,8 +656,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "reveal-no-dynamic-lights",
             "variants": {
                 "withoutShadows": "reveal-no-advanced-lighting"
@@ -714,8 +671,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "reveal-no-shadows",
             "variants": {
                 "withoutDynamicLights": "reveal-no-advanced-lighting"
@@ -730,8 +686,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "reveal-no-advanced-lighting",
             "vertexShaderSource": "mesh/reveal-no-advanced-lighting.vert",
             "fragmentShaderSource": "mesh/reveal-no-advanced-lighting.frag",
@@ -743,8 +698,7 @@
                 "a_color": "color",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "skybox",
             "vertexShaderSource": "billboard/skybox.vert",
             "fragmentShaderSource": "billboard/skybox.frag",
@@ -752,8 +706,7 @@
             "vertexAttributeRoles": {
                 "a_position": "position"
             }
-        },
-        {
+        }, {
             "name": "billboard-instanced",
             "vertexShaderSource": "billboard/billboard-instanced.vert",
             "fragmentShaderSource": "billboard/billboard.frag",
@@ -767,8 +720,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "billboard",
             "variants": {
                 "instanced": "billboard-instanced"
@@ -780,8 +732,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "particle-instanced",
             "vertexShaderSource": "billboard/particle-instanced.vert",
             "fragmentShaderSource": "billboard/particle-instanced.frag",
@@ -795,8 +746,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "particle",
             "variants": {
                 "instanced": "particle-instanced"
@@ -808,8 +758,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "backgroundBillboard",
             "vertexShaderSource": "billboard/backgroundBillboard.vert",
             "fragmentShaderSource": "billboard/particle.frag",
@@ -818,8 +767,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "backgroundFixBillboard",
             "vertexShaderSource": "billboard/backgroundFixBillboard.vert",
             "fragmentShaderSource": "billboard/particle.frag",
@@ -828,8 +776,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "dust-instanced",
             "vertexShaderSource": "dust-instanced.vert",
             "fragmentShaderSource": "dust.frag",
@@ -840,8 +787,7 @@
             "vertexAttributeRoles": {
                 "a_position": "position"
             }
-        },
-        {
+        }, {
             "name": "dust",
             "variants": {
                 "instanced": "dust-instanced"
@@ -852,8 +798,7 @@
             "vertexAttributeRoles": {
                 "a_position": "position"
             }
-        },
-        {
+        }, {
             "name": "shadowMapping",
             "vertexShaderSource": "shadow-mapping.vert",
             "fragmentShaderSource": "shadow-mapping.frag",
@@ -862,8 +807,7 @@
                 "a_position": "position",
                 "a_groupIndices": "groupIndices"
             }
-        },
-        {
+        }, {
             "name": "ui2d",
             "vertexShaderSource": "ui/ui2d.vert",
             "fragmentShaderSource": "ui/ui2d.frag",
@@ -872,8 +816,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "ui3d",
             "vertexShaderSource": "ui/ui3d.vert",
             "fragmentShaderSource": "ui/ui2d.frag",
@@ -882,8 +825,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "ui2d-mix",
             "vertexShaderSource": "ui/ui2d.vert",
             "fragmentShaderSource": "ui/ui2d.frag",
@@ -892,8 +834,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "ui2d-clip",
             "vertexShaderSource": "ui/ui2d.vert",
             "fragmentShaderSource": "ui/ui2d-clip.frag",
@@ -902,8 +843,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "ui2d-viewport",
             "vertexShaderSource": "ui/ui2d-viewport.vert",
             "fragmentShaderSource": "ui/ui2d.frag",
@@ -912,8 +852,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "ui2d-mix-viewport",
             "vertexShaderSource": "ui/ui2d-viewport.vert",
             "fragmentShaderSource": "ui/ui2d.frag",
@@ -922,8 +861,7 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        },
-        {
+        }, {
             "name": "ui2d-clip-viewport",
             "vertexShaderSource": "ui/ui2d-viewport.vert",
             "fragmentShaderSource": "ui/ui2d-clip.frag",
@@ -932,15 +870,12 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
-        }
-    ],
-    "models": [
-        {
+        }],
+    "models": [{
             "name": "trainingGun",
             "basepath": "weapons/trainingGun",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -955,15 +890,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "plasma",
             "basepath": "weapons/plasma",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -978,15 +910,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "heavyPlasmaGun",
             "basepath": "weapons/heavyPlasmaGun",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1001,15 +930,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "turret",
             "basepath": "weapons/turret",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1024,15 +950,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "cannon",
             "basepath": "weapons/cannon",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1047,15 +970,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "ion_cannon",
             "basepath": "weapons/ion_cannon",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1070,15 +990,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "box",
             "basepath": "box",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1093,15 +1010,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "drone",
             "basepath": "drone",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1116,15 +1030,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "falcon",
             "basepath": "falcon",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1139,15 +1050,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "viper",
             "basepath": "viper",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1162,15 +1070,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "aries",
             "basepath": "aries",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1185,15 +1090,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "taurus",
             "basepath": "taurus",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1208,15 +1110,12 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        },
-        {
+                }]
+        }, {
             "name": "libra",
             "basepath": "libra",
             "format": "egm",
-            "files": [
-                {
+            "files": [{
                     "suffix": "_lod0-0",
                     "maxLOD": 0
                 }, {
@@ -1231,92 +1130,68 @@
                 }, {
                     "suffix": "_lod0-4",
                     "maxLOD": 4
-                }
-            ]
-        }
-    ],
-    "soundEffects": [
-        {
+                }]
+        }],
+    "soundEffects": [{
             "name": "spacecraftHum",
             "samples": ["spacecraft/hum.ogg"]
-        },
-        {
+        }, {
             "name": "thruster",
             "samples": ["spacecraft/thruster.ogg"]
-        },
-        {
+        }, {
             "name": "trainingShot",
             "samples": ["weapon/weaponshot_training.ogg"]
-        },
-        {
+        }, {
             "name": "plasmaShot",
             "samples": ["weapon/weaponshot_plasma.ogg"]
-        },
-        {
+        }, {
             "name": "heavyPlasmaShot",
             "samples": ["weapon/weaponshot_heavyPlasma.ogg"]
-        },
-        {
+        }, {
             "name": "protonShot",
             "samples": ["weapon/weaponshot_proton.ogg"]
-        },
-        {
+        }, {
             "name": "ionShot",
             "samples": ["weapon/weaponshot_ion.ogg"]
-        },
-        {
+        }, {
             "name": "hit",
             "samples": ["explosion/hit.ogg"]
-        },
-        {
+        }, {
             "name": "containerExplosion",
             "samples": ["explosion/containerExplosion.ogg"]
-        },
-        {
+        }, {
             "name": "fighterExplosion",
             "samples": ["explosion/fighterExplosion.ogg"]
-        },
-        {
-            "name": "beep1",
-            "samples": ["computer/beep1.wav"]
-        },
-        {
-            "name": "beep3",
-            "samples": ["computer/beep3.wav"]
-        },
-        {
+        }, {
+            "name": "beep_targeting",
+            "samples": ["computer/beep_targeting.wav"]
+        }, {
+            "name": "beep_targeting_denied",
+            "samples": ["computer/beep_targeting_denied.wav"]
+        }, {
             "name": "buttonHover",
             "samples": ["ui/button_hover.wav"]
-        },
-        {
+        }, {
             "name": "buttonClick",
             "samples": ["ui/button_click.ogg"]
-        }
-    ],
-    "music": [
-        {
+        }],
+    "music": [{
             "name": "menu",
             "sample": "menu.ogg"
-        },
-        {
+        }, {
             "name": "ambient",
             "sample": "ambient.ogg"
-        },
-        {
+        }, {
             "name": "anticipation",
             "sample": "anticipation.ogg"
-        },
-        {
+        }, {
             "name": "combat",
             "sample": "combat.ogg"
-        },
-        {
+        }, {
             "name": "victory",
             "sample": "victory.ogg"
-        },
-        {
+        }, {
             "name": "defeat",
             "sample": "defeat.ogg"
-        }
-    ]
+        }]
 }

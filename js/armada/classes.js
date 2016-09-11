@@ -99,15 +99,10 @@ define([
     // ------------------------------------------------------------------------------
     // constants
     /**
-     * Classes that are initialized without a name will be initialized with this name
+     * In the class description file, skybox classes will be initialized from the array with this name
      * @type String
      */
-    UNNAMED_CLASS_NAME = "unnamed",
-            /**
-             * In the class description file, skybox classes will be initialized from the array with this name
-             * @type String
-             */
-            SKYBOX_CLASS_ARRAY_NAME = "skyboxClasses",
+    SKYBOX_CLASS_ARRAY_NAME = "skyboxClasses",
             /**
              * In the class description file, background object classes will be initialized from the array with this name
              * @type String
@@ -175,6 +170,11 @@ define([
              * @type Number
              */
             VOLUME_FACTOR_FOR_STACKED_SOUNDS = 0.5,
+            /**
+             * The name (ID) of shader variants to be used (if available) for shaders when instancing is turned on
+             * @type String
+             */
+            SHADER_VARIANT_INSTANCED_NAME = "instanced",
             /**
              * A definition object with the structure of 2D sound effect descriptors used for type verification.
              * @type Object
@@ -420,72 +420,15 @@ define([
     // ##############################################################################
     /**
      * @class
-     * @augments GenericResource
+     * @extends JSONResource
      * @param {Object} dataJSON
      * @param {Boolean} [nameIsOptional=false] If true, no error message will be given in case there is no name defined in the data JSON
      */
     function GenericClass(dataJSON, nameIsOptional) {
-        resourceManager.GenericResource.call(this, dataJSON ? (dataJSON.name || (nameIsOptional && UNNAMED_CLASS_NAME) || _showMissingPropertyError(this, "name")) : null);
-        /**
-         * @type String
-         */
-        this._source = dataJSON ? (dataJSON.source || null) : null;
-        /**
-         * Stores a reference to the object from which this class was initialized.
-         * @type String
-         */
-        this._dataJSON = dataJSON;
-        if (dataJSON) {
-            if (!this._source) {
-                this._loadData(dataJSON);
-                this.setToReady();
-            }
-        }
+        resourceManager.JSONResource.call(this, dataJSON, _classFolder, nameIsOptional);
     }
-    GenericClass.prototype = new resourceManager.GenericResource();
+    GenericClass.prototype = new resourceManager.JSONResource();
     GenericClass.prototype.constructor = GenericClass;
-    /**
-     * @override
-     * @returns {Boolean}
-     */
-    GenericClass.prototype.requiresReload = function () {
-        if (this.isRequested()) {
-            return false;
-        }
-        return !this.isLoaded();
-    };
-    /**
-     * @override
-     */
-    GenericClass.prototype._requestFiles = function () {
-        application.requestTextFile(_classFolder, this._source, function (responseText) {
-            this._onFilesLoad(true, JSON.parse(responseText));
-        }.bind(this));
-    };
-    /**
-     * @override
-     * @param {Object} dataJSON
-     * @returns {Boolean}
-     */
-    GenericClass.prototype._loadData = function (dataJSON) {
-        this._source = this._source || "";
-        this._dataJSON = dataJSON;
-        return true;
-    };
-    /**
-     * Returns the object this class was initialized from.
-     * @returns {Object}
-     */
-    GenericClass.prototype.getData = function () {
-        return this._dataJSON;
-    };
-    /**
-     * Reinitializes the class based on the stored data object. (can be used to modify a class by modifying its data object and then calling
-     * this - only to be used by the editor, not by the game!
-     */
-    GenericClass.prototype.reloadData = function () {
-        this._loadData(this._dataJSON);
-    };
     /**
      * @param {String} resourceType
      * @param {String} resourceName
@@ -562,7 +505,7 @@ define([
         params = params || {};
         if (!params.omitShader) {
             this._shader = graphics.getShader(this._shaderName);
-            this._instancedShaderName = resources.getShader(this._shaderName).getVariantShaderName("instanced");
+            this._instancedShaderName = resources.getShader(this._shaderName).getVariantShaderName(SHADER_VARIANT_INSTANCED_NAME);
             if (this._instancedShaderName) {
                 this._instancedShader = graphics.getShader(this._instancedShaderName);
             }
@@ -3443,6 +3386,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        SHADER_VARIANT_INSTANCED_NAME: SHADER_VARIANT_INSTANCED_NAME,
         SOUND_EFFECT_2D: SOUND_EFFECT_2D,
         ParticleEmitterType: ParticleEmitterType,
         ObjectViewLookAtMode: ObjectViewLookAtMode,
@@ -3466,6 +3410,8 @@ define([
         ObjectView: ObjectView,
         SceneView: SceneView,
         requestLoad: requestLoad,
-        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged
+        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
+        executeForAllClasses: _classManager.executeForAllResources.bind(_classManager),
+        renameClass: _classManager.renameResource.bind(_classManager)
     };
 });

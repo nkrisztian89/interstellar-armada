@@ -12,18 +12,24 @@
 
 /**
  * @param utils Used to handle enums
+ * @param managedGL Used to access enums
+ * @param egomModel Used to access enums
  * @param budaScene Used to access enums
  * @param resources Used to retrieve resource name lists
  * @param config Used for configuration (setting) key strings
+ * @param graphics Used to access contants
  * @param classes Used to access enums and retrieve class name lists
  */
 define([
     "utils/utils",
+    "modules/managed-gl",
+    "modules/egom-model",
     "modules/buda-scene",
     "modules/media-resources",
     "armada/configuration",
+    "armada/graphics",
     "armada/classes"
-], function (utils, budaScene, resources, config, classes) {
+], function (utils, managedGL, egomModel, budaScene, resources, config, graphics, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -34,15 +40,16 @@ define([
                 STRING: "string",
                 ARRAY: "array",
                 OBJECT: "object",
-                ENUM: "enum",
-                COLOR3: "color3", // RGB
-                COLOR4: "color4", // RGBA
-                VECTOR3: "vector3",
-                RANGE: "range",
-                PAIRS: "pairs",
-                ROTATIONS: "rotations",
-                SET: "set",
-                CONFINES: "confines"
+                ENUM: "enum", // string or number that must have a value from a fixed set (defined in an object such as {FIRST: 1, SECOND: 2} -> value must be 1 or 2)
+                ASSOCIATIVE_ARRAY: "associativeArray", // object with custom properties
+                COLOR3: "color3", // [r, g, b]
+                COLOR4: "color4", // [r, g, b, a]
+                VECTOR3: "vector3", // [x, y, z]
+                RANGE: "range", // [min, max]
+                PAIRS: "pairs", // [[a, b], [a, b], ...]
+                ROTATIONS: "rotations", // [{axis: "X"/"Y"/"Z", degrees: x}, ...]
+                SET: "set", // array where all elements must be members of an enum
+                CONFINES: "confines" // [[minX, maxX], [minY, maxY], [minZ, maxZ]]
             },
     Unit = {
         TIMES: "x",
@@ -80,37 +87,74 @@ define([
         ROLL_LEFT: "rollLeft",
         ROLL_RIGHT: "rollRight"
     },
+    /**
+     * @typedef {Object} Editor~TypeDescriptor
+     * @property {String} baseType (enum BaseType)
+     * @property {String} [unit] For BaseType.NUMBER
+     * @property {Boolean} [long=false] For BaseType.STRING
+     * @property {String} [resourceReference] For BaseType.ENUM and BaseType.SET
+     * @property {String} [classReference] For BaseType.ENUM and BaseType.SET
+     * @property {String} [name] For BaseType.OBJECT and BaseType.SET
+     * @property {Editor~ItemDescriptor} [properties] For BaseType.OBJECT
+     * @property {Object} [values] For BaseType.ENUM and BaseType.SET
+     * @property {Editor~PropertyDescriptor} [first] For BaseType.PAIRS
+     * @property {Editor~PropertyDescriptor} [second] For BaseType.PAIRS
+     * @property {String|Editor~TypeDescriptor} [elementType] For BaseType.ARRAY and BaseType.ASSOCIATIVE_ARRAY
+     * @property {String[]} [validKeys] For BaseType.ASSOCIATIVE_ARRAY (if not given, all keys valid)
+     */
+    /**
+     * @typedef {Object} Editor~PropertyDescriptor
+     * @property {String} name
+     * @property {String|Editor~TypeDescriptor} type (if string: enum BaseType)
+     * @property {Boolean} [optional=false] Whether undefined / null (= unset) is actually a valid value for this property
+     * @property {} [defaultValue] If the value is undefined, it means the property will be taken as having this value
+     * @property {Boolean} [defaultDerived] If the value is undefined, the value of the property will be derived (calculated) from other properties
+     * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
+     * @property {String} [settingName] If globalDefault is true, the name of the setting from where the default value is retrieved from can be given here
+     */
+    /**
+     * @typedef {Object.<String, PropertyDescriptor>} Editor~ItemDescriptor
+     */
     // ------------------------------------------------------------------------------
-    // Constants
-    NAME_PROPERTY_NAME = "name",
+    // private functions used for constants
+    /**
+     * Returns a type descriptor describing an array type that has elements of the passed type
+     * @param {Editor~TypeDescriptor} elementType
+     * @returns {Editor~TypeDescriptor}
+     */
+    _createTypedArrayType = function (elementType) {
+        return {
+            baseType: BaseType.ARRAY,
+            elementType: elementType
+        };
+    },
+            /**
+             * Returns a type descriptor describing an associative array type that has elements of the passed type
+             * @param {Editor~TypeDescriptor} elementType
+             * @returns {Editor~TypeDescriptor}
+             */
+            _createTypedAssociativeArrayType = function (elementType) {
+                return {
+                    baseType: BaseType.ASSOCIATIVE_ARRAY,
+                    elementType: elementType
+                };
+            },
+            // ------------------------------------------------------------------------------
+            // Constants
+            NAME_PROPERTY_NAME = "name",
             BASED_ON_PROPERTY_NAME = "basedOn",
             /**
-             * @typedef {Object} Editor~TypeDescriptor
-             * @property {String} baseType (enum BaseType)
-             * @property {String} [unit] For BaseType.NUMBER
-             * @property {Boolean} [long=false] For BaseType.STRING
-             * @property {String} [resourceReference] For BaseType.ENUM and BaseType.SET
-             * @property {String} [classReference] For BaseType.ENUM and BaseType.SET
-             * @property {String} [name] For BaseType.OBJECT and BaseType.SET
-             * @property {Editor~ItemDescriptor} [properties] For BaseType.OBJECT
-             * @property {Object} [values] For BaseType.ENUM and BaseType.SET
-             * @property {Editor~PropertyDescriptor} [first] For BaseType.PAIRS
-             * @property {Editor~PropertyDescriptor} [second] For BaseType.PAIRS
+             * @type Editor~TypeDescriptor
              */
+            NUMBER_ARRAY = _createTypedArrayType(BaseType.NUMBER),
             /**
-             * @typedef {Object} Editor~PropertyDescriptor
-             * @property {String} name
-             * @property {String|Editor~TypeDescriptor} type (if string: enum BaseType)
-             * @property {String|Editor~TypeDescriptor} [elementType] given only if baseType is BaseType.ARRAY - same format as type
-             * @property {Boolean} [optional=false] Whether undefined / null (= unset) is actually a valid value for this property
-             * @property {} [defaultValue] If the value is undefined, it means the property will be taken as having this value
-             * @property {Boolean} [defaultDerived] If the value is undefined, the value of the property will be derived (calculated) from other properties
-             * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
-             * @property {String} [settingName] If globalDefault is true, the name of the setting from where the default value is retrieved from can be given here
+             * @type Editor~TypeDescriptor
              */
+            STRING_ARRAY = _createTypedArrayType(BaseType.STRING),
             /**
-             * @typedef {Object.<String, PropertyDescriptor>} Editor~ItemDescriptor
+             * @type Editor~TypeDescriptor
              */
+            STRING_ASSOCIATIVE_ARRAY = _createTypedAssociativeArrayType(BaseType.STRING),
             /**
              * @type Editor~TypeDescriptor
              */
@@ -274,6 +318,225 @@ define([
         values: Axis
     },
     /**
+     * The descriptor object for texture resources, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    TEXTURE = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        BASEPATH: {
+            name: "basepath",
+            type: BaseType.STRING
+        },
+        FORMAT: {
+            name: "format",
+            type: BaseType.STRING
+        },
+        USE_MIPMAP: {
+            name: "useMipmap",
+            type: BaseType.BOOLEAN
+        },
+        TYPE_SUFFIXES: {
+            name: "typeSuffixes",
+            type: STRING_ASSOCIATIVE_ARRAY
+        },
+        QUALITY_SUFFIXES: {
+            name: "qualitySuffixes",
+            type: STRING_ASSOCIATIVE_ARRAY
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    CUBEMAP_IMAGE_NAMES = {
+        baseType: BaseType.OBJECT,
+        name: "CubemapImageNames",
+        properties: {
+            POS_X: {
+                name: "posX",
+                type: BaseType.STRING
+            },
+            NEG_X: {
+                name: "negX",
+                type: BaseType.STRING
+            },
+            POS_Y: {
+                name: "posY",
+                type: BaseType.STRING
+            },
+            NEG_Y: {
+                name: "negY",
+                type: BaseType.STRING
+            },
+            POS_Z: {
+                name: "posZ",
+                type: BaseType.STRING
+            },
+            NEG_Z: {
+                name: "negZ",
+                type: BaseType.STRING
+            }
+        }
+    },
+    /**
+     * The descriptor object for cubemap resources, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    CUBEMAP = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        BASEPATH: {
+            name: "basepath",
+            type: BaseType.STRING
+        },
+        FORMAT: {
+            name: "format",
+            type: BaseType.STRING
+        },
+        IMAGE_NAMES: {
+            name: "imageNames",
+            type: CUBEMAP_IMAGE_NAMES
+        },
+        QUALITY_SUFFIXES: {
+            name: "qualitySuffixes",
+            type: STRING_ASSOCIATIVE_ARRAY
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    SHADER_VARIANTS = {
+        baseType: BaseType.ASSOCIATIVE_ARRAY,
+        validKeys: [
+            graphics.SHADER_VARIANT_WITHOUT_SHADOWS_NAME,
+            graphics.SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME,
+            classes.SHADER_VARIANT_INSTANCED_NAME
+        ],
+        elementType: SHADER_REFERENCE
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    SHADER_BLEND_MODE = {
+        baseType: BaseType.ENUM,
+        values: managedGL.ShaderBlendMode
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    VERTEX_ATTRIBUTE_ROLE = {
+        baseType: BaseType.ENUM,
+        name: "VertexAttributeRole",
+        values: egomModel.VertexAttributeRole
+    },
+    /**
+     * The descriptor object for shader resources, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    SHADER = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        VARIANTS: {
+            name: "variants",
+            type: SHADER_VARIANTS,
+            optional: true
+        },
+        VERTEX_SHADER_SOURCE: {
+            name: "vertexShaderSource",
+            type: BaseType.STRING
+        },
+        FRAGMENT_SHADER_SOURCE: {
+            name: "fragmentShaderSource",
+            type: BaseType.STRING
+        },
+        BLEND_MODE: {
+            name: "blendMode",
+            type: SHADER_BLEND_MODE
+        },
+        VERTEX_ATTRIBUTE_ROLES: {
+            name: "vertexAttributeRoles",
+            type: _createTypedAssociativeArrayType(VERTEX_ATTRIBUTE_ROLE)
+        },
+        INSTANCE_ATTRIBUTE_ROLES: {
+            name: "instanceAttributeRoles",
+            type: STRING_ASSOCIATIVE_ARRAY,
+            optional: true
+        }
+    },
+    /**
+     * @type Editor~TypeDescriptor
+     */
+    MODEL_FILE_DESCRIPTOR = {
+        baseType: BaseType.OBJECT,
+        name: "ModelFileDescriptor",
+        properties: {
+            SUFFIX: {
+                name: "suffix",
+                type: BaseType.STRING
+            },
+            MAX_LOD: {
+                name: "maxLOD",
+                type: BaseType.NUMBER
+            }
+        }
+    },
+    /**
+     * The descriptor object for model resources, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    MODEL = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        BASEPATH: {
+            name: "basepath",
+            type: BaseType.STRING
+        },
+        FORMAT: {
+            name: "format",
+            type: BaseType.STRING
+        },
+        FILES: {
+            name: "files",
+            type: _createTypedArrayType(MODEL_FILE_DESCRIPTOR)
+        }
+    },
+    /**
+     * The descriptor object for sound effect resources, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    SOUND_EFFECT = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        SAMPLES: {
+            name: "samples",
+            type: STRING_ARRAY
+        }
+    },
+    /**
+     * The descriptor object for music resources, describing their properties
+     * @type Editor~ItemDescriptor
+     */
+    MUSIC = {
+        NAME: {
+            name: "name",
+            type: BaseType.STRING
+        },
+        SAMPLES: {
+            name: "sample",
+            type: BaseType.STRING
+        }
+    },
+    /**
      * The descriptor object for skybox classes, describing their properties
      * @type Editor~ItemDescriptor
      */
@@ -331,8 +594,7 @@ define([
         },
         LAYERS: {
             name: "layers",
-            type: BaseType.ARRAY,
-            elementType: BACKGROUND_OBJECT_LAYER
+            type: _createTypedArrayType(BACKGROUND_OBJECT_LAYER)
         }
     },
     /**
@@ -442,8 +704,7 @@ define([
             },
             PARTICLE_STATES: {
                 name: "particleStates",
-                type: BaseType.ARRAY,
-                elementType: PARTICLE_STATE
+                type: _createTypedArrayType(PARTICLE_STATE)
             }
         }
     },
@@ -479,13 +740,11 @@ define([
         },
         PARTICLE_EMITTERS: {
             name: "particleEmitters",
-            type: BaseType.ARRAY,
-            elementType: PARTICLE_EMITTER
+            type: _createTypedArrayType(PARTICLE_EMITTER)
         },
         LIGHT_STATES: {
             name: "lightStates",
-            type: BaseType.ARRAY,
-            elementType: LIGHT_STATE
+            type: _createTypedArrayType(LIGHT_STATE)
         }
     },
     /**
@@ -576,8 +835,7 @@ define([
         },
         INTERSECTION_POSITIONS: {
             name: "intersectionPositions",
-            type: BaseType.ARRAY,
-            elementType: BaseType.NUMBER
+            type: NUMBER_ARRAY
         },
         WIDTH: {
             name: "width",
@@ -700,8 +958,7 @@ define([
         },
         BARRELS: {
             name: "barrels",
-            type: BaseType.ARRAY,
-            elementType: BARREL
+            type: _createTypedArrayType(BARREL)
         },
         ATTACHMENT_POINT: {
             name: "attachmentPoint",
@@ -717,8 +974,7 @@ define([
         },
         ROTATORS: {
             name: "rotators",
-            type: BaseType.ARRAY,
-            elementType: WEAPON_ROTATOR
+            type: _createTypedArrayType(WEAPON_ROTATOR)
         },
         FIRE_SOUND: {
             name: "fireSound",
@@ -930,8 +1186,7 @@ define([
             },
             THRUSTERS: {
                 name: "thrusters",
-                type: BaseType.ARRAY,
-                elementType: THRUSTER,
+                type: _createTypedArrayType(THRUSTER),
                 optional: true
             },
             ARRAY: {
@@ -1148,8 +1403,7 @@ define([
             },
             WEAPONS: {
                 name: "weapons",
-                type: BaseType.ARRAY,
-                elementType: WEAPON,
+                type: _createTypedArrayType(WEAPON),
                 optional: true
             },
             PROPULSION: {
@@ -1235,8 +1489,7 @@ define([
             },
             BLINKS: {
                 name: "blinks",
-                type: BaseType.ARRAY,
-                elementType: BaseType.NUMBER
+                type: NUMBER_ARRAY
             },
             INTENSITY: {
                 name: "intensity",
@@ -1325,13 +1578,11 @@ define([
         },
         BODIES: {
             name: "bodies",
-            type: BaseType.ARRAY,
-            elementType: BODY
+            type: _createTypedArrayType(BODY)
         },
         WEAPON_SLOTS: {
             name: "weaponSlots",
-            type: BaseType.ARRAY,
-            elementType: WEAPON_SLOT,
+            type: _createTypedArrayType(WEAPON_SLOT),
             optional: true
         },
         MAX_PROPULSION_GRADE: {
@@ -1340,19 +1591,16 @@ define([
         },
         THRUSTER_SLOTS: {
             name: "thrusterSlots",
-            type: BaseType.ARRAY,
-            elementType: THRUSTER_SLOT,
+            type: _createTypedArrayType(THRUSTER_SLOT),
             optional: true
         },
         VIEWS: {
             name: "views",
-            type: BaseType.ARRAY,
-            elementType: VIEW
+            type: _createTypedArrayType(VIEW)
         },
         EQUIPMENT_PROFILES: {
             name: "equipmentProfiles",
-            type: BaseType.ARRAY,
-            elementType: EQUIPMENT_PROFILE,
+            type: _createTypedArrayType(EQUIPMENT_PROFILE),
             optional: true
         },
         HUM_SOUND: {
@@ -1374,18 +1622,15 @@ define([
         },
         DAMAGE_INDICATORS: {
             name: "damageIndicators",
-            type: BaseType.ARRAY,
-            elementType: DAMAGE_INDICATOR
+            type: _createTypedArrayType(DAMAGE_INDICATOR)
         },
         LIGHTS: {
             name: "lights",
-            type: BaseType.ARRAY,
-            elementType: SPACECRAFT_LIGHT
+            type: _createTypedArrayType(SPACECRAFT_LIGHT)
         },
         BLINKERS: {
             name: "blinkers",
-            type: BaseType.ARRAY,
-            elementType: BLINKER
+            type: _createTypedArrayType(BLINKER)
         }
     },
     /**
@@ -1460,31 +1705,36 @@ define([
     ENVIRONMENT = {
         SKYBOXES: {
             name: "skyboxes",
-            type: BaseType.ARRAY,
-            elementType: SKYBOX
+            type: _createTypedArrayType(SKYBOX)
         },
         BACKGROUND_OBJECTS: {
             name: "backgroundObjects",
-            type: BaseType.ARRAY,
-            elementType: BACKGROUND_OBJECT
+            type: _createTypedArrayType(BACKGROUND_OBJECT)
         },
         DUST_CLOUDS: {
             name: "dustClouds",
-            type: BaseType.ARRAY,
-            elementType: DUST_CLOUD
+            type: _createTypedArrayType(DUST_CLOUD)
         }
     };
     /**
      * @class
      * Represents a basic or complex type.
-     * @param {String|Editor~TypeDescriptor} type Either string, for basic types (from enum BaseType), or an object with a baseType property
-     * containing the base type string and other properties containing the additional parameters of the type.
+     * @param {String|Editor~TypeDescriptor|Editor~ItemDescriptor} type Either string, for basic types (from enum BaseType), or an object 
+     * with a baseType property containing the base type string and other properties containing the additional parameters of the type.
+     * Item descriptors are also accepted, taking them as an unnamed object type with the given properties
      */
     function Type(type) {
         /**
          * @type Editor~TypeDescriptor
          */
         this._descriptor = (typeof type === "string") ? {baseType: type} : type;
+        // interpret descriptors without a baseType as item descriptors
+        if (!this._descriptor.baseType) {
+            this._descriptor = {
+                baseType: BaseType.OBJECT,
+                properties: this._descriptor
+            };
+        }
     }
     /**
      * Returns whether there is a property named "name" among the properties this (object based) type
@@ -1509,6 +1759,13 @@ define([
      */
     Type.prototype.getName = function () {
         return this._descriptor.name;
+    };
+    /**
+     * 
+     * @returns {Editor~TypeDescriptor}
+     */
+    Type.prototype.getDescriptor = function () {
+        return this._descriptor;
     };
     /**
      * Returns a displayable name for the type 
@@ -1584,6 +1841,34 @@ define([
     Type.prototype.getProperties = function () {
         return this._descriptor.properties;
     };
+    /**
+     * For associative arrays, returns the list of valid keys. If there is no restriction on valid keys, no array is returned.
+     * @returns {String[]}
+     */
+    Type.prototype.getValidKeys = function () {
+        return this._descriptor.validKeys;
+    };
+    /**
+     * Returns the type of elements for arrays and associative arrays.
+     * @returns {Type}
+     */
+    Type.prototype.getElementType = function () {
+        return new Type(this._descriptor.elementType);
+    };
+    /**
+     * Returns the type of the first members of pairs (for pairs type)
+     * @returns {Type}
+     */
+    Type.prototype.getFirstType = function () {
+        return new Type(this._descriptor.first.type);
+    };
+    /**
+     * Returns the type of the second members of pairs (for pairs type)
+     * @returns {Type}
+     */
+    Type.prototype.getSecondType = function () {
+        return new Type(this._descriptor.second.type);
+    };
     // ------------------------------------------------------------------------------
     // Public functions
     /**
@@ -1600,6 +1885,13 @@ define([
         return values;
     }
     // ------------------------------------------------------------------------------
+    // Initialization
+    graphics.executeWhenReady(function () {
+        // shader variants can be set for graphics quality levels (which will be used instead of the original shader in case the corresponding
+        // graphics quality is set)
+        SHADER_VARIANTS.validKeys = graphics.getShaderComplexities().concat(SHADER_VARIANTS.validKeys);
+    });
+    // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
         BaseType: BaseType,
@@ -1611,6 +1903,12 @@ define([
          * @type Object.<String, Editor~ItemDescriptor>
          */
         itemDescriptors: {
+            "textures": TEXTURE,
+            "cubemaps": CUBEMAP,
+            "shaders": SHADER,
+            "models": MODEL,
+            "soundEffects": SOUND_EFFECT,
+            "music": MUSIC,
             "skyboxClasses": SKYBOX_CLASS,
             "backgroundObjectClasses": BACKGROUND_OBJECT_CLASS,
             "dustCloudClasses": DUST_CLOUD_CLASS,

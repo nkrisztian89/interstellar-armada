@@ -391,6 +391,8 @@ define([
                 return [0, 0];
             case descriptors.BaseType.CONFINES:
                 return [[0, 0], [0, 0], [0, 0]];
+            case descriptors.BaseType.ASSOCIATIVE_ARRAY:
+                return {};
         }
         document.crash();
     }
@@ -832,6 +834,120 @@ define([
         return button;
     }
     /**
+     * Creates and returns a control that can be used to edit associative array properties. (by opening a popup to edit the elements of that 
+     * array)
+     * @param {String} topName Name of the top property being edited (under which this array resides)
+     * @param {String[]} [validKeys] If only a set of values are accepted as valid keys in the array, pass them here (if not given, arbitrary string keys can be used)
+     * @param {Editor~TypeDescriptor} elementTypeDescriptor The descriptor object describing the type of the elements of the array
+     * @param {Object} data The array itself that the control should edit
+     * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @returns {Element}
+     */
+    function _createAssocArrayControl(topName, validKeys, elementTypeDescriptor, data, parentPopup) {
+        var
+                button = document.createElement("button"),
+                popup = _createPopup(button, parentPopup, topName),
+                table, addEntryButton,
+                newEntryKeyEditor, newEntryKeySelector,
+                refreshTable,
+                /**
+                 * Returns the list of valid keys that can still be used (so are not in the array already)
+                 * @returns {Array}
+                 */
+                getValidKeys = function () {
+                    var i, result = [];
+                    for (i = 0; i < validKeys.length; i++) {
+                        if (!data.hasOwnProperty(validKeys[i])) {
+                            result.push(validKeys[i]);
+                        }
+                    }
+                    return result;
+                },
+                updateButtonText = function () {
+                    button.innerHTML = new descriptors.Type(elementTypeDescriptor).getDisplayName() + " (" + Object.keys(data).length + ")";
+                    if (parentPopup) {
+                        parentPopup.alignPosition();
+                    }
+                },
+                /**
+                 * Displays the currently available valid keys in the key selector
+                 */
+                updateEntryKeySelector = function () {
+                    var i, option, keys;
+                    if (newEntryKeySelector) {
+                        while (newEntryKeySelector.options.length > 0) {
+                            newEntryKeySelector.remove(0);
+                        }
+                        keys = getValidKeys();
+                        for (i = 0; i < keys.length; i++) {
+                            option = document.createElement("option");
+                            option.text = keys[i];
+                            newEntryKeySelector.add(option);
+                        }
+                        if (keys.length === 0) {
+                            newEntryKeySelector.hidden = true;
+                            addEntryButton.disabled = true;
+                        } else {
+                            newEntryKeySelector.hidden = false;
+                            addEntryButton.disabled = false;
+                        }
+                    }
+                },
+                addEntryEditor = function (index) {
+                    var key = Object.keys(data)[index];
+                    _addPairRow(table,
+                            common.createLabel(key),
+                            _createControl({name: key, type: elementTypeDescriptor}, data[key], topName, data, parentPopup),
+                            common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                                delete data[key];
+                                updateButtonText();
+                                updateEntryKeySelector();
+                                refreshTable();
+                                popup.alignPosition();
+                                _updateData(topName);
+                            }));
+                },
+                getKeyEditor = function () {
+                    return validKeys ? newEntryKeySelector : newEntryKeyEditor;
+                };
+        refreshTable = function () {
+            var i, keys = Object.keys(data);
+            table.innerHTML = "";
+            for (i = 0; i < keys.length; i++) {
+                addEntryEditor(i);
+            }
+        };
+        if (!validKeys) {
+            newEntryKeyEditor = document.createElement("input");
+            newEntryKeyEditor.type = "text";
+            newEntryKeyEditor.onchange = function () {
+                addEntryButton.disabled = (newEntryKeyEditor.value.length === 0);
+            };
+        } else {
+            newEntryKeySelector = common.createSelector(getValidKeys(), undefined, false, function () {
+                addEntryButton.disabled = (newEntryKeySelector.value.length === 0);
+            });
+        }
+        addEntryButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+            data[getKeyEditor().value] = _getDefaultValue({type: elementTypeDescriptor});
+            updateButtonText();
+            updateEntryKeySelector();
+            refreshTable();
+            popup.alignPosition();
+            _updateData(topName);
+        });
+        addEntryButton.disabled = (getKeyEditor().value.length === 0);
+        _addPropertyEditorHeader(popup, [getKeyEditor()], [addEntryButton]);
+        table = document.createElement("table");
+        refreshTable();
+        popup.getElement().appendChild(table);
+        popup.addToPage();
+        // create a button using which the popup can be opened
+        _setPopupTogglerButton(button, "", popup);
+        updateButtonText();
+        return button;
+    }
+    /**
      * Creates and returns an element that can be used to display the value of properties the type of which is not identified.
      * @param {} data The value of the property to display
      * @returns {Element}
@@ -895,7 +1011,12 @@ define([
      * @returns {Element}
      */
     _createControl = function (propertyDescriptor, data, topName, parent, parentPopup, nameChangeHandler) {
-        var result, type = new descriptors.Type(propertyDescriptor.type), elementType;
+        var
+                result,
+                /**
+                 * @type Type
+                 */
+                type = new descriptors.Type(propertyDescriptor.type), elementType;
         if (data === undefined) {
             result = _createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler);
         } else {
@@ -941,12 +1062,15 @@ define([
                     result = _createConfinesControl(topName, data, parentPopup);
                     break;
                 case descriptors.BaseType.ARRAY:
-                    elementType = new descriptors.Type(propertyDescriptor.elementType);
+                    elementType = type.getElementType();
                     if (elementType.getBaseType() === descriptors.BaseType.OBJECT) {
-                        result = _createObjectControl(topName, propertyDescriptor.elementType, data, parentPopup);
+                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parentPopup);
                     } else {
-                        result = _createArrayControl(topName, propertyDescriptor.elementType, data, parentPopup);
+                        result = _createArrayControl(topName, elementType.getDescriptor(), data, parentPopup);
                     }
+                    break;
+                case descriptors.BaseType.ASSOCIATIVE_ARRAY:
+                    result = _createAssocArrayControl(topName, type.getValidKeys(), type.getElementType().getDescriptor(), data, parentPopup);
                     break;
                 case descriptors.BaseType.OBJECT:
                     result = _createObjectControl(topName, propertyDescriptor.type, data, parentPopup);

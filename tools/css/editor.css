@@ -92,24 +92,29 @@ select {
 
     overflow-x: hidden;
     overflow-y: auto;
+
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
 }
 
 .popup, .dialog {
     border: 2px solid #666666;
     background-color: #444444;
     box-shadow: 0 0 1em 0 #222222;
-
-    padding-top: 0.2em;
-    padding-bottom: 0.2em;
 }
 
 .dialog {
     position: absolute;
+    width: 20em;
+    height: 9em;
+    left: calc(50% - 10em);
+    top: calc(40% - 4.5em);
+    padding: 1em;
 }
 
 .dialogLabel {
     display: inline-block;
-    width: 5em;
+    width: 6em;
     text-align: left;
 }
 
@@ -230,7 +235,7 @@ div#items > div.windowContent, div#properties > div.windowContent {
 }
 
 div.dialogEntry {
-    text-align: center;
+    text-align: left;
     margin-bottom: 0.9em;
 }
 

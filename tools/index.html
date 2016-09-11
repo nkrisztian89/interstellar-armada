@@ -41,18 +41,22 @@
             </div>
         </div>
 
-        <div id="classesExportDialog" class="dialog" hidden>
+        <div id="exportDialog" class="dialog" hidden>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Item type:</span>
+                <select id="exportType"></select>
+            </div>
             <div class="dialogEntry">
                 <span class="dialogLabel">Name:</span>
-                <input type="text" id="classesExportName" value="classes"/>
+                <input type="text" id="exportName" value="classes"/>
             </div>
             <div class="dialogEntry">
                 <span class="dialogLabel">Author:</span>
-                <input type="text" id="classesExportAuthor" value="Krisztián Nagy"/>
+                <input type="text" id="exportAuthor" value="Krisztián Nagy"/>
             </div>
             <div class="dialogButtonRow">
-                <button type="button" id="classesExportExport">Export</button>
-                <button type="button" id="classesExportCancel">Cancel</button>
+                <button type="button" id="exportExport">Export</button>
+                <button type="button" id="exportCancel">Cancel</button>
             </div>
         </div>
 

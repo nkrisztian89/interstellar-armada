@@ -360,11 +360,11 @@
             "hudSubheaderTextFontName": "gameFont",
             "hudSubheaderTextPosition": [0, -0.85],
             "hudTargetSwitchSound": {
-                "name": "beep1",
+                "name": "beep_targeting",
                 "volume": 0.2
             },
             "hudTargetSwitchDeniedSound": {
-                "name": "beep3",
+                "name": "beep_targeting_denied",
                 "volume": 0.2
             },
             "weaponFireSoundStackMinimumDistance": 100,

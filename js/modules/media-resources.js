@@ -145,18 +145,68 @@ define([
     Object.freeze(ShaderType);
     // ############################################################################################
     /**
-     * @typedef TextureResource~ManagedTextureCacheObject
+     * @class
+     * @extends GenericResource
+     * @param {Object} [dataJSON]
+     */
+    function MediaResource(dataJSON) {
+        resourceManager.GenericResource.call(this, dataJSON ? dataJSON.name : "");
+        /**
+         * Stores a reference to the object from which this class was initialized.
+         * @type String
+         */
+        this._dataJSON = dataJSON;
+        if (dataJSON) {
+            this._loadConfig(dataJSON);
+        }
+    }
+    MediaResource.prototype = new resourceManager.GenericResource();
+    MediaResource.prototype.constructor = MediaResource;
+    /**
+     * Loads the configuration of the resource from the passed JSON object - override this to set all properties of the resource!
+     * @param {Object} dataJSON
+     */
+    MediaResource.prototype._loadConfig = function (dataJSON) {
+        this._dataJSON = dataJSON;
+    };
+    /**
+     * Returns the object this resource was initialized from.
+     * @returns {Object}
+     */
+    MediaResource.prototype.getData = function () {
+        return this._dataJSON;
+    };
+    /**
+     * Reinitializes the resource based on the stored data object. (can be used to modify a resource by modifying its data object and then calling
+     * this - only to be used by the editor, not by the game!
+     */
+    MediaResource.prototype.reloadData = function () {
+        this._loadConfig(this._dataJSON);
+        this.resetReadyState();
+    };
+    // ############################################################################################
+    /**
+     * @typedef {Object} TextureResource~ManagedTextureCacheObject
      * @property {String[]} types
      * @property {String[]} qualityPreferenceList
      * @property {Object.<String, ManagedTexture>} textures
      */
     /**
      * @class
-     * @augments GenericResource
+     * @extends MediaResource
      * @param {Object} dataJSON
      */
     function TextureResource(dataJSON) {
-        resourceManager.GenericResource.call(this, dataJSON.name);
+        MediaResource.call(this, dataJSON);
+    }
+    TextureResource.prototype = new MediaResource();
+    TextureResource.prototype.constructor = TextureResource;
+    /**
+     * 
+     * @param {Object} dataJSON
+     */
+    TextureResource.prototype._loadConfig = function (dataJSON) {
+        MediaResource.prototype._loadConfig.call(this, dataJSON);
         /**
          * @type String
          */
@@ -197,9 +247,7 @@ define([
          * @type TextureResource~ManagedTextureCacheObject[]
          */
         this._cachedManagedTexturesOfTypes = [];
-    }
-    TextureResource.prototype = new resourceManager.GenericResource();
-    TextureResource.prototype.constructor = TextureResource;
+    };
     /**
      * @param {String} type
      * @param {String} quality
@@ -402,11 +450,20 @@ define([
     // ############################################################################################x
     /**
      * @class Represents a cube mapped texture resource.
-     * @augments GenericResource
+     * @extends MediaResource
      * @param {Object} dataJSON
      */
     function CubemapResource(dataJSON) {
-        resourceManager.GenericResource.call(this, dataJSON.name);
+        MediaResource.call(this, dataJSON);
+    }
+    CubemapResource.prototype = new MediaResource();
+    CubemapResource.prototype.constructor = CubemapResource;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    CubemapResource.prototype._loadConfig = function (dataJSON) {
+        MediaResource.prototype._loadConfig.call(this, dataJSON);
         /**
          * @type String
          */
@@ -439,9 +496,7 @@ define([
          * @type {cubemap: ManagedCubemap, qualityPreferenceList: String[]}[]
          */
         this._cachedManagedCubemaps = [];
-    }
-    CubemapResource.prototype = new resourceManager.GenericResource();
-    CubemapResource.prototype.constructor = CubemapResource;
+    };
     /**
      * 
      * @param {String} face
@@ -615,11 +670,20 @@ define([
      */
     /**
      * @class 
-     * @augments GenericResource
+     * @extends MediaResource
      * @param {Object} dataJSON
      */
     function ShaderResource(dataJSON) {
-        resourceManager.GenericResource.call(this, dataJSON.name);
+        MediaResource.call(this, dataJSON);
+    }
+    ShaderResource.prototype = new MediaResource();
+    ShaderResource.prototype.constructor = ShaderResource;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ShaderResource.prototype._loadConfig = function (dataJSON) {
+        MediaResource.prototype._loadConfig.call(this, dataJSON);
         /**
          * The names of the variants of this shaders organized by the variant names.
          * @type Object.<String, String>
@@ -672,9 +736,7 @@ define([
          * @type Number
          */
         this._shaderIncludesLoaded = 0;
-    }
-    ShaderResource.prototype = new resourceManager.GenericResource();
-    ShaderResource.prototype.constructor = ShaderResource;
+    };
     /**
      * If all source files needed to assemble the final sources of this shader have been loaded and inserted, marks the shader as ready.
      */
@@ -870,14 +932,24 @@ define([
      */
     /**
      * @class
-     * @augments GenericResource
+     * @extends MediaResource
      * @param {Object} dataJSON
      */
     function ModelResource(dataJSON) {
-        resourceManager.GenericResource.call(this, dataJSON.name);
+        MediaResource.call(this, dataJSON);
+    }
+    ModelResource.prototype = new MediaResource();
+    ModelResource.prototype.constructor = ModelResource;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    ModelResource.prototype._loadConfig = function (dataJSON) {
+        MediaResource.prototype._loadConfig.call(this, dataJSON);
         if (dataJSON.model) {
             this._model = dataJSON.model;
             this._files = [];
+            this._dataJSON = null;
             this.setToReady();
             return;
         }
@@ -909,9 +981,7 @@ define([
          * @type Number
          */
         this._maxLoadedLOD = -1;
-    }
-    ModelResource.prototype = new resourceManager.GenericResource();
-    ModelResource.prototype.constructor = ModelResource;
+    };
     /**
      * @param {Number} maxLOD
      * @returns {String}
@@ -1034,11 +1104,20 @@ define([
     // ############################################################################################
     /**
      * @class
-     * @augments GenericResource
+     * @extends MediaResource
      * @param {Object} dataJSON
      */
     function SoundEffectResource(dataJSON) {
-        resourceManager.GenericResource.call(this, dataJSON.name);
+        MediaResource.call(this, dataJSON);
+    }
+    SoundEffectResource.prototype = new MediaResource();
+    SoundEffectResource.prototype.constructor = SoundEffectResource;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    SoundEffectResource.prototype._loadConfig = function (dataJSON) {
+        MediaResource.prototype._loadConfig.call(this, dataJSON);
         /**
          * The filenames (paths withing the sound effect folder) of the samples that correspond to this sound effect - when playing back
          * the effect, one of these samples is chosen randomly
@@ -1053,9 +1132,7 @@ define([
          * @type Number
          */
         this._samplesToLoad = 0;
-    }
-    SoundEffectResource.prototype = new resourceManager.GenericResource();
-    SoundEffectResource.prototype.constructor = SoundEffectResource;
+    };
     /**
      * @override
      * @returns {Boolean}
@@ -1149,19 +1226,26 @@ define([
     // ############################################################################################
     /**
      * @class
-     * @augments GenericResource
+     * @extends MediaResource
      * @param {Object} dataJSON
      */
     function MusicResource(dataJSON) {
-        resourceManager.GenericResource.call(this, dataJSON.name);
+        MediaResource.call(this, dataJSON);
+    }
+    MusicResource.prototype = new MediaResource();
+    MusicResource.prototype.constructor = MusicResource;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     */
+    MusicResource.prototype._loadConfig = function (dataJSON) {
+        MediaResource.prototype._loadConfig.call(this, dataJSON);
         /**
          * The filename (path withing the music folder) of the sample that correspond to this song
          * @type String
          */
         this._sample = dataJSON.sample;
-    }
-    MusicResource.prototype = new resourceManager.GenericResource();
-    MusicResource.prototype.constructor = MusicResource;
+    };
     /**
      * @override
      * @returns {Boolean}
@@ -1328,7 +1412,9 @@ define([
         getResourceNames: _resourceManager.getResourceNames.bind(_resourceManager),
         getResource: _resourceManager.getResource.bind(_resourceManager),
         executeWhenReady: _resourceManager.executeWhenReady.bind(_resourceManager),
-        executeOnResourceLoad: _resourceManager.executeOnResourceLoad.bind(_resourceManager)
+        executeOnResourceLoad: _resourceManager.executeOnResourceLoad.bind(_resourceManager),
+        executeForAllResources: _resourceManager.executeForAllResources.bind(_resourceManager),
+        renameResource: _resourceManager.renameResource.bind(_resourceManager)
     };
 });
 

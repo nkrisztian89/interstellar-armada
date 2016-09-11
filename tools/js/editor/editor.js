@@ -47,11 +47,12 @@ define([
             PREVIEW_WINDOW_ID = "preview",
             PROPERTIES_WINDOW_ID = "properties",
             EXPORT_BUTTON_ID = "exportButton",
-            EXPORT_DIALOG_ID = "classesExportDialog",
-            EXPORT_NAME_ID = "classesExportName",
-            EXPORT_AUTHOR_ID = "classesExportAuthor",
-            EXPORT_EXPORT_BUTTON_ID = "classesExportExport",
-            EXPORT_CANCEL_BUTTON_ID = "classesExportCancel",
+            EXPORT_DIALOG_ID = "exportDialog",
+            EXPORT_TYPE_ID = "exportType",
+            EXPORT_NAME_ID = "exportName",
+            EXPORT_AUTHOR_ID = "exportAuthor",
+            EXPORT_EXPORT_BUTTON_ID = "exportExport",
+            EXPORT_CANCEL_BUTTON_ID = "exportCancel",
             WINDOW_LABEL_CLASS = "windowLabel",
             WINDOW_CONTENT_CLASS = "windowContent",
             SELECTED_CLASS = "selected",
@@ -162,11 +163,143 @@ define([
         }
     }
     /**
+     * In case the property accessed within the passed data is a reference to an item with the passed old name and in the same category 
+     * as currently selected, changes the reference to the passed new name
+     * @param {Object|Array} data The data within to access the property to check
+     * @param {String|Number} accessor The key of the property (for objects) or the index of the element (for arrays) to access the property to check
+     * @param {Type} type The type describing the accessed property
+     * @param {String} oldName 
+     * @param {String} newName
+     * @param {Function} categoryGetter A function that should return the category of reference (e.g. "textures" or "projectileClasses") for a passed type
+     * @returns {Boolean}
+     */
+    function _changeReference(data, accessor, type, oldName, newName, categoryGetter) {
+        var index;
+        // if the property is a reference type in the same category as currently selected (e.g. we have a texture selected and the property is a texture reference)
+        if ((categoryGetter(type) === _selectedItem.category)) {
+            // references are either enums (a simple string reference) or sets (an array of string references)
+            switch (type.getBaseType()) {
+                case descriptors.BaseType.ENUM:
+                    if (data[accessor] === oldName) {
+                        data[accessor] = newName;
+                        return true;
+                    }
+                    break;
+                case descriptors.BaseType.SET:
+                    index = data[accessor].indexOf(oldName);
+                    if (index >= 0) {
+                        data[accessor][index] = newName;
+                        return true;
+                    }
+                    break;
+            }
+        }
+        return false;
+    }
+    /**
+     * Checks for all references within the passed data using the passed type information, and replaces all references having the passed
+     * old name in the same category as currently selected to the passed new name. 
+     * E.g. we want to replace texture references to the "explosion" texture to references to the "shard" texture in an explosion class,
+     * because we have just renamed the corresponding texture (so we have it selected)
+     * See the parameter examples on how to do that.
+     * @param {} data The data in which to look for references. Will be interpreted based on the type info to recursively check for references
+     * within arrays / objects. E.g. the initialization JSON object for an explosion class
+     * @param {Type} type The information describing the type of the passed data. E.g. the EXPLOSION_CLASS item descriptor
+     * @param {String} oldName The old name which to replace e.g. "explosion"
+     * @param {String} newName The new name which to replace e.g. "shard"
+     * @param {Function} categoryGetter Should return the category of reference if a type is passed to it. E.g. passing a texture reference
+     * type descriptor to it, should return "textures" if we are looking for resource references (but not if we are looking for class references)
+     */
+    function _changeReferences(data, type, oldName, newName, categoryGetter) {
+        var propertyDescriptors, propertyDescriptorNames, i, childType, keys;
+        if (data) {
+            switch (type.getBaseType()) {
+                case descriptors.BaseType.OBJECT:
+                    propertyDescriptors = type.getProperties();
+                    propertyDescriptorNames = Object.keys(propertyDescriptors);
+                    for (i = 0; i < propertyDescriptorNames.length; i++) {
+                        childType = new descriptors.Type(propertyDescriptors[propertyDescriptorNames[i]].type);
+                        if (!_changeReference(data, propertyDescriptors[propertyDescriptorNames[i]].name, childType, oldName, newName, categoryGetter)) {
+                            _changeReferences(data[propertyDescriptors[propertyDescriptorNames[i]].name], childType, oldName, newName, categoryGetter);
+                        }
+                    }
+                    break;
+                case descriptors.BaseType.ARRAY:
+                    childType = type.getElementType();
+                    for (i = 0; i < data.length; i++) {
+                        if (!_changeReference(data, i, childType, oldName, newName, categoryGetter)) {
+                            _changeReferences(data[i], childType, oldName, newName, categoryGetter);
+                        }
+                    }
+                    break;
+                case descriptors.BaseType.ASSOCIATIVE_ARRAY:
+                    childType = type.getElementType();
+                    keys = Object.keys(data);
+                    for (i = 0; i < keys.length; i++) {
+                        if (!_changeReference(data, keys[i], childType, oldName, newName, categoryGetter)) {
+                            _changeReferences(data[keys[i]], childType, oldName, newName, categoryGetter);
+                        }
+                    }
+                    break;
+                case descriptors.BaseType.PAIRS:
+                    for (i = 0; i < data.length; i++) {
+                        childType = type.getFirstType();
+                        if (!_changeReference(data[i], 0, childType, oldName, newName, categoryGetter)) {
+                            _changeReferences(data[i][0], childType, oldName, newName, categoryGetter);
+                        }
+                        childType = type.getSecondType();
+                        if (!_changeReference(data[i], 1, childType, oldName, newName, categoryGetter)) {
+                            _changeReferences(data[i][1], childType, oldName, newName, categoryGetter);
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+    /**
+     * Creates and returns a function that can be used when the name of an item is changed
+     * @param {String} oldName
+     * @param {String} newName
+     * @param {Function} categoryGetter Should return the reference category of a property if the type info of the property is passed to it,
+     * of the same item type as the item that has been changed (resource / class / etc)
+     * @returns {Function}
+     */
+    function _createItemNameChangeHandler(oldName, newName, categoryGetter) {
+        return function (itemInstance, categoryName) {
+            var descriptor = descriptors.itemDescriptors[categoryName];
+            if (descriptor) {
+                _changeReferences(itemInstance.getData(), new descriptors.Type(descriptor), oldName, newName, categoryGetter, true);
+            }
+            itemInstance.reloadData();
+        };
+    }
+    /**
      * A function to execute whenever the name property of the selected item is changed
      * @param {String} newName
      */
     function _handleNameChange(newName) {
+        var oldName = _selectedItemElement.innerHTML, nameChangeHandler;
         _selectedItemElement.innerHTML = newName;
+        switch (_selectedItem.type) {
+            case common.ItemType.RESOURCE:
+                resources.renameResource(_selectedItem.category, oldName, newName);
+                nameChangeHandler = _createItemNameChangeHandler(oldName, newName, function (type) {
+                    return type.getResourceReference();
+                });
+                resources.executeForAllResources(nameChangeHandler);
+                classes.executeForAllClasses(nameChangeHandler);
+                break;
+            case common.ItemType.CLASS:
+                classes.renameClass(_selectedItem.category, oldName, newName);
+                nameChangeHandler = _createItemNameChangeHandler(oldName, newName, function (type) {
+                    return type.getClassReference();
+                });
+                resources.executeForAllResources(nameChangeHandler);
+                classes.executeForAllClasses(nameChangeHandler);
+                break;
+            default:
+                application.showError("Name change not supported for this type of item!");
+        }
     }
     /**
      * Loads the content of the Properties window for the currently selected element.
@@ -206,17 +339,16 @@ define([
      * a resource or game class)
      * @param {Element} element The element that represents the item (typically <span>, showing the name of the item)
      * @param {String} type (enum ItemType) The type this item belongs to
-     * @param {String} name The name of the item (identifying it within its category) (e.g. "falcon")
      * @param {String} category The category the item belongs to (e.g. "spacecraftClasses")
      * @param {Object} data The data (JSON object) the given item is initialized from
      * @returns {Function}
      */
-    function _createElementClickHandler(element, type, name, category, data) {
+    function _createElementClickHandler(element, type, category, data) {
         return function () {
             if (_selectedItemElement) {
                 _selectedItemElement.classList.remove(SELECTED_CLASS);
             }
-            _selectItem(type, name, category, data);
+            _selectItem(type, element.textContent, category, data);
             _selectedItemElement = element;
             _selectedItemElement.classList.add(SELECTED_CLASS);
         };
@@ -238,19 +370,25 @@ define([
         return JSON.stringify(info);
     }
     /**
-     * Returns the string that can be used as the content of the exported classes file 
+     * Returns the string that can be used as the content of an exported file 
      * @param {String} name The name to be included in the info section of the file
      * @param {String} author The author to be included in the info section of the file
+     * @param {String[]} categories The list of the categories to include in the file
+     * @param {Function} getNamesFunction The function that returns the names of the items to be included for a given category
+     * @param {Function} getItemFunction  The function that returns the data of items to be included, given the category and name of the item
      * @returns {String}
      */
-    function _getClassesString(name, author) {
-        var i, j, classCategories = classes.getClassCategories(), classesOfCategory, result;
+    function _getItemsString(name, author, categories, getNamesFunction, getItemFunction) {
+        var i, j, itemNames, result, itemData;
         result = '{"info":' + _getInfoString(name, author);
-        for (i = 0; i < classCategories.length; i++) {
-            result += ',"' + classCategories[i] + '":[';
-            classesOfCategory = classes.getClassNames(classCategories[i]);
-            for (j = 0; j < classesOfCategory.length; j++) {
-                result += ((j > 0) ? ',' : '') + JSON.stringify(classes.getClass(classCategories[i], classesOfCategory[j]).getData());
+        for (i = 0; i < categories.length; i++) {
+            result += ',"' + categories[i] + '":[';
+            itemNames = getNamesFunction(categories[i]);
+            for (j = 0; j < itemNames.length; j++) {
+                itemData = getItemFunction(categories[i], itemNames[j]).getData();
+                if (itemData) {
+                    result += ((j > 0) ? ',' : '') + JSON.stringify(itemData);
+                }
             }
             result += ']';
         }
@@ -258,13 +396,13 @@ define([
         return result;
     }
     /**
-     * Exports the class settings into a JSON file the download of which is then triggered
-     * @param {String} name The name to be included in the info section of the file
-     * @param {String} author The author to be included in the info section of the file
+     * Exports the passed string into a JSON file the download of which is then triggered
+     * @param {String} name The name of the file (without extension)
+     * @param {String} string The string to use as the contents of the file
      */
-    function _exportClasses(name, author) {
+    function _exportString(name, string) {
         var
-                blob = new Blob([_getClassesString(name, author)], {type: "text/json"}),
+                blob = new Blob([string], {type: "text/json"}),
                 e = document.createEvent("MouseEvents"),
                 a = document.createElement("a");
         a.download = name + ".json";
@@ -274,21 +412,58 @@ define([
         a.dispatchEvent(e);
     }
     /**
-     * Sets up the event handlers for the elements in the classes export dialog
+     * Sets up the event handlers for the elements in the export dialog
      */
-    function _loadClassesExportDialog() {
+    function _loadExportDialog() {
         var
-                classesExportDialog = document.getElementById(EXPORT_DIALOG_ID),
-                classesExportName = document.getElementById(EXPORT_NAME_ID),
-                classesExportAuthor = document.getElementById(EXPORT_AUTHOR_ID),
-                classesExportExport = document.getElementById(EXPORT_EXPORT_BUTTON_ID),
-                classesExportCancel = document.getElementById(EXPORT_CANCEL_BUTTON_ID);
-        classesExportExport.onclick = function () {
-            _exportClasses(classesExportName.value, classesExportAuthor.value);
-            classesExportDialog.hidden = true;
+                option,
+                exportDialog = document.getElementById(EXPORT_DIALOG_ID),
+                exportType = document.getElementById(EXPORT_TYPE_ID),
+                exportName = document.getElementById(EXPORT_NAME_ID),
+                exportAuthor = document.getElementById(EXPORT_AUTHOR_ID),
+                exportExport = document.getElementById(EXPORT_EXPORT_BUTTON_ID),
+                exportCancel = document.getElementById(EXPORT_CANCEL_BUTTON_ID);
+        option = document.createElement("option");
+        option.text = common.ItemType.RESOURCE;
+        option.value = common.ItemType.RESOURCE;
+        exportType.add(option);
+        option = document.createElement("option");
+        option.text = common.ItemType.CLASS;
+        option.value = common.ItemType.CLASS;
+        exportType.add(option);
+        exportType.onchange = function () {
+            exportName.value = exportType.value;
         };
-        classesExportCancel.onclick = function () {
-            classesExportDialog.hidden = true;
+        exportName.value = exportType.value;
+        exportExport.onclick = function () {
+            switch (exportType.value) {
+                case common.ItemType.RESOURCE:
+                    _exportString(
+                            exportName.value,
+                            _getItemsString(
+                                    exportName.value,
+                                    exportAuthor.value,
+                                    resources.getResourceTypes(),
+                                    resources.getResourceNames,
+                                    resources.getResource));
+                    break;
+                case common.ItemType.CLASS:
+                    _exportString(
+                            exportName.value,
+                            _getItemsString(
+                                    exportName.value,
+                                    exportAuthor.value,
+                                    classes.getClassCategories(),
+                                    classes.getClassNames,
+                                    classes.getClass));
+                    break;
+                default:
+                    application.showError("Exporting " + exportType.value + " is not yet implemented!");
+            }
+            exportDialog.hidden = true;
+        };
+        exportCancel.onclick = function () {
+            exportDialog.hidden = true;
         };
     }
     /**
@@ -343,7 +518,7 @@ define([
                 itemSpan.classList.add(ELEMENT_CLASS);
                 itemSpan.innerHTML = items[j];
                 itemElement.appendChild(itemSpan);
-                itemSpan.onclick = _createElementClickHandler(itemSpan, itemType, items[j], categories[i]);
+                itemSpan.onclick = _createElementClickHandler(itemSpan, itemType, categories[i]);
                 itemList.appendChild(itemElement);
             }
             itemList.hidden = true;
@@ -370,7 +545,7 @@ define([
         document.getElementById(EXPORT_BUTTON_ID).onclick = function () {
             exportDialog.hidden = !exportDialog.hidden;
         };
-        _loadClassesExportDialog();
+        _loadExportDialog();
     }
     /**
      * Sends an asynchronous request to get the JSON file describing the game settings and sets the callback function to set them and
@@ -423,12 +598,20 @@ define([
             });
         });
     }
+    /**
+     * The function to handle the window resize event
+     * @returns {}
+     */
+    function _handleResize() {
+        common.alignPopups();
+    }
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
         initialize: function () {
             application.setPreviouslyRunVersion(localStorage[constants.VERSION_LOCAL_STORAGE_ID]);
             _requestConfigLoad();
+            window.addEventListener("resize", _handleResize);
         }
     };
 });
