@@ -121,6 +121,7 @@ define([
      * @property {Boolean} lodSetting
      * @property {String[]} canvasUpdateProperties
      * @property {String[]} optionRefreshProperties
+     * @property {Number} [defaultDistanceFactor]
      */
     /**
      * @typedef {Object} Editor~WebGLPreviewFunctions
@@ -203,8 +204,10 @@ define([
                 cameraOri = _scene.getCamera().getCameraOrientationMatrix();
                 _model.rotate(mat.getRowB43(cameraOri), rotA);
                 _model.rotate(mat.getRowA43(cameraOri), rotB);
-                _wireframeModel.rotate(mat.getRowB43(cameraOri), rotA);
-                _wireframeModel.rotate(mat.getRowA43(cameraOri), rotB);
+                if (_wireframeModel) {
+                    _wireframeModel.rotate(mat.getRowB43(cameraOri), rotA);
+                    _wireframeModel.rotate(mat.getRowA43(cameraOri), rotB);
+                }
                 mat.setMatrix4(_currentContext.modelOrientationMatrix, _model.getOrientationMatrix());
             }
         }
@@ -300,7 +303,7 @@ define([
      * @returns {Boolean}
      */
     function _shouldRenderSolid() {
-        return (_renderMode === RenderMode.SOLID) || (_renderMode === RenderMode.BOTH);
+        return (_renderMode === RenderMode.SOLID) || (_renderMode === RenderMode.BOTH) || (!_wireframeModel);
     }
     /**
      * Shows or hides the wireframe and solid models according to the currently set render mode. Does not call for render.
@@ -373,8 +376,8 @@ define([
         if (_model) {
             _elements.info.appendChild(common.createLabel(
                     "Model: " +
-                    "triangles: " + _model.getModel().getNumTriangles(graphics.getLOD(_lod)) +
-                    ", lines: " + _model.getModel().getNumLines(graphics.getLOD(_lod))));
+                    "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
+                    ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD())));
         }
         _elements.info.hidden = (_elements.info.innerHTML === "");
     }
@@ -464,6 +467,7 @@ define([
         resources.executeWhenReady(function () {
             var view;
             _elements.canvas.hidden = false;
+            _updateForLOD();
             _updateInfo();
             _updateCanvasSize();
             _scene.addToContext(_context);
@@ -471,7 +475,7 @@ define([
             if (shouldReload) {
                 if (_model) {
                     if (!params.preserve) {
-                        _currentContext.cameraDistance = DEFAULT_DISTANCE_FACTOR * _model.getScaledSize();
+                        _currentContext.cameraDistance = (_currentContext.params.defaultDistanceFactor || DEFAULT_DISTANCE_FACTOR) * _model.getScaledSize();
                     }
                     view = new classes.ObjectView({
                         name: OBJECT_VIEW_NAME,

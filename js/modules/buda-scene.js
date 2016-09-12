@@ -1582,11 +1582,18 @@ define([
         return this._shader;
     };
     /**
-     * Sets a new shader.
+     * Sets a new shader. (for non instanced mode only!)
      * @param {ManagedShader} shader
      */
     RenderableObject.prototype.setShader = function (shader) {
         this._shader = shader;
+    };
+    /**
+     * Sets a new instanced shader.
+     * @param {ManagedShader} shader
+     */
+    RenderableObject.prototype.setInstancedShader = function (shader) {
+        this._instancedShader = shader;
     };
     /**
      * Sets the texture specified for the given role. If there was already a
@@ -2520,20 +2527,26 @@ define([
      * @param {ManagedShader} shader The shader that should be active while rendering this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
      * array, with the roles as keys.
-     * @param {number} size The size of the billboard
+     * @param {Number} size The size of the billboard
+     * @param {Boolean} wireframe whether this billboard should be rendered in wireframe mode
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
      * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
      */
-    function Billboard(model, shader, textures, size, positionMatrix, orientationMatrix, instancedShader) {
+    function Billboard(model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader) {
         RenderableObject3D.call(this);
         /**
          * The model to store the simple billboard data.
          * @type Model
          */
         this._model = null;
+        /**
+         * Whether or not the rendering mode of this billboard is wireframe.
+         * @type Boolean
+         */
+        this._wireframe = false;
         if (model) {
-            this.init(model, shader, textures, size, positionMatrix, orientationMatrix, instancedShader);
+            this.init(model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader);
         }
     }
     Billboard.prototype = new RenderableObject3D();
@@ -2544,15 +2557,20 @@ define([
      * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
      * array, with the roles as keys.
      * @param {Number} size The size of the billboard
+     * @param {Boolean} wireframe whether this billboard should be rendered in wireframe mode
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
      * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
      */
-    Billboard.prototype.init = function (model, shader, textures, size, positionMatrix, orientationMatrix, instancedShader) {
+    Billboard.prototype.init = function (model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader) {
         var sizeVector = [size];
         RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size), instancedShader);
         this.setTextures(textures);
         this._model = model;
+        this._wireframe = (wireframe === true);
+        if (this._wireframe) {
+            this._isRenderedWithDepthMask = false;
+        }
         this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
         });
@@ -2567,12 +2585,26 @@ define([
         });
     };
     /**
+     * Returns the model used to render the billboard.
+     * @returns {Model}
+     */
+    Billboard.prototype.getModel = function () {
+        return this._model;
+    };
+    /**
+     * Returns the level of detail this billboard should be considered at. (always 0)
+     * @returns {Number}
+     */
+    Billboard.prototype.getCurrentLOD = function () {
+        return 0;
+    };
+    /** 
      * @override
      * @param {ManagedGLContext} context
      */
     Billboard.prototype.addToContext = function (context) {
         RenderableObject3D.prototype.addToContext.call(this, context);
-        this._model.addToContext(context, false);
+        this._model.addToContext(context, this._wireframe);
     };
     /**
      * Always returns true as is it faster to skip the check because anyway we are
@@ -2588,7 +2620,7 @@ define([
      * @param {RenderParameters} renderParameters
      */
     Billboard.prototype.performRender = function (renderParameters) {
-        this._model.render(renderParameters.context, false);
+        this._model.render(renderParameters.context, this._wireframe);
     };
     /**
      * @override
@@ -2596,7 +2628,7 @@ define([
      * @param {Number} instanceCount
      */
     Billboard.prototype._peformRenderInstances = function (context, instanceCount) {
-        this._model.renderInstances(context, false, undefined, undefined, instanceCount);
+        this._model.renderInstances(context, this._wireframe, undefined, undefined, instanceCount);
     };
     /**
      * @override

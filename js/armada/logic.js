@@ -1013,8 +1013,9 @@ define([
     /**
      * Creates the renderable object that can be used to represent this projectile
      * in a visual scene, if it has not been created yet.
+     * @param {Boolean} [wireframe=false] Whether to create the model in wireframe mode
      */
-    Projectile.prototype._createVisualModel = function () {
+    Projectile.prototype._createVisualModel = function (wireframe) {
         if (!this._visualModel) {
             this._visualModel = new budaScene.Billboard();
         }
@@ -1023,6 +1024,7 @@ define([
                 this._class.getShader(),
                 this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                 this._class.getSize(),
+                wireframe,
                 this._physicalModel.getPositionMatrix(),
                 this._physicalModel.getOrientationMatrix(),
                 this._class.getInstancedShader());
@@ -1043,25 +1045,32 @@ define([
     };
     /**
      * Adds a renderable node representing this projectile to the passed scene.
-     * @param {budaScene} scene The scene to which to add the renderable object presenting the projectile.
+     * @param {Scene} scene The scene to which to add the renderable object presenting the projectile.
+     * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
+     * @param {Function} [callback] If given, this function will be executed right after the projectile is addded to the scene, with the 
+     * visual model of the projectile passed to it as its only argument
      */
-    Projectile.prototype.addToScene = function (scene) {
+    Projectile.prototype.addToScene = function (scene, wireframe, callback) {
         resources.executeWhenReady(function () {
-            this._createVisualModel();
+            this._createVisualModel(wireframe);
             scene.addObject(this._visualModel, _minimumProjectileCountForInstancing);
+            if (callback) {
+                callback(this._visualModel);
+            }
         }.bind(this));
     };
     /**
      * Adds the resources required to render this projectile to the passed scene,
      * so they get loaded at the next resource load as well as added to any context
      * the scene is added to.
-     * @param {budaScene} scene
+     * @param {Scene} scene
+     * @param {Boolean} [wireframe=false] Whether to add the model resource for wireframe rendering
      */
-    Projectile.prototype.addResourcesToScene = function (scene) {
+    Projectile.prototype.addResourcesToScene = function (scene, wireframe) {
         var explosion;
         this._class.acquireResources();
         resources.executeWhenReady(function () {
-            this._createVisualModel();
+            this._createVisualModel(wireframe);
             scene.addResourcesOfObject(this._visualModel);
             explosion = new Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0], true);
             explosion.addResourcesToScene(scene);
@@ -5152,6 +5161,7 @@ define([
         getEnvironment: _context.getEnvironment.bind(_context),
         getEnvironmentNames: _context.getEnvironmentNames.bind(_context),
         Skybox: Skybox,
+        Projectile: Projectile,
         Weapon: Weapon,
         Spacecraft: Spacecraft,
         Level: Level

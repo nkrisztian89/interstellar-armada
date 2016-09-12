@@ -584,7 +584,7 @@ define([
         // adding the 4 lines around the quad
         if (!params.withoutLines) {
             color = params.color || [1.0, 1.0, 1.0, 1.0];
-            normals = params.normals ? params.normals[0] : null;
+            normals = params.normals ? params.normals[0] : this._triangles[this._triangles.length - 1].getNormal(0);
             this._lines.push(new Line(a, b, color, normals));
             this._lines.push(new Line(b, c, color, normals));
             this._lines.push(new Line(c, d, color, normals));

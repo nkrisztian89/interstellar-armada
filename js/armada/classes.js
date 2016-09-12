@@ -144,6 +144,11 @@ define([
              */
             SPACECRAFT_CLASS_ARRAY_NAME = "spacecraftClasses",
             /**
+             * Used in names of generated models when separating array elements
+             * @type String
+             */
+            MODEL_NAME_SEPARATOR = "-",
+            /**
              * When a model is created for skyboxes, this ID will be given to it, so that all skyboxes can refer to the same model
              * @type String
              */
@@ -164,6 +169,11 @@ define([
              * @type String
              */
             PROJECTILE_MODEL_NAME_PREFIX = "projectileModel-",
+            /**
+             * Used on the names of models generated for projectiles between the parameters.
+             * @type String
+             */
+            PROJECTILE_MODEL_NAME_INFIX = "-width-",
             /**
              * When a sound effect is added by stacking (increasing the volume of another instance of the same effect instead of adding a new
              * one), the volume of that other instance will be increased by the base volume of the new effect multiplied by this factor
@@ -1336,7 +1346,10 @@ define([
      * @override
      */
     ProjectileClass.prototype.acquireResources = function () {
-        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.turningBillboardModel(PROJECTILE_MODEL_NAME_PREFIX + this.getName(), this._intersectionPositions, this._width)});
+        TexturedModelClass.prototype.acquireResources.call(this, {
+            model: egomModel.turningBillboardModel(
+                    PROJECTILE_MODEL_NAME_PREFIX + this._intersectionPositions.join(MODEL_NAME_SEPARATOR) + PROJECTILE_MODEL_NAME_INFIX + this._width,
+                    this._intersectionPositions, this._width)});
         this._muzzleFlash.acquireResources();
         this._explosionClass.acquireResources();
         _loadSoundEffect(this._hitSound);
