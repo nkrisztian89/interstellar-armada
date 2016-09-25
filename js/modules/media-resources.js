@@ -1208,9 +1208,10 @@ define([
      * @param {Boolean} [loop=false]
      * @param {Number[3]} [position]
      * @param {Number} [rolloff=1]
+     * @param {String} [panningModel]
      * @returns {SoundSource}
      */
-    SoundEffectResource.prototype.createSoundSource = function (volume, loop, position, rolloff) {
+    SoundEffectResource.prototype.createSoundSource = function (volume, loop, position, rolloff, panningModel) {
         var sample;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot create sound source for sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
@@ -1218,7 +1219,7 @@ define([
         }
         sample = this._samples[Math.floor(Math.random() * this._samples.length)];
         if (sample) {
-            return new audio.SoundSource(audio.SoundCategory.SOUND_EFFECT, sample, volume, loop, position, rolloff);
+            return new audio.SoundSource(audio.SoundCategory.SOUND_EFFECT, sample, volume, loop, position, rolloff, panningModel);
         }
         application.log("WARNING: cannot create sound source for sample '" + sample + "', as there was a problem while loading it.", 1);
         return null;

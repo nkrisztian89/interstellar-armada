@@ -21,6 +21,7 @@
  * @param physics Required for loading Body instances for the physical model of the spacecrafts
  * @param resources This module accesses media resources to assign them to classes when they are initialized
  * @param budaScene Required for parsing camera related enums
+ * @param audio Required for accessing enums (PanningModel)
  * @param graphics Required to access resources according to current graphics settings
  * @param strings Used for translation support
  */
@@ -35,9 +36,10 @@ define([
     "modules/physics",
     "modules/media-resources",
     "modules/buda-scene",
+    "modules/audio",
     "armada/graphics",
     "armada/strings"
-], function (utils, types, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, graphics, strings) {
+], function (utils, types, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, audio, graphics, strings) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -399,10 +401,11 @@ define([
      * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
      * @param {Boolean} [loop=false] Whether to create a looping sound source
      * @param {Number[3]} [position] The camera-space position in case of spatialized 3D sounds
+     * @param {String} [panningModel] Custom panning model to apply
      * @returns {SoundSource}
      */
-    function _createSoundSource(soundEffectDescriptor, loop, position) {
-        return soundEffectDescriptor.resource ? soundEffectDescriptor.resource.createSoundSource(soundEffectDescriptor.volume, loop, position, soundEffectDescriptor.rolloff) : null;
+    function _createSoundSource(soundEffectDescriptor, loop, position, panningModel) {
+        return soundEffectDescriptor.resource ? soundEffectDescriptor.resource.createSoundSource(soundEffectDescriptor.volume, loop, position, soundEffectDescriptor.rolloff, panningModel) : null;
     }
     /**
      * Similar to _playSoundEffect, but also uses stacking if appropriate: if a currently playing instance of the same sound effect is found
@@ -414,12 +417,13 @@ define([
      * stored by the names of the effects
      * @param {Boolean} [overwrite=false] If true, a new sound source is created in any case, overwriting any previous source stored in the
      * stacking object under the same name
+     * @param {String} [panningModel] Custom panning model to apply
      * @returns {SoundSource}
      */
-    function _stackSoundSource(soundEffectDescriptor, loop, position, soundSources, overwrite) {
+    function _stackSoundSource(soundEffectDescriptor, loop, position, soundSources, overwrite, panningModel) {
         var result;
         if (overwrite || !soundSources[soundEffectDescriptor.name] || !soundSources[soundEffectDescriptor.name].isPlaying()) {
-            result = _createSoundSource(soundEffectDescriptor, loop, position);
+            result = _createSoundSource(soundEffectDescriptor, loop, position, panningModel);
             soundSources[soundEffectDescriptor.name] = result;
             result.play();
             return result;
@@ -1410,7 +1414,7 @@ define([
      * @returns {SoundSource}
      */
     ProjectileClass.prototype.stackHitSound = function (position, hitSounds, overwrite) {
-        return _stackSoundSource(this._hitSound, false, position, hitSounds, overwrite);
+        return _stackSoundSource(this._hitSound, false, position, hitSounds, overwrite, audio.PanningModel.EQUAL_POWER);
     };
     /**
      * @override
@@ -1836,7 +1840,7 @@ define([
      * @returns {SoundSource}
      */
     PropulsionClass.prototype.createThrusterSoundSource = function (position) {
-        return _createSoundSource(this._thrusterSound, true, position);
+        return _createSoundSource(this._thrusterSound, true, position, audio.PanningModel.EQUAL_POWER);
     };
     // ##############################################################################
     /**
@@ -3344,7 +3348,7 @@ define([
      */
     SpacecraftClass.prototype.createHumSource = function (position) {
         if (this._humSound) {
-            return _createSoundSource(this._humSound, true, position);
+            return _createSoundSource(this._humSound, true, position, audio.PanningModel.EQUAL_POWER);
         }
         return null;
     };

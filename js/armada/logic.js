@@ -63,7 +63,7 @@ define([
                  */
                 COMPENSATED: "compensated",
                 /**
-                 * Turning faster than it would be possible to comensate for drift is not allowed by the maneuvering computer 
+                 * Turning faster than it would be possible to compensate for drift is not allowed by the maneuvering computer 
                  */
                 RESTRICTED: "restricted"
             },
@@ -151,13 +151,13 @@ define([
              * are firing (so that the sound source is not ramping the volume all the time as the thruster fire rate changes)
              * @type Number
              */
-            THRUSTER_SOUND_VOLUME_GRADES = 4,
+            THRUSTER_SOUND_VOLUME_GRADES = 3,
             /**
              * The duration while the thruster sound effects ramp to a new volume if needed as the firing rate of the thrusters change.
              * In seconds.
              * @type Number
              */
-            THRUSTER_SOUND_VOLUME_RAMP_DURATION = 0.2,
+            THRUSTER_SOUND_VOLUME_RAMP_DURATION = 0.010,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -2064,7 +2064,7 @@ define([
         this._drivenPhysicalObject = null;
         this._thrusterUses = null;
         if (this._thrusterSoundSource) {
-            this._thrusterSoundSource.stopPlaying();
+            this._thrusterSoundSource.destroy();
             this._thrusterSoundSource = null;
         }
     };
@@ -4133,7 +4133,11 @@ define([
                 this._weapons[i].simulate(dt);
             }
             p = this.getPositionMatrixInCameraSpace();
-            p = [Math.round(p[12]), Math.round(p[13]), Math.round(p[14])];
+            p = [
+                parseInt(Math.round(p[12]).toPrecision(2), 10),
+                parseInt(Math.round(p[13]).toPrecision(2), 10),
+                parseInt(Math.round(p[14]).toPrecision(2), 10)
+            ];
             if (this._propulsion) {
                 this._maneuveringComputer.controlThrusters(dt);
                 this._propulsion.simulate(p);
@@ -4299,7 +4303,7 @@ define([
         }
         this._alive = false;
         if (this._humSource) {
-            this._humSource.stopPlaying();
+            this._humSource.destroy();
             this._humSource = null;
         }
     };

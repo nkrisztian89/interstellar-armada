@@ -22,8 +22,16 @@
  */
 
 /**
+ * @callback AudioParam~linearRampToValueAtTimeFunction
+ * @param {Number} value
+ * @param {Number} endTime
+ */
+
+/**
  * @typedef {AudioNode} AudioParam 
  * @property {Number} value
+ * @property {AudioParam~linearRampToValueAtTimeFunction} linearRampToValueAtTime
+ * @returns {AudioParam} 
  */
 
 /**
@@ -51,6 +59,9 @@
 /**
  * @typedef {AudioNode} PannerNode
  * @property {PannerNode~setPositionFunction} setPosition
+ * @property {AudioParam} positionX
+ * @property {AudioParam} positionY
+ * @property {AudioParam} positionZ
  */
 
 /**
@@ -118,14 +129,27 @@ define([
                  */
                 MUSIC: 2
             },
-    // ----------------------------------------------------------------------
-    // Private variables
     /**
-     * Stores a reference to all the loaded buffers, organized by the names of the sound files they were loaded from - so that one
-     * sound files is only loaded once.
+     * @enum {String}
+     * Encompasses the possible panning models for panner nodes
      * @type Object
      */
-    _buffers = {},
+    PanningModel = {
+        EQUAL_POWER: "equalpower",
+        HRTF: "HRTF"
+    },
+    // ----------------------------------------------------------------------
+    // Constants
+    DEFAULT_RAMP_DURATION = 0.010,
+            DEFAULT_PANNING_MODEL = PanningModel.EQUAL_POWER,
+            // ----------------------------------------------------------------------
+            // Private variables
+            /**
+             * Stores a reference to all the loaded buffers, organized by the names of the sound files they were loaded from - so that one
+             * sound files is only loaded once.
+             * @type Object
+             */
+            _buffers = {},
             /**
              * Used for setting the master volume for sound effects - all effect nodes are going through this.
              * @type GainNode
@@ -173,8 +197,9 @@ define([
      * if omitted, no associated node will be created and the sound cannot be spatialized later.
      * @param {Number} [rolloffFactor=1] In case of 3D spatialized sounds, the factor to determine how loud the sound should be at a 
      * specific distance. The formula used: 1 / (1 + rolloffFactor * (d - 1)), where d is the distance (reverse mode with refDistance=1)
+     * @param {String} [panningModel=DEFAULT_PANNING_MODEL] (enum PanningModel) The panning model to use
      */
-    function SoundSource(soundCategory, sampleName, volume, loop, position, rolloffFactor) {
+    function SoundSource(soundCategory, sampleName, volume, loop, position, rolloffFactor, panningModel) {
         /**
          * The category of this sound, allowing the user to set a separate master volume per category
          * @type Number
@@ -199,7 +224,7 @@ define([
          * The world position of the sound source
          * @type Number[3]
          */
-        this._position = position;
+        this._position = position ? position.slice() : null;
         /**
          * The factor to determine how loud the sound should be at a specific distance
          * @type Number
@@ -225,6 +250,21 @@ define([
          * @type Boolean
          */
         this._playing = false;
+        /**
+         * The function to execute whenever the playback of the sample stops / finishes
+         * @type Function
+         */
+        this._onFinish = null;
+        /**
+         * The timestamp of the moment the sample started playing (AudioContext.currentTime)
+         * @type Number
+         */
+        this._playbackStartTime = 0;
+        /**
+         * (enum PanningModel) The panning model to use
+         * @type String
+         */
+        this._panningModel = panningModel || DEFAULT_PANNING_MODEL;
     }
     /**
      * Sets a new volume for the sound source. Effective only if an initial volume was specified (even if it was 1.0)
@@ -249,17 +289,27 @@ define([
     /**
      * Changes the volume of the sound source via a linear ramp
      * @param {Number} volume The target value to change to
-     * @param {Number} duration The duration of the ramp, in seconds
+     * @param {Number} [duration=DEFAULT_RAMP_DURATION] The duration of the ramp, in seconds
      * @param {Boolean} [onlyIfDifferent=false] If true, then the ramp will not be applied in case a ramp is already in progress towards the
      * same value.
      */
     SoundSource.prototype.rampVolume = function (volume, duration, onlyIfDifferent) {
+        var currentTime;
         if (this._gainNode && (!onlyIfDifferent || (this._volume !== volume))) {
-            this._gainNode.gain.cancelScheduledValues(_context.currentTime);
-            this._gainNode.gain.setValueAtTime(this._gainNode.gain.value, _context.currentTime);
-            this._gainNode.gain.linearRampToValueAtTime(volume, _context.currentTime + duration);
+            currentTime = _context.currentTime;
+            this._gainNode.gain.cancelScheduledValues(currentTime);
+            this._gainNode.gain.setValueAtTime(this._gainNode.gain.value, currentTime);
+            this._gainNode.gain.linearRampToValueAtTime(volume, currentTime + (duration || DEFAULT_RAMP_DURATION));
         }
         this._volume = volume;
+    };
+    /**
+     * Returns the current position (offset) of playback (where we are within the sample, starting from the beginning, in seconds)
+     * @returns {Number}
+     */
+    SoundSource.prototype.getPlaybackPosition = function () {
+        var time = _context.currentTime - this._playbackStartTime;
+        return this._loop ? (time % _buffers[this._sampleName].duration) : Math.min(time, _buffers[this._sampleName].duration);
     };
     /**
      * Sets a new position for the sound source. Can be used only if an initial position was specified
@@ -268,22 +318,87 @@ define([
      * @param {Number} z
      */
     SoundSource.prototype.setPosition = function (x, y, z) {
-        this._position[0] = x;
-        this._position[1] = y;
-        this._position[2] = z;
-        if (this._pannerNode) {
-            this._pannerNode.setPosition(x, y, z);
+        var currentTime;
+        if ((x !== this._position[0]) || (y !== this._position[1]) || (z !== this._position[2])) {
+            this._position[0] = x;
+            this._position[1] = y;
+            this._position[2] = z;
+            if (this._pannerNode) {
+                // if possible, ramp with a small interval to avoid clicks / pops resulting from abrupt changes
+                // this requires more processing (AudioParam events), so only apply if the clip is not muted
+                if ((this._pannerNode.positionX) && (!this._gainNode || (this._gainNode.gain.value > 0))) {
+                    currentTime = _context.currentTime;
+                    // avoid inserting new events if possible
+                    if (this._pannerNode.positionX.value !== x) {
+                        this._pannerNode.positionX.cancelScheduledValues(currentTime);
+                        this._pannerNode.positionX.setValueAtTime(this._pannerNode.positionX.value, currentTime);
+                        this._pannerNode.positionX.linearRampToValueAtTime(x, currentTime + DEFAULT_RAMP_DURATION);
+                    }
+                    if (this._pannerNode.positionY.value !== y) {
+                        this._pannerNode.positionY.cancelScheduledValues(currentTime);
+                        this._pannerNode.positionY.setValueAtTime(this._pannerNode.positionY.value, currentTime);
+                        this._pannerNode.positionY.linearRampToValueAtTime(y, currentTime + DEFAULT_RAMP_DURATION);
+                    }
+                    if (this._pannerNode.positionZ.value !== z) {
+                        this._pannerNode.positionZ.cancelScheduledValues(currentTime);
+                        this._pannerNode.positionZ.setValueAtTime(this._pannerNode.positionZ.value, currentTime);
+                        this._pannerNode.positionZ.linearRampToValueAtTime(z, currentTime + DEFAULT_RAMP_DURATION);
+                    }
+                    // if the clip is muted or the position AudioParams are not available, do the fallback
+                } else {
+                    this._pannerNode.setPosition(x, y, z);
+                }
+            }
         }
     };
     /**
-     * Sets a new position for the sound source. Can be used only if an initial position was specified
-     * @param {Number[3]} p
+     * Recreates the audio nodes, starting the playback of the clip over
+     * @param {Number} offset From where to begin playback within the clip, in seconds
+     * @param {Function} onFinish The function to call when the playback finishes / stops
      */
-    SoundSource.prototype.setPositionv = function (p) {
-        this._position = p;
-        if (this._pannerNode) {
-            this._pannerNode.setPosition(p[0], p[1], p[2]);
+    SoundSource.prototype._startPlayingSample = function (offset, onFinish) {
+        var currentNode;
+        this._sourceNode = _context.createBufferSource();
+        this._sourceNode.buffer = _buffers[this._sampleName];
+        this._sourceNode.onended = function () {
+            this._playing = false;
+            if (onFinish) {
+                onFinish();
+            }
+        }.bind(this);
+        this._onFinish = onFinish;
+        currentNode = this._sourceNode;
+        if (this._volume !== undefined) {
+            this._gainNode = _context.createGain();
+            this._gainNode.gain.value = this._volume;
+            currentNode.connect(this._gainNode);
+            currentNode = this._gainNode;
         }
+        if (this._loop) {
+            this._sourceNode.loop = true;
+        }
+        if (this._position) {
+            this._pannerNode = _context.createPanner();
+            this._pannerNode.panningModel = this._panningModel;
+            this._pannerNode.refDistance = 1;
+            this._pannerNode.rolloffFactor = this._rolloffFactor || 1;
+            this._pannerNode.setPosition(this._position[0], this._position[1], this._position[2]);
+            currentNode.connect(this._pannerNode);
+            currentNode = this._pannerNode;
+        }
+        switch (this._soundCategory) {
+            case SoundCategory.SOUND_EFFECT:
+                currentNode.connect(_effectGain);
+                break;
+            case SoundCategory.MUSIC:
+                currentNode.connect(_musicGain);
+                break;
+            default:
+                application.showError("Cannot play sound '" + this._sampleName + "', because it has an unkown category: " + this._soundCategory);
+        }
+        this._playing = true;
+        this._sourceNode.start(0, offset);
+        this._playbackStartTime = _context.currentTime - offset;
     };
     /**
      * Starts a new playback of the sound from this source. If a previous, non looping playback is in progress, the reference to it will be
@@ -294,7 +409,6 @@ define([
      * means when stop is called)
      */
     SoundSource.prototype.play = function (restart, onFinish) {
-        var currentNode;
         if (_buffers[this._sampleName]) {
             if (this._playing) {
                 if (this._loop) {
@@ -304,44 +418,7 @@ define([
                     this.stopPlaying();
                 }
             }
-            this._sourceNode = _context.createBufferSource();
-            this._sourceNode.buffer = _buffers[this._sampleName];
-            this._sourceNode.onended = function () {
-                this._playing = false;
-                if (onFinish) {
-                    onFinish();
-                }
-            }.bind(this);
-            currentNode = this._sourceNode;
-            if (this._volume !== undefined) {
-                this._gainNode = _context.createGain();
-                currentNode.connect(this._gainNode);
-                currentNode = this._gainNode;
-                this._gainNode.gain.value = this._volume;
-            }
-            if (this._loop) {
-                this._sourceNode.loop = true;
-            }
-            if (this._position) {
-                this._pannerNode = _context.createPanner();
-                currentNode.connect(this._pannerNode);
-                currentNode = this._pannerNode;
-                this._pannerNode.refDistance = 1;
-                this._pannerNode.rolloffFactor = this._rolloffFactor || 1;
-                this._pannerNode.setPosition(this._position[0], this._position[1], this._position[2]);
-            }
-            switch (this._soundCategory) {
-                case SoundCategory.SOUND_EFFECT:
-                    currentNode.connect(_effectGain);
-                    break;
-                case SoundCategory.MUSIC:
-                    currentNode.connect(_musicGain);
-                    break;
-                default:
-                    application.showError("Cannot play sound '" + this._sampleName + "', because it has an unkown category: " + this._soundCategory);
-            }
-            this._playing = true;
-            this._sourceNode.start(0);
+            this._startPlayingSample(0, onFinish);
         } else if (this._sampleName) {
             application.showError("Attempting to play back '" + this._sampleName + "', which is not loaded!");
         }
@@ -360,6 +437,16 @@ define([
      */
     SoundSource.prototype.isPlaying = function () {
         return this._playing;
+    };
+    /**
+     * Stops the playback of the sound and removes references to the audio nodes
+     */
+    SoundSource.prototype.destroy = function () {
+        this.stopPlaying();
+        this._sourceNode = null;
+        this._gainNode = null;
+        this._pannerNode = null;
+        this._position = null;
     };
     // ----------------------------------------------------------------------
     // Public functions
@@ -433,6 +520,7 @@ define([
     // Public interface
     return {
         SoundCategory: SoundCategory,
+        PanningModel: PanningModel,
         SoundSource: SoundSource,
         loadSample: loadSample,
         playSound: playSound,
