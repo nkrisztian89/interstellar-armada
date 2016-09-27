@@ -21,7 +21,6 @@
  * @param physics Required for loading Body instances for the physical model of the spacecrafts
  * @param resources This module accesses media resources to assign them to classes when they are initialized
  * @param budaScene Required for parsing camera related enums
- * @param audio Required for accessing enums (PanningModel)
  * @param graphics Required to access resources according to current graphics settings
  * @param strings Used for translation support
  */
@@ -36,10 +35,9 @@ define([
     "modules/physics",
     "modules/media-resources",
     "modules/buda-scene",
-    "modules/audio",
     "armada/graphics",
     "armada/strings"
-], function (utils, types, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, audio, graphics, strings) {
+], function (utils, types, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, graphics, strings) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -218,10 +216,6 @@ define([
             range: [0, 10],
             defaultValue: 1
         },
-        ROLLOFF: {
-            name: "rolloff",
-            type: "number"
-        },
         RESOURCE: {
             name: "resource",
             type: "object",
@@ -393,43 +387,41 @@ define([
      * @param {Number[3]} [position] The camera-space position in case of spatialized 3D sounds
      */
     function _playSoundEffect(soundEffectDescriptor, position) {
-        soundEffectDescriptor.resource.play(soundEffectDescriptor.volume, position, soundEffectDescriptor.rolloff);
+        soundEffectDescriptor.resource.play(soundEffectDescriptor.volume, position);
     }
     /**
-     * Creates a sound source for a (randomly chosen) sound sample corresponding to the sound effect described by the passed descriptor 
+     * Creates a sound clip for a (randomly chosen) sound sample corresponding to the sound effect described by the passed descriptor 
      * (needs to be loaded), and returns the reference to it.
      * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
      * @param {Boolean} [loop=false] Whether to create a looping sound source
-     * @param {Number[3]} [position] The camera-space position in case of spatialized 3D sounds
-     * @param {String} [panningModel] Custom panning model to apply
-     * @returns {SoundSource}
+     * @param {SoundSource} [soundSource] The sound source to be used for 3D spatial positioning of the clip
+     * @returns {SoundClip}
      */
-    function _createSoundSource(soundEffectDescriptor, loop, position, panningModel) {
-        return soundEffectDescriptor.resource ? soundEffectDescriptor.resource.createSoundSource(soundEffectDescriptor.volume, loop, position, soundEffectDescriptor.rolloff, panningModel) : null;
+    function _createSoundClip(soundEffectDescriptor, loop, soundSource) {
+        return soundEffectDescriptor.resource ? soundEffectDescriptor.resource.createSoundClip(soundEffectDescriptor.volume, loop, soundSource) : null;
     }
     /**
      * Similar to _playSoundEffect, but also uses stacking if appropriate: if a currently playing instance of the same sound effect is found
-     * in the passed object, its volume is increased instead of creating a new sound source.
+     * in the passed object, its volume is increased instead of creating a new sound clip.
      * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
      * @param {Boolean} [loop=false] Whether to create a looping sound source
-     * @param {Number[3]} [position] The camera-space position in case of spatialized 3D sounds
-     * @param {Object.<String, SoundSource>} soundSources An associative array of other sound effects with which this one can be stacked, 
+     * @param {Object.<String, SoundClip>} soundClips An associative array of other sound effects with which this one can be stacked, 
      * stored by the names of the effects
      * @param {Boolean} [overwrite=false] If true, a new sound source is created in any case, overwriting any previous source stored in the
      * stacking object under the same name
-     * @param {String} [panningModel] Custom panning model to apply
-     * @returns {SoundSource}
+     * @param {SoundSource} [soundSource] The sound source to be used for 3D spatial positioning of the clip
+     * @returns {SoundClip}
      */
-    function _stackSoundSource(soundEffectDescriptor, loop, position, soundSources, overwrite, panningModel) {
+    function _stackSoundClip(soundEffectDescriptor, loop, soundClips, overwrite, soundSource) {
         var result;
-        if (overwrite || !soundSources[soundEffectDescriptor.name] || !soundSources[soundEffectDescriptor.name].isPlaying()) {
-            result = _createSoundSource(soundEffectDescriptor, loop, position, panningModel);
-            soundSources[soundEffectDescriptor.name] = result;
+        if (overwrite || !soundClips[soundEffectDescriptor.name] || !soundClips[soundEffectDescriptor.name].isPlaying()) {
+            result = _createSoundClip(soundEffectDescriptor, loop, soundSource);
+            soundClips[soundEffectDescriptor.name] = result;
             result.play();
             return result;
         }
-        soundSources[soundEffectDescriptor.name].increaseVolume(soundEffectDescriptor.volume * VOLUME_FACTOR_FOR_STACKED_SOUNDS);
-        return soundSources[soundEffectDescriptor.name];
+        soundClips[soundEffectDescriptor.name].increaseVolume(soundEffectDescriptor.volume * VOLUME_FACTOR_FOR_STACKED_SOUNDS);
+        return soundClips[soundEffectDescriptor.name];
     }
     // ##############################################################################
     /**
@@ -1408,13 +1400,13 @@ define([
     };
     /**
      * Plays the hit sound effect for this projectile, possibly stacking it
-     * @param {Number[3]} position
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
      * @param {Object.<String, SoundSource>} hitSounds The other hit sound to stack with
      * @param {Boolean} [overwrite=false]
-     * @returns {SoundSource}
+     * @returns {SoundClip}
      */
-    ProjectileClass.prototype.stackHitSound = function (position, hitSounds, overwrite) {
-        return _stackSoundSource(this._hitSound, false, position, hitSounds, overwrite, audio.PanningModel.EQUAL_POWER);
+    ProjectileClass.prototype.stackHitSound = function (soundSource, hitSounds, overwrite) {
+        return _stackSoundClip(this._hitSound, false, hitSounds, overwrite, soundSource);
     };
     /**
      * @override
@@ -1712,12 +1704,12 @@ define([
         _playSoundEffect(this._fireSound, position);
     };
     /**
-     * Plays the sound effect corresponding to a weapon of this class firing, possibly stacking it, at the given world position
-     * @param {Number[3]} position
+     * Plays the sound effect corresponding to a weapon of this class firing, possibly stacking it
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the effect
      * @param {Object.<String, SoundSource>} fireSounds
      */
-    WeaponClass.prototype.stackFireSound = function (position, fireSounds) {
-        _stackSoundSource(this._fireSound, false, position, fireSounds);
+    WeaponClass.prototype.stackFireSound = function (soundSource, fireSounds) {
+        _stackSoundClip(this._fireSound, false, fireSounds, false, soundSource);
     };
     // ##############################################################################
     /**
@@ -1835,12 +1827,12 @@ define([
         this._thrusterBurnParticle.handleGraphicsSettingsChanged();
     };
     /**
-     * Creates a sound source playing the thruster sound effect for this propulsion in looping mode, and saves the reference to it.
-     * @param {Number[3]} position The initial camera-space position of the sound source
-     * @returns {SoundSource}
+     * Creates a sound clip for the thruster sound effect for this propulsion in looping mode, and returns a reference to it.
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
+     * @returns {SoundClip}
      */
-    PropulsionClass.prototype.createThrusterSoundSource = function (position) {
-        return _createSoundSource(this._thrusterSound, true, position, audio.PanningModel.EQUAL_POWER);
+    PropulsionClass.prototype.createThrusterSoundClip = function (soundSource) {
+        return _createSoundClip(this._thrusterSound, true, soundSource);
     };
     // ##############################################################################
     /**
@@ -3342,22 +3334,23 @@ define([
         return !!this._humSound;
     };
     /**
-     * Creates a sound source playing the humming sound effect for this spacecraft in looping mode, and saves the reference to it.
-     * @param {Number[3]} position The initial camera-space position of the sound source
-     * @returns {SoundSource}
+     * Creates a sound clip for playing the humming sound effect for this spacecraft in looping mode, and returns a reference to it.
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
+     * @returns {SoundClip}
      */
-    SpacecraftClass.prototype.createHumSource = function (position) {
+    SpacecraftClass.prototype.createHumSoundClip = function (soundSource) {
         if (this._humSound) {
-            return _createSoundSource(this._humSound, true, position, audio.PanningModel.EQUAL_POWER);
+            return _createSoundClip(this._humSound, true, soundSource);
         }
         return null;
     };
     /**
      * Plays the sound effect associated with this spacecraft exploding
-     * @param {Number[3]} position The camera-space position of the sound source
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
      */
-    SpacecraftClass.prototype.playExplosionSound = function (position) {
-        _playSoundEffect(this._explosionSound, position);
+    SpacecraftClass.prototype.playExplosionSound = function (soundSource) {
+        var clip = _createSoundClip(this._explosionSound, false, soundSource);
+        clip.play();
     };
     /**
      * Sends an asynchronous request to grab the file containing the in-game

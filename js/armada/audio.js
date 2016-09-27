@@ -90,9 +90,35 @@ define([
          * @type Number
          */
         this._sfxVolume = 1;
+        /**
+         * The rolloff factor to use when playing 3D spatial sound effects (not specifying it will fall back to the default of the audio module)
+         * @type Number
+         */
+        this._rolloffFactor = 0;
+        /**
+         * (enum PanningModel) The panning model to use when playing 3D spatial sound effects (not specifying it will fall back to the default of the audio module)
+         * See Web Audio API
+         * @type String
+         */
+        this._panningModel = null;
     }
     AudioSettingsContext.prototype = new asyncResource.AsyncResource();
     AudioSettingsContext.prototype.constructor = AudioSettingsContext;
+    /**
+     * Loads all configuration information for the context from the passed JSON object. 
+     * Needs to be called only once, before the settings themselves are to be loaded.
+     * @param {Object} dataJSON
+     */
+    AudioSettingsContext.prototype.loadConfigurationFromJSON = function (dataJSON) {
+        // an undefined rolloff factor will result in using the default defined in the audio module
+        if (dataJSON.rolloffFactor) {
+            this._rolloffFactor = types.getNumberValue("configuration.audio.rolloffFactor", dataJSON.rolloffFactor, 0);
+        }
+        // an undefined panning model will result in using the default defined in the audio module
+        if (dataJSON.panningModel) {
+            this._panningModel = types.getEnumValue(audio.PanningModel, dataJSON.panningModel, {name: "configuration.audio.panningModel"});
+        }
+    };
     /**
      * Loads the audio setting from the data stored in the passed JSON object.
      * @param {Object} dataJSON The JSON object storing the game settings.
@@ -239,12 +265,22 @@ define([
     AudioSettingsContext.prototype.resetSFXVolume = function () {
         this.setSFXVolume((localStorage[SFX_VOLUME_LOCAL_STORAGE_ID] !== undefined) ? localStorage[SFX_VOLUME_LOCAL_STORAGE_ID] : this._dataJSON.sfxVolume);
     };
+    /**
+     * Creates and return a sound source that can be used for 3D sound effect positioning, using the configuration settings given for the
+     * context.
+     * @param {Number[3]} position The initial position of the sound source, in camera-space
+     * @returns {SoundSource}
+     */
+    AudioSettingsContext.prototype.createSoundSource = function (position) {
+        return new audio.SoundSource(position, this._rolloffFactor, this._panningModel);
+    };
     // -------------------------------------------------------------------------
     // Initialization
     _context = new AudioSettingsContext();
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
         loadSettingsFromLocalStorage: _context.loadFromLocalStorage.bind(_context),
         restoreDefaults: _context.restoreDefaults.bind(_context),
@@ -257,6 +293,7 @@ define([
         getSFXVolume: _context.getSFXVolume.bind(_context),
         setSFXVolume: _context.setSFXVolume.bind(_context),
         resetSFXVolume: _context.resetSFXVolume.bind(_context),
+        createSoundSource: _context.createSoundSource.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context)
     };
 });

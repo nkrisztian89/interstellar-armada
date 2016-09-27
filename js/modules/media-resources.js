@@ -1186,7 +1186,7 @@ define([
      * loaded.
      * @param {Number} [volume=1]
      * @param {Number[3]} [position]
-     * @param {Number} [rolloff=1]
+     * @param {Number} [rolloff]
      */
     SoundEffectResource.prototype.play = function (volume, position, rolloff) {
         var sample;
@@ -1206,12 +1206,10 @@ define([
      * loaded.
      * @param {Number} [volume=1]
      * @param {Boolean} [loop=false]
-     * @param {Number[3]} [position]
-     * @param {Number} [rolloff=1]
-     * @param {String} [panningModel]
-     * @returns {SoundSource}
+     * @param {SoundSource} [source]
+     * @returns {SoundClip}
      */
-    SoundEffectResource.prototype.createSoundSource = function (volume, loop, position, rolloff, panningModel) {
+    SoundEffectResource.prototype.createSoundClip = function (volume, loop, source) {
         var sample;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot create sound source for sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
@@ -1219,7 +1217,7 @@ define([
         }
         sample = this._samples[Math.floor(Math.random() * this._samples.length)];
         if (sample) {
-            return new audio.SoundSource(audio.SoundCategory.SOUND_EFFECT, sample, volume, loop, position, rolloff, panningModel);
+            return new audio.SoundClip(audio.SoundCategory.SOUND_EFFECT, sample, volume, loop, source);
         }
         application.log("WARNING: cannot create sound source for sample '" + sample + "', as there was a problem while loading it.", 1);
         return null;
@@ -1287,15 +1285,15 @@ define([
      * Creates a sound source for the sample corresponding to this music and returns the reference to it. The sample must be loaded.
      * @param {Number} [volume=1]
      * @param {Boolean} [loop=false]
-     * @returns {SoundSource}
+     * @returns {SoundClip}
      */
-    MusicResource.prototype.createSoundSource = function (volume, loop) {
+    MusicResource.prototype.createSoundClip = function (volume, loop) {
         if (this.isReadyToUse() === false) {
             application.showError("Cannot create sound source for music '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
         }
         if (this._sample) {
-            return new audio.SoundSource(audio.SoundCategory.MUSIC, this._sample, volume, loop);
+            return new audio.SoundClip(audio.SoundCategory.MUSIC, this._sample, volume, loop);
         }
         application.log("WARNING: cannot create sound source for music track '" + this._sample + "', as there was a problem while loading it.", 1);
         return null;

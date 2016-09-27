@@ -364,10 +364,10 @@ define([
         }
         this._pilotingMode = true;
         _targetSwitchSound = resources.getSoundEffect(
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_SOUND).name).createSoundSource(
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_SOUND).name).createSoundClip(
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_SOUND).volume);
         _targetSwitchDeniedSound = resources.getSoundEffect(
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_DENIED_SOUND).name).createSoundSource(
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_DENIED_SOUND).name).createSoundClip(
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_DENIED_SOUND).volume);
         this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(pilotedSpacecraft);
         this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(

@@ -119,7 +119,7 @@ define([
                             if (m && !m.hasError()) {
                                 resources.requestResourceLoad();
                                 resources.executeWhenReady(function () {
-                                    _menuMusic = m.createSoundSource(1, true);
+                                    _menuMusic = m.createSoundClip(1, true);
                                     if (_menuMusic) {
                                         _menuMusic.play();
                                     }

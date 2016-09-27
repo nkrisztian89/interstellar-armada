@@ -1282,8 +1282,7 @@
             "explosion": "smallHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 0.5,
-                "rolloff": 0.025
+                "volume": 0.5
             }
         }, {
             "name": "plasma",
@@ -1307,8 +1306,7 @@
             "explosion": "smallHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 0.6,
-                "rolloff": 0.025
+                "volume": 0.6
             }
         }, {
             "name": "heavyPlasma",
@@ -1332,8 +1330,7 @@
             "explosion": "smallHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 0.65,
-                "rolloff": 0.025
+                "volume": 0.65
             }
         }, {
             "name": "proton",
@@ -1357,8 +1354,7 @@
             "explosion": "mediumHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 0.8,
-                "rolloff": 0.02
+                "volume": 0.8
             }
         }, {
             "name": "ion",
@@ -1382,8 +1378,7 @@
             "explosion": "largeHitExplosion",
             "hitSound": {
                 "name": "hit",
-                "volume": 1,
-                "rolloff": 0.015
+                "volume": 1
             }
         }],
     "weaponClasses": [{
@@ -1402,8 +1397,7 @@
             "attachmentPoint": [0, -20, 39.6],
             "fireSound": {
                 "name": "trainingShot",
-                "volume": 0.5,
-                "rolloff": 0.02
+                "volume": 0.5
             },
             "rotationStyle": "yawPitch",
             "basePoint": [0, -20, 0],
@@ -1438,8 +1432,7 @@
             "attachmentPoint": [0, -4, 1.2],
             "fireSound": {
                 "name": "plasmaShot",
-                "volume": 0.4,
-                "rolloff": 0.01
+                "volume": 0.4
             }
         }, {
             "name": "heavyPlasmaGun",
@@ -1457,8 +1450,7 @@
             "attachmentPoint": [0, 0, 25],
             "fireSound": {
                 "name": "heavyPlasmaShot",
-                "volume": 1,
-                "rolloff": 0.01
+                "volume": 1.5
             }
         }, {
             "name": "smallPlasmaTurret",
@@ -1504,8 +1496,7 @@
                 }],
             "fireSound": {
                 "name": "plasmaShot",
-                "volume": 1,
-                "rolloff": 0.01
+                "volume": 1
             }
         }, {
             "name": "smallProtonCannon",
@@ -1540,8 +1531,7 @@
                 }],
             "fireSound": {
                 "name": "protonShot",
-                "volume": 1,
-                "rolloff": 0.01
+                "volume": 1
             }
         }, {
             "name": "largeIonCannon",
@@ -1575,8 +1565,7 @@
                 }],
             "fireSound": {
                 "name": "ionShot",
-                "volume": 2,
-                "rolloff": 0.005
+                "volume": 2
             }
         }],
     "propulsionClasses": [{
@@ -1592,8 +1581,7 @@
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
                 "name": "thruster",
-                "volume": 0.8,
-                "rolloff": 0.02
+                "volume": 0.8
             }
         }, {
             "name": "imperialFighterMk1",
@@ -1608,8 +1596,7 @@
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
                 "name": "thruster",
-                "volume": 1.2,
-                "rolloff": 0.015
+                "volume": 1.2
             }
         }, {
             "name": "imperialBomberMk1",
@@ -1624,8 +1611,7 @@
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
                 "name": "thruster",
-                "volume": 1.4,
-                "rolloff": 0.01
+                "volume": 1.4
             }
         }, {
             "name": "imperialCorvetteMk1",
@@ -1640,8 +1626,7 @@
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
                 "name": "thruster",
-                "volume": 1.75,
-                "rolloff": 0.01
+                "volume": 1.75
             }
         }, {
             "name": "imperialFrigateMk1",
@@ -1656,8 +1641,7 @@
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
                 "name": "thruster",
-                "volume": 2,
-                "rolloff": 0.01
+                "volume": 2
             }
         }, {
             "name": "imperialCruiserMk1",
@@ -1672,8 +1656,7 @@
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
                 "name": "thruster",
-                "volume": 2.5,
-                "rolloff": 0.005
+                "volume": 2.5
             }
         }],
     "spacecraftTypes": [{
@@ -1801,8 +1784,7 @@
             "explosion": "containerExplosion",
             "explosionSound": {
                 "name": "containerExplosion",
-                "volume": 2,
-                "rolloff": 0.01
+                "volume": 2
             },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [],
@@ -2213,14 +2195,12 @@
                 }],
             "humSound": {
                 "name": "spacecraftHum",
-                "volume": 0.5,
-                "rolloff": 0.02
+                "volume": 0.5
             },
             "explosion": "fighterExplosion",
             "explosionSound": {
                 "name": "fighterExplosion",
-                "volume": 2.5,
-                "rolloff": 0.01
+                "volume": 2.5
             },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
@@ -3164,14 +3144,12 @@
                 }],
             "humSound": {
                 "name": "spacecraftHum",
-                "volume": 0.5,
-                "rolloff": 0.02
+                "volume": 0.5
             },
             "explosion": "bomberExplosion",
             "explosionSound": {
                 "name": "fighterExplosion",
-                "volume": 3,
-                "rolloff": 0.01
+                "volume": 3
             },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
@@ -3456,14 +3434,12 @@
                 }],
             "humSound": {
                 "name": "spacecraftHum",
-                "volume": 0.5,
-                "rolloff": 0.02
+                "volume": 0.5
             },
             "explosion": "fighterExplosion",
             "explosionSound": {
                 "name": "fighterExplosion",
-                "volume": 2,
-                "rolloff": 0.01
+                "volume": 2
             },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
@@ -3890,14 +3866,12 @@
                 }],
             "humSound": {
                 "name": "spacecraftHum",
-                "volume": 0.75,
-                "rolloff": 0.01
+                "volume": 0.75
             },
             "explosion": "smallShipExplosion",
             "explosionSound": {
                 "name": "fighterExplosion",
-                "volume": 4,
-                "rolloff": 0.005
+                "volume": 4
             },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
@@ -4440,14 +4414,12 @@
                 }],
             "humSound": {
                 "name": "spacecraftHum",
-                "volume": 0.75,
-                "rolloff": 0.01
+                "volume": 0.75
             },
             "explosion": "smallShipExplosion",
             "explosionSound": {
                 "name": "fighterExplosion",
-                "volume": 5,
-                "rolloff": 0.005
+                "volume": 5
             },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
@@ -5040,14 +5012,12 @@
                 }],
             "humSound": {
                 "name": "spacecraftHum",
-                "volume": 1,
-                "rolloff": 0.005
+                "volume": 1.5
             },
             "explosion": "largeShipExplosion",
             "explosionSound": {
                 "name": "fighterExplosion",
-                "volume": 8,
-                "rolloff": 0.0025
+                "volume": 8
             },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{

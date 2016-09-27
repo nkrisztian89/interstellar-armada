@@ -67,6 +67,7 @@ define([
     game._loadGameConfigurationAndExecuteCallback = function (configJSON, callback) {
         config.loadConfigurationFromJSON(configJSON.dataFiles.logic);
         graphics.loadConfigurationFromJSON(configJSON.graphics);
+        audio.loadConfigurationFromJSON(configJSON.audio);
         control.loadConfigurationFromJSON(configJSON.control);
         _progressBar.value = 1;
         callback();

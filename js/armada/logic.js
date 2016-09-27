@@ -22,6 +22,7 @@
  * @param resources Used to access the loaded media (graphics and sound) resources
  * @param budaScene Creating and managing the scene graph for visual simulation is done using this module
  * @param graphics Used to access graphics settings
+ * @param audio Used for creating sound sources for spacecrafts
  * @param config Used to access game settings/configuration
  * @param strings Used for translation support
  * @param classes Used to load and access the classes of Interstellar Armada
@@ -39,12 +40,13 @@ define([
     "modules/media-resources",
     "modules/buda-scene",
     "armada/graphics",
+    "armada/audio",
     "armada/classes",
     "armada/configuration",
     "armada/strings",
     "armada/ai",
     "utils/polyfill"
-], function (utils, vec, mat, application, asyncResource, managedGL, egomModel, physics, resources, budaScene, graphics, classes, config, strings, ai) {
+], function (utils, vec, mat, application, asyncResource, managedGL, egomModel, physics, resources, budaScene, graphics, audio, classes, config, strings, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -157,7 +159,7 @@ define([
              * In seconds.
              * @type Number
              */
-            THRUSTER_SOUND_VOLUME_RAMP_DURATION = 0.010,
+            THRUSTER_SOUND_VOLUME_RAMP_DURATION = 0.020,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -1490,10 +1492,10 @@ define([
      * @param {Boolean} onlyIfAimedOrFixed The weapon only fires if it is fixed (cannot be rotated) or if it is aimed at its current target
      * and it is in range (based on the last aiming status of the weapon)
      * @param {Object.<String, SoundSource>} fireSounds an object containing the stacked fire sounds for the spacecraft of this weapon
-     * @param {Number[3]} shipPosInCameraSpace
+     * @param {SoundSource} shipSoundSource The sound source belonging to the spacecraft that fires this weapon
      * @returns {Boolean} Whether the weapon has actually fired.
      */
-    Weapon.prototype.fire = function (projectilePool, shipScaledOriMatrix, onlyIfAimedOrFixed, fireSounds, shipPosInCameraSpace) {
+    Weapon.prototype.fire = function (projectilePool, shipScaledOriMatrix, onlyIfAimedOrFixed, fireSounds, shipSoundSource) {
         var i, p,
                 weaponSlotPosVector, weaponSlotPosMatrix,
                 projectilePosMatrix, projectileOriMatrix,
@@ -1559,8 +1561,8 @@ define([
                     scene.addPointLightSource(projectileLights[projClassName], PROJECTILE_LIGHT_PRIORITY);
                 }
             }
-            if (shipPosInCameraSpace) {
-                this._class.stackFireSound(shipPosInCameraSpace, fireSounds);
+            if (shipSoundSource) {
+                this._class.stackFireSound(shipSoundSource, fireSounds);
             } else {
                 this._class.playFireSound(mat.translationVector3(p.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera())));
             }
@@ -1872,10 +1874,10 @@ define([
             "rollRight": {burn: 0, thrusters: []}
         };
         /**
-         * Sounds source used for playing the thruster sound effect for this propulsion.
-         * @type SoundSource
+         * Sound clip used for playing the thruster sound effect for this propulsion.
+         * @type SoundClip
          */
-        this._thrusterSoundSource = null;
+        this._thrusterSoundClip = null;
     }
     /**
      * 
@@ -2001,9 +2003,9 @@ define([
     /**
      * Applies the forces and torques that are created by this propulsion system
      * to the physical object it drives.
-     * @param {Number[3]} camSpacePosition The current position of the spacecraft using this propulsion in camera space (for sound effects)
+     * @param {SoundSource} spacecraftSoundSource The sound source belonging to the spacecraft that has this propulsion equipped
      */
-    Propulsion.prototype.simulate = function (camSpacePosition) {
+    Propulsion.prototype.simulate = function (spacecraftSoundSource) {
         var
                 directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix()),
                 yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix()),
@@ -2044,16 +2046,14 @@ define([
         if (this._thrusterUses.rollLeft.burn > 0) {
             this._drivenPhysicalObject.addOrRenewTorque("rollLeftThrust", this._class.getAngularThrust() * this._thrusterUses.rollLeft.burn / this._class.getMaxTurnBurnLevel(), directionVector);
         }
-        if (!this._thrusterSoundSource) {
-            this._thrusterSoundSource = this._class.createThrusterSoundSource(camSpacePosition);
-            if (this._thrusterSoundSource) {
-                this._thrusterSoundSource.play();
+        if (!this._thrusterSoundClip) {
+            this._thrusterSoundClip = this._class.createThrusterSoundClip(spacecraftSoundSource);
+            if (this._thrusterSoundClip) {
+                this._thrusterSoundClip.play();
             }
-        } else {
-            this._thrusterSoundSource.setPosition(camSpacePosition[0], camSpacePosition[1], camSpacePosition[2]);
         }
-        if (this._thrusterSoundSource) {
-            this._thrusterSoundSource.rampVolume(this._getSoundVolume(), THRUSTER_SOUND_VOLUME_RAMP_DURATION, true);
+        if (this._thrusterSoundClip) {
+            this._thrusterSoundClip.rampVolume(this._getSoundVolume(), THRUSTER_SOUND_VOLUME_RAMP_DURATION, true, true);
         }
     };
     /**
@@ -2063,9 +2063,9 @@ define([
         this._class = null;
         this._drivenPhysicalObject = null;
         this._thrusterUses = null;
-        if (this._thrusterSoundSource) {
-            this._thrusterSoundSource.destroy();
-            this._thrusterSoundSource = null;
+        if (this._thrusterSoundClip) {
+            this._thrusterSoundClip.destroy();
+            this._thrusterSoundClip = null;
         }
     };
     // #########################################################################
@@ -2837,10 +2837,10 @@ define([
          */
         this._targetHitPosition = null;
         /**
-         * Sounds source used for playing the "hum" sound effect for this spacecraft.
-         * @type SoundSource
+         * Sound clip used for playing the "hum" sound effect for this spacecraft.
+         * @type SoundClip
          */
-        this._humSource = null;
+        this._humSoundClip = null;
         /**
          * Contains the sound sources used for playing the hit sounds for projectiles hitting this spacecraft, so that multiple hit sounds of
          * the same effect can be stacked
@@ -2852,6 +2852,11 @@ define([
          * @type DOMHighResTimeStamp
          */
         this._hitSoundTimestamp = 0;
+        /**
+         * The sound source used to position the sound effects beloning to this spacecraft in 3D sound (=camera) space
+         * @type SoundSource
+         */
+        this._soundSource = null;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, projectilePool, equipmentProfileName, spacecraftArray);
@@ -3811,7 +3816,7 @@ define([
             posInCameraSpace = null;
         }
         for (i = 0; i < this._weapons.length; i++) {
-            fired = this._weapons[i].fire(this._projectilePool, scaledOriMatrix, onlyIfAimedOrFixed, fireSounds, posInCameraSpace) || fired;
+            fired = this._weapons[i].fire(this._projectilePool, scaledOriMatrix, onlyIfAimedOrFixed, fireSounds, posInCameraSpace ? this._getSoundSource() : null) || fired;
         }
         // executing callbacks
         if (fired) {
@@ -4057,16 +4062,15 @@ define([
      * Adds a hit sound corresponding to a projectile with the given class hitting this spacecraft - uses stacking of sounds if appropriate
      * to decrease the overall number of separate sound sources
      * @param {ProjectileClass} projectileClass
-     * @param {Number[3]} position The camera-space position vector of the hit.
      */
-    Spacecraft.prototype.addHitSound = function (projectileClass, position) {
+    Spacecraft.prototype.addHitSound = function (projectileClass) {
         var n = performance.now();
         if (this._timeElapsedSinceDestruction < 0) {
             if ((n - this._hitSoundTimestamp) > 100) {
-                projectileClass.stackHitSound(position, this._hitSounds, true);
+                projectileClass.stackHitSound(this._getSoundSource(), this._hitSounds, true);
                 this._hitSoundTimestamp = n;
             } else {
-                projectileClass.stackHitSound(position, this._hitSounds);
+                projectileClass.stackHitSound(this._getSoundSource(), this._hitSounds);
             }
         }
     };
@@ -4092,6 +4096,29 @@ define([
         }
     };
     /**
+     * Returns a 3D vector that can be used to position the sound source of this spacecraft in the soundscape
+     * @returns {Number[3]}
+     */
+    Spacecraft.prototype._getSoundSourcePosition = function () {
+        var result = this.getPositionMatrixInCameraSpace();
+        result = [
+            parseFloat(Math.round(result[12]).toPrecision(2)),
+            parseFloat(Math.round(result[13]).toPrecision(2)),
+            parseFloat(Math.round(result[14]).toPrecision(2))
+        ];
+        return result;
+    };
+    /**
+     * Returns the sound source beloning to this spacecraft (that can be used to play sound effects positioned in 3D)
+     * @returns {SoundSource}
+     */
+    Spacecraft.prototype._getSoundSource = function () {
+        if (!this._soundSource) {
+            this._soundSource = audio.createSoundSource([0, 0, 0]);
+        }
+        return this._soundSource;
+    };
+    /**
      * Performs all the phyics and logic simulation of this spacecraft.
      * @param {Number} dt The elapsed time since the last simulation step, in
      * milliseconds.
@@ -4104,6 +4131,9 @@ define([
         if (this._target && this._target.canBeReused()) {
             this.setTarget(null);
         }
+        // update the sound source position - will be used either way (for the explosion or for hum / thrusters / weapons... )
+        p = this._getSoundSourcePosition();
+        this._getSoundSource().setPosition(p[0], p[1], p[2]);
         // destruction of the spacecraft
         if (this._hitpoints <= 0) {
             if (this._timeElapsedSinceDestruction < 0) {
@@ -4119,7 +4149,7 @@ define([
                 for (i = 0; i < this._activeDamageIndicators; i++) {
                     this._activeDamageIndicators[i].finish();
                 }
-                this._class.playExplosionSound(mat.translationVector3(this.getPositionMatrixInCameraSpace()));
+                this._class.playExplosionSound(this._getSoundSource());
             } else {
                 this._timeElapsedSinceDestruction += dt;
                 if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getTotalDuration() * this._class.getShowTimeRatioDuringExplosion())) {
@@ -4132,24 +4162,16 @@ define([
             for (i = 0; i < this._weapons.length; i++) {
                 this._weapons[i].simulate(dt);
             }
-            p = this.getPositionMatrixInCameraSpace();
-            p = [
-                parseInt(Math.round(p[12]).toPrecision(2), 10),
-                parseInt(Math.round(p[13]).toPrecision(2), 10),
-                parseInt(Math.round(p[14]).toPrecision(2), 10)
-            ];
             if (this._propulsion) {
                 this._maneuveringComputer.controlThrusters(dt);
-                this._propulsion.simulate(p);
+                this._propulsion.simulate(this._soundSource);
             }
             if (this._class.hasHumSound()) {
-                if (!this._humSource) {
-                    this._humSource = this._class.createHumSource(p);
-                    if (this._humSource) {
-                        this._humSource.play();
+                if (!this._humSoundClip) {
+                    this._humSoundClip = this._class.createHumSoundClip(this._soundSource);
+                    if (this._humSoundClip) {
+                        this._humSoundClip.play();
                     }
-                } else {
-                    this._humSource.setPosition(p[0], p[1], p[2]);
                 }
             }
         }
@@ -4302,9 +4324,14 @@ define([
             this._activeDamageIndicators = null;
         }
         this._alive = false;
-        if (this._humSource) {
-            this._humSource.destroy();
-            this._humSource = null;
+        if (this._humSoundClip) {
+            this._humSoundClip.destroy();
+            this._humSoundClip = null;
+        }
+        if (this._soundSource) {
+            // do not destroy it, the explosion sound might still be playing, just remove the reference
+            // the node will automatically be removed after playback finishes
+            this._soundSource = null;
         }
     };
     // #########################################################################

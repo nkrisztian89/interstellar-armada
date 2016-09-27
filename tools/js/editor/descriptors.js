@@ -793,10 +793,6 @@ define([
             VOLUME: {
                 name: "volume",
                 type: BaseType.NUMBER
-            },
-            ROLLOFF: {
-                name: "rolloff",
-                type: BaseType.NUMBER
             }
         }
     },

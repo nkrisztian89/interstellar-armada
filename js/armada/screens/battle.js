@@ -1898,7 +1898,7 @@ define([
                     var m, initMusic = function (settingName, theme, loop) {
                         m = resources.getMusic(config.getSetting(settingName));
                         if (m) {
-                            _music[theme] = m.createSoundSource(1, loop);
+                            _music[theme] = m.createSoundClip(1, loop);
                         }
                     };
                     this.setAntialiasing(graphics.getAntialiasing());

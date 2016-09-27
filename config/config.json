@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0:368 (2016.09.26.)",
+    "version": "0.4.0:369 (2016.09.27.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -391,6 +391,10 @@
                 ]
             }
         }
+    },
+    "audio": {
+        "rolloffFactor": 0.01,
+        "panningModel": "equalpower"
     },
     "control": {
         "controllers": [
