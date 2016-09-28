@@ -259,6 +259,28 @@
                 "normal": ""
             }
         }, {
+            "name": "bar_right",
+            "basepath": "hud/bar_right",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        }, {
+            "name": "bar_left",
+            "basepath": "hud/bar_left",
+            "format": "png",
+            "useMipmap": false,
+            "typeSuffixes": {
+                "color": ""
+            },
+            "qualitySuffixes": {
+                "normal": ""
+            }
+        }, {
             "name": "crosshair",
             "basepath": "hud/crosshair",
             "format": "png",

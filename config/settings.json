@@ -253,11 +253,11 @@
             "hudTargetInfoTeamTextPosition": [-0.95, 0.06],
             "hudTargetInfoDistanceTextPosition": [-0.95, -0.29],
             "hudTargetInfoVelocityTextPosition": [-0.95, -0.64],
-            "hudSpeedBarTexture": "white",
+            "hudSpeedBarTexture": "bar_right",
             "hudSpeedBarLayout": {
                 "centerX": 0.575,
                 "centerY": 0.0,
-                "width": 0.05,
+                "width": 0.125,
                 "height": 0.5,
                 "scaleMode": "minimum",
                 "xScaleMode": "minimum"
@@ -270,7 +270,7 @@
             "hudSpeedBarDefaultBaseMaxSpeed": 10,
             "hudSpeedBarMaxSpeedStepFactor": 4,
             "hudSpeedTextLayerLayout": {
-                "centerX": 0.65,
+                "centerX": 0.67,
                 "centerY": 0.0,
                 "width": 0.1,
                 "height": 0.5,
@@ -283,27 +283,17 @@
             "hudSpeedTextFontName": "gameFont",
             "hudMaxSpeedTextPosition": [-0.9, 0.875],
             "hudMaxReverseSpeedTextPosition": [-0.9, -0.985],
-            "hudSpeedTargetIndicatorTexture": "white",
+            "hudSpeedTargetIndicatorTexture": "bar_right",
             "hudSpeedTargetIndicatorColor": [1, 1, 1, 1],
             "hudSpeedTargetIndicatorSize": [1.0, 0.0075],
-            "hudHullIntegrityBarBackgroundTexture": "white",
-            "hudHullIntegrityBarBackgroundLayout": {
-                "centerX": 0.0,
-                "bottom": -0.925,
-                "width": 0.85,
-                "height": 0.09,
-                "scaleMode": "minimum",
-                "yScaleMode": "minimum"
-            },
-            "hudHullIntegrityBarBackgroundColor": [0, 0, 0, 0.5],
-            "hudHullIntegrityBarTexture": "white",
+            "hudHullIntegrityBarTexture": "bar_left",
             "hudHullIntegrityBarLayout": {
-                "centerX": 0.0,
-                "bottom": -0.9,
-                "width": 0.75,
-                "height": 0.04,
+                "centerX": -0.575,
+                "centerY": 0.0,
+                "width": 0.125,
+                "height": 0.5,
                 "scaleMode": "minimum",
-                "yScaleMode": "minimum"
+                "xScaleMode": "minimum"
             },
             "hudHullIntegrityBarFilledColor": [0, 1, 0, 0.75],
             "hudHullIntegrityBarEmptyColor": [1, 0, 0, 0.5],
@@ -340,16 +330,16 @@
             "hudTargetHullIntegrityQuickViewBarLayout": {
                 "centerX": 0,
                 "centerY": 0.25,
-                "width": 0.11,
-                "height": 0.008,
+                "width": 0.14,
+                "height": 0.01,
                 "scaleMode": "minimum",
                 "xScaleMode": "minimum",
                 "yScaleMode": "minimum"
             },
             "hudTargetHullIntegrityQuickViewBarHostileFilledColor": [1, 0, 0, 1],
-            "hudTargetHullIntegrityQuickViewBarHostileEmptyColor": [1, 0, 0, 0],
+            "hudTargetHullIntegrityQuickViewBarHostileEmptyColor": [1, 0, 0, 0.2],
             "hudTargetHullIntegrityQuickViewBarFriendlyFilledColor": [0, 1, 0, 1],
-            "hudTargetHullIntegrityQuickViewBarFriendlyEmptyColor": [0, 1, 0, 0],
+            "hudTargetHullIntegrityQuickViewBarFriendlyEmptyColor": [0, 1, 0, 0.2],
             "hudHeaderTextLayerLayout": {
                 "centerX": 0,
                 "top": 0.97,

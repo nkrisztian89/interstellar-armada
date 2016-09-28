@@ -1028,18 +1028,6 @@ define([
             name: "hudSpeedTargetIndicatorSize",
             type: types.VECTOR2
         },
-        HUD_HULL_INTEGRITY_BAR_BACKGROUND_TEXTURE: {
-            name: "hudHullIntegrityBarBackgroundTexture",
-            type: "string"
-        },
-        HUD_HULL_INTEGRITY_BAR_BACKGROUND_LAYOUT: {
-            name: "hudHullIntegrityBarBackgroundLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_HULL_INTEGRITY_BAR_BACKGROUND_COLOR: {
-            name: "hudHullIntegrityBarBackgroundColor",
-            type: types.COLOR4
-        },
         HUD_HULL_INTEGRITY_BAR_TEXTURE: {
             name: "hudHullIntegrityBarTexture",
             type: "string"

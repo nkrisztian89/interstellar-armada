@@ -338,12 +338,6 @@ define([
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // hull integrity bar
             /**
-             * Displayed behind (and around) the hull integrity bar so that it can be visually separated from the scene background (e.g.
-             * cockpit)
-             * @type HUDElement
-             */
-            _hullIntegrityBarBackground,
-            /**
              * Displays the hull integrity of the followed spacecraft.
              * @type HUDElement
              */
@@ -425,11 +419,6 @@ define([
              * @type Number[2]
              */
             _speedTargetIndicatorSize,
-            /**
-             * Stores a reference to the layout used for the hull integrity bar background HUD element for quicker access.
-             * @type ClipSpaceLayout
-             */
-            _hullIntegrityBarBackgroundLayout,
             /**
              * Stores a reference to the layout used for the hull integrity bar HUD element for quicker access.
              * @type ClipSpaceLayout
@@ -916,14 +905,6 @@ define([
                 _targetInfoBackgroundLayout.getScaleMode(),
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_COLOR));
         _targetInfoBackground.addToScene(_battleScene);
-        _hullIntegrityBarBackground = _hullIntegrityBarBackground || new HUDElement(
-                UI_2D_MIX_VIEWPORT_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_BACKGROUND_TEXTURE),
-                _hullIntegrityBarBackgroundLayout.getClipSpacePosition(),
-                _hullIntegrityBarBackgroundLayout.getClipSpaceSize(),
-                _hullIntegrityBarBackgroundLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_BACKGROUND_COLOR));
-        _hullIntegrityBarBackground.addToScene(_battleScene);
         _flightModeIndicatorBackground = _flightModeIndicatorBackground || new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE),
@@ -1528,9 +1509,8 @@ define([
             // .....................................................................................................
             // hull integrity bar
             hullIntegrity = craft.getHullIntegrity();
-            _hullIntegrityBar.clipX(0.5 - hullIntegrity / 2, 0.5 + hullIntegrity / 2);
+            _hullIntegrityBar.clipY(0, hullIntegrity);
             _hullIntegrityBar.applyLayout(_hullIntegrityBarLayout, canvas.width, canvas.height);
-            _hullIntegrityBarBackground.applyLayout(_hullIntegrityBarBackgroundLayout, canvas.width, canvas.height);
             // .....................................................................................................
             // flight mode indicator
             _flightModeIndicatorBackground.applyLayout(_flightModeIndicatorBackgroundLayout, canvas.width, canvas.height);
@@ -1946,7 +1926,6 @@ define([
         _targetInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_LAYOUT));
         _targetHullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_LAYOUT));
         _speedBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_LAYOUT));
-        _hullIntegrityBarBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_BACKGROUND_LAYOUT));
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_LAYOUT));
         _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT));
         _driftArrowMinSpeed = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED);
