@@ -4135,9 +4135,9 @@ define([
     Spacecraft.prototype._getSoundSourcePosition = function () {
         var result = this.getPositionMatrixInCameraSpace();
         result = [
-            parseFloat(Math.round(result[12]).toPrecision(2)),
-            parseFloat(Math.round(result[13]).toPrecision(2)),
-            parseFloat(Math.round(result[14]).toPrecision(2))
+            parseFloat(result[12].toPrecision(1)),
+            parseFloat(result[13].toPrecision(1)),
+            parseFloat(result[14].toPrecision(1))
         ];
         return result;
     };

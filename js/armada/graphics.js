@@ -1242,13 +1242,33 @@ define([
                 dataJSON.levelOfDetailSettings.lodDisplayProfile.minimumRelativeSize);
     };
     /**
+     * Based on the passed limiting settings, if necessary, lowers the value of the passed setting to the appropriate level
+     * @param {Object} dataJSON The object storing the limiting settings (whether or not limiting is turned off, and what are the limits and their associated settings)
+     * @param {OrderedNamedNumericOptions} setting The setting that should be limited
+     * @param {Function} getSettingValueFunction The function that returns the current value (not name) of the setting
+     * @param {Function} setSettingFunction The function that sets the setting by name (not value)
+     * @param {String} settingType The name of the property by which the setting levels are referred to in the limiting settings (e.g. "level" or "amount")
+     */
+    GraphicsSettingsContext.prototype._limitSettingByScreenSize = function (dataJSON, setting, getSettingValueFunction, setSettingFunction, settingType) {
+        var screenSize, i, n, limit;
+        if (dataJSON.autoLimitByScreenSize === true) {
+            screenSize = Math.max(screen.width, screen.height);
+            for (i = 0, n = dataJSON.limits.length; i < n; i++) {
+                limit = dataJSON.limits[i];
+                if ((screenSize < limit.screenSizeLessThan) &&
+                        (getSettingValueFunction() > setting.getValueForName(limit[settingType]))) {
+                    setSettingFunction(limit[settingType], false);
+                }
+            }
+        }
+    };
+    /**
      * Loads the graphics setting from the data stored in the passed JSON object.
      * @param {Object} dataJSON The JSON object storing the game settings.
      * @param {Boolean} [onlyRestoreSettings=false] Whether only the default 
      * settings should be restored or completely new settings should be initialized.
      */
     GraphicsSettingsContext.prototype.loadSettingsFromJSON = function (dataJSON, onlyRestoreSettings) {
-        var screenSize, i, n, limit;
         onlyRestoreSettings = onlyRestoreSettings || false;
         if (!onlyRestoreSettings) {
             this._dataJSON = dataJSON;
@@ -1263,7 +1283,8 @@ define([
             this.setAntialiasing(types.getBooleanValue(dataJSON.context.antialiasing, {name: "settings.graphics.context.antialiasing"}), false);
             this.setFiltering(types.getEnumValue(managedGL.TextureFiltering, dataJSON.context.filtering, {name: "settings.graphics.context.filtering"}), false);
             this.setTextureQuality(dataJSON.context.textureQuality, false, true);
-            this.setCubemapQuality(dataJSON.context.cubemapQuality, false, true);
+            this.setCubemapQuality(dataJSON.context.cubemapQuality.level, false, true);
+            this._limitSettingByScreenSize(dataJSON.context.cubemapQuality, this._cubemapQuality, this.getCubemapMaxResolution.bind(this), this.setCubemapQuality.bind(this), "level");
             this.setShadowMapping(types.getBooleanValue(dataJSON.context.shadowMapping, {name: "settings.graphics.context.shadowMapping"}), false, true);
             if (typeof dataJSON.context.shadows === "object") {
                 this.setShadowMapQuality(dataJSON.context.shadows.quality, false, true);
@@ -1276,29 +1297,11 @@ define([
         // load the LOD load settings (maximum loaded LOD)
         this.setLODLevel(dataJSON.levelOfDetail.maxLevel, false);
         // if the maximum loaded LOD is limited by screen size, check the current size and apply the limit
-        if (dataJSON.levelOfDetail.autoLimitByScreenSize === true) {
-            screenSize = Math.max(screen.width, screen.height);
-            for (i = 0, n = dataJSON.levelOfDetail.limits.length; i < n; i++) {
-                limit = dataJSON.levelOfDetail.limits[i];
-                if ((screenSize < limit.screenSizeLessThan) &&
-                        (this.getMaxLoadedLOD() > this._lodLevel.getValueForName(limit.level))) {
-                    this.setLODLevel(limit.level, false);
-                }
-            }
-        }
+        this._limitSettingByScreenSize(dataJSON.levelOfDetail, this._lodLevel, this.getMaxLoadedLOD.bind(this), this.setLODLevel.bind(this), "level");
         // load the particle amount settings
         this.setParticleAmount(dataJSON.particleAmount.amount, false);
         // if the particle amount is limited by screen size, check the current size and apply the limit
-        if (dataJSON.particleAmount.autoLimitByScreenSize === true) {
-            screenSize = Math.max(screen.width, screen.height);
-            for (i = 0, n = dataJSON.particleAmount.limits.length; i < n; i++) {
-                limit = dataJSON.particleAmount.limits[i];
-                if ((screenSize < limit.screenSizeLessThan) &&
-                        (this.getParticleCountFactor() > this._particleAmount.getValueForName(limit.amount))) {
-                    this.setParticleAmount(limit.amount, false);
-                }
-            }
-        }
+        this._limitSettingByScreenSize(dataJSON.particleAmount, this._particleAmount, this.getParticleCountFactor.bind(this), this.setParticleAmount.bind(this), "amount");
         // if the particle amount should be automatically decreased by a level if there is no instancing available, apply this decrease
         // as necessary
         if (dataJSON.particleAmount.autoDecreaseIfInstancingNotAvailable === true) {
@@ -1309,16 +1312,7 @@ define([
         // load the dust particle amount settings
         this.setDustParticleAmount(dataJSON.dustParticleAmount.amount, false);
         // if the dust particle amount is limited by screen size, check the current size and apply the limit
-        if (dataJSON.dustParticleAmount.autoLimitByScreenSize === true) {
-            screenSize = Math.max(screen.width, screen.height);
-            for (i = 0, n = dataJSON.dustParticleAmount.limits.length; i < n; i++) {
-                limit = dataJSON.dustParticleAmount.limits[i];
-                if ((screenSize < limit.screenSizeLessThan) &&
-                        (this.getDustParticleCountFactor() > this._dustParticleAmount.getValueForName(limit.amount))) {
-                    this.setDustParticleAmount(limit.amount, false);
-                }
-            }
-        }
+        this._limitSettingByScreenSize(dataJSON.dustParticleAmount, this._dustParticleAmount, this.getDustParticleCountFactor.bind(this), this.setDustParticleAmount.bind(this), "amount");
         // if the dust particle amount should be automatically decreased by a level if there is no instancing available, apply this decrease
         // as necessary
         if (dataJSON.dustParticleAmount.autoDecreaseIfInstancingNotAvailable === true) {
@@ -1480,6 +1474,13 @@ define([
                 localStorage[TEXTURE_QUALITY_LOCAL_STORAGE_ID] = value;
             }
         }
+    };
+    /**
+     * Returns the maximum resolution of cubemaps at the current cubemap quality level setting.
+     * @returns {Number}
+     */
+    GraphicsSettingsContext.prototype.getCubemapMaxResolution = function () {
+        return this._cubemapQuality.getCurrentValue();
     };
     /**
      * Returns the list of strings identifying the available cubemap quality levels, in ascending order.

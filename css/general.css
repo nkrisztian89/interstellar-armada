@@ -132,7 +132,7 @@ body.wait, body.wait * {
 }
 
 .wideFluid {
-    width: 80%;
+    width: calc(100% - 4em);
     padding-left: 2em;
     padding-right: 2em;
 }
@@ -144,6 +144,12 @@ body.wait, body.wait * {
 
 .narrowFix {
     width: 350px;
+}
+
+@media screen and (max-width: 420px) {
+    .narrowFix {
+        width: 80%;
+    }
 }
 
 .contentWide {
@@ -273,6 +279,12 @@ a.button.disabled {
 
 img {
     margin: 0.5em;
+}
+
+@media screen and (max-width: 600px) {
+    img#splashImage {
+        width: 90%;
+    }
 }
 
 p {

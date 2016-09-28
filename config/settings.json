@@ -4,7 +4,19 @@
             "antialiasing": true,
             "filtering": "trilinear",
             "textureQuality": "normal",
-            "cubemapQuality": "high",
+            "cubemapQuality": {
+                "level": "high",
+                "autoLimitByScreenSize": true,
+                "limits": [
+                    {
+                        "screenSizeLessThan": 512,
+                        "level": "low"
+                    }, {
+                        "screenSizeLessThan": 1024,
+                        "level": "medium"
+                    }
+                ]
+            },
             "shadowMapping": true,
             "shadows": {
                 "quality": "low",
