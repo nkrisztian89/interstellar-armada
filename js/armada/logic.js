@@ -160,6 +160,11 @@ define([
              * @type Number
              */
             THRUSTER_SOUND_VOLUME_RAMP_DURATION = 0.020,
+            /**
+             * When executing callbacks for all environments, this string is passed as the category parameter.
+             * @type String
+             */
+            ENVIRONMENTS_CATEGORY_NAME = "environments",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -293,6 +298,7 @@ define([
      * that serves as a light source as well as is rendered as a set of 2D texture
      * layers on the background.
      * @param {BackgroundObjectClass} backgroundObjectClass
+     * @param {Number} size The factor to scale the background object with
      * @param {Number} degreesAlpha The angle between the positive X axis and the
      * direction in which this object is positioned on the XZ plane in degrees.
      * @param {Number} degreesBeta The angle between the XZ plane and the
@@ -300,12 +306,17 @@ define([
      * @param {Number} degreesGamma  The angle by which the object is rotated around its
      * center in 2D (in case it has a fixed orientation), in degrees.
      */
-    function BackgroundObject(backgroundObjectClass, degreesAlpha, degreesBeta, degreesGamma) {
+    function BackgroundObject(backgroundObjectClass, size, degreesAlpha, degreesBeta, degreesGamma) {
         /**
          * The class storing the general characteristics of this object.
          * @type BackgroundObjectClass
          */
         this._class = backgroundObjectClass;
+        /**
+         * The background object will be scaled by this factor
+         * @type Number
+         */
+        this._size = size;
         /**
          * A unit length vector pointing in the direction of this object.
          * @type Number[3]
@@ -339,7 +350,7 @@ define([
                         layers[i].getShader(),
                         layers[i].getTexturesOfTypes(layers[i].getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                         layers[i].getColor(),
-                        layers[i].getSize(),
+                        layers[i].getSize() * this._size,
                         mat.translation4v(vec.scaled3(this._direction, config.getSetting(config.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))),
                         this._angle);
                 layerParticle.setRelativeSize(1.0);
@@ -540,6 +551,11 @@ define([
      */
     function Environment(dataJSON) {
         /**
+         * Identifies the environment
+         * @type String
+         */
+        this._name = null;
+        /**
          * The list of skyboxes this environment contains as background.
          * @type Skybox[]
          */
@@ -575,8 +591,9 @@ define([
      * @param {Object} dataJSON
      */
     Environment.prototype.loadFromJSON = function (dataJSON) {
-        var i;
+        var i, backgroundObjectClass;
         this._dataJSON = dataJSON;
+        this._name = dataJSON.name;
         this._skyboxes = [];
         for (i = 0; i < dataJSON.skyboxes.length; i++) {
             this._skyboxes.push(new Skybox(classes.getSkyboxClass(dataJSON.skyboxes[i].class)));
@@ -584,11 +601,16 @@ define([
 
         this._backgroundObjects = [];
         for (i = 0; i < dataJSON.backgroundObjects.length; i++) {
+            backgroundObjectClass = classes.getBackgroundObjectClass(dataJSON.backgroundObjects[i].class);
+            if (!dataJSON.backgroundObjects[i].position) {
+                application.showError("No position specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR);
+            }
             this._backgroundObjects.push(new BackgroundObject(
-                    classes.getBackgroundObjectClass(dataJSON.backgroundObjects[i].class),
-                    dataJSON.backgroundObjects[i].position.angleAlpha,
-                    dataJSON.backgroundObjects[i].position.angleBeta,
-                    dataJSON.backgroundObjects[i].position.angleGamma || 0
+                    backgroundObjectClass,
+                    dataJSON.backgroundObjects[i].size || application.showError("No size specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR) || 0,
+                    (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleAlpha) || 0,
+                    (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleBeta) || 0,
+                    (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleGamma) || 0
                     ));
         }
 
@@ -695,6 +717,17 @@ define([
      */
     LogicContext.prototype.getEnvironmentNames = function () {
         return Object.keys(this._environments);
+    };
+    /**
+     * Executes the passed callback function for all the stored environments, passing each environment and a constant category string as the
+     * two parameters
+     * @param {Function} callback
+     */
+    LogicContext.prototype.executeForAllEnvironments = function (callback) {
+        var i, environmentNames = this.getEnvironmentNames();
+        for (i = 0; i < environmentNames.length; i++) {
+            callback(this._environments[environmentNames[i]], ENVIRONMENTS_CATEGORY_NAME);
+        }
     };
     // methods
     /**
@@ -5191,6 +5224,7 @@ define([
         getDebugInfo: getDebugInfo,
         getEnvironment: _context.getEnvironment.bind(_context),
         getEnvironmentNames: _context.getEnvironmentNames.bind(_context),
+        executeForAllEnvironments: _context.executeForAllEnvironments.bind(_context),
         Skybox: Skybox,
         Projectile: Projectile,
         Weapon: Weapon,

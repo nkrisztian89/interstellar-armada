@@ -1675,6 +1675,10 @@ define([
                 name: "class",
                 type: BACKGROUND_OBJECT_CLASS_REFERENCE
             },
+            SIZE: {
+                name: "size",
+                type: SCALE
+            },
             POSITION: {
                 name: "position",
                 type: BACKGROUND_OBJECT_POSITION

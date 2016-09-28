@@ -289,20 +289,20 @@ define([
                 nameChangeHandler = _createItemNameChangeHandler(oldName, newName, function (type) {
                     return type.getResourceReference();
                 });
-                resources.executeForAllResources(nameChangeHandler);
-                classes.executeForAllClasses(nameChangeHandler);
                 break;
             case common.ItemType.CLASS:
                 classes.renameClass(_selectedItem.category, oldName, newName);
                 nameChangeHandler = _createItemNameChangeHandler(oldName, newName, function (type) {
                     return type.getClassReference();
                 });
-                resources.executeForAllResources(nameChangeHandler);
-                classes.executeForAllClasses(nameChangeHandler);
                 break;
             default:
                 application.showError("Name change not supported for this type of item!");
+                return;
         }
+        resources.executeForAllResources(nameChangeHandler);
+        classes.executeForAllClasses(nameChangeHandler);
+        logic.executeForAllEnvironments(nameChangeHandler);
     }
     /**
      * Loads the content of the Properties window for the currently selected element.
@@ -434,6 +434,10 @@ define([
         option.text = common.ItemType.CLASS;
         option.value = common.ItemType.CLASS;
         exportType.add(option);
+        option = document.createElement("option");
+        option.text = common.ItemType.ENVIRONMENT;
+        option.value = common.ItemType.ENVIRONMENT;
+        exportType.add(option);
         exportType.onchange = function () {
             exportName.value = exportType.value;
         };
@@ -459,6 +463,18 @@ define([
                                     classes.getClassCategories(),
                                     classes.getClassNames,
                                     classes.getClass));
+                    break;
+                case common.ItemType.ENVIRONMENT:
+                    _exportString(
+                            exportName.value,
+                            _getItemsString(
+                                    exportName.value,
+                                    exportAuthor.value,
+                                    [ENVIRONMENTS_CATEGORY],
+                                    logic.getEnvironmentNames,
+                                    function (categoryName, itemName) {
+                                        return (categoryName === ENVIRONMENTS_CATEGORY) ? logic.getEnvironment(itemName) : null;
+                                    }));
                     break;
                 default:
                     application.showError("Exporting " + exportType.value + " is not yet implemented!");
