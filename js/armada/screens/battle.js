@@ -154,6 +154,16 @@ define([
              * @type Number
              */
             _timeSinceGameStateChanged,
+            /**
+             * A reference to the target of the followed spacecraft (if any, as last displayed on the HUD)
+             * @type Spacecraft
+             */
+            _target,
+            /**
+             * The time left from the target switch HUD animation, in milliseconds
+             * @type Number
+             */
+            _targetSwitchTime,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // music related
             /**
@@ -436,6 +446,42 @@ define([
             _targetHullIntegrityQuickViewBarLayout,
             // ................................................................................................
             // other cached setting values used for the HUD
+            /**
+             * The duration of the target switch animation (scaling applied to target indicator reticle / arrow and weapon impact indicators),
+             * in milliseconds
+             * @type Number
+             */
+            _hudTargetSwitchAnimationDuration,
+            /**
+             * The horizontal and vertical base size of the target indicator reticle
+             * @type Number[2]
+             */
+            _targetIndicatorSize,
+            /**
+             * The scaling to apply to the target indicator reticle at the start of the target switch HUD animation
+             * @type Number
+             */
+            _targetIndicatorSwitchScale,
+            /**
+             * The horizontal and vertical base size of the target indicator arrow
+             * @type Number[2]
+             */
+            _targetArrowSize,
+            /**
+             * The scaling to apply to the target indicator arrow at the start of the target switch HUD animation
+             * @type Number
+             */
+            _targetArrowSwitchScale,
+            /**
+             * The horizontal and vertical base size of the weapon impact indicators
+             * @type Number[2]
+             */
+            _weaponImpactIndicatorSize,
+            /**
+             * The scaling to apply to the weapon impact indicators at the start of the target switch HUD animation
+             * @type Number
+             */
+            _weaponImpactIndicatorSwitchScale,
             /**
              * The minimum drift speed at which the drift arrow HUD element is displayed.
              * @type Number
@@ -1347,14 +1393,15 @@ define([
     };
     /**
      * Updates the contents of the HUDF with information about the currently followed spacecraft
+     * @param {Number} dt The time elapsed since the last HUD update (in milliseconds)
      */
-    BattleScreen.prototype._updateHUD = function () {
+    BattleScreen.prototype._updateHUD = function (dt) {
         var
                 /** @type Spacecraft */
                 craft = _level ? _level.getFollowedSpacecraftForScene(_battleScene) : null,
                 target,
                 /** @type Number */
-                distance, aspect, i, scale, futureDistance,
+                distance, aspect, i, scale, futureDistance, targetSwitchScale,
                 hullIntegrity,
                 acceleration, speed, absSpeed, maxSpeed, stepFactor, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
                 /** @type Weapon[] */
@@ -1532,6 +1579,14 @@ define([
             // .....................................................................................................
             // target related information
             target = craft.getTarget();
+            if (_target !== target) {
+                _target = target;
+                _targetSwitchTime = _hudTargetSwitchAnimationDuration;
+                targetSwitchScale = 1;
+            } else if (_targetSwitchTime > 0) {
+                _targetSwitchTime -= dt;
+                targetSwitchScale = _targetSwitchTime / _hudTargetSwitchAnimationDuration;
+            }
             if (target) {
                 targetPosition = target.getPhysicalPositionVector();
                 position = craft.getPhysicalPositionVector();
@@ -1544,6 +1599,12 @@ define([
                 _targetIndicator.setColor(targetIsHostile ?
                         config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_HOSTILE_COLOR) :
                         config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_FRIENDLY_COLOR));
+                // scaling according to the target switch animation
+                if (_targetSwitchTime > 0) {
+                    _targetIndicator.setSize(vec.scaled2(_targetIndicatorSize, 1 + (_targetIndicatorSwitchScale - 1) * targetSwitchScale));
+                } else {
+                    _targetIndicator.setSize(_targetIndicatorSize);
+                }
                 _targetIndicator.show();
                 if (weapons.length > 0) {
                     // aim assist indicator at the expected future position of the target
@@ -1584,6 +1645,12 @@ define([
                         } else {
                             _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR));
                         }
+                        // scaling according to the target switch animation
+                        if (_targetSwitchTime > 0) {
+                            _weaponImpactIndicators[i].setSize(vec.scaled2(_weaponImpactIndicatorSize, 1 + (_weaponImpactIndicatorSwitchScale - 1) * targetSwitchScale));
+                        } else {
+                            _weaponImpactIndicators[i].setSize(_weaponImpactIndicatorSize);
+                        }
                         _weaponImpactIndicators[i].show();
                     }
                     while (i < _weaponImpactIndicators.length) {
@@ -1618,6 +1685,12 @@ define([
                     _targetArrow.setColor(targetIsHostile ?
                             config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_HOSTILE_COLOR) :
                             config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_FRIENDLY_COLOR));
+                    // scaling according to the target switch animation
+                    if (_targetSwitchTime > 0) {
+                        _targetArrow.setSize(vec.scaled2(_targetArrowSize, 1 + (_targetArrowSwitchScale - 1) * targetSwitchScale));
+                    } else {
+                        _targetArrow.setSize(_targetArrowSize);
+                    }
                 } else {
                     _targetArrow.hide();
                 }
@@ -1734,7 +1807,7 @@ define([
             _simulationLoopFunction();
         }
         if (_battleScene) {
-            this._updateHUD();
+            this._updateHUD(dt);
         }
         screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
         if (_battleScene) {
@@ -1928,6 +2001,13 @@ define([
         _speedBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_LAYOUT));
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_LAYOUT));
         _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT));
+        _hudTargetSwitchAnimationDuration = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_ANIMATION_DURATION);
+        _targetIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SIZE);
+        _targetIndicatorSwitchScale = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SWITCH_SCALE);
+        _targetArrowSize = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SIZE);
+        _targetArrowSwitchScale = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SWITCH_SCALE);
+        _weaponImpactIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SIZE);
+        _weaponImpactIndicatorSwitchScale = config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SWITCH_SCALE);
         _driftArrowMinSpeed = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED);
         _driftArrowMaxSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_FACTOR);
         _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_LAYOUT));

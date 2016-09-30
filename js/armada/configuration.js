@@ -730,6 +730,10 @@ define([
             name: "gameStateDisplayDelay",
             type: "number"
         },
+        HUD_TARGET_SWITCH_ANIMATION_DURATION: {
+            name: "hudTargetSwitchAnimationDuration",
+            type: "number"
+        },
         HUD_CENTER_CROSSHAIR_TEXTURE: {
             name: "hudCenterCrosshairTexture",
             type: "string"
@@ -793,6 +797,10 @@ define([
             name: "hudTargetArrowFriendlyColor",
             type: types.COLOR4
         },
+        HUD_TARGET_ARROW_SWITCH_SCALE: {
+            name: "hudTargetArrowSwitchScale",
+            type: "number"
+        },
         HUD_TARGET_INDICATOR_TEXTURE: {
             name: "hudTargetIndicatorTexture",
             type: "string"
@@ -813,6 +821,10 @@ define([
         HUD_TARGET_INDICATOR_FRIENDLY_COLOR: {
             name: "hudTargetIndicatorFriendlyColor",
             type: types.COLOR4
+        },
+        HUD_TARGET_INDICATOR_SWITCH_SCALE: {
+            name: "hudTargetIndicatorSwitchScale",
+            type: "number"
         },
         HUD_AIM_ASSIST_INDICATOR_TEXTURE: {
             name: "hudAimAssistIndicatorTexture",
@@ -855,6 +867,10 @@ define([
         HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR: {
             name: "hudWeaponImpactIndicatorOutOfRangeColor",
             type: types.COLOR4
+        },
+        HUD_WEAPON_IMPACT_INDICATOR_SWITCH_SCALE: {
+            name: "hudWeaponImpactIndicatorSwitchScale",
+            type: "number"
         },
         HUD_TARGET_VIEW_LAYOUT: {
             name: "hudTargetViewLayout",
