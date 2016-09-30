@@ -734,6 +734,14 @@ define([
             name: "hudTargetSwitchAnimationDuration",
             type: "number"
         },
+        HUD_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION: {
+            name: "hudHullIntegrityDecreaseAnimationDuration",
+            type: "number"
+        },
+        HUD_TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION: {
+            name: "hudTargetHullIntegrityDecreaseAnimationDuration",
+            type: "number"
+        },
         HUD_CENTER_CROSSHAIR_TEXTURE: {
             name: "hudCenterCrosshairTexture",
             type: "string"
@@ -1060,6 +1068,14 @@ define([
             name: "hudHullIntegrityBarEmptyColor",
             type: types.COLOR4
         },
+        HUD_HULL_INTEGRITY_BAR_FILLED_COLOR_WHEN_DECREASING: {
+            name: "hudHullIntegrityBarFilledColorWhenDecreasing",
+            type: types.COLOR4
+        },
+        HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR_WHEN_DECREASING: {
+            name: "hudHullIntegrityBarEmptyColorWhenDecreasing",
+            type: types.COLOR4
+        },
         HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE: {
             name: "hudFlightModeIndicatorBackgroundTexture",
             type: "string"
@@ -1167,6 +1183,10 @@ define([
         },
         HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_EMPTY_COLOR: {
             name: "hudTargetHullIntegrityQuickViewBarFriendlyEmptyColor",
+            type: types.COLOR4
+        },
+        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FILLED_COLOR_WHEN_DECREASING: {
+            name: "hudTargetHullIntegrityQuickViewBarFilledColorWhenDecreasing",
             type: types.COLOR4
         },
         HUD_HEADER_TEXT_LAYER_LAYOUT: {

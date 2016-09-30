@@ -168,6 +168,8 @@
             "targetChangeTransitionStyle": "smooth",
             "gameStateDisplayDelay": 2000,
             "hudTargetSwitchAnimationDuration": 100,
+            "hudHullIntegrityDecreaseAnimationDuration": 300,
+            "hudTargetHullIntegrityDecreaseAnimationDuration": 1000,
             "hudCenterCrosshairTexture": "center",
             "hudCenterCrosshairSize": [0.65, 0.65],
             "hudCenterCrosshairScaleMode": "minimum",
@@ -301,6 +303,8 @@
             },
             "hudHullIntegrityBarFilledColor": [0, 1, 0, 0.75],
             "hudHullIntegrityBarEmptyColor": [1, 0, 0, 0.5],
+            "hudHullIntegrityBarFilledColorWhenDecreasing": [1, 1, 1, 0.75],
+            "hudHullIntegrityBarEmptyColorWhenDecreasing": [1, 0.6, 0, 0.75],
             "hudFlightModeIndicatorBackgroundTexture": "white",
             "hudFlightModeIndicatorBackgroundLayout": {
                 "right": 0.98,
@@ -344,6 +348,7 @@
             "hudTargetHullIntegrityQuickViewBarHostileEmptyColor": [1, 0, 0, 0.2],
             "hudTargetHullIntegrityQuickViewBarFriendlyFilledColor": [0, 1, 0, 1],
             "hudTargetHullIntegrityQuickViewBarFriendlyEmptyColor": [0, 1, 0, 0.2],
+            "hudTargetHullIntegrityQuickViewBarFilledColorWhenDecreasing": [1, 1, 1, 1],
             "hudHeaderTextLayerLayout": {
                 "centerX": 0,
                 "top": 0.97,
