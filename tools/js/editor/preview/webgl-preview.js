@@ -16,6 +16,7 @@
  * @param managedGL Used to create a managed context for the WebGL preview canvas.
  * @param budaScene Used for creating the preview scene and light sources.
  * @param resources Used to request media resources and wait for their loading.
+ * @param audio Used to set audio volume
  * @param graphics Used to access the graphics settings of the game (same are used for the preview)
  * @param config Used to access default camera configuration settings.
  * @param classes Used to create an object view for the preview model.
@@ -28,11 +29,12 @@ define([
     "modules/managed-gl",
     "modules/buda-scene",
     "modules/media-resources",
+    "modules/audio",
     "armada/graphics",
     "armada/configuration",
     "armada/classes",
     "editor/common"
-], function (utils, vec, mat, managedGL, budaScene, resources, graphics, config, classes, common) {
+], function (utils, vec, mat, managedGL, budaScene, resources, audio, graphics, config, classes, common) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -108,17 +110,46 @@ define([
              */
             _currentContext,
             /**
+             * Whether the scne is currently animating (a requestAnimFrame loop is active)
+             * @type Boolean
+             */
+            _animating,
+            /**
+             * Whether the animation should be stopped next time a frame is about to be rendered by requestAnimFrame
+             * @type Boolean
+             */
+            _animationStopScheduled,
+            /**
+             * Whether the sound should be muted
+             * @type Boolean
+             */
+            _muted,
+            /**
+             * The timestamp of the last render frame to calculate elapsed time
+             * @type DOMHighResTimeStamp
+             */
+            _lastRenderTimestamp,
+            /**
+             * The current frames per seconds value
+             * @type Number
+             */
+            _fps,
+            /**
              * 
              * @type Object
              */
             _optionElements = {
                 renderModeSelector: null,
-                lodSelector: null
+                lodSelector: null,
+                animateButton: null,
+                muteCheckbox: null
             };
     /**
      * @typedef {Object} Editor~WebGLPreviewParams
      * @property {Boolean} renderModeSetting
      * @property {Boolean} lodSetting
+     * @property {Boolean} animateButton
+     * @property {Boolean} muteCheckbox
      * @property {String[]} canvasUpdateProperties
      * @property {String[]} optionRefreshProperties
      * @property {Number} [defaultDistanceFactor]
@@ -130,6 +161,8 @@ define([
      * @property {Function} updateForRefresh
      * @property {Function} clearSettingsForNewItem
      * @property {Function} createOptions
+     * @property {Function} animate
+     * @property {Function} onModelRotate
      */
     /**
      * @class
@@ -183,13 +216,87 @@ define([
         setupWireframeModel(value);
     }
     /**
-     * Called when a change happens as the result of which the preview scene should rendered again (if it is not rendered continuously)
+     * Creates the content for the preview information panel and adds it to the page.
      */
-    function requestRender() {
-        _scene.render(_context, 0);
+    function _updateInfo() {
+        _elements.info.innerHTML = "";
+        if (_model) {
+            _elements.info.appendChild(common.createLabel(
+                    "Model: " +
+                    "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
+                    ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD()) +
+                    (_fps ? (", FPS: " + _fps) : "")
+                    ));
+        }
+        _elements.info.hidden = (_elements.info.innerHTML === "");
     }
-    // ----------------------------------------------------------------------
-    // Private Functions
+    /**
+     * Called when a change happens as the result of which the preview scene should rendered again (if it is not rendered continuously)
+     * @param {Boolean} [force=false] If false, the render is only executed if there is no requestAnimFrame render loop active
+     * @param {Number} [dt=0] The time elapsed since the last render (to advance animation, in milliseconds)
+     */
+    function requestRender(force, dt) {
+        if (!_animating || force) {
+            dt = dt || 0;
+            _scene.render(_context, dt);
+            if (_currentContext.functions.animate) {
+                _currentContext.functions.animate(dt);
+            }
+            _fps = dt ? Math.round(1000 / dt) : 0;
+            _updateInfo();
+        }
+    }
+    /**
+     * Updates the caption of the "Animate" button according to the current animation state
+     */
+    function _updateAnimateButton() {
+        if (_optionElements.animateButton) {
+            _optionElements.animateButton.innerHTML = _animating ? "Stop" : "Animate";
+        }
+    }
+    /**
+     * Renders one animation frame (to be used with requestAnimFrame)
+     * @param {DOMHighResTimeStamp} timestamp From requestAnimFrame
+     */
+    function _renderFrame(timestamp) {
+        var dt;
+        if (_animating) {
+            if (!_lastRenderTimestamp) {
+                _lastRenderTimestamp = timestamp;
+            }
+            dt = timestamp - _lastRenderTimestamp;
+            if (!_animationStopScheduled) {
+                requestRender(true, dt);
+                _lastRenderTimestamp = timestamp;
+                window.requestAnimationFrame(_renderFrame);
+            } else {
+                _fps = 0;
+                _animating = false;
+                _updateAnimateButton();
+                _updateInfo();
+            }
+        }
+    }
+    /**
+     * Starts the animation loop using requestAnimFrame (if it is not active)
+     */
+    function startAnimating() {
+        if (!_animating) {
+            _animating = true;
+            _animationStopScheduled = false;
+            _lastRenderTimestamp = 0;
+            _updateAnimateButton();
+            window.requestAnimationFrame(_renderFrame);
+        } else if (_animationStopScheduled) {
+            _animationStopScheduled = false;
+        }
+    }
+    /**
+     * Sets the animation loop to be stopped next time the frame render is invoked
+     */
+    function stopAnimating() {
+        _animationStopScheduled = true;
+    }
     /**
      * Turns the model or the camera (or both), depending on which turn mode is active. Attached to the mouse move after a mouse down 
      * on the preview canvas.
@@ -198,17 +305,23 @@ define([
     function _handleMouseMove(event) {
         var cameraOri,
                 rotA = -(event.screenX - _mousePos[0]) * Math.radians(ROTATION_MOUSE_SENSITIVITY),
-                rotB = -(event.screenY - _mousePos[1]) * Math.radians(ROTATION_MOUSE_SENSITIVITY);
+                rotB = -(event.screenY - _mousePos[1]) * Math.radians(ROTATION_MOUSE_SENSITIVITY),
+                axisA, axisB;
         if (_model) {
             if (_turningModel) {
                 cameraOri = _scene.getCamera().getCameraOrientationMatrix();
-                _model.rotate(mat.getRowB43(cameraOri), rotA);
-                _model.rotate(mat.getRowA43(cameraOri), rotB);
+                axisA = mat.getRowA43(cameraOri);
+                axisB = mat.getRowB43(cameraOri);
+                _model.rotate(axisB, rotA);
+                _model.rotate(axisA, rotB);
                 if (_wireframeModel) {
-                    _wireframeModel.rotate(mat.getRowB43(cameraOri), rotA);
-                    _wireframeModel.rotate(mat.getRowA43(cameraOri), rotB);
+                    _wireframeModel.rotate(axisB, rotA);
+                    _wireframeModel.rotate(axisA, rotB);
                 }
                 mat.setMatrix4(_currentContext.modelOrientationMatrix, _model.getOrientationMatrix());
+                if (_currentContext.functions.onModelRotate) {
+                    _currentContext.functions.onModelRotate();
+                }
             }
         }
         if (_turningCamera) {
@@ -357,29 +470,18 @@ define([
     }
     /**
      * Creates a setting element for the preview options panel, with a label and a control
-     * @param {String} labelText The text that should show on the label
      * @param {Element} control The control to edit the value of the setting
+     * @param {String} [labelText] The text that should show on the label (if any)
      * @returns {Element}
      */
-    function createSetting(labelText, control) {
+    function createSetting(control, labelText) {
         var result = document.createElement("div");
         result.classList.add(SETTING_CLASS);
-        result.appendChild(_createSettingLabel(labelText));
+        if (labelText) {
+            result.appendChild(_createSettingLabel(labelText));
+        }
         result.appendChild(control);
         return result;
-    }
-    /**
-     * Creates the content for the preview information panel and adds it to the page.
-     */
-    function _updateInfo() {
-        _elements.info.innerHTML = "";
-        if (_model) {
-            _elements.info.appendChild(common.createLabel(
-                    "Model: " +
-                    "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
-                    ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD())));
-        }
-        _elements.info.hidden = (_elements.info.innerHTML === "");
     }
     /**
      * Updates both the calculated CSS size for the canvas as well as sets the size attributes according to the rendered (client) size.
@@ -414,10 +516,11 @@ define([
      * @param {Editor~RefreshParams} params
      */
     function updateCanvas(params) {
-        var shadowMappingSettings,
-                shouldReload;
+        var shadowMappingSettings, shouldReload, wasAnimating;
         params = params || {};
         shouldReload = !params.preserve || params.reload;
+        wasAnimating = _animating;
+        stopAnimating();
         if (graphics.shouldUseShadowMapping()) {
             graphics.getShadowMappingShader();
         }
@@ -470,6 +573,7 @@ define([
             _updateForLOD();
             _updateInfo();
             _updateCanvasSize();
+            _context.clear();
             _scene.addToContext(_context);
             _context.setup();
             if (shouldReload) {
@@ -512,7 +616,11 @@ define([
                 _updateForRenderMode();
                 _updateForLOD();
                 _currentContext.functions.updateForRefresh();
-                requestRender();
+                if (wasAnimating) {
+                    startAnimating();
+                } else {
+                    requestRender();
+                }
             });
         });
         resources.requestResourceLoad();
@@ -540,7 +648,7 @@ define([
                 _updateForRenderMode();
                 requestRender();
             });
-            _elements.options.appendChild(createSetting("Render mode:", _optionElements.renderModeSelector));
+            _elements.options.appendChild(createSetting(_optionElements.renderModeSelector, "Render mode:"));
         }
         if (_currentContext.params.lodSetting) {
             // LOD selector
@@ -550,13 +658,30 @@ define([
                 requestRender();
                 _updateInfo();
             });
-            _elements.options.appendChild(createSetting("LOD:", _optionElements.lodSelector));
+            _elements.options.appendChild(createSetting(_optionElements.lodSelector, "LOD:"));
+        }
+        if (_currentContext.params.animateButton) {
+            // animate button
+            _optionElements.animateButton = common.createButton(_animating ? "Stop" : "Animate", function () {
+                if (!_animating) {
+                    startAnimating();
+                } else {
+                    stopAnimating();
+                }
+            });
+            _elements.options.appendChild(createSetting(_optionElements.animateButton));
+        }
+        if (_currentContext.params.muteCheckbox) {
+            // mute checkbox
+            _optionElements.muteCheckbox = common.createBooleanInput(_muted, function () {
+                _muted = _optionElements.muteCheckbox.checked;
+                audio.setMasterVolume(_muted ? 0 : 1);
+            });
+            _elements.options.appendChild(createSetting(_optionElements.muteCheckbox, "Mute:"));
         }
         _currentContext.functions.createOptions();
         _elements.options.hidden = (_elements.options.innerHTML === "");
     }
-    // ----------------------------------------------------------------------
-    // Public Functions
     /**
      * @typedef {Object} refreshElements
      * @property {HTMLCanvasElement} canvas The canvas that can be used to display a preview image of the selected object
@@ -599,6 +724,8 @@ define([
         setWireframeModel: setWireframeModel,
         setupWireframeModel: setupWireframeModel,
         requestRender: requestRender,
+        startAnimating: startAnimating,
+        stopAnimating: stopAnimating,
         createSetting: createSetting,
         clearSettingsForNewItem: clearSettingsForNewItem,
         updateCanvas: updateCanvas,

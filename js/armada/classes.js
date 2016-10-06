@@ -213,7 +213,7 @@ define([
         VOLUME: {
             name: "volume",
             type: "number",
-            range: [0, 10],
+            range: [0, 25],
             defaultValue: 1
         },
         RESOURCE: {
@@ -3099,13 +3099,13 @@ define([
             _showMissingPropertyError(this, "lights");
         }
         /**
-         * The blinking lights that can be added to the scene along with this spacecraft.
+         * The descriptors for the blinking lights that can be added to the scene along with this spacecraft.
          * @type BlinkerDescriptor[]
          */
-        this._blinkers = (otherSpacecraftClass && !dataJSON.blinkers) ? otherSpacecraftClass._blinkers : [];
+        this._blinkerDescriptors = (otherSpacecraftClass && !dataJSON.blinkers) ? otherSpacecraftClass._blinkers : [];
         if (dataJSON.blinkers) {
             for (i = 0; i < dataJSON.blinkers.length; i++) {
-                this._blinkers.push(new BlinkerDescriptor(dataJSON.blinkers[i]));
+                this._blinkerDescriptors.push(new BlinkerDescriptor(dataJSON.blinkers[i]));
             }
         } else if (!otherSpacecraftClass) {
             _showMissingPropertyError(this, "blinkers");
@@ -3292,8 +3292,8 @@ define([
     /**
      * @returns {BlinkerDescriptor[]}
      */
-    SpacecraftClass.prototype.getBlinkers = function () {
-        return this._blinkers;
+    SpacecraftClass.prototype.getBlinkerDescriptors = function () {
+        return this._blinkerDescriptors;
     };
     /**
      * @override
@@ -3306,8 +3306,8 @@ define([
         for (i = 0; i < this._damageIndicators.length; i++) {
             this._damageIndicators[i].explosionClass.acquireResources();
         }
-        for (i = 0; i < this._blinkers.length; i++) {
-            this._blinkers[i].acquireResources();
+        for (i = 0; i < this._blinkerDescriptors.length; i++) {
+            this._blinkerDescriptors[i].acquireResources();
         }
         if (this._humSound) {
             _loadSoundEffect(this._humSound);
@@ -3321,8 +3321,8 @@ define([
     SpacecraftClass.prototype.handleGraphicsSettingsChanged = function () {
         var i;
         TexturedModelClass.prototype.handleGraphicsSettingsChanged.call(this);
-        for (i = 0; i < this._blinkers.length; i++) {
-            this._blinkers[i].handleGraphicsSettingsChanged();
+        for (i = 0; i < this._blinkerDescriptors.length; i++) {
+            this._blinkerDescriptors[i].handleGraphicsSettingsChanged();
         }
     };
     /**

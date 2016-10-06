@@ -1185,6 +1185,9 @@
             "name": "fighterExplosion",
             "samples": ["explosion/fighterExplosion.ogg"]
         }, {
+            "name": "largeShipExplosion",
+            "samples": ["explosion/largeShipExplosion.ogg"]
+        },{
             "name": "beep_targeting",
             "samples": ["computer/beep_targeting.wav"]
         }, {

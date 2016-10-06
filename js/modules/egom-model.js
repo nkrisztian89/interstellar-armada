@@ -1945,7 +1945,7 @@ define([
      */
     Model.prototype.getNumLines = function (lod) {
         lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getNumLines();
+        return (lod >= 0) ? this.getMeshWithLOD(lod).getNumLines() : 0;
     };
 
     /**
@@ -1976,7 +1976,7 @@ define([
      */
     Model.prototype.getNumTriangles = function (lod, transparent) {
         lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getNumTriangles(transparent);
+        return (lod >= 0) ? this.getMeshWithLOD(lod).getNumTriangles(transparent) : 0;
     };
 
     /**

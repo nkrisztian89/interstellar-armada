@@ -346,13 +346,18 @@ span.element.selected {
 
 .setting {
     display: inline-block;
+    padding-left: 0.5em;
     margin-bottom: 0.6em;
 }
 
 span.settingLabel {
     font-size: 0.8vw;
-    padding-left: 0.5em;
     padding-right: 0.5em;
+}
+
+.setting > input[type="checkbox"] {
+    margin-top: auto;
+    margin-bottom: 0;
 }
 
 /* -------------------------------------------------------------------- */

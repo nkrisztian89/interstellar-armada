@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0:369 (2016.09.27.)",
-        "creationTime": "Wed Sep 28 2016 01:06:55 GMT+0200 (CEST)"
+        "version": "0.4.0:375 (2016.10.01.)",
+        "creationTime": "Sun Oct 02 2016 14:19:45 GMT+0200 (CEST)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -945,7 +945,7 @@
                     "initialNumber": 0,
                     "spawnNumber": 1,
                     "spawnTime": 300,
-                    "duration": 1500,
+                    "duration": 900,
                     "shader": "particle",
                     "texture": "flare",
                     "particleStates": [{
@@ -977,8 +977,8 @@
                         }]
                 }, {
                     "type": "omnidirectional",
-                    "dimensions": [200, 1000, 200],
-                    "velocity": 20,
+                    "dimensions": [250, 1000, 200],
+                    "velocity": 30,
                     "initialNumber": 4,
                     "spawnNumber": 4,
                     "spawnTime": 50,
@@ -997,36 +997,37 @@
                             "color": [1, 0.3, 0, 0],
                             "size": 400,
                             "timeToReach": 350
-                        }]
+                        }],
+                    "velocitySpread": 10
                 }, {
                     "type": "omnidirectional",
                     "dimensions": [150, 600, 150],
-                    "velocity": 400,
-                    "velocitySpread": 150,
-                    "initialNumber": 100,
-                    "spawnNumber": 100,
-                    "spawnTime": 300,
-                    "duration": 3300,
+                    "velocity": 800,
+                    "velocitySpread": 300,
+                    "initialNumber": 0,
+                    "spawnNumber": 90,
+                    "spawnTime": 500,
+                    "duration": 500,
                     "shader": "particle",
                     "texture": "explosion",
                     "particleStates": [{
                             "color": [1, 1, 0.7, 1],
-                            "size": 6,
+                            "size": 35,
                             "timeToReach": 0
                         }, {
                             "color": [1, 0.7, 0, 0],
-                            "size": 1,
-                            "timeToReach": 600
+                            "size": 0,
+                            "timeToReach": 1000
                         }]
                 }, {
                     "type": "omnidirectional",
-                    "dimensions": [200, 1200, 200],
-                    "velocity": 75,
-                    "velocitySpread": 25,
+                    "dimensions": [100, 800, 100],
+                    "velocity": 175,
+                    "velocitySpread": 50,
                     "initialNumber": 0,
-                    "spawnNumber": 75,
-                    "spawnTime": 1200,
-                    "duration": 1200,
+                    "spawnNumber": 30,
+                    "spawnTime": 1000,
+                    "duration": 1000,
                     "shader": "particle",
                     "texture": "explosion",
                     "particleStates": [{
@@ -1044,13 +1045,13 @@
                         }]
                 }, {
                     "type": "omnidirectional",
-                    "dimensions": [100, 900, 100],
-                    "velocity": 40,
-                    "velocitySpread": 15,
+                    "dimensions": [250, 900, 100],
+                    "velocity": 50,
+                    "velocitySpread": 20,
                     "initialNumber": 30,
                     "spawnNumber": 20,
                     "spawnTime": 300,
-                    "duration": 1500,
+                    "duration": 1200,
                     "shader": "particle",
                     "texture": "explosion",
                     "particleStates": [{
@@ -1059,11 +1060,11 @@
                             "timeToReach": 0
                         }, {
                             "color": [1, 1, 0, 0.7],
-                            "size": 150,
+                            "size": 200,
                             "timeToReach": 1200
                         }, {
                             "color": [1, 0, 0, 0],
-                            "size": 300,
+                            "size": 400,
                             "timeToReach": 1200
                         }]
                 }, {
@@ -1073,8 +1074,8 @@
                     "velocitySpread": 15,
                     "initialNumber": 0,
                     "spawnNumber": 3,
-                    "spawnTime": 3500,
-                    "duration": 3500,
+                    "spawnTime": 3200,
+                    "duration": 3200,
                     "shader": "particle",
                     "texture": "explosion",
                     "particleStates": [{
@@ -4433,7 +4434,103 @@
                     "class": "mediumFire"
                 }],
             "lights": [],
-            "blinkers": []
+            "blinkers": [{
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 1, 1],
+                        "size": 2,
+                        "duration": 200
+                    },
+                    "position": [37, 300, 57],
+                    "period": 2000,
+                    "blinks": [0],
+                    "intensity": 64
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 1, 1],
+                        "size": 2,
+                        "duration": 200
+                    },
+                    "position": [-37, 300, 57],
+                    "period": 2000,
+                    "blinks": [0],
+                    "intensity": 64
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 0, 1],
+                        "size": 2,
+                        "duration": 200
+                    },
+                    "position": [0, 440, -102],
+                    "period": 2000,
+                    "blinks": [500],
+                    "intensity": 64
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 0, 1],
+                        "size": 2,
+                        "duration": 200
+                    },
+                    "position": [175, 20, -150.5],
+                    "period": 2000,
+                    "blinks": [500],
+                    "intensity": 64
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 0, 1],
+                        "size": 2,
+                        "duration": 200
+                    },
+                    "position": [-175, 20, -150.5],
+                    "period": 2000,
+                    "blinks": [500],
+                    "intensity": 64
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 0, 0, 1],
+                        "size": 2,
+                        "duration": 200
+                    },
+                    "position": [0, -295, -195],
+                    "period": 2000,
+                    "blinks": [1000],
+                    "intensity": 64
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 0, 0, 1],
+                        "size": 2,
+                        "duration": 200
+                    },
+                    "position": [168.9, -295, 97.5],
+                    "period": 2000,
+                    "blinks": [1000],
+                    "intensity": 64
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 0, 0, 1],
+                        "size": 2,
+                        "duration": 200
+                    },
+                    "position": [-168.9, -295, 97.5],
+                    "period": 2000,
+                    "blinks": [1000],
+                    "intensity": 64
+                }]
         }, {
             "name": "libra",
             "type": "cruiser",
@@ -5016,8 +5113,8 @@
             },
             "explosion": "largeShipExplosion",
             "explosionSound": {
-                "name": "fighterExplosion",
-                "volume": 8
+                "name": "largeShipExplosion",
+                "volume": 20
             },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{

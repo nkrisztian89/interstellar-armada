@@ -292,7 +292,7 @@ define([
      */
     function _createColorControl(name, data) {
         return common.createColorPicker(data, function () {
-            _changeData(name, data);
+            _updateData(name);
         });
     }
     /**

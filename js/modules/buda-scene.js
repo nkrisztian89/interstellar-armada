@@ -452,6 +452,7 @@ define([
             this._modelMatrix = null;
             this._modelMatrixInverse = null;
             this._insideParent = null;
+            this._positionMatrixInCameraSpace = null;
         }
         /**
          * Returns a 3D vector describing the position.
@@ -1893,6 +1894,8 @@ define([
      * @returns {Boolean}
      */
     RenderableObject.prototype.shouldAnimate = function (dt) {
+        // the object not being visible does not block the animation, as it can be a part of the animation (e.g. blinking lights)
+        // the node not being visible however blocks the animation, and the animations of all of the subnodes so that unnecessary animation can be avoided
         return dt > 0;
     };
     /**
@@ -2322,6 +2325,9 @@ define([
             if (this._staticLOD !== this.LOD_NOT_SET) {
                 this._currentLOD = this._model.getClosestAvailableLOD(this._staticLOD);
             } else {
+                if (!renderParameters) {
+                    return this.LOD_NOT_SET;
+                }
                 visibleSize = this.getSizeInPixels(renderParameters);
                 lodSize = renderParameters.lodContext.compensateForObjectSize ? this.getLODSize(visibleSize, renderParameters.lodContext.referenceSize) : visibleSize;
                 if (lodSize > 0) {
@@ -2890,6 +2896,15 @@ define([
         return this._states;
     };
     /**
+     * Sets the animation state of the particle to be the one occuring after the passed amount of time from the start
+     * @param {Number} elapsedTime In milliseconds
+     */
+    Particle.prototype.setAnimationTime = function (elapsedTime) {
+        this._currentStateIndex = 0;
+        this._timeSinceLastTransition = 0;
+        this.performAnimate(elapsedTime);
+    };
+    /**
      * @override
      * @param {ManagedGLContext} context
      */
@@ -3270,6 +3285,13 @@ define([
         }
         return particles;
     };
+    /**
+     * Adds the resources needed to render this particle emitter to the passed managed context
+     * @param {ManagedGLContext} context
+     */
+    ParticleEmitter.prototype.addToContext = function (context) {
+        this._particleConstructor().addToContext(context);
+    };
     // #########################################################################
     /**
      * @class A particle emitter that emits particles that move in all directions with a velocity within a given range
@@ -3466,6 +3488,7 @@ define([
      * @class Generates animated particles using its list of particle emitters.
      * @extends RenderableObject3D
      * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position of the center of the particle system (meters)
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix describing the orientation of the particle system
      * @param {Float32Array} velocityMatrix The 4x4 translation matrix describing the velocity of the particle system (m/s)
      * @param {ParticleEmitter[]} emitters The list of emitters that will be used to generate particles
      * @param {Number} duration For how long should the particle system be active (milliseconds)
@@ -3477,8 +3500,8 @@ define([
      * by this particle system will turn on instancing for their render queue.
      * @param {Number} [particleCountFactor=1] The number of particles created by this particle system will be multiplied by this factor
      */
-    function ParticleSystem(positionMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing, particleCountFactor) {
-        RenderableObject3D.call(this, null, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4);
+    function ParticleSystem(positionMatrix, orientationMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing, particleCountFactor) {
+        RenderableObject3D.call(this, null, false, true, positionMatrix, orientationMatrix, mat.IDENTITY4);
         /**
          * The 4x4 translation matrix describing the velocity of the particle system (m/s)
          * @type Float32Array
@@ -3586,6 +3609,16 @@ define([
             this._duration = remainingDuration;
         } else {
             this.getNode().markAsReusable();
+        }
+    };
+    /**
+     * Adds the resources needed to render this particle system to the passed managed context
+     * @param {ManagedGLContext} context
+     */
+    ParticleSystem.prototype.addToContext = function (context) {
+        var i;
+        for (i = 0; i < this._emitters.length; i++) {
+            this._emitters[i].addToContext(context);
         }
     };
     // #########################################################################
@@ -6613,6 +6646,15 @@ define([
         var viewMatrix = camera.getViewMatrix();
         // calculating the Z position in camera space by multiplying the world space position vector with the view matrix (only the applicable parts)
         return (this._positionVector[0] * viewMatrix[2] + this._positionVector[1] * viewMatrix[6] + this._positionVector[2] * viewMatrix[10] + viewMatrix[14]) < this._totalIntensity;
+    };
+    /**
+     * Sets the animation state of the light source to be the one occuring after the passed amount of time from the start
+     * @param {Number} elapsedTime In milliseconds
+     */
+    PointLightSource.prototype.setAnimationTime = function (elapsedTime) {
+        this._timeSinceLastTransition = 0;
+        this._currentStateIndex = 0;
+        this.updateState(elapsedTime);
     };
     // #########################################################################
     /**

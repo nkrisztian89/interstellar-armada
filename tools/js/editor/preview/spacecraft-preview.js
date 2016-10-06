@@ -11,6 +11,7 @@
 
 /**
  * @param utils Used for enum value listing, async execution.
+ * @param mat Used for copying matrices
  * @param budaScene Used for creating the preview scene and light sources.
  * @param config Used to access default camera configuration settings.
  * @param logic Used to create the preview spacecraft(s) and access the environments.
@@ -20,13 +21,14 @@
  */
 define([
     "utils/utils",
+    "utils/matrices",
     "modules/buda-scene",
     "armada/configuration",
     "armada/logic",
     "editor/common",
     "editor/descriptors",
     "editor/preview/webgl-preview"
-], function (utils, budaScene, config, logic, common, descriptors, preview) {
+], function (utils, mat, budaScene, config, logic, common, descriptors, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -51,6 +53,7 @@ define([
                 "bodies",
                 "weaponSlots", "thrusterSlots",
                 "equipmentProfiles",
+                "explosionSound",
                 "lights", "blinkers"],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
@@ -60,12 +63,20 @@ define([
                 "basedOn",
                 "equipmentProfiles"
             ],
-            // ----------------------------------------------------------------------
-            // Private variables
             /**
-             * @type Spacecraft
+             * The params to pass to spacecraft.simulate()
+             * @type Spacecraft~SimulateParams
              */
-            _spacecraft, _wireframeSpacecraft,
+            SPACECRAFT_SIMULATE_PARAMS = {
+                controlThrusters: false,
+                applyThrusterForces: false
+            },
+    // ----------------------------------------------------------------------
+    // Private variables
+    /**
+     * @type Spacecraft
+     */
+    _spacecraft, _wireframeSpacecraft,
             /**
              * A reference to the object storing the HTML elements to be used for the preview
              * @type Object
@@ -119,7 +130,8 @@ define([
                 equipmentSelector: null,
                 factionColorPicker: null,
                 engineStateEditor: null,
-                engineStatePopup: null
+                engineStatePopup: null,
+                explodeButton: null
             };
     // ----------------------------------------------------------------------
     // Private Functions
@@ -192,6 +204,13 @@ define([
                 (_spacecraft.getPropulsion() ? ENGINE_STATE_OFF : ENGINE_STATE_NO_PROPULSION);
     }
     /**
+     * Updates the caption and enabled state of the "Explode" button to reflect the current state of the spacecraft
+     */
+    function _updateExplodeButton() {
+        _optionElements.explodeButton.innerHTML = (_spacecraft && _spacecraft.getHitpoints() > 0) ? "Explode" : "Respawn";
+        _optionElements.explodeButton.disabled = !_spacecraft || ((_spacecraft.getHitpoints() === 0) && (_spacecraft.isAlive()));
+    }
+    /**
      * @typedef {Editor~RefreshParams} Editor~SpacecraftClassRefreshParams
      * @property {String} environmentName The name of the environment to put the previewed spacecraft in
      * @property {String} equipmentProfileName The name of the equipment profile to be equipped on the previewed spacecraft
@@ -253,7 +272,7 @@ define([
         }
         _spacecraft.addToScene(preview.getScene(), undefined, false,
                 (environmentChanged || shouldReload) ?
-                {weapons: true, lightSources: true, blinkers: true, hitboxes: true, thrusterParticles: true} :
+                {weapons: true, lightSources: true, blinkers: true, hitboxes: true, thrusterParticles: true, explosion: true} :
                 {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
@@ -362,8 +381,9 @@ define([
                 clearScene: true,
                 environmentName: (_optionElements.environmentSelector.value !== "none") ? _optionElements.environmentSelector.value : null
             });
+            _updateExplodeButton();
         });
-        _elements.options.appendChild(preview.createSetting("Environment:", _optionElements.environmentSelector));
+        _elements.options.appendChild(preview.createSetting(_optionElements.environmentSelector, "Environment:"));
         // equipment profile selector
         _optionElements.equipmentSelector = common.createSelector(_spacecraftClass.getEquipmentProfileNames(), _equipmentProfileName, true, function () {
             preview.updateCanvas({
@@ -372,8 +392,9 @@ define([
                 equipmentProfileName: (_optionElements.equipmentSelector.value !== "none") ? _optionElements.equipmentSelector.value : null
             });
             _updateEngineStateEditor();
+            _updateExplodeButton();
         });
-        _elements.options.appendChild(preview.createSetting("Equipment:", _optionElements.equipmentSelector));
+        _elements.options.appendChild(preview.createSetting(_optionElements.equipmentSelector, "Equipment:"));
         // faction color picker
         _optionElements.factionColorPicker = common.createColorPicker(_factionColor, function () {
             _factionColorChanged = true;
@@ -381,18 +402,61 @@ define([
                 preserve: true,
                 reload: true
             });
+            _updateExplodeButton();
         });
-        _elements.options.appendChild(preview.createSetting("Faction color:", _optionElements.factionColorPicker));
+        _elements.options.appendChild(preview.createSetting(_optionElements.factionColorPicker, "Faction color:"));
         // engine state editor
         _optionElements.engineStateEditor = _createEngineEditor();
-        _elements.options.appendChild(preview.createSetting("Engine:", _optionElements.engineStateEditor));
+        _elements.options.appendChild(preview.createSetting(_optionElements.engineStateEditor, "Engine:"));
+        // explode button
+        _optionElements.explodeButton = common.createButton("Explode", function () {
+            if (_spacecraft.getHitpoints() > 0) {
+                _spacecraft.setHitpointsToZero();
+                _spacecraft.setOnDestructed(function () {
+                    _spacecraft.getVisualModel().getNode().hide();
+                    _updateExplodeButton();
+                    return false;
+                });
+                preview.startAnimating();
+            } else {
+                _spacecraft.getVisualModel().getNode().show();
+                _spacecraft.respawn();
+                _updateThrusters();
+                preview.requestRender();
+            }
+            _updateExplodeButton();
+        });
+        _elements.options.appendChild(preview.createSetting(_optionElements.explodeButton));
+    }
+    /**
+     * The animation step (i.e. spacecraft.simulate())
+     * @param {Number} dt The time elapsed since the last animation step
+     */
+    function _animate(dt) {
+        if (_spacecraft) {
+            _spacecraft.simulate(dt, SPACECRAFT_SIMULATE_PARAMS);
+        }
     }
     /**
      * 
      */
     function _updateForRefresh() {
         _updateForHitboxState();
+        if (_spacecraft && (_spacecraft.getHitpoints() <= 0)) {
+            _spacecraft.getVisualModel().getNode().show();
+            _spacecraft.respawn();
+        }
         _updateThrusters();
+        _updateExplodeButton();
+    }
+    /**
+     * The handler for when the model is rotated by the user
+     */
+    function _onModelRotate() {
+        var explosion = _spacecraft && _spacecraft.getExplosion();
+        if (explosion) {
+            explosion.getVisualModel().setOrientationMatrix(mat.matrix4(_spacecraft.getVisualModel().getOrientationMatrix()));
+        }
     }
     // ----------------------------------------------------------------------
     // Public Functions
@@ -451,6 +515,8 @@ define([
     _previewContext = new preview.WebGLPreviewContext({
         renderModeSetting: true,
         lodSetting: true,
+        animateButton: true,
+        muteCheckbox: true,
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
         optionRefreshProperties: OPTION_REFRESH_PROPERIES
     }, {
@@ -458,7 +524,9 @@ define([
         load: _load,
         updateForRefresh: _updateForRefresh,
         clearSettingsForNewItem: _clearSettingsForNewItem,
-        createOptions: _createOptions
+        createOptions: _createOptions,
+        animate: _animate,
+        onModelRotate: _onModelRotate
     });
     // ----------------------------------------------------------------------
     // The public interface of the module
