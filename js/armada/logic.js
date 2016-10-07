@@ -20,7 +20,11 @@
  * @param egomModel Used for generating 3D models for hitboxes
  * @param physics Physics simulation is done using this module
  * @param resources Used to access the loaded media (graphics and sound) resources
- * @param budaScene Creating and managing the scene graph for visual simulation is done using this module
+ * @param camera Used for creating camera configurations for views
+ * @param renderableObjects Used for creating visual models for game objects
+ * @param lights Used for creating light sources for game objects and levels
+ * @param sceneGraph Creating and managing the scene graph for visual simulation is done using this module
+ * @param particleSystem Used for creating particle systems for explosions
  * @param graphics Used to access graphics settings
  * @param audio Used for creating sound sources for spacecrafts
  * @param config Used to access game settings/configuration
@@ -38,7 +42,11 @@ define([
     "modules/egom-model",
     "modules/physics",
     "modules/media-resources",
-    "modules/buda-scene",
+    "modules/scene/camera",
+    "modules/scene/renderable-objects",
+    "modules/scene/lights",
+    "modules/scene/scene-graph",
+    "modules/scene/particle-system",
     "armada/graphics",
     "armada/audio",
     "armada/classes",
@@ -46,7 +54,11 @@ define([
     "armada/strings",
     "armada/ai",
     "utils/polyfill"
-], function (utils, vec, mat, application, asyncResource, managedGL, egomModel, physics, resources, budaScene, graphics, audio, classes, config, strings, ai) {
+], function (
+        utils, vec, mat,
+        application, asyncResource, managedGL, egomModel, physics, resources,
+        camera, renderableObjects, lights, sceneGraph, particleSystem,
+        graphics, audio, classes, config, strings, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -278,7 +290,7 @@ define([
     Skybox.prototype.addToScene = function (scene) {
         this._class.acquireResources();
         resources.executeWhenReady(function () {
-            scene.addBackgroundObject(new budaScene.CubemapSampledFVQ(
+            scene.addBackgroundObject(new renderableObjects.CubemapSampledFVQ(
                     this._class.getModel(),
                     this._class.getShader(),
                     this._class.getShader().getCubemapNames()[0],
@@ -339,13 +351,13 @@ define([
      * @param {Scene} scene
      */
     BackgroundObject.prototype.addToScene = function (scene) {
-        scene.addDirectionalLightSource(new budaScene.DirectionalLightSource(this._class.getLightColor(), this._direction));
+        scene.addDirectionalLightSource(new lights.DirectionalLightSource(this._class.getLightColor(), this._direction));
         this._class.acquireResources();
         resources.executeWhenReady(function () {
             var i, layers, layerParticle;
             layers = this._class.getLayers();
             for (i = 0; i < layers.length; i++) {
-                layerParticle = new budaScene.BackgroundBillboard(
+                layerParticle = new renderableObjects.BackgroundBillboard(
                         layers[i].getModel(),
                         layers[i].getShader(),
                         layers[i].getTexturesOfTypes(layers[i].getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -401,14 +413,14 @@ define([
      * @param {Boolean} addOwnProperties
      */
     DustParticle.prototype.addToScene = function (cloudNode, addOwnProperties) {
-        this._visualModel = new budaScene.PointParticle(
+        this._visualModel = new renderableObjects.PointParticle(
                 this._cloud.getClass().getModel(),
                 this._cloud.getClass().getShader(),
                 this._cloud.getClass().getInstancedShader(),
                 this._positionVector,
                 addOwnProperties ? this._cloud.getClass().getColor() : null,
                 addOwnProperties ? this._range : null);
-        cloudNode.addSubnode(new budaScene.RenderableNode(this._visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING)));
+        cloudNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING)));
     };
     /**
      * @returns {PointParticle}
@@ -484,7 +496,7 @@ define([
     };
     /**
      * Adds the needed objects to the scene to render this dust cloud.
-     * @param {budaScene} scene
+     * @param {sceneGraph} scene
      */
     DustCloud.prototype.addToScene = function (scene) {
         var i, n, particle;
@@ -502,8 +514,8 @@ define([
         }
         resources.executeWhenReady(function () {
             var j, node;
-            this._visualModel = new budaScene.RenderableObject(null, false, false, undefined, false);
-            node = scene.addNode(new budaScene.RenderableNode(this._visualModel, true));
+            this._visualModel = new renderableObjects.RenderableObject(null, false, false, undefined, false);
+            node = scene.addNode(new sceneGraph.RenderableNode(this._visualModel, true));
             for (j = 0; j < n; j++) {
                 this._particles[j].addToScene(node, j === 0);
             }
@@ -828,7 +840,7 @@ define([
         return function () {
             var particle = _particlePool.getFreeObject();
             if (!particle) {
-                particle = new budaScene.Particle();
+                particle = new renderableObjects.Particle();
                 _particlePool.addObject(particle);
             }
             particle.init(
@@ -858,7 +870,7 @@ define([
         for (i = 0; i < particleEmitterDescriptors.length; i++) {
             switch (particleEmitterDescriptors[i].getType()) {
                 case classes.ParticleEmitterType.OMNIDIRECTIONAL:
-                    emitter = new budaScene.OmnidirectionalParticleEmitter(mat.identity4(),
+                    emitter = new particleSystem.OmnidirectionalParticleEmitter(mat.identity4(),
                             mat.IDENTITY4, // as of now, cannot be modified (no setter), so no problem - later could be initialised from JSON
                             particleEmitterDescriptors[i].getDimensions(),
                             particleEmitterDescriptors[i].getVelocity(),
@@ -870,7 +882,7 @@ define([
                             this.getEmitterParticleConstructor(i));
                     break;
                 case classes.ParticleEmitterType.UNIDIRECTIONAL:
-                    emitter = new budaScene.UnidirectionalParticleEmitter(mat.identity4(),
+                    emitter = new particleSystem.UnidirectionalParticleEmitter(mat.identity4(),
                             mat.IDENTITY4, // see above
                             particleEmitterDescriptors[i].getDimensions(),
                             this._direction,
@@ -884,7 +896,7 @@ define([
                             this.getEmitterParticleConstructor(i));
                     break;
                 case classes.ParticleEmitterType.PLANAR:
-                    emitter = new budaScene.PlanarParticleEmitter(mat.identity4(),
+                    emitter = new particleSystem.PlanarParticleEmitter(mat.identity4(),
                             mat.IDENTITY4, // see above
                             particleEmitterDescriptors[i].getDimensions(),
                             this._direction,
@@ -902,7 +914,7 @@ define([
             }
             particleEmitters.push(emitter);
         }
-        this._visualModel = this._visualModel || new budaScene.ParticleSystem(
+        this._visualModel = this._visualModel || new particleSystem.ParticleSystem(
                 this._positionMatrix,
                 this._orientationMatrix,
                 this._velocityMatrix,
@@ -925,14 +937,14 @@ define([
         resources.executeWhenReady(function () {
             this._createVisualModel();
             if (parentNode) {
-                parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel));
+                parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel));
             } else {
                 scene.addObject(this._visualModel);
             }
             lightStates = this._class.getLightStates();
             if (lightStates) {
                 scene.addPointLightSource(
-                        new budaScene.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates),
+                        new lights.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates),
                         EXPLOSION_LIGHT_PRIORITY);
             }
         }.bind(this));
@@ -1053,7 +1065,7 @@ define([
      */
     Projectile.prototype._createVisualModel = function (wireframe) {
         if (!this._visualModel) {
-            this._visualModel = new budaScene.Billboard();
+            this._visualModel = new renderableObjects.Billboard();
         }
         this._visualModel.init(
                 this._class.getModel(),
@@ -1400,7 +1412,7 @@ define([
             if (graphics.areLuminosityTexturesAvailable()) {
                 parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
             }
-            visualModel = new budaScene.ParameterizedMesh(
+            visualModel = new renderableObjects.ParameterizedMesh(
                     this._class.getModel(),
                     params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
                     this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -1410,7 +1422,7 @@ define([
                     (wireframe === true),
                     lod,
                     parameterArrays);
-            parentNode.addSubnode(new budaScene.RenderableNode(visualModel));
+            parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel));
             // setting the starting values of the parameter arrays
             // setting an identity transformation for all transform groups
             for (i = 0, n = graphics.getMaxGroupTransforms(); i < n; i++) {
@@ -1450,10 +1462,10 @@ define([
                 muzzleFlashPosMatrix = mat.translation4v(relativeBarrelPosVector),
                 particle = _particlePool.getFreeObject();
         if (!particle) {
-            particle = new budaScene.Particle();
+            particle = new renderableObjects.Particle();
             _particlePool.addObject(particle);
         }
-        budaScene.initDynamicParticle(
+        renderableObjects.initDynamicParticle(
                 particle,
                 projectileClass.getMuzzleFlash().getModel(),
                 projectileClass.getMuzzleFlash().getShader(),
@@ -1482,7 +1494,7 @@ define([
      * Adds the resources required to render the projeciles fired by this weapon
      * to the passed scene, so they get loaded at the next resource load as well 
      * as added to any context the scene is added to.
-     * @param {budaScene} scene
+     * @param {sceneGraph} scene
      */
     Weapon.prototype.addProjectileResourcesToScene = function (scene) {
         var i, projectile, barrels;
@@ -1559,7 +1571,7 @@ define([
                 muzzleFlash = this._getMuzzleFlashForBarrel(i, barrelPosVector);
                 barrelPosVector = vec.mulVec3Mat4(barrelPosVector, mat.prod3x3SubOf4(this.getScaledOriMatrix(), shipScaledOriMatrix));
                 projectilePosMatrix = mat.translatedByVector(weaponSlotPosMatrix, barrelPosVector);
-                this._visualModel.getNode().addSubnode(new budaScene.RenderableNode(muzzleFlash), false, _minimumMuzzleFlashParticleCountForInstancing);
+                this._visualModel.getNode().addSubnode(new sceneGraph.RenderableNode(muzzleFlash), false, _minimumMuzzleFlashParticleCountForInstancing);
                 // add the projectile of this barrel
                 p = projectilePool.getFreeObject();
                 if (!p) {
@@ -1576,7 +1588,7 @@ define([
                 // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
                 // been created, so that projectiles from the same weapon and of the same class only use one light source object
                 if (!projectileLights[projectileClass.getName()]) {
-                    projectileLights[projectileClass.getName()] = new budaScene.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), vec.NULL3, [p.getVisualModel()]);
+                    projectileLights[projectileClass.getName()] = new lights.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), vec.NULL3, [p.getVisualModel()]);
                 } else {
                     projectileLights[projectileClass.getName()].addEmittingObject(p.getVisualModel());
                 }
@@ -1813,7 +1825,7 @@ define([
         var visualModel;
         this._propulsionClass.acquireResources();
         resources.executeWhenReady(function () {
-            visualModel = budaScene.staticParticle(
+            visualModel = renderableObjects.staticParticle(
                     this._propulsionClass.getThrusterBurnParticle().getModel(),
                     this._propulsionClass.getThrusterBurnParticle().getShader(),
                     this._propulsionClass.getThrusterBurnParticle().getTexturesOfTypes(this._propulsionClass.getThrusterBurnParticle().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -1822,7 +1834,7 @@ define([
                     mat.translation4v(this._slot.positionVector),
                     this._propulsionClass.getThrusterBurnParticle().getInstancedShader());
             visualModel.setRelativeSize(0);
-            parentNode.addSubnode(new budaScene.RenderableNode(visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
+            parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
             if (!this._visualModel) {
                 this._visualModel = visualModel;
                 this._shipModel = parentNode.getRenderableObject();
@@ -2710,7 +2722,7 @@ define([
      * @param {Boolean} addLightSource Whether to create and add the light source
      */
     Blinker.prototype.addToScene = function (parentNode, addLightSource) {
-        this._visualModel = new budaScene.Particle(
+        this._visualModel = new renderableObjects.Particle(
                 this._descriptor.getParticle().getModel(),
                 this._descriptor.getParticle().getShader(),
                 this._descriptor.getParticle().getTexturesOfTypes(this._descriptor.getParticle().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -2719,9 +2731,9 @@ define([
                 true,
                 this._descriptor.getParticle().getInstancedShader(),
                 0);
-        parentNode.addSubnode(new budaScene.RenderableNode(this._visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
+        parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
         if ((addLightSource === true) && (this._descriptor.getIntensity() > 0)) {
-            this._lightSource = new budaScene.PointLightSource(
+            this._lightSource = new lights.PointLightSource(
                     this._descriptor.getLightColor(),
                     0,
                     this._descriptor.getPosition(),
@@ -3597,7 +3609,7 @@ define([
                                 1,
                                 1,
                                 _hitZoneColor)),
-                hitZoneMesh = new budaScene.ShadedLODMesh(
+                hitZoneMesh = new renderableObjects.ShadedLODMesh(
                         phyModel.getEgomModel(),
                         graphics.getManagedShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME)),
                         this.getHitboxTextures(),
@@ -3608,13 +3620,13 @@ define([
                                 this._class.getBodies()[index].getHeight(),
                                 this._class.getBodies()[index].getDepth()),
                         false);
-        hitZoneMesh.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
+        hitZoneMesh.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
             return _hitZoneColor;
         });
         hitZoneMesh.setUniformValueFunction(_groupTransformsArrayName, function () {
             return _groupTransformIdentityArray;
         });
-        this._hitbox.addSubnode(new budaScene.RenderableNode(hitZoneMesh));
+        this._hitbox.addSubnode(new sceneGraph.RenderableNode(hitZoneMesh));
     };
     /**
      * Returns the renderable node storing the hitbox models for this spacecraft.
@@ -3673,7 +3685,7 @@ define([
      * @function
      * Creates and adds the renderable objects to represent this spacecraft to
      * the passed scene.
-     * @param {budaScene} scene The scene to which the objects will be added.
+     * @param {sceneGraph} scene The scene to which the objects will be added.
      * @param {Number} [lod] The level of detail to use for adding the models.
      * If not given, all available LODs will be added for dynamic LOD rendering.
      * @param {Boolean} [wireframe=false] Whether to add the models in wireframe
@@ -3726,7 +3738,7 @@ define([
                 if (graphics.areLuminosityTexturesAvailable()) {
                     parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
                 }
-                visualModel = new budaScene.ParameterizedMesh(
+                visualModel = new renderableObjects.ParameterizedMesh(
                         this._class.getModel(),
                         params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
                         this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -3778,7 +3790,7 @@ define([
             // visualize physical model (hitboxes)
             if (addSupplements.hitboxes === true) {
                 // add the parent objects for the hitboxes
-                this._hitbox = new budaScene.RenderableNode(new budaScene.RenderableObject3D(
+                this._hitbox = new sceneGraph.RenderableNode(new renderableObjects.RenderableObject3D(
                         this._class.getShader(),
                         false,
                         false));
@@ -3821,10 +3833,10 @@ define([
                 lightSources = this._class.getLightSources();
                 for (i = 0; i < lightSources.length; i++) {
                     if (lightSources[i].spotDirection) {
-                        scene.addSpotLightSource(new budaScene.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, [visualModel]));
+                        scene.addSpotLightSource(new lights.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, [visualModel]));
                     } else {
                         scene.addPointLightSource(
-                                new budaScene.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [visualModel]),
+                                new lights.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [visualModel]),
                                 SPACECRAFT_LIGHT_PRIORITY);
                     }
                 }
@@ -5196,7 +5208,7 @@ define([
      */
     Level.prototype.createCameraConfigurationForSceneView = function (view, scene) {
         var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(view.getOrientationMatrix());
-        positionConfiguration = new budaScene.CameraPositionConfiguration(
+        positionConfiguration = new camera.CameraPositionConfiguration(
                 !view.isMovable(),
                 view.turnsAroundObjects(),
                 view.movesRelativeToObject(),
@@ -5206,7 +5218,7 @@ define([
                 view.getDistanceRange(),
                 view.getConfines(),
                 view.resetsWhenLeavingConfines());
-        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
+        orientationConfiguration = new camera.CameraOrientationConfiguration(
                 !view.isTurnable(),
                 view.pointsTowardsObjects(),
                 view.isFPS(),
@@ -5217,7 +5229,7 @@ define([
                 view.getBetaRange(),
                 view.getBaseOrientation() || config.getDefaultCameraBaseOrientation(),
                 view.getPointToFallback() || config.getDefaultCameraPointToFallback());
-        return new budaScene.CameraConfiguration(
+        return new camera.CameraConfiguration(
                 view.getName(),
                 positionConfiguration, orientationConfiguration,
                 view.getFOV() || config.getDefaultCameraFOV(),

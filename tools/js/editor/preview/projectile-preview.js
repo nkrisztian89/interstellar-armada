@@ -10,15 +10,15 @@
 /*jslint white: true, nomen: true, plusplus: true */
 
 /**
- * @param budaScene Used for creating the preview scene and light sources.
+ * @param lights Used for creating the light sources for the preview scene
  * @param logic Used to create the preview spacecraft(s) and access the environments.
  * @param preview
  */
 define([
-    "modules/buda-scene",
+    "modules/scene/lights",
     "armada/logic",
     "editor/preview/webgl-preview"
-], function (budaScene, logic, preview) {
+], function (lights, logic, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -85,7 +85,7 @@ define([
         shouldReload = !params.preserve || params.reload;
         if (params.clearScene || shouldReload) {
             for (i = 0; i < LIGHT_SOURCES.length; i++) {
-                preview.getScene().addDirectionalLightSource(new budaScene.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
+                preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
             }
             if (shouldReload) {
                 _projectile = new logic.Projectile(_projectileClass, undefined, orientationMatrix);

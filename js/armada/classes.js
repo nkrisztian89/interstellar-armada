@@ -20,7 +20,8 @@
  * @param egomModel Required for default basic (e.g. particle) models
  * @param physics Required for loading Body instances for the physical model of the spacecrafts
  * @param resources This module accesses media resources to assign them to classes when they are initialized
- * @param budaScene Required for parsing camera related enums
+ * @param camera Required for parsing camera related enums
+ * @param renderableObjects Required for creating particle states
  * @param graphics Required to access resources according to current graphics settings
  * @param strings Used for translation support
  */
@@ -34,10 +35,15 @@ define([
     "modules/egom-model",
     "modules/physics",
     "modules/media-resources",
-    "modules/buda-scene",
+    "modules/scene/camera",
+    "modules/scene/renderable-objects",
     "armada/graphics",
     "armada/strings"
-], function (utils, types, vec, mat, application, resourceManager, egomModel, physics, resources, budaScene, graphics, strings) {
+], function (
+        utils, types, vec, mat,
+        application, resourceManager, egomModel, physics, resources,
+        camera, renderableObjects,
+        graphics, strings) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -2153,11 +2159,11 @@ define([
          * @type String 
          */
         this._baseOrientation = dataJSON ? (dataJSON.baseOrientation ?
-                (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.baseOrientation) ||
+                (utils.getSafeEnumValue(camera.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.baseOrientation) ||
                         application.showError(
                                 "Invalid value '" + dataJSON.baseOrientation + "' specified for view baseOrientation!",
                                 application.ErrorSeverity.MINOR,
-                                "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.BaseOrientation).join(", ") + ".")) :
+                                "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.prototype.BaseOrientation).join(", ") + ".")) :
                 null) : null;
         /**
          * (enum CameraOrientationConfiguration.prototype.PointToFallback) The basis of orientation calculation if the view is set to "look at" mode,
@@ -2166,11 +2172,11 @@ define([
          * @type String
          */
         this._pointToFallback = dataJSON ? (dataJSON.pointToFallback ?
-                (utils.getSafeEnumValue(budaScene.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.pointToFallback) ||
+                (utils.getSafeEnumValue(camera.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.pointToFallback) ||
                         application.showError(
                                 "Invalid value '" + dataJSON.pointToFallback + "' specified for view pointToFallback!",
                                 application.ErrorSeverity.MINOR,
-                                "Valid values are: " + utils.getEnumValues(budaScene.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
+                                "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
                 null) : null;
     }
     /**
@@ -2459,7 +2465,7 @@ define([
     ObjectView.prototype.createCameraConfiguration = function (model, defaultCameraBaseOrientation,
             defaultCameraPointToFallback, defaultFOV, defaultFOVRange, defaultSpan, defaultSpanRange) {
         var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this.getOrientationMatrix());
-        positionConfiguration = new budaScene.CameraPositionConfiguration(
+        positionConfiguration = new camera.CameraPositionConfiguration(
                 !this.isMovable(),
                 this.turnsAroundObjects(),
                 this.movesRelativeToObject(),
@@ -2469,7 +2475,7 @@ define([
                 this.getDistanceRange(),
                 this.getConfines(),
                 this.resetsWhenLeavingConfines());
-        orientationConfiguration = new budaScene.CameraOrientationConfiguration(
+        orientationConfiguration = new camera.CameraOrientationConfiguration(
                 !this.isTurnable(),
                 this.pointsTowardsObjects(),
                 this.isFPS(),
@@ -2480,7 +2486,7 @@ define([
                 this.getBetaRange(),
                 this.getBaseOrientation() || defaultCameraBaseOrientation,
                 this.getPointToFallback() || defaultCameraPointToFallback);
-        return new budaScene.CameraConfiguration(
+        return new camera.CameraConfiguration(
                 this.getName(),
                 positionConfiguration, orientationConfiguration,
                 this.getFOV() || defaultFOV,
@@ -2750,17 +2756,17 @@ define([
         var i, time = 0, result = [];
         if (this._blinks.length > 0) {
             if (this._blinks[0] > 0) {
-                result.push(new budaScene.ParticleState(this._particle.getColor(), 0, 0));
-                result.push(new budaScene.ParticleState(this._particle.getColor(), 0, this._blinks[0]));
+                result.push(new renderableObjects.ParticleState(this._particle.getColor(), 0, 0));
+                result.push(new renderableObjects.ParticleState(this._particle.getColor(), 0, this._blinks[0]));
             }
             for (i = 0; i < this._blinks.length; i++) {
-                result.push(new budaScene.ParticleState(this._particle.getColor(), this._particle.getSize(), 0));
-                result.push(new budaScene.ParticleState(this._particle.getColor(), 0, this._particle.getDuration()));
+                result.push(new renderableObjects.ParticleState(this._particle.getColor(), this._particle.getSize(), 0));
+                result.push(new renderableObjects.ParticleState(this._particle.getColor(), 0, this._particle.getDuration()));
                 time = this._blinks[i] + this._particle.getDuration();
-                result.push(new budaScene.ParticleState(this._particle.getColor(), 0, (i < (this._blinks.length - 1)) ? (this._blinks[i + 1] - time) : (this._period - time)));
+                result.push(new renderableObjects.ParticleState(this._particle.getColor(), 0, (i < (this._blinks.length - 1)) ? (this._blinks[i + 1] - time) : (this._period - time)));
             }
         } else {
-            result.push(new budaScene.ParticleState(this._particle.getColor(), 0, 0));
+            result.push(new renderableObjects.ParticleState(this._particle.getColor(), 0, 0));
         }
         return result;
     };

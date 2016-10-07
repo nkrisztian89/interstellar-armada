@@ -14,7 +14,8 @@
  * @param vec Used for vector operations related to camera control.
  * @param mat Used for matrix operatinos related to camera control.
  * @param managedGL Used to create a managed context for the WebGL preview canvas.
- * @param budaScene Used for creating the preview scene and light sources.
+ * @param renderableObjects Used for accessing uniform name constants
+ * @param sceneGraph Used for creating the preview scene
  * @param resources Used to request media resources and wait for their loading.
  * @param audio Used to set audio volume
  * @param graphics Used to access the graphics settings of the game (same are used for the preview)
@@ -27,14 +28,15 @@ define([
     "utils/vectors",
     "utils/matrices",
     "modules/managed-gl",
-    "modules/buda-scene",
+    "modules/scene/renderable-objects",
+    "modules/scene/scene-graph",
     "modules/media-resources",
     "modules/audio",
     "armada/graphics",
     "armada/configuration",
     "armada/classes",
     "editor/common"
-], function (utils, vec, mat, managedGL, budaScene, resources, audio, graphics, config, classes, common) {
+], function (utils, vec, mat, managedGL, renderableObjects, sceneGraph, resources, audio, graphics, config, classes, common) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -207,7 +209,7 @@ define([
         _model = value;
     }
     function setupWireframeModel(model) {
-        model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
+        model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
             return WIREFRAME_COLOR;
         });
     }
@@ -530,7 +532,7 @@ define([
             _wireframeModel = null;
         }
         if (!_scene) {
-            _scene = new budaScene.Scene(
+            _scene = new sceneGraph.Scene(
                     0, 0, 1, 1, // full canvas
                     true, [true, true, true, true], // background is erased on render
                     CANVAS_BACKGROUND_COLOR, true,

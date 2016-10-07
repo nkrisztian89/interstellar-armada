@@ -11,7 +11,7 @@
 
 /**
  * @param control This module builds its game-specific functionality on the general control module
- * @param cameraController This module uses the CameraController class made for BudaScene
+ * @param cameraController This module uses the CameraController class made for SceneGraph
  * @param game To access screen-changing functionality
  * @param resources Used to access the sound effects triggered by controls
  * @param armadaScreens Used for navigation

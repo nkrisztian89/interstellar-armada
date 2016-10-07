@@ -16,7 +16,8 @@
  * @param application Used for displaying errors and logging.
  * @param components Used for the components of the screen (e.g. loading box)
  * @param screens The battle screen is a HTMLScreenWithCanvases.
- * @param budaScene Used for creating the battle scene and the nodes for the HUD elements.
+ * @param renderableObjects Used for creating the HUD elements
+ * @param sceneGraph Used for creating the battle scene and the nodes for the HUD elements.
  * @param resources Used for accessing the resources for the HUD and for requesting the loading of reasourcing and setting callback for when they are ready.
  * @param strings Used for translation support.
  * @param armadaScreens Used for common screen constants.
@@ -35,7 +36,8 @@ define([
     "modules/application",
     "modules/components",
     "modules/screens",
-    "modules/buda-scene",
+    "modules/scene/renderable-objects",
+    "modules/scene/scene-graph",
     "modules/media-resources",
     "armada/strings",
     "armada/screens/shared",
@@ -47,7 +49,7 @@ define([
     "armada/control",
     "armada/ai",
     "utils/polyfill"
-], function (utils, vec, mat, application, components, screens, budaScene, resources, strings, armadaScreens, graphics, audio, classes, config, logic, control, ai) {
+], function (utils, vec, mat, application, components, screens, renderableObjects, sceneGraph, resources, strings, armadaScreens, graphics, audio, classes, config, logic, control, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -745,7 +747,7 @@ define([
          * 1 (right / top), corresponding to a relative position within the element.
          * @type Number[4]
          */
-        this._clipCoordinates = budaScene.CLIP_COORDINATES_NO_CLIP.slice();
+        this._clipCoordinates = renderableObjects.CLIP_COORDINATES_NO_CLIP.slice();
         /**
          * An RGBA color to be used for modulation outside the clip zone set for the element.
          * @type Number[4]
@@ -772,7 +774,7 @@ define([
      * Creates and stores a new visual model to represent this HUD element. Automatically called when the element is added to a scene.
      */
     HUDElement.prototype._createVisualModel = function () {
-        this._visualModel = new budaScene.UIElement(
+        this._visualModel = new renderableObjects.UIElement(
                 this._class.getModel(),
                 this._class.getShader(),
                 this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
@@ -1779,7 +1781,7 @@ define([
                         positionMatrix: mat.translation4(0, 0, 0),
                         orientationMatrix: mat.identity4()
                     }, function (model) {
-                        model.setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, function () {
+                        model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
                             return _targetViewItemColor;
                         });
                         _targetScene.getCamera().moveToPosition([0, 0, 2 * model.getScaledSize()], 0);
@@ -1900,7 +1902,7 @@ define([
             if (application.isDebugVersion()) {
                 this._stats.setContent(
                         logic.getDebugInfo() + "<br/>" +
-                        budaScene.getDebugInfo() + "<br/>" +
+                        sceneGraph.getDebugInfo() + "<br/>" +
                         mat.getMatrixCount() + " <br/>" +
                         this.getFPS() + "<br/>" +
                         _battleScene.getNumberOfDrawnTriangles());
@@ -1982,7 +1984,7 @@ define([
             if (graphics.shouldUseShadowMapping()) {
                 graphics.getShadowMappingShader();
             }
-            _battleScene = new budaScene.Scene(
+            _battleScene = new sceneGraph.Scene(
                     0, 0, 1, 1,
                     true, [true, true, true, true],
                     [0, 0, 0, 1], true,
@@ -1998,7 +2000,7 @@ define([
                         transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
                         transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     });
-            _targetScene = new budaScene.Scene(
+            _targetScene = new sceneGraph.Scene(
                     _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),
                     _targetViewLayout.getPositiveBottom(canvas.width, canvas.height),
                     _targetViewLayout.getPositiveWidth(canvas.width, canvas.height),

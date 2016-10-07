@@ -13,16 +13,16 @@
  * @param utils Used for accessing the ScaleMode enum
  * @param types Used for verifying the types of settings loaded from JSON
  * @param asyncResource ConfigurationContext is a subclass of AsyncResource
- * @param budaScene Used for accessing the enum types in this module
+ * @param camera Used for accessing the enum types in this module
  * @param classes Loading the game configuration initiates loading the classes.
  */
 define([
     "utils/utils",
     "utils/types",
     "modules/async-resource",
-    "modules/buda-scene",
+    "modules/scene/camera",
     "armada/classes"
-], function (utils, types, asyncResource, budaScene, classes) {
+], function (utils, types, asyncResource, camera, classes) {
     "use strict";
     var
             /**
@@ -573,8 +573,8 @@ define([
         CAMERA_DEFAULT_TRANSITION_STYLE: {
             name: "cameraDefaultTransitionStyle",
             type: "enum",
-            values: budaScene.Camera.prototype.TransitionStyle,
-            defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
+            values: camera.Camera.prototype.TransitionStyle,
+            defaultValue: camera.Camera.prototype.TransitionStyle.SMOOTH
         },
         /**
          * The duration of camera transitions happening when the user switches to piloting mode
@@ -590,8 +590,8 @@ define([
         CAMERA_PILOTING_SWITCH_TRANSITION_STYLE: {
             name: "cameraPilotingSwitchTransitionStyle",
             type: "enum",
-            values: budaScene.Camera.prototype.TransitionStyle,
-            defaultValue: budaScene.Camera.prototype.TransitionStyle.SMOOTH
+            values: camera.Camera.prototype.TransitionStyle,
+            defaultValue: camera.Camera.prototype.TransitionStyle.SMOOTH
         },
         /**
          * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
@@ -720,7 +720,7 @@ define([
         TARGET_CHANGE_TRANSITION_STYLE: {
             name: "targetChangeTransitionStyle",
             type: "enum",
-            values: budaScene.Camera.prototype.TransitionStyle
+            values: camera.Camera.prototype.TransitionStyle
         },
         /**
          * The amount of time to wait after the game state changes to victory or defeat before actually displaying the result. (as for
@@ -1354,12 +1354,12 @@ define([
         DEFAULT_BASE_ORIENTATION: {
             name: "defaultBaseOrientation",
             type: "enum",
-            values: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
+            values: camera.CameraOrientationConfiguration.prototype.BaseOrientation
         },
         DEFAULT_POINT_TO_FALLBACK: {
             name: "defaultPointToFallback",
             type: "enum",
-            values: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
+            values: camera.CameraOrientationConfiguration.prototype.PointToFallback
         }
     };
     Object.freeze(_customTypes);

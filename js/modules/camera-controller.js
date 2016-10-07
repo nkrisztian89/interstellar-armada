@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file This file provides a class that builds on the Control module to provide a Controller for cameras of the BudaScene module
+ * @file This file provides a class that builds on the Control module to provide a Controller for cameras of the SceneGraph module
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -13,14 +13,14 @@
  * @param types Used for type-checking the configuration JSON for the camera controller
  * @param application Used for displaying error messages
  * @param control CameraController is a subclass of controller
- * @param budaScene Used to access the style enum of the Camera class
+ * @param camera Used to access the style enum of the Camera class
  */
 define([
     "utils/types",
     "modules/application",
     "modules/control",
-    "modules/buda-scene"
-], function (types, application, control, budaScene) {
+    "modules/scene/camera"
+], function (types, application, control, camera) {
     "use strict";
     // #########################################################################
     /**
@@ -110,7 +110,7 @@ define([
          * (enum Camera.prototype.TransitionStyle) The style of transitions applied by commands given to the camera by this controller.
          * @type String
          */
-        this._transitionStyle = types.getEnumValue(budaScene.Camera.prototype.TransitionStyle, dataJSON.transitionStyle, {name: "cameraController.transitionStyle"});
+        this._transitionStyle = types.getEnumValue(camera.Camera.prototype.TransitionStyle, dataJSON.transitionStyle, {name: "cameraController.transitionStyle"});
         // The superclass constructor above loads the data from the JSON, so all action
         // properties should have been created.
         this.setActionFunctions("controlCamera", function () {

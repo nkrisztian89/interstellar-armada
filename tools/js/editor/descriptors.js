@@ -14,7 +14,7 @@
  * @param utils Used to handle enums
  * @param managedGL Used to access enums
  * @param egomModel Used to access enums
- * @param budaScene Used to access enums
+ * @param camera Used to access enums
  * @param resources Used to retrieve resource name lists
  * @param config Used for configuration (setting) key strings
  * @param graphics Used to access contants
@@ -24,12 +24,12 @@ define([
     "utils/utils",
     "modules/managed-gl",
     "modules/egom-model",
-    "modules/buda-scene",
+    "modules/scene/camera",
     "modules/media-resources",
     "armada/configuration",
     "armada/graphics",
     "armada/classes"
-], function (utils, managedGL, egomModel, budaScene, resources, config, graphics, classes) {
+], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -1217,14 +1217,14 @@ define([
      */
     BASE_ORIENTATION = {
         baseType: BaseType.ENUM,
-        values: budaScene.CameraOrientationConfiguration.prototype.BaseOrientation
+        values: camera.CameraOrientationConfiguration.prototype.BaseOrientation
     },
     /**
      * @type Editor~TypeDescriptor
      */
     POINT_TO_FALLBACK = {
         baseType: BaseType.ENUM,
-        values: budaScene.CameraOrientationConfiguration.prototype.PointToFallback
+        values: camera.CameraOrientationConfiguration.prototype.PointToFallback
     },
     /**
      * @type Editor~TypeDescriptor

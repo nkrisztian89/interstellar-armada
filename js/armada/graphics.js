@@ -16,7 +16,7 @@
  * @param asyncResource GraphicsSettingsContext is an AsynchResource subclass
  * @param managedGL Used for checking valid texture filtering values
  * @param resources Used to provide resource accessor functions that access resources through this module but add parameters based on current graphics context settings
- * @param budaScene The graphics context creates and stores a default LODContext
+ * @param sceneGraph The graphics context creates and stores a default LODContext
  * @param constants Used to access common game constants
  */
 define([
@@ -25,10 +25,10 @@ define([
     "modules/async-resource",
     "modules/managed-gl",
     "modules/media-resources",
-    "modules/buda-scene",
+    "modules/scene/scene-graph",
     "armada/constants",
     "utils/polyfill"
-], function (types, application, asyncResource, managedGL, resources, budaScene, constants) {
+], function (types, application, asyncResource, managedGL, resources, sceneGraph, constants) {
     "use strict";
     var
             // --------------------------------------------------------------------------------------------
@@ -1234,7 +1234,7 @@ define([
             limit = dataJSON.levelOfDetailSettings.lodDisplayProfile.limits[i];
             lodDisplayLimits[this._lodLevel.getValueForName(limit.level) + 1] = limit.objectSizeLessThan;
         }
-        this._lodContext = new budaScene.LODContext(
+        this._lodContext = new sceneGraph.LODContext(
                 this._lodLevel.getFirstValue(),
                 lodDisplayLimits,
                 dataJSON.levelOfDetailSettings.lodDisplayProfile.compensateForObjectSize,
@@ -1568,7 +1568,7 @@ define([
         }
     };
     /**
-     * Returns the LOD context object storing the currently active LOD settings in the format defined by BudaScene.
+     * Returns the LOD context object storing the currently active LOD settings in the format defined by SceneGraph.
      * @returns {LODContext}
      */
     GraphicsSettingsContext.prototype.getLODContext = function () {

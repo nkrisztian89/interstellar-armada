@@ -12,23 +12,29 @@
 /**
  * @param utils Used for enum value listing, async execution.
  * @param mat Used for copying matrices
- * @param budaScene Used for creating the preview scene and light sources.
- * @param config Used to access default camera configuration settings.
- * @param logic Used to create the preview spacecraft(s) and access the environments.
- * @param common Used to create selectors.
+ * @param renderableObjects Used for accessing uniform name constants
+ * @param lights Used for creating the light sources for the preview scene
+ * @param config Used to access default camera configuration settings
+ * @param logic Used to create the preview spacecraft(s) and access the environments
+ * @param common Used to create selectors
  * @param descriptors Used to access enums
  * @param preview
  */
 define([
     "utils/utils",
     "utils/matrices",
-    "modules/buda-scene",
+    "modules/scene/renderable-objects",
+    "modules/scene/lights",
     "armada/configuration",
     "armada/logic",
     "editor/common",
     "editor/descriptors",
     "editor/preview/webgl-preview"
-], function (utils, mat, budaScene, config, logic, common, descriptors, preview) {
+], function (
+        utils, mat,
+        renderableObjects, lights,
+        config, logic,
+        common, descriptors, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -156,7 +162,7 @@ define([
         var i, n = _spacecraft.getHitbox().getSubnodes().length;
         if (_showHitbox) {
             for (i = 0; i < n; i++) {
-                _spacecraft.getHitbox(i).getRenderableObject().setUniformValueFunction(budaScene.UNIFORM_COLOR_NAME, (i === _highlightedHitboxIndex) ?
+                _spacecraft.getHitbox(i).getRenderableObject().setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, (i === _highlightedHitboxIndex) ?
                         _highlighterHitboxColorFunction :
                         _hitboxColorFunction);
             }
@@ -251,7 +257,7 @@ define([
         shouldReload = !params.preserve || params.reload;
         if ((environmentChanged || shouldReload) && !params.environmentName) {
             for (i = 0; i < LIGHT_SOURCES.length; i++) {
-                preview.getScene().addDirectionalLightSource(new budaScene.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
+                preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
             }
         }
         if (shouldReload) {

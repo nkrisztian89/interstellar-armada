@@ -14,7 +14,8 @@
  * @param mat Used for the rotation and scaling of item view models.
  * @param components Used for the components (i.e. the loading box) of the screen.
  * @param screens The database screen is a HTMLScreenWithCanvases.
- * @param budaScene Used for creating and setting up (with light sources) the item view scene.
+ * @param lights Used for creating and setting up light sources
+ * @param sceneGraph Used for creating and setting up the item view scene.
  * @param game Used for navigation.
  * @param resources Used for requesting and waiting for resource loads.
  * @param armadaScreens Used for common screen constants.
@@ -29,9 +30,10 @@ define([
     "utils/matrices",
     "modules/components",
     "modules/screens",
-    "modules/buda-scene",
     "modules/game",
     "modules/media-resources",
+    "modules/scene/lights",
+    "modules/scene/scene-graph",
     "armada/screens/shared",
     "armada/strings",
     "armada/graphics",
@@ -39,7 +41,11 @@ define([
     "armada/configuration",
     "armada/logic",
     "utils/polyfill"
-], function (utils, mat, components, screens, budaScene, game, resources, armadaScreens, strings, graphics, classes, config, logic) {
+], function (
+        utils, mat,
+        components, screens, game, resources,
+        lights, sceneGraph,
+        armadaScreens, strings, graphics, classes, config, logic) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -506,6 +512,7 @@ define([
         _stopRotationLoop();
         _itemViewScene.clearNodes();
         _itemViewScene.clearPointLights();
+        _itemViewScene.clearSpotLights();
         _itemViewScene = null;
         if (_currentItem) {
             _currentItem.destroy();
@@ -606,7 +613,7 @@ define([
             graphics.getShadowMappingShader();
         }
         canvas = this.getScreenCanvas(DATABASE_CANVAS_NAME).getCanvasElement();
-        _itemViewScene = new budaScene.Scene(
+        _itemViewScene = new sceneGraph.Scene(
                 0, 0, 1, 1,
                 true, [true, true, true, true],
                 _getSetting(SETTINGS.BACKGROUND_COLOR), true,
@@ -623,7 +630,7 @@ define([
         lightSources = _getSetting(SETTINGS.LIGHT_SOURCES);
         if (lightSources) {
             for (i = 0; i < lightSources.length; i++) {
-                _itemViewScene.addDirectionalLightSource(new budaScene.DirectionalLightSource(lightSources[i].color, lightSources[i].direction));
+                _itemViewScene.addDirectionalLightSource(new lights.DirectionalLightSource(lightSources[i].color, lightSources[i].direction));
             }
         }
         if (_getSetting(SETTINGS.SHOW_LOADING_BOX_FIRST_TIME)) {
@@ -669,6 +676,7 @@ define([
             this.executeWhenReady(function () {
                 _itemViewScene.clearNodes();
                 _itemViewScene.clearPointLights();
+                _itemViewScene.clearSpotLights();
                 this.render();
             });
             return true;
@@ -711,6 +719,7 @@ define([
         // clear the previous scene graph and render the empty scene to clear the canvas 
         _itemViewScene.clearNodes();
         _itemViewScene.clearPointLights();
+        _itemViewScene.clearSpotLights();
         _itemViewScene.setShouldAnimate(false);
         if (_currentItem) {
             _currentItem.destroy();

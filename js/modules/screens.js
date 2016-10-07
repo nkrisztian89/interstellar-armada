@@ -1463,7 +1463,7 @@ define([
          * @property {ScreenCanvas} canvas
          */
         /**
-         * Stores all the active bindings that exist between the canvases of this screen and WebGL (BudaScene)
+         * Stores all the active bindings that exist between the canvases of this screen and WebGL (SceneGraph)
          * Scenes. When calling render or starting the render loop, all the scenes present in these bindings
          * will be automatically rendered on their corresponding canvases.
          * @type HTMLScreenWithCanvases~ScreenCanvasBinding[]
