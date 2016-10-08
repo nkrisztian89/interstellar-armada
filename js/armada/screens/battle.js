@@ -25,8 +25,9 @@
  * @param audio Used for controlling volume (muting when opening the menu)
  * @param classes Used for HUD elements for convenient acquiry of their resources.
  * @param config Used to access game setting / configuration.
- * @param logic Used for creating the Level object, accessing enums.
  * @param control Used for global game control functions.
+ * @param level Used for creating the Level object, accessing enums.
+ * @param equipment Used to access flight mode constants
  * @param ai Used for performing the AI control operations in the battle simulation loop.
  */
 define([
@@ -36,20 +37,25 @@ define([
     "modules/application",
     "modules/components",
     "modules/screens",
+    "modules/media-resources",
     "modules/scene/renderable-objects",
     "modules/scene/scene-graph",
-    "modules/media-resources",
     "armada/strings",
     "armada/screens/shared",
     "armada/graphics",
     "armada/audio",
     "armada/classes",
     "armada/configuration",
-    "armada/logic",
     "armada/control",
-    "armada/ai",
+    "armada/logic/level",
+    "armada/logic/equipment",
+    "armada/logic/ai",
     "utils/polyfill"
-], function (utils, vec, mat, application, components, screens, renderableObjects, sceneGraph, resources, strings, armadaScreens, graphics, audio, classes, config, logic, control, ai) {
+], function (
+        utils, vec, mat,
+        application, components, screens, resources,
+        renderableObjects, sceneGraph,
+        strings, armadaScreens, graphics, audio, classes, config, control, level, equipment, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -1627,13 +1633,13 @@ define([
             _flightModeIndicatorBackground.applyLayout(_flightModeIndicatorBackgroundLayout, canvas.width, canvas.height);
             _flightModeText.setText(strings.get(strings.FLIGHT_MODE.PREFIX, craft.getFlightMode(), craft.getFlightMode()));
             switch (craft.getFlightMode()) {
-                case logic.FlightMode.FREE:
+                case equipment.FlightMode.FREE:
                     _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_FREE_FLIGHT_MODE_TEXT_COLOR));
                     break;
-                case logic.FlightMode.COMPENSATED:
+                case equipment.FlightMode.COMPENSATED:
                     _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_COMPENSATED_FLIGHT_MODE_TEXT_COLOR));
                     break;
-                case logic.FlightMode.RESTRICTED:
+                case equipment.FlightMode.RESTRICTED:
                     _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_RESTRICTED_FLIGHT_MODE_TEXT_COLOR));
                     break;
                 default:
@@ -1901,7 +1907,7 @@ define([
         if (_battleScene) {
             if (application.isDebugVersion()) {
                 this._stats.setContent(
-                        logic.getDebugInfo() + "<br/>" +
+                        level.getDebugInfo() + "<br/>" +
                         sceneGraph.getDebugInfo() + "<br/>" +
                         mat.getMatrixCount() + " <br/>" +
                         this.getFPS() + "<br/>" +
@@ -1970,7 +1976,7 @@ define([
         control.setScreenCenter(
                 canvas.width / 2,
                 canvas.height / 2);
-        _level = new logic.Level();
+        _level = new level.Level();
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_LEVEL), 0);
         _level.requestLoadFromFile(_levelSourceFilename, _demoMode, function () {
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);

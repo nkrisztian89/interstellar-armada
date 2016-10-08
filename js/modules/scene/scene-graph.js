@@ -1699,7 +1699,10 @@ define([
      * @param {RenderableObject} object
      */
     Scene.prototype.addResourcesOfObject = function (object) {
-        this._rootResourceNode.addSubnode(new RenderableNode(object));
+        var node = new RenderableNode(object);
+        this._rootResourceNode.addSubnode(node);
+        // in case this is a pooled object, mark it as reusable so the pooled instance can be marked free
+        node.markAsReusable();
     };
     /**
      * Adds the passed directional light source to this scene.

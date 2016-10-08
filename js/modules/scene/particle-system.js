@@ -35,10 +35,10 @@ define([
      * @param {Number} spawnTime The duration of one spawn round in milliseconds
      * @param {Number} duration The duration of particle generation in milliseconds. If zero, particle generation
      * will go on as long as the emitter exists.
-     * @param {Function} particleConstructor The function that will be called to generate new particles. Must
+     * @param {Function} createParticleFunction The function that will be called to generate new particles. Must
      * have no parameters and return a new instance of the Particle class
      */
-    function ParticleEmitter(positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
+    function ParticleEmitter(positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, createParticleFunction) {
         /**
          * The position of the center of the emitter area, relative to the center of the particle system
          * @type Float32Array
@@ -91,7 +91,7 @@ define([
          * instance of the Particle class
          * @type Function
          */
-        this._particleConstructor = particleConstructor;
+        this._createParticleFunction = createParticleFunction;
         /**
          * The duration of the life of the emitted particles (milliseconds). This is a cache variable.
          * @type Number
@@ -111,14 +111,17 @@ define([
      * @returns {Number}
      */
     ParticleEmitter.prototype.getParticleDuration = function () {
-        var i, particleStates;
+        var i, particle, particleStates;
         if (this._particleDuration === -1) {
             this._particleDuration = 0;
-            particleStates = this._particleConstructor().getStates();
+            particle = this._createParticleFunction();
+            particleStates = particle.getStates();
             for (i = 0; i < particleStates.length; i++) {
                 this._particleDuration += particleStates[i].timeToReach;
             }
         }
+        // make sure the particle pool will be cleaned up
+        particle.markAsReusable();
         return this._particleDuration;
     };
     /**
@@ -126,9 +129,9 @@ define([
      * subclasses to add customization to the created particle.
      * @returns {Particle}
      */
-    ParticleEmitter.prototype._createParticle = function () {
+    ParticleEmitter.prototype._emitParticle = function () {
         var particle, positionVector;
-        particle = this._particleConstructor();
+        particle = this._createParticleFunction();
         positionVector = [
             this._positionMatrix[12] + (Math.random() - 0.5) * this._dimensions[0],
             this._positionMatrix[13] + (Math.random() - 0.5) * this._dimensions[1],
@@ -154,7 +157,7 @@ define([
                 n = 1;
             }
             for (i = 0; i < n; i++) {
-                particles.push(this._createParticle());
+                particles.push(this._emitParticle());
             }
         }
         this._age += dt;
@@ -164,7 +167,7 @@ define([
                 n = 1;
             }
             for (i = 0; i < n; i++) {
-                particles.push(this._createParticle());
+                particles.push(this._emitParticle());
             }
             this._lastSpawn += this._spawnTime;
         }
@@ -175,7 +178,10 @@ define([
      * @param {ManagedGLContext} context
      */
     ParticleEmitter.prototype.addToContext = function (context) {
-        this._particleConstructor().addToContext(context);
+        var particle = this._createParticleFunction();
+        particle.addToContext(context);
+        // make sure the particle pool will be cleaned up
+        particle.markAsReusable();
     };
     // #########################################################################
     /**
@@ -219,8 +225,8 @@ define([
      * Sets the random velocity of the created particle before returning it
      * @returns {Particle}
      */
-    OmnidirectionalParticleEmitter.prototype._createParticle = function () {
-        var velocity, velocityMatrix, particle = ParticleEmitter.prototype._createParticle.call(this);
+    OmnidirectionalParticleEmitter.prototype._emitParticle = function () {
+        var velocity, velocityMatrix, particle = ParticleEmitter.prototype._emitParticle.call(this);
         velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
         velocityMatrix = mat.translation4(0, velocity, 0);
         mat.rotate4(velocityMatrix, vec.UNIT3_X, Math.random() * 2 * Math.PI);
@@ -285,8 +291,8 @@ define([
      * Sets the random velocity of the created particle before returning it
      * @returns {Particle}
      */
-    UnidirectionalParticleEmitter.prototype._createParticle = function () {
-        var velocity, velocityMatrix, axis, particle = ParticleEmitter.prototype._createParticle.call(this);
+    UnidirectionalParticleEmitter.prototype._emitParticle = function () {
+        var velocity, velocityMatrix, axis, particle = ParticleEmitter.prototype._emitParticle.call(this);
         velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
         velocityMatrix = mat.translation4v(vec.scaled3(this._direction, velocity));
         axis = (Math.abs(this._direction[0]) < 0.75) ? [1, 0, 0] : ((Math.abs(this._direction[1]) < 0.75) ? [0, 1, 0] : [0, 0, 1]);
@@ -356,8 +362,8 @@ define([
      * Sets the random velocity of the created particle before returning it
      * @returns {Particle}
      */
-    PlanarParticleEmitter.prototype._createParticle = function () {
-        var directionVector, velocity, velocityMatrix, particle = ParticleEmitter.prototype._createParticle.call(this);
+    PlanarParticleEmitter.prototype._emitParticle = function () {
+        var directionVector, velocity, velocityMatrix, particle = ParticleEmitter.prototype._emitParticle.call(this);
         velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
         directionVector = (Math.abs(this._planeNormal[0]) < 0.75) ? [1, 0, 0] : ((Math.abs(this._planeNormal[1]) < 0.75) ? [0, 1, 0] : [0, 0, 1]);
         vec.mulCross3(directionVector, this._planeNormal);

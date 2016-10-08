@@ -10,13 +10,13 @@
 /*jslint white: true, nomen: true, plusplus: true */
 
 /**
- * @param logic Used to create the preview spacecraft(s) and access the environments.
+ * @param level Used to create the skybox
  * @param preview Used for common WebGL preview functionality
  */
 define([
-    "armada/logic",
+    "armada/logic/level",
     "editor/preview/webgl-preview"
-], function (logic, preview) {
+], function (level, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -72,7 +72,7 @@ define([
         params = params || {};
         shouldReload = !params.preserve || params.reload;
         if (shouldReload) {
-            _skybox = new logic.Skybox(_skyboxClass);
+            _skybox = new level.Skybox(_skyboxClass);
         }
         _skybox.addToScene(preview.getScene());
     }

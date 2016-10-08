@@ -14,14 +14,14 @@
  * @param utils Used for converting between float / hex colors
  * @param resources Used for obtaining resource references
  * @param classes Used for obtaining class references
- * @param logic Used for obtaining environments and levels
+ * @param level Used for obtaining environments and levels
  */
 define([
     "utils/utils",
     "modules/media-resources",
     "armada/classes",
-    "armada/logic"
-], function (utils, resources, classes, logic) {
+    "armada/logic/level"
+], function (utils, resources, classes, level) {
     "use strict";
     /**
      * @typedef {Object} Editor~Item
@@ -95,7 +95,7 @@ define([
             case ItemType.CLASS:
                 return classes.getClass(item.category, item.name);
             case ItemType.ENVIRONMENT:
-                return logic.getEnvironment(item.name);
+                return level.getEnvironment(item.name);
             case ItemType.LEVEL:
                 return {
                     getData: function () {
@@ -128,9 +128,9 @@ define([
                 }
                 break;
             case ItemType.ENVIRONMENT:
-                names = logic.getEnvironmentNames();
+                names = level.getEnvironmentNames();
                 for (i = 0; i < names.length; i++) {
-                    result.push(logic.getEnvironment(names[i]));
+                    result.push(level.getEnvironment(names[i]));
                 }
                 break;
             case ItemType.LEVEL:

@@ -15,10 +15,11 @@
  * @param renderableObjects Used for accessing uniform name constants
  * @param lights Used for creating the light sources for the preview scene
  * @param config Used to access default camera configuration settings
- * @param logic Used to create the preview spacecraft(s) and access the environments
+ * @param level Used to access the environments
+ * @param spacecraft Used to create the spacecraft for preview
  * @param common Used to create selectors
  * @param descriptors Used to access enums
- * @param preview
+ * @param preview This module is based on the common WebGL preview module
  */
 define([
     "utils/utils",
@@ -26,14 +27,15 @@ define([
     "modules/scene/renderable-objects",
     "modules/scene/lights",
     "armada/configuration",
-    "armada/logic",
+    "armada/logic/level",
+    "armada/logic/spacecraft",
     "editor/common",
     "editor/descriptors",
     "editor/preview/webgl-preview"
 ], function (
         utils, mat,
         renderableObjects, lights,
-        config, logic,
+        config, level, spacecraft,
         common, descriptors, preview) {
     "use strict";
     var
@@ -261,8 +263,8 @@ define([
             }
         }
         if (shouldReload) {
-            _spacecraft = new logic.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
-            _wireframeSpacecraft = new logic.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
+            _spacecraft = new spacecraft.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
+            _wireframeSpacecraft = new spacecraft.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
         }
         if (equipmentProfileChanged || environmentChanged || shouldReload) {
             if (_equipmentProfileName) {
@@ -306,7 +308,7 @@ define([
                     preview.setupWireframeModel(model);
                 });
         if (params.environmentName && (environmentChanged || shouldReload)) {
-            logic.getEnvironment(params.environmentName).addToScene(preview.getScene());
+            level.getEnvironment(params.environmentName).addToScene(preview.getScene());
         }
         _environmentName = params.environmentName;
         _updateEngineStateEditor();
@@ -381,7 +383,7 @@ define([
      */
     function _createOptions() {
         // environment selector
-        _optionElements.environmentSelector = common.createSelector(logic.getEnvironmentNames(), _environmentName, true, function () {
+        _optionElements.environmentSelector = common.createSelector(level.getEnvironmentNames(), _environmentName, true, function () {
             preview.updateCanvas({
                 preserve: true,
                 clearScene: true,

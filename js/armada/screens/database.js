@@ -23,7 +23,8 @@
  * @param graphics Used for accessing graphics settings and shaders appropriate for current graphics settings.
  * @param classes Used for accessing the array of displayable spacecraft classes.
  * @param config Used for accessing settings 
- * @param logic Used for creating the spacecraft to be shown in the item view box.
+ * @param level Used for waiting for environment loading
+ * @param spacecraft Used for creating the spacecraft to be shown in the item view box.
  */
 define([
     "utils/utils",
@@ -39,13 +40,14 @@ define([
     "armada/graphics",
     "armada/classes",
     "armada/configuration",
-    "armada/logic",
+    "armada/logic/level",
+    "armada/logic/spacecraft",
     "utils/polyfill"
 ], function (
         utils, mat,
         components, screens, game, resources,
         lights, sceneGraph,
-        armadaScreens, strings, graphics, classes, config, logic) {
+        armadaScreens, strings, graphics, classes, config, level, spacecraft) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -304,12 +306,11 @@ define([
      */
     function _setupCurrentItemAndModels() {
         // create a ship that can be used to add the models to the scene
-        _currentItem = new logic.Spacecraft(
+        _currentItem = new spacecraft.Spacecraft(
                 classes.getSpacecraftClassesInArray(true)[_currentItemIndex],
                 null,
                 mat.identity4(),
                 mat.identity4(),
-                null,
                 _getSetting(SETTINGS.EQUIPMENT_PROFILE_NAME));
         // request the required shaders from the resource manager
         graphics.getShader(_getSetting(SETTINGS.WIREFRAME_SHADER_NAME));
@@ -726,7 +727,7 @@ define([
         }
         _currentItem = null;
         this.render();
-        logic.executeWhenReady(function () {
+        level.executeWhenReady(function () {
             this._updateItemInfo();
             _setupCurrentItemAndModels();
             // set the loading box to update when a new resource is loaded

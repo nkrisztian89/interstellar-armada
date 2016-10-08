@@ -11,14 +11,14 @@
 
 /**
  * @param lights Used for creating the light sources for the preview scene
- * @param logic Used to create the preview spacecraft(s) and access the environments.
+ * @param equipment Used to create the preview weapons
  * @param preview
  */
 define([
     "modules/scene/lights",
-    "armada/logic",
+    "armada/logic/equipment",
     "editor/preview/webgl-preview"
-], function (lights, logic, preview) {
+], function (lights, equipment, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -90,8 +90,8 @@ define([
                 preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
             }
             if (shouldReload) {
-                _weapon = new logic.Weapon(_weaponClass);
-                _wireframeWeapon = new logic.Weapon(_weaponClass);
+                _weapon = new equipment.Weapon(_weaponClass);
+                _wireframeWeapon = new equipment.Weapon(_weaponClass);
             }
             _weapon.addToScene(preview.getScene().getRootNode(), undefined, false,
                     {

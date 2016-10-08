@@ -11,14 +11,14 @@
 
 /**
  * @param lights Used for creating the light sources for the preview scene
- * @param logic Used to create the preview spacecraft(s) and access the environments.
+ * @param equipment Used to create the preview projectiles
  * @param preview
  */
 define([
     "modules/scene/lights",
-    "armada/logic",
+    "armada/logic/equipment",
     "editor/preview/webgl-preview"
-], function (lights, logic, preview) {
+], function (lights, equipment, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -88,7 +88,7 @@ define([
                 preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
             }
             if (shouldReload) {
-                _projectile = new logic.Projectile(_projectileClass, undefined, orientationMatrix);
+                _projectile = new equipment.Projectile(_projectileClass, undefined, orientationMatrix);
             }
             _projectile.addResourcesToScene(preview.getScene(), false);
             _projectile.addToScene(preview.getScene(), false, function (model) {

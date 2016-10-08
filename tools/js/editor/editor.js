@@ -16,7 +16,7 @@
  * @param config Used to load game configuration and settings from file
  * @param graphics Used to load the graphics settings from file
  * @param classes Used to display the class structure in the Items window and access the selected class for preview and properties
- * @param logic Used to load the environments 
+ * @param level Used to load the environments 
  * @param common Used for clearing open popups
  * @param skyboxPreview Used to create previews for skybox classes
  * @param projectilePreview Used to create previews for projectile classes
@@ -32,7 +32,7 @@ define([
     "armada/configuration",
     "armada/graphics",
     "armada/classes",
-    "armada/logic",
+    "armada/logic/level",
     "editor/common",
     "editor/preview/skybox-preview",
     "editor/preview/projectile-preview",
@@ -40,7 +40,11 @@ define([
     "editor/preview/spacecraft-preview",
     "editor/descriptors",
     "editor/properties"
-], function (application, resources, constants, config, graphics, classes, logic, common, skyboxPreview, projectilePreview, weaponPreview, spacecraftPreview, descriptors, properties) {
+], function (
+        application, resources,
+        constants, config, graphics, classes,
+        level,
+        common, skyboxPreview, projectilePreview, weaponPreview, spacecraftPreview, descriptors, properties) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -302,7 +306,7 @@ define([
         }
         resources.executeForAllResources(nameChangeHandler);
         classes.executeForAllClasses(nameChangeHandler);
-        logic.executeForAllEnvironments(nameChangeHandler);
+        level.executeForAllEnvironments(nameChangeHandler);
     }
     /**
      * Loads the content of the Properties window for the currently selected element.
@@ -471,9 +475,9 @@ define([
                                     exportName.value,
                                     exportAuthor.value,
                                     [ENVIRONMENTS_CATEGORY],
-                                    logic.getEnvironmentNames,
+                                    level.getEnvironmentNames,
                                     function (categoryName, itemName) {
-                                        return (categoryName === ENVIRONMENTS_CATEGORY) ? logic.getEnvironment(itemName) : null;
+                                        return (categoryName === ENVIRONMENTS_CATEGORY) ? level.getEnvironment(itemName) : null;
                                     }));
                     break;
                 default:
@@ -507,7 +511,7 @@ define([
                 break;
             case common.ItemType.ENVIRONMENT:
                 categories = [ENVIRONMENTS_CATEGORY];
-                getItems = logic.getEnvironmentNames;
+                getItems = level.getEnvironmentNames;
                 break;
             case common.ItemType.LEVEL:
                 categories = [LEVELS_CATEGORY];
@@ -579,8 +583,8 @@ define([
             graphics.loadSettingsFromLocalStorage();
             config.loadSettingsFromJSON(settingsJSON.logic);
             config.executeWhenReady(function () {
-                logic.requestEnvironmentsLoad();
-                logic.executeWhenReady(function () {
+                level.requestEnvironmentsLoad();
+                level.executeWhenReady(function () {
                     application.log("Game settings loaded.", 1);
                     localStorage[constants.VERSION_LOCAL_STORAGE_ID] = application.getVersion();
                     application.log("Initialization completed.");
