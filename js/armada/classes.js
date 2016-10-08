@@ -3327,8 +3327,10 @@ define([
     SpacecraftClass.prototype.handleGraphicsSettingsChanged = function () {
         var i;
         TexturedModelClass.prototype.handleGraphicsSettingsChanged.call(this);
-        for (i = 0; i < this._blinkerDescriptors.length; i++) {
-            this._blinkerDescriptors[i].handleGraphicsSettingsChanged();
+        if (this._blinkerDescriptors) {
+            for (i = 0; i < this._blinkerDescriptors.length; i++) {
+                this._blinkerDescriptors[i].handleGraphicsSettingsChanged();
+            }
         }
     };
     /**
