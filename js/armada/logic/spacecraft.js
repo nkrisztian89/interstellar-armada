@@ -1579,8 +1579,10 @@ define([
      */
     Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy) {
         var i, damageIndicator, hitpointThreshold, exp;
+        // armor rating decreases damage
+        damage = Math.max(0, damage - this._class.getArmor());
         // logic simulation: modify hitpoints
-        this._hitpoints -= Math.max(0, damage - this._class.getArmor());
+        this._hitpoints -= damage;
         if (this._hitpoints < 0) {
             this._hitpoints = 0;
         } else {
