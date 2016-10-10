@@ -387,17 +387,6 @@ define([
          */
         this._humSoundClip = null;
         /**
-         * Contains the sound sources used for playing the hit sounds for projectiles hitting this spacecraft, so that multiple hit sounds of
-         * the same effect can be stacked
-         * @type Object.<String, SoundSource>
-         */
-        this._hitSounds = null;
-        /**
-         * The timestamp for when the last hit sound started playing for a projectile hitting this spacecraft
-         * @type DOMHighResTimeStamp
-         */
-        this._hitSoundTimestamp = 0;
-        /**
          * The sound source used to position the sound effects beloning to this spacecraft in 3D sound (=camera) space
          * @type SoundSource
          */
@@ -1354,18 +1343,16 @@ define([
      * and are currently aimed at their target.
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
-        var i, scaledOriMatrix, fired = false, posInCameraSpace, fireSounds;
+        var i, scaledOriMatrix, fired = false, posInCameraSpace;
         scaledOriMatrix = this.getScaledOriMatrix();
         posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
-        if ((Math.abs(posInCameraSpace[0]) > _weaponFireSoundStackMinimumDistance) ||
-                (Math.abs(posInCameraSpace[1]) > _weaponFireSoundStackMinimumDistance) ||
-                (Math.abs(posInCameraSpace[2]) > _weaponFireSoundStackMinimumDistance)) {
-            fireSounds = {};
-        } else {
+        if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
+                (Math.abs(posInCameraSpace[1]) <= _weaponFireSoundStackMinimumDistance) &&
+                (Math.abs(posInCameraSpace[2]) <= _weaponFireSoundStackMinimumDistance)) {
             posInCameraSpace = null;
         }
         for (i = 0; i < this._weapons.length; i++) {
-            fired = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, fireSounds, posInCameraSpace ? this._getSoundSource() : null) || fired;
+            fired = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, posInCameraSpace ? this.getSoundSource() : null) || fired;
         }
         // executing callbacks
         if (fired) {
@@ -1597,7 +1584,7 @@ define([
                             mat.identity4(),
                             damageDir,
                             true);
-                    exp.addToScene(this._visualModel.getNode().getScene(), this._visualModel.getNode());
+                    exp.addToScene(this._visualModel.getNode(), this.getSoundSource());
                     this._activeDamageIndicators.push(exp);
                 }
             }
@@ -1608,22 +1595,6 @@ define([
             hitBy.handleTargetHit();
         }
         hitBy.handleAnySpacecraftHit(this);
-    };
-    /**
-     * Adds a hit sound corresponding to a projectile with the given class hitting this spacecraft - uses stacking of sounds if appropriate
-     * to decrease the overall number of separate sound sources
-     * @param {ProjectileClass} projectileClass
-     */
-    Spacecraft.prototype.addHitSound = function (projectileClass) {
-        var n = performance.now();
-        if (this._timeElapsedSinceDestruction < 0) {
-            if ((n - this._hitSoundTimestamp) > 100) {
-                projectileClass.stackHitSound(this._getSoundSource(), this._hitSounds, true);
-                this._hitSoundTimestamp = n;
-            } else {
-                projectileClass.stackHitSound(this._getSoundSource(), this._hitSounds);
-            }
-        }
     };
     /**
      * Rotates all the non-fixed weapons of the spacecraft to aim towards the calculated hitting position of the current target.
@@ -1663,7 +1634,7 @@ define([
      * Returns the sound source beloning to this spacecraft (that can be used to play sound effects positioned in 3D)
      * @returns {SoundSource}
      */
-    Spacecraft.prototype._getSoundSource = function () {
+    Spacecraft.prototype.getSoundSource = function () {
         if (!this._soundSource) {
             this._soundSource = audio.createSoundSource([0, 0, 0]);
         }
@@ -1731,7 +1702,7 @@ define([
         }
         // update the sound source position - will be used either way (for the explosion or for hum / thrusters / weapons... )
         p = this._getSoundSourcePosition();
-        this._getSoundSource().setPosition(p[0], p[1], p[2]);
+        this.getSoundSource().setPosition(p[0], p[1], p[2]);
         // destruction of the spacecraft
         if (this._hitpoints <= 0) {
             if (this._timeElapsedSinceDestruction < 0) {
@@ -1741,7 +1712,7 @@ define([
                 }
                 if (this._propulsion) {
                     this._propulsion.resetThrusterBurn();
-                    this._propulsion.simulate(this._getSoundSource(), false);
+                    this._propulsion.simulate(this.getSoundSource(), false);
                 }
                 this._explosion = new explosion.Explosion(
                         this._class.getExplosionClass(),
@@ -1750,11 +1721,10 @@ define([
                         mat.getRowC43(this._physicalModel.getPositionMatrix()),
                         true,
                         mat.matrix4(this._physicalModel.getVelocityMatrix()));
-                this._explosion.addToScene(this._visualModel.getNode().getScene());
+                this._explosion.addToScene(this._visualModel.getNode().getScene().getRootNode(), this.getSoundSource());
                 for (i = 0; i < this._activeDamageIndicators; i++) {
                     this._activeDamageIndicators[i].finish();
                 }
-                this._class.playExplosionSound(this._getSoundSource());
             } else {
                 this._timeElapsedSinceDestruction += dt;
                 if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getTotalDuration() * this._class.getShowTimeRatioDuringExplosion())) {

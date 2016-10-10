@@ -379,6 +379,10 @@
                 "volume": 0.2
             },
             "weaponFireSoundStackMinimumDistance": 100,
+            "hitSoundStackingTimeThreshold": 0.1,
+            "hitSoundStackingVolumeFactor": 0.5,
+            "fireSoundStackingTimeThreshold": 0.05,
+            "fireSoundStackingVolumeFactor": 0.5,
             "demoFighterAI": "fighter",
             "demoShipAI": "ship",
             "demoViewSwitchInterval": 6000,

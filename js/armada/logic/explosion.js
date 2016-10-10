@@ -50,6 +50,16 @@ define([
             // ------------------------------------------------------------------------------
             // private variables
             /**
+             * Cached value of the configuration setting of the same name (see configuration.json)
+             * @type Number
+             */
+            _hitSoundStackingTimeThreshold,
+            /**
+             * Cached value of the configuration setting of the same name (see configuration.json)
+             * @type Number
+             */
+            _hitSoundStackingVolumeFactor,
+            /**
              * A pool containing dynamic particles (such as particles for muzzle flashes and explosions) for reuse, so that creation of
              * new particle objects can be decreased for optimization.
              * @type Pool
@@ -208,27 +218,23 @@ define([
                 graphics.getParticleCountFactor());
     };
     /**
-     * Adds a renderable node representing this explosion to the passed scene.
-     * @param {Scene} scene The scene to which to add the renderable object
-     * presenting the explosion.
-     * @param {RenderableNode} [parentNode] If given, the explosion will be added 
-     * to the scene graph as the subnode of this node
+     * Adds a renderable node and light source representing this explosion and plays the sound of the explosion.
+     * @param {RenderableNode} parentNode The explosion will be added to the scene graph as the subnode of this node
+     * @param {SoundSource} [soundSource] If the sound of the explosion should be played by a 3D sound source, pass it here
+     * @param {Boolean} [isHit=false] Whether this explosion is marking a hit - which will enable stacking of the sound effect
      */
-    Explosion.prototype.addToScene = function (scene, parentNode) {
-        var lightStates;
+    Explosion.prototype.addToScene = function (parentNode, soundSource, isHit) {
+        var lightStates, scene = parentNode.getScene();
         resources.executeWhenReady(function () {
             this._createVisualModel();
-            if (parentNode) {
-                parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel));
-            } else {
-                scene.addObject(this._visualModel);
-            }
+            parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel));
             lightStates = this._class.getLightStates();
             if (lightStates) {
                 scene.addPointLightSource(
                         new lights.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates),
                         constants.EXPLOSION_LIGHT_PRIORITY);
             }
+            this._class.playSound(soundSource, isHit, _hitSoundStackingTimeThreshold, _hitSoundStackingVolumeFactor);
         }.bind(this));
     };
     /**
@@ -266,6 +272,11 @@ define([
     // initializazion
     // obtaining pool references
     _particlePool = pools.getPool(renderableObjects.Particle);
+    // caching configuration settings
+    config.executeWhenReady(function () {
+        _hitSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_TIME_THRESHOLD);
+        _hitSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_VOLUME_FACTOR);
+    });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

@@ -1206,10 +1206,13 @@ define([
      * loaded.
      * @param {Number} [volume=1]
      * @param {Boolean} [loop=false]
+     * @param {Boolean} [shouldStack=false]
+     * @param {Number} [stackTimeThreshold=0]
+     * @param {Number} [stackVolumeFactor=1]
      * @param {SoundSource} [source]
      * @returns {SoundClip}
      */
-    SoundEffectResource.prototype.createSoundClip = function (volume, loop, source) {
+    SoundEffectResource.prototype.createSoundClip = function (volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, source) {
         var sample;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot create sound source for sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
@@ -1217,7 +1220,7 @@ define([
         }
         sample = this._samples[Math.floor(Math.random() * this._samples.length)];
         if (sample) {
-            return new audio.SoundClip(audio.SoundCategory.SOUND_EFFECT, sample, volume, loop, source);
+            return new audio.SoundClip(audio.SoundCategory.SOUND_EFFECT, sample, volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, source);
         }
         application.log("WARNING: cannot create sound source for sample '" + sample + "', as there was a problem while loading it.", 1);
         return null;

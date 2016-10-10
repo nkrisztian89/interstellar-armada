@@ -167,6 +167,16 @@ define([
              */
             _groupTransformsArrayName = null,
             /**
+             * Cached value of the configuration setting of the same name (see configuration.json)
+             * @type Number
+             */
+            _fireSoundStackingTimeThreshold,
+            /**
+             * Cached value of the configuration setting of the same name (see configuration.json)
+             * @type Number
+             */
+            _fireSoundStackingVolumeFactor,
+            /**
              * A pool containing dynamic particles (such as particles for muzzle flashes and explosions) for reuse, so that creation of
              * new particle objects can be decreased for optimization.
              * @type Pool
@@ -369,11 +379,10 @@ define([
                         relativeHitPositionVectorInWorldSpace = vec.diff3(hitPositionVectorInWorldSpace, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                         physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
                         exp = new explosion.Explosion(this._class.getExplosionClass(), mat.translation4v(hitPositionVectorInWorldSpace), mat.identity4(), vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true);
-                        exp.addToScene(this._visualModel.getNode().getScene());
+                        exp.addToScene(this._visualModel.getNode().getScene().getRootNode(), hitObjects[i].getSoundSource(), true);
                         hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
                         this._timeLeft = 0;
                         this._visualModel.markAsReusable();
-                        hitObjects[i].addHitSound(this._class, mat.translationVector3(this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera())));
                         return;
                     }
                 }
@@ -732,15 +741,15 @@ define([
      * is more effective to calculate it once for a spacecraft and pass it to all weapons as a parameter.
      * @param {Boolean} onlyIfAimedOrFixed The weapon only fires if it is fixed (cannot be rotated) or if it is aimed at its current target
      * and it is in range (based on the last aiming status of the weapon)
-     * @param {Object.<String, SoundSource>} fireSounds an object containing the stacked fire sounds for the spacecraft of this weapon
      * @param {SoundSource} shipSoundSource The sound source belonging to the spacecraft that fires this weapon
      * @returns {Boolean} Whether the weapon has actually fired.
      */
-    Weapon.prototype.fire = function (shipScaledOriMatrix, onlyIfAimedOrFixed, fireSounds, shipSoundSource) {
+    Weapon.prototype.fire = function (shipScaledOriMatrix, onlyIfAimedOrFixed, shipSoundSource) {
         var i, p,
                 weaponSlotPosVector, weaponSlotPosMatrix,
                 projectilePosMatrix, projectileOriMatrix,
                 projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
+                soundPosition,
                 scene = this._visualModel.getNode().getScene();
         if (onlyIfAimedOrFixed && (this._lastAimStatus !== WeaponAimStatus.FIXED) && (this._lastAimStatus !== WeaponAimStatus.AIMED_IN_RANGE)) {
             return false;
@@ -798,11 +807,10 @@ define([
                     scene.addPointLightSource(projectileLights[projClassName], constants.PROJECTILE_LIGHT_PRIORITY);
                 }
             }
-            if (shipSoundSource) {
-                this._class.stackFireSound(shipSoundSource, fireSounds);
-            } else {
-                this._class.playFireSound(mat.translationVector3(p.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera())));
+            if (!shipSoundSource) {
+                soundPosition = mat.translationVector3(p.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera()));
             }
+            this._class.playFireSound(soundPosition, shipSoundSource, _fireSoundStackingTimeThreshold, _fireSoundStackingVolumeFactor);
             return true;
         }
         return false;
@@ -1843,6 +1851,8 @@ define([
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
         _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
         _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
+        _fireSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_TIME_THRESHOLD);
+        _fireSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_VOLUME_FACTOR);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

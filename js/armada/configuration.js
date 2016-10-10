@@ -1253,6 +1253,38 @@ define([
             name: "weaponFireSoundStackMinimumDistance",
             type: "number"
         },
+        /**
+         * Two (or more) hit sound effects will be stacked if the difference between their starting time
+         * is less than this amount (in seconds)
+         */
+        HIT_SOUND_STACKING_TIME_THRESHOLD: {
+            name: "hitSoundStackingTimeThreshold",
+            type: "number"
+        },
+        /**
+         * When two (or more) hit sound effects are stacked, each additional sound effect increases the
+         * volume of the first effect by its volume multiplied by this factor
+         */
+        HIT_SOUND_STACKING_VOLUME_FACTOR: {
+            name: "hitSoundStackingVolumeFactor",
+            type: "number"
+        },
+        /**
+         * Two (or more) fire sound effects will be stacked if the difference between their starting time
+         * is less than this amount (in seconds)
+         */
+        FIRE_SOUND_STACKING_TIME_THRESHOLD: {
+            name: "fireSoundStackingTimeThreshold",
+            type: "number"
+        },
+        /**
+         * When two (or more) fire sound effects are stacked, each additional sound effect increases the
+         * volume of the first effect by its volume multiplied by this factor
+         */
+        FIRE_SOUND_STACKING_VOLUME_FACTOR: {
+            name: "fireSoundStackingVolumeFactor",
+            type: "number"
+        },
         DEMO_FIGHTER_AI_TYPE: {
             name: "demoFighterAI",
             type: "string"

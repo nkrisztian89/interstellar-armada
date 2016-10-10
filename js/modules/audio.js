@@ -231,6 +231,13 @@ define([
          * @type String
          */
         this._panningModel = panningModel || DEFAULT_PANNING_MODEL;
+        /**
+         * Associated sound clips organized by the names of the samples they play. This can be used
+         * to stack clips - instead of adding multiple clips of the same sample at the same time or with
+         * a short time difference, only one is added, and the others just increase its volume
+         * @type Object.<String, SoundClip>
+         */
+        this._clips = {};
     }
     /**
      * If necessary, creates, and returns the AudioNode to which nodes can be connected to play their output at the 3D position determined
@@ -289,6 +296,22 @@ define([
         }
     };
     /**
+     * Sets the stored sound clip reference associated with the passed (sample) name
+     * @param {String} name
+     * @param {SoundClip} clip
+     */
+    SoundSource.prototype.setClip = function (name, clip) {
+        this._clips[name] = clip;
+    };
+    /**
+     * Returns the sound clip associated with the passed name (if any)
+     * @param {String} name
+     * @returns {SoundClip}
+     */
+    SoundSource.prototype.getClip = function (name) {
+        return this._clips[name];
+    };
+    /**
      * Removes the reference to the stored panner node (if any) and disconnects all other nodes from the panner node
      */
     SoundSource.prototype.destroy = function () {
@@ -308,10 +331,14 @@ define([
      * @param {Number} [volume=1] The volume at which to play the sound sample (in case of 3D sounds, at the reference distance: 1). Can be
      * modified later, but if omitted, no gain node will be added for this source, which means a volume of 1 that cannot be changed.
      * @param {Boolean} [loop=false] Whether the sound sample should be played in looping mode.
+     * @param {Boolean} [shouldStack=false] If true, whenever the clip is set to play at an associated sound source, 
+     * the sound source will be checked for clips of the same sample, and this clip will be stacked if possible
+     * @param {Number} [stackTimeThreshold=0] The time threshold for stacking (maximum time difference, in seconds)
+     * @param {Number} [stackVolumeFactor=1] The factor to multiply the volume of stacked sound clips by
      * @param {SoundSource} [soundSource] The (spatial) sound source that emits this clip (category must be sound effect), to position it
      * in 3D
      */
-    function SoundClip(soundCategory, sampleName, volume, loop, soundSource) {
+    function SoundClip(soundCategory, sampleName, volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, soundSource) {
         /**
          * The category of this sound, allowing the user to set a separate master volume per category
          * @type Number
@@ -332,6 +359,23 @@ define([
          * @type Boolean
          */
         this._loop = loop;
+        /**
+         * If true, whenever the clip is set to play at an associated sound source, the sound source 
+         * is checked for clips of the same sample, and this clip will be stacked if possible
+         * @type Boolean
+         */
+        this._shouldStack = shouldStack || false;
+        /**
+         * If set to stack, the clip will be stacked only if the play time difference between it and the 
+         * other clip is less than this amount, in seconds
+         * @type Number
+         */
+        this._stackTimeThreshold = stackTimeThreshold || 0;
+        /**
+         * When stacking this clip on top of another, the volume increase will be multiplied by this factor
+         * @type Number
+         */
+        this._stackVolumeFactor = stackVolumeFactor || 1;
         /**
          * A reference to the buffer source node used to play this sound
          * @type AudioBufferSourceNode
@@ -493,6 +537,7 @@ define([
      * means when stop is called)
      */
     SoundClip.prototype.play = function (restart, onFinish) {
+        var /** @type SoundClip */  clipToStackTo;
         if (_buffers[this._sampleName]) {
             if (this._playing) {
                 if (this._loop) {
@@ -502,7 +547,22 @@ define([
                     this.stopPlaying();
                 }
             }
-            this._startPlayingSample(0, onFinish);
+            // stacking if we should
+            if (this._soundSource && this._shouldStack) {
+                clipToStackTo = this._soundSource.getClip(this._sampleName);
+                if (clipToStackTo && clipToStackTo.isPlaying() && (clipToStackTo.getPlaybackPosition() <= this._stackTimeThreshold)) {
+                    clipToStackTo.increaseVolume(this._volume * this._stackVolumeFactor);
+                } else {
+                    // start a new stack
+                    this._startPlayingSample(0, onFinish);
+                    if (this._soundSource) {
+                        this._soundSource.setClip(this._sampleName, this);
+                    }
+                }
+            } else {
+                // simply start playing if stacking is disabled
+                this._startPlayingSample(0, onFinish);
+            }
         } else if (this._sampleName) {
             application.showError("Attempting to play back '" + this._sampleName + "', which is not loaded!");
         }

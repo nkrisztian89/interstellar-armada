@@ -730,6 +730,23 @@ define([
         }
     },
     /**
+     * @type Editor~TypeDescriptor
+     */
+    SOUND_DESCRIPTOR = {
+        baseType: BaseType.OBJECT,
+        name: "SoundDescriptor",
+        properties: {
+            NAME: {
+                name: "name",
+                type: SOUND_REFERENCE
+            },
+            VOLUME: {
+                name: "volume",
+                type: BaseType.NUMBER
+            }
+        }
+    },
+    /**
      * The descriptor object for propulsion classes, describing their properties
      * @type Editor~ItemDescriptor
      */
@@ -744,7 +761,13 @@ define([
         },
         LIGHT_STATES: {
             name: "lightStates",
-            type: _createTypedArrayType(LIGHT_STATE)
+            type: _createTypedArrayType(LIGHT_STATE),
+            optional: true
+        },
+        SOUND_EFFECT: {
+            name: "soundEffect",
+            type: SOUND_DESCRIPTOR,
+            optional: true
         }
     },
     /**
@@ -776,23 +799,6 @@ define([
             DURATION: {
                 name: "duration",
                 type: MILLISECONDS
-            }
-        }
-    },
-    /**
-     * @type Editor~TypeDescriptor
-     */
-    SOUND_DESCRIPTOR = {
-        baseType: BaseType.OBJECT,
-        name: "SoundDescriptor",
-        properties: {
-            NAME: {
-                name: "name",
-                type: SOUND_REFERENCE
-            },
-            VOLUME: {
-                name: "volume",
-                type: BaseType.NUMBER
             }
         }
     },
@@ -852,10 +858,6 @@ define([
         EXLOSION: {
             name: "explosion",
             type: EXPLOSION_CLASS_REFERENCE
-        },
-        HIT_SOUND: {
-            name: "hitSound",
-            type: SOUND_DESCRIPTOR
         }
     },
     /**
@@ -1607,10 +1609,6 @@ define([
         EXPLOSION: {
             name: "explosion",
             type: EXPLOSION_CLASS_REFERENCE
-        },
-        EXPLOSION_SOUND: {
-            name: "explosionSound",
-            type: SOUND_DESCRIPTOR
         },
         SHOW_TIME_RATIO_DURING_EXPLOSION: {
             name: "showTimeRatioDuringExplosion",

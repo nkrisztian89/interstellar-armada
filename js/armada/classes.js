@@ -181,12 +181,6 @@ define([
              */
             PROJECTILE_MODEL_NAME_INFIX = "-width-",
             /**
-             * When a sound effect is added by stacking (increasing the volume of another instance of the same effect instead of adding a new
-             * one), the volume of that other instance will be increased by the base volume of the new effect multiplied by this factor
-             * @type Number
-             */
-            VOLUME_FACTOR_FOR_STACKED_SOUNDS = 0.5,
-            /**
              * The name (ID) of shader variants to be used (if available) for shaders when instancing is turned on
              * @type String
              */
@@ -401,33 +395,19 @@ define([
      * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
      * @param {Boolean} [loop=false] Whether to create a looping sound source
      * @param {SoundSource} [soundSource] The sound source to be used for 3D spatial positioning of the clip
+     * @param {Boolean} [shouldStack=false] If true, the sound clip will be created with stacking enabled
+     * @param {Number} [stackTimeThreshold=0] The time threshold for stacking in case it is enabled
+     * @param {Number} [stackVolumeFactor=1] The volume factor for stacking in case it is enabled
      * @returns {SoundClip}
      */
-    function _createSoundClip(soundEffectDescriptor, loop, soundSource) {
-        return soundEffectDescriptor.resource ? soundEffectDescriptor.resource.createSoundClip(soundEffectDescriptor.volume, loop, soundSource) : null;
-    }
-    /**
-     * Similar to _playSoundEffect, but also uses stacking if appropriate: if a currently playing instance of the same sound effect is found
-     * in the passed object, its volume is increased instead of creating a new sound clip.
-     * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
-     * @param {Boolean} [loop=false] Whether to create a looping sound source
-     * @param {Object.<String, SoundClip>} soundClips An associative array of other sound effects with which this one can be stacked, 
-     * stored by the names of the effects
-     * @param {Boolean} [overwrite=false] If true, a new sound source is created in any case, overwriting any previous source stored in the
-     * stacking object under the same name
-     * @param {SoundSource} [soundSource] The sound source to be used for 3D spatial positioning of the clip
-     * @returns {SoundClip}
-     */
-    function _stackSoundClip(soundEffectDescriptor, loop, soundClips, overwrite, soundSource) {
-        var result;
-        if (overwrite || !soundClips[soundEffectDescriptor.name] || !soundClips[soundEffectDescriptor.name].isPlaying()) {
-            result = _createSoundClip(soundEffectDescriptor, loop, soundSource);
-            soundClips[soundEffectDescriptor.name] = result;
-            result.play();
-            return result;
-        }
-        soundClips[soundEffectDescriptor.name].increaseVolume(soundEffectDescriptor.volume * VOLUME_FACTOR_FOR_STACKED_SOUNDS);
-        return soundClips[soundEffectDescriptor.name];
+    function _createSoundClip(soundEffectDescriptor, loop, soundSource, shouldStack, stackTimeThreshold, stackVolumeFactor) {
+        return soundEffectDescriptor.resource ?
+                soundEffectDescriptor.resource.createSoundClip(
+                        soundEffectDescriptor.volume,
+                        loop,
+                        shouldStack, stackTimeThreshold, stackVolumeFactor,
+                        soundSource) :
+                null;
     }
     // ##############################################################################
     /**
@@ -1183,6 +1163,11 @@ define([
          * @type PointLightSource~LightState[]
          */
         this._lightStates = dataJSON ? dataJSON.lightStates : null;
+        /**
+         * The descriptor of the sound effect to be played when this explosion is shown
+         * @type Object
+         */
+        this._soundEffect = (dataJSON && dataJSON.soundEffect) ? (types.getVerifiedObject("explosionClasses['" + this._name + "'].soundEffect", dataJSON.soundEffect, SOUND_EFFECT_3D)) : null;
         return true;
     };
     /**
@@ -1192,6 +1177,9 @@ define([
         var i;
         for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
             this._particleEmitterDescriptors[i].acquireResources();
+        }
+        if (this._soundEffect) {
+            _loadSoundEffect(this._soundEffect);
         }
     };
     /**
@@ -1242,6 +1230,23 @@ define([
             }
         }
         return false;
+    };
+    /**
+     * Plays the sound effect for this explosion
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
+     * @param {Boolean} [shouldStack=false] Whether to enable stacking for this sound effect (e.g. for stacking
+     * the sounds of multiple prpojectiles hitting a spacecraft at the same time into one node with increased
+     * volume)
+     * @param {Number} [stackTimeThreshold=0] The time threshold for stacking (maximum time difference, in seconds)
+     * @param {Number} [stackVolumeFactor=1] The factor to multiply the volume of stacked sound clips by
+     */
+    ExplosionClass.prototype.playSound = function (soundSource, shouldStack, stackTimeThreshold, stackVolumeFactor) {
+        if (this._soundEffect) {
+            _createSoundClip(
+                    this._soundEffect,
+                    false,
+                    soundSource, shouldStack, stackTimeThreshold, stackVolumeFactor).play();
+        }
     };
     /**
      * @override
@@ -1337,11 +1342,6 @@ define([
          * @type ExplosionClass
          */
         this._explosionClass = dataJSON ? (getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion")) || application.crash()) : null;
-        /**
-         * The descriptor of the sound effect to be played when this projectile hits a spacecraft.
-         * @type Object
-         */
-        this._hitSound = dataJSON ? (types.getVerifiedObject("projectileClasses['" + this._name + "'].hitSound", dataJSON.hitSound, SOUND_EFFECT_3D)) : null;
         return true;
     };
     /**
@@ -1354,7 +1354,6 @@ define([
                     this._intersectionPositions, this._width)});
         this._muzzleFlash.acquireResources();
         this._explosionClass.acquireResources();
-        _loadSoundEffect(this._hitSound);
     };
     /**
      * @returns {Number}
@@ -1403,16 +1402,6 @@ define([
      */
     ProjectileClass.prototype.getExplosionClass = function () {
         return this._explosionClass;
-    };
-    /**
-     * Plays the hit sound effect for this projectile, possibly stacking it
-     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
-     * @param {Object.<String, SoundSource>} hitSounds The other hit sound to stack with
-     * @param {Boolean} [overwrite=false]
-     * @returns {SoundClip}
-     */
-    ProjectileClass.prototype.stackHitSound = function (soundSource, hitSounds, overwrite) {
-        return _stackSoundClip(this._hitSound, false, hitSounds, overwrite, soundSource);
     };
     /**
      * @override
@@ -1704,18 +1693,20 @@ define([
     };
     /**
      * Plays the sound effect corresponding to a weapon of this class firing, at the given world position
-     * @param {Number[3]} position
+     * @param {Number[3]} [position] The camera-space position where to put the sound source, if the sound
+     * is not to be stacked to the sound source of the spacecraft (the spacecraft is close and the different
+     * weapons should have their own sound sources created)
+     * @param {SoundSource} [soundSource] The sound source belonging to the spacecraft it the fire sound effect
+     * is to be stacked to it (for spacecrafts that are farther away to simplify the sound graph)
+     * @param {Number} [stackTimeThreshold=0] The time threshold for stacking (maximum time difference, in seconds)
+     * @param {Number} [stackVolumeFactor=1] The factor to multiply the volume of stacked sound clips by
      */
-    WeaponClass.prototype.playFireSound = function (position) {
-        _playSoundEffect(this._fireSound, position);
-    };
-    /**
-     * Plays the sound effect corresponding to a weapon of this class firing, possibly stacking it
-     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the effect
-     * @param {Object.<String, SoundSource>} fireSounds
-     */
-    WeaponClass.prototype.stackFireSound = function (soundSource, fireSounds) {
-        _stackSoundClip(this._fireSound, false, fireSounds, false, soundSource);
+    WeaponClass.prototype.playFireSound = function (position, soundSource, stackTimeThreshold, stackVolumeFactor) {
+        if (position) {
+            _playSoundEffect(this._fireSound, position);
+        } else {
+            _createSoundClip(this._fireSound, false, soundSource, true, stackTimeThreshold, stackVolumeFactor).play();
+        }
     };
     // ##############################################################################
     /**
@@ -3067,13 +3058,6 @@ define([
                 (dataJSON.explosion ? getExplosionClass(dataJSON.explosion) : otherSpacecraftClass._explosionClass) :
                 getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion"));
         /**
-         * The descriptor of the sound effect to be played when this spacecraft explodes.
-         * @type Object
-         */
-        this._explosionSound = dataJSON.explosionSound ?
-                types.getVerifiedObject("spacecraftClasses['" + this._name + "'].explosionSound", dataJSON.explosionSound, SOUND_EFFECT_3D) :
-                (otherSpacecraftClass ? otherSpacecraftClass._explosionSound : _showMissingPropertyError(this, "explosionSound"));
-        /**
          * How long should spacecraft be displayed during its explosion (as a ratio compared to the explosion duration)
          * @type Number
          */
@@ -3318,7 +3302,6 @@ define([
         if (this._humSound) {
             _loadSoundEffect(this._humSound);
         }
-        _loadSoundEffect(this._explosionSound);
     };
     /**
      * @override
@@ -3351,14 +3334,6 @@ define([
             return _createSoundClip(this._humSound, true, soundSource);
         }
         return null;
-    };
-    /**
-     * Plays the sound effect associated with this spacecraft exploding
-     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
-     */
-    SpacecraftClass.prototype.playExplosionSound = function (soundSource) {
-        var clip = _createSoundClip(this._explosionSound, false, soundSource);
-        clip.play();
     };
     /**
      * Sends an asynchronous request to grab the file containing the in-game

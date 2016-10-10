@@ -245,7 +245,11 @@
                     "color": [1, 0.6, 0.2],
                     "intensity": 0,
                     "timeToReach": 450
-                }]
+                }],
+            "soundEffect": {
+                "name": "hit",
+                "volume": 0.5
+            }
         }, {
             "name": "mediumHitExplosion",
             "particleEmitters": [{
@@ -327,7 +331,11 @@
                     "color": [1, 0, 0],
                     "intensity": 0,
                     "timeToReach": 400
-                }]
+                }],
+            "soundEffect": {
+                "name": "hit",
+                "volume": 0.8
+            }
         }, {
             "name": "largeHitExplosion",
             "particleEmitters": [{
@@ -434,7 +442,11 @@
                     "color": [1, 0, 0],
                     "intensity": 0,
                     "timeToReach": 250
-                }]
+                }],
+            "soundEffect": {
+                "name": "hit",
+                "volume": 1
+            }
         }, {
             "name": "containerExplosion",
             "particleEmitters": [{
@@ -542,7 +554,11 @@
                     "color": [1, 0, 0],
                     "intensity": 0,
                     "timeToReach": 400
-                }]
+                }],
+            "soundEffect": {
+                "name": "containerExplosion",
+                "volume": 2
+            }
         }, {
             "name": "fighterExplosion",
             "particleEmitters": [{
@@ -650,7 +666,11 @@
                     "color": [1, 0, 0],
                     "intensity": 0,
                     "timeToReach": 400
-                }]
+                }],
+            "soundEffect": {
+                "name": "fighterExplosion",
+                "volume": 2.5
+            }
         }, {
             "name": "bomberExplosion",
             "particleEmitters": [{
@@ -776,7 +796,11 @@
                     "color": [1, 0, 0],
                     "intensity": 0,
                     "timeToReach": 500
-                }]
+                }],
+            "soundEffect": {
+                "name": "fighterExplosion",
+                "volume": 3
+            }
         }, {
             "name": "smallShipExplosion",
             "particleEmitters": [{
@@ -918,7 +942,11 @@
                     "color": [1, 0.2, 0],
                     "intensity": 0,
                     "timeToReach": 400
-                }]
+                }],
+            "soundEffect": {
+                "name": "fighterExplosion",
+                "volume": 4
+            }
         }, {
             "name": "largeShipExplosion",
             "particleEmitters": [{
@@ -1112,7 +1140,11 @@
                     "color": [1, 0, 0],
                     "intensity": 0,
                     "timeToReach": 3000
-                }]
+                }],
+            "soundEffect": {
+                "name": "largeShipExplosion",
+                "volume": 20
+            }
         }, {
             "name": "smallFire",
             "particleEmitters": [{
@@ -1280,11 +1312,7 @@
             },
             "lightColor": [1, 1, 1],
             "lightIntensity": 30,
-            "explosion": "smallHitExplosion",
-            "hitSound": {
-                "name": "hit",
-                "volume": 0.5
-            }
+            "explosion": "smallHitExplosion"
         }, {
             "name": "plasma",
             "damage": 2,
@@ -1304,11 +1332,7 @@
             },
             "lightColor": [0, 1, 0],
             "lightIntensity": 36,
-            "explosion": "smallHitExplosion",
-            "hitSound": {
-                "name": "hit",
-                "volume": 0.6
-            }
+            "explosion": "smallHitExplosion"
         }, {
             "name": "heavyPlasma",
             "damage": 6,
@@ -1328,11 +1352,7 @@
             },
             "lightColor": [1, 0, 1],
             "lightIntensity": 100,
-            "explosion": "smallHitExplosion",
-            "hitSound": {
-                "name": "hit",
-                "volume": 0.65
-            }
+            "explosion": "smallHitExplosion"
         }, {
             "name": "proton",
             "damage": 35,
@@ -1352,11 +1372,7 @@
             },
             "lightColor": [1, 1, 0],
             "lightIntensity": 400,
-            "explosion": "mediumHitExplosion",
-            "hitSound": {
-                "name": "hit",
-                "volume": 0.8
-            }
+            "explosion": "mediumHitExplosion"
         }, {
             "name": "ion",
             "damage": 100,
@@ -1376,11 +1392,7 @@
             },
             "lightColor": [0, 0.6, 1],
             "lightIntensity": 1296,
-            "explosion": "largeHitExplosion",
-            "hitSound": {
-                "name": "hit",
-                "volume": 1
-            }
+            "explosion": "largeHitExplosion"
         }],
     "weaponClasses": [{
             "name": "trainingGun",
@@ -1783,10 +1795,6 @@
                     "weapons": []
                 }],
             "explosion": "containerExplosion",
-            "explosionSound": {
-                "name": "containerExplosion",
-                "volume": 2
-            },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [],
             "lights": [],
@@ -2199,10 +2207,6 @@
                 "volume": 0.5
             },
             "explosion": "fighterExplosion",
-            "explosionSound": {
-                "name": "fighterExplosion",
-                "volume": 2.5
-            },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
                     "hullIntegrity": 25,
@@ -3148,10 +3152,6 @@
                 "volume": 0.5
             },
             "explosion": "bomberExplosion",
-            "explosionSound": {
-                "name": "fighterExplosion",
-                "volume": 3
-            },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
                     "hullIntegrity": 25,
@@ -3438,10 +3438,6 @@
                 "volume": 0.5
             },
             "explosion": "fighterExplosion",
-            "explosionSound": {
-                "name": "fighterExplosion",
-                "volume": 2
-            },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
                     "hullIntegrity": 25,
@@ -3870,10 +3866,6 @@
                 "volume": 0.75
             },
             "explosion": "smallShipExplosion",
-            "explosionSound": {
-                "name": "fighterExplosion",
-                "volume": 4
-            },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
                     "hullIntegrity": 25,
@@ -4418,10 +4410,6 @@
                 "volume": 0.75
             },
             "explosion": "smallShipExplosion",
-            "explosionSound": {
-                "name": "fighterExplosion",
-                "volume": 5
-            },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
                     "hullIntegrity": 45,
@@ -5112,10 +5100,6 @@
                 "volume": 1.5
             },
             "explosion": "largeShipExplosion",
-            "explosionSound": {
-                "name": "largeShipExplosion",
-                "volume": 20
-            },
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
                     "hullIntegrity": 35,
