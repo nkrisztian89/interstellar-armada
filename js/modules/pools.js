@@ -137,6 +137,19 @@ define(function () {
         return (this._firstFreeIndex !== this._firstLockedIndex) || !this._objectsFree[this._freeIndices[this._firstFreeIndex]];
     };
     /**
+     * Returns the number of locked object within this pool
+     * @returns {Number}
+     */
+    Pool.prototype.getLockedObjectCount = function () {
+        if (this._firstFreeIndex === this._firstLockedIndex) {
+            return this._objectsFree[this._freeIndices[this._firstFreeIndex]] ? 0 : this._objects.length;
+        }
+        if (this._firstFreeIndex < this._firstLockedIndex) {
+            return this._objects.length - (this._firstLockedIndex - this._firstFreeIndex);
+        }
+        return this._firstFreeIndex - this._firstLockedIndex;
+    };
+    /**
      * Executes the passed function on all of the stored locked (in-use) objects, passing the object and its index within the pool as the
      * two arguments
      * @param {Function} callback

@@ -13,6 +13,7 @@
  * @param utils Used for enum value listing, async execution.
  * @param vec Used for vector operations related to camera control.
  * @param mat Used for matrix operatinos related to camera control.
+ * @param pools Used to clean up the particle pool during animations and refresh
  * @param managedGL Used to create a managed context for the WebGL preview canvas.
  * @param renderableObjects Used for accessing uniform name constants
  * @param sceneGraph Used for creating the preview scene
@@ -27,16 +28,22 @@ define([
     "utils/utils",
     "utils/vectors",
     "utils/matrices",
+    "modules/pools",
     "modules/managed-gl",
-    "modules/scene/renderable-objects",
-    "modules/scene/scene-graph",
     "modules/media-resources",
     "modules/audio",
+    "modules/scene/renderable-objects",
+    "modules/scene/scene-graph",
     "armada/graphics",
     "armada/configuration",
     "armada/classes",
     "editor/common"
-], function (utils, vec, mat, managedGL, renderableObjects, sceneGraph, resources, audio, graphics, config, classes, common) {
+], function (
+        utils, vec, mat,
+        pools, managedGL, resources, audio,
+        renderableObjects, sceneGraph,
+        graphics, config, classes,
+        common) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -51,9 +58,9 @@ define([
                 SOLID: "solid",
                 BOTH: "both"
             },
-    // ----------------------------------------------------------------------
-    // Constants
-    INITIAL_CAMERA_FOV = 40,
+            // ----------------------------------------------------------------------
+            // Constants
+            INITIAL_CAMERA_FOV = 40,
             INITIAL_CAMERA_SPAN = 0.2,
             ROTATION_MOUSE_SENSITIVITY = 1.0,
             MODEL_ROTATE_BUTTON = utils.MouseButton.LEFT,
@@ -65,6 +72,7 @@ define([
             CANVAS_BACKGROUND_COLOR = [0, 0, 0, 1],
             MANAGED_CONTEXT_NAME = "context",
             DEFAULT_DISTANCE_FACTOR = 1.5,
+            DEFAULT_CAMERA_DIRECTION = [0, -1, 0],
             MAX_DISTANCE_FACTOR = 100,
             OBJECT_VIEW_NAME = "standard",
             FOV = 45,
@@ -72,6 +80,10 @@ define([
             WIREFRAME_COLOR = [1, 1, 1, 1],
             // ----------------------------------------------------------------------
             // Private variables
+            /**
+             * @type Pool
+             */
+            _particlePool,
             /**
              * @type ManagedGLContext
              */
@@ -151,10 +163,12 @@ define([
      * @property {Boolean} renderModeSetting
      * @property {Boolean} lodSetting
      * @property {Boolean} animateButton
+     * @property {Boolean} [animateOnRefresh] If not set, preserving previously set animation state
      * @property {Boolean} muteCheckbox
      * @property {String[]} canvasUpdateProperties
      * @property {String[]} optionRefreshProperties
      * @property {Number} [defaultDistanceFactor]
+     * @property {Number[3]} [cameraDirection] 
      */
     /**
      * @typedef {Object} Editor~WebGLPreviewFunctions
@@ -165,6 +179,7 @@ define([
      * @property {Function} createOptions
      * @property {Function} animate
      * @property {Function} onModelRotate
+     * @property {Function} getInfo
      */
     /**
      * @class
@@ -221,16 +236,34 @@ define([
      * Creates the content for the preview information panel and adds it to the page.
      */
     function _updateInfo() {
+        var infoSections = [];
         _elements.info.innerHTML = "";
         if (_model) {
-            _elements.info.appendChild(common.createLabel(
-                    "Model: " +
-                    "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
-                    ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD()) +
-                    (_fps ? (", FPS: " + _fps) : "")
-                    ));
+            if (_model.getModel) {
+                infoSections.push(
+                        "Model: " +
+                        "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
+                        ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD()));
+            }
+            if (_currentContext.functions.getInfo) {
+                infoSections.push(_currentContext.functions.getInfo());
+            }
+            if (_fps) {
+                infoSections.push("FPS: " + _fps);
+            }
+            _elements.info.appendChild(common.createLabel(infoSections.join(", ")));
         }
         _elements.info.hidden = (_elements.info.innerHTML === "");
+    }
+    /**
+     * Function to execute on (active, used) particles in the particle pool every animation step
+     * @param {Particle} particle
+     * @param {Number} indexInPool
+     */
+    function _handleParticle(particle, indexInPool) {
+        if (particle.canBeReused()) {
+            _particlePool.markAsFree(indexInPool);
+        }
     }
     /**
      * Called when a change happens as the result of which the preview scene should rendered again (if it is not rendered continuously)
@@ -240,6 +273,10 @@ define([
     function requestRender(force, dt) {
         if (!_animating || force) {
             dt = dt || 0;
+            if (_particlePool.hasLockedObjects()) {
+                _particlePool.executeForLockedObjects(_handleParticle);
+            }
+            _scene.cleanUp();
             _scene.render(_context, dt);
             if (_currentContext.functions.animate) {
                 _currentContext.functions.animate(dt);
@@ -530,6 +567,7 @@ define([
             _currentContext.functions.clear();
             _model = null;
             _wireframeModel = null;
+            _particlePool.clear();
         }
         if (!_scene) {
             _scene = new sceneGraph.Scene(
@@ -595,7 +633,7 @@ define([
                         turnable: true,
                         rotationCenterIsObject: true,
                         distanceRange: [0, MAX_DISTANCE_FACTOR * _model.getScaledSize()],
-                        position: [0, -_currentContext.cameraDistance, 0]
+                        position: vec.scaled3(_currentContext.params.cameraDirection || DEFAULT_CAMERA_DIRECTION, _currentContext.cameraDistance)
                     });
                     _scene.getCamera().setConfiguration(view.createCameraConfiguration(_model,
                             config.getDefaultCameraBaseOrientation(),
@@ -618,7 +656,7 @@ define([
                 _updateForRenderMode();
                 _updateForLOD();
                 _currentContext.functions.updateForRefresh();
-                if (wasAnimating) {
+                if (_currentContext.params.animateOnRefresh || (wasAnimating && (_currentContext.params.animateOnRefresh !== false))) {
                     startAnimating();
                 } else {
                     requestRender();
@@ -715,6 +753,9 @@ define([
             });
         }
     }
+    // initializazion
+    // obtaining pool references
+    _particlePool = pools.getPool(renderableObjects.Particle);
     // ----------------------------------------------------------------------
     // The public interface of the module
     return {

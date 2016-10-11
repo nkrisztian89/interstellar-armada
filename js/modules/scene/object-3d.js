@@ -345,6 +345,13 @@ define([
             return this._size;
         }
         /**
+         * Sets a new explicit size for this object
+         * @param {Number} value
+         */
+        function setSize(value) {
+            this._size = value;
+        }
+        /**
          * Returns the size of this object in world space, accounting for all 
          * the scaling.
          * @returns {Number}
@@ -471,6 +478,7 @@ define([
             this.prototype.getModelMatrix = getModelMatrix;
             this.prototype.getModelMatrixInverse = getModelMatrixInverse;
             this.prototype.getSize = getSize;
+            this.prototype.setSize = setSize;
             this.prototype.getScaledSize = getScaledSize;
             this.prototype.isInsideParent = isInsideParent;
             this.prototype.getPositionMatrixInCameraSpace = getPositionMatrixInCameraSpace;

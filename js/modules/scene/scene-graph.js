@@ -333,6 +333,12 @@ define([
          * @type Number
          */
         this._minimumCountForInstancing = minimumCountForInstancing || 0;
+        /**
+         * A shortcut cache variable that is set to true once this node is set to be resuable or it is found reusable in a check, so that
+         * later this can be determined in one step
+         * @type Boolean
+         */
+        this._canBeReused = false;
     }
     /**
      * Returns whether this node can be reused to hold a different object.
@@ -340,12 +346,16 @@ define([
      */
     RenderableNode.prototype.canBeReused = function () {
         var i;
+        if (this._canBeReused) {
+            return true;
+        }
         if (this._renderableObject.canBeReused()) {
             for (i = 0; i < this._subnodes.length; i++) {
                 if (this._subnodes[i].canBeReused() === false) {
                     return false;
                 }
             }
+            this._canBeReused = true;
             return true;
         }
         return false;
@@ -835,6 +845,7 @@ define([
         for (i = 0; i < this._subnodes.length; i++) {
             this._subnodes[i].markAsReusable();
         }
+        this._canBeReused = true;
     };
     /**
      * Removes all subnodes from the subtree of this object that are deleted or
@@ -843,7 +854,6 @@ define([
     RenderableNode.prototype.cleanUp = function () {
         var i, j, k;
         for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].cleanUp();
             j = i;
             k = 0;
             while ((j < this._subnodes.length) && ((!this._subnodes[j]) || (this._subnodes[j].canBeReused() === true))) {
@@ -851,6 +861,9 @@ define([
                 k++;
             }
             this._subnodes.splice(i, k);
+        }
+        for (i = 0; i < this._subnodes.length; i++) {
+            this._subnodes[i].cleanUp();
         }
     };
     /**
@@ -1036,6 +1049,12 @@ define([
          * @type RenderableNode
          */
         this._rootResourceNode = null;
+        /**
+         * Stores the IDs with which resource nodes were added to this scene, so that attempting to add another object with the same ID
+         * will not add another node, and thus duplicates can be avoided
+         * @type Object.<String, String>
+         */
+        this._resourceObjectIDs = null;
         /**
          * The camera used for rendering this scene.
          * @type Camera
@@ -1383,12 +1402,22 @@ define([
      * @param {ManagedGLContext} context
      */
     Scene.prototype.addToContext = function (context) {
-        this._contexts.push(context);
-        this._setupContext(this._contexts.length - 1);
-        this._rootBackgroundNode.addToContext(context);
-        this._rootNode.addToContext(context);
-        this._rootUINode.addToContext(context);
-        this._rootResourceNode.addToContext(context);
+        // perform a check to avoid adding the nodes to the same context multiple times
+        var newContext = false, contextIndex = this._contexts.findIndex(function (element) {
+            return element.getName() === context.getName();
+        });
+        if (contextIndex < 0) {
+            this._contexts.push(context);
+            contextIndex = this._contexts.length - 1;
+            newContext = true;
+        }
+        this._setupContext(contextIndex);
+        if (newContext) {
+            this._rootBackgroundNode.addToContext(context);
+            this._rootNode.addToContext(context);
+            this._rootUINode.addToContext(context);
+            this._rootResourceNode.addToContext(context);
+        }
     };
     /**
      * If the shadow mapping properties were appropriately set up, after this call the scene will be rendered using shadow mapping.
@@ -1587,6 +1616,7 @@ define([
         }
         this._rootResourceNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false));
         this._rootResourceNode.setScene(this);
+        this._resourceObjectIDs = {};
         // clearing UI objects
         if (this._rootUINode) {
             this._rootUINode.destroy();
@@ -1693,16 +1723,33 @@ define([
         return this._rootNode.getPreviousSubnode(currentNode);
     };
     /**
+     * Returns whether the resources of an object have already been added to the scene with the passed ID
+     * @param {String} id
+     * @returns {Boolean}
+     */
+    Scene.prototype.hasResourcesOfObject = function (id) {
+        return !!this._resourceObjectIDs[id];
+    };
+    /**
      * Marks the resources of the passed renderable object to be added to any contexts this scene will get added to. This will make it 
      * possible to dynamically add objects of this type to the scene after it has already been added to a context, as its resources (such
      * as vertices in the vertex buffers of the context) will be available.
-     * @param {RenderableObject} object
+     * @param {RenderableObject} [object] Can be omitted, in which case the passed id will simply be marked as having its resources added
+     * @param {String} [id] If given, the resources will only be added if no other object has been added with the same ID as this before
      */
-    Scene.prototype.addResourcesOfObject = function (object) {
-        var node = new RenderableNode(object);
-        this._rootResourceNode.addSubnode(node);
-        // in case this is a pooled object, mark it as reusable so the pooled instance can be marked free
-        node.markAsReusable();
+    Scene.prototype.addResourcesOfObject = function (object, id) {
+        var node;
+        if (!id || !this._resourceObjectIDs[id]) {
+            if (object) {
+                node = new RenderableNode(object);
+                this._rootResourceNode.addSubnode(node);
+                // mark it as reusable so in case this is a pooled object, the pooled instance can be marked free
+                node.markAsReusable();
+            }
+            if (id) {
+                this._resourceObjectIDs[id] = true;
+            }
+        }
     };
     /**
      * Adds the passed directional light source to this scene.

@@ -71,47 +71,59 @@ define([
                  */
                 RESTRICTED: "restricted"
             },
-    /**
-     * @enum {Number}
-     * When aiming (rotating), weapons determine in which of these states they are within the aiming process. It is used when 
-     * deciding whether to fire or not.
-     * @type Object
-     */
-    WeaponAimStatus = {
-        /**
-         * The weapon cannot be rotated and thus cannot be aimed at targets.
-         */
-        FIXED: 0,
-        /**
-         * The weapon can be rotated, but it currently does not have a target to aim for (and is rotating back to the default position)
-         */
-        NO_TARGET: 1,
-        /**
-         * The weapon is currently trying to aim at a target, but the target lies out of the region accessible based on the restrictions
-         * of the weapon's rotators.
-         */
-        AIMING_OUT_OF_REACH: 2,
-        /**
-         * The weapon is in the process of aiming at a target (rotating).
-         */
-        AIMING: 3,
-        /**
-         * The weapon is currently aimed at the direction towards the target, but the target is out of its range.
-         */
-        AIMED_OUT_OF_RANGE: 4,
-        /**
-         * The weapon is currently aimed at the direction towards the target, and the target is within its range (ready to fire).
-         */
-        AIMED_IN_RANGE: 5
-    },
-    // ------------------------------------------------------------------------------
-    // constants
-    /**
-     * The number of discrete volume levels to which the thruster sounds can be set according to the rate at which the thrusters
-     * are firing (so that the sound source is not ramping the volume all the time as the thruster fire rate changes)
-     * @type Number
-     */
-    THRUSTER_SOUND_VOLUME_GRADES = 3,
+            /**
+             * @enum {Number}
+             * When aiming (rotating), weapons determine in which of these states they are within the aiming process. It is used when 
+             * deciding whether to fire or not.
+             * @type Object
+             */
+            WeaponAimStatus = {
+                /**
+                 * The weapon cannot be rotated and thus cannot be aimed at targets.
+                 */
+                FIXED: 0,
+                /**
+                 * The weapon can be rotated, but it currently does not have a target to aim for (and is rotating back to the default position)
+                 */
+                NO_TARGET: 1,
+                /**
+                 * The weapon is currently trying to aim at a target, but the target lies out of the region accessible based on the restrictions
+                 * of the weapon's rotators.
+                 */
+                AIMING_OUT_OF_REACH: 2,
+                /**
+                 * The weapon is in the process of aiming at a target (rotating).
+                 */
+                AIMING: 3,
+                /**
+                 * The weapon is currently aimed at the direction towards the target, but the target is out of its range.
+                 */
+                AIMED_OUT_OF_RANGE: 4,
+                /**
+                 * The weapon is currently aimed at the direction towards the target, and the target is within its range (ready to fire).
+                 */
+                AIMED_IN_RANGE: 5
+            },
+            // ------------------------------------------------------------------------------
+            // constants
+            /**
+             * When adding the resources of a projectile (class) to a scene, this prefix is used in the ID to avoid adding the same one multiple
+             * times
+             * @type String
+             */
+            PROJECTILE_RESOURCE_ID_PREFIX = "projectile/",
+            /**
+             * When adding the resources of a weapon (class) to a scene, this prefix is used in the ID to avoid adding the same one multiple
+             * times
+             * @type String
+             */
+            WEAPON_RESOURCE_ID_PREFIX = "weapon/",
+            /**
+             * The number of discrete volume levels to which the thruster sounds can be set according to the rate at which the thrusters
+             * are firing (so that the sound source is not ramping the volume all the time as the thruster fire rate changes)
+             * @type Number
+             */
+            THRUSTER_SOUND_VOLUME_GRADES = 3,
             /**
              * The duration while the thruster sound effects ramp to a new volume if needed as the firing rate of the thrusters change.
              * In seconds.
@@ -323,13 +335,15 @@ define([
      * @param {Boolean} [wireframe=false] Whether to add the model resource for wireframe rendering
      */
     Projectile.prototype.addResourcesToScene = function (scene, wireframe) {
-        var exp;
+        var exp, resourceID = PROJECTILE_RESOURCE_ID_PREFIX + this._class.getName();
         this._class.acquireResources();
         resources.executeWhenReady(function () {
-            this._createVisualModel(wireframe);
-            scene.addResourcesOfObject(this._visualModel);
-            exp = new explosion.Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0], true);
-            exp.addResourcesToScene(scene);
+            if (!scene.hasResourcesOfObject(resourceID)) {
+                this._createVisualModel(wireframe);
+                scene.addResourcesOfObject(this._visualModel, resourceID);
+                exp = new explosion.Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0], true);
+                exp.addResourcesToScene(scene);
+            }
         }.bind(this));
     };
     /**
@@ -687,28 +701,35 @@ define([
      * 
      * @param {Scene} scene
      * @param {Number} barrelIndex
+     * @param {String} resourceID
      * @returns {Function}
      */
-    Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex) {
+    Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex, resourceID) {
         return function () {
-            var particle = this._getMuzzleFlashForBarrel(barrelIndex, [0, 0, 0]);
-            scene.addResourcesOfObject(particle);
+            var particle;
+            if (!scene.hasResourcesOfObject(resourceID)) {
+                particle = this._getMuzzleFlashForBarrel(barrelIndex, [0, 0, 0]);
+                scene.addResourcesOfObject(particle);
+            }
         }.bind(this);
     };
     /**
      * Adds the resources required to render the projeciles fired by this weapon
      * to the passed scene, so they get loaded at the next resource load as well 
      * as added to any context the scene is added to.
-     * @param {sceneGraph} scene
+     * @param {Scene} scene
      */
     Weapon.prototype.addProjectileResourcesToScene = function (scene) {
-        var i, projectile, barrels;
+        var i, projectile, barrels, resourceID = WEAPON_RESOURCE_ID_PREFIX + this._class.getName();
         barrels = this._class.getBarrels();
         for (i = 0; i < barrels.length; i++) {
             projectile = new Projectile(barrels[i].getProjectileClass());
             projectile.addResourcesToScene(scene);
-            resources.executeWhenReady(this.getResourceAdderFunction(scene, i).bind(this));
+            resources.executeWhenReady(this.getResourceAdderFunction(scene, i, resourceID).bind(this));
         }
+        resources.executeWhenReady(function () {
+            scene.addResourcesOfObject(null, resourceID);
+        });
     };
     /**
      * Does all the needed updates to the weapon's state for one simulation step.

@@ -48,6 +48,14 @@ define([
     "use strict";
     var
             // ------------------------------------------------------------------------------
+            // constants
+            /**
+             * When adding the resources of an explosion (class) to a scene, this prefix is used in the ID to avoid adding the same one multiple
+             * times
+             * @type String
+             */
+            RESOURCE_ID_PREFIX = "explosion/",
+            // ------------------------------------------------------------------------------
             // private variables
             /**
              * Cached value of the configuration setting of the same name (see configuration.json)
@@ -158,7 +166,9 @@ define([
      * in a visual scene, if it has not been created yet.
      */
     Explosion.prototype._createVisualModel = function () {
-        var i, particleEmitters = [], emitter, particleEmitterDescriptors = this._class.getParticleEmitterDescriptors();
+        var i, particleEmitters, emitter, particleEmitterDescriptors;
+        particleEmitters = [];
+        particleEmitterDescriptors = this._class.getParticleEmitterDescriptors();
         for (i = 0; i < particleEmitterDescriptors.length; i++) {
             switch (particleEmitterDescriptors[i].getType()) {
                 case classes.ParticleEmitterType.OMNIDIRECTIONAL:
@@ -206,7 +216,7 @@ define([
             }
             particleEmitters.push(emitter);
         }
-        this._visualModel = this._visualModel || new particleSystem.ParticleSystem(
+        this._visualModel = new particleSystem.ParticleSystem(
                 this._positionMatrix,
                 this._orientationMatrix,
                 this._velocityMatrix,
@@ -222,8 +232,10 @@ define([
      * @param {RenderableNode} parentNode The explosion will be added to the scene graph as the subnode of this node
      * @param {SoundSource} [soundSource] If the sound of the explosion should be played by a 3D sound source, pass it here
      * @param {Boolean} [isHit=false] Whether this explosion is marking a hit - which will enable stacking of the sound effect
+     * @param {Function} [callback] Called after the explosion has been added to the scene, with the created visual model passed in as its 
+     * single argument
      */
-    Explosion.prototype.addToScene = function (parentNode, soundSource, isHit) {
+    Explosion.prototype.addToScene = function (parentNode, soundSource, isHit, callback) {
         var lightStates, scene = parentNode.getScene();
         resources.executeWhenReady(function () {
             this._createVisualModel();
@@ -235,6 +247,9 @@ define([
                         constants.EXPLOSION_LIGHT_PRIORITY);
             }
             this._class.playSound(soundSource, isHit, _hitSoundStackingTimeThreshold, _hitSoundStackingVolumeFactor);
+            if (callback) {
+                callback(this._visualModel);
+            }
         }.bind(this));
     };
     /**
@@ -244,10 +259,13 @@ define([
      * @param {Scene} scene
      */
     Explosion.prototype.addResourcesToScene = function (scene) {
+        var resourceID = RESOURCE_ID_PREFIX + this._class.getName();
         this._class.acquireResources();
         resources.executeWhenReady(function () {
-            this._createVisualModel();
-            scene.addResourcesOfObject(this._visualModel);
+            if (!scene.hasResourcesOfObject(resourceID)) {
+                this._createVisualModel();
+                scene.addResourcesOfObject(this._visualModel, resourceID);
+            }
         }.bind(this));
     };
     /**

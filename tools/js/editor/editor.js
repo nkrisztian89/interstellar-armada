@@ -19,6 +19,7 @@
  * @param level Used to load the environments 
  * @param common Used for clearing open popups
  * @param skyboxPreview Used to create previews for skybox classes
+ * @param explosionPreview Used to create previews for explosion classes
  * @param projectilePreview Used to create previews for projectile classes
  * @param weaponPreview Used to create previews for weapon classes
  * @param spacecraftPreview Used to create previews for spacecraft classes
@@ -34,17 +35,19 @@ define([
     "armada/classes",
     "armada/logic/level",
     "editor/common",
+    "editor/descriptors",
+    "editor/properties",
     "editor/preview/skybox-preview",
+    "editor/preview/explosion-preview",
     "editor/preview/projectile-preview",
     "editor/preview/weapon-preview",
-    "editor/preview/spacecraft-preview",
-    "editor/descriptors",
-    "editor/properties"
+    "editor/preview/spacecraft-preview"
 ], function (
         application, resources,
         constants, config, graphics, classes,
         level,
-        common, skyboxPreview, projectilePreview, weaponPreview, spacecraftPreview, descriptors, properties) {
+        common, descriptors, properties,
+        skyboxPreview, explosionPreview, projectilePreview, weaponPreview, spacecraftPreview) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -83,15 +86,16 @@ define([
              */
             _previews = {
                 "skyboxClasses": skyboxPreview,
+                "explosionClasses": explosionPreview,
                 "projectileClasses": projectilePreview,
                 "weaponClasses": weaponPreview,
                 "spacecraftClasses": spacecraftPreview
             },
-    /**
-     * The HTML element (<span>) that corresponds to the currently selected item
-     * @type Element
-     */
-    _selectedItemElement,
+            /**
+             * The HTML element (<span>) that corresponds to the currently selected item
+             * @type Element
+             */
+            _selectedItemElement,
             /**
              * The data of the currently selected item
              * @type Editor~Item

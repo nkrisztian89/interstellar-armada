@@ -38,12 +38,12 @@ define([
                 FRONT_QUEUE_BIT: 1,
                 DISTANCE_QUEUE_BIT: 2
             },
-    // ----------------------------------------------------------------------
-    // constants
-    /**
-     * @type String
-     */
-    UNIFORM_VIEW_PROJECTION_INVERSE_MATRIX_NAME = "viewDirectionProjectionInverse",
+            // ----------------------------------------------------------------------
+            // constants
+            /**
+             * @type String
+             */
+            UNIFORM_VIEW_PROJECTION_INVERSE_MATRIX_NAME = "viewDirectionProjectionInverse",
             UNIFORM_MODEL_MATRIX_NAME = "modelMatrix",
             UNIFORM_NORMAL_MATRIX_NAME = "normalMatrix",
             UNIFORM_BILLBOARD_SIZE_NAME = "billboardSize",
@@ -1459,11 +1459,53 @@ define([
         this._visible = this._calculatedSize[0] >= PARTICLE_MINIMUM_VISIBLE_SIZE;
     };
     /**
+     * Returns the total duration this particle takes to animate from its first state to the last (in milliseconds)
+     * @returns {Number}
+     */
+    Particle.prototype.getDuration = function () {
+        var i, result;
+        if (this._states.length <= 1) {
+            return 0;
+        }
+        result = 0;
+        for (i = 0; i < this._states.length; i++) {
+            result += this._states[i].timeToReach;
+        }
+        return result;
+    };
+    /**
      * @override
      * @returns {Number}
      */
     Particle.prototype.getSize = function () {
         return this._calculatedSize[0];
+    };
+    /**
+     * 
+     * @returns {Number}
+     */
+    Particle.prototype.getFinalSize = function () {
+        if (this._states.length === 0) {
+            return this._size;
+        }
+        return this._states[this._states.length - 1].size;
+    };
+    /**
+     * 
+     * @returns {Number}
+     */
+    Particle.prototype.getMaxSize = function () {
+        var result, i;
+        if (this._states.length === 0) {
+            return this._size;
+        }
+        result = 0;
+        for (i = 0; i < this._states.length; i++) {
+            if (this._states[i].size > result) {
+                result = this._states[i].size;
+            }
+        }
+        return result;
     };
     /**
      * Returns whether the particle has a non-zero velocity set.

@@ -30,6 +30,10 @@ define([
      * relative to the center of the particle system
      * @param {Float32Array} orientationMatrix The orienation relative to the center of the particle system
      * @param {Number[3]} dimensions The size of the area in which the new particles are generated
+     * @param {Number} velocity The starting velocity of the emitted particles is randomly generated within a range.
+     * This number is the middle of that range. (m/s)
+     * @param {Number} velocitySpread The starting velocity of the emitted particles is randomly generated within a range.
+     * This number is the size of the range (difference between smallest and biggest possible velocity, m/s)
      * @param {Number} initialNumber The number of particles generated right after the creation of the emitter
      * @param {Number} spawnNumber The number of particles generated at the end of each spawn round
      * @param {Number} spawnTime The duration of one spawn round in milliseconds
@@ -38,7 +42,7 @@ define([
      * @param {Function} createParticleFunction The function that will be called to generate new particles. Must
      * have no parameters and return a new instance of the Particle class
      */
-    function ParticleEmitter(positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, createParticleFunction) {
+    function ParticleEmitter(positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, createParticleFunction) {
         /**
          * The position of the center of the emitter area, relative to the center of the particle system
          * @type Float32Array
@@ -54,6 +58,18 @@ define([
          * @type Number[3]
          */
         this._dimensions = dimensions;
+        /**
+         * The starting velocity of the emitted particles is randomly generated within a range.
+         * This number is the middle of that range. (m/s)
+         * @type Number
+         */
+        this._velocity = velocity;
+        /**
+         * The starting velocity of the emitted particles is randomly generated within a range.
+         * This number is the size of the range (difference between smallest and biggest possible velocity, m/s)
+         * @type Number
+         */
+        this._velocitySpread = velocitySpread;
         /**
          * The number of particles generated right after the creation of the emitter
          * @type Number
@@ -97,7 +113,34 @@ define([
          * @type Number
          */
         this._particleDuration = -1;
+        /**
+         * The (calculated) size of this emitter, i.e. how far an emitted particle could reach (including with its own size) from the center
+         * @type Number
+         */
+        this._size = 0;
+        if (positionMatrix) {
+            this._calculateSize();
+        }
     }
+    /**
+     * Calculates the size of the emitter, considering its specific properties
+     */
+    ParticleEmitter.prototype._calculateSize = function () {
+        var
+                /** @type Particle */
+                particle = this._createParticleFunction();
+        // conversion as duration is in ms, velocity in m/s
+        this._size = mat.translationLength(this._positionMatrix) + vec.length3(this._dimensions) +
+                Math.max((this._velocity + this._velocitySpread * 0.5) * particle.getDuration() * 0.001 + particle.getFinalSize(), particle.getMaxSize());
+        particle.markAsReusable();
+    };
+    /**
+     * Returns the (calculated) size of this emitter, i.e. how far an emitted particle could reach (including with its own size) from the center
+     * @returns {Number}
+     */
+    ParticleEmitter.prototype.getSize = function () {
+        return this._size;
+    };
     /**
      * Returns the duration of particle generation in milliseconds. If zero, particle generation will 
      * go on as long as the emitter exists.
@@ -111,14 +154,11 @@ define([
      * @returns {Number}
      */
     ParticleEmitter.prototype.getParticleDuration = function () {
-        var i, particle, particleStates;
+        var particle;
         if (this._particleDuration === -1) {
             this._particleDuration = 0;
             particle = this._createParticleFunction();
-            particleStates = particle.getStates();
-            for (i = 0; i < particleStates.length; i++) {
-                this._particleDuration += particleStates[i].timeToReach;
-            }
+            this._particleDuration = particle.getDuration();
         }
         // make sure the particle pool will be cleaned up
         particle.markAsReusable();
@@ -204,19 +244,8 @@ define([
      * have no parameters and return a new instance of the Particle class
      */
     function OmnidirectionalParticleEmitter(positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
-        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
-        /**
-         * The starting velocity of the emitted particles is randomly generated within a range.
-         * This number is the middle of that range. (m/s)
-         * @type Number
-         */
-        this._velocity = velocity;
-        /**
-         * The starting velocity of the emitted particles is randomly generated within a range.
-         * This number is the size of the range (difference between smallest and biggest possible velocity, m/s)
-         * @type Number
-         */
-        this._velocitySpread = velocitySpread;
+        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
+        this._calculateSize();
     }
     OmnidirectionalParticleEmitter.prototype = new ParticleEmitter();
     OmnidirectionalParticleEmitter.prototype.constructor = OmnidirectionalParticleEmitter;
@@ -259,7 +288,7 @@ define([
      * have no parameters and return a new instance of the Particle class
      */
     function UnidirectionalParticleEmitter(positionMatrix, orientationMatrix, dimensions, direction, directionSpread, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
-        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
+        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
         /**
          * The direction of the starting velocity of the particles will be generated around this vector
          * @type Number[3]
@@ -271,18 +300,6 @@ define([
          * @type Number
          */
         this._directionSpread = directionSpread;
-        /**
-         * The starting velocity of the emitted particles is randomly generated within a range.
-         * This number is the middle of that range. (m/s)
-         * @type Number
-         */
-        this._velocity = velocity;
-        /**
-         * The starting velocity of the emitted particles is randomly generated within a range.
-         * This number is the size of the range (difference between smallest and biggest possible velocity, m/s)
-         * @type Number
-         */
-        this._velocitySpread = velocitySpread;
     }
     UnidirectionalParticleEmitter.prototype = new ParticleEmitter();
     UnidirectionalParticleEmitter.prototype.constructor = UnidirectionalParticleEmitter;
@@ -329,7 +346,7 @@ define([
      * have no parameters and return a new instance of the Particle class
      */
     function PlanarParticleEmitter(positionMatrix, orientationMatrix, dimensions, planeNormal, directionSpread, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
-        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
+        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
         /**
          * The normal vector of the plane in or around which the velocity vectors
          * of the generated particles will fall
@@ -342,18 +359,6 @@ define([
          * @type Number
          */
         this._directionSpread = directionSpread;
-        /**
-         * The starting velocity of the emitted particles is randomly generated within a range.
-         * This number is the middle of that range. (m/s)
-         * @type Number
-         */
-        this._velocity = velocity;
-        /**
-         * The starting velocity of the emitted particles is randomly generated within a range.
-         * This number is the size of the range (difference between smallest and biggest possible velocity, m/s)
-         * @type Number
-         */
-        this._velocitySpread = velocitySpread;
     }
     PlanarParticleEmitter.prototype = new ParticleEmitter();
     PlanarParticleEmitter.prototype.constructor = UnidirectionalParticleEmitter;
@@ -436,9 +441,19 @@ define([
          * @type Number
          */
         this._particleCountFactor = (particleCountFactor !== undefined) ? particleCountFactor : 1;
+        this._calculateSize();
     }
     ParticleSystem.prototype = new renderableObjects.RenderableObject3D();
     ParticleSystem.prototype.constructor = ParticleSystem;
+    /**
+     */
+    ParticleSystem.prototype._calculateSize = function () {
+        var i, result = 0;
+        for (i = 0; i < this._emitters.length; i++) {
+            result = Math.max(result, this._emitters[i].getSize());
+        }
+        this.setSize(result);
+    };
     /**
      * @override
      * Always false, as particle system object itself is never rendered, only the particles it has emitted.

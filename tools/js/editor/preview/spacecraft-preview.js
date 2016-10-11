@@ -61,7 +61,8 @@ define([
                 "bodies",
                 "weaponSlots", "thrusterSlots",
                 "equipmentProfiles",
-                "explosionSound",
+                "humSound",
+                "explosion",
                 "lights", "blinkers"],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
@@ -79,12 +80,12 @@ define([
                 controlThrusters: false,
                 applyThrusterForces: false
             },
-    // ----------------------------------------------------------------------
-    // Private variables
-    /**
-     * @type Spacecraft
-     */
-    _spacecraft, _wireframeSpacecraft,
+            // ----------------------------------------------------------------------
+            // Private variables
+            /**
+             * @type Spacecraft
+             */
+            _spacecraft, _wireframeSpacecraft,
             /**
              * A reference to the object storing the HTML elements to be used for the preview
              * @type Object
@@ -286,7 +287,7 @@ define([
                     replaceVisualModel: true,
                     factionColor: _factionColor
                 },
-        (environmentChanged || shouldReload) ?
+                (environmentChanged || shouldReload) ?
                 function (model) {
                     preview.setModel(model);
                 } :
@@ -299,7 +300,7 @@ define([
                     replaceVisualModel: true,
                     shaderName: preview.getWireframeShaderName()
                 },
-        (environmentChanged || shouldReload) ?
+                (environmentChanged || shouldReload) ?
                 function (model) {
                     preview.setWireframeModel(model);
                 } :

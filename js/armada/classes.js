@@ -53,62 +53,62 @@ define([
                 UNIDIRECTIONAL: "unidirectional",
                 PLANAR: "planar"
             },
-    ObjectViewLookAtMode = {
-        NONE: "none",
-        SELF: "self",
-        TARGET: "target"
-    },
-    SceneViewLookAtMode = {
-        NONE: "none",
-        ALL: "all"
-    },
-    /**
-     * @enum {String}
-     * Determines how to translate a direction to rotation angles for a weapon.
-     * @type Object
-     */
-    WeaponRotationStyle = {
-        /**
-         * The weapon cannot be rotated, it is pointing in a fix direction: the positive Y.
-         */
-        NONE: "none",
-        /**
-         * The weapon has two rotators. The first one rotates around axis Z starting from the positive Y direction, clockwise.
-         * The second one further rotates the direction around the rotated X axis, clockwise.
-         */
-        YAW_PITCH: "yawPitch",
-        /**
-         * The weapon has two rotators. The first one rotates around axis Y starting from the positive X direction, counter-clockwise.
-         * The second one further rotates the direction around the rotated Z axis, counter-clockwise.
-         */
-        ROLL_YAW: "rollYaw"
-    },
-    /**
-     * @enum {String}
-     * Spacecrafts controlled by the AI can use one of these styles when orienting themselves.
-     * @type Object
-     */
-    SpacecraftTurnStyle = {
-        /**
-         * The spacecraft is turning by changing its yaw and pitch (that is, turning its positive Y vector left/right/up/down)
-         */
-        YAW_PITCH: "yawPitch",
-        /**
-         * The spacecraft is turning by changing its roll and yaw (that is, rolling around its positive Y vector and turning it left/right)
-         */
-        ROLL_YAW: "rollYaw",
-        /**
-         * The spacecraft is turning by changing its roll and pitch (that is, rolling around its positive Y vector and turning it up/down)
-         */
-        ROLL_PITCH: "rollPitch"
-    },
-    // ------------------------------------------------------------------------------
-    // constants
-    /**
-     * In the class description file, skybox classes will be initialized from the array with this name
-     * @type String
-     */
-    SKYBOX_CLASS_ARRAY_NAME = "skyboxClasses",
+            ObjectViewLookAtMode = {
+                NONE: "none",
+                SELF: "self",
+                TARGET: "target"
+            },
+            SceneViewLookAtMode = {
+                NONE: "none",
+                ALL: "all"
+            },
+            /**
+             * @enum {String}
+             * Determines how to translate a direction to rotation angles for a weapon.
+             * @type Object
+             */
+            WeaponRotationStyle = {
+                /**
+                 * The weapon cannot be rotated, it is pointing in a fix direction: the positive Y.
+                 */
+                NONE: "none",
+                /**
+                 * The weapon has two rotators. The first one rotates around axis Z starting from the positive Y direction, clockwise.
+                 * The second one further rotates the direction around the rotated X axis, clockwise.
+                 */
+                YAW_PITCH: "yawPitch",
+                /**
+                 * The weapon has two rotators. The first one rotates around axis Y starting from the positive X direction, counter-clockwise.
+                 * The second one further rotates the direction around the rotated Z axis, counter-clockwise.
+                 */
+                ROLL_YAW: "rollYaw"
+            },
+            /**
+             * @enum {String}
+             * Spacecrafts controlled by the AI can use one of these styles when orienting themselves.
+             * @type Object
+             */
+            SpacecraftTurnStyle = {
+                /**
+                 * The spacecraft is turning by changing its yaw and pitch (that is, turning its positive Y vector left/right/up/down)
+                 */
+                YAW_PITCH: "yawPitch",
+                /**
+                 * The spacecraft is turning by changing its roll and yaw (that is, rolling around its positive Y vector and turning it left/right)
+                 */
+                ROLL_YAW: "rollYaw",
+                /**
+                 * The spacecraft is turning by changing its roll and pitch (that is, rolling around its positive Y vector and turning it up/down)
+                 */
+                ROLL_PITCH: "rollPitch"
+            },
+            // ------------------------------------------------------------------------------
+            // constants
+            /**
+             * In the class description file, skybox classes will be initialized from the array with this name
+             * @type String
+             */
+            SKYBOX_CLASS_ARRAY_NAME = "skyboxClasses",
             /**
              * In the class description file, background object classes will be initialized from the array with this name
              * @type String
@@ -201,34 +201,34 @@ define([
                     defaultValue: 1
                 }
             },
-    /**
-     * A definition object with the structure of 3D sound effect descriptors used for type verification.
-     * @type Object
-     */
-    SOUND_EFFECT_3D = {
-        NAME: {
-            name: "name",
-            type: "string"
-        },
-        VOLUME: {
-            name: "volume",
-            type: "number",
-            range: [0, 25],
-            defaultValue: 1
-        },
-        RESOURCE: {
-            name: "resource",
-            type: "object",
-            optional: true
-        }
-    },
-    // ------------------------------------------------------------------------------
-    // module variables
-    /**
-     * This resource manager will be used to load and access class definitions.
-     * @type ResourceManager
-     */
-    _classManager,
+            /**
+             * A definition object with the structure of 3D sound effect descriptors used for type verification.
+             * @type Object
+             */
+            SOUND_EFFECT_3D = {
+                NAME: {
+                    name: "name",
+                    type: "string"
+                },
+                VOLUME: {
+                    name: "volume",
+                    type: "number",
+                    range: [0, 25],
+                    defaultValue: 1
+                },
+                RESOURCE: {
+                    name: "resource",
+                    type: "object",
+                    optional: true
+                }
+            },
+            // ------------------------------------------------------------------------------
+            // module variables
+            /**
+             * This resource manager will be used to load and access class definitions.
+             * @type ResourceManager
+             */
+            _classManager,
             /**
              * Holds the folder ID (not the URL) where the class definition file(s) reside
              * @type String
@@ -3092,7 +3092,7 @@ define([
          * The descriptors for the blinking lights that can be added to the scene along with this spacecraft.
          * @type BlinkerDescriptor[]
          */
-        this._blinkerDescriptors = (otherSpacecraftClass && !dataJSON.blinkers) ? otherSpacecraftClass._blinkers : [];
+        this._blinkerDescriptors = (otherSpacecraftClass && !dataJSON.blinkers) ? otherSpacecraftClass._blinkerDescriptors : [];
         if (dataJSON.blinkers) {
             for (i = 0; i < dataJSON.blinkers.length; i++) {
                 this._blinkerDescriptors.push(new BlinkerDescriptor(dataJSON.blinkers[i]));
