@@ -201,7 +201,7 @@ define([
             }
         }
         this._age += dt;
-        while (((this._age - this._lastSpawn) > this._spawnTime) && ((this._lastSpawn <= this._duration) || (this._duration === 0))) {
+        while (((this._age - this._lastSpawn) > this._spawnTime) && ((this._lastSpawn < this._duration) || (this._duration === 0))) {
             n = Math.round(this._spawnNumber * particleCountFactor);
             if ((this._spawnNumber > 0) && (n < 1)) {
                 n = 1;

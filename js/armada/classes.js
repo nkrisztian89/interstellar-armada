@@ -1121,6 +1121,23 @@ define([
     ParticleEmitterDescriptor.prototype.getParticleStates = function () {
         return this._particleStates;
     };
+    /**
+     * Returns the duration it takes from the start of emitting until the last particle emitted by this emitter (except for looping) 
+     * diminishes
+     * @returns {Number}
+     */
+    ParticleEmitterDescriptor.prototype.getTotalDuration = function () {
+        var result = 0, i;
+        // calculating last spawning time
+        if (this._spawnNumber && this._spawnTime) {
+            result += Math.floor(this._duration / this._spawnTime) * this._spawnTime;
+        }
+        // calculating the duration of a particle
+        for (i = 0; i < this._particleStates.length; i++) {
+            result += this._particleStates[i].timeToReach;
+        }
+        return result;
+    };
     // ##############################################################################
     /**
      * @class Stores the general properties of a class of explosions (or fires), that can be
@@ -1203,13 +1220,9 @@ define([
      * @returns {Number}
      */
     ExplosionClass.prototype.getTotalDuration = function () {
-        var i, j, emitterDuration, particleStates, result = 0;
+        var i, emitterDuration, result = 0;
         for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
-            emitterDuration = this._particleEmitterDescriptors[i].getDuration();
-            particleStates = this._particleEmitterDescriptors[i].getParticleStates();
-            for (j = 0; j < particleStates.length; j++) {
-                emitterDuration += particleStates[j].timeToReach;
-            }
+            emitterDuration = this._particleEmitterDescriptors[i].getTotalDuration();
             if (emitterDuration > result) {
                 result = emitterDuration;
             }
