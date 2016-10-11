@@ -137,6 +137,13 @@ body.wait, body.wait * {
     padding-right: 2em;
 }
 
+/* To be used with outer containers (page containers) that must have a fluid
+ * almost all screen wide width
+ */
+.outerWideFluid {
+    width: calc(100% - 5em);
+}
+
 .fullWide {
     margin-left: 0;
     margin-right: 0;
@@ -285,6 +292,11 @@ img {
     img#splashImage {
         width: 90%;
     }
+}
+
+progress#splashProgress {
+    margin-top: 20px;
+    margin-bottom: 10px;
 }
 
 p {

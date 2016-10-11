@@ -35,7 +35,7 @@ define([
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
-    var _progressBar = document.getElementById("progress");
+    var _progressBar = document.getElementById("splashProgress");
     _progressBar.max = 5;
     // -------------------------------------------------------------------------
     // setting game properties

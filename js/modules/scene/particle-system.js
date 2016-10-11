@@ -159,9 +159,9 @@ define([
             this._particleDuration = 0;
             particle = this._createParticleFunction();
             this._particleDuration = particle.getDuration();
+            // make sure the particle pool will be cleaned up
+            particle.markAsReusable();
         }
-        // make sure the particle pool will be cleaned up
-        particle.markAsReusable();
         return this._particleDuration;
     };
     /**
@@ -499,21 +499,24 @@ define([
      * Ceases emitting particles and clears the particle system for reuse when all last particles are gone.
      */
     ParticleSystem.prototype.finishEmitting = function () {
-        var remainingDuration = 0, i, emitterDuration;
+        var remainingDuration = 0, i, emitterParticleDuration;
         this._keepAlive = false;
-        this._age = 0;
         if (this._carriesParticles) {
+            // if called multiple times, the emitter will already be deleted - no need to do anything
             if (this._emitters) {
-                for (i = 0; i < this._emitters; i++) {
-                    emitterDuration = this._emitters[i].getDuration() + this._emitters[i].getParticleDuration();
-                    if (emitterDuration > remainingDuration) {
-                        remainingDuration = emitterDuration;
+                // set the system up to last as long as the longest particle duration, without any emitters
+                this._age = 0;
+                for (i = 0; i < this._emitters.length; i++) {
+                    emitterParticleDuration = this._emitters[i].getParticleDuration();
+                    if (emitterParticleDuration > remainingDuration) {
+                        remainingDuration = emitterParticleDuration;
                     }
                 }
                 this._emitters = null;
+                this._duration = remainingDuration;
             }
-            this._duration = remainingDuration;
         } else {
+            this._duration = 0;
             this.getNode().markAsReusable();
         }
     };

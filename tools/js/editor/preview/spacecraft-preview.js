@@ -428,6 +428,9 @@ define([
                 });
                 preview.startAnimating();
             } else {
+                if (_spacecraft.getExplosion()) {
+                    _spacecraft.getExplosion().finish();
+                }
                 _spacecraft.getVisualModel().getNode().show();
                 _spacecraft.respawn();
                 _updateThrusters();
