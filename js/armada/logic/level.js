@@ -1014,6 +1014,23 @@ define([
         return false;
     };
     /**
+     * Returns whether there are no spacecrafts present in the level that are hostiles towards each other
+     * @returns {Boolean}
+     */
+    Level.prototype.noHostilesPresent = function () {
+        var i, team = null, spacecraftTeam;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
+                spacecraftTeam = this._spacecrafts[i].getTeam();
+                if (spacecraftTeam && team && (spacecraftTeam !== team)) {
+                    return false;
+                }
+                team = spacecraftTeam;
+            }
+        }
+        return true;
+    };
+    /**
      * Returns whether according to the current state of the level, the controlled spacecraft has lost. 
      * @returns {Boolean}
      */

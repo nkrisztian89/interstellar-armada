@@ -1861,26 +1861,36 @@ define([
             }
         }
         // displaying the victory or defeat message
-        if ((_simulationLoop !== LOOP_CANCELED) && !_demoMode) {
-            // we wait a little after the state changes to victory or defeat so that incoming projectiles destroying the player's ship
-            // right after it destroyed the last enemy can change the state from victory to defeat
-            if (!_gameStateChanged) {
-                if (_level && (_level.isWon() || _level.isLost())) {
-                    _gameStateChanged = true;
-                    _timeSinceGameStateChanged = 0;
+        if ((_simulationLoop !== LOOP_CANCELED)) {
+            if (!_demoMode) {
+                // we wait a little after the state changes to victory or defeat so that incoming projectiles destroying the player's ship
+                // right after it destroyed the last enemy can change the state from victory to defeat
+                if (!_gameStateChanged) {
+                    if (_level && (_level.isWon() || _level.isLost())) {
+                        _gameStateChanged = true;
+                        _timeSinceGameStateChanged = 0;
+                    }
+                } else if (!_gameStateShown) {
+                    _timeSinceGameStateChanged += dt;
+                    if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
+                        victory = !_level.isLost();
+                        this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_DEFEAT), {
+                            menuKey: _getMenuKeyHTMLString()
+                        }));
+                        _gameStateShown = true;
+                        audio.playMusic(
+                                (victory ? VICTORY_THEME : DEFEAT_THEME),
+                                (victory ? AMBIENT_THEME : null),
+                                config.getSetting(config.BATTLE_SETTINGS.END_THEME_CROSSFADE_DURATION));
+                    }
                 }
-            } else if (!_gameStateShown) {
-                _timeSinceGameStateChanged += dt;
-                if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
-                    victory = !_level.isLost();
-                    this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_DEFEAT), {
-                        menuKey: _getMenuKeyHTMLString()
-                    }));
-                    _gameStateShown = true;
-                    audio.playMusic(
-                            (victory ? VICTORY_THEME : DEFEAT_THEME),
-                            (victory ? AMBIENT_THEME : null),
-                            config.getSetting(config.BATTLE_SETTINGS.END_THEME_CROSSFADE_DURATION));
+            } else {
+                if (!_gameStateChanged) {
+                    if (_level && _level.noHostilesPresent()) {
+                        _gameStateChanged = true;
+                        _gameStateShown = true;
+                        audio.playMusic(AMBIENT_THEME);
+                    }
                 }
             }
         }
@@ -1926,7 +1936,7 @@ define([
             _level.addRandomShips(undefined, _demoMode);
             // for levels that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
             // victory / defeat message
-            if (_level.isWon() || _level.isLost()) {
+            if ((!_demoMode && (_level.isWon() || _level.isLost())) || (_demoMode && _level.noHostilesPresent())) {
                 _gameStateShown = true;
             }
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
