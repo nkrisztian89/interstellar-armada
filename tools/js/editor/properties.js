@@ -397,6 +397,25 @@ define([
         document.crash();
     }
     /**
+     * Creates a JSON object for items described by the passed item descriptor, with all properties (except for the name property) will
+     * be set to default values
+     * @param {Editor~ItemDescriptor} itemDescriptor
+     * @param {String} name The value to set for the name property in the created object
+     * @returns {Object}
+     */
+    function getDefaultItemData(itemDescriptor, name) {
+        var result = {}, i, propertyDescriptor, propertyDescriptorNames = Object.keys(itemDescriptor);
+        for (i = 0; i < propertyDescriptorNames.length; i++) {
+            propertyDescriptor = itemDescriptor[propertyDescriptorNames[i]];
+            if (propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) {
+                result[propertyDescriptor.name] = name;
+            } else {
+                result[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, null, true);
+            }
+        }
+        return result;
+    }
+    /**
      * Adds a header (div element) to the element representing the passed Popup with the appropriate CSS class,
      * containing the element and buttons passed. The buttons also get the appropriate CSS class.
      * @param {Popup} popup
@@ -1133,6 +1152,7 @@ define([
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
-        createProperties: createProperties
+        createProperties: createProperties,
+        getDefaultItemData: getDefaultItemData
     };
 });

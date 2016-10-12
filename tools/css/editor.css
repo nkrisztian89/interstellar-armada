@@ -106,10 +106,17 @@ select {
 .dialog {
     position: absolute;
     width: 20em;
-    height: 9em;
     left: calc(50% - 10em);
     top: calc(40% - 4.5em);
     padding: 1em;
+}
+
+#newItemDialog {
+    height: 11em;
+}
+
+#exportDialog {
+    height: 9em;
 }
 
 .dialogLabel {
@@ -278,9 +285,9 @@ li.category {
 
 .itemType {
     border-top: 3px solid #3d3d3d;
-    
+
     padding-left: 0.5em;
-    
+
     font-size: 1.2vw;
     font-weight: bold;
     color: #aaaaaa;

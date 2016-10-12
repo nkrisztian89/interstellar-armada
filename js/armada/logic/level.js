@@ -570,6 +570,13 @@ define([
         return Object.keys(this._environments);
     };
     /**
+     * Creates a new environment and adds it to the list. Uses the passed JSON for the initialization of the environment
+     * @param {Object} dataJSON
+     */
+    LogicContext.prototype.createEnvironment = function (dataJSON) {
+        this._environments[dataJSON.name] = new Environment(dataJSON);
+    };
+    /**
      * Executes the passed callback function for all the stored environments, passing each environment and a constant category string as the
      * two parameters
      * @param {Function} callback
@@ -1423,6 +1430,7 @@ define([
         getDebugInfo: getDebugInfo,
         getEnvironment: _context.getEnvironment.bind(_context),
         getEnvironmentNames: _context.getEnvironmentNames.bind(_context),
+        createEnvironment: _context.createEnvironment.bind(_context),
         executeForAllEnvironments: _context.executeForAllEnvironments.bind(_context),
         Skybox: Skybox,
         Level: Level

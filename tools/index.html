@@ -16,6 +16,7 @@
         <div id="items" class="window">
             <div class="windowTitle">Items</div>
             <div class="windowToolbar">
+                <button type="button" id="newItemButton" class="toolbarButton">New</button>
                 <button type="button" id="exportButton" class="toolbarButton">Export</button>
             </div>
             <div class="windowContent">
@@ -38,6 +39,29 @@
             <div class="windowTitle">Properties</div>
             <div class="windowContent">
                 <div class="windowLabel">loading...</div>
+            </div>
+        </div>
+
+        <div id="newItemDialog" class="dialog" hidden>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Item type:</span>
+                <select id="newItemType"></select>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Category:</span>
+                <select id="newItemCategory"></select>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Copy from:</span>
+                <select id="newItemBase"></select>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Name:</span>
+                <input type="text" id="newItemName" value=""/>
+            </div>
+            <div class="dialogButtonRow">
+                <button type="button" id="newItemCreate">Create</button>
+                <button type="button" id="newItemCancel">Cancel</button>
             </div>
         </div>
 

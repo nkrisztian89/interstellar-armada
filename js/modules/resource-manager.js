@@ -410,6 +410,11 @@ define([
          * @type Function[]
          */
         this._onResourceLoadFunctionQueue = [];
+        /**
+         * The constructors associated with the various resource types (during the latest resource config load)
+         * @type Object.<String, Function>
+         */
+        this._resourceClasses = null;
     }
     // we set the Resource class as parent to add an execution queue to the resource
     // manage for when all resources have been loaded
@@ -461,6 +466,22 @@ define([
     ResourceManager.prototype.addResource = function (resourceType, resource) {
         this._resourceHolders[resourceType] = this._resourceHolders[resourceType] || new ResourceHolder(resourceType);
         return this._resourceHolders[resourceType].addResource(resource);
+    };
+    /**
+     * Similar to addResource, but creates the resource itself using the passed JSON to initialize it
+     * @param {String} resourceType
+     * @param {Object} dataJSON
+     */
+    ResourceManager.prototype.createResource = function (resourceType, dataJSON) {
+        if (!this._resourceClasses) {
+            application.showError("Cannot create resource of type '" + resourceType + "': no resource constructors were assigned!");
+            return;
+        }
+        if (!this._resourceClasses[resourceType]) {
+            application.showError("Cannot create resource of type '" + resourceType + "': no resource constructor was assigned for this resource type!");
+            return;
+        }
+        this.addResource(resourceType, new this._resourceClasses[resourceType](dataJSON));
     };
     /**
      * @param {String} resourceType
@@ -561,6 +582,7 @@ define([
      */
     ResourceManager.prototype._loadConfigFromJSON = function (configJSON, resourceClasses) {
         var resourceType, resourceArray, i;
+        this._resourceClasses = resourceClasses;
         for (resourceType in resourceClasses) {
             if (resourceClasses.hasOwnProperty(resourceType)) {
                 resourceArray = configJSON[resourceType];

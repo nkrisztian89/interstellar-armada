@@ -10,6 +10,7 @@
 /*jslint white: true, nomen: true, plusplus: true */
 
 /**
+ * @param utils Used for deep copying 
  * @param application Used for logging, configuration setup and downloading files
  * @param resources Used for loading the resource configuration and displaying it in the Resources window
  * @param constants Used for accessing the previously run version number in the local storage
@@ -27,6 +28,7 @@
  * @param properties Used to generate the content of the Properties window
  */
 define([
+    "utils/utils",
     "modules/application",
     "modules/media-resources",
     "armada/constants",
@@ -43,6 +45,7 @@ define([
     "editor/preview/weapon-preview",
     "editor/preview/spacecraft-preview"
 ], function (
+        utils,
         application, resources,
         constants, config, graphics, classes,
         level,
@@ -55,6 +58,16 @@ define([
             ITEMS_WINDOW_ID = "items",
             PREVIEW_WINDOW_ID = "preview",
             PROPERTIES_WINDOW_ID = "properties",
+            // new item
+            NEW_ITEM_BUTTON_ID = "newItemButton",
+            NEW_ITEM_DIALOG_ID = "newItemDialog",
+            NEW_ITEM_TYPE_ID = "newItemType",
+            NEW_ITEM_CATEGORY_ID = "newItemCategory",
+            NEW_ITEM_BASE_ID = "newItemBase",
+            NEW_ITEM_NAME_ID = "newItemName",
+            NEW_ITEM_CREATE_BUTTON_ID = "newItemCreate",
+            NEW_ITEM_CANCEL_BUTTON_ID = "newItemCancel",
+            // export items
             EXPORT_BUTTON_ID = "exportButton",
             EXPORT_DIALOG_ID = "exportDialog",
             EXPORT_TYPE_ID = "exportType",
@@ -62,6 +75,7 @@ define([
             EXPORT_AUTHOR_ID = "exportAuthor",
             EXPORT_EXPORT_BUTTON_ID = "exportExport",
             EXPORT_CANCEL_BUTTON_ID = "exportCancel",
+            // classes
             WINDOW_LABEL_CLASS = "windowLabel",
             WINDOW_CONTENT_CLASS = "windowContent",
             SELECTED_CLASS = "selected",
@@ -106,7 +120,11 @@ define([
                 category: "",
                 reference: null,
                 data: null
-            };
+            },
+            _resourceList,
+            _classList,
+            _environmentList,
+            _levelList;
     // ------------------------------------------------------------------------------
     // Private functions
     /**
@@ -427,25 +445,13 @@ define([
      */
     function _loadExportDialog() {
         var
-                option,
                 exportDialog = document.getElementById(EXPORT_DIALOG_ID),
                 exportType = document.getElementById(EXPORT_TYPE_ID),
                 exportName = document.getElementById(EXPORT_NAME_ID),
                 exportAuthor = document.getElementById(EXPORT_AUTHOR_ID),
                 exportExport = document.getElementById(EXPORT_EXPORT_BUTTON_ID),
                 exportCancel = document.getElementById(EXPORT_CANCEL_BUTTON_ID);
-        option = document.createElement("option");
-        option.text = common.ItemType.RESOURCE;
-        option.value = common.ItemType.RESOURCE;
-        exportType.add(option);
-        option = document.createElement("option");
-        option.text = common.ItemType.CLASS;
-        option.value = common.ItemType.CLASS;
-        exportType.add(option);
-        option = document.createElement("option");
-        option.text = common.ItemType.ENVIRONMENT;
-        option.value = common.ItemType.ENVIRONMENT;
-        exportType.add(option);
+        common.setSelectorOptions(exportType, [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT]);
         exportType.onchange = function () {
             exportName.value = exportType.value;
         };
@@ -561,14 +567,133 @@ define([
      * loaded.
      */
     function _loadItems() {
-        var
-                windowContent = document.getElementById(ITEMS_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS),
-                exportDialog = document.getElementById(EXPORT_DIALOG_ID);
+        var windowContent = document.getElementById(ITEMS_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS);
         _hideLabel(windowContent);
-        windowContent.appendChild(_createCategoryList(common.ItemType.RESOURCE));
-        windowContent.appendChild(_createCategoryList(common.ItemType.CLASS));
-        windowContent.appendChild(_createCategoryList(common.ItemType.ENVIRONMENT));
-        windowContent.appendChild(_createCategoryList(common.ItemType.LEVEL));
+
+        if (_resourceList) {
+            windowContent.removeChild(_resourceList);
+        }
+        _resourceList = _createCategoryList(common.ItemType.RESOURCE);
+        windowContent.appendChild(_resourceList);
+        if (_classList) {
+            windowContent.removeChild(_classList);
+        }
+        _classList = _createCategoryList(common.ItemType.CLASS);
+        windowContent.appendChild(_classList);
+        if (_environmentList) {
+            windowContent.removeChild(_environmentList);
+        }
+        _environmentList = _createCategoryList(common.ItemType.ENVIRONMENT);
+        windowContent.appendChild(_environmentList);
+        if (_levelList) {
+            windowContent.removeChild(_levelList);
+        }
+        _levelList = _createCategoryList(common.ItemType.LEVEL);
+        windowContent.appendChild(_levelList);
+    }
+    /**
+     * Loads the default values and sets the change handlers for the contents of the New item dialog
+     */
+    function _loadNewItemDialog() {
+        var
+                newItemDialog = document.getElementById(NEW_ITEM_DIALOG_ID),
+                newItemType = document.getElementById(NEW_ITEM_TYPE_ID),
+                newItemCategory = document.getElementById(NEW_ITEM_CATEGORY_ID),
+                newItemBase = document.getElementById(NEW_ITEM_BASE_ID),
+                newItemName = document.getElementById(NEW_ITEM_NAME_ID),
+                createButton = document.getElementById(NEW_ITEM_CREATE_BUTTON_ID),
+                cancelButton = document.getElementById(NEW_ITEM_CANCEL_BUTTON_ID),
+                getItems, create;
+        common.setSelectorOptions(newItemType, [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT]);
+        newItemType.onchange = function () {
+            switch (newItemType.value) {
+                case common.ItemType.RESOURCE:
+                    common.setSelectorOptions(newItemCategory, resources.getResourceTypes());
+                    getItems = resources.getResourceNames;
+                    create = function () {
+                        var newItemData = ((newItemBase.selectedIndex > 0) ?
+                                utils.deepCopy(resources.getResource(newItemCategory.value, newItemBase.value).getData()) :
+                                properties.getDefaultItemData(
+                                        descriptors.itemDescriptors[newItemCategory.value],
+                                        newItemName.value));
+                        newItemData.name = newItemName.value;
+                        resources.createResource(newItemCategory.value, newItemData);
+                    };
+                    break;
+                case common.ItemType.CLASS:
+                    common.setSelectorOptions(newItemCategory, classes.getClassCategories());
+                    getItems = classes.getClassNames;
+                    create = function () {
+                        var newItemData = ((newItemBase.selectedIndex > 0) ?
+                                utils.deepCopy(classes.getClass(newItemCategory.value, newItemBase.value).getData()) :
+                                properties.getDefaultItemData(
+                                        descriptors.itemDescriptors[newItemCategory.value],
+                                        newItemName.value));
+                        newItemData.name = newItemName.value;
+                        classes.createClass(newItemCategory.value, newItemData);
+                    };
+                    break;
+                case common.ItemType.ENVIRONMENT:
+                    common.setSelectorOptions(newItemCategory, [ENVIRONMENTS_CATEGORY]);
+                    getItems = level.getEnvironmentNames;
+                    create = function () {
+                        var newItemData = ((newItemBase.selectedIndex > 0) ?
+                                utils.deepCopy(level.getEnvironment(newItemBase.value).getData()) :
+                                properties.getDefaultItemData(
+                                        descriptors.itemDescriptors[newItemCategory.value],
+                                        newItemName.value));
+                        newItemData.name = newItemName.value;
+                        level.createEnvironment(newItemData);
+                    };
+                    break;
+                default:
+                    getItems = null;
+                    create = null;
+                    application.showError("Creating " + newItemType.value + " is not yet implemented!");
+            }
+            newItemCategory.onchange();
+        };
+        newItemCategory.onchange = function () {
+            if (getItems) {
+                common.setSelectorOptions(newItemBase, ["none"].concat(getItems(newItemCategory.value)));
+                newItemName.value = newItemCategory.value;
+            }
+        };
+        newItemBase.onchange = function () {
+            newItemName.value = newItemBase.value + "_copy";
+        };
+        newItemType.onchange();
+        createButton.onclick = function () {
+            var itemNames;
+            if (getItems) {
+                itemNames = getItems(newItemCategory.value);
+                if (itemNames.indexOf(newItemName.value) >= 0) {
+                    application.showError("Cannot create item: '" + newItemName.value + "' already exists!", application.ErrorSeverity.MINOR);
+                    return;
+                }
+                if (create) {
+                    create();
+                    _loadItems();
+                    newItemDialog.hidden = true;
+                }
+            }
+        };
+        cancelButton.onclick = function () {
+            newItemDialog.hidden = true;
+        };
+    }
+    /**
+     * Sets up the content for all dialogs
+     */
+    function _loadDialogs() {
+        var
+                newItemDialog = document.getElementById(NEW_ITEM_DIALOG_ID),
+                exportDialog = document.getElementById(EXPORT_DIALOG_ID);
+        document.getElementById(NEW_ITEM_BUTTON_ID).onclick = function () {
+            newItemDialog.hidden = !newItemDialog.hidden;
+        };
+        _loadNewItemDialog();
+
         document.getElementById(EXPORT_BUTTON_ID).onclick = function () {
             exportDialog.hidden = !exportDialog.hidden;
         };
@@ -595,6 +720,7 @@ define([
                     _setLabel(document.getElementById(PREVIEW_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
                     _setLabel(document.getElementById(PROPERTIES_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
                     _loadItems();
+                    _loadDialogs();
                 });
             });
         });

@@ -42,13 +42,13 @@ define([
                 VERTEX: "vertex",
                 FRAGMENT: "fragment"
             },
-    // ------------------------------------------------------------------------------
-    // constants
-    /**
-     * In the resource description file, texture resources will be initialized from the array with this name
-     * @type String
-     */
-    TEXTURE_ARRAY_NAME = "textures",
+            // ------------------------------------------------------------------------------
+            // constants
+            /**
+             * In the resource description file, texture resources will be initialized from the array with this name
+             * @type String
+             */
+            TEXTURE_ARRAY_NAME = "textures",
             /**
              * In the resource description file, cubemap resources will be initialized from the array with this name
              * @type String
@@ -1413,6 +1413,8 @@ define([
         getResourceTypes: _resourceManager.getResourceTypes.bind(_resourceManager),
         getResourceNames: _resourceManager.getResourceNames.bind(_resourceManager),
         getResource: _resourceManager.getResource.bind(_resourceManager),
+        addResource: _resourceManager.addResource.bind(_resourceManager),
+        createResource: _resourceManager.createResource.bind(_resourceManager),
         executeWhenReady: _resourceManager.executeWhenReady.bind(_resourceManager),
         executeOnResourceLoad: _resourceManager.executeOnResourceLoad.bind(_resourceManager),
         executeForAllResources: _resourceManager.executeForAllResources.bind(_resourceManager),

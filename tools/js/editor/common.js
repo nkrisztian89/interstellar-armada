@@ -53,9 +53,9 @@ define([
                 ENVIRONMENT: "environments",
                 LEVEL: "levels"
             },
-    // ------------------------------------------------------------------------------
-    // Constants
-    LABEL_CLASS = "label",
+            // ------------------------------------------------------------------------------
+            // Constants
+            LABEL_CLASS = "label",
             NUMERIC_INPUT_CLASS = "numericInput",
             COLOR_COMPONENT_CLASS = "colorComponent",
             COLOR_PICKER_CLASS = "colorPicker",
@@ -204,6 +204,19 @@ define([
         return result;
     }
     /**
+     * Sets the appropriate <option> tags for the passed <select> element to correspond to the list of options specified in the passed
+     * string list (with text contents and value attributes both being equal to the strings)
+     * @param {Element} selector
+     * @param {String[]} options
+     */
+    function setSelectorOptions(selector, options) {
+        var i, s = "";
+        for (i = 0; i < options.length; i++) {
+            s += '<option value="' + options[i] + '">' + options[i] + '</option>';
+        }
+        selector.innerHTML = s;
+    }
+    /**
      * Creates and returns an HTML <select> element storing the given options (with the same value and text)
      * @param {String[]} options The options to include in the element
      * @param {String} selected The initial text of the element (should be one of the options)
@@ -212,12 +225,11 @@ define([
      * @returns {Element}
      */
     function createSelector(options, selected, includeNone, onchange) {
-        var result = document.createElement("select"), s, i;
-        s = includeNone ? '<option value="none">none</option>' : '';
-        for (i = 0; i < options.length; i++) {
-            s += '<option value="' + options[i] + '">' + options[i] + '</option>';
+        var result = document.createElement("select");
+        if (includeNone) {
+            options = ["none"].concat(options);
         }
-        result.innerHTML = s;
+        setSelectorOptions(result, options);
         if (selected && (options.indexOf(selected) >= 0)) {
             result.value = selected;
         } else {
@@ -562,6 +574,7 @@ define([
         createButton: createButton,
         createBooleanInput: createBooleanInput,
         createNumericInput: createNumericInput,
+        setSelectorOptions: setSelectorOptions,
         createSelector: createSelector,
         createColorPicker: createColorPicker,
         setColorForPicker: setColorForPicker,

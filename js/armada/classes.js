@@ -3412,6 +3412,7 @@ define([
         getClassCategories: getClassCategories,
         getClassNames: getClassNames,
         getClass: getClass,
+        createClass: _classManager.createResource.bind(_classManager),
         EquipmentProfile: EquipmentProfile,
         ObjectView: ObjectView,
         SceneView: SceneView,
