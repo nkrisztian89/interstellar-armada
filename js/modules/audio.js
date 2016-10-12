@@ -129,22 +129,22 @@ define([
                  */
                 MUSIC: 2
             },
-    /**
-     * @enum {String}
-     * Encompasses the possible panning models for panner nodes
-     * @type Object
-     */
-    PanningModel = {
-        EQUAL_POWER: "equalpower",
-        HRTF: "HRTF"
-    },
-    // ----------------------------------------------------------------------
-    // Constants
-    /**
-     * When calling a ramp function without a duration parameter, this duration is used
-     * @type Number
-     */
-    DEFAULT_RAMP_DURATION = 0.010,
+            /**
+             * @enum {String}
+             * Encompasses the possible panning models for panner nodes
+             * @type Object
+             */
+            PanningModel = {
+                EQUAL_POWER: "equalpower",
+                HRTF: "HRTF"
+            },
+            // ----------------------------------------------------------------------
+            // Constants
+            /**
+             * When calling a ramp function without a duration parameter, this duration is used
+             * @type Number
+             */
+            DEFAULT_RAMP_DURATION = 0.010,
             /**
              * When creating a sound source without a rolloff factor parameter, this value is used
              * @type Number
@@ -540,11 +540,10 @@ define([
         var /** @type SoundClip */  clipToStackTo;
         if (_buffers[this._sampleName]) {
             if (this._playing) {
-                if (this._loop) {
-                    return;
-                }
                 if (restart) {
                     this.stopPlaying();
+                } else if (this._loop) {
+                    return;
                 }
             }
             // stacking if we should

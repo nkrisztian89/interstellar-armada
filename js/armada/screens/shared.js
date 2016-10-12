@@ -13,18 +13,22 @@
  * 
  * @param resources Used to load and access the sound effects for buttons
  * @param components Used for constants (CSS class names)
- * @param config Used to access which sound effects to load
+ * @param config Used to access which sound effects and music to load
+ * @param audio Used to initialize music
  */
 define([
     "modules/media-resources",
     "modules/components",
-    "armada/configuration"
-], function (resources, components, config) {
+    "armada/configuration",
+    "armada/audio"
+], function (resources, components, config, audio) {
     "use strict";
     var
             exports = {
                 // ------------------------------------------------------------------------------
                 // Constants
+                // music
+                MENU_THEME: "menu",
                 // components
                 SELECTOR_SOURCE: "selector.html",
                 SELECTOR_CSS: "selector.css",
@@ -76,14 +80,14 @@ define([
                 INGAME_MENU_SCREEN_CSS: "ingame-menu.css",
                 INGAME_MENU_CONTAINER_ID: "menuContainer"
             },
-    // ------------------------------------------------------------------------------
-    // Private variables
-    /**
-     * Stores the sound source that can be used to play the button select sound (played when the player hovers over a button or selects it
-     * with the arrow keys)
-     * @type SoundSource
-     */
-    _buttonSelectSound,
+            // ------------------------------------------------------------------------------
+            // Private variables
+            /**
+             * Stores the sound source that can be used to play the button select sound (played when the player hovers over a button or selects it
+             * with the arrow keys)
+             * @type SoundSource
+             */
+            _buttonSelectSound,
             /**
              * Stores the sound source that can be used to play the button click sound (played when the player clicks on or activates an
              * enabled button)
@@ -96,19 +100,20 @@ define([
      * Initiates the loading of the sound effects used on all screens.
      * @param {Function} [callback] If given, this function is executed once all sound effects are loaded
      */
-    exports.initSounds = function (callback) {
+    exports.initAudio = function (callback) {
         var s1, s2;
         s1 = resources.getSoundEffect(config.getSetting(config.GENERAL_SETTINGS.BUTTON_SELECT_SOUND).name);
         s2 = resources.getSoundEffect(config.getSetting(config.GENERAL_SETTINGS.BUTTON_CLICK_SOUND).name);
+        audio.initMusic(config.getSetting(config.GENERAL_SETTINGS.MENU_MUSIC), exports.MENU_THEME, true);
         if ((s1 && !s1.isLoaded() && !s1.hasError()) || (s2 && !s2.isLoaded() && !s2.hasError())) {
-            resources.requestResourceLoad();
             resources.executeWhenReady(function () {
                 _buttonSelectSound = s1 && s1.createSoundClip(config.getSetting(config.GENERAL_SETTINGS.BUTTON_SELECT_SOUND).volume);
                 _buttonClickSound = s2 && s2.createSoundClip(config.getSetting(config.GENERAL_SETTINGS.BUTTON_CLICK_SOUND).volume);
-                if (callback) {
-                    callback();
-                }
             });
+        }
+        resources.requestResourceLoad();
+        if (callback) {
+            resources.executeWhenReady(callback);
         }
     };
     /**

@@ -230,6 +230,27 @@ define([
             type: "string"
         },
         /**
+         * The default duration of the fade in of music themes (when no theme is playing), in seconds
+         */
+        MUSIC_FADE_IN_DURATION: {
+            name: "musicFadeInDuration",
+            type: "number"
+        },
+        /**
+         * The default duration of the crossfade between different music themes (e.g. anticipation -> combat), in seconds
+         */
+        THEME_CROSSFADE_DURATION: {
+            name: "themeCrossfadeDuration",
+            type: "number"
+        },
+        /**
+         * The default duration of the fade out of music themes (when no theme is following), in seconds
+         */
+        MUSIC_FADE_OUT_DURATION: {
+            name: "musicFadeOutDuration",
+            type: "number"
+        },
+        /**
          * The descriptor for the sound effect that should play when the player selects a button on a screen (hover over / navigates to it
          * with the keyboard)
          */
@@ -1343,13 +1364,6 @@ define([
         DEFEAT_MUSIC: {
             name: "defeatMusic",
             type: "string"
-        },
-        /**
-         * The duration of the crossfade between different music themes during battle (e.g. anticipation -> combat), in seconds
-         */
-        THEME_CROSSFADE_DURATION: {
-            name: "themeCrossfadeDuration",
-            type: "number"
         },
         /**
          * The duration while the combat theme is kept playing during battle after a spacecraft fires at a hostile target, in seconds

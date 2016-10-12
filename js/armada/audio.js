@@ -15,16 +15,20 @@
  * @param application Using the application module for error displaying functionality
  * @param asyncResource AudioSettingsContext is an AsynchResource subclass
  * @param audio Used for actually setting the volumes
+ * @param resources Used for loading music resources
  * @param constants Used to access common game constants
+ * @param config Used for accessing music fading setting values
  */
 define([
     "utils/types",
     "modules/application",
     "modules/async-resource",
     "modules/audio",
+    "modules/media-resources",
     "armada/constants",
+    "armada/configuration",
     "utils/polyfill"
-], function (types, application, asyncResource, audio, constants) {
+], function (types, application, asyncResource, audio, resources, constants, config) {
     "use strict";
     var
             // --------------------------------------------------------------------------------------------
@@ -57,7 +61,34 @@ define([
              * @type String
              */
             SFX_VOLUME_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "sfxVolume",
-            // ............................................................................................
+            // --------------------------------------------------------------------------------------------
+            // Private variables
+            /**
+             * The ID of the currently playing music theme
+             * @type String
+             */
+            _currentTheme = null,
+            /**
+             * An associative array storing the sound sources used to play the various tracks during battle. The keys are the theme names.
+             * @type Object.<String, SoundClip>
+             */
+            _music = {},
+            /**
+             * Cached setting of the duration of fade in of music themes, in seconds
+             * @type Number
+             */
+            _musicFadeInDuration,
+            /**
+             * Cached setting of the duration of the crossfade between different music themes during battle (e.g. anticipation -> combat), 
+             * in seconds
+             * @type Number
+             */
+            _themeCrossfadeDuration,
+            /**
+             * Cached setting of the duration of fade out of music themes, in seconds
+             * @type Number
+             */
+            _musicFadeOutDuration,
             /**
              * Stores a default context the methods of which are exposed in the interface of this module.
              * @type AudioSettingsContext
@@ -275,8 +306,97 @@ define([
         return new audio.SoundSource(position, this._rolloffFactor, this._panningModel);
     };
     // -------------------------------------------------------------------------
+    // Public functions
+    /**
+     * Sets up the music resource with the passed name to be used with the passed theme ID. If necessary, marks the resource for loading
+     * so after the resources are loaded the music can be played by calling playMusic() with the same theme ID.
+     * @param {String} musicName The name of the music resource to associate with the theme ID
+     * @param {String} theme The theme ID that can be used later to play this music
+     * @param {Boolean} loop Whether the music should be set up as looping or not
+     */
+    function initMusic(musicName, theme, loop) {
+        var m;
+        if (!_music[theme] || (_music[theme].name !== musicName)) {
+            m = resources.getMusic(musicName);
+            if (m && !m.hasError()) {
+                resources.executeWhenReady(function () {
+                    _music[theme] = {
+                        name: musicName,
+                        clip: m.createSoundClip(1, loop)
+                    };
+                });
+            } else {
+                application.log("Could not initialize music from resource '" + musicName + "' for theme ID '" + theme + "'!");
+            }
+        }
+    }
+    /**
+     * Starts to play the music theme previously associated with the passed theme ID, stopping the current one (if any), possibly with a 
+     * crossfade.
+     * @param {String} theme The ID of the theme to start playing
+     * @param {String} [followupTheme] If a non-looping theme is chosen (e.g. victory / defeat), this theme will be played after it finishes
+     * (with the same crossfade applied)
+     * @param {Number} [fadeDuration] If greater than zero, the a linear crossfade will happen from the current theme to the new one, 
+     * lasting the given duration. In seconds! If not given, a default fade in / fade out / crossfade duration is chosen from the settings
+     */
+    function playMusic(theme, followupTheme, fadeDuration) {
+        if (fadeDuration === undefined) {
+            fadeDuration = _currentTheme ?
+                    (theme ? _themeCrossfadeDuration : _musicFadeOutDuration) :
+                    (theme ? _musicFadeInDuration : 0);
+        }
+        if (theme !== _currentTheme) {
+            if (_currentTheme && _music[_currentTheme]) {
+                if (fadeDuration > 0) {
+                    _music[_currentTheme].clip.rampVolume(0, fadeDuration);
+                } else {
+                    _music[_currentTheme].clip.stopPlaying();
+                }
+            }
+            if (theme) {
+                if (!_music[theme]) {
+                    application.log("Warning: music associated with theme '" + theme + "' cannot be played, because it is not loaded!");
+                } else {
+                    _music[theme].clip.play(true, followupTheme ? function () {
+                        // start the followup music only if we are still playing the same theme it is followup for
+                        if (_currentTheme === theme) {
+                            playMusic(followupTheme, null, fadeDuration);
+                        }
+                    } : null);
+                    if (fadeDuration > 0) {
+                        _music[theme].clip.setVolume(0);
+                        _music[theme].clip.rampVolume(1, fadeDuration);
+                    } else {
+                        _music[theme].clip.setVolume(1);
+                    }
+                }
+            }
+            _currentTheme = theme;
+        }
+    }
+    /**
+     * Stops all (any) theme music tracks that are playing. The stop is instant (abrupt), use playMusic(null) for a fadeout effect
+     */
+    function stopMusic() {
+        var themes = Object.keys(_music), i;
+        for (i = 0; i < themes.length; i++) {
+            if (_music[themes[i]]) {
+                _music[themes[i]].clip.stopPlaying();
+            }
+        }
+        _currentTheme = null;
+    }
+    // -------------------------------------------------------------------------
     // Initialization
     _context = new AudioSettingsContext();
+    // -------------------------------------------------------------------------
+    // Caching frequently needed setting values
+    config.executeWhenReady(function () {
+        // music
+        _musicFadeInDuration = config.getSetting(config.GENERAL_SETTINGS.MUSIC_FADE_IN_DURATION);
+        _themeCrossfadeDuration = config.getSetting(config.GENERAL_SETTINGS.THEME_CROSSFADE_DURATION);
+        _musicFadeOutDuration = config.getSetting(config.GENERAL_SETTINGS.MUSIC_FADE_OUT_DURATION);
+    });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -294,6 +414,9 @@ define([
         setSFXVolume: _context.setSFXVolume.bind(_context),
         resetSFXVolume: _context.resetSFXVolume.bind(_context),
         createSoundSource: _context.createSoundSource.bind(_context),
-        executeWhenReady: _context.executeWhenReady.bind(_context)
+        executeWhenReady: _context.executeWhenReady.bind(_context),
+        initMusic: initMusic,
+        playMusic: playMusic,
+        stopMusic: stopMusic
     };
 });

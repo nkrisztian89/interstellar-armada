@@ -103,7 +103,7 @@ define([
                     _progressBar.value = 5;
                     components.clearStoredDOMModels();
                     localStorage[constants.VERSION_LOCAL_STORAGE_ID] = game.getVersion();
-                    armadaScreens.initSounds(callback);
+                    armadaScreens.initAudio(callback);
                 });
             });
         });

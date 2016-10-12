@@ -84,6 +84,9 @@
             "luminosityFactorsArrayName": "luminosityFactors",
             "useVerticalCameraValues": true,
             "menuMusic": "menu",
+            "musicFadeInDuration": 0.1,
+            "themeCrossfadeDuration": 1.5,
+            "musicFadeOutDuration": 0.1,
             "buttonSelectSound": {
                 "name": "buttonHover",
                 "volume": 0.5
@@ -393,7 +396,6 @@
             "combatMusic": "combat",
             "victoryMusic": "victory",
             "defeatMusic": "defeat",
-            "themeCrossfadeDuration": 1.5,
             "combatThemeDurationAfterFire": 10,
             "endThemeCrossfadeDuration": 0.2
         },
