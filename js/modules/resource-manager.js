@@ -379,6 +379,16 @@ define([
             this._resourceNames[this._resourceNames.indexOf(oldName)] = newName;
         }
     };
+    /**
+     * Changes the order in which the stored resource names are returned by moving one name into a new posiiton, specified by another name
+     * (after which it will be inserted)
+     * @param {String} nameOfResourceToMove
+     * @param {String} targetResourceName
+     */
+    ResourceHolder.prototype.moveResourceAfter = function (nameOfResourceToMove, targetResourceName) {
+        this._resourceNames.splice(this._resourceNames.indexOf(nameOfResourceToMove), 1);
+        this._resourceNames.splice(this._resourceNames.indexOf(targetResourceName) + 1, 0, nameOfResourceToMove);
+    };
     // ############################################################################################x
     /**
      * @class
@@ -640,7 +650,16 @@ define([
     ResourceManager.prototype.renameResource = function (resourceType, oldName, newName) {
         this._resourceHolders[resourceType].renameResource(oldName, newName);
     };
-
+    /**
+     * Changes the order in which the stored resource names are returned by moving one name into a new posiiton, specified by another name
+     * (after which it will be inserted)
+     * @param {String} resourceType The type of the resource to move
+     * @param {String} nameOfResourceToMove
+     * @param {String} targetResourceName
+     */
+    ResourceManager.prototype.moveResourceAfter = function (resourceType, nameOfResourceToMove, targetResourceName) {
+        this._resourceHolders[resourceType].moveResourceAfter(nameOfResourceToMove, targetResourceName);
+    };
     /**
      * Executes the given callback function for all the stored resources (of all types), passing each resource to it as its only parameter.
      * @param {Function} callback

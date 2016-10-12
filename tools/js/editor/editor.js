@@ -83,8 +83,12 @@ define([
             CATEGORY_CLASS = "category",
             ELEMENT_LIST_CLASS = "elementList",
             ELEMENT_CLASS = "element",
+            ELEMENT_INSERTING_CLASS = "inserting",
+            ELEMENT_DRAGOVER_CLASS = "dragover",
             ENVIRONMENTS_CATEGORY = "environments",
             LEVELS_CATEGORY = "levels",
+            ID_SEPARATOR = "_",
+            ELEMENT_LI_ID_PREFIX = "element_",
             PREVIEW_OPTIONS_ID = "previewOptions",
             PREVIEW_CANVAS_ID = "previewCanvas",
             PREVIEW_INFO_ID = "previewInfo",
@@ -383,6 +387,113 @@ define([
         };
     }
     /**
+     * Returns a string that can be used as a drag and drop dataTransfer type for items of the passed type and category
+     * @param {String} type
+     * @param {String} category
+     * @returns {String}
+     */
+    function _getItemDataTransferType(type, category) {
+        return (type + "/" + category).toLowerCase();
+    }
+    /**
+     * Creates and returns a handler for the dragstart event for item elements (<li> tags)
+     * @param {Element} element
+     * @param {String} type
+     * @param {String} category
+     * @returns {Function}
+     */
+    function _createElementDragStartHandler(element, type, category) {
+        var dataTransferType = _getItemDataTransferType(type, category);
+        return function (event) {
+            event.dataTransfer.setData(dataTransferType, element.id);
+            element.classList.add(ELEMENT_INSERTING_CLASS);
+        };
+    }
+    /**
+     * Creates and returns a handler for the dragend event for item elements (<li> tags)
+     * @param {Element} element
+     * @returns {Function}
+     */
+    function _createElementDragEndHandler(element) {
+        return function () {
+            element.classList.remove(ELEMENT_INSERTING_CLASS);
+        };
+    }
+    /**
+     * Creates and returns a handler for the dragenter event for item elements (<li> tags)
+     * @param {Element} element
+     * @param {String} type
+     * @param {String} category
+     * @returns {Function}
+     */
+    function _createElementDragEnterHandler(element, type, category) {
+        var dataTransferType = _getItemDataTransferType(type, category);
+        return function (event) {
+            var hasCorrectType = event.dataTransfer.types.indexOf(dataTransferType) >= 0;
+            if (hasCorrectType && (event.dataTransfer.getData(dataTransferType) !== element.id)) {
+                element.classList.add(ELEMENT_DRAGOVER_CLASS);
+                event.preventDefault();
+            }
+        };
+    }
+    /**
+     * Creates and returns a handler for the dragover event for item elements (<li> tags)
+     * @param {Element} element
+     * @param {String} type
+     * @param {String} category
+     * @returns {Function}
+     */
+    function _createElementDragOverHandler(element, type, category) {
+        var dataTransferType = _getItemDataTransferType(type, category);
+        return function (event) {
+            var hasCorrectType = event.dataTransfer.types.indexOf(dataTransferType) >= 0;
+            if (hasCorrectType && (event.dataTransfer.getData(dataTransferType) !== element.id)) {
+                event.preventDefault();
+            }
+        };
+    }
+    /**
+     * Creates and returns a handler for the dragleave event for item elements (<li> tags)
+     * @param {Element} element
+     * @param {String} type
+     * @param {String} category
+     * @returns {Function}
+     */
+    function _createElementDragLeaveHandler(element, type, category) {
+        var dataTransferType = _getItemDataTransferType(type, category);
+        return function (event) {
+            var hasCorrectType = event.dataTransfer.types.indexOf(dataTransferType) >= 0;
+            if (hasCorrectType) {
+                element.classList.remove(ELEMENT_DRAGOVER_CLASS);
+            }
+        };
+    }
+    /**
+     * Creates and returns a handler for the drop event for item elements (<li> tags)
+     * @param {Element} element
+     * @param {String} type
+     * @param {String} category
+     * @returns {Function}
+     */
+    function _createElementDropHandler(element, type, category) {
+        var dataTransferType = _getItemDataTransferType(type, category);
+        return function (event) {
+            var otherElement = document.getElementById(event.dataTransfer.getData(dataTransferType));
+            element.classList.remove(ELEMENT_DRAGOVER_CLASS);
+            element.parentNode.insertBefore(otherElement, element.nextSibling);
+            switch (type) {
+                case common.ItemType.RESOURCE:
+                    resources.moveResourceAfter(category, otherElement.firstChild.textContent, element.firstChild.textContent);
+                    break;
+                case common.ItemType.CLASS:
+                    classes.moveClassAfter(category, otherElement.firstChild.textContent, element.firstChild.textContent);
+                    break;
+                default:
+                    application.showError("Cannot move element of type '" + type + "'!");
+            }
+        };
+    }
+    /**
      * Returns the stringified info object that can be embedded at the beginning of exported files (e.g. classes)
      * @param {String} name The name to be included in the info
      * @param {String} author The author to be included in the info
@@ -547,11 +658,22 @@ define([
             items = getItems(categories[i]);
             for (j = 0; j < items.length; j++) {
                 itemElement = document.createElement("li");
+                itemElement.setAttribute("id", ELEMENT_LI_ID_PREFIX + itemType + ID_SEPARATOR + categories[i] + ID_SEPARATOR + items[j]);
+                itemElement.classList.add(ELEMENT_CLASS);
+                itemElement.draggable = (itemType === common.ItemType.RESOURCE) || (itemType === common.ItemType.CLASS);
                 itemSpan = document.createElement("span");
                 itemSpan.classList.add(ELEMENT_CLASS);
                 itemSpan.innerHTML = items[j];
                 itemElement.appendChild(itemSpan);
                 itemSpan.onclick = _createElementClickHandler(itemSpan, itemType, categories[i]);
+                if (itemElement.draggable) {
+                    itemElement.ondragstart = _createElementDragStartHandler(itemElement, itemType, categories[i], itemElement.id);
+                    itemElement.ondragend = _createElementDragEndHandler(itemElement);
+                    itemElement.ondragenter = _createElementDragEnterHandler(itemElement, itemType, categories[i]);
+                    itemElement.ondragover = _createElementDragOverHandler(itemElement, itemType, categories[i]);
+                    itemElement.ondragleave = _createElementDragLeaveHandler(itemElement, itemType, categories[i]);
+                    itemElement.ondrop = _createElementDropHandler(itemElement, itemType, categories[i]);
+                }
                 itemList.appendChild(itemElement);
             }
             itemList.hidden = true;

@@ -318,6 +318,14 @@ span.element.selected {
     font-weight: bold;
 }
 
+li.element.inserting {
+    opacity: 0.3;
+}
+
+li.element.dragover {
+    padding-bottom: 1.0em;
+}
+
 /* -------------------------------------------------------------------- */
 /* preview */
 

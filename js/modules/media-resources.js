@@ -1418,7 +1418,8 @@ define([
         executeWhenReady: _resourceManager.executeWhenReady.bind(_resourceManager),
         executeOnResourceLoad: _resourceManager.executeOnResourceLoad.bind(_resourceManager),
         executeForAllResources: _resourceManager.executeForAllResources.bind(_resourceManager),
-        renameResource: _resourceManager.renameResource.bind(_resourceManager)
+        renameResource: _resourceManager.renameResource.bind(_resourceManager),
+        moveResourceAfter: _resourceManager.moveResourceAfter.bind(_resourceManager)
     };
 });
 

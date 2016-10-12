@@ -3419,6 +3419,7 @@ define([
         requestLoad: requestLoad,
         handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
         executeForAllClasses: _classManager.executeForAllResources.bind(_classManager),
-        renameClass: _classManager.renameResource.bind(_classManager)
+        renameClass: _classManager.renameResource.bind(_classManager),
+        moveClassAfter: _classManager.moveResourceAfter.bind(_classManager)
     };
 });
