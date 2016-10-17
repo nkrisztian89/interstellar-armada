@@ -1671,7 +1671,7 @@
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
                 "name": "thruster",
-                "volume": 2.5
+                "volume": 4.0
             }
         }],
     "spacecraftTypes": [{

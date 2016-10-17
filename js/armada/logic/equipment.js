@@ -1323,7 +1323,7 @@ define([
             }
         }
         if (this._thrusterSoundClip) {
-            this._thrusterSoundClip.rampVolume(this._getSoundVolume(), THRUSTER_SOUND_VOLUME_RAMP_DURATION, true, true);
+            this._thrusterSoundClip.rampVolume(this._getSoundVolume() * this._class.getThrusterSoundVolume(), THRUSTER_SOUND_VOLUME_RAMP_DURATION, true, true);
         }
     };
     /**

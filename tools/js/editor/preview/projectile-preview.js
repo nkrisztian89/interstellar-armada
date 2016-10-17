@@ -177,6 +177,7 @@ define([
     // The public interface of the module
     return {
         refresh: refresh,
+        clear: preview.clear,
         handleDataChanged: preview.handleDataChanged,
         handleStartEdit: handleStartEdit,
         handleStopEdit: handleStopEdit

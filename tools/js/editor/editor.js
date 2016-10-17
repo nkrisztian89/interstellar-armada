@@ -168,6 +168,14 @@ define([
         label.innerHTML = text;
     }
     /**
+     * Clears the currently open preview (if any), so that a new one can be opened (or the missing preview text shown)
+     */
+    function _clearPreview() {
+        if ((_selectedItem.type !== common.ItemType.NONE) && (_previews[_selectedItem.category])) {
+            _previews[_selectedItem.category].clear();
+        }
+    }
+    /**
      * Loads the content of the Preview window for the currently selected element.
      */
     function _loadPreview() {
@@ -357,6 +365,7 @@ define([
      */
     function _selectItem(type, name, category) {
         if ((_selectedItem.type !== type) || (_selectedItem.name !== name) || (_selectedItem.category !== category)) {
+            _clearPreview();
             _selectedItem.type = type;
             _selectedItem.name = name;
             _selectedItem.category = category;

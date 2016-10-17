@@ -1856,6 +1856,14 @@ define([
     PropulsionClass.prototype.createThrusterSoundClip = function (soundSource) {
         return _createSoundClip(this._thrusterSound, true, soundSource);
     };
+    /**
+     * Returns the nominal volume to use for thruster sound effects for this propulsion class (tha actual volume can be set based on the
+     * burn level of the thrusters)
+     * @returns {Number}
+     */
+    PropulsionClass.prototype.getThrusterSoundVolume = function () {
+        return this._thrusterSound.volume;
+    };
     // ##############################################################################
     /**
      * @class A type of spacecraft. This a more general classification of 

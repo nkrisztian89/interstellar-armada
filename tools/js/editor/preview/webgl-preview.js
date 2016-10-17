@@ -245,7 +245,7 @@ define([
                         "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
                         ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD()));
             }
-            if (_currentContext.functions.getInfo) {
+            if (_currentContext && _currentContext.functions.getInfo) {
                 infoSections.push(_currentContext.functions.getInfo());
             }
             if (_fps) {
@@ -278,7 +278,7 @@ define([
             }
             _scene.cleanUp();
             _scene.render(_context, dt);
-            if (_currentContext.functions.animate) {
+            if (_currentContext && _currentContext.functions.animate) {
                 _currentContext.functions.animate(dt);
             }
             _fps = dt ? Math.round(1000 / dt) : 0;
@@ -739,6 +739,12 @@ define([
         window.addEventListener("resize", _handleResize);
     }
     /**
+     * Clears the preview and its current context so that a new preview (or the same with a different context) can be opened
+     */
+    function clear() {
+        setContext(null);
+    }
+    /**
      * Updates the preview (refreshes if needed) in case the property with the given name changed
      * @param {String} name
      */
@@ -773,6 +779,7 @@ define([
         clearSettingsForNewItem: clearSettingsForNewItem,
         updateCanvas: updateCanvas,
         refresh: refresh,
+        clear: clear,
         handleDataChanged: handleDataChanged
     };
 });
