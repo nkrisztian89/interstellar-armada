@@ -181,6 +181,7 @@ define([
                             particleEmitterDescriptors[i].getSpawnNumber(),
                             particleEmitterDescriptors[i].getSpawnTime(),
                             particleEmitterDescriptors[i].getDuration(),
+                            particleEmitterDescriptors[i].getDelay(),
                             this.getEmitterParticleConstructor(i));
                     break;
                 case classes.ParticleEmitterType.UNIDIRECTIONAL:
@@ -195,6 +196,7 @@ define([
                             particleEmitterDescriptors[i].getSpawnNumber(),
                             particleEmitterDescriptors[i].getSpawnTime(),
                             particleEmitterDescriptors[i].getDuration(),
+                            particleEmitterDescriptors[i].getDelay(),
                             this.getEmitterParticleConstructor(i));
                     break;
                 case classes.ParticleEmitterType.PLANAR:
@@ -209,6 +211,7 @@ define([
                             particleEmitterDescriptors[i].getSpawnNumber(),
                             particleEmitterDescriptors[i].getSpawnTime(),
                             particleEmitterDescriptors[i].getDuration(),
+                            particleEmitterDescriptors[i].getDelay(),
                             this.getEmitterParticleConstructor(i));
                     break;
                 default:

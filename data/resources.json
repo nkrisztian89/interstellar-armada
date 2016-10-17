@@ -3,8 +3,8 @@
         "name": "resources",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0:366 (2016.09.08.)",
-        "creationTime": "Sat Sep 10 2016 01:54:16 GMT+0200 (CEST)"
+        "version": "0.4.0-dev:387 (2016.10.12.)",
+        "creationTime": "Thu Oct 13 2016 01:01:11 GMT+0200 (CEST)"
     },
     "textures": [{
             "name": "white",
@@ -1185,9 +1185,12 @@
             "name": "fighterExplosion",
             "samples": ["explosion/fighterExplosion.ogg"]
         }, {
+            "name": "smallShipExplosion",
+            "samples": ["explosion/smallShipExplosion.ogg"]
+        }, {
             "name": "largeShipExplosion",
             "samples": ["explosion/largeShipExplosion.ogg"]
-        },{
+        }, {
             "name": "beep_targeting",
             "samples": ["computer/beep_targeting.wav"]
         }, {

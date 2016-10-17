@@ -39,10 +39,11 @@ define([
      * @param {Number} spawnTime The duration of one spawn round in milliseconds
      * @param {Number} duration The duration of particle generation in milliseconds. If zero, particle generation
      * will go on as long as the emitter exists.
+     * @param {Number} [delay=0] The amount of time to elapse from the activation of the emitter until the initial spawning
      * @param {Function} createParticleFunction The function that will be called to generate new particles. Must
      * have no parameters and return a new instance of the Particle class
      */
-    function ParticleEmitter(positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, createParticleFunction) {
+    function ParticleEmitter(positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, delay, createParticleFunction) {
         /**
          * The position of the center of the emitter area, relative to the center of the particle system
          * @type Float32Array
@@ -96,6 +97,11 @@ define([
          * @type Number
          */
         this._duration = duration;
+        /**
+         * The amount of time to elapse from the activation of the emitter until the initial spawning
+         * @type Number
+         */
+        this._delay = delay || 0;
         /**
          * The time that passed between the creation of this emitter and the end of the last spawning round,
          * in milliseconds
@@ -191,25 +197,34 @@ define([
         if (particleCountFactor === undefined) {
             particleCountFactor = 1;
         }
-        if (this._age === 0) {
-            n = Math.round(this._initialNumber * particleCountFactor);
-            if ((this._initialNumber > 0) && (n < 1)) {
-                n = 1;
-            }
-            for (i = 0; i < n; i++) {
-                particles.push(this._emitParticle());
+        if (this._delay > 0) {
+            this._delay -= dt;
+            if (this._delay <= 0) {
+                dt = -this._delay;
+                this._delay = 0;
             }
         }
-        this._age += dt;
-        while (((this._age - this._lastSpawn) > this._spawnTime) && ((this._lastSpawn < this._duration) || (this._duration === 0))) {
-            n = Math.round(this._spawnNumber * particleCountFactor);
-            if ((this._spawnNumber > 0) && (n < 1)) {
-                n = 1;
+        if (this._delay === 0) {
+            if (this._age === 0) {
+                n = Math.round(this._initialNumber * particleCountFactor);
+                if ((this._initialNumber > 0) && (n < 1)) {
+                    n = 1;
+                }
+                for (i = 0; i < n; i++) {
+                    particles.push(this._emitParticle());
+                }
             }
-            for (i = 0; i < n; i++) {
-                particles.push(this._emitParticle());
+            this._age += dt;
+            while (((this._age - this._lastSpawn) > this._spawnTime) && ((this._lastSpawn < this._duration) || (this._duration === 0))) {
+                n = Math.round(this._spawnNumber * particleCountFactor);
+                if ((this._spawnNumber > 0) && (n < 1)) {
+                    n = 1;
+                }
+                for (i = 0; i < n; i++) {
+                    particles.push(this._emitParticle());
+                }
+                this._lastSpawn += this._spawnTime;
             }
-            this._lastSpawn += this._spawnTime;
         }
         return particles;
     };
@@ -240,11 +255,12 @@ define([
      * @param {Number} spawnTime The duration of one spawn round in milliseconds
      * @param {Number} duration The duration of particle generation in milliseconds. If zero, particle generation
      * will go on as long as the emitter exists.
+     * @param {Number} [delay=0] The amount of time to elapse from the activation of the emitter until the initial spawning
      * @param {Function} particleConstructor The function that will be called to generate new particles. Must
      * have no parameters and return a new instance of the Particle class
      */
-    function OmnidirectionalParticleEmitter(positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
-        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
+    function OmnidirectionalParticleEmitter(positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, delay, particleConstructor) {
+        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, delay, particleConstructor);
         this._calculateSize();
     }
     OmnidirectionalParticleEmitter.prototype = new ParticleEmitter();
@@ -284,11 +300,12 @@ define([
      * @param {Number} spawnTime The duration of one spawn round in milliseconds
      * @param {Number} duration The duration of particle generation in milliseconds. If zero, particle generation
      * will go on as long as the emitter exists.
+     * @param {Number} [delay=0] The amount of time to elapse from the activation of the emitter until the initial spawning
      * @param {Function} particleConstructor The function that will be called to generate new particles. Must
      * have no parameters and return a new instance of the Particle class
      */
-    function UnidirectionalParticleEmitter(positionMatrix, orientationMatrix, dimensions, direction, directionSpread, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
-        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
+    function UnidirectionalParticleEmitter(positionMatrix, orientationMatrix, dimensions, direction, directionSpread, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, delay, particleConstructor) {
+        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, delay, particleConstructor);
         /**
          * The direction of the starting velocity of the particles will be generated around this vector
          * @type Number[3]
@@ -342,11 +359,12 @@ define([
      * @param {Number} spawnTime The duration of one spawn round in milliseconds
      * @param {Number} duration The duration of particle generation in milliseconds. If zero, particle generation
      * will go on as long as the emitter exists.
+     * @param {Number} [delay=0] The amount of time to elapse from the activation of the emitter until the initial spawning
      * @param {Function} particleConstructor The function that will be called to generate new particles. Must
      * have no parameters and return a new instance of the Particle class
      */
-    function PlanarParticleEmitter(positionMatrix, orientationMatrix, dimensions, planeNormal, directionSpread, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor) {
-        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, particleConstructor);
+    function PlanarParticleEmitter(positionMatrix, orientationMatrix, dimensions, planeNormal, directionSpread, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, delay, particleConstructor) {
+        ParticleEmitter.call(this, positionMatrix, orientationMatrix, dimensions, velocity, velocitySpread, initialNumber, spawnNumber, spawnTime, duration, delay, particleConstructor);
         /**
          * The normal vector of the plane in or around which the velocity vectors
          * of the generated particles will fall

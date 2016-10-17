@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:382 (2016.10.11.)",
-        "creationTime": "Tue Oct 11 2016 23:09:47 GMT+0200 (CEST)"
+        "version": "0.4.0-dev:388 (2016.10.17.)",
+        "creationTime": "Mon Oct 17 2016 03:15:57 GMT+0200 (CEST)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -820,11 +820,12 @@
                         }]
                 }, {
                     "type": "omnidirectional",
-                    "dimensions": [50, 150, 50],
+                    "dimensions": [50, 100, 50],
                     "initialNumber": 1,
                     "spawnNumber": 1,
-                    "spawnTime": 150,
-                    "duration": 300,
+                    "spawnTime": 500,
+                    "duration": 500,
+                    "delay": 300,
                     "shader": "particle",
                     "texture": "flare",
                     "particleStates": [{
@@ -839,12 +840,12 @@
                 }, {
                     "type": "omnidirectional",
                     "dimensions": [30, 90, 30],
-                    "velocity": 80,
-                    "velocitySpread": 30,
+                    "velocity": 280,
+                    "velocitySpread": 60,
                     "initialNumber": 25,
                     "spawnNumber": 25,
-                    "spawnTime": 100,
-                    "duration": 400,
+                    "spawnTime": 250,
+                    "duration": 500,
                     "shader": "particle",
                     "texture": "explosion",
                     "particleStates": [{
@@ -854,12 +855,13 @@
                         }, {
                             "color": [1, 1, 0, 1],
                             "size": 2.5,
-                            "timeToReach": 700
+                            "timeToReach": 500
                         }, {
                             "color": [1, 0, 0, 1],
                             "size": 0,
-                            "timeToReach": 700
-                        }]
+                            "timeToReach": 300
+                        }],
+                    "delay": 300
                 }, {
                     "type": "omnidirectional",
                     "dimensions": [40, 120, 40],
@@ -886,13 +888,13 @@
                         }]
                 }, {
                     "type": "omnidirectional",
-                    "dimensions": [40, 120, 40],
+                    "dimensions": [60, 120, 40],
                     "velocity": 70,
                     "velocitySpread": 20,
                     "initialNumber": 24,
                     "spawnNumber": 12,
                     "spawnTime": 100,
-                    "duration": 600,
+                    "duration": 700,
                     "shader": "particle",
                     "texture": "explosion",
                     "particleStates": [{
@@ -902,17 +904,17 @@
                         }, {
                             "color": [1, 0.7, 0, 1],
                             "size": 30,
-                            "timeToReach": 400
+                            "timeToReach": 450
                         }, {
                             "color": [1, 0.2, 0, 0],
                             "size": 60,
-                            "timeToReach": 400
+                            "timeToReach": 450
                         }]
                 }, {
                     "type": "omnidirectional",
                     "dimensions": [10, 30, 10],
-                    "velocity": 100,
-                    "velocitySpread": 5,
+                    "velocity": 150,
+                    "velocitySpread": 50,
                     "initialNumber": 20,
                     "shader": "particle",
                     "texture": "explosion",
@@ -944,8 +946,8 @@
                     "timeToReach": 400
                 }],
             "soundEffect": {
-                "name": "fighterExplosion",
-                "volume": 4
+                "name": "smallShipExplosion",
+                "volume": 9
             }
         }, {
             "name": "largeShipExplosion",
@@ -4410,7 +4412,7 @@
                 "volume": 0.75
             },
             "explosion": "smallShipExplosion",
-            "showTimeRatioDuringExplosion": 0.25,
+            "showTimeRatioDuringExplosion": 0.48,
             "damageIndicators": [{
                     "hullIntegrity": 45,
                     "class": "mediumFire"

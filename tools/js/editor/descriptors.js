@@ -694,6 +694,10 @@ define([
                         name: "duration",
                         type: MILLISECONDS
                     },
+                    DELAY: {
+                        name: "delay",
+                        type: MILLISECONDS
+                    },
                     SHADER: {
                         name: "shader",
                         type: SHADER_REFERENCE

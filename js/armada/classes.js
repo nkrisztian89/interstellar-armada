@@ -1032,10 +1032,15 @@ define([
          */
         this._spawnTime = dataJSON ? (dataJSON.spawnTime || 1) : 0;
         /**
-         * The duration while new particles are emitted after the emitter has been created. (milliseconds)
+         * The duration while new particles are emitted after the initial particle spawning. (milliseconds)
          * @type Number
          */
         this._duration = dataJSON ? (dataJSON.duration !== undefined ? dataJSON.duration : 1) : 0;
+        /**
+         * The duration to wait before the initial particle spawning. (milliseconds)
+         * @type Number
+         */
+        this._delay = dataJSON ? (dataJSON.delay !== undefined ? dataJSON.delay : 0) : 0;
         /**
          * The list of states that the generated particles should go through.
          * @type ParticleState[]
@@ -1108,11 +1113,18 @@ define([
         return this._spawnTime;
     };
     /**
-     * Returns the duration for which new particles are emitted after the emitter has been created. (milliseconds)
+     * Returns the duration for which new particles are emitted after the initial particle spawning. (milliseconds)
      * @returns {Number}
      */
     ParticleEmitterDescriptor.prototype.getDuration = function () {
         return this._duration;
+    };
+    /**
+     * Returns the duration to wait before the initial particle spawning. (milliseconds)
+     * @returns {Number}
+     */
+    ParticleEmitterDescriptor.prototype.getDelay = function () {
+        return this._delay;
     };
     /**
      * Returns the list of states that the generated particles should go through.
