@@ -199,7 +199,7 @@ define([
      */
     function JSONResource(dataJSON, sourceFolder, nameIsOptional) {
         GenericResource.call(this, dataJSON ?
-                (dataJSON.name || (nameIsOptional && UNNAMED_RESOURCE_NAME) || application.showError("Cannot initialize instance of " + this.constructor.name + ": a name is required!")) :
+                (dataJSON.name || (nameIsOptional && ((dataJSON && dataJSON.source) || UNNAMED_RESOURCE_NAME)) || application.showError("Cannot initialize instance of " + this.constructor.name + ": a name is required!")) :
                 null);
         /**
          * @type String
@@ -392,7 +392,7 @@ define([
     // ############################################################################################x
     /**
      * @class
-     * @augments AsyncResource
+     * @extends AsyncResource
      */
     function ResourceManager() {
         asyncResource.AsyncResource.call(this);
@@ -425,6 +425,12 @@ define([
          * @type Object.<String, Function>
          */
         this._resourceClasses = null;
+        /**
+         * The ID of the folder to use when loading the configuration of stored resources from file. This is passed to the constructor of
+         * the resources as a second parameter.
+         * @type String
+         */
+        this._sourceFolder = null;
     }
     // we set the Resource class as parent to add an execution queue to the resource
     // manage for when all resources have been loaded
@@ -491,7 +497,7 @@ define([
             application.showError("Cannot create resource of type '" + resourceType + "': no resource constructor was assigned for this resource type!");
             return;
         }
-        this.addResource(resourceType, new this._resourceClasses[resourceType](dataJSON));
+        this.addResource(resourceType, new this._resourceClasses[resourceType](dataJSON, this._sourceFolder));
     };
     /**
      * @param {String} resourceType
@@ -593,11 +599,12 @@ define([
     ResourceManager.prototype._loadConfigFromJSON = function (configJSON, resourceClasses) {
         var resourceType, resourceArray, i;
         this._resourceClasses = resourceClasses;
+        this._sourceFolder = configJSON.config ? configJSON.config.sourceFolder : null;
         for (resourceType in resourceClasses) {
             if (resourceClasses.hasOwnProperty(resourceType)) {
                 resourceArray = configJSON[resourceType];
                 for (i = 0; i < resourceArray.length; i++) {
-                    this.addResource(resourceType, new resourceClasses[resourceType](resourceArray[i]));
+                    this.addResource(resourceType, new resourceClasses[resourceType](resourceArray[i], this._sourceFolder));
                 }
             }
         }
@@ -661,19 +668,32 @@ define([
         this._resourceHolders[resourceType].moveResourceAfter(nameOfResourceToMove, targetResourceName);
     };
     /**
-     * Executes the given callback function for all the stored resources (of all types), passing each resource to it as its only parameter.
-     * @param {Function} callback
+     * @callback ResourceManager~executeCallback
+     * @param {GenericResource} resource The resource to execute the callback on
+     * @param {String} resourceType The ID of the type this resource belongs to within the resource manager
      */
-    ResourceManager.prototype.executeForAllResources = function (callback) {
-        var resourceTypes = Object.keys(this._resourceHolders), i, j, resourceNames;
-        for (i = 0; i < resourceTypes.length; i++) {
-            resourceNames = this._resourceHolders[resourceTypes[i]].getResourceNames();
-            for (j = 0; j < resourceNames.length; j++) {
-                callback(this._resourceHolders[resourceTypes[i]].getResource(resourceNames[j]), resourceTypes[i]);
-            }
+    /**
+     * Executes the given callback function for all the stored resources of the given type.
+     * @param {String} resourceType 
+     * @param {ResourceManager~executeCallback} callback
+     */
+    ResourceManager.prototype.executeForAllResourcesOfType = function (resourceType, callback) {
+        var i, resourceNames;
+        resourceNames = this._resourceHolders[resourceType].getResourceNames();
+        for (i = 0; i < resourceNames.length; i++) {
+            callback(this._resourceHolders[resourceType].getResource(resourceNames[i]), resourceType);
         }
     };
-
+    /**
+     * Executes the given callback function for all the stored resources (of all types).
+     * @param {ResourceManager~executeCallback} callback
+     */
+    ResourceManager.prototype.executeForAllResources = function (callback) {
+        var resourceTypes = Object.keys(this._resourceHolders), i;
+        for (i = 0; i < resourceTypes.length; i++) {
+            this.executeForAllResourcesOfType(resourceTypes[i], callback);
+        }
+    };
     return {
         GenericResource: GenericResource,
         JSONResource: JSONResource,

@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0-dev:391 (2016.10.17.)",
+    "version": "0.4.0-dev:392 (2016.10.17.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -51,26 +51,8 @@
                 "folder": "environment"
             },
             "levels": {
-                "folder": "level",
-                "filenames": [
-                    "targetPracticeBoxes.json",
-                    "targetPracticeDrones.json",
-                    "targetPracticeFalcon.json",
-                    "1v1.json",
-                    "3v3.json",
-                    "bombers.json",
-                    "mixed.json",
-                    "defendCorvette.json",
-                    "1v6.json",
-                    "corvette.json",
-                    "defendFrigate.json",
-                    "patrolVsPatrol.json",
-                    "defendFrigates.json",
-                    "level.json",
-                    "libraTest.json",
-                    "staticAvoidance.json",
-                    "dynamicAvoidance.json"
-                ]
+                "filename": "levels.json",
+                "folder": "data"
             }
         }
     },

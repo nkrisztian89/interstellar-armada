@@ -166,14 +166,13 @@ define([
             type: {
                 baseType: "object",
                 properties: {
+                    FILENAME: {
+                        name: "filename",
+                        type: "string"
+                    },
                     FOLDER: {
                         name: "folder",
                         type: "string"
-                    },
-                    FILENAMES: {
-                        name: "filenames",
-                        type: "array",
-                        elementType: "string"
                     }
                 }
             }
@@ -1495,28 +1494,6 @@ define([
     ConfigurationContext.prototype.getDefaultCameraPointToFallback = function () {
         return this.getSetting(CAMERA_SETTINGS.DEFAULT_POINT_TO_FALLBACK);
     };
-    /**
-     * Returns the number of available level files.
-     * @returns {Number}
-     */
-    ConfigurationContext.prototype.getLevelFileCount = function () {
-        return this.getConfigurationSetting(CONFIGURATION.LEVEL_FILES).filenames.length;
-    };
-    /**
-     * Returns the name of the level file (without path) of the given index.
-     * @param {number} index
-     * @returns {string}
-     */
-    ConfigurationContext.prototype.getLevelFileName = function (index) {
-        return this.getConfigurationSetting(CONFIGURATION.LEVEL_FILES).filenames[index];
-    };
-    /**
-     * Returns the array with the names of the level files (without path).
-     * @returns {String[]}
-     */
-    ConfigurationContext.prototype.getLevelFileNames = function () {
-        return this.getConfigurationSetting(CONFIGURATION.LEVEL_FILES).filenames;
-    };
     // methods
     /**
      * Loads all the setting and references from the passed JSON object and
@@ -1544,9 +1521,6 @@ define([
         CAMERA_SETTINGS: CAMERA_SETTINGS,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
-        getLevelFileCount: _context.getLevelFileCount.bind(_context),
-        getLevelFileName: _context.getLevelFileName.bind(_context),
-        getLevelFileNames: _context.getLevelFileNames.bind(_context),
         getConfigurationSetting: _context.getConfigurationSetting.bind(_context),
         getSetting: _context.getSetting.bind(_context),
         getDefaultCameraFOV: _context.getDefaultCameraFOV.bind(_context),

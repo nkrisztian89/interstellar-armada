@@ -14,9 +14,9 @@
  * @param screens The menu screens are instances of MenuScreen.
  * @param game Used for navigation.
  * @param armadaScreens Used for common screen constants.
- * @param config Used for choosing the level description file to load when a new battle is started from the main menu.
  * @param strings Used for translation support.
  * @param audio Used for volume control
+ * @param level Used for choosing the level description file to load when a new battle is started from the main menu.
  * @param battle Used for starting / resuming the battle.
  */
 define([
@@ -24,11 +24,11 @@ define([
     "modules/screens",
     "modules/game",
     "armada/screens/shared",
-    "armada/configuration",
     "armada/strings",
     "armada/audio",
+    "armada/logic/level",
     "armada/screens/battle"
-], function (utils, screens, game, armadaScreens, config, strings, audio, battle) {
+], function (utils, screens, game, armadaScreens, strings, audio, level, battle) {
     "use strict";
     // -------------------------------------------------------------------------
     // Private functions
@@ -38,17 +38,18 @@ define([
      * @returns {MenuComponent~MenuOption[]}
      */
     function _getLevelOptions(demoMode) {
-        var result = [], i, actionFunction = function (levelFilename) {
+        var result = [], levelFilenames, i, actionFunction = function (levelFilename) {
             audio.playMusic(null);
             game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
             game.getScreen().startNewBattle({
                 levelSourceFilename: levelFilename,
                 demoMode: demoMode});
         };
-        for (i = 0; i < config.getLevelFileCount(); i++) {
+        levelFilenames = level.getLevelNames();
+        for (i = 0; i < levelFilenames.length; i++) {
             result.push({
-                id: strings.LEVEL.PREFIX.name + utils.getFilenameWithoutExtension(config.getLevelFileName(i)),
-                action: actionFunction.bind(this, config.getLevelFileName(i))
+                id: strings.LEVEL.PREFIX.name + utils.getFilenameWithoutExtension(levelFilenames[i]),
+                action: actionFunction.bind(this, levelFilenames[i])
             });
         }
         result.push({

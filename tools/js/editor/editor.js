@@ -843,7 +843,7 @@ define([
             graphics.loadSettingsFromLocalStorage();
             config.loadSettingsFromJSON(settingsJSON.logic);
             config.executeWhenReady(function () {
-                level.requestEnvironmentsLoad();
+                level.requestLoad();
                 level.executeWhenReady(function () {
                     application.log("Game settings loaded.", 1);
                     localStorage[constants.VERSION_LOCAL_STORAGE_ID] = application.getVersion();

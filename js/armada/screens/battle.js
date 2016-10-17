@@ -1929,9 +1929,9 @@ define([
         control.setScreenCenter(
                 canvas.width / 2,
                 canvas.height / 2);
-        _level = new level.Level();
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_LEVEL), 0);
-        _level.requestLoadFromFile(_levelSourceFilename, _demoMode, function () {
+        level.requestLevel(_levelSourceFilename, _demoMode, function (createdLevel) {
+            _level = createdLevel;
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
             _level.addRandomShips(undefined, _demoMode);
             // for levels that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the

@@ -1,0 +1,42 @@
+{
+    "config": {
+        "sourceFolder": "level"
+    },
+    "levels": [
+        {
+            "source": "targetPracticeBoxes.json"
+        }, {
+            "source": "targetPracticeDrones.json"
+        }, {
+            "source": "targetPracticeFalcon.json"
+        }, {
+            "source": "1v1.json"
+        }, {
+            "source": "3v3.json"
+        }, {
+            "source": "bombers.json"
+        }, {
+            "source": "mixed.json"
+        }, {
+            "source": "defendCorvette.json"
+        }, {
+            "source": "1v6.json"
+        }, {
+            "source": "corvette.json"
+        }, {
+            "source": "defendFrigate.json"
+        }, {
+            "source": "patrolVsPatrol.json"
+        }, {
+            "source": "defendFrigates.json"
+        }, {
+            "source": "level.json"
+        }, {
+            "source": "libraTest.json"
+        }, {
+            "source": "staticAvoidance.json"
+        }, {
+            "source": "dynamicAvoidance.json"
+        }
+    ]
+}

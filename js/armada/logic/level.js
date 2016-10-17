@@ -16,6 +16,7 @@
  * @param application Used for file loading and logging functionality
  * @param asyncResource LogicContext is a subclass of AsyncResource
  * @param resources Used to access the loaded media (graphics and sound) resources
+ * @param resourceManager Used for storing the level descriptors in a resource manager 
  * @param pools Used to access the pools for particles and projectiles
  * @param camera Used for creating camera configurations for views
  * @param renderableObjects Used for creating visual models for game objects
@@ -35,6 +36,7 @@ define([
     "utils/matrices",
     "modules/application",
     "modules/async-resource",
+    "modules/resource-manager",
     "modules/media-resources",
     "modules/pools",
     "modules/scene/camera",
@@ -51,13 +53,18 @@ define([
     "utils/polyfill"
 ], function (
         utils, vec, mat,
-        application, asyncResource, resources, pools,
+        application, asyncResource, resourceManager, resources, pools,
         camera, renderableObjects, lights, sceneGraph,
         graphics, classes, config, strings, spacecraft, equipment, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
             // constants
+            /**
+             * Used to choose the array of level descriptors when loading the configuration of the level resource manager
+             * @type String
+             */
+            LEVEL_ARRAY_NAME = "levels",
             /**
              * When adding random ships or ships without a team to a level in demo mode, they will be automatically put into a team with
              * this name, with an ID that equals the index of the spacecraft added + 1 (converted to string).
@@ -538,85 +545,6 @@ define([
     };
     // #########################################################################
     /**
-     * @class A class responsible for loading and storing game logic related 
-     * settings and data as well and provide an interface to access them.
-     * @extends AsyncResource
-     */
-    function LogicContext() {
-        asyncResource.AsyncResource.call(this);
-        /**
-         * An associative array storing the reusable Environment objects that 
-         * describe possible environments for levels. The keys are the names
-         * of the environments.
-         * @type Object.<String, Environment>
-         */
-        this._environments = null;
-    }
-    LogicContext.prototype = new asyncResource.AsyncResource();
-    LogicContext.prototype.constructor = LogicContext;
-    /**
-     * Return the reusable environment with the given name if it exists, otherwise null.
-     * @param {String} name
-     * @returns {Environment}
-     */
-    LogicContext.prototype.getEnvironment = function (name) {
-        return this._environments[name] || null;
-    };
-    /**
-     * Returns the list of names (IDs) of the loaded environments.
-     * @returns {String[]}
-     */
-    LogicContext.prototype.getEnvironmentNames = function () {
-        return Object.keys(this._environments);
-    };
-    /**
-     * Creates a new environment and adds it to the list. Uses the passed JSON for the initialization of the environment
-     * @param {Object} dataJSON
-     */
-    LogicContext.prototype.createEnvironment = function (dataJSON) {
-        this._environments[dataJSON.name] = new Environment(dataJSON);
-    };
-    /**
-     * Executes the passed callback function for all the stored environments, passing each environment and a constant category string as the
-     * two parameters
-     * @param {Function} callback
-     */
-    LogicContext.prototype.executeForAllEnvironments = function (callback) {
-        var i, environmentNames = this.getEnvironmentNames();
-        for (i = 0; i < environmentNames.length; i++) {
-            callback(this._environments[environmentNames[i]], ENVIRONMENTS_CATEGORY_NAME);
-        }
-    };
-    // methods
-    /**
-     * Sends an asynchronous request to grab the file containing the reusable
-     * environment descriptions and sets a callback to load those descriptions 
-     * and set the resource state of this context to ready when done.
-     */
-    LogicContext.prototype.requestEnvironmentsLoad = function () {
-        application.requestTextFile(
-                config.getConfigurationSetting(config.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).folder,
-                config.getConfigurationSetting(config.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).filename,
-                function (responseText) {
-                    this.loadEnvironmentsFromJSON(JSON.parse(responseText));
-                    this.setToReady();
-                }.bind(this));
-    };
-    /**
-     * Loads the desciptions of all reusable environments from the passed JSON object,
-     *  creates and stores all the objects for them.
-     * @param {Object} dataJSON
-     */
-    LogicContext.prototype.loadEnvironmentsFromJSON = function (dataJSON) {
-        var i, environment;
-        this._environments = {};
-        for (i = 0; i < dataJSON.environments.length; i++) {
-            environment = new Environment(dataJSON.environments[i]);
-            this._environments[dataJSON.environments[i].name] = environment;
-        }
-    };
-    // #########################################################################
-    /**
      * @class
      * A team to which spacecrafts can belong to that determines which spacecrafts are hostile and friendly towards each other.
      * @param {String|Object} idOrParams
@@ -899,7 +827,6 @@ define([
      * projectiles. Can create scenes for visual representation using the held
      * references as well as perform the game logic and physics simulation
      * among the contained objects.
-     * @returns {Level}
      */
     function Level() {
         /**
@@ -1080,24 +1007,6 @@ define([
     };
     // #########################################################################
     // methods
-    /**
-     * Sends an asynchronous request to grab the file with the passed name from
-     * the level folder and initializes the level data when the file has been
-     * loaded.
-     * @param {String} filename
-     * @param {Boolean} demoMode If true, the data from the level file will be loaded in demo mode, so that the piloted craft is not set
-     * and a suitable AI is added to all spacecrafts if possible.
-     * @param {Function} [callback] An optional function to execute after the
-     * level has been loaded.
-     */
-    Level.prototype.requestLoadFromFile = function (filename, demoMode, callback) {
-        application.requestTextFile(config.getConfigurationSetting(config.CONFIGURATION.LEVEL_FILES).folder, filename, function (responseText) {
-            this.loadFromJSON(JSON.parse(responseText), demoMode);
-            if (callback) {
-                callback();
-            }
-        }.bind(this));
-    };
     /**
      * Loads all the data describing this level from the passed JSON object. Does not add random ships to the level, only loads their 
      * configuration - they can be added by calling addRandomShips() later, which will use the loaded configuration.
@@ -1412,6 +1321,155 @@ define([
         _particlePool.clear();
         _projectilePool.clear();
     };
+    // #########################################################################
+    /**
+     * @class Stores the data needed to initialize a level. Used so that the data can be accessed (such as description, objectives) before
+     * creating the Level object itself (with all spacecrafts etc for the battle simulation) i.e. during mission briefing
+     * @extends JSONResource
+     * @param {Object} dataJSON The object storing the level data or a reference to the file which stores the data
+     * @param {String} folder The ID of the folder from where to load the data file in case the data passed here just stores a reference
+     */
+    function LevelDescriptor(dataJSON, folder) {
+        resourceManager.JSONResource.call(this, dataJSON, folder, true);
+    }
+    LevelDescriptor.prototype = new resourceManager.JSONResource();
+    LevelDescriptor.prototype.constructor = LevelDescriptor;
+    /**
+     * Creates and returns a Level object based on the data stored in this descriptor. Only works if the data has been loaded - either it
+     * was given when constructing this object, or it was requested and has been loaded
+     * @param {Boolean} demoMode Whether to load the created level in demo mode
+     * @returns {Level}
+     */
+    LevelDescriptor.prototype.createLevel = function (demoMode) {
+        var result = null;
+        if (this.isReadyToUse()) {
+            result = new Level();
+            result.loadFromJSON(this._dataJSON, demoMode);
+        } else {
+            application.showError("Cannot create level from descriptor that has not yet been initialized!");
+        }
+        return result;
+    };
+    // #########################################################################
+    /**
+     * @class A class responsible for loading and storing game logic related 
+     * settings and data as well and provide an interface to access them.
+     * @extends AsyncResource
+     */
+    function LogicContext() {
+        asyncResource.AsyncResource.call(this);
+        /**
+         * An associative array storing the reusable Environment objects that 
+         * describe possible environments for levels. The keys are the names
+         * of the environments.
+         * @type Object.<String, Environment>
+         */
+        this._environments = null;
+        /**
+         * Stores (and manages the loading of) the descriptors for the levels.
+         * @type ResourceManager
+         */
+        this._levelManager = new resourceManager.ResourceManager();
+    }
+    LogicContext.prototype = new asyncResource.AsyncResource();
+    LogicContext.prototype.constructor = LogicContext;
+    /**
+     * Return the reusable environment with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {Environment}
+     */
+    LogicContext.prototype.getEnvironment = function (name) {
+        return this._environments[name] || null;
+    };
+    /**
+     * Returns the list of names (IDs) of the loaded environments.
+     * @returns {String[]}
+     */
+    LogicContext.prototype.getEnvironmentNames = function () {
+        return Object.keys(this._environments);
+    };
+    /**
+     * Creates a new environment and adds it to the list. Uses the passed JSON for the initialization of the environment
+     * @param {Object} dataJSON
+     */
+    LogicContext.prototype.createEnvironment = function (dataJSON) {
+        this._environments[dataJSON.name] = new Environment(dataJSON);
+    };
+    /**
+     * Executes the passed callback function for all the stored environments, passing each environment and a constant category string as the
+     * two parameters
+     * @param {Function} callback
+     */
+    LogicContext.prototype.executeForAllEnvironments = function (callback) {
+        var i, environmentNames = this.getEnvironmentNames();
+        for (i = 0; i < environmentNames.length; i++) {
+            callback(this._environments[environmentNames[i]], ENVIRONMENTS_CATEGORY_NAME);
+        }
+    };
+    // methods
+    /**
+     * Sends an asynchronous request to grab the file containing the reusable
+     * environment descriptions and sets a callback to load those descriptions 
+     * and set the resource state of this context to ready when done.
+     */
+    LogicContext.prototype.requestLoad = function () {
+        application.requestTextFile(
+                config.getConfigurationSetting(config.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).folder,
+                config.getConfigurationSetting(config.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).filename,
+                function (responseText) {
+                    var levelAssignment = {};
+                    levelAssignment[LEVEL_ARRAY_NAME] = LevelDescriptor;
+                    this.loadEnvironmentsFromJSON(JSON.parse(responseText));
+                    this._levelManager.requestConfigLoad(
+                            config.getConfigurationSetting(config.CONFIGURATION.LEVEL_FILES).filename,
+                            config.getConfigurationSetting(config.CONFIGURATION.LEVEL_FILES).folder,
+                            levelAssignment,
+                            this.setToReady.bind(this)
+                            );
+                }.bind(this));
+    };
+    /**
+     * Loads the desciptions of all reusable environments from the passed JSON object,
+     *  creates and stores all the objects for them.
+     * @param {Object} dataJSON
+     */
+    LogicContext.prototype.loadEnvironmentsFromJSON = function (dataJSON) {
+        var i, environment;
+        this._environments = {};
+        for (i = 0; i < dataJSON.environments.length; i++) {
+            environment = new Environment(dataJSON.environments[i]);
+            this._environments[dataJSON.environments[i].name] = environment;
+        }
+    };
+    /**
+     * Returns the (file)names of the level( descriptor)s stored in the level manager
+     * @returns {String[]}
+     */
+    LogicContext.prototype.getLevelNames = function () {
+        var result = [];
+        this._levelManager.executeForAllResourcesOfType(LEVEL_ARRAY_NAME, function (levelDescriptor) {
+            result.push(levelDescriptor.getName());
+        });
+        return result;
+    };
+    /**
+     * Requests the data (descriptor) for the level with the passed name to be loaded (if it is not loaded already), creates a level based 
+     * on it and calls the passed callback with the created level as its argument when it is loaded
+     * @param {String} name
+     * @param {Boolean} demoMode Whether to load the created level in demo mode
+     * @param {Function} callback
+     */
+    LogicContext.prototype.requestLevel = function (name, demoMode, callback) {
+        var levelDescriptor = this._levelManager.getResource(LEVEL_ARRAY_NAME, name);
+        if (levelDescriptor) {
+            this._levelManager.requestResourceLoad();
+            this._levelManager.executeWhenReady(function () {
+                callback(levelDescriptor.createLevel(demoMode));
+            });
+        } else {
+            callback(null);
+        }
+    };
     // initializazion
     // obtaining pool references
     _particlePool = pools.getPool(renderableObjects.Particle);
@@ -1425,14 +1483,15 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        requestEnvironmentsLoad: _context.requestEnvironmentsLoad.bind(_context),
+        requestLoad: _context.requestLoad.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
         getDebugInfo: getDebugInfo,
         getEnvironment: _context.getEnvironment.bind(_context),
         getEnvironmentNames: _context.getEnvironmentNames.bind(_context),
         createEnvironment: _context.createEnvironment.bind(_context),
         executeForAllEnvironments: _context.executeForAllEnvironments.bind(_context),
-        Skybox: Skybox,
-        Level: Level
+        getLevelNames: _context.getLevelNames.bind(_context),
+        requestLevel: _context.requestLevel.bind(_context),
+        Skybox: Skybox
     };
 });

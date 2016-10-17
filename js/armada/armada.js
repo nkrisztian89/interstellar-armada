@@ -57,7 +57,7 @@ define([
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
         config.executeWhenReady(function () {
-            level.requestEnvironmentsLoad();
+            level.requestLoad();
             level.executeWhenReady(function () {
                 _progressBar.value = 2;
                 callback();
