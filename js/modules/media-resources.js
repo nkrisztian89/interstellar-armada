@@ -1083,10 +1083,8 @@ define([
         application.log_DEBUG("Model file of max LOD level " + params.maxLOD + " has been loaded for model '" + this.getName() + "'", 2);
         if (params.text[0] === "{") {
             this._model.loadFromJSON(this._getPath(params.maxLOD), JSON.parse(params.text), params.maxLOD);
-        } else if (params.text[0] === "<") {
-            this._model.loadFromXML(this._getPath(params.maxLOD), new window.DOMParser().parseFromString(params.text, "text/xml"), params.maxLOD);
         } else {
-            application.showError("Cannot load Egom Mode from file '" + this._getPath(params.maxLOD) + "', as it does no appear to be either an XML or a JSON file!");
+            application.showError("Cannot load Egom Model from file '" + this._getPath(params.maxLOD) + "' - the file needs to start with '{'!");
         }
         this._maxLoadedLOD = params.maxLOD;
         return true;
