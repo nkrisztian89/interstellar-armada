@@ -1040,7 +1040,7 @@ define([
      * @param {Boolean} customShader
      */
     Spacecraft.prototype.acquireResources = function (lod, hitbox, customShader) {
-        application.log("Requesting resources for spacecraft (" + this._class.getName() + ")...", 2);
+        application.log_DEBUG("Requesting resources for spacecraft (" + this._class.getName() + ")...", 2);
         var params = (lod === undefined) ? {maxLOD: graphics.getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
             graphics.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
@@ -1125,7 +1125,7 @@ define([
         }
         resources.executeWhenReady(function () {
             var j, n, node, exp, lightSources, parameterArrays = {}, originalFactionColor, replacementFactionColor;
-            application.log("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
+            application.log_DEBUG("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
             if (addSupplements.self !== false) {
                 // setting up parameter array declarations (name: type)
                 parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;

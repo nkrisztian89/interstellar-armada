@@ -44,39 +44,39 @@ define([
                 TRILINEAR: "trilinear",
                 ANISOTROPIC: "anisotropic"
             },
-    /**
-     * Enumeration defining the available (supported) variables types in GLSL shaders.
-     * @enum {String}
-     * @type String
-     */
-    ShaderVariableType = {
-        NONE: "none",
-        FLOAT: "float",
-        VEC2: "vec2",
-        VEC3: "vec3",
-        VEC4: "vec4",
-        MAT2: "mat2",
-        MAT3: "mat3",
-        MAT4: "mat4",
-        SAMPLER2D: "sampler2D",
-        SAMPLER_CUBE: "samplerCube",
-        INT: "int",
-        BOOL: "bool",
-        STRUCT: "struct"
-    },
-    /**
-     * The possible blend modes based on which the blend function is set when a shader is applied.
-     * @enum {String}
-     * @type String
-     */
-    ShaderBlendMode = {
-        NONE: "none",
-        MIX: "mix",
-        ADD: "add"
-    },
-    // ----------------------------------------------------------------------
-    // Constants
-    UNIFORM_NAME_PREFIX = "u_",
+            /**
+             * Enumeration defining the available (supported) variables types in GLSL shaders.
+             * @enum {String}
+             * @type String
+             */
+            ShaderVariableType = {
+                NONE: "none",
+                FLOAT: "float",
+                VEC2: "vec2",
+                VEC3: "vec3",
+                VEC4: "vec4",
+                MAT2: "mat2",
+                MAT3: "mat3",
+                MAT4: "mat4",
+                SAMPLER2D: "sampler2D",
+                SAMPLER_CUBE: "samplerCube",
+                INT: "int",
+                BOOL: "bool",
+                STRUCT: "struct"
+            },
+            /**
+             * The possible blend modes based on which the blend function is set when a shader is applied.
+             * @enum {String}
+             * @type String
+             */
+            ShaderBlendMode = {
+                NONE: "none",
+                MIX: "mix",
+                ADD: "add"
+            },
+            // ----------------------------------------------------------------------
+            // Constants
+            UNIFORM_NAME_PREFIX = "u_",
             UNIFORM_NAME_SUFFIX = "",
             TEXTURE_UNIFORM_NAME_PREFIX = "",
             TEXTURE_UNIFORM_NAME_SUFFIX = "Texture",
@@ -998,7 +998,7 @@ define([
         }
         var location = this._locations[shader.getName()];
         if ((location >= 0) && (context.getBoundVertexBuffer(location) !== this)) {
-            application.log("Binding " + (instanced ? "instance" : "vertex") + " buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
+            application.log_DEBUG("Binding " + (instanced ? "instance" : "vertex") + " buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
             if (instanced) {
                 this.loadToGPUMemory(context.getName(), context.gl, true);
             } else {
@@ -1157,7 +1157,7 @@ define([
         status = context.gl.checkFramebufferStatus(context.gl.FRAMEBUFFER);
         switch (status) {
             case context.gl.FRAMEBUFFER_COMPLETE:
-                application.log("Framebuffer '" + this._name + "' successfully created.", 2);
+                application.log_DEBUG("Framebuffer '" + this._name + "' successfully created.", 2);
                 break;
             case context.gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
                 application.showGraphicsError("Incomplete status for framebuffer '" + this._name + "': The attachment types are mismatched or not all framebuffer attachment points are framebuffer attachment complete.");
@@ -2491,7 +2491,7 @@ define([
      */
     ManagedGLContext.prototype.addFrameBuffer = function (frameBuffer) {
         if (this._frameBuffers[frameBuffer.getName()] === undefined) {
-            application.log("Adding new framebuffer '" + frameBuffer.getName() + "' to context (" + this._name + ")...", 2);
+            application.log_DEBUG("Adding new framebuffer '" + frameBuffer.getName() + "' to context (" + this._name + ")...", 2);
             this._frameBuffers[frameBuffer.getName()] = frameBuffer;
             if (this.isReadyToUse()) {
                 this._frameBuffers[frameBuffer.getName()].setup(this);
@@ -2531,7 +2531,7 @@ define([
      * added to it up to this point.
      */
     ManagedGLContext.prototype.setup = function () {
-        application.log("Setting up context '" + this._name + "'...", 2);
+        application.log_DEBUG("Setting up context '" + this._name + "'...", 2);
         this.setupVertexBuffers();
         this.setupFrameBuffers();
         this.setToReady();
@@ -2542,7 +2542,7 @@ define([
      */
     ManagedGLContext.prototype.clear = function () {
         var i;
-        application.log("Clearing context '" + this._name + "'...", 2);
+        application.log_DEBUG("Clearing context '" + this._name + "'...", 2);
         this.clearFrameBuffers();
         this._currentShader = null;
         for (i = 0; i < this._boundTextures.length; i++) {
@@ -2599,7 +2599,7 @@ define([
     ManagedGLContext.prototype.setCurrentShader = function (shader) {
         var newBlendMode, prog;
         if (this._currentShader !== shader) {
-            application.log("Switching to shader: " + shader.getName(), 3);
+            application.log_DEBUG("Switching to shader: " + shader.getName(), 3);
             prog = shader.getIDForContext(this._name);
             if (prog) {
                 this.gl.useProgram(prog);
@@ -2686,15 +2686,15 @@ define([
         // only bind to it the given texture location if currenty it is unbound or a different texture is bound to it
         if (!this._boundTextures[place] || (this._boundTextures[place].texture !== texture)) {
             if (texture instanceof ManagedTexture) {
-                application.log("Binding texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
+                application.log_DEBUG("Binding texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
                 texture.bindGLTexture(this._name, this.gl, place);
             } else
             if (texture instanceof ManagedCubemap) {
-                application.log("Binding cubemap texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
+                application.log_DEBUG("Binding cubemap texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
                 texture.bindGLTexture(this._name, this.gl, place);
             } else
             if (texture instanceof FrameBuffer) {
-                application.log("Binding framebuffer texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
+                application.log_DEBUG("Binding framebuffer texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
                 texture.bindGLTexture(this.gl, place);
             } else {
                 application.showError("Cannot set object: '" + texture.toString() + "' as current texture, because it is not of an appropriate type.");
@@ -2704,7 +2704,7 @@ define([
         // make sure the reserve state is updated even if no bind happened
         if (this._boundTextures[place].reserved !== reserved) {
             this._boundTextures[place].reserved = reserved;
-            application.log((reserved ? "Reserved" : "Freed") + " texture unit index " + place + ".", 3);
+            application.log_DEBUG((reserved ? "Reserved" : "Freed") + " texture unit index " + place + ".", 3);
         }
         return place;
     };

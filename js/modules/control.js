@@ -524,7 +524,7 @@ define([
          */
         this._altState = (altState === undefined) ? false : (altState || (this._keyCode === ALT_CODE));
         ControlBinding.call(this, dataJSONOrActionName);
-        application.log("Created key binding: " + this._actionName + " - " + this.getControlString(), 3);
+        application.log_DEBUG("Created key binding: " + this._actionName + " - " + this.getControlString(), 3);
     }
     KeyBinding.prototype = new ControlBinding();
     KeyBinding.prototype.constructor = KeyBinding;

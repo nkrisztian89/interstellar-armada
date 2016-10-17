@@ -609,14 +609,14 @@ define([
      */
     ResourceManager.prototype.requestResourceLoad = function () {
         var resourceType;
-        application.log("Requesting loading of resources contained in the resource manager...", 2);
+        application.log_DEBUG("Requesting loading of resources contained in the resource manager...", 2);
         if (this.allResourcesAreLoaded() === true) {
-            application.log("There are no resources to load, executing set up callback queue right away...", 2);
+            application.log_DEBUG("There are no resources to load, executing set up callback queue right away...", 2);
             this.executeOnReadyQueue();
         } else {
             for (resourceType in this._resourceHolders) {
                 if (this._resourceHolders.hasOwnProperty(resourceType)) {
-                    application.log("Requesting the loading of " + resourceType + " from files...", 2);
+                    application.log_DEBUG("Requesting the loading of " + resourceType + " from files...", 2);
                     this._resourceHolders[resourceType].requestResourceLoad();
                 }
             }

@@ -1926,7 +1926,7 @@ define([
      */
     Scene.prototype._renderShadowMap = function (context, widthInPixels, heightInPixels, lightMatrix, range, depthRatio) {
         var gl = context.gl, i, newShadowQueue;
-        application.log("Starting new shadow map...", 4);
+        application.log_DEBUG("Starting new shadow map...", 4);
         if (this._shadowQueue.length > 0) {
             if (managedGL.areDepthTexturesAvailable()) {
                 gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -1953,7 +1953,7 @@ define([
         var i, j, gl = context.gl;
         // rendering the shadow maps, if needed
         if (this._shadowMappingEnabled) {
-            application.log("Rendering shadow maps for scene...", 4);
+            application.log_DEBUG("Rendering shadow maps for scene...", 4);
             // common GL state setup
             gl.viewport(0, 0, this._shadowMapTextureSize, this._shadowMapTextureSize);
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
@@ -1968,7 +1968,7 @@ define([
                 this._directionalLights[i].reset();
                 this._shadowQueue = [];
                 this._shadowQueue = this._shadowQueue.concat(this._rootNode.getSubnodes());
-                application.log("Rendering shadow maps for light " + i + "...", 4);
+                application.log_DEBUG("Rendering shadow maps for light " + i + "...", 4);
                 for (j = this._shadowMapRanges.length - 1; j >= 0; j--) {
                     this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio, this._shadowMapRanges[j]);
                     this._renderShadowMap(context, widthInPixels, heightInPixels, this._directionalLights[i].getTranslatedMatrix(), this._shadowMapRanges[j], this._shadowMapDepthRatio);
@@ -1991,7 +1991,7 @@ define([
      * @param {Number} heightInPixels The height of the viewport in pixels.
      */
     Scene.prototype._renderBackgroundObjects = function (context, widthInPixels, heightInPixels) {
-        application.log("Rendering background objects of scene...", 4);
+        application.log_DEBUG("Rendering background objects of scene...", 4);
         // preparing to render background objects
         context.enableBlending();
         context.setDepthMask(false);
@@ -2049,7 +2049,7 @@ define([
         var i;
         // preparing to render main scene objects
         // first rendering pass: rendering the non-transparent triangles with Z buffer writing turned on
-        application.log("Rendering opaque phase...", 4);
+        application.log_DEBUG("Rendering opaque phase...", 4);
         if (opaqueRenderQueues.length > 0) {
             context.setDepthMask(true);
             context.disableBlending();
@@ -2068,7 +2068,7 @@ define([
             this._renderBackgroundObjects(context, widthInPixels, heightInPixels);
         }
         // second rendering pass: rendering the transparent triangles with Z buffer writing turned off
-        application.log("Rendering transparent phase...", 4);
+        application.log_DEBUG("Rendering transparent phase...", 4);
         if (transparentRenderQueues.length > 0) {
             context.setDepthMask(false);
             context.enableBlending();
@@ -2116,7 +2116,7 @@ define([
                 bufferHeight = gl.drawingBufferHeight,
                 widthInPixels = bufferWidth * this._width,
                 heightInPixels = bufferHeight * this._height;
-        application.log("Rendering scene...", 3);
+        application.log_DEBUG("Rendering scene...", 3);
         this._camera.setAspect(widthInPixels / heightInPixels);
         // updating camera
         this._camera.update(this._shouldUpdateCamera ? dt : 0);

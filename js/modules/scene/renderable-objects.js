@@ -1037,7 +1037,7 @@ define([
      */
     ShadedLODMesh.prototype.performRenderToShadowMap = function (renderParameters) {
         this._model.render(renderParameters.context, this._wireframe, true, this.getCurrentLOD(renderParameters));
-        application.log("Rendered model (" + this._model.getName() + ") to shadow map.", 5);
+        application.log_DEBUG("Rendered model (" + this._model.getName() + ") to shadow map.", 5);
     };
     /**
      * @override

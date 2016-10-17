@@ -47,9 +47,9 @@ define(function () {
                  */
                 MINOR: "minor"
             },
-    // -------------------------------------------------------------------------
-    // Private variables
-    DEFAULT_TEXT_MIME_TYPE = "text/plain; charset=utf-8",
+            // -------------------------------------------------------------------------
+            // Private variables
+            DEFAULT_TEXT_MIME_TYPE = "text/plain; charset=utf-8",
             /**
              * The associative array storing the names of the folders of the application, 
              * indexed by the types of files they contain.
@@ -96,6 +96,17 @@ define(function () {
              * @type Boolean
              */
             _firstRun;
+    /**
+     * Logs the passed message. (currently on console)
+     * @param {String} message The message to log.
+     * @param {Number} verbosity The verbosity level of the message. It will only
+     * be logged, if the currently set verbosity level is greater or equal than this.
+     */
+    function log(message, verbosity) {
+        if (!verbosity || (verbosity <= _logVerbosity)) {
+            console.log(message);
+        }
+    }
     return {
         // -------------------------------------------------------------------------
         // Public enums
@@ -292,17 +303,10 @@ define(function () {
             }
             alert(errorString);
         },
-        /**
-         * Logs the passed message. (currently on console)
-         * @param {String} message The message to log.
-         * @param {Number} verbosity The verbosity level of the message. It will only
-         * be logged, if the currently set verbosity level is greater or equal than this.
-         */
-        log: function (message, verbosity) {
-            if (!verbosity || (verbosity <= _logVerbosity)) {
-                console.log(message);
-            }
-        },
+        // for generic logging both for dev and prod
+        log: log,
+        // removed from prod source when building
+        log_DEBUG: log,
         /**
          * Issues an asynchronous request to get a file and executes a callback function when the file has been grabbed. Uses HTTP request, 
          * thus only works through servers, cannot be used to access files on the local filesystem!

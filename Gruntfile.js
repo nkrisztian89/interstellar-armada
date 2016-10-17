@@ -34,6 +34,9 @@ module.exports = function (grunt) {
                 replacements: [{
                         from: '_matrixCount++;',
                         to: '//_matrixCount++;'
+                    }, {
+                        from: 'application.log_DEBUG',
+                        to: '//application.log_DEBUG'
                     }]
             },
             // replacing some widely and frequently used one-line getter calls with the direct access of their respective properties to
@@ -88,6 +91,9 @@ module.exports = function (grunt) {
                 replacements: [{
                         from: '//_matrixCount++;',
                         to: '_matrixCount++;'
+                    }, {
+                        from: '//application.log_DEBUG',
+                        to: 'application.log_DEBUG'
                     }]
             },
             dev: {

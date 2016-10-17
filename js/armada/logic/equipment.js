@@ -629,7 +629,7 @@ define([
         }
         resources.executeWhenReady(function () {
             var visualModel, scale, parameterArrays = {};
-            application.log("Adding weapon (" + this._class.getName() + ") to scene...", 2);
+            application.log_DEBUG("Adding weapon (" + this._class.getName() + ") to scene...", 2);
             scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
             // setting up parameter array declarations (name: type)
             parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;

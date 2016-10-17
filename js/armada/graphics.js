@@ -142,11 +142,11 @@ define([
                     }
                 }
             },
-    /**
-     * A shortcut to access the dependent shader requirement property definition objects.
-     * @type Object
-     */
-    DEPENDENT_SHADER_REQUIREMENT_PROPERTIES = DEPENDENT_SHADER_REQUIREMENT_DESCRIPTOR_TYPE.properties,
+            /**
+             * A shortcut to access the dependent shader requirement property definition objects.
+             * @type Object
+             */
+            DEPENDENT_SHADER_REQUIREMENT_PROPERTIES = DEPENDENT_SHADER_REQUIREMENT_DESCRIPTOR_TYPE.properties,
             /**
              * A shader requirement descriptor has a property with this name to define the number of (static) required vertex uniform vectors.
              * @type String
@@ -262,86 +262,86 @@ define([
                     }
                 }
             },
-    /**
-     * A constant defining the structure of shader descriptor object, used to verify the shader complexity descriptors read from JSON.
-     * @type Object
-     */
-    SHADER_COMPLEXITY_DESCRIPTOR_TYPE = {
-        baseType: "object",
-        properties: {
             /**
-             * Identifies this shader complexity level.
+             * A constant defining the structure of shader descriptor object, used to verify the shader complexity descriptors read from JSON.
+             * @type Object
              */
-            NAME: {
-                name: "name",
-                type: "string"
+            SHADER_COMPLEXITY_DESCRIPTOR_TYPE = {
+                baseType: "object",
+                properties: {
+                    /**
+                     * Identifies this shader complexity level.
+                     */
+                    NAME: {
+                        name: "name",
+                        type: "string"
+                    },
+                    /**
+                     * Whether shadow mapping is available to turn on when this shader complexity level is used.
+                     */
+                    SHADOW_MAPPING_AVAILABLE: {
+                        name: "shadows",
+                        type: "boolean"
+                    },
+                    /**
+                     * The number of samples to be used for shadow mapping PCF when this shader complexity is used.
+                     */
+                    NUM_SHADOW_MAP_SAMPLES: {
+                        name: "numShadowMapSamples",
+                        type: "number",
+                        defaultValue: 0
+                    },
+                    /**
+                     * Whether dynamic lights are available to turn on when this shader complexity level is used.
+                     */
+                    DYNAMIC_LIGHTS_AVAILABLE: {
+                        name: "dynamicLights",
+                        type: "boolean"
+                    },
+                    /**
+                     * The number of maximum available directional light sources when this shader complexity is used.
+                     */
+                    MAX_DIR_LIGHTS: {
+                        name: "maxDirLights",
+                        type: "number"
+                    },
+                    /**
+                     * The number of maximum available spot light sources (for dynamic lighting) when this shader complexity is used.
+                     */
+                    MAX_SPOT_LIGHTS: {
+                        name: "maxSpotLights",
+                        type: "number",
+                        defaultValue: 0
+                    },
+                    /**
+                     * Whether luminosity textures are available when this shader complexity level is used.
+                     */
+                    LUMINOSITY_TEXTURES_AVAILABLE: {
+                        name: "luminosityTextures",
+                        type: "boolean"
+                    },
+                    /**
+                     * Whether the reveal feature is available when this shader complexity level is used.
+                     */
+                    REVEAL_AVAILABLE: {
+                        name: "reveal",
+                        type: "boolean"
+                    },
+                    /**
+                     * The object describing the base requirements of this shader complexity level (without any of the features (shadow mapping, 
+                     * dynamic lights...) being turned on.
+                     */
+                    REQUIREMENTS: {
+                        name: "requirements",
+                        type: SHADER_REQUIREMENTS_DESCRIPTOR_TYPE
+                    }
+                }
             },
             /**
-             * Whether shadow mapping is available to turn on when this shader complexity level is used.
+             * A shortcut to access the shader complexity property definition objects.
+             * @type Object
              */
-            SHADOW_MAPPING_AVAILABLE: {
-                name: "shadows",
-                type: "boolean"
-            },
-            /**
-             * The number of samples to be used for shadow mapping PCF when this shader complexity is used.
-             */
-            NUM_SHADOW_MAP_SAMPLES: {
-                name: "numShadowMapSamples",
-                type: "number",
-                defaultValue: 0
-            },
-            /**
-             * Whether dynamic lights are available to turn on when this shader complexity level is used.
-             */
-            DYNAMIC_LIGHTS_AVAILABLE: {
-                name: "dynamicLights",
-                type: "boolean"
-            },
-            /**
-             * The number of maximum available directional light sources when this shader complexity is used.
-             */
-            MAX_DIR_LIGHTS: {
-                name: "maxDirLights",
-                type: "number"
-            },
-            /**
-             * The number of maximum available spot light sources (for dynamic lighting) when this shader complexity is used.
-             */
-            MAX_SPOT_LIGHTS: {
-                name: "maxSpotLights",
-                type: "number",
-                defaultValue: 0
-            },
-            /**
-             * Whether luminosity textures are available when this shader complexity level is used.
-             */
-            LUMINOSITY_TEXTURES_AVAILABLE: {
-                name: "luminosityTextures",
-                type: "boolean"
-            },
-            /**
-             * Whether the reveal feature is available when this shader complexity level is used.
-             */
-            REVEAL_AVAILABLE: {
-                name: "reveal",
-                type: "boolean"
-            },
-            /**
-             * The object describing the base requirements of this shader complexity level (without any of the features (shadow mapping, 
-             * dynamic lights...) being turned on.
-             */
-            REQUIREMENTS: {
-                name: "requirements",
-                type: SHADER_REQUIREMENTS_DESCRIPTOR_TYPE
-            }
-        }
-    },
-    /**
-     * A shortcut to access the shader complexity property definition objects.
-     * @type Object
-     */
-    SHADER_COMPLEXITY_PROPERTIES = SHADER_COMPLEXITY_DESCRIPTOR_TYPE.properties,
+            SHADER_COMPLEXITY_PROPERTIES = SHADER_COMPLEXITY_DESCRIPTOR_TYPE.properties,
             /**
              * The array of shader complexity descriptors will be read from the property with this name in the shader settings JSON.
              * @type String
@@ -511,11 +511,11 @@ define([
                     type: "string"
                 }
             },
-    /**
-     * A shortcut to access the shader feature requirements property definition objects.
-     * @type Object
-     */
-    FEATURE_REQUIREMENTS_PROPERTIES = SHADER_CONFIG.FEATURE_REQUIREMENTS.properties,
+            /**
+             * A shortcut to access the shader feature requirements property definition objects.
+             * @type Object
+             */
+            FEATURE_REQUIREMENTS_PROPERTIES = SHADER_CONFIG.FEATURE_REQUIREMENTS.properties,
             // ............................................................................................
             // Shadow distance (number of used shadow map ranges)
             /**
@@ -1590,7 +1590,7 @@ define([
                 originalShadowMapping = this.isShadowMappingEnabled(),
                 originalNumShadowMapRanges = this.getNumShadowMapRanges(),
                 originalMaxPointLights = this.getMaxPointLights();
-        application.log("Checking requirements for current shader complexity...");
+        application.log_DEBUG("Checking requirements for current shader complexity...");
         while (!this._shaderRequirementsAreSatisfied()) {
             if (this.isShadowMappingEnabled()) {
                 if (!this._shadowDistances.decrease()) {

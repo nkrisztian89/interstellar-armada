@@ -351,10 +351,10 @@ define([
      */
     TextureResource.prototype._loadData = function (params) {
         if (!params.error) {
-            application.log("Texture from file: " + params.path + " has been loaded.", 2);
+            application.log_DEBUG("Texture from file: " + params.path + " has been loaded.", 2);
             return true;
         }
-        application.log("Texture from file: " + params.path + " could not be loaded.", 2);
+        application.log("WARNING: Texture from file: " + params.path + " could not be loaded.", 1);
         return false;
     };
     /**
@@ -600,10 +600,10 @@ define([
      */
     CubemapResource.prototype._loadData = function (params) {
         if (!params.error) {
-            application.log("Face '" + params.path + "' of cubemap named '" + this.getName() + "' has been loaded.", 2);
+            application.log_DEBUG("Face '" + params.path + "' of cubemap named '" + this.getName() + "' has been loaded.", 2);
             return true;
         }
-        application.log("Face '" + params.path + "' of cubemap named '" + this.getName() + "' could not be loaded.", 2);
+        application.log("WARNING: Face '" + params.path + "' of cubemap named '" + this.getName() + "' could not be loaded.", 1);
         return false;
     };
     /**
@@ -1080,7 +1080,7 @@ define([
             application.showError("Model file of max LOD level " + params.maxLOD + " could not be loaded for model '" + this.getName() + "'!");
             return false;
         }
-        application.log("Model file of max LOD level " + params.maxLOD + " has been loaded for model '" + this.getName() + "'", 2);
+        application.log_DEBUG("Model file of max LOD level " + params.maxLOD + " has been loaded for model '" + this.getName() + "'", 2);
         if (params.text[0] === "{") {
             this._model.loadFromJSON(this._getPath(params.maxLOD), JSON.parse(params.text), params.maxLOD);
         } else if (params.text[0] === "<") {
@@ -1175,10 +1175,10 @@ define([
      */
     SoundEffectResource.prototype._loadData = function (params) {
         if (!params.error) {
-            application.log("Sound effect sample from file: " + params.path + " has been loaded.", 2);
+            application.log_DEBUG("Sound effect sample from file: " + params.path + " has been loaded.", 2);
             return true;
         }
-        application.log("Sound effect sample from file: " + params.path + " could not be loaded.", 2);
+        application.log("WARNING: Sound effect sample from file: " + params.path + " could not be loaded.", 1);
         return false;
     };
     /**
@@ -1278,10 +1278,10 @@ define([
      */
     MusicResource.prototype._loadData = function (params) {
         if (!params.error) {
-            application.log("Music song from file: " + params.path + " has been loaded.", 2);
+            application.log_DEBUG("Music song from file: " + params.path + " has been loaded.", 2);
             return true;
         }
-        application.log("Music song from file: " + params.path + " cound not be loaded.", 2);
+        application.log("WARNING: Music song from file: " + params.path + " cound not be loaded.", 1);
         return false;
     };
     /**

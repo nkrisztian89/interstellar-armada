@@ -33,13 +33,13 @@ define([
                 GROUP_INDICES: "groupIndices",
                 TRIANGLE_INDEX: "triangleIndex"
             },
-    // ------------------------------------------------------------------------------
-    // private variables
-    /**
-     * The list of EgomModel versions that can be loaded from file.
-     * @type String[]
-     */
-    _supportedVersions = ["2.0", "2.1", "2.2", "3.0"];
+            // ------------------------------------------------------------------------------
+            // private variables
+            /**
+             * The list of EgomModel versions that can be loaded from file.
+             * @type String[]
+             */
+            _supportedVersions = ["2.0", "2.1", "2.2", "3.0"];
     // freezing enum objects
     Object.freeze(VertexAttributeRole);
     // ############################################################################################
@@ -1374,7 +1374,7 @@ define([
                     return s.split(",").map(parseFloat);
                 };
         defaultLOD = defaultLOD || 0;
-        application.log("Loading EgomModel data from file: " + filename + " ...", 2);
+        application.log_DEBUG("Loading EgomModel data from file: " + filename + " ...", 2);
         // checking the passed XML document
         if (!(xmlDoc instanceof Document)) {
             application.showError("'" + filename + "' does not appear to be an XML document.",
@@ -1482,7 +1482,7 @@ define([
                 this.getMeshWithLOD(j).setVertex(index, vertex);
             }
         }
-        application.log("Loaded " + nVertices + " vertices.", 3);
+        application.log_DEBUG("Loaded " + nVertices + " vertices.", 3);
         // loading lines
         lineTags = xmlDoc.getElementsByTagName(lineTagName);
         nLines = lineTags.length;
@@ -1517,7 +1517,7 @@ define([
                 this.getMeshWithLOD(j).addLine(line);
             }
         }
-        application.log("Loaded " + nLines + " lines.", 3);
+        application.log_DEBUG("Loaded " + nLines + " lines.", 3);
         // loading triangles
         triangleTags = xmlDoc.getElementsByTagName(triangleTagName);
         nTriangles = triangleTags.length;
@@ -1594,13 +1594,13 @@ define([
                 }
             }
         }
-        application.log("Loaded " + triangleTags.length + " triangles.", 3);
-        application.log("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
+        application.log_DEBUG("Loaded " + triangleTags.length + " triangles.", 3);
+        application.log_DEBUG("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
         str = "Number of triangles per LOD for " + this._name + ": ";
         for (i = this._minLOD; i <= this._maxLOD; i++) {
             str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
         }
-        application.log(str, 2);
+        application.log_DEBUG(str, 2);
         return true;
     };
     /**
@@ -1641,7 +1641,7 @@ define([
                     }
                 }.bind(this);
         defaultLOD = defaultLOD || 0;
-        application.log("Loading EgomModel data from file: " + filename + " ...", 2);
+        application.log_DEBUG("Loading EgomModel data from file: " + filename + " ...", 2);
         // checking the passed JSON file
         if (typeof dataJSON !== "object") {
             application.showError("'" + filename + "' does not appear to be an JSON file.",
@@ -1684,7 +1684,7 @@ define([
                 this.getMeshWithLOD(j).setVertex(index, vertex);
             }
         }
-        application.log("Loaded " + nVertices + " vertices.", 3);
+        application.log_DEBUG("Loaded " + nVertices + " vertices.", 3);
         // loading lines
         nLines = dataJSON.lines.length;
         for (i = 0; i < nLines; i++) {
@@ -1704,7 +1704,7 @@ define([
                 this.getMeshWithLOD(j).addLine(line);
             }
         }
-        application.log("Loaded " + nLines + " lines.", 3);
+        application.log_DEBUG("Loaded " + nLines + " lines.", 3);
         // loading triangles
         nTriangles = dataJSON.triangles.length;
         params = {};
@@ -1733,13 +1733,13 @@ define([
                 }
             }
         }
-        application.log("Loaded " + nTriangles + " triangles.", 3);
-        application.log("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
+        application.log_DEBUG("Loaded " + nTriangles + " triangles.", 3);
+        application.log_DEBUG("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
         str = "Number of triangles per LOD for " + this._name + ": ";
         for (i = this._minLOD; i <= this._maxLOD; i++) {
             str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
         }
-        application.log(str, 2);
+        application.log_DEBUG(str, 2);
         return true;
     };
     /**
@@ -1998,7 +1998,7 @@ define([
         // If the model hasn't been added to this context at all yet, add it with
         // the appropriate mode.
         if (!props) {
-            application.log("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") + " mode)...", 2);
+            application.log_DEBUG("Adding model (" + this._name + ") to context (" + (wireframe ? "wireframe" : "solid") + " mode)...", 2);
             props = new ModelContextProperties();
             props.wireframe = wireframe;
             props.solid = !wireframe;
@@ -2011,22 +2011,22 @@ define([
             // data will need to be loaded to the buffers.
         } else {
             if (!props.wireframe && wireframe) {
-                application.log("Adding model (" + this._name + ") to context in wireframe mode)...", 2);
+                application.log_DEBUG("Adding model (" + this._name + ") to context in wireframe mode)...", 2);
                 props.wireframe = true;
                 context.resetReadyState();
             }
             if (!props.solid && !wireframe) {
-                application.log("Adding model (" + this._name + ") to context in solid mode)...", 2);
+                application.log_DEBUG("Adding model (" + this._name + ") to context in solid mode)...", 2);
                 props.solid = true;
                 context.resetReadyState();
             }
             if (props.minLOD > this._minLOD) {
-                application.log("Adding model (" + this._name + ") to context with minimum LOD " + this._minLOD + "...", 2);
+                application.log_DEBUG("Adding model (" + this._name + ") to context with minimum LOD " + this._minLOD + "...", 2);
                 props.minLOD = this._minLOD;
                 context.resetReadyState();
             }
             if (props.maxLOD < this._maxLOD) {
-                application.log("Adding model (" + this._name + ") to context with maximum LOD " + this._maxLOD + "...", 2);
+                application.log_DEBUG("Adding model (" + this._name + ") to context with maximum LOD " + this._maxLOD + "...", 2);
                 props.maxLOD = this._maxLOD;
                 context.resetReadyState();
             }

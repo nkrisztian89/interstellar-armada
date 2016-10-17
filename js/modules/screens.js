@@ -480,7 +480,7 @@ define([
     HTMLScreen.prototype._updateComponents = function () {
         var translatableElements, i;
         if (this._container) {
-            application.log("Screen '" + this._name + "' is getting updated.", 2);
+            application.log_DEBUG("Screen '" + this._name + "' is getting updated.", 2);
             translatableElements = this._container.querySelectorAll("." + TRANSLATABLE_CLASS_NAME);
             for (i = 0; i < translatableElements.length; i++) {
                 translatableElements[i].innerHTML = strings.get({
