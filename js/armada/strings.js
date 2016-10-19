@@ -22,10 +22,22 @@ define([
     };
     strings.MAIN_MENU = {
         NEW_GAME: {name: "mainMenu.newGame"},
-        DEMO: {name: "mainMenu.demo"},
         DATABASE: {name: "mainMenu.database"},
         SETTINGS: {name: "mainMenu.settings"},
         ABOUT: {name: "mainMenu.about"}
+    };
+    strings.MISSIONS = {
+        BACK: {name: "missions.backButton"},
+        TITLE: {name: "missions.title"},
+        LAUNCH_BUTTON: {name: "missions.launchButton"},
+        DEMO_BUTTON: {name: "missions.demoButton"},
+        NOT_COMPLETED: {name: "missions.notCompleted"},
+        NO_SELECTED_NAME: {name: "missions.noSelectedName"},
+        NO_SELECTED_DESCRIPTION: {name: "missions.noSelectedDescription"},
+        LOADING_DESCRIPTION: {name: "missions.loadingDescription"},
+        NO_TRANSLATED_DESCRIPTION: {name: "missions.noTranslatedDescription"},
+        NO_DESCRIPTION: {name: "missions.noDescription"},
+        DESCRIPTION: {name: "missions.description"}
     };
     strings.SETTINGS = {
         GENERAL: {name: "settings.general"},
@@ -56,7 +68,9 @@ define([
         ARMOR_RATING: {name: "spacecraftStats.armorRating"}
     };
     strings.LEVEL = {
-        PREFIX: {name: "level.", optional: true}
+        PREFIX: {name: "level.", optional: true},
+        NAME_SUFFIX: {name: ".name", optional: true},
+        DESCRIPTION_SUFFIX: {name: ".description", optional: true}
     };
     strings.TEAM = {
         PREFIX: {name: "team.", optional: true}

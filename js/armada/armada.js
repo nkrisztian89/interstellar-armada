@@ -76,6 +76,7 @@ define([
         require([
             "armada/screens/shared",
             "armada/screens/menus",
+            "armada/screens/missions",
             "armada/screens/battle",
             "armada/screens/database",
             "armada/screens/general-settings",
@@ -83,10 +84,9 @@ define([
             "armada/screens/audio-settings",
             "armada/screens/control-settings",
             "armada/screens/about"
-        ], function (armadaScreens, menus, battle, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
+        ], function (armadaScreens, menus, missions, battle, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
             game.addScreen(menus.mainMenuScreen);
-            game.addScreen(menus.levelSelectionMenuScreen);
-            game.addScreen(menus.demoLevelSelectionMenuScreen);
+            game.addScreen(missions.missionsScreen);
             game.addScreen(battle.battleScreen);
             game.addScreen(database.databaseScreen);
             game.addScreen(menus.settingsMenuScreen);

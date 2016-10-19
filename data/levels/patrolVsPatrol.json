@@ -1,4 +1,5 @@
 {
+    "description": "Two identical partols consisting of a corvette and three interceptor escorts face each other in this mission. You are one of fighters. Draw the fire of the enemy corvette away from the one on your team, but do not approach it too much as it will quickly take you down.",
     "environment": {
         "createFrom": "deepSpaceBlueNebula"
     },

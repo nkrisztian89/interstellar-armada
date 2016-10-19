@@ -206,7 +206,7 @@ define([
         }
         return function (event) {
             if (keyCommandsByCode[event.keyCode]) {
-                keyCommandsByCode[event.keyCode].call(this);
+                keyCommandsByCode[event.keyCode].call(this, event);
             }
         }.bind(this);
     };

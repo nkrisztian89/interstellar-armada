@@ -2,10 +2,22 @@
     "screen.back": "Back",
     "mainMenu": {
         "newGame": "New game",
-        "demo": "Demo",
         "database": "Database",
         "settings": "Settings",
         "about": "About"
+    },
+    "missions": {
+        "backButton": "Back to menu",
+        "title": "Missions",
+        "launchButton": "Launch mission",
+        "demoButton": "Launch demo",
+        "notCompleted": "Not yet completed",
+        "noSelectedName": "Choose mission",
+        "noSelectedDescription": "Choose a mission from the list.",
+        "loadingDescription": "Loading...",
+        "noTranslatedDescription": "{originalDescription}",
+        "noDescription": "No mission description available.",
+        "description": "{description}<br/><br/>Spacecraft: {pilotedSpacecraftClass}"
     },
     "settings": {
         "general": "General settings",
@@ -36,23 +48,57 @@
         "armorRating": "rating: {rating}"
     },
     "level": {
-        "targetPracticeBoxes": "Basic target practice",
-        "targetPracticeDrones": "Intermediate target practice",
-        "targetPracticeFalcon": "Advanced target practice",
-        "1v1": "One versus one",
-        "3v3": "Three versus three",
-        "bombers": "Bombers",
-        "mixed": "Mixed",
-        "defendCorvette": "Defend the corvette",
-        "1v6": "One versus six",
-        "corvette": "Corvette",
-        "defendFrigate": "Defend the frigate",
-        "patrolVsPatrol": "Patrol vs patrol",
-        "defendFrigates": "Defend the frigates",
-        "level": "Test level",
-        "libraTest": "Libra test",
-        "staticAvoidance": "Static avoidance test",
-        "dynamicAvoidance": "Dynamic avoidance test"
+        "targetPracticeBoxes": {
+            "name": "Basic target practice"
+        },
+        "targetPracticeDrones": {
+            "name": "Intermediate target practice"
+        },
+        "targetPracticeFalcon": {
+            "name": "Advanced target practice"
+        },
+        "1v1": {
+            "name": "One versus one"
+        },
+        "3v3": {
+            "name": "Three versus three"
+        },
+        "bombers": {
+            "name": "Bombers"
+        },
+        "mixed": {
+            "name": "Mixed"
+        },
+        "defendCorvette": {
+            "name": "Defend the corvette"
+        },
+        "1v6": {
+            "name": "One versus six"
+        },
+        "corvette": {
+            "name": "Corvette"
+        },
+        "defendFrigate": {
+            "name": "Defend the frigate"
+        },
+        "patrolVsPatrol": {
+            "name": "Patrol vs patrol"
+        },
+        "defendFrigates": {
+            "name": "Defend the frigates"
+        },
+        "level": {
+            "name": "Test level"
+        },
+        "libraTest": {
+            "name": "Libra test"
+        },
+        "staticAvoidance": {
+            "name": "Static avoidance test"
+        },
+        "dynamicAvoidance": {
+            "name": "Dynamic avoidance test"
+        }
     },
     "team": {
         "team": "Team {id}",

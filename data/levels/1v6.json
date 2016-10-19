@@ -1,4 +1,5 @@
 {
+    "description": "Similar to the team match with three interceptors and three bombers each side, only this time you are alone. Can you hold your own against six opponents?",
     "environment": {
         "createFrom": "deepSpaceTwoStars"
     },

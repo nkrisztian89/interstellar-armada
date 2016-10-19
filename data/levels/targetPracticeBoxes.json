@@ -1,4 +1,5 @@
 {
+    "description": "Practice your aiming skills by destroying an array of unarmed, stationary target containers. You are equipped with training weapons, which automatically track targets within a small area in front of you, to make your job easier.",
     "environment": {
         "createFrom": "deepSpaceWhiteRedStarsFromSides"
     },

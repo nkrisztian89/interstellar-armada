@@ -1,4 +1,5 @@
 {
+    "description": "Try piloting a heavily armed bomber in a simple three versus three dogfight against less armed opponents.",
     "environment": {
         "createFrom": "deepSpaceBrownPlanet"
     },

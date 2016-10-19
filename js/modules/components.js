@@ -72,6 +72,7 @@ define([
             // CSS class names
             DISABLED_CLASS_NAME = "disabled",
             SELECTED_CLASS_NAME = "selected",
+            HIGHLIGHTED_CLASS_NAME = "highlighted",
             // event names for passing event handlers when components are crated
             SHOW_EVENT_NAME = "show",
             HIDE_EVENT_NAME = "hide",
@@ -83,6 +84,8 @@ define([
             BUTTON_CLICK_EVENT_NAME = "buttonclick",
             OPTION_SELECT_EVENT_NAME = "optionselect",
             OPTION_CLICK_EVENT_NAME = "optionclick",
+            ELEMENT_HIGHLIGHT_EVENT_NAME = "elementhighlight",
+            ELEMENT_SELECT_EVENT_NAME = "elementselect",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -1062,6 +1065,7 @@ define([
         var i, aElement, liElement;
         ExternalComponent.prototype._initializeComponents.call(this);
         if (this._rootElement) {
+            this._rootElement.classList.add(this._style.menuClassName);
             for (i = 0; i < this._menuOptions.length; i++) {
                 aElement = document.createElement("a");
                 if (this._menuOptions[i].id) {
@@ -1130,6 +1134,311 @@ define([
     MenuComponent.prototype.activateSelected = function () {
         if (this._selectedIndex >= 0) {
             this._menuOptions[this._selectedIndex].element.onclick();
+        }
+    };
+    // #########################################################################
+    /**
+     * @typedef {ExternalComponent~Style} ListComponent~Style
+     * @property {String} [listClassName]
+     * @property {String} [listContainerClassName]
+     * @property {String} [elementClassName]
+     * @property {String} [elementContainerClassName]
+     * @property {String} [captionClassName]
+     * @property {String} [subcaptionClassName]
+     * @property {String} disabledElementClassName Added to disabled list elements. Disabled list elements cannot be highlighted or selected
+     * @property {String} selectedElementClassName
+     * @property {String} highlightedElementClassName
+     */
+    /**
+     * @typedef {Object} ListComponent~ListElement
+     * @property {String} [captionID] The key for translation for the main caption
+     * @property {String} [caption] Main static caption (non-translated)
+     * @property {String} [subcaptionID] The key for translation for the subcaption
+     * @property {String} [subcaption] Static subcaption (non-translated)
+     * @property {Boolean} [enabled=true] Only enabled list elements can be selected, and non-enabled elements have a the disabled CSS class (defined in ListComponent~Style)
+     * @property {Element} [element] Set when the element is created
+     */
+    /**
+     * @class A component that consists of a container and a list of selectable elements. Elements can be highlighted, which represents a 
+     * transient state and then the highlighted element can be selected (cancelling previous selections - only one element can be highlighted
+     * or selected at a time) - selection is a persistent state
+     * @extends ExternalComponent
+     * @param {String} name See ExternalComponent.
+     * @param {String} htmlFilename See ExternalComponent
+     * @param {ListComponent~Style} [style] See ExternalComponent
+     * @param {ListComponent~ListElement[]} listElements An array of the available list elements
+     * @param {Boolean} subcaptions Whether to display the subcaptions of the list element
+     * @param {Object.<String, Function>} [eventHandlers] The functions to execute when various events happen to this component.
+     * Currently supported events: elementhighlight, elementselect
+     */
+    function ListComponent(name, htmlFilename, style, listElements, subcaptions, eventHandlers) {
+        var i;
+        ExternalComponent.call(this, name, htmlFilename, style);
+        /**
+         * An array of the available list elements, each described by a ListComponent~ListElement object
+         * @type ListComponent~ListElement[]
+         */
+        this._listElements = listElements;
+        for (i = 0; i < this._listElements.length; i++) {
+            if (this._listElements[i].enabled === undefined) {
+                this._listElements[i].enabled = true;
+            }
+        }
+        /**
+         * Whether to display the subcaptions of the list element
+         * @type Boolean
+         */
+        this._subcaptions = subcaptions;
+        /**
+         * The index of the highlighted list element. -1 if no element is highlighted.
+         * @type Number
+         */
+        this._highlightedIndex = -1;
+        /**
+         * The index of the selected list element. -1 if no element is selected.
+         * @type Number
+         */
+        this._selectedIndex = -1;
+        /**
+         * A function that runs whenever an element is highlighted
+         * @type Function
+         */
+        this._onElementHighlight = eventHandlers ? eventHandlers[ELEMENT_HIGHLIGHT_EVENT_NAME] : null;
+        /**
+         * A function that runs whenever an element is selected
+         * @type Function
+         */
+        this._onElementSelect = eventHandlers ? eventHandlers[ELEMENT_SELECT_EVENT_NAME] : null;
+        // validate the style object as a missings highlighted style can lead to obscure bugs
+        this._validateStyle(style);
+    }
+    ListComponent.prototype = new ExternalComponent();
+    ListComponent.prototype.constructor = ListComponent;
+    /**
+     * Shows an error message if the given style object is not valid.
+     * @param {ListComponent~Style} style
+     */
+    ListComponent.prototype._validateStyle = function (style) {
+        if (typeof style !== "object") {
+            application.showError("Invalid menu style specified: not an object!");
+            return;
+        }
+        if (!style.disabledElementClassName) {
+            application.showError("Attempting to specify a list style without specifying a class for disabled list elements!");
+        }
+        if (!style.selectedElementClassName) {
+            application.showError("Attempting to specify a list style without specifying a class for selected list elements!");
+        }
+        if (!style.highlightedElementClassName) {
+            application.showError("Attempting to specify a list style without specifying a class for highlighted list elements!");
+        }
+    };
+    /**
+     * Highlights the element with the passed index (distinguishes the highlighted option with the set CSS class)
+     * @param {Number} index Index of the element (-1 to cancel current highlight)
+     * @param {Boolean} [scroll=false] Whether to make sure the highlighted element is visible by scrolling if necessary (to be used with 
+     * keyboard controls)
+     */
+    ListComponent.prototype._highlightIndex = function (index, scroll) {
+        var listElement;
+        if (index !== this._highlightedIndex) {
+            if (this._highlightedIndex >= 0) {
+                this._listElements[this._highlightedIndex].element.classList.remove(this._style.highlightedElementClassName);
+            }
+            this._highlightedIndex = index;
+            if (this._highlightedIndex >= 0) {
+                if (this._listElements[this._highlightedIndex].enabled) {
+                    this._listElements[this._highlightedIndex].element.classList.add(this._style.highlightedElementClassName);
+                    if (scroll) {
+                        listElement = this._listElements[this._highlightedIndex].element;
+                        if (listElement.offsetTop < this._rootElement.scrollTop) {
+                            this._rootElement.scrollTop = listElement.offsetTop;
+                        } else if (listElement.offsetTop + listElement.offsetHeight > this._rootElement.scrollTop + this._rootElement.clientHeight) {
+                            this._rootElement.scrollTop = listElement.offsetTop + listElement.offsetHeight - this._rootElement.clientHeight;
+                        }
+                    }
+                    if (this._onElementHighlight) {
+                        this._onElementHighlight(index, true); // always enabled - disabled list elements cannot be highlighted
+                    }
+                }
+            }
+        }
+    };
+    /**
+     * Selects the element with the passed index (distinguishes the selected option with the set CSS class)
+     * @param {Number} index Index of the element (-1 to cancel selection)
+     */
+    ListComponent.prototype._selectIndex = function (index) {
+        if (index !== this._selectedIndex) {
+            if ((index < 0) || ((index >= 0) && this._listElements[index].enabled)) {
+                if (this._selectedIndex >= 0) {
+                    this._listElements[this._selectedIndex].element.classList.remove(this._style.selectedElementClassName);
+                }
+                this._selectedIndex = index;
+                if (this._selectedIndex >= 0) {
+                    this._listElements[this._selectedIndex].element.classList.add(this._style.selectedElementClassName);
+                }
+            }
+            if (this._onElementSelect) {
+                this._onElementSelect(index, (index >= 0) && this._listElements[index].enabled);
+            }
+        }
+    };
+    /**
+     * Returns the index of the currently highlighted element (-1 if no element is currently highlighted)
+     * @returns {Number}
+     */
+    ListComponent.prototype.getHighlightedIndex = function () {
+        return this._highlightedIndex;
+    };
+    /**
+     * Returns the index of the currently selected element (-1 if no element is currently selected)
+     * @returns {Number}
+     */
+    ListComponent.prototype.getSelectedIndex = function () {
+        return this._selectedIndex;
+    };
+    /**
+     * The return value of the click handler on a link decides whether the link path 
+     * should be followed or not. By making sure it is false, the links will not bring 
+     * the user back to the top of the page (because href is #). 
+     * @param {Number} index
+     * @returns {Function}
+     */
+    ListComponent.prototype._getElementClickHandler = function (index) {
+        return function () {
+            if (this._listElements[index].enabled) {
+                this._highlightIndex(index);
+                this._selectIndex(index);
+            }
+            return false;
+        }.bind(this);
+    };
+    /**
+     * Returns an event listener that can be used for the HTML element corresponding to the list element with the
+     * passed index to handle the mouse move events on it - highlighting the option. (without scrolling)
+     * @param {Number} index
+     * @returns {Function}
+     */
+    ListComponent.prototype._getElementMouseMoveHandler = function (index) {
+        return function () {
+            if (this._listElements[index].enabled) {
+                this._highlightIndex(index);
+            } else {
+                this._highlightIndex(-1);
+            }
+        }.bind(this);
+    };
+    /**
+     * @override
+     */
+    ListComponent.prototype._initializeComponents = function () {
+        var i, ulElement, spanElement, aElement, liElement;
+        ExternalComponent.prototype._initializeComponents.call(this);
+        if (this._rootElement) {
+            // list container
+            this._rootElement.classList.add(this._style.listContainerClassName);
+            // list
+            ulElement = document.createElement("ul");
+            ulElement.classList.add(this._style.listClassName);
+            for (i = 0; i < this._listElements.length; i++) {
+                // element container
+                liElement = document.createElement("li");
+                liElement.className = (this._style.elementContainerClassName || "");
+                // element 
+                aElement = document.createElement("a");
+                aElement.className = (this._style.elementClassName || "") + " " + (this._listElements[i].enabled ? "" : this._style.disabledElementClassName);
+                this._listElements[i].element = aElement;
+                aElement.onclick = this._getElementClickHandler(i);
+                aElement.onmousemove = this._getElementMouseMoveHandler(i);
+                liElement.appendChild(aElement);
+                // main caption
+                spanElement = document.createElement("span");
+                if (this._listElements[i].captionID) {
+                    spanElement.id = this._getElementID(this._listElements[i].captionID);
+                }
+                spanElement.className = (this._style.captionClassName || "");
+                spanElement.innerHTML = this._listElements[i].caption || strings.get({name: this._listElements[i].captionID});
+                aElement.appendChild(spanElement);
+                if (this._subcaptions) {
+                    // dividing captions
+                    aElement.appendChild(document.createElement("br"));
+                    // subcaption
+                    spanElement = document.createElement("span");
+                    if (this._listElements[i].subcaptionID) {
+                        spanElement.id = this._getElementID(this._listElements[i].subcaptionID);
+                    }
+                    spanElement.className = (this._style.subcaptionClassName || "");
+                    spanElement.innerHTML = this._listElements[i].subcaption || strings.get({name: this._listElements[i].subcaptionID});
+                    aElement.appendChild(spanElement);
+                }
+                // adding to DOM hierarchy
+                ulElement.appendChild(liElement);
+            }
+            this._rootElement.onmouseleave = this.unhighlight.bind(this);
+            this._rootElement.appendChild(ulElement);
+        }
+    };
+    /**
+     * Cancels the highlight of the currently highlighted list element (if any)
+     */
+    ListComponent.prototype.unhighlight = function () {
+        this._highlightIndex(-1);
+    };
+    /**
+     * Cancels the selection of the currently selected list element (if any)
+     */
+    ListComponent.prototype.unselect = function () {
+        this._selectIndex(-1);
+    };
+    /**
+     * Cancels the highlight and selection and scrolls to the top of the list
+     */
+    ListComponent.prototype.reset = function () {
+        this.unselect();
+        this.unhighlight();
+        this._rootElement.scrollTop = 0;
+    };
+    /**
+     * Highlights the list element coming after the currently highlighted one, or the first one if none are highlighted. Skips disabled elements.
+     */
+    ListComponent.prototype.highlightNext = function () {
+        var start = this._highlightedIndex;
+        if (start === -1) {
+            start = this._listElements.length - 1;
+        }
+        do {
+            this._highlightIndex((this._highlightedIndex + 1) % this._listElements.length, true);
+        } while (this._highlightedIndex !== start && !this._listElements[this._highlightedIndex].enabled);
+        if (!this._listElements[this._highlightedIndex].enabled) {
+            this._highlightIndex(-1);
+        }
+    };
+    /**
+     * Highlights the list element coming before the currently highlighted one, or the last one if none are highlighted. Skips disabled elements.
+     */
+    ListComponent.prototype.highlightPrevious = function () {
+        var start = this._highlightedIndex;
+        if (start === -1) {
+            start = 0;
+        }
+        do {
+            if (this._highlightedIndex > 0) {
+                this._highlightIndex(this._highlightedIndex - 1, true);
+            } else {
+                this._highlightIndex(this._listElements.length - 1, true);
+            }
+        } while (this._highlightedIndex !== start && !this._listElements[this._highlightedIndex].enabled);
+        if (!this._listElements[this._highlightedIndex].enabled) {
+            this._highlightIndex(-1);
+        }
+    };
+    /**
+     * Selects the currently highlighted list element (executing the handler if set)
+     */
+    ListComponent.prototype.selectHighlighted = function () {
+        if (this._highlightedIndex >= 0) {
+            this._listElements[this._highlightedIndex].element.onclick();
         }
     };
     // #########################################################################
@@ -1480,6 +1789,7 @@ define([
         // class names
         DISABLED_CLASS_NAME: DISABLED_CLASS_NAME,
         SELECTED_CLASS_NAME: SELECTED_CLASS_NAME,
+        HIGHLIGHTED_CLASS_NAME: HIGHLIGHTED_CLASS_NAME,
         // event names
         SHOW_EVENT_NAME: SHOW_EVENT_NAME,
         HIDE_EVENT_NAME: HIDE_EVENT_NAME,
@@ -1494,6 +1804,7 @@ define([
         LoadingBox: LoadingBox,
         InfoBox: InfoBox,
         MenuComponent: MenuComponent,
+        ListComponent: ListComponent,
         Selector: Selector,
         Slider: Slider
     };

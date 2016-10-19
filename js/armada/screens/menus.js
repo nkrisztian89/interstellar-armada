@@ -10,17 +10,14 @@
 /*global define */
 
 /**
- * @param utils Used for trimming filename extensions.
  * @param screens The menu screens are instances of MenuScreen.
  * @param game Used for navigation.
  * @param armadaScreens Used for common screen constants.
  * @param strings Used for translation support.
  * @param audio Used for volume control
- * @param level Used for choosing the level description file to load when a new battle is started from the main menu.
  * @param battle Used for starting / resuming the battle.
  */
 define([
-    "utils/utils",
     "modules/screens",
     "modules/game",
     "armada/screens/shared",
@@ -28,38 +25,8 @@ define([
     "armada/audio",
     "armada/logic/level",
     "armada/screens/battle"
-], function (utils, screens, game, armadaScreens, strings, audio, level, battle) {
+], function (screens, game, armadaScreens, strings, audio, battle) {
     "use strict";
-    // -------------------------------------------------------------------------
-    // Private functions
-    /**
-     * Creates and returns the menu options for the level selection screen.
-     * @param {Boolean} demoMode
-     * @returns {MenuComponent~MenuOption[]}
-     */
-    function _getLevelOptions(demoMode) {
-        var result = [], levelFilenames, i, actionFunction = function (levelFilename) {
-            audio.playMusic(null);
-            game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
-            game.getScreen().startNewBattle({
-                levelSourceFilename: levelFilename,
-                demoMode: demoMode});
-        };
-        levelFilenames = level.getLevelNames();
-        for (i = 0; i < levelFilenames.length; i++) {
-            result.push({
-                id: strings.LEVEL.PREFIX.name + utils.getFilenameWithoutExtension(levelFilenames[i]),
-                action: actionFunction.bind(this, levelFilenames[i])
-            });
-        }
-        result.push({
-            id: strings.SCREEN.BACK.name,
-            action: function () {
-                game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
-            }
-        });
-        return result;
-    }
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -75,12 +42,7 @@ define([
                 [{
                         id: strings.MAIN_MENU.NEW_GAME.name,
                         action: function () {
-                            game.setScreen(armadaScreens.LEVEL_MENU_SCREEN_NAME);
-                        }
-                    }, {
-                        id: strings.MAIN_MENU.DEMO.name,
-                        action: function () {
-                            game.setScreen(armadaScreens.DEMO_LEVEL_MENU_SCREEN_NAME);
+                            game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
                         }
                     }, {
                         id: strings.MAIN_MENU.DATABASE.name,
@@ -106,40 +68,6 @@ define([
                     },
                     optionselect: armadaScreens.playButtonSelectSound,
                     optionclick: armadaScreens.playButtonClickSound
-                }),
-        levelSelectionMenuScreen: new screens.MenuScreen(
-                armadaScreens.LEVEL_MENU_SCREEN_NAME,
-                armadaScreens.LEVEL_MENU_SCREEN_SOURCE,
-                {
-                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
-                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
-                },
-                armadaScreens.MENU_COMPONENT_SOURCE,
-                armadaScreens.MENU_STYLE,
-                _getLevelOptions(false),
-                armadaScreens.LEVEL_MENU_CONTAINER_ID,
-                armadaScreens.MENU_EVENT_HANDLERS,
-                {
-                    "escape": function () {
-                        game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
-                    }
-                }),
-        demoLevelSelectionMenuScreen: new screens.MenuScreen(
-                armadaScreens.DEMO_LEVEL_MENU_SCREEN_NAME,
-                armadaScreens.DEMO_LEVEL_MENU_SCREEN_SOURCE,
-                {
-                    backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
-                    containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
-                },
-                armadaScreens.MENU_COMPONENT_SOURCE,
-                armadaScreens.MENU_STYLE,
-                _getLevelOptions(true),
-                armadaScreens.DEMO_LEVEL_MENU_CONTAINER_ID,
-                armadaScreens.MENU_EVENT_HANDLERS,
-                {
-                    "escape": function () {
-                        game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
-                    }
                 }),
         settingsMenuScreen: new screens.MenuScreen(
                 armadaScreens.SETTINGS_SCREEN_NAME,

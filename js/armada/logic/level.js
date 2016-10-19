@@ -1335,6 +1335,39 @@ define([
     LevelDescriptor.prototype = new resourceManager.JSONResource();
     LevelDescriptor.prototype.constructor = LevelDescriptor;
     /**
+     * Returns the raw description of this mission (as given in the data JSON)
+     * @returns {String} 
+     */
+    LevelDescriptor.prototype.getDescription = function () {
+        return this._dataJSON.description || "";
+    };
+    /**
+     * Returns the user-friendly, translated and fallback protected version of the description of this mission.
+     * @returns {String} 
+     */
+    LevelDescriptor.prototype.getDisplayDescription = function () {
+        return strings.get(
+                strings.LEVEL.PREFIX, utils.getFilenameWithoutExtension(this.getName()) + strings.LEVEL.DESCRIPTION_SUFFIX.name,
+                (this.getDescription() ?
+                        utils.formatString(strings.get(strings.MISSIONS.NO_TRANSLATED_DESCRIPTION), {
+                            originalDescription: this.getDescription()
+                        }) :
+                        strings.get(strings.MISSIONS.NO_DESCRIPTION)));
+    };
+    /**
+     * Returns the class of the spacecraft the user is piloting in this mission.
+     * @returns {SpacecraftClass}
+     */
+    LevelDescriptor.prototype.getPilotedSpacecraftClass = function () {
+        var i;
+        for (i = 0; i < this._dataJSON.spacecrafts.length; i++) {
+            if (this._dataJSON.spacecrafts[i].piloted) {
+                return classes.getSpacecraftClass(this._dataJSON.spacecrafts[i].class);
+            }
+        }
+        return null;
+    };
+    /**
      * Creates and returns a Level object based on the data stored in this descriptor. Only works if the data has been loaded - either it
      * was given when constructing this object, or it was requested and has been loaded
      * @param {Boolean} demoMode Whether to load the created level in demo mode
@@ -1453,6 +1486,34 @@ define([
         return result;
     };
     /**
+     * Returns a (new) array containing all of the level descriptors (both loaded and not yet loaded ones)
+     * @returns {LevelDescriptor[]}
+     */
+    LogicContext.prototype.getLevelDescriptors = function () {
+        var result = [];
+        this._levelManager.executeForAllResourcesOfType(LEVEL_ARRAY_NAME, function (levelDescriptor) {
+            result.push(levelDescriptor);
+        });
+        return result;
+    };
+    /**
+     * Requests the data (descriptor) for the level with the passed name to be loaded (if it is not loaded already) and calls the passed 
+     * callback with the descriptor as its argument when it is loaded
+     * @param {String} name
+     * @param {Function} callback
+     */
+    LogicContext.prototype.requestLevelDescriptor = function (name, callback) {
+        var levelDescriptor = this._levelManager.getResource(LEVEL_ARRAY_NAME, name);
+        if (levelDescriptor) {
+            this._levelManager.requestResourceLoad();
+            this._levelManager.executeWhenReady(function () {
+                callback(levelDescriptor);
+            });
+        } else {
+            callback(null);
+        }
+    };
+    /**
      * Requests the data (descriptor) for the level with the passed name to be loaded (if it is not loaded already), creates a level based 
      * on it and calls the passed callback with the created level as its argument when it is loaded
      * @param {String} name
@@ -1491,6 +1552,8 @@ define([
         createEnvironment: _context.createEnvironment.bind(_context),
         executeForAllEnvironments: _context.executeForAllEnvironments.bind(_context),
         getLevelNames: _context.getLevelNames.bind(_context),
+        getLevelDescriptors: _context.getLevelDescriptors.bind(_context),
+        requestLevelDescriptor: _context.requestLevelDescriptor.bind(_context),
         requestLevel: _context.requestLevel.bind(_context),
         Skybox: Skybox
     };

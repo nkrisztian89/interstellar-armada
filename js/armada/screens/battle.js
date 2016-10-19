@@ -2006,7 +2006,7 @@ define([
                     _smallHeaderText.setText(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
                     document.body.classList.remove("wait");
                     control.switchToSpectatorMode(false, true);
-                    this.setHeaderContent(strings.get(strings.LEVEL.PREFIX, utils.getFilenameWithoutExtension(_levelSourceFilename)));
+                    this.setHeaderContent(strings.get(strings.LEVEL.PREFIX, utils.getFilenameWithoutExtension(_levelSourceFilename) + strings.LEVEL.NAME_SUFFIX.name));
                     _battleCursor = document.body.style.cursor;
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
                         menuKey: _getMenuKeyHTMLString()

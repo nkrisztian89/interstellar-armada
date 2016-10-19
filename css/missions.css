@@ -1,0 +1,50 @@
+.pageContent {
+    width: 900px;
+    height: 420px;
+    position: relative;
+}
+
+.missionListContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 400px;
+}
+
+.missionInfoContainer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 680px;
+}
+
+@media screen and (max-width: 420px) {
+    .pageContent {
+        position: relative;
+        margin-left: 0;
+        margin-left: 0;
+        width: auto;
+        height: auto;
+    }
+
+    .missionListContainer {
+        position: relative;
+        margin-left: auto;
+        margin-right: auto;
+
+        width: 90%;
+        height: 300px;
+    }
+
+    .missionInfoContainer {
+        position: relative;
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+    }
+}
+
+.missionTitle {
+    text-align: left;
+}

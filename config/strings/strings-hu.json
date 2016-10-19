@@ -27,10 +27,22 @@
     "screen.back": "Vissza",
     "mainMenu": {
         "newGame": "Új játék",
-        "demo": "Demo",
         "database": "Adatbázis",
         "settings": "Beállítások",
         "about": "Információ"
+    },
+    "missions": {
+        "backButton": "Vissza a menübe",
+        "title": "Küldetések",
+        "launchButton": "Indítás",
+        "demoButton": "Demo",
+        "notCompleted": "Nem teljesített",
+        "noSelectedName": "Küldetésválasztás",
+        "noSelectedDescription": "Válassz egy küldetést a listából.",
+        "loadingDescription": "Betöltés...",
+        "noTranslatedDescription": "A küldetéshez nem érhető el leírás magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
+        "noDescription": "A küldetéshez nem érhető el leírás.",
+        "description": "{description}<br/><br/>Űrhajó: {pilotedSpacecraftClass}"
     },
     "settings": {
         "general": "Általános beállítások",
@@ -78,23 +90,58 @@
         "reaper": "Kaszás"
     },
     "level": {
-        "targetPracticeBoxes": "Kezdő lőgyakorlat",
-        "targetPracticeDrones": "Középhaladó lőgyakorlat",
-        "targetPracticeFalcon": "Haladó lőgyakorlat",
-        "1v1": "Egy egy ellen",
-        "3v3": "Három három ellen",
-        "bombers": "Bombázók",
-        "mixed": "Vegyes",
-        "defendCorvette": "Védd meg a korvettet",
-        "1v6": "Egy hat ellen",
-        "corvette": "Korvett",
-        "defendFrigate": "Védd meg a fregattot",
-        "patrolVsPatrol": "Őrjárat őrjárat ellen",
-        "defendFrigates": "Védd meg a fregattokat",
-        "level": "Teszt",
-        "libraTest": "Libra teszt",
-        "staticAvoidance": "Statikus akadály teszt",
-        "dynamicAvoidance": "Dinamikus akadály teszt"
+        "targetPracticeBoxes": {
+            "name": "Kezdő lőgyakorlat",
+            "description": "Gyakorold a célzást fegyvertelen, egy helyben álló konténerek felrobbantásával! Az űrhajódat gyakorló fegyverekkel szereltük fel, amelyek maguktól pontosan a célra állnak, ha felé nézel, így könnyítve a dolgod."
+        },
+        "targetPracticeDrones": {
+            "name": "Középhaladó lőgyakorlat"
+        },
+        "targetPracticeFalcon": {
+            "name": "Haladó lőgyakorlat"
+        },
+        "1v1": {
+            "name": "Egy egy ellen"
+        },
+        "3v3": {
+            "name": "Három három ellen"
+        },
+        "bombers": {
+            "name": "Bombázók"
+        },
+        "mixed": {
+            "name": "Vegyes"
+        },
+        "defendCorvette": {
+            "name": "Védd meg a korvettet"
+        },
+        "1v6": {
+            "name": "Egy hat ellen"
+        },
+        "corvette": {
+            "name": "Korvett"
+        },
+        "defendFrigate": {
+            "name": "Védd meg a fregattot"
+        },
+        "patrolVsPatrol": {
+            "name": "Őrjárat őrjárat ellen"
+        },
+        "defendFrigates": {
+            "name": "Védd meg a fregattokat"
+        },
+        "level": {
+            "name": "Teszt"
+        },
+        "libraTest": {
+            "name": "Libra teszt"
+        },
+        "staticAvoidance": {
+            "name": "Statikus akadály teszt"
+        },
+        "dynamicAvoidance": {
+            "name": "Dinamikus akadály teszt"
+        }
     },
     "battle": {
         "developmentVersionNotice": "ez az Interstellar Armada korai teszt verziója ({version})",

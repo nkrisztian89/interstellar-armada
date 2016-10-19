@@ -250,7 +250,7 @@ a.button {
     box-shadow: 0em 0em 0.5em #000000;
 }
 
-a:hover:not(.disabled):not(.menu), a.button.selected {
+a:hover:not(.disabled):not(.menu):not(.listElement), a.button.selected {
     color: #FFFFFF;
     text-shadow:
         #00FF00 0 0 0.2em,
