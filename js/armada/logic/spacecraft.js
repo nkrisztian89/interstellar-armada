@@ -391,6 +391,26 @@ define([
          * @type SoundSource
          */
         this._soundSource = null;
+        /**
+         * The kill count for this spacecraft (current mission)
+         * @type Number
+         */
+        this._kills = 0;
+        /**
+         * The current score for this spacecraft (without bonuses)
+         * @type Number
+         */
+        this._score = 0;
+        /**
+         * A counter for the shots fired during  the current mission (for hit ratio calculation)
+         * @type Number
+         */
+        this._shotsFired = 0;
+        /**
+         * A counter for the shots that hit an enemry during the current mission (for hit ratio calculation)
+         * @type Number
+         */
+        this._hitsOnEnemies = 0;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, equipmentProfileName, spacecraftArray);
@@ -609,6 +629,54 @@ define([
      */
     Spacecraft.prototype.canBeReused = function () {
         return !this._alive;
+    };
+    /**
+     * Returns the hit ratio (only counting hitting the enemy) during the current mission
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getHitRatio = function () {
+        return this._shotsFired ? (this._hitsOnEnemies / this._shotsFired) : 0;
+    };
+    /**
+     * Returns the number of enemy spacecrafts destroyed (last hit delivered) by this spacecraft during the current mission
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getKills = function () {
+        return this._kills;
+    };
+    /**
+     * Increases the number of kills for this spacecraft
+     * @type Number
+     */
+    Spacecraft.prototype.gainKill = function () {
+        this._kills++;
+    };
+    /**
+     * Returns the (base) score this spacecraft acquired during the current mission
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getScore = function () {
+        return this._score;
+    };
+    /**
+     * Increases the score of this spacecraft by the passed amount
+     * @param {Number} score
+     */
+    Spacecraft.prototype.gainScore = function (score) {
+        this._score += score;
+    };
+    /**
+     * Returns how much score destroying this spacecraft should grant to the passed spacecraft if it delivered the last, destroying hit
+     * @param {Spacecraft} other
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getScoreValue = function (other) {
+        // destroying more durable or faster targets is rewarded more
+        return Math.round(config.getSetting(config.BATTLE_SETTINGS.BASE_SCORE_VALUE) *
+                this._class.getHitpoints() / other.getClass().getHitpoints() *
+                Math.max(
+                        config.getSetting(config.BATTLE_SETTINGS.MIN_SCORE_FACTOR_FOR_ACCELERATION),
+                        other.getMaxAcceleration() ? (this.getMaxAcceleration() / other.getMaxAcceleration()) : 0));
     };
     /**
      * Returns the 4x4 translation matrix describing the position of this 
@@ -1343,7 +1411,7 @@ define([
      * and are currently aimed at their target.
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
-        var i, scaledOriMatrix, fired = false, posInCameraSpace;
+        var i, scaledOriMatrix, fired = false, weaponFired, posInCameraSpace;
         scaledOriMatrix = this.getScaledOriMatrix();
         posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
         if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
@@ -1352,7 +1420,11 @@ define([
             posInCameraSpace = null;
         }
         for (i = 0; i < this._weapons.length; i++) {
-            fired = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, posInCameraSpace ? this.getSoundSource() : null) || fired;
+            weaponFired = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, posInCameraSpace ? this.getSoundSource() : null);
+            fired = weaponFired || fired;
+            if (weaponFired) {
+                this._shotsFired++;
+            }
         }
         // executing callbacks
         if (fired) {
@@ -1565,13 +1637,19 @@ define([
      * @param {Spacecraft} hitBy The spacecraft that caused the damage (fired the hitting projectile)
      */
     Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy) {
-        var i, damageIndicator, hitpointThreshold, exp;
+        var i, damageIndicator, hitpointThreshold, exp, liveHit;
         // armor rating decreases damage
         damage = Math.max(0, damage - this._class.getArmor());
+        liveHit = this._hitpoints > 0;
         // logic simulation: modify hitpoints
         this._hitpoints -= damage;
-        if (this._hitpoints < 0) {
+        if (this._hitpoints <= 0) {
             this._hitpoints = 0;
+            // granting kill and score to the spacecraft that destroyed this one
+            if (liveHit && hitBy && this.isHostile(hitBy)) {
+                hitBy.gainScore(this.getScoreValue(hitBy));
+                hitBy.gainKill();
+            }
         } else {
             // visual simulation: add damage indicators if needed
             for (i = 0; i < this._class.getDamageIndicators().length; i++) {
@@ -1828,6 +1906,9 @@ define([
     Spacecraft.prototype.handleAnySpacecraftHit = function (spacecraft) {
         if (this._onAnySpacecraftHit) {
             this._onAnySpacecraftHit(spacecraft);
+        }
+        if (spacecraft.isHostile(this)) {
+            this._hitsOnEnemies++;
         }
     };
     /**

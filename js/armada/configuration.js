@@ -1377,6 +1377,21 @@ define([
         END_THEME_CROSSFADE_DURATION: {
             name: "endThemeCrossfadeDuration",
             type: "number"
+        },
+        /**
+         * Destroying an identical(ly valued) spacecraft will grant this amount of score to a spacecraft
+         */
+        BASE_SCORE_VALUE: {
+            name: "baseScoreValue",
+            type: "number"
+        },
+        /**
+         * The factor affecting the score valuation of a spacecraft corresponding to the difference in acceleration from the destroying
+         * spacecraft will never be below this value (e.g. for spacecrafts without propulsion)
+         */
+        MIN_SCORE_FACTOR_FOR_ACCELERATION: {
+            name: "minimumScoreFactorForAcceleration",
+            type: "number"
         }
     };
     CAMERA_SETTINGS = {

@@ -1837,7 +1837,7 @@ define([
      * @param {Number} dt
      */
     BattleScreen.prototype._render = function (dt) {
-        var victory;
+        var /**@type Boolean*/ victory, /**@type Spacecraft*/ craft, /**@type Number*/ baseScore, hitRatio, hullIntegrity, score;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -1874,8 +1874,20 @@ define([
                     _timeSinceGameStateChanged += dt;
                     if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = !_level.isLost();
+                        if (victory) {
+                            craft = _level.getFollowedSpacecraftForScene(_battleScene);
+                            baseScore = craft.getScore();
+                            hitRatio = craft.getHitRatio();
+                            hullIntegrity = craft.getHullIntegrity();
+                            score = Math.round(baseScore * (1 + hitRatio + hullIntegrity));
+                            level.getLevelDescriptor(_level.getName()).updateBestScore(score);
+                        }
                         this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_DEFEAT), {
-                            menuKey: _getMenuKeyHTMLString()
+                            menuKey: _getMenuKeyHTMLString(),
+                            score: score || 0,
+                            kills: craft ? craft.getKills() : 0,
+                            hitRatio: Math.round(100 * hitRatio) + "%",
+                            hullIntegrity: Math.round(100 * hullIntegrity) + "%"
                         }));
                         _gameStateShown = true;
                         audio.playMusic(

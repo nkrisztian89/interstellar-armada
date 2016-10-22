@@ -397,7 +397,9 @@
             "victoryMusic": "victory",
             "defeatMusic": "defeat",
             "combatThemeDurationAfterFire": 10,
-            "endThemeCrossfadeDuration": 0.2
+            "endThemeCrossfadeDuration": 0.2,
+            "baseScoreValue": 100,
+            "minimumScoreFactorForAcceleration": 0.2
         },
         "camera": {
             "defaultFOV": 40,

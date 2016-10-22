@@ -1441,6 +1441,17 @@ define([
             this._listElements[this._highlightedIndex].element.onclick();
         }
     };
+    /**
+     * Executes the passed callback function for each list element, passing the HTML element representing that list element as its single
+     * argument
+     * @param {Function} callback 
+     */
+    ListComponent.prototype.executeForListElements = function (callback) {
+        var i;
+        for (i = 0; i < this._listElements.length; i++) {
+            callback(this._listElements[i].element);
+        }
+    };
     // #########################################################################
     /**
      * @class A component that consists of a label describing a property, and a

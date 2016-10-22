@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, Element, this, Float32Array, performance */
+/*global define, Element, this, Float32Array, performance, localStorage */
 
 /**
  * @param utils Used for format strings and useful constants
@@ -22,6 +22,7 @@
  * @param renderableObjects Used for creating visual models for game objects
  * @param lights Used for creating light sources for game objects and levels
  * @param sceneGraph Creating and managing the scene graph for visual simulation is done using this module
+ * @param constants Used for Accessing global localStorage prefixes
  * @param graphics Used to access graphics settings
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param config Used to access game settings/configuration
@@ -43,6 +44,7 @@ define([
     "modules/scene/renderable-objects",
     "modules/scene/lights",
     "modules/scene/scene-graph",
+    "armada/constants",
     "armada/graphics",
     "armada/classes",
     "armada/configuration",
@@ -55,11 +57,16 @@ define([
         utils, vec, mat,
         application, asyncResource, resourceManager, resources, pools,
         camera, renderableObjects, lights, sceneGraph,
-        graphics, classes, config, strings, spacecraft, equipment, ai) {
+        constants, graphics, classes, config, strings, spacecraft, equipment, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
             // constants
+            /**
+             * Level related local storage IDs start with this prefix
+             * @type String
+             */
+            MODULE_LOCAL_STORAGE_PREFIX = constants.LOCAL_STORAGE_PREFIX + "missions_",
             /**
              * Used to choose the array of level descriptors when loading the configuration of the level resource manager
              * @type String
@@ -76,6 +83,11 @@ define([
              * @type String
              */
             ENVIRONMENTS_CATEGORY_NAME = "environments",
+            /**
+             * The location IDs of local storage values storing best scores for levels are prefixed by this 
+             * @type String
+             */
+            BEST_SCORE_LOCAL_STORAGE_PREFIX = MODULE_LOCAL_STORAGE_PREFIX + "bestScore_",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -827,8 +839,14 @@ define([
      * projectiles. Can create scenes for visual representation using the held
      * references as well as perform the game logic and physics simulation
      * among the contained objects.
+     * @param {String} name The name of the level (typically same as the filename e.g. someLevel.json)
      */
-    function Level() {
+    function Level(name) {
+        /**
+         * The name of the level (typically same as the filename e.g. someLevel.json)
+         * @type String
+         */
+        this._name = name;
         /**
          * Stores the attributes of the environment where this level is situated.
          * @type Environment
@@ -895,6 +913,13 @@ define([
          */
         this._randomShipsEquipmentProfileName = null;
     }
+    /**
+     * Return the name identifying this level (typically same as the filename e.g. someLevel.json)
+     * @returns {String}
+     */
+    Level.prototype.getName = function () {
+        return this._name;
+    };
     // #########################################################################
     // indirect getters and setters
     /**
@@ -1331,9 +1356,24 @@ define([
      */
     function LevelDescriptor(dataJSON, folder) {
         resourceManager.JSONResource.call(this, dataJSON, folder, true);
+        /**
+         * The current best score of the player on this level (saved to loval storage)
+         * @type Number
+         */
+        this._bestScore = parseInt(localStorage[this._getLocalStorageID()], 10);
+        if (isNaN(this._bestScore)) {
+            this._bestScore = undefined;
+        }
     }
     LevelDescriptor.prototype = new resourceManager.JSONResource();
     LevelDescriptor.prototype.constructor = LevelDescriptor;
+    /**
+     * Returns the location ID to use when saving/loading the best score value to/from local storage
+     * @returns {String}
+     */
+    LevelDescriptor.prototype._getLocalStorageID = function () {
+        return BEST_SCORE_LOCAL_STORAGE_PREFIX + this.getName();
+    };
     /**
      * Returns the raw description of this mission (as given in the data JSON)
      * @returns {String} 
@@ -1376,12 +1416,33 @@ define([
     LevelDescriptor.prototype.createLevel = function (demoMode) {
         var result = null;
         if (this.isReadyToUse()) {
-            result = new Level();
+            result = new Level(this.getName());
             result.loadFromJSON(this._dataJSON, demoMode);
         } else {
             application.showError("Cannot create level from descriptor that has not yet been initialized!");
         }
         return result;
+    };
+    /**
+     * Returns the current best score for the level (also stored in local storage)
+     * @returns {Number}
+     */
+    LevelDescriptor.prototype.getBestScore = function () {
+        return this._bestScore;
+    };
+    /**
+     * Checks whether the passed score exceeds the current best score of the level, and if so, updates the value both in this object and in
+     * local storage
+     * @param {Number} score
+     * @returns {Boolean}
+     */
+    LevelDescriptor.prototype.updateBestScore = function (score) {
+        if ((this._bestScore === undefined) || (score > this._bestScore)) {
+            this._bestScore = score;
+            localStorage[this._getLocalStorageID()] = this._bestScore;
+            return true;
+        }
+        return false;
     };
     // #########################################################################
     /**
@@ -1497,6 +1558,14 @@ define([
         return result;
     };
     /**
+     * Returns the level descriptor identified by the passed name (typically the filename e.g. someLevel.json)
+     * @param {String} name
+     * @returns {LevelDescriptor}
+     */
+    LogicContext.prototype.getLevelDescriptor = function (name) {
+        return this._levelManager.getResource(LEVEL_ARRAY_NAME, name);
+    };
+    /**
      * Requests the data (descriptor) for the level with the passed name to be loaded (if it is not loaded already) and calls the passed 
      * callback with the descriptor as its argument when it is loaded
      * @param {String} name
@@ -1552,6 +1621,7 @@ define([
         createEnvironment: _context.createEnvironment.bind(_context),
         executeForAllEnvironments: _context.executeForAllEnvironments.bind(_context),
         getLevelNames: _context.getLevelNames.bind(_context),
+        getLevelDescriptor: _context.getLevelDescriptor.bind(_context),
         getLevelDescriptors: _context.getLevelDescriptors.bind(_context),
         requestLevelDescriptor: _context.requestLevelDescriptor.bind(_context),
         requestLevel: _context.requestLevel.bind(_context),

@@ -32,6 +32,7 @@ define([
         LAUNCH_BUTTON: {name: "missions.launchButton"},
         DEMO_BUTTON: {name: "missions.demoButton"},
         NOT_COMPLETED: {name: "missions.notCompleted"},
+        BEST_SCORE: {name: "missions.bestScore"},
         NO_SELECTED_NAME: {name: "missions.noSelectedName"},
         NO_SELECTED_DESCRIPTION: {name: "missions.noSelectedDescription"},
         LOADING_DESCRIPTION: {name: "missions.loadingDescription"},

@@ -23,7 +23,6 @@ define([
     "armada/screens/shared",
     "armada/strings",
     "armada/audio",
-    "armada/logic/level",
     "armada/screens/battle"
 ], function (screens, game, armadaScreens, strings, audio, battle) {
     "use strict";

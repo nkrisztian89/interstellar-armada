@@ -34,6 +34,7 @@ define([
             // ------------------------------------------------------------------------------
             // constants
             MISSION_LIST_CONTAINER_CLASS = "missionListContainer",
+            COMPLETED_CLASS = "completed",
             BACK_BUTTON_ID = "backButton",
             DEMO_BUTTON_ID = "demoButton",
             LAUNCH_BUTTON_ID = "launchButton",
@@ -192,11 +193,35 @@ define([
         return keyCommands;
     };
     /**
+     * Updates the subcaption for all missions in the displayed list with the current best score for the mission
+     */
+    MissionsScreen.prototype._updateScores = function () {
+        var levelDescriptors, i;
+        levelDescriptors = level.getLevelDescriptors();
+        i = 0;
+        this._listComponent.executeForListElements(function (listElement) {
+            var
+                    score = levelDescriptors[i].getBestScore(),
+                    subcaption = listElement.querySelector("." + armadaScreens.SUBCAPTION_CLASS_NAME);
+            subcaption.innerHTML = utils.formatString(
+                    ((score === undefined) ?
+                            strings.get(strings.MISSIONS.NOT_COMPLETED) :
+                            strings.get(strings.MISSIONS.BEST_SCORE)), {
+                score: score
+            });
+            if (score !== undefined) {
+                subcaption.classList.add(COMPLETED_CLASS);
+            }
+            i++;
+        });
+    };
+    /**
      * @override
      * @param {Boolean} active
      */
     MissionsScreen.prototype.setActive = function (active) {
         screens.HTMLScreen.prototype.setActive.call(this, active);
+        this._updateScores();
         this._listComponent.reset();
     };
     /**
@@ -236,6 +261,7 @@ define([
      */
     MissionsScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
+        this._updateScores();
         this._selectMission(-1);
     };
     // -------------------------------------------------------------------------
