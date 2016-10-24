@@ -416,6 +416,12 @@ define([
          * @type Number
          */
         this._hitsOnEnemies = 0;
+        /**
+         * The calculated cached value of how many score points is destroying this spacecraft worth (based on spacecraft class and equipment
+         * score values)
+         * @type Number
+         */
+        this._scoreValue = 0;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, equipmentProfileName, spacecraftArray);
@@ -465,6 +471,7 @@ define([
         this._hitSounds = {};
         this._hitSoundTimestamp = 0;
         this._updateIDAndName();
+        this._updateScoreValue();
     };
     /**
      * Updates the cached values for the spacecraft ID and display name based on the designation (name / squad) of the spacecraft.
@@ -671,17 +678,11 @@ define([
         this._score += score;
     };
     /**
-     * Returns how much score destroying this spacecraft should grant to the passed spacecraft if it delivered the last, destroying hit
-     * @param {Spacecraft} other
+     * Returns how much score destroying this spacecraft should grant (completely, including dealing damage and scoring the final hit)
      * @returns {Number}
      */
-    Spacecraft.prototype.getScoreValue = function (other) {
-        // destroying more durable or faster targets is rewarded more
-        return Math.round(config.getSetting(config.BATTLE_SETTINGS.BASE_SCORE_VALUE) *
-                this._class.getHitpoints() / other.getClass().getHitpoints() *
-                Math.max(
-                        config.getSetting(config.BATTLE_SETTINGS.MIN_SCORE_FACTOR_FOR_ACCELERATION),
-                        other.getMaxAcceleration() ? (this.getMaxAcceleration() / other.getMaxAcceleration()) : 0));
+    Spacecraft.prototype.getScoreValue = function () {
+        return this._scoreValue;
     };
     /**
      * Returns the 4x4 translation matrix describing the position of this 
@@ -1351,11 +1352,24 @@ define([
         }
     };
     /**
+     * Calculates and caches the score value. Needs to be called when the equipment changes
+     */
+    Spacecraft.prototype._updateScoreValue = function () {
+        var i;
+        this._scoreValue = this._class.getScoreValue();
+        for (i = 0; i < this._weapons.length; i++) {
+            this._scoreValue += this._weapons[i].getScoreValue();
+        }
+        if (this._propulsion) {
+            this._scoreValue += this._propulsion.getScoreValue();
+        }
+    };
+    /**
      * Equips a weapon of the given class to the ship's next free weapon hard
      * point, if any are available.
      * @param {WeaponClass} weaponClass
      */
-    Spacecraft.prototype.addWeapon = function (weaponClass) {
+    Spacecraft.prototype._addWeapon = function (weaponClass) {
         var slot, weaponSlots = this._class.getWeaponSlots();
         if (this._weapons.length < weaponSlots.length) {
             slot = weaponSlots[this._weapons.length];
@@ -1367,7 +1381,7 @@ define([
      * previous propulsion system, if one was equipped.
      * @param {PropulsionClass} propulsionClass
      */
-    Spacecraft.prototype.addPropulsion = function (propulsionClass) {
+    Spacecraft.prototype._addPropulsion = function (propulsionClass) {
         this._propulsion = new equipment.Propulsion(propulsionClass, this._physicalModel);
         this._maneuveringComputer.updateForNewPropulsion();
         this._maneuveringComputer.updateTurningLimit();
@@ -1384,6 +1398,7 @@ define([
         this._propulsion = null;
         this._maneuveringComputer.updateForNewPropulsion();
         this._maneuveringComputer.updateTurningLimit();
+        this._updateScoreValue();
     };
     /**
      * Equips the spacecraft according to the specifications in the given equipment
@@ -1394,14 +1409,15 @@ define([
         var i;
         if (equipmentProfile) {
             for (i = 0; i < equipmentProfile.getWeaponDescriptors().length; i++) {
-                this.addWeapon(classes.getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
+                this._addWeapon(classes.getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
             }
             if (equipmentProfile.getPropulsionDescriptor() !== null) {
-                this.addPropulsion(classes.getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
+                this._addPropulsion(classes.getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
             }
         } else {
             application.log("WARNING: equipping empty profile on " + this._class.getName() + "!");
         }
+        this._updateScoreValue();
     };
     /**
      * Returns the list of names (IDs) of the available equipment profiles for this spacecraft.
@@ -1651,7 +1667,7 @@ define([
         if (this._hitpoints <= 0) {
             // granting kill and score to the spacecraft that destroyed this one
             if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
-                scoreValue = this.getScoreValue(hitBy);
+                scoreValue = this.getScoreValue();
                 // gain score for dealing the damage
                 hitBy.gainScore((1 - _scoreFactorForKill) * (damage + this._hitpoints) / this._class.getHitpoints() * scoreValue);
                 // gain score and kill for delivering the final hit
@@ -1677,7 +1693,7 @@ define([
             }
             // granting score to the spacecraft that hit this one for the damage
             if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
-                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._class.getHitpoints() * this.getScoreValue(hitBy));
+                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._class.getHitpoints() * this.getScoreValue());
             }
         }
         // callbacks

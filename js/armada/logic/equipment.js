@@ -985,6 +985,13 @@ define([
         }
     };
     /**
+     * Returns the amount of score points to be added to the total score value of spacecrafts that have this weapon equipped
+     * @returns {Number}
+     */
+    Weapon.prototype.getScoreValue = function () {
+        return this._class.getScoreValue();
+    };
+    /**
      * Removes all references stored by this object
      */
     Weapon.prototype.destroy = function () {
@@ -1325,6 +1332,13 @@ define([
         if (this._thrusterSoundClip) {
             this._thrusterSoundClip.rampVolume(this._getSoundVolume() * this._class.getThrusterSoundVolume(), THRUSTER_SOUND_VOLUME_RAMP_DURATION, true, true);
         }
+    };
+    /**
+     * Returns the amount of score points to be added to the total score value of spacecrafts that have this propulsion equipped
+     * @returns {Number}
+     */
+    Propulsion.prototype.getScoreValue = function () {
+        return this._class.getScoreValue();
     };
     /**
      * Removes all references stored by this object

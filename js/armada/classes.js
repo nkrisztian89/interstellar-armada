@@ -1633,6 +1633,11 @@ define([
          * @type Object
          */
         this._fireSound = dataJSON ? (types.getVerifiedObject("weaponClasses['" + this._name + "'].fireSound", dataJSON.fireSound, SOUND_EFFECT_3D)) : null;
+        /**
+         * The amount of score points to be added to the total score value of spacecrafts that have a weapon of this class equipped
+         * @type Number
+         */
+        this._scoreValue = dataJSON ? (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0) : 0;
         return true;
     };
     /**
@@ -1733,6 +1738,13 @@ define([
             _createSoundClip(this._fireSound, false, soundSource, true, stackTimeThreshold, stackVolumeFactor).play();
         }
     };
+    /**
+     * Returns the amount of score points to be added to the total score value of spacecrafts that have a weapon of this class equipped
+     * @returns {Number}
+     */
+    WeaponClass.prototype.getScoreValue = function () {
+        return this._scoreValue;
+    };
     // ##############################################################################
     /**
      * @class Each spacecraft can be equipped with a propulsion system. This class
@@ -1793,6 +1805,11 @@ define([
          * @type Object
          */
         this._thrusterSound = dataJSON ? types.getVerifiedObject("propulsionClasses['" + this._name + "'].thrusterSound", dataJSON.thrusterSound, SOUND_EFFECT_3D) : null;
+        /**
+         * The amount of score points to be added to the total score value of spacecrafts that have a propulsion of this class equipped
+         * @type Number
+         */
+        this._scoreValue = dataJSON ? (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0) : 0;
         return true;
     };
     /**
@@ -1863,6 +1880,13 @@ define([
      */
     PropulsionClass.prototype.getThrusterSoundVolume = function () {
         return this._thrusterSound.volume;
+    };
+    /**
+     * Returns the amount of score points to be added to the total score value of spacecrafts that have a propulsion of this class equipped
+     * @returns {Number}
+     */
+    PropulsionClass.prototype.getScoreValue = function () {
+        return this._scoreValue;
     };
     // ##############################################################################
     /**
@@ -3133,6 +3157,13 @@ define([
         } else if (!otherSpacecraftClass) {
             _showMissingPropertyError(this, "blinkers");
         }
+        /**
+         * The basic (without any equipment) amount of score points destroying a spacecraft of this type is worth 
+         * @type Number
+         */
+        this._scoreValue = otherSpacecraftClass ?
+                (dataJSON.scoreValue || otherSpacecraftClass._scoreValue) :
+                (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0);
     };
     /**
      * @override
@@ -3367,6 +3398,13 @@ define([
             return _createSoundClip(this._humSound, true, soundSource);
         }
         return null;
+    };
+    /**
+     * Returns the basic (without any equipment) amount of score points destroying a spacecraft of this type is worth 
+     * @returns {Number}
+     */
+    SpacecraftClass.prototype.getScoreValue = function () {
+        return this._scoreValue;
     };
     /**
      * Sends an asynchronous request to grab the file containing the in-game

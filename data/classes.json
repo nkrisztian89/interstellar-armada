@@ -1430,7 +1430,8 @@
                     "defaultAngle": 0,
                     "rotationRate": 10,
                     "transformGroupIndex": 1
-                }]
+                }],
+            "scoreValue": 5
         }, {
             "name": "plasmaGun",
             "shader": "ship",
@@ -1448,7 +1449,8 @@
             "fireSound": {
                 "name": "plasmaShot",
                 "volume": 0.4
-            }
+            },
+            "scoreValue": 20
         }, {
             "name": "heavyPlasmaGun",
             "shader": "ship",
@@ -1466,7 +1468,8 @@
             "fireSound": {
                 "name": "heavyPlasmaShot",
                 "volume": 1.5
-            }
+            },
+            "scoreValue": 30
         }, {
             "name": "smallPlasmaTurret",
             "shader": "ship",
@@ -1512,7 +1515,8 @@
             "fireSound": {
                 "name": "plasmaShot",
                 "volume": 1
-            }
+            },
+            "scoreValue": 50
         }, {
             "name": "smallProtonCannon",
             "shader": "ship",
@@ -1547,7 +1551,8 @@
             "fireSound": {
                 "name": "protonShot",
                 "volume": 1
-            }
+            },
+            "scoreValue": 60
         }, {
             "name": "largeIonCannon",
             "shader": "ship",
@@ -1581,7 +1586,8 @@
             "fireSound": {
                 "name": "ionShot",
                 "volume": 2
-            }
+            },
+            "scoreValue": 100
         }],
     "propulsionClasses": [{
             "name": "imperialDrone",
@@ -1597,7 +1603,8 @@
             "thrusterSound": {
                 "name": "thruster",
                 "volume": 0.8
-            }
+            },
+            "scoreValue": 5
         }, {
             "name": "imperialFighterMk1",
             "shader": "particle",
@@ -1612,7 +1619,8 @@
             "thrusterSound": {
                 "name": "thruster",
                 "volume": 1.2
-            }
+            },
+            "scoreValue": 10
         }, {
             "name": "imperialBomberMk1",
             "shader": "particle",
@@ -1627,7 +1635,8 @@
             "thrusterSound": {
                 "name": "thruster",
                 "volume": 1.4
-            }
+            },
+            "scoreValue": 10
         }, {
             "name": "imperialCorvetteMk1",
             "shader": "particle",
@@ -1642,7 +1651,8 @@
             "thrusterSound": {
                 "name": "thruster",
                 "volume": 1.75
-            }
+            },
+            "scoreValue": 20
         }, {
             "name": "imperialFrigateMk1",
             "shader": "particle",
@@ -1657,7 +1667,8 @@
             "thrusterSound": {
                 "name": "thruster",
                 "volume": 2
-            }
+            },
+            "scoreValue": 20
         }, {
             "name": "imperialCruiserMk1",
             "shader": "particle",
@@ -1672,7 +1683,8 @@
             "thrusterSound": {
                 "name": "thruster",
                 "volume": 4.0
-            }
+            },
+            "scoreValue": 50
         }],
     "spacecraftTypes": [{
             "name": "container",
@@ -1800,7 +1812,8 @@
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [],
             "lights": [],
-            "blinkers": []
+            "blinkers": [],
+            "scoreValue": 5
         }, {
             "name": "falcon",
             "type": "interceptor",
@@ -2232,7 +2245,8 @@
                     "spotCutoffAngle": 11,
                     "spotFullIntensityAngle": 5
                 }],
-            "blinkers": []
+            "blinkers": [],
+            "scoreValue": 50
         }, {
             "name": "falcon-cameraTest",
             "basedOn": "falcon",
@@ -3170,7 +3184,8 @@
                     "spotCutoffAngle": 11,
                     "spotFullIntensityAngle": 5
                 }],
-            "blinkers": []
+            "blinkers": [],
+            "scoreValue": 80
         }, {
             "name": "drone",
             "type": "drone",
@@ -3545,7 +3560,8 @@
                     "period": 2000,
                     "blinks": [1000],
                     "intensity": 25
-                }]
+                }],
+            "scoreValue": 15
         }, {
             "name": "aries",
             "type": "corvette",
@@ -3949,7 +3965,8 @@
                     "period": 1500,
                     "blinks": [150],
                     "intensity": 49
-                }]
+                }],
+            "scoreValue": 300
         }, {
             "name": "taurus",
             "type": "frigate",
@@ -4520,7 +4537,8 @@
                     "period": 2000,
                     "blinks": [1000],
                     "intensity": 64
-                }]
+                }],
+            "scoreValue": 500
         }, {
             "name": "libra",
             "type": "cruiser",
@@ -5133,6 +5151,7 @@
                     "color": [1, 1, 1],
                     "intensity": 400
                 }],
-            "blinkers": []
+            "blinkers": [],
+            "scoreValue": 2500
         }]
 }

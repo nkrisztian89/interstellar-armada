@@ -981,6 +981,10 @@ define([
                 FIRE_SOUND: {
                     name: "fireSound",
                     type: SOUND_DESCRIPTOR
+                },
+                SCORE_VALUE: {
+                    name: "scoreValue",
+                    type: "number"
                 }
             },
             /**
@@ -1031,6 +1035,10 @@ define([
                 THRUSTER_SOUND: {
                     name: "thrusterSound",
                     type: SOUND_DESCRIPTOR
+                },
+                SCORE_VALUE: {
+                    name: "scoreValue",
+                    type: "number"
                 }
             },
             /**
@@ -1629,6 +1637,10 @@ define([
                 BLINKERS: {
                     name: "blinkers",
                     type: _createTypedArrayType(BLINKER)
+                },
+                SCORE_VALUE: {
+                    name: "scoreValue",
+                    type: "number"
                 }
             },
             /**

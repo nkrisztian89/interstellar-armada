@@ -1331,21 +1331,6 @@ define([
             type: "number"
         },
         /**
-         * Destroying an identical(ly valued) spacecraft will grant this amount of score to a spacecraft
-         */
-        BASE_SCORE_VALUE: {
-            name: "baseScoreValue",
-            type: "number"
-        },
-        /**
-         * The factor affecting the score valuation of a spacecraft corresponding to the difference in acceleration from the destroying
-         * spacecraft will never be below this value (e.g. for spacecrafts without propulsion)
-         */
-        MIN_SCORE_FACTOR_FOR_ACCELERATION: {
-            name: "minimumScoreFactorForAcceleration",
-            type: "number"
-        },
-        /**
          * The ratio of score points that should be awarded for destroying an enemy. E.g. 0.2 means that 20% of score points should be 
          * awarded for the kill to the spacecraft which delivered the final hit, and 80% for the damage, proportionally to all spacecrafts
          * which dealt it

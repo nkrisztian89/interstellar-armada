@@ -437,8 +437,6 @@
             "defeatMusic": "defeat",
             "combatThemeDurationAfterFire": 10,
             "endThemeCrossfadeDuration": 0.2,
-            "baseScoreValue": 100,
-            "minimumScoreFactorForAcceleration": 0.2,
             "scoreFractionForKill": 0.5
         },
         "camera": {
