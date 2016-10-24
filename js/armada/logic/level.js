@@ -587,6 +587,11 @@ define([
         } else {
             application.showError("Invalid parameter specified for Team constructor!");
         }
+        /**
+         * The number of spacecrafts belonging to this team at the start of the current mission
+         * @type Number
+         */
+        this._initialCount = 0;
     }
     /**
      * Returns the unique string ID of this team.
@@ -610,6 +615,19 @@ define([
      */
     Team.prototype.getColor = function () {
         return this._color;
+    };
+    /**
+     * Returns the number of spacecrafts belonging to this team at the start of the current mission
+     * @returns {Number}
+     */
+    Team.prototype.getInitialCount = function () {
+        return this._initialCount;
+    };
+    /**
+     * Increases the number of spacecrafts belonging to this team at the start of the current mission
+     */
+    Team.prototype.increaseInitialCount = function () {
+        this._initialCount++;
     };
     // #########################################################################
     /**
@@ -997,6 +1015,22 @@ define([
         return !this._pilotedCraft || this._pilotedCraft.canBeReused();
     };
     /**
+     * Returns how many spacecrafts are currently alive in the passed team
+     * @param {Team} team
+     * @returns {Number}
+     */
+    Level.prototype.getSpacecraftCountForTeam = function (team) {
+        var i, result = 0;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
+                if (this._spacecrafts[i].getTeam() === team) {
+                    result++;
+                }
+            }
+        }
+        return result;
+    };
+    /**
      * Returns whether the passed spacecraft has the given renderable object as its visual model.
      * @param {RenderableObject} visualModel
      * @param {Spacecraft} spacecraft
@@ -1088,6 +1122,7 @@ define([
                 team = this.getTeam(teamID);
                 if (team) {
                     craft.setTeam(team);
+                    team.increaseInitialCount();
                 } else {
                     application.showError("Invalid team ID '" + teamID + "' specified for " + craft.getClassName() + "!");
                 }

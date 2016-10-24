@@ -166,7 +166,7 @@
         "message": {
             "ready": "Kész!<br/>Játék közven az {menuKey} billentyűvel hívhatod elő a menüt, ahol az irányítást is beállíthatod.",
             "paused": "Játék szüneteltetve.",
-            "victory": "<strong>Győzelem!</strong><br/>Gratulálok, sikeresen teljesítetted ezt a szintet!<br/>Pontszám: <strong>{score}</strong><br/>Kilőtt űrhajók: {kills}<br/>Találati arány bónusz: {hitRatio}<br/>Páncélzat épsége bónusz: {hullIntegrity}<br/>Az {menuKey} billentyűvel hívhatod elő a menüt.",
+            "victory": "<strong>Győzelem!</strong><br/>Gratulálok, sikeresen teljesítetted ezt a szintet!<br/>Pontszám: <strong>{score}</strong><br/>Kilőtt űrhajók: {kills}<br/>Találati arány bónusz: {hitRatio}<br/>Páncélzat épsége bónusz: {hullIntegrity}<br/>Csapat túlélési bónusz: {teamSurvival}<br/>Az {menuKey} billentyűvel hívhatod elő a menüt.",
             "defeat": "<strong>Vereség!</strong><br/>Az űrhajód megsemmisült. Az {menuKey} billentyűvel hívhatod elő a menüt, ahonnan újrakezdheted a szintet."
         }
     },

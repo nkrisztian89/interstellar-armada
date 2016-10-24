@@ -1341,6 +1341,30 @@ define([
                 baseType: "number",
                 range: [0, 1]
             }
+        },
+        /**
+         * The amount of score points awarded for the player if an individual mission (no teammates) is completed with full hull integrity. 
+         * If the player's ship is damaged, the bonus is proportional to the amount of hull integrity left.
+         */
+        SCORE_BONUS_FOR_HULL_INTEGRITY: {
+            name: "scoreBonusForHullIntegrity",
+            type: "number"
+        },
+        /**
+         * The amount of score points awarded for the player if a team mission (the player has teammates) is completed with full hull 
+         * integrity. If the player's ship is damaged, the bonus is proportional to the amount of hull integrity left.
+         */
+        SCORE_BONUS_FOR_HULL_INTEGRITY_TEAM: {
+            name: "scoreBonusForHullIntegrityTeam",
+            type: "number"
+        },
+        /**
+         * The amount of score points awarded for the player if a team mission (the player has teammates) is completed with all teammates
+         * surviving. If some teammates fall, the bonus is proportional to the ratio of surviving teammates.
+         */
+        SCORE_BONUS_FOR_TEAM_SURVIVAL: {
+            name: "scoreBonusForTeamSurvival",
+            type: "number"
         }
     };
     CAMERA_SETTINGS = {

@@ -1872,7 +1872,7 @@ define([
      * @param {Number} dt
      */
     BattleScreen.prototype._render = function (dt) {
-        var /**@type Boolean*/ victory, /**@type Spacecraft*/ craft, /**@type Number*/ baseScore, hitRatio, hullIntegrity, score;
+        var /**@type Boolean*/ victory, isTeamMission, /**@type Spacecraft*/ craft, /**@type Number*/ baseScore, hitRatio, hullIntegrityBonus, teamSurvivalBonus, score;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -1911,10 +1911,16 @@ define([
                         victory = !_level.isLost();
                         if (victory) {
                             craft = _level.getFollowedSpacecraftForScene(_battleScene);
+                            isTeamMission = craft.getTeam().getInitialCount() > 1;
                             baseScore = craft.getScore();
                             hitRatio = craft.getHitRatio();
-                            hullIntegrity = craft.getHullIntegrity();
-                            score = Math.round(baseScore * (1 + hitRatio + hullIntegrity));
+                            hullIntegrityBonus = Math.round(craft.getHullIntegrity() * (isTeamMission ?
+                                    config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY_TEAM) :
+                                    config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY)));
+                            teamSurvivalBonus = isTeamMission ?
+                                    Math.round((_level.getSpacecraftCountForTeam(craft.getTeam()) - 1) / (craft.getTeam().getInitialCount() - 1) * config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_TEAM_SURVIVAL)) :
+                                    0;
+                            score = Math.round(baseScore * (1 + hitRatio)) + hullIntegrityBonus + teamSurvivalBonus;
                             level.getLevelDescriptor(_level.getName()).updateBestScore(score);
                         }
                         this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_DEFEAT), {
@@ -1922,7 +1928,8 @@ define([
                             score: score || 0,
                             kills: craft ? craft.getKills() : 0,
                             hitRatio: Math.round(100 * hitRatio) + "%",
-                            hullIntegrity: Math.round(100 * hullIntegrity) + "%"
+                            hullIntegrity: hullIntegrityBonus,
+                            teamSurvival: isTeamMission ? teamSurvivalBonus : "-"
                         }));
                         _gameStateShown = true;
                         audio.playMusic(

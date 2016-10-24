@@ -140,7 +140,7 @@
         "message": {
             "ready": "Ready!<br/>During the game, press the {menuKey} key to open the menu, where you can also check and adjust the controls.",
             "paused": "Game paused.",
-            "victory": "<strong>Victory!</strong><br/>Congratulations, you have completed this level!<br/>Score: <strong>{score}</strong><br/>Kills: {kills}<br/>Hit ratio bonus: {hitRatio}<br/>Hull integrity bonus: {hullIntegrity}<br/>You can keep flying around or press the {menuKey} key to open the menu.",
+            "victory": "<strong>Victory!</strong><br/>Congratulations, you have completed this level!<br/>Score: <strong>{score}</strong><br/>Kills: {kills}<br/>Hit ratio bonus: {hitRatio}<br/>Hull integrity bonus: {hullIntegrity}<br/>Team survival bonus: {teamSurvival}<br/>You can keep flying around or press the {menuKey} key to open the menu.",
             "defeat": "<strong>Defeat!<strong><br/>You ship has been destroyed. You can keep looking around in spectator mode or press the {menuKey} key to open the menu."
         }
     },
