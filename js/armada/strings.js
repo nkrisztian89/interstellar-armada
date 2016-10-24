@@ -82,6 +82,7 @@ define([
     strings.BATTLE = {
         DEVELOPMENT_VERSION_NOTICE: {name: "battle.developmentVersionNotice"},
         SPECTATOR_MODE: {name: "battle.spectatorMode"},
+        SCORE: {name: "battle.score"},
         HUD_TARGET: {name: "battle.hud.target"},
         HUD_DISTANCE: {name: "battle.hud.distance"},
         HUD_VELOCITY: {name: "battle.hud.velocity"},

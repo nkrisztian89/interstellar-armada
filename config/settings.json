@@ -253,15 +253,21 @@
                 "xScaleMode": "minimum",
                 "yScaleMode": "minimum"
             },
-            "hudTargetInfoTextHostileColor": [1, 0, 0, 1],
-            "hudTargetInfoTextFriendlyColor": [0, 1, 0, 1],
-            "hudTargetInfoTextFontSize": 0.15,
-            "hudTargetInfoTextFontName": "gameFont",
-            "hudTargetInfoNameTextPosition": [-0.95, 0.76],
-            "hudTargetInfoClassTextPosition": [-0.95, 0.41],
-            "hudTargetInfoTeamTextPosition": [-0.95, 0.06],
-            "hudTargetInfoDistanceTextPosition": [-0.95, -0.29],
-            "hudTargetInfoVelocityTextPosition": [-0.95, -0.64],
+            "hudTargetInfoText": {
+                "colors": {
+                    "hostile": [1, 0, 0, 1],
+                    "friendly": [0, 1, 0, 1]
+                },
+                "fontSize": 0.15,
+                "fontName": "gameFont",
+                "positions": {
+                    "name": [-0.95, 0.76],
+                    "class": [-0.95, 0.41],
+                    "team": [-0.95, 0.06],
+                    "distance": [-0.95, -0.29],
+                    "velocity": [-0.95, -0.64]
+                }
+            },
             "hudSpeedBarTexture": "bar_right",
             "hudSpeedBarLayout": {
                 "centerX": 0.575,
@@ -286,12 +292,18 @@
                 "scaleMode": "minimum",
                 "xScaleMode": "minimum"
             },
-            "hudSpeedTextColor": [0, 1, 1, 0.75],
-            "hudReverseSpeedTextColor": [1, 0.75, 0, 0.75],
-            "hudSpeedTextFontSize": 0.35,
-            "hudSpeedTextFontName": "gameFont",
-            "hudMaxSpeedTextPosition": [-0.9, 0.875],
-            "hudMaxReverseSpeedTextPosition": [-0.9, -0.985],
+            "hudSpeedText": {
+                "colors": {
+                    "forward": [0, 1, 1, 0.75],
+                    "reverse": [1, 0.75, 0, 0.75]
+                },
+                "fontSize": 0.35,
+                "fontName": "gameFont",
+                "positions": {
+                    "maxForward": [-0.9, 0.875],
+                    "maxReverse": [-0.9, -0.985]
+                }
+            },
             "hudSpeedTargetIndicatorTexture": "bar_right",
             "hudSpeedTargetIndicatorColor": [1, 1, 1, 1],
             "hudSpeedTargetIndicatorSize": [1.0, 0.0075],
@@ -319,16 +331,22 @@
                 "yScaleMode": "minimum"
             },
             "hudFlightModeIndicatorBackgroundColor": [0, 0, 0, 0.5],
-            "hudFlightModeHeaderTextColor": [0, 1, 0, 1],
-            "hudFlightModeHeaderTextFontSize": 0.3,
-            "hudFlightModeHeaderTextFontName": "gameFont",
-            "hudFlightModeHeaderTextPosition": [-0.9, 0.25],
-            "hudFreeFlightModeTextColor": [1, 0.85, 0.1, 1],
-            "hudCompensatedFlightModeTextColor": [0.3, 0.6, 1, 1],
-            "hudRestrictedFlightModeTextColor": [0.8, 0.1, 0.8, 1],
-            "hudFlightModeTextFontSize": 0.3,
-            "hudFlightModeTextFontName": "gameFont",
-            "hudFlightModeTextPosition": [-0.9, -0.5],
+            "hudFlightModeHeaderText": {
+                "color": [0, 1, 0, 1],
+                "fontSize": 0.3,
+                "fontName": "gameFont",
+                "position": [-0.9, 0.25]
+            },
+            "hudFlightModeText": {
+                "colors": {
+                    "free": [1, 0.85, 0.1, 1],
+                    "compensated": [0.3, 0.6, 1, 1],
+                    "restricted": [0.8, 0.1, 0.8, 1]
+                },
+                "fontSize": 0.3,
+                "fontName": "gameFont",
+                "position": [-0.9, -0.5]
+            },
             "hudDriftArrowTexture": "drift-arrow",
             "hudDriftArrowPositionRadius": 0.35,
             "hudDriftArrowSize": [0.325, 0.325],
@@ -361,18 +379,39 @@
                 "xScaleMode": "maximum",
                 "yScaleMode": "maximum"
             },
-            "hudSmallHeaderTextColor": [1, 1, 1, 1],
-            "hudSmallHeaderTextFontSize": 0.025,
-            "hudSmallHeaderTextFontName": "gameFont",
-            "hudSmallHeaderTextPosition": [0, 0.7],
-            "hudBigHeaderTextColor": [1, 1, 1, 1],
-            "hudBigHeaderTextFontSize": 0.06,
-            "hudBigHeaderTextFontName": "gameFont",
-            "hudBigHeaderTextPosition": [0, -0.35],
-            "hudSubheaderTextColor": [1, 1, 1, 1],
-            "hudSubheaderTextFontSize": 0.025,
-            "hudSubheaderTextFontName": "gameFont",
-            "hudSubheaderTextPosition": [0, -0.85],
+            "hudSmallHeaderText": {
+                "color": [1, 1, 1, 1],
+                "fontSize": 0.025,
+                "fontName": "gameFont",
+                "position": [0, 0.7]
+            },
+            "hudBigHeaderText": {
+                "color": [1, 1, 1, 1],
+                "fontSize": 0.06,
+                "fontName": "gameFont",
+                "position": [0, -0.35]
+            },
+            "hudSubheaderText": {
+                "color": [1, 1, 1, 1],
+                "fontSize": 0.025,
+                "fontName": "gameFont",
+                "position": [0, -0.85]
+            },
+            "hudTopLeftTextLayerLayout": {
+                "left": -0.98,
+                "top": 0.97,
+                "width": 0.5,
+                "height": 0.05,
+                "scaleMode": "minimum",
+                "xScaleMode": "minimum",
+                "yScaleMode": "minimum"
+            },
+            "hudScoreText": {
+                "color": [1, 1, 1, 1],
+                "fontSize": 1.0,
+                "fontName": "gameFont",
+                "position": [-1.0, -0.7]
+            },
             "hudTargetSwitchSound": {
                 "name": "beep_targeting",
                 "volume": 0.2
@@ -399,7 +438,8 @@
             "combatThemeDurationAfterFire": 10,
             "endThemeCrossfadeDuration": 0.2,
             "baseScoreValue": 100,
-            "minimumScoreFactorForAcceleration": 0.2
+            "minimumScoreFactorForAcceleration": 0.2,
+            "scoreFractionForKill": 0.5
         },
         "camera": {
             "defaultFOV": 40,

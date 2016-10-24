@@ -152,6 +152,70 @@ define([
             }
         }
     };
+    _customTypes.TEXT_DESCRIPTOR = {
+        baseType: "object",
+        properties: {
+            COLOR: {
+                name: "color",
+                type: types.COLOR4
+            },
+            FONT_SIZE: {
+                name: "fontSize",
+                type: "number"
+            },
+            FONT_NAME: {
+                name: "fontName",
+                type: "string"
+            },
+            POSITION: {
+                name: "position",
+                type: types.VECTOR2
+            }
+        }
+    };
+    /**
+     * Returns a type descriptor to use for UI texts that have multiple colors and/or positions instead of a single one
+     * @param {String[]} [colors] The names (identifiers) of the colors. E.g. for describing "colors": {"active": [...], "inactive": [...]},
+     * use ["active", "inactive"] If omitted, a single "color" property is expected (as in TEXT_DESCRIPTOR)
+     * @param {String[]} [positions] The same as colors. If omitted, a single "position" property is expected (as in TEXT_DESCRIPTOR)
+     * @returns {Object}
+     */
+    _customTypes.getCustomTextDescriptor = function (colors, positions) {
+        var i, result = utils.deepCopy(_customTypes.TEXT_DESCRIPTOR);
+        if (colors) {
+            delete result.properties.COLOR;
+            result.properties.COLORS = {
+                name: "colors",
+                type: {
+                    baseType: "object",
+                    properties: {}
+                }
+            };
+            for (i = 0; i < colors.length; i++) {
+                result.properties.COLORS.type.properties[colors[i].toUpperCase()] = {
+                    name: colors[i],
+                    type: types.COLOR4
+                };
+            }
+        }
+        if (positions) {
+            delete result.properties.POSITION;
+            result.properties.POSITIONS = {
+                name: "positions",
+                type: {
+                    baseType: "object",
+                    properties: {}
+                }
+            };
+            for (i = 0; i < positions.length; i++) {
+                result.properties.POSITIONS.type.properties[positions[i].toUpperCase()] = {
+                    name: positions[i],
+                    type: types.VECTOR2
+                };
+            }
+        }
+        return result;
+    };
     CONFIGURATION = {
         CLASSES_SOURCE_FILE: {
             name: "classes",
@@ -960,41 +1024,9 @@ define([
             name: "hudTargetInfoTextLayerLayout",
             type: _customTypes.LAYOUT_DESCRIPTOR
         },
-        HUD_TARGET_INFO_TEXT_HOSTILE_COLOR: {
-            name: "hudTargetInfoTextHostileColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_INFO_TEXT_FRIENDLY_COLOR: {
-            name: "hudTargetInfoTextFriendlyColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_INFO_TEXT_FONT_SIZE: {
-            name: "hudTargetInfoTextFontSize",
-            type: "number"
-        },
-        HUD_TARGET_INFO_TEXT_FONT_NAME: {
-            name: "hudTargetInfoTextFontName",
-            type: "string"
-        },
-        HUD_TARGET_INFO_NAME_TEXT_POSITION: {
-            name: "hudTargetInfoNameTextPosition",
-            type: types.VECTOR2
-        },
-        HUD_TARGET_INFO_CLASS_TEXT_POSITION: {
-            name: "hudTargetInfoClassTextPosition",
-            type: types.VECTOR2
-        },
-        HUD_TARGET_INFO_TEAM_TEXT_POSITION: {
-            name: "hudTargetInfoTeamTextPosition",
-            type: types.VECTOR2
-        },
-        HUD_TARGET_INFO_DISTANCE_TEXT_POSITION: {
-            name: "hudTargetInfoDistanceTextPosition",
-            type: types.VECTOR2
-        },
-        HUD_TARGET_INFO_VELOCITY_TEXT_POSITION: {
-            name: "hudTargetInfoVelocityTextPosition",
-            type: types.VECTOR2
+        HUD_TARGET_INFO_TEXT: {
+            name: "hudTargetInfoText",
+            type: _customTypes.getCustomTextDescriptor(["hostile", "friendly"], ["name", "class", "team", "distance", "velocity"])
         },
         HUD_SPEED_BAR_TEXTURE: {
             name: "hudSpeedBarTexture",
@@ -1036,29 +1068,9 @@ define([
             name: "hudSpeedTextLayerLayout",
             type: _customTypes.LAYOUT_DESCRIPTOR
         },
-        HUD_SPEED_TEXT_COLOR: {
-            name: "hudSpeedTextColor",
-            type: types.COLOR4
-        },
-        HUD_REVERSE_SPEED_TEXT_COLOR: {
-            name: "hudReverseSpeedTextColor",
-            type: types.COLOR4
-        },
-        HUD_SPEED_TEXT_FONT_SIZE: {
-            name: "hudSpeedTextFontSize",
-            type: "number"
-        },
-        HUD_SPEED_TEXT_FONT_NAME: {
-            name: "hudSpeedTextFontName",
-            type: "string"
-        },
-        HUD_MAX_SPEED_TEXT_POSITION: {
-            name: "hudMaxSpeedTextPosition",
-            type: types.VECTOR2
-        },
-        HUD_MAX_REVERSE_SPEED_TEXT_POSITION: {
-            name: "hudMaxReverseSpeedTextPosition",
-            type: types.VECTOR2
+        HUD_SPEED_TEXT: {
+            name: "hudSpeedText",
+            type: _customTypes.getCustomTextDescriptor(["forward", "reverse"], ["maxForward", "maxReverse"])
         },
         HUD_SPEED_TARGET_INDICATOR_TEXTURE: {
             name: "hudSpeedTargetIndicatorTexture",
@@ -1108,45 +1120,13 @@ define([
             name: "hudFlightModeIndicatorBackgroundColor",
             type: types.COLOR4
         },
-        HUD_FLIGHT_MODE_HEADER_TEXT_COLOR: {
-            name: "hudFlightModeHeaderTextColor",
-            type: types.COLOR4
+        HUD_FLIGHT_MODE_HEADER_TEXT: {
+            name: "hudFlightModeHeaderText",
+            type: _customTypes.TEXT_DESCRIPTOR
         },
-        HUD_FLIGHT_MODE_HEADER_TEXT_FONT_SIZE: {
-            name: "hudFlightModeHeaderTextFontSize",
-            type: "number"
-        },
-        HUD_FLIGHT_MODE_HEADER_TEXT_FONT_NAME: {
-            name: "hudFlightModeHeaderTextFontName",
-            type: "string"
-        },
-        HUD_FLIGHT_MODE_HEADER_TEXT_POSITION: {
-            name: "hudFlightModeHeaderTextPosition",
-            type: types.VECTOR2
-        },
-        HUD_FREE_FLIGHT_MODE_TEXT_COLOR: {
-            name: "hudFreeFlightModeTextColor",
-            type: types.COLOR4
-        },
-        HUD_COMPENSATED_FLIGHT_MODE_TEXT_COLOR: {
-            name: "hudCompensatedFlightModeTextColor",
-            type: types.COLOR4
-        },
-        HUD_RESTRICTED_FLIGHT_MODE_TEXT_COLOR: {
-            name: "hudRestrictedFlightModeTextColor",
-            type: types.COLOR4
-        },
-        HUD_FLIGHT_MODE_TEXT_FONT_SIZE: {
-            name: "hudFlightModeTextFontSize",
-            type: "number"
-        },
-        HUD_FLIGHT_MODE_TEXT_FONT_NAME: {
-            name: "hudFlightModeTextFontName",
-            type: "string"
-        },
-        HUD_FLIGHT_MODE_TEXT_POSITION: {
-            name: "hudFlightModeTextPosition",
-            type: types.VECTOR2
+        HUD_FLIGHT_MODE_TEXT: {
+            name: "hudFlightModeText",
+            type: _customTypes.getCustomTextDescriptor(["free", "compensated", "restricted"])
         },
         HUD_DRIFT_ARROW_TEXTURE: {
             name: "hudDriftArrowTexture",
@@ -1213,53 +1193,25 @@ define([
             name: "hudHeaderTextLayerLayout",
             type: _customTypes.LAYOUT_DESCRIPTOR
         },
-        HUD_SMALL_HEADER_TEXT_COLOR: {
-            name: "hudSmallHeaderTextColor",
-            type: types.COLOR4
+        HUD_SMALL_HEADER_TEXT: {
+            name: "hudSmallHeaderText",
+            type: _customTypes.TEXT_DESCRIPTOR
         },
-        HUD_SMALL_HEADER_TEXT_FONT_SIZE: {
-            name: "hudSmallHeaderTextFontSize",
-            type: "number"
+        HUD_BIG_HEADER_TEXT: {
+            name: "hudBigHeaderText",
+            type: _customTypes.TEXT_DESCRIPTOR
         },
-        HUD_SMALL_HEADER_TEXT_FONT_NAME: {
-            name: "hudSmallHeaderTextFontName",
-            type: "string"
+        HUD_SUBHEADER_TEXT: {
+            name: "hudSubheaderText",
+            type: _customTypes.TEXT_DESCRIPTOR
         },
-        HUD_SMALL_HEADER_TEXT_POSITION: {
-            name: "hudSmallHeaderTextPosition",
-            type: types.VECTOR2
+        HUD_TOP_LEFT_TEXT_LAYER_LAYOUT: {
+            name: "hudTopLeftTextLayerLayout",
+            type: _customTypes.LAYOUT_DESCRIPTOR
         },
-        HUD_BIG_HEADER_TEXT_COLOR: {
-            name: "hudBigHeaderTextColor",
-            type: types.COLOR4
-        },
-        HUD_BIG_HEADER_TEXT_FONT_SIZE: {
-            name: "hudBigHeaderTextFontSize",
-            type: "number"
-        },
-        HUD_BIG_HEADER_TEXT_FONT_NAME: {
-            name: "hudBigHeaderTextFontName",
-            type: "string"
-        },
-        HUD_BIG_HEADER_TEXT_POSITION: {
-            name: "hudBigHeaderTextPosition",
-            type: types.VECTOR2
-        },
-        HUD_SUBHEADER_TEXT_COLOR: {
-            name: "hudSubheaderTextColor",
-            type: types.COLOR4
-        },
-        HUD_SUBHEADER_TEXT_FONT_SIZE: {
-            name: "hudSubheaderTextFontSize",
-            type: "number"
-        },
-        HUD_SUBHEADER_TEXT_FONT_NAME: {
-            name: "hudSubheaderTextFontName",
-            type: "string"
-        },
-        HUD_SUBHEADER_TEXT_POSITION: {
-            name: "hudSubheaderTextPosition",
-            type: types.VECTOR2
+        HUD_SCORE_TEXT: {
+            name: "hudScoreText",
+            type: _customTypes.TEXT_DESCRIPTOR
         },
         HUD_TARGET_SWITCH_SOUND: {
             name: "hudTargetSwitchSound",
@@ -1392,6 +1344,18 @@ define([
         MIN_SCORE_FACTOR_FOR_ACCELERATION: {
             name: "minimumScoreFactorForAcceleration",
             type: "number"
+        },
+        /**
+         * The ratio of score points that should be awarded for destroying an enemy. E.g. 0.2 means that 20% of score points should be 
+         * awarded for the kill to the spacecraft which delivered the final hit, and 80% for the damage, proportionally to all spacecrafts
+         * which dealt it
+         */
+        SCORE_FRACTION_FOR_KILL: {
+            name: "scoreFractionForKill",
+            type: {
+                baseType: "number",
+                range: [0, 1]
+            }
         }
     };
     CAMERA_SETTINGS = {

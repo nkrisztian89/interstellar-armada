@@ -121,6 +121,7 @@
     "battle": {
         "developmentVersionNotice": "running an early test of Interstellar Armada, version: {version}",
         "spectatorMode": "Spectator mode",
+        "score": "Score: {score}",
         "hud": {
             "target": "target",
             "distance": "Distance",

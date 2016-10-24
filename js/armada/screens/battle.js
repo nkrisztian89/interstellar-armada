@@ -414,6 +414,18 @@ define([
              * @type CanvasText
              */
             _subheaderText,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // top left
+            /**
+             * Houses the score text
+             * @type TextLayer
+             */
+            _topLeftTextLayer,
+            /**
+             * Displays the score of the player
+             * @type CanvasText
+             */
+            _scoreText,
             // ................................................................................................
             // cached references of setting values used for the layout of the HUD
             /**
@@ -1204,19 +1216,19 @@ define([
                     return new screens.CanvasText(
                             textPosition,
                             "",
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_FONT_NAME),
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_FONT_SIZE),
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).fontName,
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).fontSize,
                             _targetInfoBackgroundLayout.getScaleMode(),
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_FRIENDLY_COLOR));
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).colors.friendly);
                 },
                 getSpeedText = function (textPosition) {
                     return new screens.CanvasText(
                             textPosition,
                             "",
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_FONT_NAME),
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_FONT_SIZE),
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).fontName,
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).fontSize,
                             _speedBarLayout.getScaleMode(),
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_COLOR));
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.forward);
                 };
         // ..............................................................................
         // target info
@@ -1225,23 +1237,23 @@ define([
             screenCanvas.addTextLayer(_targetInfoTextLayer);
         }
         if (!_targetInfoNameText) {
-            _targetInfoNameText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_NAME_TEXT_POSITION));
+            _targetInfoNameText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.name);
             _targetInfoTextLayer.addText(_targetInfoNameText);
         }
         if (!_targetInfoClassText) {
-            _targetInfoClassText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_CLASS_TEXT_POSITION));
+            _targetInfoClassText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.class);
             _targetInfoTextLayer.addText(_targetInfoClassText);
         }
         if (!_targetInfoTeamText) {
-            _targetInfoTeamText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEAM_TEXT_POSITION));
+            _targetInfoTeamText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.team);
             _targetInfoTextLayer.addText(_targetInfoTeamText);
         }
         if (!_targetInfoDistanceText) {
-            _targetInfoDistanceText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_DISTANCE_TEXT_POSITION));
+            _targetInfoDistanceText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.distance);
             _targetInfoTextLayer.addText(_targetInfoDistanceText);
         }
         if (!_targetInfoVelocityText) {
-            _targetInfoVelocityText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_VELOCITY_TEXT_POSITION));
+            _targetInfoVelocityText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.velocity);
             _targetInfoTextLayer.addText(_targetInfoVelocityText);
         }
         // ..............................................................................
@@ -1251,11 +1263,11 @@ define([
             screenCanvas.addTextLayer(_speedTextLayer);
         }
         if (!_maxSpeedText) {
-            _maxSpeedText = getSpeedText(config.getSetting(config.BATTLE_SETTINGS.HUD_MAX_SPEED_TEXT_POSITION));
+            _maxSpeedText = getSpeedText(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).positions.maxForward);
             _speedTextLayer.addText(_maxSpeedText);
         }
         if (!_currentSpeedText) {
-            _currentSpeedText = getSpeedText(config.getSetting(config.BATTLE_SETTINGS.HUD_MAX_SPEED_TEXT_POSITION));
+            _currentSpeedText = getSpeedText(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).positions.maxReverse);
             _speedTextLayer.addText(_currentSpeedText);
         }
         // ..............................................................................
@@ -1266,23 +1278,23 @@ define([
         }
         if (!_flightModeHeaderText) {
             _flightModeHeaderText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT_POSITION),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT_FONT_NAME),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT_FONT_SIZE),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT).fontName,
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT).fontSize,
                     _flightModeIndicatorBackgroundLayout.getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT_COLOR));
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT).color);
             _flightModeIndicatorTextLayer.addText(_flightModeHeaderText);
         }
         _flightModeHeaderText.setText(strings.get(strings.BATTLE.HUD_FLIGHT_MODE));
         if (!_flightModeText) {
             _flightModeText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT_POSITION),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT_FONT_NAME),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT_FONT_SIZE),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).fontName,
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).fontSize,
                     _flightModeIndicatorBackgroundLayout.getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_COMPENSATED_FLIGHT_MODE_TEXT_COLOR));
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).colors.compensated);
             _flightModeIndicatorTextLayer.addText(_flightModeText);
         }
         // ..............................................................................
@@ -1293,36 +1305,53 @@ define([
         }
         if (!_smallHeaderText) {
             _smallHeaderText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT_POSITION),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT_FONT_NAME),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT_FONT_SIZE),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT).fontName,
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT).fontSize,
                     _headerTextLayer.getLayout().getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT_COLOR),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT).color,
                     "center");
             _headerTextLayer.addText(_smallHeaderText);
         }
         if (!_bigHeaderText) {
             _bigHeaderText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT_POSITION),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT_FONT_NAME),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT_FONT_SIZE),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT).fontName,
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT).fontSize,
                     _headerTextLayer.getLayout().getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT_COLOR),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT).color,
                     "center");
             _headerTextLayer.addText(_bigHeaderText);
         }
         if (!_subheaderText) {
             _subheaderText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT_POSITION),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT_FONT_NAME),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT_FONT_SIZE),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT).fontName,
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT).fontSize,
                     _headerTextLayer.getLayout().getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT_COLOR),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT).color,
                     "center");
             _headerTextLayer.addText(_subheaderText);
+        }
+        // ..............................................................................
+        // top left
+        if (!_topLeftTextLayer) {
+            _topLeftTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_TOP_LEFT_TEXT_LAYER_LAYOUT));
+            screenCanvas.addTextLayer(_topLeftTextLayer);
+        }
+        if (!_scoreText) {
+            _scoreText = new screens.CanvasText(
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SCORE_TEXT).position,
+                    "",
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SCORE_TEXT).fontName,
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SCORE_TEXT).fontSize,
+                    _topLeftTextLayer.getLayout().getScaleMode(),
+                    config.getSetting(config.BATTLE_SETTINGS.HUD_SCORE_TEXT).color,
+                    "left");
+            _topLeftTextLayer.addText(_scoreText);
         }
     };
     /**
@@ -1409,13 +1438,18 @@ define([
         if (craft && _isHUDVisible) {
             isInAimingView = craft.getView(_battleScene.getCamera().getConfiguration().getName()).isAimingView();
             // .....................................................................................................
-            // header
+            // header and score
             _bigHeaderText.show();
             if (control.isInPilotMode()) {
                 _subheaderText.hide();
+                _scoreText.setText(utils.formatString(strings.get(strings.BATTLE.SCORE), {
+                    score: Math.round(craft.getScore())
+                }));
+                _scoreText.show();
             } else {
                 _subheaderText.setText(craft.getDisplayName() || craft.getClass().getDisplayName());
                 _subheaderText.show();
+                _scoreText.hide();
             }
             // .....................................................................................................
             // center crosshair
@@ -1473,17 +1507,17 @@ define([
                 }
             }
             speedRatio = absSpeed / maxSpeed;
-            maxSpeedTextPosition = config.getSetting(config.BATTLE_SETTINGS.HUD_MAX_SPEED_TEXT_POSITION);
-            maxReverseSpeedTextPosition = config.getSetting(config.BATTLE_SETTINGS.HUD_MAX_REVERSE_SPEED_TEXT_POSITION);
+            maxSpeedTextPosition = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).positions.maxForward;
+            maxReverseSpeedTextPosition = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).positions.maxReverse;
             if (speed >= 0) {
                 _speedBar.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_FILLED_COLOR));
                 _speedBar.setClipColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_EMPTY_COLOR));
                 _speedBar.clipY(0, speedRatio);
                 _maxSpeedText.setPosition(maxSpeedTextPosition);
-                _maxSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_COLOR));
+                _maxSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.forward);
                 _maxSpeedText.setText(maxSpeed.toFixed());
                 _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxReverseSpeedTextPosition[1] + (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
-                _currentSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_COLOR));
+                _currentSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.forward);
                 _currentSpeedText.setText(absSpeed.toFixed());
                 _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
                 if (craft.hasSpeedTarget()) {
@@ -1497,10 +1531,10 @@ define([
                 _speedBar.setClipColor(config.getSetting(config.BATTLE_SETTINGS.HUD_REVERSE_SPEED_BAR_EMPTY_COLOR));
                 _speedBar.clipY(1 - speedRatio, 1);
                 _maxSpeedText.setPosition(maxReverseSpeedTextPosition);
-                _maxSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_REVERSE_SPEED_TEXT_COLOR));
+                _maxSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.reverse);
                 _maxSpeedText.setText("-" + maxSpeed.toFixed());
                 _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxSpeedTextPosition[1] - (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
-                _currentSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_REVERSE_SPEED_TEXT_COLOR));
+                _currentSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.reverse);
                 _currentSpeedText.setText("-" + absSpeed.toFixed());
                 _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
                 if (craft.hasSpeedTarget()) {
@@ -1577,13 +1611,13 @@ define([
             _flightModeText.setText(strings.get(strings.FLIGHT_MODE.PREFIX, craft.getFlightMode(), craft.getFlightMode()));
             switch (craft.getFlightMode()) {
                 case equipment.FlightMode.FREE:
-                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_FREE_FLIGHT_MODE_TEXT_COLOR));
+                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).colors.free);
                     break;
                 case equipment.FlightMode.COMPENSATED:
-                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_COMPENSATED_FLIGHT_MODE_TEXT_COLOR));
+                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).colors.compensated);
                     break;
                 case equipment.FlightMode.RESTRICTED:
-                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_RESTRICTED_FLIGHT_MODE_TEXT_COLOR));
+                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).colors.restricted);
                     break;
                 default:
                     application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
@@ -1747,8 +1781,8 @@ define([
                 _targetHullIntegrityBar.show();
                 // target info texts
                 targetInfoTextColor = targetIsHostile ?
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_HOSTILE_COLOR) :
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_FRIENDLY_COLOR);
+                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).colors.hostile :
+                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).colors.friendly;
                 _targetInfoNameText.setColor(targetInfoTextColor);
                 _targetInfoNameText.setText(target.getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
                 _targetInfoTeamText.setColor(targetInfoTextColor);
@@ -1824,6 +1858,7 @@ define([
                 _bigHeaderText.hide();
             }
             _subheaderText.hide();
+            _scoreText.hide();
             _battleScene.hideUI();
             _targetScene.clearNodes();
             _targetViewItem = null;

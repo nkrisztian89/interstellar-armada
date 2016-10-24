@@ -106,7 +106,12 @@ define([
              * Cached value of the configuration setting for the minimum distance at which fire sounds of a spacecraft should be stacked.
              * @type Number
              */
-            _weaponFireSoundStackMinimumDistance;
+            _weaponFireSoundStackMinimumDistance,
+            /**
+             * Cached value of the configuratino settings of the factor for score awarded for kills
+             * @type Number
+             */
+            _scoreFactorForKill;
     // #########################################################################
     /**
      * @class
@@ -1637,19 +1642,23 @@ define([
      * @param {Spacecraft} hitBy The spacecraft that caused the damage (fired the hitting projectile)
      */
     Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy) {
-        var i, damageIndicator, hitpointThreshold, exp, liveHit;
+        var i, damageIndicator, hitpointThreshold, exp, liveHit, scoreValue;
         // armor rating decreases damage
         damage = Math.max(0, damage - this._class.getArmor());
         liveHit = this._hitpoints > 0;
         // logic simulation: modify hitpoints
         this._hitpoints -= damage;
         if (this._hitpoints <= 0) {
-            this._hitpoints = 0;
             // granting kill and score to the spacecraft that destroyed this one
-            if (liveHit && hitBy && this.isHostile(hitBy)) {
-                hitBy.gainScore(this.getScoreValue(hitBy));
+            if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
+                scoreValue = this.getScoreValue(hitBy);
+                // gain score for dealing the damage
+                hitBy.gainScore((1 - _scoreFactorForKill) * (damage + this._hitpoints) / this._class.getHitpoints() * scoreValue);
+                // gain score and kill for delivering the final hit
+                hitBy.gainScore(_scoreFactorForKill * scoreValue);
                 hitBy.gainKill();
             }
+            this._hitpoints = 0;
         } else {
             // visual simulation: add damage indicators if needed
             for (i = 0; i < this._class.getDamageIndicators().length; i++) {
@@ -1665,6 +1674,10 @@ define([
                     exp.addToScene(this._visualModel.getNode(), this.getSoundSource());
                     this._activeDamageIndicators.push(exp);
                 }
+            }
+            // granting score to the spacecraft that hit this one for the damage
+            if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
+                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._class.getHitpoints() * this.getScoreValue(hitBy));
             }
         }
         // callbacks
@@ -2025,6 +2038,7 @@ define([
         }
         _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
         _weaponFireSoundStackMinimumDistance = config.getSetting(config.BATTLE_SETTINGS.WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE);
+        _scoreFactorForKill = config.getSetting(config.BATTLE_SETTINGS.SCORE_FRACTION_FOR_KILL);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

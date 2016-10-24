@@ -147,6 +147,7 @@
     "battle": {
         "developmentVersionNotice": "ez az Interstellar Armada korai teszt verziója ({version})",
         "spectatorMode": "Nézelődő mód",
+        "score": "Pontszám: {score}",
         "hud": {
             "target": "célpont",
             "distance": "Távolság",
