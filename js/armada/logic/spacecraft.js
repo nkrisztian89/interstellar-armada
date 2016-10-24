@@ -1432,7 +1432,7 @@ define([
      * and are currently aimed at their target.
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
-        var i, scaledOriMatrix, fired = false, weaponFired, posInCameraSpace;
+        var i, scaledOriMatrix, fired = false, projectileCount, posInCameraSpace;
         scaledOriMatrix = this.getScaledOriMatrix();
         posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
         if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
@@ -1441,11 +1441,9 @@ define([
             posInCameraSpace = null;
         }
         for (i = 0; i < this._weapons.length; i++) {
-            weaponFired = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, posInCameraSpace ? this.getSoundSource() : null);
-            fired = weaponFired || fired;
-            if (weaponFired) {
-                this._shotsFired++;
-            }
+            projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, posInCameraSpace ? this.getSoundSource() : null);
+            fired = (projectileCount > 0) || fired;
+            this._shotsFired += projectileCount;
         }
         // executing callbacks
         if (fired) {

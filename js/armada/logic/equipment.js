@@ -763,17 +763,17 @@ define([
      * @param {Boolean} onlyIfAimedOrFixed The weapon only fires if it is fixed (cannot be rotated) or if it is aimed at its current target
      * and it is in range (based on the last aiming status of the weapon)
      * @param {SoundSource} shipSoundSource The sound source belonging to the spacecraft that fires this weapon
-     * @returns {Boolean} Whether the weapon has actually fired.
+     * @returns {Number} How many projectiles did the weapon fire.
      */
     Weapon.prototype.fire = function (shipScaledOriMatrix, onlyIfAimedOrFixed, shipSoundSource) {
-        var i, p,
+        var i, p, result,
                 weaponSlotPosVector, weaponSlotPosMatrix,
                 projectilePosMatrix, projectileOriMatrix,
                 projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
                 soundPosition,
                 scene = this._visualModel.getNode().getScene();
         if (onlyIfAimedOrFixed && (this._lastAimStatus !== WeaponAimStatus.FIXED) && (this._lastAimStatus !== WeaponAimStatus.AIMED_IN_RANGE)) {
-            return false;
+            return 0;
         }
         // check cooldown
         if (this._cooldown >= this._class.getCooldown()) {
@@ -784,6 +784,7 @@ define([
             projectileOriMatrix = this.getProjectileOrientationMatrix();
             barrels = this._class.getBarrels();
             projectileLights = {};
+            result = 0;
             // generate the muzzle flashes and projectiles for each barrel
             for (i = 0; i < barrels.length; i++) {
                 // cache variables
@@ -822,6 +823,7 @@ define([
                         barrels[i].getForceForDuration(_momentDuration),
                         _momentDuration
                         );
+                result++;
             }
             for (projClassName in projectileLights) {
                 if (projectileLights.hasOwnProperty(projClassName)) {
@@ -832,9 +834,9 @@ define([
                 soundPosition = mat.translationVector3(p.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera()));
             }
             this._class.playFireSound(soundPosition, shipSoundSource, _fireSoundStackingTimeThreshold, _fireSoundStackingVolumeFactor);
-            return true;
+            return result;
         }
-        return false;
+        return 0;
     };
     /**
      * Sets new rotation angles (instantly) for this weapon (if it can be rotated)
