@@ -6,7 +6,7 @@
     background-color: rgba(17,17,17,0.75);
     border: 2px solid #333333;
     padding: 0;
-    
+
     overflow-x: hidden;
     overflow-y: scroll;
 }
@@ -32,6 +32,10 @@
 
     width: calc(100% - 1.2em);
     padding: 0.6em;
+
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 .listElement:not(.disabled) {

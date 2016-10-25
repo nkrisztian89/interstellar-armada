@@ -248,6 +248,10 @@ a.button {
     padding: 0.5em;
     background-color: #222222;
     box-shadow: 0em 0em 0.5em #000000;
+
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 a:hover:not(.disabled):not(.menu):not(.listElement), a.button.selected {
@@ -264,6 +268,8 @@ a.button:hover:not(.disabled):not(.menu), a.button.selected {
 a.button.disabled {
     color: #AAAAAA;
     background-color: #1A1A1A;
+    
+    cursor: default;
 }
 
 .clickable:hover {
