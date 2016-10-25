@@ -13,6 +13,7 @@
         "demoButton": "Launch demo",
         "notCompleted": "Not yet completed",
         "bestScore": "Best score: {score}",
+        "sandboxCompleted": "Test checked",
         "noSelectedName": "Choose mission",
         "noSelectedDescription": "Choose a mission from the list.",
         "loadingDescription": "Loading...",

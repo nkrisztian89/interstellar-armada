@@ -1403,6 +1403,11 @@ define([
     LevelDescriptor.prototype = new resourceManager.JSONResource();
     LevelDescriptor.prototype.constructor = LevelDescriptor;
     /**
+     * The score value to you for sandbox (non-winnable) missions
+     * @type Number
+     */
+    LevelDescriptor.SANDBOX_COMPLETE_SCORE = -1;
+    /**
      * Returns the location ID to use when saving/loading the best score value to/from local storage
      * @returns {String}
      */
@@ -1478,6 +1483,19 @@ define([
             return true;
         }
         return false;
+    };
+    /**
+     * Returns whether the described level is an already tried, non-winnable sandbox mission 
+     * @returns {Boolean}
+     */
+    LevelDescriptor.prototype.isCompletedSandbox = function () {
+        return this._bestScore === LevelDescriptor.SANDBOX_COMPLETE_SCORE;
+    };
+    /**
+     * Sets the level as an already tried, non-winnable sandbox mission
+     */
+    LevelDescriptor.prototype.setAsCompletedSandbox = function () {
+        this.updateBestScore(LevelDescriptor.SANDBOX_COMPLETE_SCORE);
     };
     // #########################################################################
     /**

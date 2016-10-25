@@ -38,6 +38,7 @@
         "demoButton": "Demo",
         "notCompleted": "Nem teljesített",
         "bestScore": "Legjobb pontszám: {score}",
+        "sandboxCompleted": "teszt kipróbálva",
         "noSelectedName": "Küldetésválasztás",
         "noSelectedDescription": "Válassz egy küldetést a listából.",
         "loadingDescription": "Betöltés...",

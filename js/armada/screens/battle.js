@@ -1904,6 +1904,7 @@ define([
                     if (_level && (_level.isWon() || _level.isLost())) {
                         _gameStateChanged = true;
                         _timeSinceGameStateChanged = 0;
+                        level.getLevelDescriptor(_level.getName()).setAsCompletedSandbox();
                     }
                 } else if (!_gameStateShown) {
                     _timeSinceGameStateChanged += dt;

@@ -210,7 +210,9 @@ define([
             subcaption.innerHTML = utils.formatString(
                     ((score === undefined) ?
                             strings.get(strings.MISSIONS.NOT_COMPLETED) :
-                            strings.get(strings.MISSIONS.BEST_SCORE)), {
+                            (levelDescriptors[i].isCompletedSandbox() ?
+                                    strings.get(strings.MISSIONS.SANDBOX_COMPLETED) :
+                                    strings.get(strings.MISSIONS.BEST_SCORE))), {
                 score: score
             });
             if (score !== undefined) {
