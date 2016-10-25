@@ -155,9 +155,13 @@ define([
                     });
                 }
             }.bind(this));
+            this._launchButton.enable();
+            this._demoButton.enable();
         } else {
             this._missionTitle.setContent(strings.get(strings.MISSIONS.NO_SELECTED_NAME));
             this._missionDescription.setContent(strings.get(strings.MISSIONS.NO_SELECTED_DESCRIPTION));
+            this._launchButton.disable();
+            this._demoButton.disable();
         }
     };
     /**
