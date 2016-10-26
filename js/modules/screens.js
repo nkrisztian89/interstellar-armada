@@ -481,10 +481,15 @@ define([
         var translatableElements, i;
         if (this._container) {
             application.log_DEBUG("Screen '" + this._name + "' is getting updated.", 2);
-            translatableElements = this._container.querySelectorAll("." + TRANSLATABLE_CLASS_NAME);
+            // no data-translation-key attribute is needed to translate simple, static HTML elements - simply the ID of the element will
+            // be used together with the screen name if it is omitted (generated elements however need to use data-translation-key, to avoid
+            // having multiple elements with the same ID in case the same text needs to be displayed multiple times)
+            translatableElements = this._container.querySelectorAll("." + TRANSLATABLE_CLASS_NAME + ", [" + components.TRANSLATION_KEY_ATTRIBUTE + "]");
             for (i = 0; i < translatableElements.length; i++) {
                 translatableElements[i].innerHTML = strings.get({
-                    name: this._name + TRANSLATION_KEY_SEPARATOR + this._getOriginalElementID(translatableElements[i]),
+                    name:
+                            translatableElements[i].getAttribute(components.TRANSLATION_KEY_ATTRIBUTE) ||
+                            (this._name + TRANSLATION_KEY_SEPARATOR + this._getOriginalElementID(translatableElements[i])),
                     defaultValue: translatableElements[i].innerHTML
                 });
             }

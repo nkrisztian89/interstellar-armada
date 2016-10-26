@@ -86,6 +86,7 @@ define([
             OPTION_CLICK_EVENT_NAME = "optionclick",
             ELEMENT_HIGHLIGHT_EVENT_NAME = "elementhighlight",
             ELEMENT_SELECT_EVENT_NAME = "elementselect",
+            TRANSLATION_KEY_ATTRIBUTE = "data-translation-key",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -600,16 +601,16 @@ define([
     };
     /**
      * If possible, updates the inner HTML text of the child elements to the translation in the current language.
-     * (it is possible, if the child element was given an ID that is a valid translation key)
+     * (it is possible, if the child element has a data-translation-key attribute with the value of the translation key)
      */
     ExternalComponent.prototype.updateComponents = function () {
-        var i, namedElements;
+        var i, elementsToTranslate;
         if (this._rootElement) {
-            namedElements = this._rootElement.querySelectorAll("[id]");
-            for (i = 0; i < namedElements.length; i++) {
-                namedElements[i].innerHTML = strings.get({
-                    name: this._getOriginalElementID(namedElements[i]),
-                    defaultValue: namedElements[i].innerHTML
+            elementsToTranslate = this._rootElement.querySelectorAll("[" + TRANSLATION_KEY_ATTRIBUTE + "]");
+            for (i = 0; i < elementsToTranslate.length; i++) {
+                elementsToTranslate[i].innerHTML = strings.get({
+                    name: elementsToTranslate[i].getAttribute(TRANSLATION_KEY_ATTRIBUTE),
+                    defaultValue: elementsToTranslate[i].innerHTML
                 });
             }
         } else {
@@ -1070,6 +1071,7 @@ define([
                 aElement = document.createElement("a");
                 if (this._menuOptions[i].id) {
                     aElement.id = this._getElementID(this._menuOptions[i].id);
+                    aElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._menuOptions[i].id);
                 }
                 aElement.href = "#";
                 aElement.className = (this._style.menuClassName || "") + " " + (this._style.buttonClassName || "") + (this._menuOptions[i].enabled ? "" : this._style.disabledClassName);
@@ -1355,7 +1357,7 @@ define([
                 // main caption
                 spanElement = document.createElement("span");
                 if (this._listElements[i].captionID) {
-                    spanElement.id = this._getElementID(this._listElements[i].captionID);
+                    spanElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._listElements[i].captionID);
                 }
                 spanElement.className = (this._style.captionClassName || "");
                 spanElement.innerHTML = this._listElements[i].caption || strings.get({name: this._listElements[i].captionID});
@@ -1366,7 +1368,7 @@ define([
                     // subcaption
                     spanElement = document.createElement("span");
                     if (this._listElements[i].subcaptionID) {
-                        spanElement.id = this._getElementID(this._listElements[i].subcaptionID);
+                        spanElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._listElements[i].subcaptionID);
                     }
                     spanElement.className = (this._style.subcaptionClassName || "");
                     spanElement.innerHTML = this._listElements[i].subcaption || strings.get({name: this._listElements[i].subcaptionID});
@@ -1514,6 +1516,7 @@ define([
         if (this._rootElement) {
             if (this._propertyLabelDescriptor.id) {
                 this._propertyLabel.setElementID(this._getElementID(this._propertyLabelDescriptor.id));
+                this._propertyLabel.getElement().setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._propertyLabelDescriptor.id);
             }
             this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
             this._valueSelector.setContent(this._valueList[0]);
@@ -1697,6 +1700,7 @@ define([
         if (this._rootElement) {
             if (this._propertyLabelDescriptor.id) {
                 this._propertyLabel.setElementID(this._getElementID(this._propertyLabelDescriptor.id));
+                this._propertyLabel.getElement().setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._propertyLabelDescriptor.id);
             }
             this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
 
@@ -1808,6 +1812,8 @@ define([
         BUTTON_CLICK_EVENT_NAME: BUTTON_CLICK_EVENT_NAME,
         OPTION_SELECT_EVENT_NAME: OPTION_SELECT_EVENT_NAME,
         OPTION_CLICK_EVENT_NAME: OPTION_CLICK_EVENT_NAME,
+        // attribute names
+        TRANSLATION_KEY_ATTRIBUTE: TRANSLATION_KEY_ATTRIBUTE,
         // functions
         clearStoredDOMModels: clearStoredDOMModels,
         // classes
