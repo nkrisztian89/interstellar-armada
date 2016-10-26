@@ -812,7 +812,7 @@ define([
     Spacecraft.prototype.getHitboxTextures = function () {
         var
                 textureTypes = graphics.getManagedShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME)).getTextureTypes(),
-                textureResource = resources.getTexture(config.getSetting(config.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
+                textureResource = graphics.getTexture(config.getSetting(config.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME), {types: textureTypes});
         return textureResource.getManagedTexturesOfTypes(textureTypes, graphics.getTextureQualityPreferenceList());
     };
     /**
@@ -1118,7 +1118,7 @@ define([
         var params = (lod === undefined) ? {maxLOD: graphics.getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
             graphics.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
-            resources.getTexture(config.getSetting(config.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
+            graphics.getTexture(config.getSetting(config.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         }
         params.omitShader = customShader;
         this._class.acquireResources(params);

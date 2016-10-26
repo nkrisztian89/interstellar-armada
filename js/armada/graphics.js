@@ -2017,6 +2017,28 @@ define([
         return this.isShadowMappingAvailable() && this._shaderRequirementsAreSatisfied({numShadowRanges: this._shadowDistances.getFirstValue()});
     };
     /**
+     * Return texture resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
+     * @param {String} textureName
+     * @param {TextureResource~RequestParams} params
+     * @returns {TextureResource}
+     */
+    GraphicsSettingsContext.prototype.getTexture = function (textureName, params) {
+        params = params || {};
+        params.qualityPreferenceList = this.getTextureQualityPreferenceList();
+        return resources.getTexture(textureName, params);
+    };
+    /**
+     * Return cubemap resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
+     * @param {String} cubemapName
+     * @param {CubemapResource~RequestParams} params
+     * @returns {CubemapResource}
+     */
+    GraphicsSettingsContext.prototype.getCubemap = function (cubemapName, params) {
+        params = params || {};
+        params.qualityPreferenceList = this.getCubemapQualityPreferenceList();
+        return resources.getCubemap(cubemapName, params);
+    };
+    /**
      * Return shader resource that should be used for the given name and requests it for loading if needed. Considers the context settings.
      * @param {String} shaderName
      * @returns {ShaderResource}
@@ -2161,6 +2183,8 @@ define([
         isRevealAvailable: _context.isRevealAvailable.bind(_context),
         areDynamicLightsAvailable: _context.areDynamicLightsAvailable.bind(_context),
         canEnableShadowMapping: _context.canEnableShadowMapping.bind(_context),
+        getTexture: _context.getTexture.bind(_context),
+        getCubemap: _context.getCubemap.bind(_context),
         getShader: _context.getShader.bind(_context),
         getManagedShader: _context.getManagedShader.bind(_context),
         getModel: _context.getModel.bind(_context),

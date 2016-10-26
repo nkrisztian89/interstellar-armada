@@ -639,7 +639,7 @@ define([
     SkyboxClass.prototype.acquireResources = function () {
         ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.fvqModel(SKYBOX_MODEL_NAME)});
         if (this._cubemap === null) {
-            this._cubemap = resources.getCubemap(this._cubemapName);
+            this._cubemap = graphics.getCubemap(this._cubemapName);
         }
     };
     /**
@@ -652,6 +652,13 @@ define([
             return null;
         }
         return this._cubemap.getManagedCubemap(qualityPreferenceList);
+    };
+    /**
+     * @override
+     */
+    SkyboxClass.prototype.handleGraphicsSettingsChanged = function () {
+        ShadedModelClass.prototype.handleGraphicsSettingsChanged.call(this);
+        this._cubemap = null;
     };
     // ##############################################################################
     /**
@@ -726,7 +733,7 @@ define([
     TexturedModelClass.prototype.acquireResources = function (params) {
         ShadedModelClass.prototype.acquireResources.call(this, params);
         if (this._texture === null) {
-            this._texture = resources.getTexture(this._textureName);
+            this._texture = graphics.getTexture(this._textureName);
         }
     };
     /**
@@ -766,6 +773,13 @@ define([
      */
     TexturedModelClass.prototype.getDefaultGroupLuminosity = function (groupIndex) {
         return this._defaultLuminosityFactors[groupIndex];
+    };
+    /**
+     * @override
+     */
+    TexturedModelClass.prototype.handleGraphicsSettingsChanged = function () {
+        ShadedModelClass.prototype.handleGraphicsSettingsChanged.call(this);
+        this._texture = null;
     };
     // ##############################################################################
     /**

@@ -41,20 +41,20 @@ define(function () {
                  */
                 MAXIMUM: "maximum"
             },
-    /**
-     * A convenience enum storing the numeric mouse button identifiers as they appear in the "which" property of MouseEvent events
-     * by meaningful names
-     * @enum {Number}
-     * @type Object
-     */
-    MouseButton = {
-        LEFT: 1,
-        MIDDLE: 2,
-        RIGHT: 3
-    },
-    // ------------------------------------------------------------------------------
-    // constants
-    EMPTY_ARRAY = [],
+            /**
+             * A convenience enum storing the numeric mouse button identifiers as they appear in the "which" property of MouseEvent events
+             * by meaningful names
+             * @enum {Number}
+             * @type Object
+             */
+            MouseButton = {
+                LEFT: 1,
+                MIDDLE: 2,
+                RIGHT: 3
+            },
+            // ------------------------------------------------------------------------------
+            // constants
+            EMPTY_ARRAY = [],
             NUMBER_THOUSANDS_DELIMITER = " ",
             // ------------------------------------------------------------------------------
             // private variables
@@ -91,9 +91,9 @@ define(function () {
                 "f10": 121, "f11": 122, "f12": 123,
                 "-": 173, ",": 188, ".": 190
             },
-    // ------------------------------------------------------------------------------
-    // interface
-    exports = {};
+            // ------------------------------------------------------------------------------
+            // interface
+            exports = {};
     // ------------------------------------------------------------------------------
     // public constants
     exports.EMPTY_ARRAY = EMPTY_ARRAY;
@@ -225,7 +225,7 @@ define(function () {
         return "#" + keyCode;
     };
     /**
-     * Compares whether two arrays contain the same values in the same order.
+     * Compares whether two arrays contain the same values in the same order. Checks for nested arrays as well.
      * @param {Array} array1
      * @param {Array} array2
      * @returns {Boolean}
@@ -252,6 +252,8 @@ define(function () {
     };
     /**
      * Compares whether two objects have the same own enumerable properties with the same values.
+     * Values of properties are checked strictly! Properties that point to equivalent, but different objects or arrays are considered 
+     * different.
      * @param {Object} object1
      * @param {Object} object2
      * @returns {Boolean}
@@ -262,12 +264,12 @@ define(function () {
             return true;
         }
         if (object1) {
-            keys1 = Object.keys(object1);
+            keys1 = Object.keys(object1).sort();
         } else {
             return false;
         }
         if (object2) {
-            keys2 = Object.keys(object2);
+            keys2 = Object.keys(object2).sort();
         } else {
             return false;
         }
@@ -280,6 +282,47 @@ define(function () {
             }
         }
         return true;
+    };
+    /**
+     * Checks whether the passed two variables are equivalent. That is, they have the same value or they refer to objects / arrays that
+     * have equivalent properties / elements (even if the reference itself is different) 
+     * The types of the two values must be the same.
+     * @param {} a
+     * @param {} b
+     * @returns {Boolean}
+     */
+    exports.equivalent = function (a, b) {
+        var i, l, ka, kb;
+        // objects and arrays are (recursively) compared based on the equivalency of their properties / elements
+        if (((typeof a) === "object") && ((typeof b) === "object")) {
+            if ((a === null) || (b === null)) {
+                return (a === b);
+            }
+            if ((a instanceof Array) && (b instanceof  Array)) {
+                if (a.length !== b.length) {
+                    return false;
+                }
+                for (i = 0, l = a.length; i < l; i++) {
+                    if (!exports.equivalent(a[i], b[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            ka = Object.keys(a).sort();
+            kb = Object.keys(b).sort();
+            if (ka.length !== kb.length) {
+                return false;
+            }
+            for (i = 0, l = ka.length; i < l; i++) {
+                if ((ka[i] !== kb[i]) || !exports.equivalent(a[ka[i]], b[kb[i]])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        // primitives are strictly checked (types must be the same, "1" is not equivalent to 1)
+        return a === b;
     };
     /**
      * Returns a deep copy (recursive copy by values) of the passed data

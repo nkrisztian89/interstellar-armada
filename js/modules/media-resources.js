@@ -278,26 +278,65 @@ define([
         this._onFilesLoad(this._loadedImages === this._imagesToLoad, {path: filename, error: true});
     };
     /**
+     * @typedef {Object} TextureResource~RequestParams
+     * @property {String[]} [types] 
+     * @property {String[]} [qualities] 
+     * @property {String[]} [qualityPreferenceList]
+     */
+    /**
+     * Returns the one from the preference list of passed quality identifiers that is available for this texture and has the highest 
+     * preference. (lowest index in the list)
+     * @param {String[]} qualityPreferenceList
+     * @returns {String}
+     */
+    TextureResource.prototype._getMostFittingQuality = function (qualityPreferenceList) {
+        var i, index, mostFittingQuality,
+                qualities = this.getQualities(),
+                mostFittingQualityIndex = -1;
+        for (i = 0; i < qualities.length; i++) {
+            index = qualityPreferenceList.indexOf(qualities[i]);
+            if ((index >= 0) && ((mostFittingQualityIndex === -1) || (index < mostFittingQualityIndex))) {
+                mostFittingQualityIndex = index;
+                mostFittingQuality = qualityPreferenceList[index];
+            }
+        }
+        if (mostFittingQualityIndex === -1) {
+            application.showError("Texture '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
+            return null;
+        }
+        return mostFittingQuality;
+    };
+    /**
+     * If a quality preference list is given in the params, resolves it to the most fitting quality.
+     * @param {TextureResource~RequestParams} params
+     * @returns {TextureResource~RequestParams}
+     */
+    TextureResource.prototype._getProcessedParams = function (params) {
+        params = params || {};
+        params.types = params.types || Object.keys(this._typeSuffixes);
+        params.qualities = params.qualities || (params.qualityPreferenceList && [this._getMostFittingQuality(params.qualityPreferenceList)]) || Object.keys(this._qualitySuffixes);
+        delete params.qualityPreferenceList;
+        return params;
+    };
+    /**
      * @override
-     * @param {Object} params
+     * @param {TextureResource~RequestParams} params
      * @returns {Boolean}
      */
     TextureResource.prototype.requiresReload = function (params) {
-        var requestedTypes, type, requestedQualities, quality;
+        var i, j;
+        params = this._getProcessedParams(params);
         if (this.isRequested(params)) {
             return false;
         }
-        params = params || {};
-        requestedTypes = params.types || this._typeSuffixes;
-        requestedQualities = params.qualities || this._qualitySuffixes;
-        for (type in requestedTypes) {
-            if (requestedTypes.hasOwnProperty(type)) {
-                if (!this._images[type]) {
+        for (i = 0; i < params.types.length; i++) {
+            if (this._typeSuffixes.hasOwnProperty(params.types[i])) {
+                if (!this._images[params.types[i]]) {
                     return true;
                 }
-                for (quality in requestedQualities) {
-                    if (requestedQualities.hasOwnProperty(quality)) {
-                        if (!this._images[type][quality]) {
+                for (j = 0; j < params.qualities.length; j++) {
+                    if (this._qualitySuffixes.hasOwnProperty(params.qualities[j])) {
+                        if (!this._images[params.types[i]][params.qualities[j]]) {
                             return true;
                         }
                     }
@@ -308,18 +347,18 @@ define([
     };
     /**
      * @override
-     * @param {Object} params
+     * @param {TextureResource~RequestParams} params
      */
     TextureResource.prototype._requestFiles = function (params) {
-        var requestedTypes, type, requestedQualities, quality;
-        params = params || {};
-        requestedTypes = params.types || this._typeSuffixes;
-        requestedQualities = params.qualities || this._qualitySuffixes;
-        for (type in requestedTypes) {
-            if (requestedTypes.hasOwnProperty(type)) {
+        var i, j, type, quality;
+        params = this._getProcessedParams(params);
+        for (i = 0; i < params.types.length; i++) {
+            type = params.types[i];
+            if (this._typeSuffixes.hasOwnProperty(type)) {
                 this._images[type] = this._images[type] || {};
-                for (quality in requestedQualities) {
-                    if (requestedQualities.hasOwnProperty(quality)) {
+                for (j = 0; j < params.qualities.length; j++) {
+                    quality = params.qualities[j];
+                    if (this._qualitySuffixes.hasOwnProperty(quality)) {
                         if (!this._images[type][quality]) {
                             this._imagesToLoad++;
                             this._images[type][quality] = new Image();
@@ -332,10 +371,12 @@ define([
         }
         // setting the src property of an Image object will automatically result in an asynchronous
         // request to grab the image source file
-        for (type in requestedTypes) {
-            if (requestedTypes.hasOwnProperty(type)) {
-                for (quality in requestedQualities) {
-                    if (requestedQualities.hasOwnProperty(quality)) {
+        for (i = 0; i < params.types.length; i++) {
+            type = params.types[i];
+            if (this._typeSuffixes.hasOwnProperty(type)) {
+                for (j = 0; j < params.qualities.length; j++) {
+                    quality = params.qualities[j];
+                    if (this._qualitySuffixes.hasOwnProperty(quality)) {
                         if (!this._images[type][quality].src) {
                             this._images[type][quality].src = application.getFileURL(TEXTURE_FOLDER, this._getPath(type, quality));
                         }
@@ -361,25 +402,13 @@ define([
      * @returns {String[]}
      */
     TextureResource.prototype.getTypes = function () {
-        var type, textureTypes = [];
-        for (type in this._typeSuffixes) {
-            if (this._typeSuffixes.hasOwnProperty(type)) {
-                textureTypes.push(type);
-            }
-        }
-        return textureTypes;
+        return Object.keys(this._typeSuffixes);
     };
     /**
      * @returns {String[]}
      */
     TextureResource.prototype.getQualities = function () {
-        var quality, qualitities = [];
-        for (quality in this._qualitySuffixes) {
-            if (this._qualitySuffixes.hasOwnProperty(quality)) {
-                qualitities.push(quality);
-            }
-        }
-        return qualitities;
+        return Object.keys(this._qualitySuffixes);
     };
     /**
      * @param {String} type
@@ -407,7 +436,7 @@ define([
      * @returns {Object.<String, ManagedTexture>} 
      */
     TextureResource.prototype.getManagedTexturesOfTypes = function (types, qualityPreferenceList) {
-        var i, qualities, index, mostFittingQuality, mostFittingQualityIndex, result;
+        var i, result, mostFittingQuality;
         types.sort();
         // return from cache if possible
         for (i = 0; i < this._cachedManagedTexturesOfTypes.length; i++) {
@@ -416,19 +445,7 @@ define([
             }
         }
         result = {};
-        qualities = this.getQualities();
-        mostFittingQualityIndex = -1;
-        for (i = 0; i < qualities.length; i++) {
-            index = qualityPreferenceList.indexOf(qualities[i]);
-            if ((index >= 0) && ((mostFittingQualityIndex === -1) || (index < mostFittingQualityIndex))) {
-                mostFittingQualityIndex = index;
-                mostFittingQuality = qualityPreferenceList[index];
-            }
-        }
-        if (mostFittingQualityIndex === -1) {
-            application.showError("Texture '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
-            return null;
-        }
+        mostFittingQuality = this._getMostFittingQuality(qualityPreferenceList);
         for (i = 0; i < types.length; i++) {
             result[types[i]] = this.getManagedTexture(types[i], mostFittingQuality);
         }
@@ -529,25 +546,63 @@ define([
         this._onFilesLoad(this._loadedImages === this._imagesToLoad, {path: filename, error: true});
     };
     /**
+     * @typedef {Object} CubemapResource~RequestParams
+     * @property {String[]} [qualities] 
+     * @property {String[]} [qualityPreferenceList]
+     */
+    /**
+     * Returns the one from the preference list of passed quality identifiers that is available for this cubemap and has the highest 
+     * preference. (lowest index in the list)
+     * @param {String[]} qualityPreferenceList
+     * @returns {String}
+     */
+    CubemapResource.prototype._getMostFittingQuality = function (qualityPreferenceList) {
+        var i, index, mostFittingQuality,
+                qualities = this.getQualities(),
+                mostFittingQualityIndex = -1;
+        for (i = 0; i < qualities.length; i++) {
+            index = qualityPreferenceList.indexOf(qualities[i]);
+            if ((index >= 0) && ((mostFittingQualityIndex === -1) || (index < mostFittingQualityIndex))) {
+                mostFittingQualityIndex = index;
+                mostFittingQuality = qualityPreferenceList[index];
+            }
+        }
+        if (mostFittingQualityIndex === -1) {
+            application.showError("Cubemap '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
+            return null;
+        }
+        return mostFittingQuality;
+    };
+    /**
+     * If a quality preference list is given in the params, resolves it to the most fitting quality.
+     * @param {CubemapResource~RequestParams} params
+     * @returns {CubemapResource~RequestParams}
+     */
+    CubemapResource.prototype._getProcessedParams = function (params) {
+        params = params || {};
+        params.qualities = params.qualities || (params.qualityPreferenceList && [this._getMostFittingQuality(params.qualityPreferenceList)]) || Object.keys(this._qualitySuffixes);
+        delete params.qualityPreferenceList;
+        return params;
+    };
+    /**
      * @override
-     * @param {Object} params 
+     * @param {CubemapResource~RequestParams} params 
      * @returns {Boolean}
      */
     CubemapResource.prototype.requiresReload = function (params) {
-        var face, requestedQualities, quality;
+        var face, i;
+        params = this._getProcessedParams(params);
         if (this.isRequested(params)) {
             return false;
         }
-        params = params || {};
-        requestedQualities = params.qualities || this._qualitySuffixes;
         for (face in this._imageNames) {
             if (this._imageNames.hasOwnProperty(face)) {
                 if (!this._images[face]) {
                     return true;
                 }
-                for (quality in requestedQualities) {
-                    if (requestedQualities.hasOwnProperty(quality)) {
-                        if (!this._images[face][quality]) {
+                for (i = 0; i < params.qualities.length; i++) {
+                    if (this._qualitySuffixes.hasOwnProperty(params.qualities[i])) {
+                        if (!this._images[face][params.qualities[i]]) {
                             return true;
                         }
                     }
@@ -558,17 +613,17 @@ define([
     };
     /**
      * @override
-     * @param {Object} params 
+     * @param {CubemapResource~RequestParams} params 
      */
     CubemapResource.prototype._requestFiles = function (params) {
-        var face, requestedQualities, quality;
-        params = params || {};
-        requestedQualities = params.qualities || this._qualitySuffixes;
+        var face, i, quality;
+        params = this._getProcessedParams(params);
         for (face in this._imageNames) {
             if (this._imageNames.hasOwnProperty(face)) {
                 this._images[face] = this._images[face] || {};
-                for (quality in requestedQualities) {
-                    if (requestedQualities.hasOwnProperty(quality)) {
+                for (i = 0; i < params.qualities.length; i++) {
+                    quality = params.qualities[i];
+                    if (this._qualitySuffixes.hasOwnProperty(quality)) {
                         if (!this._images[face][quality]) {
                             this._imagesToLoad++;
                             this._images[face][quality] = new Image();
@@ -583,8 +638,9 @@ define([
         // request to grab the image source file
         for (face in this._imageNames) {
             if (this._imageNames.hasOwnProperty(face)) {
-                for (quality in requestedQualities) {
-                    if (requestedQualities.hasOwnProperty(quality)) {
+                for (i = 0; i < params.qualities.length; i++) {
+                    quality = params.qualities[i];
+                    if (this._qualitySuffixes.hasOwnProperty(quality)) {
                         if (!this._images[face][quality].src) {
                             this._images[face][quality].src = application.getFileURL(CUBEMAP_FOLDER, this._getPath(face, quality));
                         }
@@ -610,20 +666,14 @@ define([
      * @returns {String[]}
      */
     CubemapResource.prototype.getQualities = function () {
-        var quality, qualitities = [];
-        for (quality in this._qualitySuffixes) {
-            if (this._qualitySuffixes.hasOwnProperty(quality)) {
-                qualitities.push(quality);
-            }
-        }
-        return qualitities;
+        return Object.keys(this._qualitySuffixes);
     };
     /**
      * @param {String[]} qualityPreferenceList
      * @returns {ManagedCubemap}
      */
     CubemapResource.prototype.getManagedCubemap = function (qualityPreferenceList) {
-        var i, result, qualities, index, mostFittingQuality, mostFittingQualityIndex;
+        var i, result, mostFittingQuality;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot get managed GL cubemap for '" + this.getName() + "', as it has not been loaded from file yet!");
             return null;
@@ -634,19 +684,7 @@ define([
                 return this._cachedManagedCubemaps[i].cubemap;
             }
         }
-        qualities = this.getQualities();
-        mostFittingQualityIndex = -1;
-        for (i = 0; i < qualities.length; i++) {
-            index = qualityPreferenceList.indexOf(qualities[i]);
-            if ((index >= 0) && ((mostFittingQualityIndex === -1) || (index < mostFittingQualityIndex))) {
-                mostFittingQualityIndex = index;
-                mostFittingQuality = qualityPreferenceList[index];
-            }
-        }
-        if (mostFittingQualityIndex === -1) {
-            application.showError("Cubemap '" + this.getName() + "' is not available in any of the qualities: [" + qualityPreferenceList.join(", ") + "]!");
-            return null;
-        }
+        mostFittingQuality = this._getMostFittingQuality(qualityPreferenceList);
         result = new managedGL.ManagedCubemap(this.getName(), [
             this._images.posX[mostFittingQuality],
             this._images.negX[mostFittingQuality],
@@ -1311,17 +1349,19 @@ define([
     MediaResourceManager.prototype.constructor = MediaResourceManager;
     /**
      * @param {String} name
+     * @param {TextureResource~RequestParams} params 
      * @returns {TextureResource}
      */
-    MediaResourceManager.prototype.getTexture = function (name) {
-        return this.getResource(TEXTURE_ARRAY_NAME, name);
+    MediaResourceManager.prototype.getTexture = function (name, params) {
+        return this.getResource(TEXTURE_ARRAY_NAME, name, params);
     };
     /**
      * @param {String} name
+     * @param {Object} params 
      * @returns {CubemapResource}
      */
-    MediaResourceManager.prototype.getCubemap = function (name) {
-        return this.getResource(CUBEMAP_ARRAY_NAME, name);
+    MediaResourceManager.prototype.getCubemap = function (name, params) {
+        return this.getResource(CUBEMAP_ARRAY_NAME, name, params);
     };
     /**
      * @param {String} name

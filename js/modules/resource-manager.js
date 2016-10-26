@@ -85,7 +85,6 @@ define([
      * @returns {Boolean}
      */
     GenericResource.prototype.isRequested = function (requestParams) {
-        var requestParamName;
         if (!this._requested) {
             return false;
         }
@@ -93,19 +92,8 @@ define([
             if (!this._requestParams) {
                 return false;
             }
-            for (requestParamName in requestParams) {
-                if (requestParams.hasOwnProperty(requestParamName)) {
-                    if (requestParams[requestParamName] !== this._requestParams[requestParamName]) {
-                        return false;
-                    }
-                }
-            }
-            for (requestParamName in this._requestParams) {
-                if (this._requestParams.hasOwnProperty(requestParamName)) {
-                    if (this._requestParams[requestParamName] !== requestParams[requestParamName]) {
-                        return false;
-                    }
-                }
+            if (!utils.equivalent(this._requestParams, requestParams)) {
+                return false;
             }
         }
         return true;
@@ -114,7 +102,7 @@ define([
      * @param {Object} params
      */
     GenericResource.prototype.request = function (params) {
-        if ((this._loading) && (!utils.objectsEqual(this._requestParams || null, params || null))) {
+        if ((this._loading) && (!utils.equivalent(this._requestParams || null, params || null))) {
             application.showError("Attempting to request resource '" + this._name + "' with different parameters while it is being loaded!");
         } else {
             this._requested = true;
