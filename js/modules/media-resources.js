@@ -137,6 +137,18 @@ define([
              */
             _shaderIncludeCache = {},
             /**
+             * Stores the Image objects created for downloading texture images for each path (within the textures folder), so that when the
+             * same image file is needed two times, the same Image object can be used by looking it up in this object
+             * @type Object.<String, Image>
+             */
+            _textureImageCache = {},
+            /**
+             * Stores the Image objects created for downloading cubemap face images for each path (within the cubemaps folder), so that when 
+             * the same image file is needed two times, the same Image object can be used by looking it up in this object
+             * @type Object.<String, Image>
+             */
+            _cubemapImageCache = {},
+            /**
              * This media resource manager will be used to load and access the media resources.
              * @type MediaResourceManager
              */
@@ -350,7 +362,7 @@ define([
      * @param {TextureResource~RequestParams} params
      */
     TextureResource.prototype._requestFiles = function (params) {
-        var i, j, type, quality;
+        var i, j, type, quality, path;
         params = this._getProcessedParams(params);
         for (i = 0; i < params.types.length; i++) {
             type = params.types[i];
@@ -360,10 +372,16 @@ define([
                     quality = params.qualities[j];
                     if (this._qualitySuffixes.hasOwnProperty(quality)) {
                         if (!this._images[type][quality]) {
-                            this._imagesToLoad++;
-                            this._images[type][quality] = new Image();
-                            this._images[type][quality].onload = this._getOnLoadImageFunction(type, quality).bind(this);
-                            this._images[type][quality].onerror = this._handleError.bind(this, this._getPath(type, quality));
+                            path = this._getPath(type, quality);
+                            if (!_textureImageCache[path]) {
+                                _textureImageCache[path] = new Image();
+                                this._imagesToLoad++;
+                                this._images[type][quality] = _textureImageCache[path];
+                                this._images[type][quality].onload = this._getOnLoadImageFunction(type, quality).bind(this);
+                                this._images[type][quality].onerror = this._handleError.bind(this, path);
+                            } else {
+                                this._images[type][quality] = _textureImageCache[path];
+                            }
                         }
                     }
                 }
@@ -383,6 +401,10 @@ define([
                     }
                 }
             }
+        }
+        // it is possible that all images could be set from cache and no loading is needed
+        if (this._loadedImages === this._imagesToLoad) {
+            this._onFilesLoad(true, {path: this._basepath});
         }
     };
     /**
@@ -616,7 +638,7 @@ define([
      * @param {CubemapResource~RequestParams} params 
      */
     CubemapResource.prototype._requestFiles = function (params) {
-        var face, i, quality;
+        var face, i, quality, path;
         params = this._getProcessedParams(params);
         for (face in this._imageNames) {
             if (this._imageNames.hasOwnProperty(face)) {
@@ -625,10 +647,16 @@ define([
                     quality = params.qualities[i];
                     if (this._qualitySuffixes.hasOwnProperty(quality)) {
                         if (!this._images[face][quality]) {
-                            this._imagesToLoad++;
-                            this._images[face][quality] = new Image();
-                            this._images[face][quality].onload = this._getOnLoadImageFunction(face, quality).bind(this);
-                            this._images[face][quality].onerror = this._handleError.bind(this, this._getPath(face, quality));
+                            path = this._getPath(face, quality);
+                            if (!_cubemapImageCache[path]) {
+                                _cubemapImageCache[path] = new Image();
+                                this._imagesToLoad++;
+                                this._images[face][quality] = _cubemapImageCache[path];
+                                this._images[face][quality].onload = this._getOnLoadImageFunction(face, quality).bind(this);
+                                this._images[face][quality].onerror = this._handleError.bind(this, path);
+                            } else {
+                                this._images[face][quality] = _cubemapImageCache[path];
+                            }
                         }
                     }
                 }
@@ -647,6 +675,10 @@ define([
                     }
                 }
             }
+        }
+        // it is possible that all images could be set from cache and no loading is needed
+        if (this._loadedImages === this._imagesToLoad) {
+            this._onFilesLoad(true, {path: this._basepath});
         }
     };
     /**
