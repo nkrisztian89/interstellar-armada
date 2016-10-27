@@ -1258,7 +1258,7 @@ define([
                 this._spacecrafts[i].addToScene(targetScene, graphics.getMaxLoadedLOD(), true, {
                     weapons: true
                 }, {
-                    shaderName: config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_SHADER)
+                    shaderName: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_SHADER)
                 });
             }
             this._hitObjects.push(this._spacecrafts[i]);

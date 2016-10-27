@@ -907,13 +907,13 @@ define([
     function _getWeaponImpactIndicator() {
         return new HUDElement(
                 UI_3D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).texture,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).texture,
                 [0, 0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).size,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).scaleMode,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).colors.normal,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).scaleMode,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).colors.normal,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).mapping);
     }
     /**
      * Creates all HUD elements, marks their resources for loading if they are not loaded yet, and adds their visual models to the scene if
@@ -924,53 +924,53 @@ define([
         // keep the ons with the same shader together for faster rendering
         _centerCrosshair = _centerCrosshair || new HUDElement(
                 UI_2D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).texture,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).texture,
                 [0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).size,
                 _centerCrosshairScaleMode,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).color,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).color,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).mapping);
         _centerCrosshair.addToScene(_battleScene);
         _driftArrow = _driftArrow || new HUDElement(
                 UI_2D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_TEXTURE),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).texture,
                 [0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_SIZE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_SCALE_MODE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_COLOR),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).scaleMode,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).colors.maxSpeed,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_TEXTURE_MAPPING));
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).mapping);
         _driftArrow.addToScene(_battleScene);
         _targetArrow = _targetArrow || new HUDElement(
                 UI_2D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).texture,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW).texture,
                 [0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).size,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).scaleMode,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).colors.hostile,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW).scaleMode,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW).colors.hostile,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW).mapping);
         _targetArrow.addToScene(_battleScene);
         _targetIndicator = _targetIndicator || new HUDElement(
                 UI_3D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).texture,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR).texture,
                 [0, 0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).size,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).scaleMode,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).colors.hostile,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR).scaleMode,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR).colors.hostile,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR).mapping);
         _targetIndicator.addToScene(_battleScene);
         _aimAssistIndicator = _aimAssistIndicator || new HUDElement(
                 UI_3D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).texture,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).texture,
                 [0, 0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).size,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).scaleMode,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).colors.hostile,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).scaleMode,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.hostile,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).mapping);
         _aimAssistIndicator.addToScene(_battleScene);
         if (!_weaponImpactIndicators) {
             _weaponImpactIndicators = [_getWeaponImpactIndicator()];
@@ -980,97 +980,97 @@ define([
         }
         _targetInfoBackground = _targetInfoBackground || new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_TEXTURE),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).texture,
                 _targetInfoBackgroundLayout.getClipSpacePosition(),
                 _targetInfoBackgroundLayout.getClipSpaceSize(),
                 _targetInfoBackgroundLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_COLOR),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).color,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_TEXTURE_MAPPING));
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).mapping);
         _targetInfoBackground.addToScene(_battleScene);
         _flightModeIndicatorBackground = _flightModeIndicatorBackground || new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).texture,
                 _flightModeIndicatorBackgroundLayout.getClipSpacePosition(),
                 _flightModeIndicatorBackgroundLayout.getClipSpaceSize(),
                 _flightModeIndicatorBackgroundLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_COLOR),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).color,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE_MAPPING));
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).mapping);
         _flightModeIndicatorBackground.addToScene(_battleScene);
         _targetHullIntegrityBar = _targetHullIntegrityBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).texture,
                 _targetHullIntegrityBarLayout.getClipSpacePosition(),
                 _targetHullIntegrityBarLayout.getClipSpaceSize(),
                 _targetHullIntegrityBarLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_FILLED_COLOR),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_EMPTY_COLOR),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE_MAPPING));
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).colors.filled,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).colors.empty,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).mapping);
         _targetHullIntegrityBar.addToScene(_battleScene);
         _speedBar = _speedBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_TEXTURE),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).texture,
                 _speedBarLayout.getClipSpacePosition(),
                 _speedBarLayout.getClipSpaceSize(),
                 _speedBarLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_FILLED_COLOR),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_EMPTY_COLOR),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_TEXTURE_MAPPING));
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.filled,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.empty,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).mapping);
         _speedBar.addToScene(_battleScene);
         _speedTargetIndicator = _speedTargetIndicator || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_TEXTURE),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).texture,
                 _speedBarLayout.getClipSpacePosition(),
                 _speedBarLayout.getClipSpaceSize(),
                 _speedBarLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_COLOR),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).color,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_TEXTURE_MAPPING));
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).mapping);
         _speedTargetIndicator.addToScene(_battleScene);
         _hullIntegrityBar = _hullIntegrityBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_TEXTURE),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).texture,
                 _hullIntegrityBarLayout.getClipSpacePosition(),
                 _hullIntegrityBarLayout.getClipSpaceSize(),
                 _hullIntegrityBarLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_FILLED_COLOR),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_TEXTURE_MAPPING));
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.filled,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.empty,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).mapping);
         _hullIntegrityBar.addToScene(_battleScene);
         _targetHullIntegrityQuickViewBar = _targetHullIntegrityQuickViewBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).texture,
                 _targetHullIntegrityQuickViewBarLayout.getClipSpacePosition(),
                 _targetHullIntegrityQuickViewBarLayout.getClipSpaceSize(),
                 _targetHullIntegrityQuickViewBarLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_FILLED_COLOR),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.hostileFilled,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE_MAPPING));
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).mapping);
         _targetHullIntegrityQuickViewBar.addToScene(_battleScene);
         _hudStillCursor = _hudStillCursor || new HUDElement(
                 UI_2D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).texture,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).texture,
                 [0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).size,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).scaleMode,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).color,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).scaleMode,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).color,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).mappings.still);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).mappings.still);
         _hudStillCursor.addToScene(_battleScene);
         _hudTurnCursor = _hudTurnCursor || new HUDElement(
                 UI_2D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).texture,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).texture,
                 [0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).size,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).scaleMode,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).color,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).scaleMode,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).color,
                 undefined,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).mappings.turn);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).mappings.turn);
         _hudTurnCursor.addToScene(_battleScene);
         // mark HUD sound effects for loading
-        resources.getSoundEffect(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_SOUND).name);
-        resources.getSoundEffect(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_DENIED_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND).name);
     }
     /**
      * Returns the HTML string to insert to messages that contains the key to open the menu in a highlighted style.
@@ -1269,140 +1269,140 @@ define([
                     return new screens.CanvasText(
                             textPosition,
                             "",
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).fontName,
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).fontSize,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).fontName,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).fontSize,
                             _targetInfoBackgroundLayout.getScaleMode(),
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).colors.friendly);
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.friendly);
                 },
                 getSpeedText = function (textPosition) {
                     return new screens.CanvasText(
                             textPosition,
                             "",
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).fontName,
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).fontSize,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).fontName,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).fontSize,
                             _speedBarLayout.getScaleMode(),
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.forward);
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
                 };
         // ..............................................................................
         // target info
         if (!_targetInfoTextLayer) {
-            _targetInfoTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT_LAYER_LAYOUT));
+            _targetInfoTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT_LAYER_LAYOUT));
             screenCanvas.addTextLayer(_targetInfoTextLayer);
         }
         if (!_targetInfoNameText) {
-            _targetInfoNameText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.name);
+            _targetInfoNameText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.name);
             _targetInfoTextLayer.addText(_targetInfoNameText);
         }
         if (!_targetInfoClassText) {
-            _targetInfoClassText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.class);
+            _targetInfoClassText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.class);
             _targetInfoTextLayer.addText(_targetInfoClassText);
         }
         if (!_targetInfoTeamText) {
-            _targetInfoTeamText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.team);
+            _targetInfoTeamText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.team);
             _targetInfoTextLayer.addText(_targetInfoTeamText);
         }
         if (!_targetInfoDistanceText) {
-            _targetInfoDistanceText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.distance);
+            _targetInfoDistanceText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.distance);
             _targetInfoTextLayer.addText(_targetInfoDistanceText);
         }
         if (!_targetInfoVelocityText) {
-            _targetInfoVelocityText = getTargetInfoText(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).positions.velocity);
+            _targetInfoVelocityText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.velocity);
             _targetInfoTextLayer.addText(_targetInfoVelocityText);
         }
         // ..............................................................................
         // speed bar
         if (!_speedTextLayer) {
-            _speedTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT_LAYER_LAYOUT));
+            _speedTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT_LAYER_LAYOUT));
             screenCanvas.addTextLayer(_speedTextLayer);
         }
         if (!_maxSpeedText) {
-            _maxSpeedText = getSpeedText(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).positions.maxForward);
+            _maxSpeedText = getSpeedText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxForward);
             _speedTextLayer.addText(_maxSpeedText);
         }
         if (!_currentSpeedText) {
-            _currentSpeedText = getSpeedText(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).positions.maxReverse);
+            _currentSpeedText = getSpeedText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxReverse);
             _speedTextLayer.addText(_currentSpeedText);
         }
         // ..............................................................................
         // flight mode
         if (!_flightModeIndicatorTextLayer) {
-            _flightModeIndicatorTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT));
+            _flightModeIndicatorTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).layout);
             screenCanvas.addTextLayer(_flightModeIndicatorTextLayer);
         }
         if (!_flightModeHeaderText) {
             _flightModeHeaderText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT).position,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_HEADER_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT).fontName,
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT).fontSize,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_HEADER_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_HEADER_TEXT).fontSize,
                     _flightModeIndicatorBackgroundLayout.getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_HEADER_TEXT).color);
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_HEADER_TEXT).color);
             _flightModeIndicatorTextLayer.addText(_flightModeHeaderText);
         }
         _flightModeHeaderText.setText(strings.get(strings.BATTLE.HUD_FLIGHT_MODE));
         if (!_flightModeText) {
             _flightModeText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).position,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).fontName,
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).fontSize,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).fontSize,
                     _flightModeIndicatorBackgroundLayout.getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).colors.compensated);
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.compensated);
             _flightModeIndicatorTextLayer.addText(_flightModeText);
         }
         // ..............................................................................
         // headers
         if (!_headerTextLayer) {
-            _headerTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_HEADER_TEXT_LAYER_LAYOUT));
+            _headerTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HEADER_TEXT_LAYER_LAYOUT));
             screenCanvas.addTextLayer(_headerTextLayer);
         }
         if (!_smallHeaderText) {
             _smallHeaderText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT).position,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SMALL_HEADER_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT).fontName,
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT).fontSize,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SMALL_HEADER_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SMALL_HEADER_TEXT).fontSize,
                     _headerTextLayer.getLayout().getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SMALL_HEADER_TEXT).color,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SMALL_HEADER_TEXT).color,
                     "center");
             _headerTextLayer.addText(_smallHeaderText);
         }
         if (!_bigHeaderText) {
             _bigHeaderText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT).position,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.BIG_HEADER_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT).fontName,
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT).fontSize,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.BIG_HEADER_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.BIG_HEADER_TEXT).fontSize,
                     _headerTextLayer.getLayout().getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_BIG_HEADER_TEXT).color,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.BIG_HEADER_TEXT).color,
                     "center");
             _headerTextLayer.addText(_bigHeaderText);
         }
         if (!_subheaderText) {
             _subheaderText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT).position,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SUBHEADER_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT).fontName,
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT).fontSize,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SUBHEADER_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SUBHEADER_TEXT).fontSize,
                     _headerTextLayer.getLayout().getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SUBHEADER_TEXT).color,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SUBHEADER_TEXT).color,
                     "center");
             _headerTextLayer.addText(_subheaderText);
         }
         // ..............................................................................
         // top left
         if (!_topLeftTextLayer) {
-            _topLeftTextLayer = new screens.TextLayer(config.getSetting(config.BATTLE_SETTINGS.HUD_TOP_LEFT_TEXT_LAYER_LAYOUT));
+            _topLeftTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TOP_LEFT_TEXT_LAYER_LAYOUT));
             screenCanvas.addTextLayer(_topLeftTextLayer);
         }
         if (!_scoreText) {
             _scoreText = new screens.CanvasText(
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SCORE_TEXT).position,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SCORE_TEXT).position,
                     "",
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SCORE_TEXT).fontName,
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SCORE_TEXT).fontSize,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SCORE_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SCORE_TEXT).fontSize,
                     _topLeftTextLayer.getLayout().getScaleMode(),
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SCORE_TEXT).color,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SCORE_TEXT).color,
                     "left");
             _topLeftTextLayer.addText(_scoreText);
         }
@@ -1542,9 +1542,9 @@ define([
             speed = relativeVelocity[13];
             absSpeed = Math.abs(speed);
             acceleration = craft.getMaxAcceleration();
-            maxSpeed = (config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_BASE_MAX_SPEED_FACTOR) * acceleration) ||
-                    config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_DEFAULT_BASE_MAX_SPEED);
-            stepFactor = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_MAX_SPEED_STEP_FACTOR);
+            maxSpeed = (config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_BASE_MAX_SPEED_FACTOR) * acceleration) ||
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_DEFAULT_BASE_MAX_SPEED);
+            stepFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_MAX_SPEED_STEP_FACTOR);
             while (maxSpeed < absSpeed) {
                 maxSpeed *= stepFactor;
             }
@@ -1560,17 +1560,17 @@ define([
                 }
             }
             speedRatio = absSpeed / maxSpeed;
-            maxSpeedTextPosition = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).positions.maxForward;
-            maxReverseSpeedTextPosition = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).positions.maxReverse;
+            maxSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxForward;
+            maxReverseSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxReverse;
             if (speed >= 0) {
-                _speedBar.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_FILLED_COLOR));
-                _speedBar.setClipColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_EMPTY_COLOR));
+                _speedBar.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.filled);
+                _speedBar.setClipColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.empty);
                 _speedBar.clipY(0, speedRatio);
                 _maxSpeedText.setPosition(maxSpeedTextPosition);
-                _maxSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.forward);
+                _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
                 _maxSpeedText.setText(maxSpeed.toFixed());
                 _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxReverseSpeedTextPosition[1] + (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
-                _currentSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.forward);
+                _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
                 _currentSpeedText.setText(absSpeed.toFixed());
                 _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
                 if (craft.hasSpeedTarget()) {
@@ -1580,14 +1580,14 @@ define([
                     _speedTargetIndicator.hide();
                 }
             } else {
-                _speedBar.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_REVERSE_SPEED_BAR_FILLED_COLOR));
-                _speedBar.setClipColor(config.getSetting(config.BATTLE_SETTINGS.HUD_REVERSE_SPEED_BAR_EMPTY_COLOR));
+                _speedBar.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.reverseFilled);
+                _speedBar.setClipColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.reverseEmpty);
                 _speedBar.clipY(1 - speedRatio, 1);
                 _maxSpeedText.setPosition(maxReverseSpeedTextPosition);
-                _maxSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.reverse);
+                _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.reverse);
                 _maxSpeedText.setText("-" + maxSpeed.toFixed());
                 _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxSpeedTextPosition[1] - (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
-                _currentSpeedText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TEXT).colors.reverse);
+                _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.reverse);
                 _currentSpeedText.setText("-" + absSpeed.toFixed());
                 _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
                 if (craft.hasSpeedTarget()) {
@@ -1609,7 +1609,7 @@ define([
                 if (driftSpeed > _driftArrowMinSpeed) {
                     _driftArrow.show();
                     aspect = _battleScene.getCamera().getAspect();
-                    arrowPositionRadius = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? 1 : aspect);
+                    arrowPositionRadius = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? 1 : aspect);
                     _driftArrow.setPosition(vec.scaled2([direction2D[0] / aspect, direction2D[1]], arrowPositionRadius));
                     _driftArrow.setAngle(vec.angle2u([0, 1], direction2D) * ((direction2D[0] < 0) ? -1 : 1));
                     driftArrowMaxSpeed = _driftArrowMaxSpeedFactor * acceleration;
@@ -1617,8 +1617,8 @@ define([
                         driftArrowMaxSpeed = maxSpeed;
                     }
                     _driftArrow.setColor(utils.getMixedColor(
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED_COLOR),
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_COLOR),
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).colors.minSpeed,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).colors.maxSpeed,
                             Math.min((driftSpeed - _driftArrowMinSpeed) / (driftArrowMaxSpeed - _driftArrowMinSpeed), 1.0)));
                 } else {
                     _driftArrow.hide();
@@ -1645,16 +1645,16 @@ define([
             }
             if (_hullIntegrityDecreaseTime > 0) {
                 _hullIntegrityBar.setColor(utils.getMixedColor(
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_FILLED_COLOR),
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_FILLED_COLOR_WHEN_DECREASING),
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.filled,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.filledWhenDecreasing,
                         animationProgress));
                 _hullIntegrityBar.setClipColor(utils.getMixedColor(
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR),
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR_WHEN_DECREASING),
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.empty,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.emptyWhenDecreasing,
                         animationProgress));
             } else {
-                _hullIntegrityBar.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_FILLED_COLOR));
-                _hullIntegrityBar.setClipColor(config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR));
+                _hullIntegrityBar.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.filled);
+                _hullIntegrityBar.setClipColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.empty);
             }
             _hullIntegrityBar.clipY(0, hullIntegrity);
             _hullIntegrityBar.applyLayout(_hullIntegrityBarLayout, canvas.width, canvas.height);
@@ -1664,13 +1664,13 @@ define([
             _flightModeText.setText(strings.get(strings.FLIGHT_MODE.PREFIX, craft.getFlightMode(), craft.getFlightMode()));
             switch (craft.getFlightMode()) {
                 case equipment.FlightMode.FREE:
-                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).colors.free);
+                    _flightModeText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.free);
                     break;
                 case equipment.FlightMode.COMPENSATED:
-                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).colors.compensated);
+                    _flightModeText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.compensated);
                     break;
                 case equipment.FlightMode.RESTRICTED:
-                    _flightModeText.setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_TEXT).colors.restricted);
+                    _flightModeText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.restricted);
                     break;
                 default:
                     application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
@@ -1698,8 +1698,8 @@ define([
                 _targetIndicator.setPosition(targetPosition);
                 targetIsHostile = target.isHostile(craft);
                 _targetIndicator.setColor(targetIsHostile ?
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).colors.hostile :
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).colors.friendly);
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR).colors.hostile :
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR).colors.friendly);
                 // scaling according to the target switch animation
                 if (_targetSwitchTime > 0) {
                     _targetIndicator.setSize(vec.scaled2(_targetIndicatorSize, 1 + (_targetIndicatorSwitchScale - 1) * animationProgress));
@@ -1712,8 +1712,8 @@ define([
                     futureTargetPosition = craft.getTargetHitPosition();
                     _aimAssistIndicator.setPosition(futureTargetPosition);
                     _aimAssistIndicator.setColor(targetIsHostile ?
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).colors.hostile :
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).colors.friendly);
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.hostile :
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.friendly);
                     _aimAssistIndicator.show();
                     // weapon crosshairs in the lines of fire
                     futureDistance = vec.length3(vec.diff3(futureTargetPosition, position));
@@ -1741,10 +1741,10 @@ define([
                                             vec.diff3(futureTargetPosition, basePointPosition)))));
                         }
                         if (futureDistance <= weapons[i].getRange(speed)) {
-                            _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).colors.normal);
+                            _weaponImpactIndicators[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).colors.normal);
                             targetInRange = true;
                         } else {
-                            _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).colors.outOfRange);
+                            _weaponImpactIndicators[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).colors.outOfRange);
                         }
                         // scaling according to the target switch animation
                         if (_targetSwitchTime > 0) {
@@ -1780,12 +1780,12 @@ define([
                     if (behind) {
                         vec.negate2(direction);
                     }
-                    arrowPositionRadius = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? (1 / aspect) : 1);
+                    arrowPositionRadius = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? (1 / aspect) : 1);
                     _targetArrow.setPosition(vec.scaled2([direction[0], direction[1] * aspect], arrowPositionRadius));
                     _targetArrow.setAngle(vec.angle2u([0, 1], direction) * ((direction[0] < 0) ? -1 : 1));
                     _targetArrow.setColor(targetIsHostile ?
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).colors.hostile :
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).colors.friendly);
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW).colors.hostile :
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW).colors.friendly);
                     // scaling according to the target switch animation
                     if (_targetSwitchTime > 0) {
                         _targetArrow.setSize(vec.scaled2(_targetArrowSize, 1 + (_targetArrowSwitchScale - 1) * animationProgress));
@@ -1802,18 +1802,18 @@ define([
                 hullIntegrity = target.getHullIntegrity();
                 _targetViewItemColor = (hullIntegrity > 0.5) ?
                         utils.getMixedColor(
-                                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
-                                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR),
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR),
                                 (hullIntegrity - 0.5) * 2) :
                         utils.getMixedColor(
-                                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR),
-                                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR),
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
                                 hullIntegrity * 2);
                 if (_targetViewItem !== target) {
                     _targetScene.clearNodes();
                     _targetViewItem = target;
                     _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, {
-                        shaderName: config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_TARGET_ITEM_SHADER),
+                        shaderName: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_SHADER),
                         positionMatrix: mat.translation4(0, 0, 0),
                         orientationMatrix: mat.identity4()
                     }, function (model) {
@@ -1834,8 +1834,8 @@ define([
                 _targetHullIntegrityBar.show();
                 // target info texts
                 targetInfoTextColor = targetIsHostile ?
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).colors.hostile :
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_TEXT).colors.friendly;
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.hostile :
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.friendly;
                 _targetInfoNameText.setColor(targetInfoTextColor);
                 _targetInfoNameText.setText(target.getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
                 _targetInfoTeamText.setColor(targetInfoTextColor);
@@ -1866,16 +1866,16 @@ define([
                         animationProgress = _targetHullIntegrityDecreaseTime / _hudTargetHullIntegrityDecreaseAnimationDuration;
                     }
                     filledColor = targetIsHostile ?
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_FILLED_COLOR) :
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_FILLED_COLOR);
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.hostileFilled :
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.friendlyFilled;
                     emptyColor = targetIsHostile ?
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_EMPTY_COLOR) :
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_EMPTY_COLOR);
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.hostileEmpty :
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.friendlyEmpty;
 
                     if (_targetHullIntegrityDecreaseTime > 0) {
                         _targetHullIntegrityQuickViewBar.setColor(utils.getMixedColor(
                                 filledColor,
-                                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FILLED_COLOR_WHEN_DECREASING),
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.filledWhenDecreasing,
                                 animationProgress));
                     } else {
                         _targetHullIntegrityQuickViewBar.setColor(filledColor);
@@ -2080,8 +2080,8 @@ define([
                     0,
                     {
                         useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
-                        viewDistance: config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_VIEW_DISTANCE),
-                        fov: config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_FOV),
+                        viewDistance: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_VIEW_DISTANCE),
+                        fov: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_FOV),
                         span: config.getSetting(config.CAMERA_SETTINGS.DEFAULT_SPAN),
                         transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
                         transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
@@ -2136,26 +2136,26 @@ define([
     // Caching frequently needed setting values
     config.executeWhenReady(function () {
         // hud
-        _centerCrosshairScaleMode = config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).scaleMode;
-        _speedTargetIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_SIZE);
-        _targetViewLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_LAYOUT));
-        _targetInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_LAYOUT));
-        _targetHullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_LAYOUT));
-        _speedBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_LAYOUT));
-        _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_LAYOUT));
-        _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT));
-        _hudTargetSwitchAnimationDuration = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_ANIMATION_DURATION);
-        _hudHullIntegrityDecreaseAnimationDuration = config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
-        _hudTargetHullIntegrityDecreaseAnimationDuration = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
-        _targetIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).size;
-        _targetIndicatorSwitchScale = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SWITCH_SCALE);
-        _targetArrowSize = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).size;
-        _targetArrowSwitchScale = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SWITCH_SCALE);
-        _weaponImpactIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).size;
-        _weaponImpactIndicatorSwitchScale = config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SWITCH_SCALE);
-        _driftArrowMinSpeed = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED);
-        _driftArrowMaxSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_FACTOR);
-        _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_LAYOUT));
+        _centerCrosshairScaleMode = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).scaleMode;
+        _speedTargetIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).size;
+        _targetViewLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_LAYOUT));
+        _targetInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).layout);
+        _targetHullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).layout);
+        _speedBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).layout);
+        _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).layout);
+        _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).layout);
+        _hudTargetSwitchAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_ANIMATION_DURATION);
+        _hudHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
+        _hudTargetHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
+        _targetIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR).size;
+        _targetIndicatorSwitchScale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR_SWITCH_SCALE);
+        _targetArrowSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW).size;
+        _targetArrowSwitchScale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW_SWITCH_SCALE);
+        _weaponImpactIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).size;
+        _weaponImpactIndicatorSwitchScale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR_SWITCH_SCALE);
+        _driftArrowMinSpeed = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_MIN_SPEED);
+        _driftArrowMaxSpeedFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_MAX_SPEED_FACTOR);
+        _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).layout);
         // music
         _combatThemeDurationAfterFire = config.getSetting(config.BATTLE_SETTINGS.COMBAT_THEME_DURATION_AFTER_FIRE) * 1000;
     });

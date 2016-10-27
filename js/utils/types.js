@@ -44,11 +44,11 @@ define([
                  */
                 INVALID_ENUM_OBJECT_ERROR: "invalidEnumObjectError"
             },
-    /**
-     * The log verbosity level to use when logging errors if no explicit level is given.
-     * @type Number
-     */
-    DEFAULT_ERROR_LOG_VERBOSITY_LEVEL = 1,
+            /**
+             * The log verbosity level to use when logging errors if no explicit level is given.
+             * @type Number
+             */
+            DEFAULT_ERROR_LOG_VERBOSITY_LEVEL = 1,
             /**
              * The object that will be returned as the public interface of this module.
              */
@@ -611,7 +611,7 @@ define([
      * @returns {Object}
      */
     exports.getVerifiedObject = function (name, value, definitionObject, objectToAppendTo, doNotDiscard, silentDiscard, propertyType) {
-        var propertyName, propertyDefinitionName, propertyDefinition, result = objectToAppendTo || {}, processedProperties = [];
+        var propertyName, propertyDefinitionName, propertyDefinition, result = objectToAppendTo || {}, processedProperties = [], impliedType, i, impliedProperties;
         if (typeof value === "object") {
             for (propertyDefinitionName in definitionObject) {
                 if (definitionObject.hasOwnProperty(propertyDefinitionName)) {
@@ -619,9 +619,22 @@ define([
                     if (result[propertyDefinition.name]) {
                         application.showError("'" + name + "' already has a property named '" + propertyDefinition.name + "', which will be overridden by a new value!");
                     }
+                    // if no explicit type is given and the property definition object has no type either, imply that the property
+                    // is of object type and the object properties of the property definition object describe the nested properties
+                    // this way nested object can be described simply (e.g. parent: {name: "parentObject", CHILD: {name: "child", type: ...}}
+                    // is equal to {name: "parentObject", type: {baseType: "object", properties: { CHILD: {name: "child", type: ... ...)
+                    if (!propertyDefinition.type && !propertyType) {
+                        impliedType = {};
+                        impliedProperties = Object.keys(propertyDefinition);
+                        for (i = 0; i < impliedProperties.length; i++) {
+                            if (typeof propertyDefinition[impliedProperties[i]] === "object") {
+                                impliedType[impliedProperties[i]] = propertyDefinition[impliedProperties[i]];
+                            }
+                        }
+                    }
                     result[propertyDefinition.name] = exports.getValueOfType(
                             name + "." + propertyDefinition.name,
-                            propertyDefinition.type || propertyType,
+                            propertyDefinition.type || impliedType || propertyType,
                             value[propertyDefinition.name],
                             propertyDefinition.defaultValue,
                             propertyDefinition.optional,

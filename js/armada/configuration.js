@@ -189,48 +189,26 @@ define([
             }
         }
     };
-    /**
-     * Returns a type descriptor to use for UI images that have multiple colors and/or texture mappings instead of a single one
-     * @param {String[]} [mappings] The names (identifiers) of the mappings. E.g. for describing "mappings": {"active": [...], "inactive": [...]},
-     * use ["active", "inactive"] If omitted, a single "mapping" property is optional (as in UI_IMAGE_DESCRIPTOR)
-     * @param {String[]} [colors] The same as mappings. If omitted, a single "color" property is expected (as in UI_IMAGE_DESCRIPTOR)
-     * @returns {Object}
-     */
-    _customTypes.getCustomUIImageDescriptor = function (mappings, colors) {
-        var i, result = utils.deepCopy(_customTypes.UI_IMAGE_DESCRIPTOR);
-        if (mappings) {
-            delete result.properties.MAPPING;
-            result.properties.MAPPINGS = {
-                name: "mappings",
-                type: {
-                    baseType: "object",
-                    properties: {}
-                }
-            };
-            for (i = 0; i < mappings.length; i++) {
-                result.properties.MAPPINGS.type.properties[mappings[i].toUpperCase()] = {
-                    name: mappings[i],
-                    type: _customTypes.TEXTURE_MAPPING
-                };
+    _customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR = {
+        baseType: "object",
+        properties: {
+            TEXTURE: {
+                name: "texture",
+                type: "string"
+            },
+            MAPPING: {
+                name: "mapping",
+                type: _customTypes.TEXTURE_MAPPING
+            },
+            LAYOUT: {
+                name: "layout",
+                type: _customTypes.LAYOUT_DESCRIPTOR
+            },
+            COLOR: {
+                name: "color",
+                type: types.COLOR4
             }
         }
-        if (colors) {
-            delete result.properties.COLOR;
-            result.properties.COLORS = {
-                name: "colors",
-                type: {
-                    baseType: "object",
-                    properties: {}
-                }
-            };
-            for (i = 0; i < colors.length; i++) {
-                result.properties.COLORS.type.properties[colors[i].toUpperCase()] = {
-                    name: colors[i],
-                    type: types.COLOR4
-                };
-            }
-        }
-        return result;
     };
     _customTypes.TEXT_DESCRIPTOR = {
         baseType: "object",
@@ -254,45 +232,32 @@ define([
         }
     };
     /**
-     * Returns a type descriptor to use for UI texts that have multiple colors and/or positions instead of a single one
-     * @param {String[]} [colors] The names (identifiers) of the colors. E.g. for describing "colors": {"active": [...], "inactive": [...]},
-     * use ["active", "inactive"] If omitted, a single "color" property is expected (as in TEXT_DESCRIPTOR)
-     * @param {String[]} [positions] The same as colors. If omitted, a single "position" property is expected (as in TEXT_DESCRIPTOR)
+     * Creates and returns a new type descriptor based on the passed one, changing some of its property descriptors
+     * @param {Object} baseDescriptor
+     * @param {Object.<String, String[]>} customProperties Changes the given simple property descriptors e.g. passing 
+     * {COLOR: ["active", "passive"]} will make the COLOR property descriptor in such way that if it expected "color": [r,g,b,a] properties,
+     * now it will expect "colors": {"active": [r,g,b,a], "passive": [r,g,b,a]} properties instead
      * @returns {Object}
      */
-    _customTypes.getCustomTextDescriptor = function (colors, positions) {
-        var i, result = utils.deepCopy(_customTypes.TEXT_DESCRIPTOR);
-        if (colors) {
-            delete result.properties.COLOR;
-            result.properties.COLORS = {
-                name: "colors",
+    _customTypes.getCustomDescriptor = function (baseDescriptor, customProperties) {
+        var i, j, result = utils.deepCopy(baseDescriptor), customPropDescNames, propertyDescriptor;
+        customPropDescNames = Object.keys(customProperties);
+        for (i = 0; i < customPropDescNames.length; i++) {
+            propertyDescriptor = result.properties[customPropDescNames[i]];
+            result.properties[customPropDescNames[i] + "S"] = {
+                name: propertyDescriptor.name + "s",
                 type: {
                     baseType: "object",
                     properties: {}
                 }
             };
-            for (i = 0; i < colors.length; i++) {
-                result.properties.COLORS.type.properties[colors[i].toUpperCase()] = {
-                    name: colors[i],
-                    type: types.COLOR4
+            for (j = 0; j < customProperties[customPropDescNames[i]].length; j++) {
+                result.properties[customPropDescNames[i] + "S"].type.properties[customProperties[customPropDescNames[i]][j].toUpperCase()] = {
+                    name: customProperties[customPropDescNames[i]][j],
+                    type: propertyDescriptor.type
                 };
             }
-        }
-        if (positions) {
-            delete result.properties.POSITION;
-            result.properties.POSITIONS = {
-                name: "positions",
-                type: {
-                    baseType: "object",
-                    properties: {}
-                }
-            };
-            for (i = 0; i < positions.length; i++) {
-                result.properties.POSITIONS.type.properties[positions[i].toUpperCase()] = {
-                    name: positions[i],
-                    type: types.VECTOR2
-                };
-            }
+            delete result.properties[customPropDescNames[i]];
         }
         return result;
     };
@@ -894,346 +859,200 @@ define([
             name: "gameStateDisplayDelay",
             type: "number"
         },
-        HUD_TARGET_SWITCH_ANIMATION_DURATION: {
-            name: "hudTargetSwitchAnimationDuration",
-            type: "number"
-        },
-        HUD_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION: {
-            name: "hudHullIntegrityDecreaseAnimationDuration",
-            type: "number"
-        },
-        HUD_TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION: {
-            name: "hudTargetHullIntegrityDecreaseAnimationDuration",
-            type: "number"
-        },
-        HUD_CENTER_CROSSHAIR: {
-            name: "hudCenterCrosshair",
-            type: _customTypes.UI_IMAGE_DESCRIPTOR
-        },
-        HUD_CURSOR: {
-            name: "hudCursor",
-            type: _customTypes.getCustomUIImageDescriptor(["still", "turn"])
-        },
-        HUD_TARGET_ARROW: {
-            name: "hudTargetArrow",
-            type: _customTypes.getCustomUIImageDescriptor(undefined, ["hostile", "friendly"])
-        },
-        HUD_TARGET_ARROW_POSITION_RADIUS: {
-            name: "hudTargetArrowPositionRadius",
-            type: "number"
-        },
-        HUD_TARGET_ARROW_SWITCH_SCALE: {
-            name: "hudTargetArrowSwitchScale",
-            type: "number"
-        },
-        HUD_TARGET_INDICATOR: {
-            name: "hudTargetIndicator",
-            type: _customTypes.getCustomUIImageDescriptor(undefined, ["hostile", "friendly"])
-        },
-        HUD_TARGET_INDICATOR_SWITCH_SCALE: {
-            name: "hudTargetIndicatorSwitchScale",
-            type: "number"
-        },
-        HUD_AIM_ASSIST_INDICATOR: {
-            name: "hudAimAssistIndicator",
-            type: _customTypes.getCustomUIImageDescriptor(undefined, ["hostile", "friendly"])
-        },
-        HUD_WEAPON_IMPACT_INDICATOR: {
-            name: "hudWeaponImpactIndicator",
-            type: _customTypes.getCustomUIImageDescriptor(undefined, ["normal", "outOfRange"])
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_SWITCH_SCALE: {
-            name: "hudWeaponImpactIndicatorSwitchScale",
-            type: "number"
-        },
-        HUD_TARGET_VIEW_LAYOUT: {
-            name: "hudTargetViewLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_TARGET_VIEW_VIEW_DISTANCE: {
-            name: "hudTargetViewViewDistance",
-            type: "number"
-        },
-        HUD_TARGET_VIEW_FOV: {
-            name: "hudTargetViewFOV",
-            type: "number"
-        },
-        HUD_TARGET_VIEW_TARGET_ITEM_SHADER: {
-            name: "hudTargetViewTargetItemShader",
-            type: "string"
-        },
-        HUD_TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR: {
-            name: "hudTargetViewTargetItemFullIntegrityColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR: {
-            name: "hudTargetViewTargetItemHalfIntegrityColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR: {
-            name: "hudTargetViewTargetItemZeroIntegrityColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_INFO_BACKGROUND_TEXTURE: {
-            name: "hudTargetInfoBackgroundTexture",
-            type: "string"
-        },
-        HUD_TARGET_INFO_BACKGROUND_TEXTURE_MAPPING: {
-            name: "hudTargetInfoBackgroundTextureMapping",
-            type: _customTypes.TEXTURE_MAPPING
-        },
-        HUD_TARGET_INFO_BACKGROUND_LAYOUT: {
-            name: "hudTargetInfoBackgroundLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_TARGET_INFO_BACKGROUND_COLOR: {
-            name: "hudTargetInfoBackgroundColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE: {
-            name: "hudTargetHullIntegrityBarTexture",
-            type: "string"
-        },
-        HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE_MAPPING: {
-            name: "hudTargetHullIntegrityBarTextureMapping",
-            type: _customTypes.TEXTURE_MAPPING
-        },
-        HUD_TARGET_HULL_INTEGRITY_BAR_LAYOUT: {
-            name: "hudTargetHullIntegrityBarLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_TARGET_HULL_INTEGRITY_BAR_FILLED_COLOR: {
-            name: "hudTargetHullIntegrityBarFilledColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_HULL_INTEGRITY_BAR_EMPTY_COLOR: {
-            name: "hudTargetHullIntegrityBarEmptyColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_INFO_TEXT_LAYER_LAYOUT: {
-            name: "hudTargetInfoTextLayerLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_TARGET_INFO_TEXT: {
-            name: "hudTargetInfoText",
-            type: _customTypes.getCustomTextDescriptor(["hostile", "friendly"], ["name", "class", "team", "distance", "velocity"])
-        },
-        HUD_SPEED_BAR_TEXTURE: {
-            name: "hudSpeedBarTexture",
-            type: "string"
-        },
-        HUD_SPEED_BAR_TEXTURE_MAPPING: {
-            name: "hudSpeedBarTextureMapping",
-            type: _customTypes.TEXTURE_MAPPING
-        },
-        HUD_SPEED_BAR_LAYOUT: {
-            name: "hudSpeedBarLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_SPEED_BAR_FILLED_COLOR: {
-            name: "hudSpeedBarFilledColor",
-            type: types.COLOR4
-        },
-        HUD_SPEED_BAR_EMPTY_COLOR: {
-            name: "hudSpeedBarEmptyColor",
-            type: types.COLOR4
-        },
-        HUD_REVERSE_SPEED_BAR_FILLED_COLOR: {
-            name: "hudReverseSpeedBarFilledColor",
-            type: types.COLOR4
-        },
-        HUD_REVERSE_SPEED_BAR_EMPTY_COLOR: {
-            name: "hudReverseSpeedBarEmptyColor",
-            type: types.COLOR4
-        },
-        HUD_SPEED_BAR_BASE_MAX_SPEED_FACTOR: {
-            name: "hudSpeedBarBaseMaxSpeedFactor",
-            type: "number"
-        },
-        HUD_SPEED_BAR_DEFAULT_BASE_MAX_SPEED: {
-            name: "hudSpeedBarDefaultBaseMaxSpeed",
-            type: "number"
-        },
-        HUD_SPEED_BAR_MAX_SPEED_STEP_FACTOR: {
-            name: "hudSpeedBarMaxSpeedStepFactor",
-            type: "number"
-        },
-        HUD_SPEED_TEXT_LAYER_LAYOUT: {
-            name: "hudSpeedTextLayerLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_SPEED_TEXT: {
-            name: "hudSpeedText",
-            type: _customTypes.getCustomTextDescriptor(["forward", "reverse"], ["maxForward", "maxReverse"])
-        },
-        HUD_SPEED_TARGET_INDICATOR_TEXTURE: {
-            name: "hudSpeedTargetIndicatorTexture",
-            type: "string"
-        },
-        HUD_SPEED_TARGET_INDICATOR_TEXTURE_MAPPING: {
-            name: "hudSpeedTargetIndicatorTextureMapping",
-            type: _customTypes.TEXTURE_MAPPING
-        },
-        HUD_SPEED_TARGET_INDICATOR_COLOR: {
-            name: "hudSpeedTargetIndicatorColor",
-            type: types.COLOR4
-        },
-        HUD_SPEED_TARGET_INDICATOR_SIZE: {
-            name: "hudSpeedTargetIndicatorSize",
-            type: types.VECTOR2
-        },
-        HUD_HULL_INTEGRITY_BAR_TEXTURE: {
-            name: "hudHullIntegrityBarTexture",
-            type: "string"
-        },
-        HUD_HULL_INTEGRITY_BAR_TEXTURE_MAPPING: {
-            name: "hudHullIntegrityBarTextureMapping",
-            type: _customTypes.TEXTURE_MAPPING
-        },
-        HUD_HULL_INTEGRITY_BAR_LAYOUT: {
-            name: "hudHullIntegrityBarLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_HULL_INTEGRITY_BAR_FILLED_COLOR: {
-            name: "hudHullIntegrityBarFilledColor",
-            type: types.COLOR4
-        },
-        HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR: {
-            name: "hudHullIntegrityBarEmptyColor",
-            type: types.COLOR4
-        },
-        HUD_HULL_INTEGRITY_BAR_FILLED_COLOR_WHEN_DECREASING: {
-            name: "hudHullIntegrityBarFilledColorWhenDecreasing",
-            type: types.COLOR4
-        },
-        HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR_WHEN_DECREASING: {
-            name: "hudHullIntegrityBarEmptyColorWhenDecreasing",
-            type: types.COLOR4
-        },
-        HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE: {
-            name: "hudFlightModeIndicatorBackgroundTexture",
-            type: "string"
-        },
-        HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE_MAPPING: {
-            name: "hudFlightModeIndicatorBackgroundTextureMapping",
-            type: _customTypes.TEXTURE_MAPPING
-        },
-        HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT: {
-            name: "hudFlightModeIndicatorBackgroundLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_COLOR: {
-            name: "hudFlightModeIndicatorBackgroundColor",
-            type: types.COLOR4
-        },
-        HUD_FLIGHT_MODE_HEADER_TEXT: {
-            name: "hudFlightModeHeaderText",
-            type: _customTypes.TEXT_DESCRIPTOR
-        },
-        HUD_FLIGHT_MODE_TEXT: {
-            name: "hudFlightModeText",
-            type: _customTypes.getCustomTextDescriptor(["free", "compensated", "restricted"])
-        },
-        HUD_DRIFT_ARROW_TEXTURE: {
-            name: "hudDriftArrowTexture",
-            type: "string"
-        },
-        HUD_DRIFT_ARROW_TEXTURE_MAPPING: {
-            name: "hudDriftArrowTextureMapping",
-            type: _customTypes.TEXTURE_MAPPING
-        },
-        HUD_DRIFT_ARROW_POSITION_RADIUS: {
-            name: "hudDriftArrowPositionRadius",
-            type: "number"
-        },
-        HUD_DRIFT_ARROW_SIZE: {
-            name: "hudDriftArrowSize",
-            type: types.VECTOR2
-        },
-        HUD_DRIFT_ARROW_SCALE_MODE: {
-            name: "hudDriftArrowScaleMode",
-            type: "enum",
-            values: utils.ScaleMode
-        },
-        HUD_DRIFT_ARROW_MIN_SPEED_COLOR: {
-            name: "hudDriftArrowMinSpeedColor",
-            type: types.COLOR4
-        },
-        HUD_DRIFT_ARROW_MAX_SPEED_COLOR: {
-            name: "hudDriftArrowMaxSpeedColor",
-            type: types.COLOR4
-        },
-        HUD_DRIFT_ARROW_MIN_SPEED: {
-            name: "hudDriftArrowMinSpeed",
-            type: "number"
-        },
-        HUD_DRIFT_ARROW_MAX_SPEED_FACTOR: {
-            name: "hudDriftArrowMaxSpeedFactor",
-            type: "number"
-        },
-        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE: {
-            name: "hudTargetHullIntegrityQuickViewBarTexture",
-            type: "string"
-        },
-        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE_MAPPING: {
-            name: "hudTargetHullIntegrityQuickViewBarTextureMapping",
-            type: _customTypes.TEXTURE_MAPPING
-        },
-        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_LAYOUT: {
-            name: "hudTargetHullIntegrityQuickViewBarLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_FILLED_COLOR: {
-            name: "hudTargetHullIntegrityQuickViewBarHostileFilledColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_EMPTY_COLOR: {
-            name: "hudTargetHullIntegrityQuickViewBarHostileEmptyColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_FILLED_COLOR: {
-            name: "hudTargetHullIntegrityQuickViewBarFriendlyFilledColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FRIENDLY_EMPTY_COLOR: {
-            name: "hudTargetHullIntegrityQuickViewBarFriendlyEmptyColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_FILLED_COLOR_WHEN_DECREASING: {
-            name: "hudTargetHullIntegrityQuickViewBarFilledColorWhenDecreasing",
-            type: types.COLOR4
-        },
-        HUD_HEADER_TEXT_LAYER_LAYOUT: {
-            name: "hudHeaderTextLayerLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_SMALL_HEADER_TEXT: {
-            name: "hudSmallHeaderText",
-            type: _customTypes.TEXT_DESCRIPTOR
-        },
-        HUD_BIG_HEADER_TEXT: {
-            name: "hudBigHeaderText",
-            type: _customTypes.TEXT_DESCRIPTOR
-        },
-        HUD_SUBHEADER_TEXT: {
-            name: "hudSubheaderText",
-            type: _customTypes.TEXT_DESCRIPTOR
-        },
-        HUD_TOP_LEFT_TEXT_LAYER_LAYOUT: {
-            name: "hudTopLeftTextLayerLayout",
-            type: _customTypes.LAYOUT_DESCRIPTOR
-        },
-        HUD_SCORE_TEXT: {
-            name: "hudScoreText",
-            type: _customTypes.TEXT_DESCRIPTOR
-        },
-        HUD_TARGET_SWITCH_SOUND: {
-            name: "hudTargetSwitchSound",
-            type: classes.SOUND_EFFECT_2D
-        },
-        HUD_TARGET_SWITCH_DENIED_SOUND: {
-            name: "hudTargetSwitchDeniedSound",
-            type: classes.SOUND_EFFECT_2D
+        HUD: {
+            name: "hud",
+            TARGET_SWITCH_ANIMATION_DURATION: {
+                name: "targetSwitchAnimationDuration",
+                type: "number"
+            },
+            HULL_INTEGRITY_DECREASE_ANIMATION_DURATION: {
+                name: "hullIntegrityDecreaseAnimationDuration",
+                type: "number"
+            },
+            TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION: {
+                name: "targetHullIntegrityDecreaseAnimationDuration",
+                type: "number"
+            },
+            CENTER_CROSSHAIR: {
+                name: "centerCrosshair",
+                type: _customTypes.UI_IMAGE_DESCRIPTOR
+            },
+            CURSOR: {
+                name: "cursor",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["still", "turn"]})
+            },
+            TARGET_ARROW: {
+                name: "targetArrow",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly"]})
+            },
+            TARGET_ARROW_POSITION_RADIUS: {
+                name: "targetArrowPositionRadius",
+                type: "number"
+            },
+            TARGET_ARROW_SWITCH_SCALE: {
+                name: "targetArrowSwitchScale",
+                type: "number"
+            },
+            TARGET_INDICATOR: {
+                name: "targetIndicator",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly"]})
+            },
+            TARGET_INDICATOR_SWITCH_SCALE: {
+                name: "targetIndicatorSwitchScale",
+                type: "number"
+            },
+            AIM_ASSIST_INDICATOR: {
+                name: "aimAssistIndicator",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly"]})
+            },
+            WEAPON_IMPACT_INDICATOR: {
+                name: "weaponImpactIndicator",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["normal", "outOfRange"]})
+            },
+            WEAPON_IMPACT_INDICATOR_SWITCH_SCALE: {
+                name: "weaponImpactIndicatorSwitchScale",
+                type: "number"
+            },
+            TARGET_VIEW_LAYOUT: {
+                name: "targetViewLayout",
+                type: _customTypes.LAYOUT_DESCRIPTOR
+            },
+            TARGET_VIEW_VIEW_DISTANCE: {
+                name: "targetViewViewDistance",
+                type: "number"
+            },
+            TARGET_VIEW_FOV: {
+                name: "targetViewFOV",
+                type: "number"
+            },
+            TARGET_VIEW_TARGET_ITEM_SHADER: {
+                name: "targetViewTargetItemShader",
+                type: "string"
+            },
+            TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR: {
+                name: "targetViewTargetItemFullIntegrityColor",
+                type: types.COLOR4
+            },
+            TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR: {
+                name: "targetViewTargetItemHalfIntegrityColor",
+                type: types.COLOR4
+            },
+            TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR: {
+                name: "targetViewTargetItemZeroIntegrityColor",
+                type: types.COLOR4
+            },
+            TARGET_INFO_BACKGROUND: {
+                name: "targetInfoBackground",
+                type: _customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR
+            },
+            TARGET_HULL_INTEGRITY_BAR: {
+                name: "targetHullIntegrityBar",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty"]})
+            },
+            TARGET_INFO_TEXT_LAYER_LAYOUT: {
+                name: "targetInfoTextLayerLayout",
+                type: _customTypes.LAYOUT_DESCRIPTOR
+            },
+            TARGET_INFO_TEXT: {
+                name: "targetInfoText",
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["hostile", "friendly"], POSITION: ["name", "class", "team", "distance", "velocity"]})
+            },
+            SPEED_BAR: {
+                name: "speedBar",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty", "reverseFilled", "reverseEmpty"]})
+            },
+            SPEED_BAR_BASE_MAX_SPEED_FACTOR: {
+                name: "speedBarBaseMaxSpeedFactor",
+                type: "number"
+            },
+            SPEED_BAR_DEFAULT_BASE_MAX_SPEED: {
+                name: "speedBarDefaultBaseMaxSpeed",
+                type: "number"
+            },
+            SPEED_BAR_MAX_SPEED_STEP_FACTOR: {
+                name: "speedBarMaxSpeedStepFactor",
+                type: "number"
+            },
+            SPEED_TEXT_LAYER_LAYOUT: {
+                name: "speedTextLayerLayout",
+                type: _customTypes.LAYOUT_DESCRIPTOR
+            },
+            SPEED_TEXT: {
+                name: "speedText",
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["forward", "reverse"], POSITION: ["maxForward", "maxReverse"]})
+            },
+            SPEED_TARGET_INDICATOR: {
+                name: "speedTargetIndicator",
+                type: _customTypes.UI_IMAGE_DESCRIPTOR
+            },
+            HULL_INTEGRITY_BAR: {
+                name: "hullIntegrityBar",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty", "filledWhenDecreasing", "emptyWhenDecreasing"]})
+            },
+            FLIGHT_MODE_INDICATOR_BACKGROUND: {
+                name: "flightModeIndicatorBackground",
+                type: _customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR
+            },
+            FLIGHT_MODE_HEADER_TEXT: {
+                name: "flightModeHeaderText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
+            FLIGHT_MODE_TEXT: {
+                name: "flightModeText",
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["free", "compensated", "restricted"]})
+            },
+            DRIFT_ARROW: {
+                name: "driftArrow",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["minSpeed", "maxSpeed"]})
+            },
+            DRIFT_ARROW_POSITION_RADIUS: {
+                name: "driftArrowPositionRadius",
+                type: "number"
+            },
+            DRIFT_ARROW_MIN_SPEED: {
+                name: "driftArrowMinSpeed",
+                type: "number"
+            },
+            DRIFT_ARROW_MAX_SPEED_FACTOR: {
+                name: "driftArrowMaxSpeedFactor",
+                type: "number"
+            },
+            TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR: {
+                name: "targetHullIntegrityQuickViewBar",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["hostileFilled", "hostileEmpty", "friendlyFilled", "friendlyEmpty", "filledWhenDecreasing"]})
+            },
+            HEADER_TEXT_LAYER_LAYOUT: {
+                name: "headerTextLayerLayout",
+                type: _customTypes.LAYOUT_DESCRIPTOR
+            },
+            SMALL_HEADER_TEXT: {
+                name: "smallHeaderText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
+            BIG_HEADER_TEXT: {
+                name: "bigHeaderText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
+            SUBHEADER_TEXT: {
+                name: "subheaderText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
+            TOP_LEFT_TEXT_LAYER_LAYOUT: {
+                name: "topLeftTextLayerLayout",
+                type: _customTypes.LAYOUT_DESCRIPTOR
+            },
+            SCORE_TEXT: {
+                name: "scoreText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
+            TARGET_SWITCH_SOUND: {
+                name: "targetSwitchSound",
+                type: classes.SOUND_EFFECT_2D
+            },
+            TARGET_SWITCH_DENIED_SOUND: {
+                name: "targetSwitchDeniedSound",
+                type: classes.SOUND_EFFECT_2D
+            }
         },
         WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE: {
             name: "weaponFireSoundStackMinimumDistance",
@@ -1453,6 +1272,13 @@ define([
         return this._settings[settingDefinitionObject.name];
     };
     /**
+     * Returns the setting value within the HUD setting object for the passed setting definition object.
+     * @param {Object} settingDefinitionObject
+     */
+    ConfigurationContext.prototype.getHUDSetting = function (settingDefinitionObject) {
+        return this._settings[BATTLE_SETTINGS.HUD.name][settingDefinitionObject.name];
+    };
+    /**
      * Returns the default starting field of view value for camera configurations, in degrees
      * @returns {Number}
      */
@@ -1525,6 +1351,7 @@ define([
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
         getConfigurationSetting: _context.getConfigurationSetting.bind(_context),
         getSetting: _context.getSetting.bind(_context),
+        getHUDSetting: _context.getHUDSetting.bind(_context),
         getDefaultCameraFOV: _context.getDefaultCameraFOV.bind(_context),
         getDefaultCameraFOVRange: _context.getDefaultCameraFOVRange.bind(_context),
         getDefaultCameraSpan: _context.getDefaultCameraSpan.bind(_context),

@@ -170,291 +170,320 @@
             "targetChangeTransitonDuration": 300,
             "targetChangeTransitionStyle": "smooth",
             "gameStateDisplayDelay": 2000,
-            "hudTargetSwitchAnimationDuration": 100,
-            "hudHullIntegrityDecreaseAnimationDuration": 300,
-            "hudTargetHullIntegrityDecreaseAnimationDuration": 1000,
-            "hudCenterCrosshair": {
-                "texture": "hud-atlas",
-                "mapping": [[0.5, 0.0], [1.0, 0.5]],
-                "size": [0.65, 0.65],
-                "scaleMode": "minimum",
-                "color": [0, 1, 0, 0.25]
-            },
-            "hudCursor": {
-                "texture": "hud-atlas",
-                "mappings": {
-                    "still": [[0.75, 0.75], [1.0, 1.0]],
-                    "turn": [[0.5, 0.75], [0.75, 1.0]]
+            "hud": {
+                "targetSwitchAnimationDuration": 100,
+                "hullIntegrityDecreaseAnimationDuration": 300,
+                "targetHullIntegrityDecreaseAnimationDuration": 1000,
+                "centerCrosshair": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.5, 0.0], [1.0, 0.5]],
+                    "size": [0.65, 0.65],
+                    "scaleMode": "minimum",
+                    "color": [0, 1, 0, 0.25]
                 },
-                "size": [0.075, 0.075],
-                "scaleMode": "maximum",
-                "color": [0, 1, 0, 0.25]
-            },
-            "hudTargetArrow": {
-                "texture": "hud-atlas",
-                "mapping": [[0.25, 0.25], [0.5, 0.5]],
-                "size": [0.12, 0.12],
-                "scaleMode": "minimum",
-                "colors": {
-                    "hostile": [1, 0, 0, 0.75],
-                    "friendly": [0, 1, 0, 0.75]
-                }
-            },
-            "hudTargetArrowPositionRadius": 0.45,
-            "hudTargetArrowSwitchScale": 1.8,
-            "hudTargetIndicator": {
-                "texture": "hud-atlas",
-                "mapping": [[0.0, 0.0], [0.25, 0.25]],
-                "size": [0.15, 0.15],
-                "scaleMode": "maximum",
-                "colors": {
-                    "hostile": [1, 0, 0, 0.75],
-                    "friendly": [0, 1, 0, 0.75]
-                }
-            },
-            "hudTargetIndicatorSwitchScale": 1.5,
-            "hudAimAssistIndicator": {
-                "texture": "hud-atlas",
-                "mapping": [[0.0, 0.0], [0.25, 0.25]],
-                "size": [0.05, 0.05],
-                "scaleMode": "maximum",
-                "colors": {
-                    "hostile": [1, 0, 0, 0.75],
-                    "friendly": [0, 1, 0, 0.75]
-                }
-            },
-            "hudWeaponImpactIndicator": {
-                "texture": "hud-atlas",
-                "mapping": [[0.34375, 0.09375], [0.40625, 0.15625]],
-                "size": [0.025, 0.025],
-                "scaleMode": "maximum",
-                "colors": {
-                    "normal": [0, 1, 0, 0.95],
-                    "outOfRange": [0, 1, 0, 0.25]
-                }
-            },
-            "hudWeaponImpactIndicatorSwitchScale": 1.75,
-            "hudTargetViewLayout": {
-                "right": 0.98,
-                "top": 0.98,
-                "width": 0.6,
-                "height": 0.4,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum",
-                "yScaleMode": "minimum"
-            },
-            "hudTargetViewViewDistance": 1500,
-            "hudTargetViewFOV": 40,
-            "hudTargetViewTargetItemShader": "oneColor",
-            "hudTargetViewTargetItemFullIntegrityColor": [0, 1, 0, 1],
-            "hudTargetViewTargetItemHalfIntegrityColor": [1, 1, 0, 1],
-            "hudTargetViewTargetItemZeroIntegrityColor": [1, 0, 0, 1],
-            "hudTargetInfoBackgroundTexture": "hud-atlas",
-            "hudTargetInfoBackgroundTextureMapping": [[0.35375, 0.01], [0.39625, 0.0525]],
-            "hudTargetInfoBackgroundLayout": {
-                "right": 0.98,
-                "top": 0.98,
-                "width": 0.6,
-                "height": 0.8,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum",
-                "yScaleMode": "minimum"
-            },
-            "hudTargetInfoBackgroundColor": [0, 0, 0, 0.4],
-            "hudTargetHullIntegrityBarTexture": "hud-atlas",
-            "hudTargetHullIntegrityBarTextureMapping": [[0.35375, 0.01], [0.39625, 0.0525]],
-            "hudTargetHullIntegrityBarLayout": {
-                "right": 0.98,
-                "top": 0.58,
-                "width": 0.6,
-                "height": 0.01,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum",
-                "yScaleMode": "minimum"
-            },
-            "hudTargetHullIntegrityBarFilledColor": [0, 1, 0, 1],
-            "hudTargetHullIntegrityBarEmptyColor": [0, 1, 0, 0.2],
-            "hudTargetInfoTextLayerLayout": {
-                "right": 0.98,
-                "top": 0.53,
-                "width": 0.6,
-                "height": 0.3,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum",
-                "yScaleMode": "minimum"
-            },
-            "hudTargetInfoText": {
-                "colors": {
-                    "hostile": [1, 0, 0, 1],
-                    "friendly": [0, 1, 0, 1]
+                "cursor": {
+                    "texture": "hud-atlas",
+                    "mappings": {
+                        "still": [[0.75, 0.75], [1.0, 1.0]],
+                        "turn": [[0.5, 0.75], [0.75, 1.0]]
+                    },
+                    "size": [0.075, 0.075],
+                    "scaleMode": "maximum",
+                    "color": [0, 1, 0, 0.25]
                 },
-                "fontSize": 0.15,
-                "fontName": "gameFont",
-                "positions": {
-                    "name": [-0.95, 0.76],
-                    "class": [-0.95, 0.41],
-                    "team": [-0.95, 0.06],
-                    "distance": [-0.95, -0.29],
-                    "velocity": [-0.95, -0.64]
-                }
-            },
-            "hudSpeedBarTexture": "hud-atlas",
-            "hudSpeedBarTextureMapping": [[0.0, 0.5], [0.125, 1.0]],
-            "hudSpeedBarLayout": {
-                "centerX": 0.575,
-                "centerY": 0.0,
-                "width": 0.125,
-                "height": 0.5,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum"
-            },
-            "hudSpeedBarFilledColor": [0, 1, 1, 0.75],
-            "hudSpeedBarEmptyColor": [0, 1, 1, 0.2],
-            "hudReverseSpeedBarFilledColor": [1, 0.75, 0, 0.75],
-            "hudReverseSpeedBarEmptyColor": [1, 0.75, 0, 0.2],
-            "hudSpeedBarBaseMaxSpeedFactor": 1,
-            "hudSpeedBarDefaultBaseMaxSpeed": 10,
-            "hudSpeedBarMaxSpeedStepFactor": 4,
-            "hudSpeedTextLayerLayout": {
-                "centerX": 0.67,
-                "centerY": 0.0,
-                "width": 0.1,
-                "height": 0.5,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum"
-            },
-            "hudSpeedText": {
-                "colors": {
-                    "forward": [0, 1, 1, 0.75],
-                    "reverse": [1, 0.75, 0, 0.75]
+                "targetArrow": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.25, 0.25], [0.5, 0.5]],
+                    "size": [0.12, 0.12],
+                    "scaleMode": "minimum",
+                    "colors": {
+                        "hostile": [1, 0, 0, 0.75],
+                        "friendly": [0, 1, 0, 0.75]
+                    }
                 },
-                "fontSize": 0.35,
-                "fontName": "gameFont",
-                "positions": {
-                    "maxForward": [-0.9, 0.875],
-                    "maxReverse": [-0.9, -0.985]
-                }
-            },
-            "hudSpeedTargetIndicatorTexture": "hud-atlas",
-            "hudSpeedTargetIndicatorTextureMapping": [[0.0, 0.5], [0.125, 1.0]],
-            "hudSpeedTargetIndicatorColor": [1, 1, 1, 1],
-            "hudSpeedTargetIndicatorSize": [1.0, 0.015],
-            "hudHullIntegrityBarTexture": "hud-atlas",
-            "hudHullIntegrityBarTextureMapping": [[0.125, 0.5], [0.0, 1.0]],
-            "hudHullIntegrityBarLayout": {
-                "centerX": -0.575,
-                "centerY": 0.0,
-                "width": 0.125,
-                "height": 0.5,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum"
-            },
-            "hudHullIntegrityBarFilledColor": [0, 1, 0, 0.75],
-            "hudHullIntegrityBarEmptyColor": [1, 0, 0, 0.5],
-            "hudHullIntegrityBarFilledColorWhenDecreasing": [1, 1, 1, 0.75],
-            "hudHullIntegrityBarEmptyColorWhenDecreasing": [1, 0.6, 0, 0.75],
-            "hudFlightModeIndicatorBackgroundTexture": "hud-atlas",
-            "hudFlightModeIndicatorBackgroundTextureMapping": [[0.35375, 0.01], [0.39625, 0.0525]],
-            "hudFlightModeIndicatorBackgroundLayout": {
-                "right": 0.98,
-                "top": -0.2,
-                "width": 0.34,
-                "height": 0.15,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum",
-                "yScaleMode": "minimum"
-            },
-            "hudFlightModeIndicatorBackgroundColor": [0, 0, 0, 0.5],
-            "hudFlightModeHeaderText": {
-                "color": [0, 1, 0, 1],
-                "fontSize": 0.3,
-                "fontName": "gameFont",
-                "position": [-0.9, 0.25]
-            },
-            "hudFlightModeText": {
-                "colors": {
-                    "free": [1, 0.85, 0.1, 1],
-                    "compensated": [0.3, 0.6, 1, 1],
-                    "restricted": [0.8, 0.1, 0.8, 1]
+                "targetArrowPositionRadius": 0.45,
+                "targetArrowSwitchScale": 1.8,
+                "targetIndicator": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.0, 0.0], [0.25, 0.25]],
+                    "size": [0.15, 0.15],
+                    "scaleMode": "maximum",
+                    "colors": {
+                        "hostile": [1, 0, 0, 0.75],
+                        "friendly": [0, 1, 0, 0.75]
+                    }
                 },
-                "fontSize": 0.3,
-                "fontName": "gameFont",
-                "position": [-0.9, -0.5]
-            },
-            "hudDriftArrowTexture": "hud-atlas",
-            "hudDriftArrowTextureMapping": [[0.0, 0.25], [0.25, 0.5]],
-            "hudDriftArrowPositionRadius": 0.35,
-            "hudDriftArrowSize": [0.325, 0.325],
-            "hudDriftArrowScaleMode": "minimum",
-            "hudDriftArrowMinSpeedColor": [0, 1, 1, 0.0],
-            "hudDriftArrowMaxSpeedColor": [0, 1, 1, 0.75],
-            "hudDriftArrowMinSpeed": 0.5,
-            "hudDriftArrowMaxSpeedFactor": 2,
-            "hudTargetHullIntegrityQuickViewBarTexture": "hud-atlas",
-            "hudTargetHullIntegrityQuickViewBarTextureMapping": [[0.35375, 0.01], [0.39625, 0.0525]],
-            "hudTargetHullIntegrityQuickViewBarLayout": {
-                "centerX": 0,
-                "centerY": 0.25,
-                "width": 0.14,
-                "height": 0.01,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum",
-                "yScaleMode": "minimum"
-            },
-            "hudTargetHullIntegrityQuickViewBarHostileFilledColor": [1, 0, 0, 1],
-            "hudTargetHullIntegrityQuickViewBarHostileEmptyColor": [1, 0, 0, 0.2],
-            "hudTargetHullIntegrityQuickViewBarFriendlyFilledColor": [0, 1, 0, 1],
-            "hudTargetHullIntegrityQuickViewBarFriendlyEmptyColor": [0, 1, 0, 0.2],
-            "hudTargetHullIntegrityQuickViewBarFilledColorWhenDecreasing": [1, 1, 1, 1],
-            "hudHeaderTextLayerLayout": {
-                "centerX": 0,
-                "top": 0.97,
-                "width": 0.85,
-                "height": 0.155,
-                "scaleMode": "maximum",
-                "xScaleMode": "maximum",
-                "yScaleMode": "maximum"
-            },
-            "hudSmallHeaderText": {
-                "color": [1, 1, 1, 1],
-                "fontSize": 0.025,
-                "fontName": "gameFont",
-                "position": [0, 0.7]
-            },
-            "hudBigHeaderText": {
-                "color": [1, 1, 1, 1],
-                "fontSize": 0.06,
-                "fontName": "gameFont",
-                "position": [0, -0.35]
-            },
-            "hudSubheaderText": {
-                "color": [1, 1, 1, 1],
-                "fontSize": 0.025,
-                "fontName": "gameFont",
-                "position": [0, -0.85]
-            },
-            "hudTopLeftTextLayerLayout": {
-                "left": -0.98,
-                "top": 0.97,
-                "width": 0.5,
-                "height": 0.05,
-                "scaleMode": "minimum",
-                "xScaleMode": "minimum",
-                "yScaleMode": "minimum"
-            },
-            "hudScoreText": {
-                "color": [1, 1, 1, 1],
-                "fontSize": 1.0,
-                "fontName": "gameFont",
-                "position": [-1.0, -0.7]
-            },
-            "hudTargetSwitchSound": {
-                "name": "beep_targeting",
-                "volume": 0.2
-            },
-            "hudTargetSwitchDeniedSound": {
-                "name": "beep_targeting_denied",
-                "volume": 0.2
+                "targetIndicatorSwitchScale": 1.5,
+                "aimAssistIndicator": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.0, 0.0], [0.25, 0.25]],
+                    "size": [0.05, 0.05],
+                    "scaleMode": "maximum",
+                    "colors": {
+                        "hostile": [1, 0, 0, 0.75],
+                        "friendly": [0, 1, 0, 0.75]
+                    }
+                },
+                "weaponImpactIndicator": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.34375, 0.09375], [0.40625, 0.15625]],
+                    "size": [0.025, 0.025],
+                    "scaleMode": "maximum",
+                    "colors": {
+                        "normal": [0, 1, 0, 0.95],
+                        "outOfRange": [0, 1, 0, 0.25]
+                    }
+                },
+                "weaponImpactIndicatorSwitchScale": 1.75,
+                "targetViewLayout": {
+                    "right": 0.98,
+                    "top": 0.98,
+                    "width": 0.6,
+                    "height": 0.4,
+                    "scaleMode": "minimum",
+                    "xScaleMode": "minimum",
+                    "yScaleMode": "minimum"
+                },
+                "targetViewViewDistance": 1500,
+                "targetViewFOV": 40,
+                "targetViewTargetItemShader": "oneColor",
+                "targetViewTargetItemFullIntegrityColor": [0, 1, 0, 1],
+                "targetViewTargetItemHalfIntegrityColor": [1, 1, 0, 1],
+                "targetViewTargetItemZeroIntegrityColor": [1, 0, 0, 1],
+                "targetInfoBackground": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "right": 0.98,
+                        "top": 0.98,
+                        "width": 0.6,
+                        "height": 0.8,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
+                    },
+                    "color": [0, 0, 0, 0.4]
+                },
+                "targetHullIntegrityBar": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "right": 0.98,
+                        "top": 0.58,
+                        "width": 0.6,
+                        "height": 0.01,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
+                    },
+                    "colors": {
+                        "filled": [0, 1, 0, 1],
+                        "empty": [0, 1, 0, 0.2]
+                    }
+                },
+                "targetInfoTextLayerLayout": {
+                    "right": 0.98,
+                    "top": 0.53,
+                    "width": 0.6,
+                    "height": 0.3,
+                    "scaleMode": "minimum",
+                    "xScaleMode": "minimum",
+                    "yScaleMode": "minimum"
+                },
+                "targetInfoText": {
+                    "colors": {
+                        "hostile": [1, 0, 0, 1],
+                        "friendly": [0, 1, 0, 1]
+                    },
+                    "fontSize": 0.15,
+                    "fontName": "gameFont",
+                    "positions": {
+                        "name": [-0.95, 0.76],
+                        "class": [-0.95, 0.41],
+                        "team": [-0.95, 0.06],
+                        "distance": [-0.95, -0.29],
+                        "velocity": [-0.95, -0.64]
+                    }
+                },
+                "speedBar": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.0, 0.5], [0.125, 1.0]],
+                    "layout": {
+                        "centerX": 0.575,
+                        "centerY": 0.0,
+                        "width": 0.125,
+                        "height": 0.5,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum"
+                    },
+                    "colors": {
+                        "filled": [0, 1, 1, 0.75],
+                        "empty": [0, 1, 1, 0.2],
+                        "reverseFilled": [1, 0.75, 0, 0.75],
+                        "reverseEmpty": [1, 0.75, 0, 0.2]
+                    }
+                },
+                "speedBarBaseMaxSpeedFactor": 1,
+                "speedBarDefaultBaseMaxSpeed": 10,
+                "speedBarMaxSpeedStepFactor": 4,
+                "speedTextLayerLayout": {
+                    "centerX": 0.67,
+                    "centerY": 0.0,
+                    "width": 0.1,
+                    "height": 0.5,
+                    "scaleMode": "minimum",
+                    "xScaleMode": "minimum"
+                },
+                "speedText": {
+                    "colors": {
+                        "forward": [0, 1, 1, 0.75],
+                        "reverse": [1, 0.75, 0, 0.75]
+                    },
+                    "fontSize": 0.35,
+                    "fontName": "gameFont",
+                    "positions": {
+                        "maxForward": [-0.9, 0.875],
+                        "maxReverse": [-0.9, -0.985]
+                    }
+                },
+                "speedTargetIndicator": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.0, 0.5], [0.125, 1.0]],
+                    "color": [1, 1, 1, 1],
+                    "size": [1.0, 0.015],
+                    "scaleMode": "minimum"
+                },
+                "hullIntegrityBar": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.125, 0.5], [0.0, 1.0]],
+                    "layout": {
+                        "centerX": -0.575,
+                        "centerY": 0.0,
+                        "width": 0.125,
+                        "height": 0.5,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum"
+                    },
+                    "colors": {
+                        "filled": [0, 1, 0, 0.75],
+                        "empty": [1, 0, 0, 0.5],
+                        "filledWhenDecreasing": [1, 1, 1, 0.75],
+                        "emptyWhenDecreasing": [1, 0.6, 0, 0.75]
+                    }
+                },
+                "flightModeIndicatorBackground": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "right": 0.98,
+                        "top": -0.2,
+                        "width": 0.34,
+                        "height": 0.15,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
+                    },
+                    "color": [0, 0, 0, 0.5]
+                },
+                "flightModeHeaderText": {
+                    "color": [0, 1, 0, 1],
+                    "fontSize": 0.3,
+                    "fontName": "gameFont",
+                    "position": [-0.9, 0.25]
+                },
+                "flightModeText": {
+                    "colors": {
+                        "free": [1, 0.85, 0.1, 1],
+                        "compensated": [0.3, 0.6, 1, 1],
+                        "restricted": [0.8, 0.1, 0.8, 1]
+                    },
+                    "fontSize": 0.3,
+                    "fontName": "gameFont",
+                    "position": [-0.9, -0.5]
+                },
+                "driftArrow": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.0, 0.25], [0.25, 0.5]],
+                    "size": [0.325, 0.325],
+                    "scaleMode": "minimum",
+                    "colors": {
+                        "minSpeed": [0, 1, 1, 0.0],
+                        "maxSpeed": [0, 1, 1, 0.75]
+                    }
+                },
+                "driftArrowPositionRadius": 0.35,
+                "driftArrowMinSpeed": 0.5,
+                "driftArrowMaxSpeedFactor": 2,
+                "targetHullIntegrityQuickViewBar": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "centerX": 0,
+                        "centerY": 0.25,
+                        "width": 0.14,
+                        "height": 0.01,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
+                    },
+                    "colors": {
+                        "hostileFilled": [1, 0, 0, 1],
+                        "hostileEmpty": [1, 0, 0, 0.2],
+                        "friendlyFilled": [0, 1, 0, 1],
+                        "friendlyEmpty": [0, 1, 0, 0.2],
+                        "filledWhenDecreasing": [1, 1, 1, 1]       
+                    }
+                },
+                "headerTextLayerLayout": {
+                    "centerX": 0,
+                    "top": 0.97,
+                    "width": 0.85,
+                    "height": 0.155,
+                    "scaleMode": "maximum",
+                    "xScaleMode": "maximum",
+                    "yScaleMode": "maximum"
+                },
+                "smallHeaderText": {
+                    "color": [1, 1, 1, 1],
+                    "fontSize": 0.025,
+                    "fontName": "gameFont",
+                    "position": [0, 0.7]
+                },
+                "bigHeaderText": {
+                    "color": [1, 1, 1, 1],
+                    "fontSize": 0.06,
+                    "fontName": "gameFont",
+                    "position": [0, -0.35]
+                },
+                "subheaderText": {
+                    "color": [1, 1, 1, 1],
+                    "fontSize": 0.025,
+                    "fontName": "gameFont",
+                    "position": [0, -0.85]
+                },
+                "topLeftTextLayerLayout": {
+                    "left": -0.98,
+                    "top": 0.97,
+                    "width": 0.5,
+                    "height": 0.05,
+                    "scaleMode": "minimum",
+                    "xScaleMode": "minimum",
+                    "yScaleMode": "minimum"
+                },
+                "scoreText": {
+                    "color": [1, 1, 1, 1],
+                    "fontSize": 1.0,
+                    "fontName": "gameFont",
+                    "position": [-1.0, -0.7]
+                },
+                "targetSwitchSound": {
+                    "name": "beep_targeting",
+                    "volume": 0.2
+                },
+                "targetSwitchDeniedSound": {
+                    "name": "beep_targeting_denied",
+                    "volume": 0.2
+                }
             },
             "weaponFireSoundStackMinimumDistance": 100,
             "hitSoundStackingTimeThreshold": 0.1,

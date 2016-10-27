@@ -35,6 +35,12 @@ body.wait, body.wait * {
     cursor: wait !important;
 }
 
+canvas {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
 /* Put a wrapper div of this class around an element to be centered that has no fixed height */
 .pageGhost {
     text-align: center;
