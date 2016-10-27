@@ -528,6 +528,16 @@ define(function () {
         return (dotIndex > 0) ? filename.substr(0, dotIndex) : filename;
     };
     /**
+     * 
+     * @param {Number} value1
+     * @param {Number} value2
+     * @param {Number} value2Ratio
+     * @returns {Number}
+     */
+    exports.getLinearMix = function (value1, value2, value2Ratio) {
+        return value1 * (1 - value2Ratio) + value2 * value2Ratio;
+    };
+    /**
      * Returns an RGBA color that is the result of mixing the two passed RGBA colors with the second color
      * having the given ratio. (using a simple linear combination of the components of the colors)
      * @param {Number[4]} color1

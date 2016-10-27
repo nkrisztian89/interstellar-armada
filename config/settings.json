@@ -173,38 +173,66 @@
             "hudTargetSwitchAnimationDuration": 100,
             "hudHullIntegrityDecreaseAnimationDuration": 300,
             "hudTargetHullIntegrityDecreaseAnimationDuration": 1000,
-            "hudCenterCrosshairTexture": "center",
-            "hudCenterCrosshairSize": [0.65, 0.65],
-            "hudCenterCrosshairScaleMode": "minimum",
-            "hudCenterCrosshairColor": [0, 1, 0, 0.25],
-            "hudCursorStillTexture": "cursor-still",
-            "hudCursorTurnTexture": "cursor-turn",
-            "hudCursorSize": [0.075, 0.075],
-            "hudCursorScaleMode": "maximum",
-            "hudCursorColor": [0, 1, 0, 0.25],
-            "hudTargetArrowTexture": "arrow",
+            "hudCenterCrosshair": {
+                "texture": "hud-atlas",
+                "mapping": [[0.5, 0.0], [1.0, 0.5]],
+                "size": [0.65, 0.65],
+                "scaleMode": "minimum",
+                "color": [0, 1, 0, 0.25]
+            },
+            "hudCursor": {
+                "texture": "hud-atlas",
+                "mappings": {
+                    "still": [[0.75, 0.75], [1.0, 1.0]],
+                    "turn": [[0.5, 0.75], [0.75, 1.0]]
+                },
+                "size": [0.075, 0.075],
+                "scaleMode": "maximum",
+                "color": [0, 1, 0, 0.25]
+            },
+            "hudTargetArrow": {
+                "texture": "hud-atlas",
+                "mapping": [[0.25, 0.25], [0.5, 0.5]],
+                "size": [0.12, 0.12],
+                "scaleMode": "minimum",
+                "colors": {
+                    "hostile": [1, 0, 0, 0.75],
+                    "friendly": [0, 1, 0, 0.75]
+                }
+            },
             "hudTargetArrowPositionRadius": 0.45,
-            "hudTargetArrowSize": [0.12, 0.12],
-            "hudTargetArrowScaleMode": "minimum",
-            "hudTargetArrowHostileColor": [1, 0, 0, 0.75],
-            "hudTargetArrowFriendlyColor": [0, 1, 0, 0.75],
             "hudTargetArrowSwitchScale": 1.8,
-            "hudTargetIndicatorTexture": "target",
-            "hudTargetIndicatorSize": [0.15, 0.15],
-            "hudTargetIndicatorScaleMode": "maximum",
-            "hudTargetIndicatorHostileColor": [1, 0, 0, 0.75],
-            "hudTargetIndicatorFriendlyColor": [0, 1, 0, 0.75],
+            "hudTargetIndicator": {
+                "texture": "hud-atlas",
+                "mapping": [[0.0, 0.0], [0.25, 0.25]],
+                "size": [0.15, 0.15],
+                "scaleMode": "maximum",
+                "colors": {
+                    "hostile": [1, 0, 0, 0.75],
+                    "friendly": [0, 1, 0, 0.75]
+                }
+            },
             "hudTargetIndicatorSwitchScale": 1.5,
-            "hudAimAssistIndicatorTexture": "target",
-            "hudAimAssistIndicatorSize": [0.05, 0.05],
-            "hudAimAssistIndicatorScaleMode": "maximum",
-            "hudAimAssistIndicatorHostileColor": [1, 0, 0, 0.75],
-            "hudAimAssistIndicatorFriendlyColor": [0, 1, 0, 0.75],
-            "hudWeaponImpactIndicatorTexture": "crosshair",
-            "hudWeaponImpactIndicatorSize": [0.025, 0.025],
-            "hudWeaponImpactIndicatorScaleMode": "maximum",
-            "hudWeaponImpactIndicatorColor": [0, 1, 0, 0.95],
-            "hudWeaponImpactIndicatorOutOfRangeColor": [0, 1, 0, 0.25],
+            "hudAimAssistIndicator": {
+                "texture": "hud-atlas",
+                "mapping": [[0.0, 0.0], [0.25, 0.25]],
+                "size": [0.05, 0.05],
+                "scaleMode": "maximum",
+                "colors": {
+                    "hostile": [1, 0, 0, 0.75],
+                    "friendly": [0, 1, 0, 0.75]
+                }
+            },
+            "hudWeaponImpactIndicator": {
+                "texture": "hud-atlas",
+                "mapping": [[0.34375, 0.09375], [0.40625, 0.15625]],
+                "size": [0.025, 0.025],
+                "scaleMode": "maximum",
+                "colors": {
+                    "normal": [0, 1, 0, 0.95],
+                    "outOfRange": [0, 1, 0, 0.25]
+                }
+            },
             "hudWeaponImpactIndicatorSwitchScale": 1.75,
             "hudTargetViewLayout": {
                 "right": 0.98,
@@ -221,7 +249,8 @@
             "hudTargetViewTargetItemFullIntegrityColor": [0, 1, 0, 1],
             "hudTargetViewTargetItemHalfIntegrityColor": [1, 1, 0, 1],
             "hudTargetViewTargetItemZeroIntegrityColor": [1, 0, 0, 1],
-            "hudTargetInfoBackgroundTexture": "white",
+            "hudTargetInfoBackgroundTexture": "hud-atlas",
+            "hudTargetInfoBackgroundTextureMapping": [[0.35375, 0.01], [0.39625, 0.0525]],
             "hudTargetInfoBackgroundLayout": {
                 "right": 0.98,
                 "top": 0.98,
@@ -232,7 +261,8 @@
                 "yScaleMode": "minimum"
             },
             "hudTargetInfoBackgroundColor": [0, 0, 0, 0.4],
-            "hudTargetHullIntegrityBarTexture": "white",
+            "hudTargetHullIntegrityBarTexture": "hud-atlas",
+            "hudTargetHullIntegrityBarTextureMapping": [[0.35375, 0.01], [0.39625, 0.0525]],
             "hudTargetHullIntegrityBarLayout": {
                 "right": 0.98,
                 "top": 0.58,
@@ -268,7 +298,8 @@
                     "velocity": [-0.95, -0.64]
                 }
             },
-            "hudSpeedBarTexture": "bar_right",
+            "hudSpeedBarTexture": "hud-atlas",
+            "hudSpeedBarTextureMapping": [[0.0, 0.5], [0.125, 1.0]],
             "hudSpeedBarLayout": {
                 "centerX": 0.575,
                 "centerY": 0.0,
@@ -304,10 +335,12 @@
                     "maxReverse": [-0.9, -0.985]
                 }
             },
-            "hudSpeedTargetIndicatorTexture": "bar_right",
+            "hudSpeedTargetIndicatorTexture": "hud-atlas",
+            "hudSpeedTargetIndicatorTextureMapping": [[0.0, 0.5], [0.125, 1.0]],
             "hudSpeedTargetIndicatorColor": [1, 1, 1, 1],
-            "hudSpeedTargetIndicatorSize": [1.0, 0.0075],
-            "hudHullIntegrityBarTexture": "bar_left",
+            "hudSpeedTargetIndicatorSize": [1.0, 0.015],
+            "hudHullIntegrityBarTexture": "hud-atlas",
+            "hudHullIntegrityBarTextureMapping": [[0.125, 0.5], [0.0, 1.0]],
             "hudHullIntegrityBarLayout": {
                 "centerX": -0.575,
                 "centerY": 0.0,
@@ -320,7 +353,8 @@
             "hudHullIntegrityBarEmptyColor": [1, 0, 0, 0.5],
             "hudHullIntegrityBarFilledColorWhenDecreasing": [1, 1, 1, 0.75],
             "hudHullIntegrityBarEmptyColorWhenDecreasing": [1, 0.6, 0, 0.75],
-            "hudFlightModeIndicatorBackgroundTexture": "white",
+            "hudFlightModeIndicatorBackgroundTexture": "hud-atlas",
+            "hudFlightModeIndicatorBackgroundTextureMapping": [[0.35375, 0.01], [0.39625, 0.0525]],
             "hudFlightModeIndicatorBackgroundLayout": {
                 "right": 0.98,
                 "top": -0.2,
@@ -347,7 +381,8 @@
                 "fontName": "gameFont",
                 "position": [-0.9, -0.5]
             },
-            "hudDriftArrowTexture": "drift-arrow",
+            "hudDriftArrowTexture": "hud-atlas",
+            "hudDriftArrowTextureMapping": [[0.0, 0.25], [0.25, 0.5]],
             "hudDriftArrowPositionRadius": 0.35,
             "hudDriftArrowSize": [0.325, 0.325],
             "hudDriftArrowScaleMode": "minimum",
@@ -355,7 +390,8 @@
             "hudDriftArrowMaxSpeedColor": [0, 1, 1, 0.75],
             "hudDriftArrowMinSpeed": 0.5,
             "hudDriftArrowMaxSpeedFactor": 2,
-            "hudTargetHullIntegrityQuickViewBarTexture": "white",
+            "hudTargetHullIntegrityQuickViewBarTexture": "hud-atlas",
+            "hudTargetHullIntegrityQuickViewBarTextureMapping": [[0.35375, 0.01], [0.39625, 0.0525]],
             "hudTargetHullIntegrityQuickViewBarLayout": {
                 "centerX": 0,
                 "centerY": 0.25,

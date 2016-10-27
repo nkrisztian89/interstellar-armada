@@ -2035,6 +2035,14 @@ define([
     UIElement.prototype.constructor = UIElement;
     /**
      * @override
+     * @param {ManagedGLContext} context
+     */
+    UIElement.prototype.addToContext = function (context) {
+        RenderableObject.prototype.addToContext.call(this, context);
+        this._model.addToContext(context, false);
+    };
+    /**
+     * @override
      * Renders the UI element.
      * @param {RenderParameters} renderParameters
      */

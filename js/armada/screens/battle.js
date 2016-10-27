@@ -19,6 +19,7 @@
  * @param renderableObjects Used for creating the HUD elements
  * @param sceneGraph Used for creating the battle scene and the nodes for the HUD elements.
  * @param resources Used for accessing the resources for the HUD and for requesting the loading of reasourcing and setting callback for when they are ready.
+ * @param egomModel Used for creating the models for the HUD elements
  * @param strings Used for translation support.
  * @param armadaScreens Used for common screen constants.
  * @param graphics Used for accessing graphics settings.
@@ -38,6 +39,7 @@ define([
     "modules/components",
     "modules/screens",
     "modules/media-resources",
+    "modules/egom-model",
     "modules/scene/renderable-objects",
     "modules/scene/scene-graph",
     "armada/strings",
@@ -53,7 +55,7 @@ define([
     "utils/polyfill"
 ], function (
         utils, vec, mat,
-        application, components, screens, resources,
+        application, components, screens, resources, egomModel,
         renderableObjects, sceneGraph,
         strings, armadaScreens, graphics, audio, classes, config, control, level, equipment, ai) {
     "use strict";
@@ -79,7 +81,8 @@ define([
             INITIAL_CAMERA_FOV = 40,
             INITIAL_CAMERA_SPAN = 0.2,
             HUD_ELEMENT_CLASS_NAME = "hudElementClass",
-            HUD_ELEMENT_MODEL_NAME = "squareModel",
+            HUD_ELEMENT_MODEL_NAME_PREFIX = "squareModel",
+            MODEL_NAME_INFIX = "-",
             UI_2D_SHADER_NAME = "ui2d",
             UI_3D_SHADER_NAME = "ui3d",
             UI_2D_MIX_VIEWPORT_SHADER_NAME = "ui2d-mix-viewport",
@@ -664,9 +667,12 @@ define([
      * @param {Number[2]} size The 2D size factor of the element to scale it.
      * @param {String} scaleMode (enum ScaleMode) The scaling mode to be used to size this element.
      * @param {Number[4]} color An RGBA color for the element it can be modulated with. (inside the clip zone)
-     * @param {Number[4]} clipColor An RGBA color to be used for modulation outside the clip zone set for the element.
+     * @param {Number[4]} [clipColor] An RGBA color to be used for modulation outside the clip zone set for the element.
+     * @param {Number[2][2]} [textureCoordinates] The coordinates for the top-left and bottom-right corners of the section of the texture
+     * image to use for texture mapping (or other corners if flipped horizontally or vertically) If not given, the whole image is used.
+     * (0;0) is top-left and (1;1) is bottom-right of the image
      */
-    function HUDElement(shaderName, textureName, position, size, scaleMode, color, clipColor) {
+    function HUDElement(shaderName, textureName, position, size, scaleMode, color, clipColor, textureCoordinates) {
         /**
          * Manages the acquiry of appropriate resources.
          * @type TexturedModelClass
@@ -714,6 +720,13 @@ define([
          */
         this._clipColor = clipColor || [0, 0, 0, 0];
         /**
+         * The coordinates for the top-left and bottom-right corners of the section of the texture image to use for texture mapping (or 
+         * other corners if flipped horizontally or vertically) When not set, the whole image is used.
+         * (0;0) is top-left and (1;1) is bottom-right of the image
+         * @type Number[2][2]
+         */
+        this._textureCoordinates = textureCoordinates;
+        /**
          * A reference to the visual model that is used to add a representation of this element to the scene.
          * @type UIElement
          */
@@ -728,7 +741,12 @@ define([
      * Grabs the references to all needed resource objects and marks them for loading. Automatically called when the element is added to a scene.
      */
     HUDElement.prototype._acquireResources = function () {
-        this._class.acquireResources({model: resources.getModel(HUD_ELEMENT_MODEL_NAME)});
+        var modelName, model;
+        modelName = HUD_ELEMENT_MODEL_NAME_PREFIX + (this._textureCoordinates ?
+                MODEL_NAME_INFIX + (this._textureCoordinates[0].join(MODEL_NAME_INFIX) + MODEL_NAME_INFIX + this._textureCoordinates[1].join(MODEL_NAME_INFIX)) :
+                "");
+        model = resources.getModel(modelName, {allowNullResult: true});
+        this._class.acquireResources({model: model || egomModel.squareModel(modelName, this._textureCoordinates)});
     };
     /**
      * Creates and stores a new visual model to represent this HUD element. Automatically called when the element is added to a scene.
@@ -833,6 +851,10 @@ define([
      * @param {Number} maximum
      */
     HUDElement.prototype.clipX = function (minimum, maximum) {
+        if (this._textureCoordinates) {
+            minimum = utils.getLinearMix(this._textureCoordinates[0][0], this._textureCoordinates[1][0], minimum);
+            maximum = utils.getLinearMix(this._textureCoordinates[0][0], this._textureCoordinates[1][0], maximum);
+        }
         this._clipCoordinates[0] = minimum;
         this._clipCoordinates[1] = maximum;
         if (this._visualModel) {
@@ -845,6 +867,10 @@ define([
      * @param {Number} maximum
      */
     HUDElement.prototype.clipY = function (minimum, maximum) {
+        if (this._textureCoordinates) {
+            minimum = 1 - utils.getLinearMix(this._textureCoordinates[1][1], this._textureCoordinates[0][1], minimum);
+            maximum = 1 - utils.getLinearMix(this._textureCoordinates[1][1], this._textureCoordinates[0][1], maximum);
+        }
         this._clipCoordinates[2] = 1 - maximum;
         this._clipCoordinates[3] = 1 - minimum;
         if (this._visualModel) {
@@ -881,11 +907,13 @@ define([
     function _getWeaponImpactIndicator() {
         return new HUDElement(
                 UI_3D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).texture,
                 [0, 0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SIZE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SCALE_MODE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).size,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).scaleMode,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).colors.normal,
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).mapping);
     }
     /**
      * Creates all HUD elements, marks their resources for loading if they are not loaded yet, and adds their visual models to the scene if
@@ -896,11 +924,13 @@ define([
         // keep the ons with the same shader together for faster rendering
         _centerCrosshair = _centerCrosshair || new HUDElement(
                 UI_2D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).texture,
                 [0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_SIZE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).size,
                 _centerCrosshairScaleMode,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).color,
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).mapping);
         _centerCrosshair.addToScene(_battleScene);
         _driftArrow = _driftArrow || new HUDElement(
                 UI_2D_SHADER_NAME,
@@ -908,31 +938,39 @@ define([
                 [0, 0],
                 config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_SIZE),
                 config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_SCALE_MODE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_COLOR),
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_TEXTURE_MAPPING));
         _driftArrow.addToScene(_battleScene);
         _targetArrow = _targetArrow || new HUDElement(
                 UI_2D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).texture,
                 [0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SIZE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SCALE_MODE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_HOSTILE_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).size,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).scaleMode,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).colors.hostile,
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).mapping);
         _targetArrow.addToScene(_battleScene);
         _targetIndicator = _targetIndicator || new HUDElement(
                 UI_3D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).texture,
                 [0, 0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SIZE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SCALE_MODE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_HOSTILE_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).size,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).scaleMode,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).colors.hostile,
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).mapping);
         _targetIndicator.addToScene(_battleScene);
         _aimAssistIndicator = _aimAssistIndicator || new HUDElement(
                 UI_3D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).texture,
                 [0, 0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_SIZE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_SCALE_MODE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_HOSTILE_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).size,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).scaleMode,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).colors.hostile,
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).mapping);
         _aimAssistIndicator.addToScene(_battleScene);
         if (!_weaponImpactIndicators) {
             _weaponImpactIndicators = [_getWeaponImpactIndicator()];
@@ -946,7 +984,9 @@ define([
                 _targetInfoBackgroundLayout.getClipSpacePosition(),
                 _targetInfoBackgroundLayout.getClipSpaceSize(),
                 _targetInfoBackgroundLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_COLOR),
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_TEXTURE_MAPPING));
         _targetInfoBackground.addToScene(_battleScene);
         _flightModeIndicatorBackground = _flightModeIndicatorBackground || new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
@@ -954,7 +994,9 @@ define([
                 _flightModeIndicatorBackgroundLayout.getClipSpacePosition(),
                 _flightModeIndicatorBackgroundLayout.getClipSpaceSize(),
                 _flightModeIndicatorBackgroundLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_COLOR),
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE_MAPPING));
         _flightModeIndicatorBackground.addToScene(_battleScene);
         _targetHullIntegrityBar = _targetHullIntegrityBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
@@ -963,7 +1005,8 @@ define([
                 _targetHullIntegrityBarLayout.getClipSpaceSize(),
                 _targetHullIntegrityBarLayout.getScaleMode(),
                 config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_FILLED_COLOR),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_EMPTY_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_EMPTY_COLOR),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE_MAPPING));
         _targetHullIntegrityBar.addToScene(_battleScene);
         _speedBar = _speedBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
@@ -972,7 +1015,8 @@ define([
                 _speedBarLayout.getClipSpaceSize(),
                 _speedBarLayout.getScaleMode(),
                 config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_FILLED_COLOR),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_EMPTY_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_EMPTY_COLOR),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_BAR_TEXTURE_MAPPING));
         _speedBar.addToScene(_battleScene);
         _speedTargetIndicator = _speedTargetIndicator || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
@@ -980,7 +1024,9 @@ define([
                 _speedBarLayout.getClipSpacePosition(),
                 _speedBarLayout.getClipSpaceSize(),
                 _speedBarLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_COLOR),
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_TEXTURE_MAPPING));
         _speedTargetIndicator.addToScene(_battleScene);
         _hullIntegrityBar = _hullIntegrityBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
@@ -989,7 +1035,8 @@ define([
                 _hullIntegrityBarLayout.getClipSpaceSize(),
                 _hullIntegrityBarLayout.getScaleMode(),
                 config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_FILLED_COLOR),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_EMPTY_COLOR),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_BAR_TEXTURE_MAPPING));
         _hullIntegrityBar.addToScene(_battleScene);
         _targetHullIntegrityQuickViewBar = _targetHullIntegrityQuickViewBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
@@ -997,23 +1044,29 @@ define([
                 _targetHullIntegrityQuickViewBarLayout.getClipSpacePosition(),
                 _targetHullIntegrityQuickViewBarLayout.getClipSpaceSize(),
                 _targetHullIntegrityQuickViewBarLayout.getScaleMode(),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_FILLED_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_HOSTILE_FILLED_COLOR),
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE_MAPPING));
         _targetHullIntegrityQuickViewBar.addToScene(_battleScene);
         _hudStillCursor = _hudStillCursor || new HUDElement(
                 UI_2D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_STILL_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).texture,
                 [0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_SIZE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_SCALE_MODE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).size,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).scaleMode,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).color,
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).mappings.still);
         _hudStillCursor.addToScene(_battleScene);
         _hudTurnCursor = _hudTurnCursor || new HUDElement(
                 UI_2D_SHADER_NAME,
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_TURN_TEXTURE),
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).texture,
                 [0, 0],
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_SIZE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_SCALE_MODE),
-                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR_COLOR));
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).size,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).scaleMode,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).color,
+                undefined,
+                config.getSetting(config.BATTLE_SETTINGS.HUD_CURSOR).mappings.turn);
         _hudTurnCursor.addToScene(_battleScene);
         // mark HUD sound effects for loading
         resources.getSoundEffect(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_SOUND).name);
@@ -1645,8 +1698,8 @@ define([
                 _targetIndicator.setPosition(targetPosition);
                 targetIsHostile = target.isHostile(craft);
                 _targetIndicator.setColor(targetIsHostile ?
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_HOSTILE_COLOR) :
-                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_FRIENDLY_COLOR));
+                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).colors.hostile :
+                        config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).colors.friendly);
                 // scaling according to the target switch animation
                 if (_targetSwitchTime > 0) {
                     _targetIndicator.setSize(vec.scaled2(_targetIndicatorSize, 1 + (_targetIndicatorSwitchScale - 1) * animationProgress));
@@ -1659,8 +1712,8 @@ define([
                     futureTargetPosition = craft.getTargetHitPosition();
                     _aimAssistIndicator.setPosition(futureTargetPosition);
                     _aimAssistIndicator.setColor(targetIsHostile ?
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_HOSTILE_COLOR) :
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR_FRIENDLY_COLOR));
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).colors.hostile :
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_AIM_ASSIST_INDICATOR).colors.friendly);
                     _aimAssistIndicator.show();
                     // weapon crosshairs in the lines of fire
                     futureDistance = vec.length3(vec.diff3(futureTargetPosition, position));
@@ -1688,10 +1741,10 @@ define([
                                             vec.diff3(futureTargetPosition, basePointPosition)))));
                         }
                         if (futureDistance <= weapons[i].getRange(speed)) {
-                            _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_COLOR));
+                            _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).colors.normal);
                             targetInRange = true;
                         } else {
-                            _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR));
+                            _weaponImpactIndicators[i].setColor(config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).colors.outOfRange);
                         }
                         // scaling according to the target switch animation
                         if (_targetSwitchTime > 0) {
@@ -1731,8 +1784,8 @@ define([
                     _targetArrow.setPosition(vec.scaled2([direction[0], direction[1] * aspect], arrowPositionRadius));
                     _targetArrow.setAngle(vec.angle2u([0, 1], direction) * ((direction[0] < 0) ? -1 : 1));
                     _targetArrow.setColor(targetIsHostile ?
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_HOSTILE_COLOR) :
-                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_FRIENDLY_COLOR));
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).colors.hostile :
+                            config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).colors.friendly);
                     // scaling according to the target switch animation
                     if (_targetSwitchTime > 0) {
                         _targetArrow.setSize(vec.scaled2(_targetArrowSize, 1 + (_targetArrowSwitchScale - 1) * animationProgress));
@@ -2083,7 +2136,7 @@ define([
     // Caching frequently needed setting values
     config.executeWhenReady(function () {
         // hud
-        _centerCrosshairScaleMode = config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR_SCALE_MODE);
+        _centerCrosshairScaleMode = config.getSetting(config.BATTLE_SETTINGS.HUD_CENTER_CROSSHAIR).scaleMode;
         _speedTargetIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_SPEED_TARGET_INDICATOR_SIZE);
         _targetViewLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_VIEW_LAYOUT));
         _targetInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INFO_BACKGROUND_LAYOUT));
@@ -2094,11 +2147,11 @@ define([
         _hudTargetSwitchAnimationDuration = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_SWITCH_ANIMATION_DURATION);
         _hudHullIntegrityDecreaseAnimationDuration = config.getSetting(config.BATTLE_SETTINGS.HUD_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
         _hudTargetHullIntegrityDecreaseAnimationDuration = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
-        _targetIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SIZE);
+        _targetIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR).size;
         _targetIndicatorSwitchScale = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_INDICATOR_SWITCH_SCALE);
-        _targetArrowSize = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SIZE);
+        _targetArrowSize = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW).size;
         _targetArrowSwitchScale = config.getSetting(config.BATTLE_SETTINGS.HUD_TARGET_ARROW_SWITCH_SCALE);
-        _weaponImpactIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SIZE);
+        _weaponImpactIndicatorSize = config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR).size;
         _weaponImpactIndicatorSwitchScale = config.getSetting(config.BATTLE_SETTINGS.HUD_WEAPON_IMPACT_INDICATOR_SWITCH_SCALE);
         _driftArrowMinSpeed = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MIN_SPEED);
         _driftArrowMaxSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.HUD_DRIFT_ARROW_MAX_SPEED_FACTOR);

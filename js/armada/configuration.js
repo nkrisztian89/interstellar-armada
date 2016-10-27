@@ -152,6 +152,86 @@ define([
             }
         }
     };
+    /**
+     * Defines the coordinates for the top-left and bottom-right corners (or other corners if flipped horizontally or vertically) of a
+     * texture within an image, in texture space ((0;0) is top-left, (1;1) is bottom-right of the image)
+     * @type Object
+     */
+    _customTypes.TEXTURE_MAPPING = {
+        baseType: "array",
+        elementType: types.VECTOR2,
+        length: 2
+    };
+    _customTypes.UI_IMAGE_DESCRIPTOR = {
+        baseType: "object",
+        properties: {
+            TEXTURE: {
+                name: "texture",
+                type: "string"
+            },
+            MAPPING: {
+                name: "mapping",
+                type: _customTypes.TEXTURE_MAPPING,
+                optional: true
+            },
+            SIZE: {
+                name: "size",
+                type: types.VECTOR2
+            },
+            SCALE_MODE: {
+                name: "scaleMode",
+                type: "enum",
+                values: utils.ScaleMode
+            },
+            COLOR: {
+                name: "color",
+                type: types.COLOR4
+            }
+        }
+    };
+    /**
+     * Returns a type descriptor to use for UI images that have multiple colors and/or texture mappings instead of a single one
+     * @param {String[]} [mappings] The names (identifiers) of the mappings. E.g. for describing "mappings": {"active": [...], "inactive": [...]},
+     * use ["active", "inactive"] If omitted, a single "mapping" property is optional (as in UI_IMAGE_DESCRIPTOR)
+     * @param {String[]} [colors] The same as mappings. If omitted, a single "color" property is expected (as in UI_IMAGE_DESCRIPTOR)
+     * @returns {Object}
+     */
+    _customTypes.getCustomUIImageDescriptor = function (mappings, colors) {
+        var i, result = utils.deepCopy(_customTypes.UI_IMAGE_DESCRIPTOR);
+        if (mappings) {
+            delete result.properties.MAPPING;
+            result.properties.MAPPINGS = {
+                name: "mappings",
+                type: {
+                    baseType: "object",
+                    properties: {}
+                }
+            };
+            for (i = 0; i < mappings.length; i++) {
+                result.properties.MAPPINGS.type.properties[mappings[i].toUpperCase()] = {
+                    name: mappings[i],
+                    type: _customTypes.TEXTURE_MAPPING
+                };
+            }
+        }
+        if (colors) {
+            delete result.properties.COLOR;
+            result.properties.COLORS = {
+                name: "colors",
+                type: {
+                    baseType: "object",
+                    properties: {}
+                }
+            };
+            for (i = 0; i < colors.length; i++) {
+                result.properties.COLORS.type.properties[colors[i].toUpperCase()] = {
+                    name: colors[i],
+                    type: types.COLOR4
+                };
+            }
+        }
+        return result;
+    };
     _customTypes.TEXT_DESCRIPTOR = {
         baseType: "object",
         properties: {
@@ -826,139 +906,41 @@ define([
             name: "hudTargetHullIntegrityDecreaseAnimationDuration",
             type: "number"
         },
-        HUD_CENTER_CROSSHAIR_TEXTURE: {
-            name: "hudCenterCrosshairTexture",
-            type: "string"
+        HUD_CENTER_CROSSHAIR: {
+            name: "hudCenterCrosshair",
+            type: _customTypes.UI_IMAGE_DESCRIPTOR
         },
-        HUD_CENTER_CROSSHAIR_SIZE: {
-            name: "hudCenterCrosshairSize",
-            type: types.VECTOR2
+        HUD_CURSOR: {
+            name: "hudCursor",
+            type: _customTypes.getCustomUIImageDescriptor(["still", "turn"])
         },
-        HUD_CENTER_CROSSHAIR_SCALE_MODE: {
-            name: "hudCenterCrosshairScaleMode",
-            type: "enum",
-            values: utils.ScaleMode
-        },
-        HUD_CENTER_CROSSHAIR_COLOR: {
-            name: "hudCenterCrosshairColor",
-            type: types.COLOR4
-        },
-        HUD_CURSOR_STILL_TEXTURE: {
-            name: "hudCursorStillTexture",
-            type: "string"
-        },
-        HUD_CURSOR_TURN_TEXTURE: {
-            name: "hudCursorTurnTexture",
-            type: "string"
-        },
-        HUD_CURSOR_SIZE: {
-            name: "hudCursorSize",
-            type: types.VECTOR2
-        },
-        HUD_CURSOR_SCALE_MODE: {
-            name: "hudCursorScaleMode",
-            type: "enum",
-            values: utils.ScaleMode
-        },
-        HUD_CURSOR_COLOR: {
-            name: "hudCursorColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_ARROW_TEXTURE: {
-            name: "hudTargetArrowTexture",
-            type: "string"
+        HUD_TARGET_ARROW: {
+            name: "hudTargetArrow",
+            type: _customTypes.getCustomUIImageDescriptor(undefined, ["hostile", "friendly"])
         },
         HUD_TARGET_ARROW_POSITION_RADIUS: {
             name: "hudTargetArrowPositionRadius",
             type: "number"
         },
-        HUD_TARGET_ARROW_SIZE: {
-            name: "hudTargetArrowSize",
-            type: types.VECTOR2
-        },
-        HUD_TARGET_ARROW_SCALE_MODE: {
-            name: "hudTargetArrowScaleMode",
-            type: "enum",
-            values: utils.ScaleMode
-        },
-        HUD_TARGET_ARROW_HOSTILE_COLOR: {
-            name: "hudTargetArrowHostileColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_ARROW_FRIENDLY_COLOR: {
-            name: "hudTargetArrowFriendlyColor",
-            type: types.COLOR4
-        },
         HUD_TARGET_ARROW_SWITCH_SCALE: {
             name: "hudTargetArrowSwitchScale",
             type: "number"
         },
-        HUD_TARGET_INDICATOR_TEXTURE: {
-            name: "hudTargetIndicatorTexture",
-            type: "string"
-        },
-        HUD_TARGET_INDICATOR_SIZE: {
-            name: "hudTargetIndicatorSize",
-            type: types.VECTOR2
-        },
-        HUD_TARGET_INDICATOR_SCALE_MODE: {
-            name: "hudTargetIndicatorScaleMode",
-            type: "enum",
-            values: utils.ScaleMode
-        },
-        HUD_TARGET_INDICATOR_HOSTILE_COLOR: {
-            name: "hudTargetIndicatorHostileColor",
-            type: types.COLOR4
-        },
-        HUD_TARGET_INDICATOR_FRIENDLY_COLOR: {
-            name: "hudTargetIndicatorFriendlyColor",
-            type: types.COLOR4
+        HUD_TARGET_INDICATOR: {
+            name: "hudTargetIndicator",
+            type: _customTypes.getCustomUIImageDescriptor(undefined, ["hostile", "friendly"])
         },
         HUD_TARGET_INDICATOR_SWITCH_SCALE: {
             name: "hudTargetIndicatorSwitchScale",
             type: "number"
         },
-        HUD_AIM_ASSIST_INDICATOR_TEXTURE: {
-            name: "hudAimAssistIndicatorTexture",
-            type: "string"
+        HUD_AIM_ASSIST_INDICATOR: {
+            name: "hudAimAssistIndicator",
+            type: _customTypes.getCustomUIImageDescriptor(undefined, ["hostile", "friendly"])
         },
-        HUD_AIM_ASSIST_INDICATOR_SIZE: {
-            name: "hudAimAssistIndicatorSize",
-            type: types.VECTOR2
-        },
-        HUD_AIM_ASSIST_INDICATOR_SCALE_MODE: {
-            name: "hudAimAssistIndicatorScaleMode",
-            type: "enum",
-            values: utils.ScaleMode
-        },
-        HUD_AIM_ASSIST_INDICATOR_HOSTILE_COLOR: {
-            name: "hudAimAssistIndicatorHostileColor",
-            type: types.COLOR4
-        },
-        HUD_AIM_ASSIST_INDICATOR_FRIENDLY_COLOR: {
-            name: "hudAimAssistIndicatorFriendlyColor",
-            type: types.COLOR4
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_TEXTURE: {
-            name: "hudWeaponImpactIndicatorTexture",
-            type: "string"
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_SIZE: {
-            name: "hudWeaponImpactIndicatorSize",
-            type: types.VECTOR2
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_SCALE_MODE: {
-            name: "hudWeaponImpactIndicatorScaleMode",
-            type: "enum",
-            values: utils.ScaleMode
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_COLOR: {
-            name: "hudWeaponImpactIndicatorColor",
-            type: types.COLOR4
-        },
-        HUD_WEAPON_IMPACT_INDICATOR_OUT_OF_RANGE_COLOR: {
-            name: "hudWeaponImpactIndicatorOutOfRangeColor",
-            type: types.COLOR4
+        HUD_WEAPON_IMPACT_INDICATOR: {
+            name: "hudWeaponImpactIndicator",
+            type: _customTypes.getCustomUIImageDescriptor(undefined, ["normal", "outOfRange"])
         },
         HUD_WEAPON_IMPACT_INDICATOR_SWITCH_SCALE: {
             name: "hudWeaponImpactIndicatorSwitchScale",
@@ -996,6 +978,10 @@ define([
             name: "hudTargetInfoBackgroundTexture",
             type: "string"
         },
+        HUD_TARGET_INFO_BACKGROUND_TEXTURE_MAPPING: {
+            name: "hudTargetInfoBackgroundTextureMapping",
+            type: _customTypes.TEXTURE_MAPPING
+        },
         HUD_TARGET_INFO_BACKGROUND_LAYOUT: {
             name: "hudTargetInfoBackgroundLayout",
             type: _customTypes.LAYOUT_DESCRIPTOR
@@ -1007,6 +993,10 @@ define([
         HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE: {
             name: "hudTargetHullIntegrityBarTexture",
             type: "string"
+        },
+        HUD_TARGET_HULL_INTEGRITY_BAR_TEXTURE_MAPPING: {
+            name: "hudTargetHullIntegrityBarTextureMapping",
+            type: _customTypes.TEXTURE_MAPPING
         },
         HUD_TARGET_HULL_INTEGRITY_BAR_LAYOUT: {
             name: "hudTargetHullIntegrityBarLayout",
@@ -1031,6 +1021,10 @@ define([
         HUD_SPEED_BAR_TEXTURE: {
             name: "hudSpeedBarTexture",
             type: "string"
+        },
+        HUD_SPEED_BAR_TEXTURE_MAPPING: {
+            name: "hudSpeedBarTextureMapping",
+            type: _customTypes.TEXTURE_MAPPING
         },
         HUD_SPEED_BAR_LAYOUT: {
             name: "hudSpeedBarLayout",
@@ -1076,6 +1070,10 @@ define([
             name: "hudSpeedTargetIndicatorTexture",
             type: "string"
         },
+        HUD_SPEED_TARGET_INDICATOR_TEXTURE_MAPPING: {
+            name: "hudSpeedTargetIndicatorTextureMapping",
+            type: _customTypes.TEXTURE_MAPPING
+        },
         HUD_SPEED_TARGET_INDICATOR_COLOR: {
             name: "hudSpeedTargetIndicatorColor",
             type: types.COLOR4
@@ -1087,6 +1085,10 @@ define([
         HUD_HULL_INTEGRITY_BAR_TEXTURE: {
             name: "hudHullIntegrityBarTexture",
             type: "string"
+        },
+        HUD_HULL_INTEGRITY_BAR_TEXTURE_MAPPING: {
+            name: "hudHullIntegrityBarTextureMapping",
+            type: _customTypes.TEXTURE_MAPPING
         },
         HUD_HULL_INTEGRITY_BAR_LAYOUT: {
             name: "hudHullIntegrityBarLayout",
@@ -1112,6 +1114,10 @@ define([
             name: "hudFlightModeIndicatorBackgroundTexture",
             type: "string"
         },
+        HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_TEXTURE_MAPPING: {
+            name: "hudFlightModeIndicatorBackgroundTextureMapping",
+            type: _customTypes.TEXTURE_MAPPING
+        },
         HUD_FLIGHT_MODE_INDICATOR_BACKGROUND_LAYOUT: {
             name: "hudFlightModeIndicatorBackgroundLayout",
             type: _customTypes.LAYOUT_DESCRIPTOR
@@ -1131,6 +1137,10 @@ define([
         HUD_DRIFT_ARROW_TEXTURE: {
             name: "hudDriftArrowTexture",
             type: "string"
+        },
+        HUD_DRIFT_ARROW_TEXTURE_MAPPING: {
+            name: "hudDriftArrowTextureMapping",
+            type: _customTypes.TEXTURE_MAPPING
         },
         HUD_DRIFT_ARROW_POSITION_RADIUS: {
             name: "hudDriftArrowPositionRadius",
@@ -1164,6 +1174,10 @@ define([
         HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE: {
             name: "hudTargetHullIntegrityQuickViewBarTexture",
             type: "string"
+        },
+        HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_TEXTURE_MAPPING: {
+            name: "hudTargetHullIntegrityQuickViewBarTextureMapping",
+            type: _customTypes.TEXTURE_MAPPING
         },
         HUD_TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR_LAYOUT: {
             name: "hudTargetHullIntegrityQuickViewBarLayout",

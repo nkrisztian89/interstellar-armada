@@ -248,98 +248,10 @@
                 "normal": ""
             }
         }, {
-            "name": "center",
-            "basepath": "hud/center",
-            "format": "png",
-            "useMipmap": false,
-            "typeSuffixes": {
-                "color": ""
-            },
-            "qualitySuffixes": {
-                "normal": ""
-            }
-        }, {
-            "name": "bar_right",
-            "basepath": "hud/bar_right",
-            "format": "png",
-            "useMipmap": false,
-            "typeSuffixes": {
-                "color": ""
-            },
-            "qualitySuffixes": {
-                "normal": ""
-            }
-        }, {
-            "name": "bar_left",
-            "basepath": "hud/bar_left",
-            "format": "png",
-            "useMipmap": false,
-            "typeSuffixes": {
-                "color": ""
-            },
-            "qualitySuffixes": {
-                "normal": ""
-            }
-        }, {
-            "name": "crosshair",
-            "basepath": "hud/crosshair",
+            "name": "hud-atlas",
+            "basepath": "hud/hud-atlas",
             "format": "png",
             "useMipmap": true,
-            "typeSuffixes": {
-                "color": ""
-            },
-            "qualitySuffixes": {
-                "normal": ""
-            }
-        }, {
-            "name": "target",
-            "basepath": "hud/target",
-            "format": "png",
-            "useMipmap": false,
-            "typeSuffixes": {
-                "color": ""
-            },
-            "qualitySuffixes": {
-                "normal": ""
-            }
-        }, {
-            "name": "arrow",
-            "basepath": "hud/arrow",
-            "format": "png",
-            "useMipmap": false,
-            "typeSuffixes": {
-                "color": ""
-            },
-            "qualitySuffixes": {
-                "normal": ""
-            }
-        }, {
-            "name": "cursor-still",
-            "basepath": "hud/cursor-still",
-            "format": "png",
-            "useMipmap": false,
-            "typeSuffixes": {
-                "color": ""
-            },
-            "qualitySuffixes": {
-                "normal": ""
-            }
-        }, {
-            "name": "cursor-turn",
-            "basepath": "hud/cursor-turn",
-            "format": "png",
-            "useMipmap": false,
-            "typeSuffixes": {
-                "color": ""
-            },
-            "qualitySuffixes": {
-                "normal": ""
-            }
-        }, {
-            "name": "drift-arrow",
-            "basepath": "hud/drift-arrow",
-            "format": "png",
-            "useMipmap": false,
             "typeSuffixes": {
                 "color": ""
             },

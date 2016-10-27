@@ -34,6 +34,9 @@ define([
                 TRIANGLE_INDEX: "triangleIndex"
             },
             // ------------------------------------------------------------------------------
+            // constants
+            DEFAULT_SQUARE_TEX_COORDINATES = [[0, 0], [1, 1]],
+            // ------------------------------------------------------------------------------
             // private variables
             /**
              * The list of EgomModel versions that can be loaded from file.
@@ -1964,21 +1967,22 @@ define([
         /**
          * Sets up and returns a simple model that contains a two sided XY square.
          * @param {String} [name] The name of the model to be created.
+         * @param {Number[2][2]} [textureCoordinates] The texture coordinates to use - top-left and bottom-right, in (0;0) - (1;1) space
          * @returns {Model}
          */
-        squareModel: function (name) {
-            var result = new Model();
+        squareModel: function (name, textureCoordinates) {
+            var result = new Model(), tc;
             if (name) {
                 result.setName(name);
             }
+            tc = textureCoordinates || DEFAULT_SQUARE_TEX_COORDINATES;
 
             result.appendVertex([-1, -1, 0]);
             result.appendVertex([1, -1, 0]);
             result.appendVertex([1, 1, 0]);
             result.appendVertex([-1, 1, 0]);
 
-            result.addQuad(0, 1, 2, 3);
-            result.addQuad(2, 1, 0, 3, {texCoords: [[0, 1], [1, 1], [1, 0], [0, 0]]});
+            result.addQuad(0, 1, 2, 3, {texCoords: [[tc[0][0], tc[1][1]], [tc[1][0], tc[1][1]], [tc[1][0], tc[0][1]], [tc[0][0], tc[0][1]]]});
 
             return result;
         },
