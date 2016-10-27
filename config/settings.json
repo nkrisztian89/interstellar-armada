@@ -156,7 +156,7 @@
             "momentDuration": 1,
             "backgroundObjectDistance": 4500,
             "turnAccelerationDurationInSeconds": 0.333,
-            "compensatedForwardSpeedFactor": 4,
+            "compensatedForwardSpeedFactor": 3,
             "compensatedReverseSpeedFactor": 1,
             "strafeSpeedFactor": 2,
             "defaultMuzzleFlashDuration": 500,
@@ -323,9 +323,9 @@
                         "reverseEmpty": [1, 0.75, 0, 0.2]
                     }
                 },
-                "speedBarBaseMaxSpeedFactor": 1,
+                "speedBarBaseMaxSpeedFactor": 3,
                 "speedBarDefaultBaseMaxSpeed": 10,
-                "speedBarMaxSpeedStepFactor": 4,
+                "speedBarMaxSpeedStepFactor": 3,
                 "speedTextLayerLayout": {
                     "centerX": 0.67,
                     "centerY": 0.0,

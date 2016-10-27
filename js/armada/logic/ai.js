@@ -113,13 +113,13 @@ define([
              * multiplied by this factor.
              * @type Number
              */
-            APPROACH_SPEED_FACTOR = 4,
+            APPROACH_SPEED_FACTOR = 3,
             /**
              * During charge attacks, fighters will approach / evade with a maximum speed equal to their acceleration multiplied by this 
              * factor.
              * @type Number
              */
-            CHARGE_SPEED_FACTOR = 6,
+            CHARGE_SPEED_FACTOR = 5,
             /**
              * Fighters will initiate a charge attack if they are unable to hit their target after firing this many shots at it.
              * @type Number

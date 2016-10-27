@@ -1628,7 +1628,7 @@
             "color": [0, 0.8, 1, 1],
             "grade": 1,
             "referenceMass": 35000,
-            "thrust": 30,
+            "thrust": 35,
             "angularThrust": 225,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
