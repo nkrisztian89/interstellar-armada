@@ -227,8 +227,11 @@ define([
      */
     MissionsScreen.prototype.setActive = function (active) {
         screens.HTMLScreen.prototype.setActive.call(this, active);
-        this._updateScores();
-        this._listComponent.reset();
+        if (active) {
+            this._updateScores();
+            this._listComponent.reset();
+            this._selectMission(-1);
+        }
     };
     /**
      * Launches the currently selected level
@@ -268,7 +271,6 @@ define([
     MissionsScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._updateScores();
-        this._selectMission(-1);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
