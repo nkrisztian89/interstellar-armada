@@ -28,6 +28,25 @@
             ]
         }
     ],
+    "triggers": [{
+            "name": "frigateDestroyed",
+            "conditions": [{
+                    "type": "destroyed",
+                    "subjects": {
+                        "spacecrafts": ["Danube"]
+                    }
+                }
+            ],
+            "conditionsRequired": "all",
+            "fireWhen": "changeToTrue",
+            "oneShot": true
+        }
+    ],
+    "actions": [{
+            "type": "lose",
+            "trigger": "frigateDestroyed"
+        }
+    ],
     "spacecrafts": [
         {
             "team": "empire",

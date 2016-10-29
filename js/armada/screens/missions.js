@@ -78,6 +78,22 @@ define([
         /**
          * @type SimpleComponent
          */
+        this._missionObjectivesTitle = this.registerSimpleComponent("missionObjectivesTitle");
+        /**
+         * @type SimpleComponent
+         */
+        this._missionObjectives = this.registerSimpleComponent("missionObjectives");
+        /**
+         * @type SimpleComponent
+         */
+        this._playerSpacecraftTitle = this.registerSimpleComponent("playerSpacecraftTitle");
+        /**
+         * @type SimpleComponent
+         */
+        this._playerSpacecraftData = this.registerSimpleComponent("playerSpacecraftData");
+        /**
+         * @type SimpleComponent
+         */
         this._demoButton = this.registerSimpleComponent(DEMO_BUTTON_ID);
         /**
          * @type SimpleComponent
@@ -143,16 +159,32 @@ define([
             levelName = utils.getFilenameWithoutExtension(levelFilename);
             this._missionTitle.setContent(strings.get({name: strings.LEVEL.PREFIX.name + levelName + strings.LEVEL.NAME_SUFFIX.name}));
             this._missionDescription.setContent(strings.get(strings.MISSIONS.LOADING_DESCRIPTION));
+            this._missionObjectivesTitle.hide();
+            this._missionObjectives.hide();
+            this._playerSpacecraftTitle.hide();
+            this._playerSpacecraftData.hide();
             level.requestLevelDescriptor(levelFilename, function (levelDescriptor) {
                 var
                         /** @type SpacecraftClass */
-                        pilotedSpacecraftClass;
+                        pilotedSpacecraftClass,
+                        /** @type String[] */
+                        objectives;
                 if (this._listComponent.getSelectedIndex() === index) {
                     pilotedSpacecraftClass = levelDescriptor.getPilotedSpacecraftClass();
-                    this._missionDescription.setContent(strings.get(strings.MISSIONS.DESCRIPTION), {
-                        description: levelDescriptor.getDisplayDescription(),
-                        pilotedSpacecraftClass: pilotedSpacecraftClass.getDisplayName()
+                    objectives = levelDescriptor.getMissionObjectives().map(function (objective) {
+                        return "<li>" + objective + "</li>";
                     });
+                    this._missionDescription.setContent(strings.get(strings.MISSIONS.DESCRIPTION), {
+                        description: levelDescriptor.getDisplayDescription()
+                    });
+                    this._missionObjectives.setContent(objectives.join(""));
+                    this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
+                        class: pilotedSpacecraftClass.getDisplayName()
+                    });
+                    this._missionObjectivesTitle.show();
+                    this._missionObjectives.show();
+                    this._playerSpacecraftTitle.show();
+                    this._playerSpacecraftData.show();
                 }
             }.bind(this));
             this._launchButton.enable();
@@ -160,6 +192,10 @@ define([
         } else {
             this._missionTitle.setContent(strings.get(strings.MISSIONS.NO_SELECTED_NAME));
             this._missionDescription.setContent(strings.get(strings.MISSIONS.NO_SELECTED_DESCRIPTION));
+            this._missionObjectivesTitle.hide();
+            this._missionObjectives.hide();
+            this._playerSpacecraftTitle.hide();
+            this._playerSpacecraftData.hide();
             this._launchButton.disable();
             this._demoButton.disable();
         }
@@ -206,16 +242,17 @@ define([
         this._listComponent.executeForListElements(function (listElement) {
             var
                     score = levelDescriptors[i].getBestScore(),
+                    winCount = levelDescriptors[i].getWinCount(),
                     subcaption = listElement.querySelector("." + armadaScreens.SUBCAPTION_CLASS_NAME);
             subcaption.innerHTML = utils.formatString(
-                    ((score === undefined) ?
-                            strings.get(strings.MISSIONS.NOT_COMPLETED) :
-                            (levelDescriptors[i].isCompletedSandbox() ?
+                    ((winCount > 0) ?
+                            ((score === undefined) ?
                                     strings.get(strings.MISSIONS.SANDBOX_COMPLETED) :
-                                    strings.get(strings.MISSIONS.BEST_SCORE))), {
+                                    strings.get(strings.MISSIONS.BEST_SCORE)) :
+                            strings.get(strings.MISSIONS.NOT_COMPLETED)), {
                 score: score
             });
-            if (score !== undefined) {
+            if (winCount > 0) {
                 subcaption.classList.add(COMPLETED_CLASS);
             }
             i++;

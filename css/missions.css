@@ -52,3 +52,16 @@
 .missionTitle {
     text-align: left;
 }
+
+.missionObjectivesTitle, .playerSpacecraftTitle {
+    text-align: left;
+    font-size: 18px;
+    padding: 0;
+    margin: 0;
+}
+
+.missionObjectives {
+    text-align: left;
+    font-size: 14px;
+    padding: 0;
+}

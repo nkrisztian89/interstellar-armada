@@ -10,6 +10,25 @@
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],
+    "triggers": [{
+            "name": "corvetteDestroyed",
+            "conditions": [{
+                    "type": "destroyed",
+                    "subjects": {
+                        "spacecrafts": ["Ohio"]
+                    }
+                }
+            ],
+            "conditionsRequired": "all",
+            "fireWhen": "changeToTrue",
+            "oneShot": true
+        }
+    ],
+    "actions": [{
+            "type": "lose",
+            "trigger": "corvetteDestroyed"
+        }
+    ],
     "views": [
         {
             "name": "free",

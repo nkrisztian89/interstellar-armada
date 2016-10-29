@@ -1957,14 +1957,14 @@ define([
                     if (_level && (_level.isWon() || _level.isLost())) {
                         _gameStateChanged = true;
                         _timeSinceGameStateChanged = 0;
-                        level.getLevelDescriptor(_level.getName()).setAsCompletedSandbox();
                     }
                 } else if (!_gameStateShown) {
                     _timeSinceGameStateChanged += dt;
                     if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = !_level.isLost();
+                        craft = _level.getPilotedSpacecraft();
+                        level.getLevelDescriptor(_level.getName()).increasePlaythroughCount(victory);
                         if (victory) {
-                            craft = _level.getFollowedSpacecraftForScene(_battleScene);
                             isTeamMission = craft.getTeam().getInitialCount() > 1;
                             baseScore = craft.getScore();
                             hitRatio = craft.getHitRatio();
@@ -1977,7 +1977,7 @@ define([
                             score = Math.round(baseScore * (1 + hitRatio)) + hullIntegrityBonus + teamSurvivalBonus;
                             level.getLevelDescriptor(_level.getName()).updateBestScore(score);
                         }
-                        this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_DEFEAT), {
+                        this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : (craft ? strings.BATTLE.MESSAGE_FAIL : strings.BATTLE.MESSAGE_DEFEAT)), {
                             menuKey: _getMenuKeyHTMLString(),
                             score: score || 0,
                             kills: craft ? craft.getKills() : 0,
@@ -2046,6 +2046,9 @@ define([
             // victory / defeat message
             if ((!_demoMode && (_level.isWon() || _level.isLost())) || (_demoMode && _level.noHostilesPresent())) {
                 _gameStateShown = true;
+                if (!_demoMode) {
+                    level.getLevelDescriptor(_level.getName()).increasePlaythroughCount(true);
+                }
             }
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
             if (graphics.shouldUseShadowMapping()) {

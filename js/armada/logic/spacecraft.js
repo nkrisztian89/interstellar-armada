@@ -518,6 +518,13 @@ define([
         this._updateIDAndName();
     };
     /**
+     * Returns the string ID of the squad this spacecraft belongs to.
+     * @returns {String}
+     */
+    Spacecraft.prototype.getSquad = function () {
+        return this._squad;
+    };
+    /**
      * Returns whether the passed spacecraft is friendly to this one.
      * @param {Spacecraft} spacecraft
      * @returns {Boolean}

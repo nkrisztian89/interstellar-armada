@@ -28,6 +28,28 @@
             ]
         }
     ],
+    "triggers": [{
+            "name": "frigateCountBelow",
+            "conditions": [{
+                    "type": "countBelow",
+                    "subjects": {
+                        "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                    },
+                    "params": {
+                        "count": 3
+                    }
+                }
+            ],
+            "conditionsRequired": "all",
+            "fireWhen": "changeToTrue",
+            "oneShot": true
+        }
+    ],
+    "actions": [{
+            "type": "lose",
+            "trigger": "frigateCountBelow"
+        }
+    ],
     "spacecrafts": [
         {
             "class": "taurus",

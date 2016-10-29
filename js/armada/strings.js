@@ -7,7 +7,7 @@
  * @version 0.1
  */
 
-/*jslint nomen: true, white: true*/
+/*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
 /**
@@ -17,6 +17,11 @@ define([
     "modules/strings"
 ], function (strings) {
     "use strict";
+    strings.GRAMMAR = {
+        DEFINITE_ARTICLE_BEFORE_VOWEL: {name: "grammar.definiteArticle.beforeVowel"},
+        DEFINITE_ARTICLE_BEFORE_CONSONANT: {name: "grammar.definiteArticle.beforeConsonant"},
+        AND: {name: "grammar.and"}
+    };
     strings.SCREEN = {
         BACK: {name: "screen.back"}
     };
@@ -39,7 +44,19 @@ define([
         LOADING_DESCRIPTION: {name: "missions.loadingDescription"},
         NO_TRANSLATED_DESCRIPTION: {name: "missions.noTranslatedDescription"},
         NO_DESCRIPTION: {name: "missions.noDescription"},
-        DESCRIPTION: {name: "missions.description"}
+        DESCRIPTION: {name: "missions.description"},
+        OBJECTIVES_TITLE: {name: "missions.missionObjectivesTitle"},
+        SPACECRAFT_TITLE: {name: "missions.playerSpacecraftTitle"},
+        SPACECRAFT_DATA: {name: "missions.playerSpacecraftData"},
+        OBJECTIVE_SUBJECTS_SQUAD: {name: "missions.objectiveSubjects.squad"},
+        OBJECTIVE_SUBJECTS_SQUADS: {name: "missions.objectiveSubjects.squads"},
+        OBJECTIVE_SUBJECTS_TEAM: {name: "missions.objectiveSubjects.team"},
+        OBJECTIVE_SUBJECTS_TEAMS: {name: "missions.objectiveSubjects.teams"},
+        OBJECTIVE_WIN_PREFIX: {name: "missions.winObjective.", optional: true},
+        OBJECTIVE_LOSE_PREFIX: {name: "missions.loseObjective.", optional: true},
+        OBJECTIVE_DESTROY_ALL_SUFFIX: {name: "destroyAll", optional: true},
+        OBJECTIVE_DESTROY_SUFFIX: {name: "destroy", optional: true},
+        OBJECTIVE_COUNT_BELOW_SUFFIX: {name: "countBelow", optional: true}
     };
     strings.SETTINGS = {
         GENERAL: {name: "settings.general"},
@@ -98,7 +115,8 @@ define([
         MESSAGE_READY: {name: "battle.message.ready"},
         MESSAGE_PAUSED: {name: "battle.message.paused"},
         MESSAGE_VICTORY: {name: "battle.message.victory"},
-        MESSAGE_DEFEAT: {name: "battle.message.defeat"}
+        MESSAGE_DEFEAT: {name: "battle.message.defeat"},
+        MESSAGE_FAIL: {name: "battle.message.fail"}
     };
     strings.DATABASE = {
         BACK: {name: "database.backButton"},
@@ -210,6 +228,40 @@ define([
     };
     strings.FLIGHT_MODE = {
         PREFIX: {name: "flightMode.", optional: true}
+    };
+    /**
+     * Returns whether the passed word start with a vowel (one that is recognized)
+     * @param {String} word
+     * @returns {Boolean}
+     */
+    function startsWithVowel(word) {
+        var char = word[0].toLowerCase();
+        return (char === "a") || (char === "e") || (char === "u") || (char === "i") || (char === "o") ||
+                (char === "á") || (char === "é") || (char === "ú") || (char === "ü") || (char === "ű") || (char === "í") || (char === "ó") || (char === "ö") || (char === "ő");
+    }
+    /**
+     * Returns the translated definite article that should be used with the passed (translated) word
+     * @param {String} word
+     * @returns {String}
+     */
+    strings.getDefiniteArticleForWord = function (word) {
+        return strings.get(startsWithVowel(word) ? strings.GRAMMAR.DEFINITE_ARTICLE_BEFORE_VOWEL : strings.GRAMMAR.DEFINITE_ARTICLE_BEFORE_CONSONANT);
+    };
+    /**
+     * Returns a string that can be used to display the list of the passed translated items in the current language.
+     * @param {String[]} items
+     * @returns {String}
+     */
+    strings.getList = function (items) {
+        var result, i;
+        result = items[0];
+        for (i = 1; i < items.length - 1; i++) {
+            result += (", " + items[i]);
+        }
+        if (items.length > 1) {
+            result += (" " + strings.get(strings.GRAMMAR.AND) + " " + items[items.length - 1]);
+        }
+        return result;
     };
     return strings;
 });

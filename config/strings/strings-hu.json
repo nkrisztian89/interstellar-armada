@@ -1,4 +1,11 @@
 {
+    "grammar": {
+        "definiteArticle": {
+            "beforeVowel": "az",
+            "beforeConsonant": "a"
+        }, 
+        "and": "és"
+    },
     "key": {
         "left": "balra",
         "right": "jobbra",
@@ -44,7 +51,25 @@
         "loadingDescription": "Betöltés...",
         "noTranslatedDescription": "A küldetéshez nem érhető el leírás magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
         "noDescription": "A küldetéshez nem érhető el leírás.",
-        "description": "{description}<br/><br/>Űrhajó: {pilotedSpacecraftClass}"
+        "description": "{description}",
+        "missionObjectivesTitle": "Feladatok:",
+        "playerSpacecraftTitle": "Űrhajó:",
+        "playerSpacecraftData": "Osztály: {class}",
+        "objectiveSubjects": {
+            "squad": "{ids} csapat",
+            "squads": "{ids} csapat",
+            "team": "{ids} összes űrhajója",
+            "teams": "{ids} összes űrhajója"
+        },
+        "winObjective": {
+            "destroyAll": "Semmisíts meg minden ellenséget.",
+            "destroy": "Megsemmisítendő: {subjects}.",
+            "countBelow": "Kevesebb, mint {count} maradhat meg a következőkből: {subjects}."
+        },
+        "loseObjective": {
+            "destroy": "Nem semmisülhet meg {subjects}.",
+            "countBelow": "Legalább {count} maradjon meg a következőkből: {subjects}."
+        }
     },
     "settings": {
         "general": "Általános beállítások",
@@ -168,7 +193,8 @@
             "ready": "Kész!<br/>Játék közven az {menuKey} billentyűvel hívhatod elő a menüt, ahol az irányítást is beállíthatod.",
             "paused": "Játék szüneteltetve.",
             "victory": "<strong>Győzelem!</strong><br/>Gratulálok, sikeresen teljesítetted ezt a szintet!<br/>Pontszám: <strong>{score}</strong><br/>Kilőtt űrhajók: {kills}<br/>Találati arány bónusz: {hitRatio}<br/>Páncélzat épsége bónusz: {hullIntegrity}<br/>Csapat túlélési bónusz: {teamSurvival}<br/>Az {menuKey} billentyűvel hívhatod elő a menüt.",
-            "defeat": "<strong>Vereség!</strong><br/>Az űrhajód megsemmisült. Az {menuKey} billentyűvel hívhatod elő a menüt, ahonnan újrakezdheted a szintet."
+            "defeat": "<strong>Vereség!</strong><br/>Az űrhajód megsemmisült. Az {menuKey} billentyűvel hívhatod elő a menüt, ahonnan újrakezdheted a szintet.",
+            "fail": "<strong>Vereség!<strong><br/>Nem sikerült teljesítened a küldetés feladatait. <br/>Az {menuKey} billentyűvel hívhatod elő a menüt."
         }
     },
     "database": {

@@ -61,6 +61,46 @@ define([
     "use strict";
     var
             // ------------------------------------------------------------------------------
+            // enums
+            TriggerConditionsRequired = {
+                /** All the conditions need to be satisfied for the trigger state to be considered true */
+                ALL: "all",
+                /** Any if the conditions being satisfied causes the trigger state to be considered true */
+                ANY: "any"
+            },
+            TriggerFireWhen = {
+                /** The trigger fires ones at the very first simulation step of the mission (must be oneShot) */
+                MISSION_STARTS: "missionStarts",
+                /** The trigger fires in every simulation step when its condition state is true */
+                TRUE: "true",
+                /** The trigger fires in every simulation step when its condition state is false */
+                FALSE: "false",
+                /** The trigger fires in every simulation step when its condition state is different from the previous step */
+                CHANGE: "change",
+                /** The trigger fires in every simulation step when its condition state changes to true from false */
+                CHANGE_TO_TRUE: "changeToTrue",
+                /** The trigger fires in every simulation step when its condition state changes to false from true */
+                CHANGE_TO_FALSE: "changeToFalse"
+            },
+            ConditionType = {
+                /** The condition is evaluated true when all of its subjects are destroyed */
+                DESTROYED: "destroyed",
+                /** The condition is evaluated true when the count of still alive spacecrafts from its subjects is below a given value */
+                COUNT_BELOW: "countBelow"
+            },
+            ActionType = {
+                /** Executing this action marks the mission as complete */
+                WIN: "win",
+                /** Executing this action marks the mission as failed */
+                LOSE: "lose"
+            },
+            MissionState = {
+                NONE: 0,
+                IN_PROGRESS: 1,
+                COMPLETED: 2,
+                FAILED: 3
+            },
+            // ------------------------------------------------------------------------------
             // constants
             /**
              * Level related local storage IDs start with this prefix
@@ -83,11 +123,6 @@ define([
              * @type String
              */
             ENVIRONMENTS_CATEGORY_NAME = "environments",
-            /**
-             * The location IDs of local storage values storing best scores for levels are prefixed by this 
-             * @type String
-             */
-            BEST_SCORE_LOCAL_STORAGE_PREFIX = MODULE_LOCAL_STORAGE_PREFIX + "bestScore_",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -117,6 +152,13 @@ define([
              * @type String
              */
             _debugInfo = "";
+    // -------------------------------------------------------------------------
+    // Freezing enums
+    Object.freeze(TriggerConditionsRequired);
+    Object.freeze(TriggerFireWhen);
+    Object.freeze(ConditionType);
+    Object.freeze(ActionType);
+    Object.freeze(MissionState);
     // -------------------------------------------------------------------------
     // Public functions
     /**
@@ -853,6 +895,466 @@ define([
     };
     // #########################################################################
     /**
+     * @typedef {Object} Condition~Subjects
+     * @property {String[]} [spacecrafts] 
+     * @property {String[]} [squads] 
+     * @property {String[]} [teams] 
+     */
+    /**
+     * @class A condition that can be evaluated in every simulation step of the mission to be found either true (satisfied) or false, and 
+     * can be used to fire triggers.
+     * @param {Object} dataJSON The object storing the data for the condition
+     */
+    function Condition(dataJSON) {
+        /**
+         * (enum ConditionType) 
+         * The nature of this condition, ultimately decides how the condition is evaluated
+         * @type String
+         */
+        this._type = utils.getSafeEnumValue(ConditionType, dataJSON.type, null);
+        /**
+         * The identifiers of the spacecrafts / groups of spacecrafts that determine the subjects of the condition
+         * @type Condition~Subjects
+         */
+        this._subjects = dataJSON.subjects;
+        /**
+         * Holds the parameters (apart from the subjects) of the condition for those types that need them
+         * @type Object
+         */
+        this._params = dataJSON.params;
+        /**
+         * References to the actual spacecrafts in the mission that are identified by this._subjects are stored in this field for quicker 
+         * evaluation
+         * @type Spacecraft[]
+         */
+        this._spacecrafts = null;
+        this._checkParams();
+    }
+    /**
+     * Based on the type of the condition, checks whether it has all the appropriate parameters set in this._params, and outputs errors if
+     * it doesn't
+     */
+    Condition.prototype._checkParams = function () {
+        switch (this._type) {
+            case ConditionType.DESTROYED:
+                break;
+            case ConditionType.COUNT_BELOW:
+                if (!this._params || ((typeof this._params.count) !== "number")) {
+                    application.showError("Wrong parameters specified for condition of type: '" + this._type + "'!");
+                }
+                break;
+            default:
+                application.showError("Unrecognized condition type: '" + this._type + "'!");
+        }
+    };
+    /**
+     * Returns whether the passed spacecraft is a subject of this condition based on the identifiers in this._subjects
+     * @param {Spacecraft} spacecraft
+     * @returns {Boolean}
+     */
+    Condition.prototype._isSubject = function (spacecraft) {
+        return (this._subjects.spacecrafts && (this._subjects.spacecrafts.indexOf(spacecraft.getID()) >= 0)) ||
+                (this._subjects.squads && (this._subjects.squads.indexOf(spacecraft.getSquad()) >= 0)) ||
+                (this._subjects.teams && (this._subjects.teams.indexOf(spacecraft.getTeam().getID()) >= 0));
+    };
+    /**
+     * Gathers and caches references to the spacecrafts in the passed mission that are subjects of this condition, for faster future 
+     * evaluation
+     * @param {Level} level
+     */
+    Condition.prototype._cacheSubjects = function (level) {
+        var i, spacecrafts;
+        this._spacecrafts = [];
+        spacecrafts = level.getSpacecrafts();
+        for (i = 0; i < spacecrafts.length; i++) {
+            if (this._isSubject(spacecrafts[i])) {
+                this._spacecrafts.push(spacecrafts[i]);
+            }
+        }
+    };
+    /**
+     * Returns whether the condition is considered to be satisfied (true) according to the current state of the passed mission
+     * @param {Level} level
+     * @returns {Boolean}
+     */
+    Condition.prototype.isSatisfied = function (level) {
+        var i, count;
+        if (!this._spacecrafts) {
+            this._cacheSubjects(level);
+        }
+        switch (this._type) {
+            case ConditionType.DESTROYED:
+                for (i = 0; i < this._spacecrafts.length; i++) {
+                    if (this._spacecrafts[i].isAlive()) {
+                        return false;
+                    }
+                }
+                return true;
+            case ConditionType.COUNT_BELOW:
+                count = 0;
+                for (i = 0; i < this._spacecrafts.length; i++) {
+                    if (this._spacecrafts[i].isAlive()) {
+                        count++;
+                    }
+                }
+                return count < this._params.count;
+            default:
+                application.showError("Unrecognized condition type: '" + this._type + "'!");
+                return false;
+        }
+    };
+    /**
+     * 
+     * @param {String} subjectID
+     * @returns {String}
+     */
+    Condition._mapSpacecraftID = function (subjectID) {
+        return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
+    };
+    /**
+     * 
+     * @param {Array} subjectIDs
+     * @returns {String}
+     */
+    Condition._getMappedSpacecraftIDs = function (subjectIDs) {
+        return strings.getList(subjectIDs.map(Condition._mapSpacecraftID));
+    };
+    /**
+     * 
+     * @param {String} subjectID
+     * @returns {String}
+     */
+    Condition._mapSquadID = function (subjectID) {
+        subjectID = strings.get(strings.SQUAD.PREFIX, subjectID);
+        return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
+    };
+    /**
+     * 
+     * @param {Array} subjectIDs
+     * @returns {String}
+     */
+    Condition._getMappedSquadIDs = function (subjectIDs) {
+        return strings.getList(subjectIDs.map(Condition._mapSquadID));
+    };
+    /**
+     * 
+     * @param {String} subjectID
+     * @returns {String}
+     */
+    Condition._mapTeamID = function (subjectID) {
+        subjectID = strings.get(strings.TEAM.PREFIX, subjectID);
+        return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
+    };
+    /**
+     * 
+     * @param {Array} subjectIDs
+     * @returns {String}
+     */
+    Condition._getMappedTeamIDs = function (subjectIDs) {
+        return strings.getList(subjectIDs.map(Condition._mapTeamID));
+    };
+    /**
+     * Returns a translated string that can be used to display the subjects of this condition to the player
+     * @returns {String}
+     */
+    Condition.prototype._getSubjectsString = function () {
+        var result = "";
+        if (this._subjects.spacecrafts) {
+            result += Condition._getMappedSpacecraftIDs(this._subjects.spacecrafts);
+        }
+        if (this._subjects.squads) {
+            if (result.length > 0) {
+                result += "; ";
+            }
+            result += utils.formatString(strings.get((this._subjects.squads.length > 1) ?
+                    strings.MISSIONS.OBJECTIVE_SUBJECTS_SQUADS :
+                    strings.MISSIONS.OBJECTIVE_SUBJECTS_SQUAD), {
+                ids: Condition._getMappedSquadIDs(this._subjects.squads)
+            });
+        }
+        if (this._subjects.teams) {
+            if (result.length > 0) {
+                result += "; ";
+            }
+            result += utils.formatString(strings.get((this._subjects.teams.length > 1) ?
+                    strings.MISSIONS.OBJECTIVE_SUBJECTS_TEAMS :
+                    strings.MISSIONS.OBJECTIVE_SUBJECTS_TEAM), {
+                ids: Condition._getMappedTeamIDs(this._subjects.teams)
+            });
+        }
+        return result;
+    };
+    /**
+     * Returns a translated sentence that can be used to display a mission objective to the user that is based on this condition (for either
+     * winning or losing). The prefix to be passed determines whether it should be considered a winning or losing condition
+     * @param {Object} stringPrefix A translation string descriptor containing the prexif to be used for translating the string
+     * @returns {String}
+     */
+    Condition.prototype.getObjectiveString = function (stringPrefix) {
+        var result;
+        switch (this._type) {
+            case ConditionType.DESTROYED:
+                result = utils.formatString(strings.get(stringPrefix, strings.MISSIONS.OBJECTIVE_DESTROY_SUFFIX.name), {
+                    subjects: this._getSubjectsString()
+                });
+                result = result.charAt(0).toUpperCase() + result.slice(1);
+                return result;
+            case ConditionType.COUNT_BELOW:
+                result = utils.formatString(strings.get(stringPrefix, strings.MISSIONS.OBJECTIVE_COUNT_BELOW_SUFFIX.name), {
+                    subjects: this._getSubjectsString(),
+                    count: this._params.count
+                });
+                result = result.charAt(0).toUpperCase() + result.slice(1);
+                return result;
+            default:
+                application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
+                return null;
+        }
+    };
+    // #########################################################################
+    /**
+     * @callback Trigger~onFireCallback
+     * @param {Level} level 
+     */
+    /**
+     * @class Missions contain triggers, which fire based on a set of conditions that they evaluate in every simulation step, and can have
+     * callbacks added to them which are invoked upon firing
+     * that can be 
+     * @param {Object} dataJSON
+     */
+    function Trigger(dataJSON) {
+        var i;
+        /**
+         * This name can be used to identify the trigger within a mission when referenced from an action
+         * @type String
+         */
+        this._name = dataJSON.name;
+        /**
+         * The list of conditions to evaluate when deciding whether to fire
+         * @type Condition[]
+         */
+        this._conditions = null;
+        if (dataJSON.conditions) {
+            this._conditions = [];
+            for (i = 0; i < dataJSON.conditions.length; i++) {
+                this._conditions.push(new Condition(dataJSON.conditions[i]));
+            }
+        }
+        /**
+         * (enum TriggerConditionsRequired) 
+         * Determines the logical operation used to combine the conditions when deciding whether to fire
+         * @type String
+         */
+        this._conditionsRequired = utils.getSafeEnumValue(TriggerConditionsRequired, dataJSON.conditionsRequired, TriggerConditionsRequired.ALL);
+        /**
+         * (enum TriggerFireWhen) 
+         * Determines at what logic state (or state change) should the trigger fire
+         * @type String
+         */
+        this._fireWhen = utils.getSafeEnumValue(TriggerFireWhen, dataJSON.fireWhen, TriggerFireWhen.CHANGE_TO_TRUE);
+        /**
+         * When true, the trigger can only fire once during a mission, and then it does not evaluate its conditions anymore
+         * @type Boolean
+         */
+        this._oneShot = dataJSON.oneShot || false;
+        /**
+         * The callbacks attached which should be invoked when the trigger fires
+         * @type Trigger~onFireCallback[]
+         */
+        this._onFireHandlers = [];
+        /**
+         * The result of the condition evaluation in the last simulation step, to track condition changes
+         * @type Boolean
+         */
+        this._previousConditionState = false;
+        /**
+         * Whether this trigger has already fired (at least once) during the current mission
+         * @type Boolean
+         */
+        this._fired = false;
+        // invalid state checks
+        if (!this._conditions) {
+            if (this._fireWhen !== TriggerFireWhen.MISSION_STARTS) {
+                application.showError("Trigger '" + this._name + "' has no conditions, and so its fireWhen state must be '" + TriggerFireWhen.MISSION_STARTS + "'!");
+                this._fireWhen = TriggerFireWhen.MISSION_STARTS;
+            }
+            if (!this._oneShot) {
+                application.showError("Trigger '" + this._name + "' has no conditions, and so it must be one shot!");
+                this._oneShot = true;
+            }
+        }
+    }
+    /**
+     * Returns the string that identifies this trigger within a mission
+     * @returns {String}
+     */
+    Trigger.prototype.getName = function () {
+        return this._name;
+    };
+    /**
+     * Adds the passed callback function to be executed whenever this trigger fires
+     * @param {Trigger~onFireCallback} value
+     */
+    Trigger.prototype.addFireHandler = function (value) {
+        this._onFireHandlers.push(value);
+    };
+    /**
+     * Fires the trigger, invoking every callback previously added to it
+     * @param {Level} level 
+     */
+    Trigger.prototype.fire = function (level) {
+        var i;
+        for (i = 0; i < this._onFireHandlers.length; i++) {
+            this._onFireHandlers[i](level);
+        }
+        this._fired = true;
+    };
+    /**
+     * Checks the state of the passed mission to determine whether the trigger should fire, and fires it if necessary.
+     * Should be called in every simulation step of the mission.
+     * @param {Level} level
+     */
+    Trigger.prototype.simulate = function (level) {
+        var conditionState, i;
+        if (this._oneShot && this._fired) {
+            return;
+        }
+        if (this._fireWhen === TriggerFireWhen.MISSION_STARTS) {
+            this.fire(level);
+            return;
+        }
+        switch (this._conditionsRequired) {
+            case TriggerConditionsRequired.ALL:
+                conditionState = true;
+                for (i = 0; i < this._conditions.length; i++) {
+                    if (!this._conditions[i].isSatisfied(level)) {
+                        conditionState = false;
+                        break;
+                    }
+                }
+                break;
+            case TriggerConditionsRequired.ANY:
+                conditionState = false;
+                for (i = 0; i < this._conditions.length; i++) {
+                    if (this._conditions[i].isSatisfied(level)) {
+                        conditionState = true;
+                        break;
+                    }
+                }
+                break;
+            default:
+                application.showError("Unrecognized trigger condition requirement: '" + this._conditionsRequired + "'!");
+        }
+        switch (this._fireWhen) {
+            case TriggerFireWhen.TRUE:
+                if (conditionState) {
+                    this.fire(level);
+                }
+                break;
+            case TriggerFireWhen.FALSE:
+                if (!conditionState) {
+                    this.fire(level);
+                }
+                break;
+            case TriggerFireWhen.CHANGE:
+                if (conditionState !== this._previousConditionState) {
+                    this.fire(level);
+                }
+                break;
+            case TriggerFireWhen.CHANGE_TO_TRUE:
+                if (conditionState && !this._previousConditionState) {
+                    this.fire(level);
+                }
+                break;
+            case TriggerFireWhen.CHANGE_TO_FALSE:
+                if (!conditionState && this._previousConditionState) {
+                    this.fire(level);
+                }
+                break;
+            default:
+                application.showError("Unrecognized trigger firing requirement: '" + this._fireWhen + "'!");
+        }
+        this._previousConditionState = conditionState;
+    };
+    /**
+     * Returns the list of HTML strings that can be used to display the objectives associated with the conditions of this trigger.
+     * @param {Object} stringPrefix The translation string descriptor containing the prefix to be used to decide whether the conditions 
+     * should be considered win or lose conditions
+     * @returns {String[]}
+     */
+    Trigger.prototype.getObjectiveStrings = function (stringPrefix) {
+        var i, result = [];
+        if (this._conditionsRequired !== TriggerConditionsRequired.ALL) {
+            application.showError("Triggers for mission objectives must be set to conditionsRequired state of '" + TriggerConditionsRequired.ALL + "'!");
+            return null;
+        }
+        if (this._fireWhen !== TriggerFireWhen.CHANGE_TO_TRUE) {
+            application.showError("Triggers for mission objectives must be set to fireWhen state of '" + TriggerFireWhen.CHANGE_TO_TRUE + "'!");
+            return null;
+        }
+        for (i = 0; i < this._conditions.length; i++) {
+            result.push(this._conditions[i].getObjectiveString(stringPrefix));
+        }
+        return result;
+    };
+    // #########################################################################
+    /**
+     * An action to be executed whenever the associated trigger fires during the simulation of the mission
+     * @param {Object} dataJSON The object storing the data to initialize this action
+     * @param {Level} level
+     */
+    function Action(dataJSON, level) {
+        /**
+         * (enum ActionType) Determines what the action to execute actually is
+         * @type String
+         */
+        this._type = utils.getSafeEnumValue(ActionType, dataJSON.type, null);
+        /**
+         * A reference to the trigger that needs to fire to execute this action
+         * @type Trigger
+         */
+        this._trigger = level.getTrigger(dataJSON.trigger);
+        this._trigger.addFireHandler(this._execute.bind(this));
+    }
+    /**
+     * Return the value that identifies the nature of this action - i.e. what it does
+     * @returns {String} (enum ActionType) 
+     */
+    Action.prototype.getType = function () {
+        return this._type;
+    };
+    /**
+     * Executes the action - does whatever its type defines. Called whenever the associated trigger fires.
+     * @param {Level} level 
+     */
+    Action.prototype._execute = function (level) {
+        switch (this._type) {
+            case ActionType.WIN:
+                level.completeMission();
+                break;
+            case ActionType.LOSE:
+                level.failMission();
+                break;
+            default:
+                application.showError("Unrecognized action type: '" + this._type + "'!");
+        }
+    };
+    /**
+     * Returns a list of strings that contain translated HTML text which can be used to display the mission objectives associate with this
+     * action (if it is a win or lose action)
+     */
+    Action.prototype.getObjectiveStrings = function () {
+        if (this._type === ActionType.WIN) {
+            return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_WIN_PREFIX);
+        }
+        if (this._type === ActionType.LOSE) {
+            return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_LOSE_PREFIX);
+        }
+        application.showError("Action of type '" + this._type + "' does no correspond to a mission objective!");
+        return null;
+    };
+    // #########################################################################
+    /**
      * @class Represents a battle scene with an environment, spacecrafts, 
      * projectiles. Can create scenes for visual representation using the held
      * references as well as perform the game logic and physics simulation
@@ -888,6 +1390,26 @@ define([
          * @type String[]
          */
         this._teams = null;
+        /**
+         * The list of triggers that are checked every simulation step whether to fire and invoke their associated actions or not
+         * @type Trigger[]
+         */
+        this._triggers = null;
+        /**
+         * Actions that are executed in every simulation sten when their associated triggers fire
+         * @type Action[]
+         */
+        this._actions = null;
+        /**
+         * References to those actions of the mission that, when executed, cause it to be completed 
+         * @type Action[]
+         */
+        this._winActions = null;
+        /**
+         * References to those actions of the mission that, when executed, cause it to be failed 
+         * @type Action[]
+         */
+        this._loseActions = null;
         /**
          * The list of spacecrafts that are placed on the map of this level.
          * @type Spacecraft[]
@@ -930,6 +1452,11 @@ define([
          * @type string
          */
         this._randomShipsEquipmentProfileName = null;
+        /**
+         * Tracks the state of mission objective completion.
+         * @type Number
+         */
+        this._state = MissionState.NONE;
     }
     /**
      * Return the name identifying this level (typically same as the filename e.g. someLevel.json)
@@ -965,6 +1492,13 @@ define([
         return null;
     };
     /**
+     * Returns the list of spacecrafts (both alive and destroyed) in this mission
+     * @returns {Spacecraft[]}
+     */
+    Level.prototype.getSpacecrafts = function () {
+        return this._spacecrafts;
+    };
+    /**
      * Calls the passed function for every spacecraft this level has, passing each of the spacecrafts as its single argument
      * @param {Function} method
      */
@@ -975,12 +1509,34 @@ define([
         }
     };
     /**
+     * Returns whether this mission has explicitly set objectives
+     * @returns {Boolean}
+     */
+    Level.prototype.hasObjectives = function () {
+        return this._state !== MissionState.NONE;
+    };
+    /**
+     * Marks the mission as completed (by achieving its objectives)
+     */
+    Level.prototype.completeMission = function () {
+        this._state = MissionState.COMPLETED;
+    };
+    /**
+     * Marks the mission as failed (by failing one of its objectives)
+     */
+    Level.prototype.failMission = function () {
+        this._state = MissionState.FAILED;
+    };
+    /**
      * Returns whether according to the current state of the level, the controlled spacecraft has won.
      * @returns {Boolean}
      */
     Level.prototype.isWon = function () {
         var i, craft = this.getPilotedSpacecraft();
         if (craft) {
+            if (this._winActions.length > 0) {
+                return this._state === MissionState.COMPLETED;
+            }
             for (i = 0; i < this._spacecrafts.length; i++) {
                 if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused() && craft.isHostile(this._spacecrafts[i])) {
                     return false;
@@ -1012,7 +1568,7 @@ define([
      * @returns {Boolean}
      */
     Level.prototype.isLost = function () {
-        return !this._pilotedCraft || this._pilotedCraft.canBeReused();
+        return !this._pilotedCraft || this._pilotedCraft.canBeReused() || (this._state === MissionState.FAILED);
     };
     /**
      * Returns how many spacecrafts are currently alive in the passed team
@@ -1064,8 +1620,74 @@ define([
         application.showError("No team exists with ID '" + id + "'!");
         return null;
     };
+    /**
+     * Returns the trigger identified by the passed string
+     * @param {String} name
+     * @returns {Trigger}
+     */
+    Level.prototype.getTrigger = function (name) {
+        var i;
+        for (i = 0; i < this._triggers.length; i++) {
+            if (this._triggers[i].getName() === name) {
+                return this._triggers[i];
+            }
+        }
+        application.showError("No trigger exists with name '" + name + "'!");
+        return null;
+    };
+    /**
+     * Returns a list of translated HTML strings that can be used to dislay the objectives of this mission to the player.
+     * @returns {String[]}
+     */
+    Level.prototype.getObjectives = function () {
+        var i, result = [];
+        if (this._winActions.length === 0) {
+            result.push(strings.get(strings.MISSIONS.OBJECTIVE_WIN_PREFIX, strings.MISSIONS.OBJECTIVE_DESTROY_ALL_SUFFIX.name));
+        } else {
+            for (i = 0; i < this._winActions.length; i++) {
+                result = result.concat(this._winActions[i].getObjectiveStrings());
+            }
+        }
+        for (i = 0; i < this._loseActions.length; i++) {
+            result = result.concat(this._loseActions[i].getObjectiveStrings());
+        }
+        return result;
+    };
     // #########################################################################
     // methods
+    /**
+     * Loads the required data and sets up the triggers and actions for this mission, so that mission objectives can be determined
+     * @param {Object} dataJSON The object storing the mission data
+     */
+    Level.prototype.loadObjectives = function (dataJSON) {
+        var i, actionType;
+        this._triggers = [];
+        if (dataJSON.triggers) {
+            for (i = 0; i < dataJSON.triggers.length; i++) {
+                this._triggers.push(new Trigger(dataJSON.triggers[i]));
+            }
+        }
+        this._actions = [];
+        if (dataJSON.actions) {
+            for (i = 0; i < dataJSON.actions.length; i++) {
+                this._actions.push(new Action(dataJSON.actions[i], this));
+            }
+        }
+        this._state = MissionState.NONE;
+        this._winActions = [];
+        this._loseActions = [];
+        for (i = 0; i < this._actions.length; i++) {
+            actionType = this._actions[i].getType();
+            if (actionType === ActionType.WIN) {
+                this._winActions.push(this._actions[i]);
+            } else if (actionType === ActionType.LOSE) {
+                this._loseActions.push(this._actions[i]);
+            }
+        }
+        if ((this._winActions.length > 0) || (this._loseActions.length > 0)) {
+            this._state = MissionState.IN_PROGRESS;
+        }
+    };
     /**
      * Loads all the data describing this level from the passed JSON object. Does not add random ships to the level, only loads their 
      * configuration - they can be added by calling addRandomShips() later, which will use the loaded configuration.
@@ -1092,6 +1714,7 @@ define([
                 this._teams.push(new Team(dataJSON.teams[i]));
             }
         }
+        this.loadObjectives(dataJSON);
         this._views = [];
         if (dataJSON.views) {
             for (i = 0; i < dataJSON.views.length; i++) {
@@ -1316,6 +1939,9 @@ define([
         if (this._environment) {
             this._environment.simulate();
         }
+        for (i = 0; i < this._triggers.length; i++) {
+            this._triggers[i].simulate(this);
+        }
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].simulate(dt);
             if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {
@@ -1383,6 +2009,12 @@ define([
     };
     // #########################################################################
     /**
+     * @typedef {Object} LevelDescriptor~LocalData
+     * @property {Number} bestScore 
+     * @property {Number} winCount
+     * @property {Number} loseCount
+     */
+    /**
      * @class Stores the data needed to initialize a level. Used so that the data can be accessed (such as description, objectives) before
      * creating the Level object itself (with all spacecrafts etc for the battle simulation) i.e. during mission briefing
      * @extends JSONResource
@@ -1392,27 +2024,27 @@ define([
     function LevelDescriptor(dataJSON, folder) {
         resourceManager.JSONResource.call(this, dataJSON, folder, true);
         /**
-         * The current best score of the player on this level (saved to loval storage)
-         * @type Number
+         * The data that is saved to / loaded from local storage about this mission
+         * @type LevelDescriptor~LocalData
          */
-        this._bestScore = parseInt(localStorage[this._getLocalStorageID()], 10);
-        if (isNaN(this._bestScore)) {
-            this._bestScore = undefined;
-        }
+        this._localData = JSON.parse(localStorage[this._getLocalStorageID()] || "{}");
+        this._localData.winCount = this._localData.winCount || 0;
+        this._localData.loseCount = this._localData.loseCount || 0;
     }
     LevelDescriptor.prototype = new resourceManager.JSONResource();
     LevelDescriptor.prototype.constructor = LevelDescriptor;
-    /**
-     * The score value to you for sandbox (non-winnable) missions
-     * @type Number
-     */
-    LevelDescriptor.SANDBOX_COMPLETE_SCORE = -1;
     /**
      * Returns the location ID to use when saving/loading the best score value to/from local storage
      * @returns {String}
      */
     LevelDescriptor.prototype._getLocalStorageID = function () {
-        return BEST_SCORE_LOCAL_STORAGE_PREFIX + this.getName();
+        return MODULE_LOCAL_STORAGE_PREFIX + this.getName();
+    };
+    /**
+     * Updates the data saved of this mission in local storage
+     */
+    LevelDescriptor.prototype._saveLocalData = function () {
+        localStorage[this._getLocalStorageID()] = JSON.stringify(this._localData);
     };
     /**
      * Returns the raw description of this mission (as given in the data JSON)
@@ -1448,6 +2080,21 @@ define([
         return null;
     };
     /**
+     * Returns a list of translated HTML strings that can be used to display the objectives of this mission to the player.
+     * Only works if the mission data file has already been loaded!
+     * @returns {String[]}
+     */
+    LevelDescriptor.prototype.getMissionObjectives = function () {
+        var level = null;
+        if (this.isReadyToUse()) {
+            level = new Level(this.getName());
+            level.loadObjectives(this._dataJSON);
+            return level.getObjectives();
+        }
+        application.showError("Cannot get mission objectives from mission descriptor that has not yet been initialized!");
+        return null;
+    };
+    /**
      * Creates and returns a Level object based on the data stored in this descriptor. Only works if the data has been loaded - either it
      * was given when constructing this object, or it was requested and has been loaded
      * @param {Boolean} demoMode Whether to load the created level in demo mode
@@ -1468,7 +2115,7 @@ define([
      * @returns {Number}
      */
     LevelDescriptor.prototype.getBestScore = function () {
-        return this._bestScore;
+        return this._localData.bestScore;
     };
     /**
      * Checks whether the passed score exceeds the current best score of the level, and if so, updates the value both in this object and in
@@ -1477,25 +2124,31 @@ define([
      * @returns {Boolean}
      */
     LevelDescriptor.prototype.updateBestScore = function (score) {
-        if ((this._bestScore === undefined) || (score > this._bestScore)) {
-            this._bestScore = score;
-            localStorage[this._getLocalStorageID()] = this._bestScore;
+        if ((this._localData.bestScore === undefined) || (score > this._localData.bestScore)) {
+            this._localData.bestScore = score;
+            this._saveLocalData();
             return true;
         }
         return false;
     };
     /**
-     * Returns whether the described level is an already tried, non-winnable sandbox mission 
-     * @returns {Boolean}
+     * Increases the win or lose count of the mission depending on the passed parameter, and saves the new data to local storage
+     * @param {Boolean} victory
      */
-    LevelDescriptor.prototype.isCompletedSandbox = function () {
-        return this._bestScore === LevelDescriptor.SANDBOX_COMPLETE_SCORE;
+    LevelDescriptor.prototype.increasePlaythroughCount = function (victory) {
+        if (victory) {
+            this._localData.winCount++;
+        } else {
+            this._localData.loseCount++;
+        }
+        this._saveLocalData();
     };
     /**
-     * Sets the level as an already tried, non-winnable sandbox mission
+     * Returns the number of times this mission has been won by the player
+     * @returns {Number}
      */
-    LevelDescriptor.prototype.setAsCompletedSandbox = function () {
-        this.updateBestScore(LevelDescriptor.SANDBOX_COMPLETE_SCORE);
+    LevelDescriptor.prototype.getWinCount = function () {
+        return this._localData.winCount;
     };
     // #########################################################################
     /**
