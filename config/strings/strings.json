@@ -29,7 +29,7 @@
         "description": "{description}",
         "missionObjectivesTitle": "Objectives:",
         "playerSpacecraftTitle": "Spacecraft:",
-        "playerSpacecraftData": "Class: {class}",
+        "playerSpacecraftData": "Class: {class}<br/>Firepower: {firepower}",
         "objectiveSubjects": {
             "squad": "{ids} squad",
             "squads": "{ids} squads",

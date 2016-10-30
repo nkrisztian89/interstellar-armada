@@ -54,7 +54,7 @@
         "description": "{description}",
         "missionObjectivesTitle": "Feladatok:",
         "playerSpacecraftTitle": "Űrhajó:",
-        "playerSpacecraftData": "Osztály: {class}",
+        "playerSpacecraftData": "Osztály: {class}<br/>Tűzerő: {firepower}",
         "objectiveSubjects": {
             "squad": "{ids} csapat",
             "squads": "{ids} csapat",

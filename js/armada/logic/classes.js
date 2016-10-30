@@ -1736,6 +1736,19 @@ define([
         return this._barrels[0].getProjectileVelocity();
     };
     /**
+     * Returns the damage per second dealt by a weapon of this class to a target with the passed armor rating.
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    WeaponClass.prototype.getFirepower = function (armorRating) {
+        var result = 0, i;
+        armorRating = armorRating || 0;
+        for (i = 0; i < this._barrels.length; i++) {
+            result += Math.max(0, this._barrels[i].getProjectileClass().getDamage() - armorRating);
+        }
+        return result * 1000 / this._cooldown; // cooldown is in milliseconds
+    };
+    /**
      * Plays the sound effect corresponding to a weapon of this class firing, at the given world position
      * @param {Number[3]} [position] The camera-space position where to put the sound source, if the sound
      * is not to be stacked to the sound source of the spacecraft (the spacecraft is close and the different

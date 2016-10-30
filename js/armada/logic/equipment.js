@@ -520,6 +520,14 @@ define([
         return this._class.getProjectileVelocity();
     };
     /**
+     * Returns the damage per second dealt this a weapon to a target with the passed armor rating.
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    Weapon.prototype.getFirepower = function (armorRating) {
+        return this._class.getFirepower(armorRating);
+    };
+    /**
      * Returns the relative range of the weapon, based on the first barrel, that is the farthest distance the fired projectiles will reach
      * if the weapon itself is travelling with the given speed along its firing line in world space.
      * @param {Number} baseSpeed

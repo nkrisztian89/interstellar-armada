@@ -2066,14 +2066,14 @@ define([
                         strings.get(strings.MISSIONS.NO_DESCRIPTION)));
     };
     /**
-     * Returns the class of the spacecraft the user is piloting in this mission.
-     * @returns {SpacecraftClass}
+     * Returns the descriptor of the spacecraft the user is piloting in this mission.
+     * @returns {Object}
      */
-    MissionDescriptor.prototype.getPilotedSpacecraftClass = function () {
+    MissionDescriptor.prototype.getPilotedSpacecraftDescriptor = function () {
         var i;
         for (i = 0; i < this._dataJSON.spacecrafts.length; i++) {
             if (this._dataJSON.spacecrafts[i].piloted) {
-                return classes.getSpacecraftClass(this._dataJSON.spacecrafts[i].class);
+                return this._dataJSON.spacecrafts[i];
             }
         }
         return null;

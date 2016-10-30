@@ -642,6 +642,20 @@ define([
         return this._weapons;
     };
     /**
+     * Returns the sum of the firepower the weapons on this spacecraft have, that is, the total damage per second
+     * they could do to a target with the passed armor rating. (not consider that it might be impossible to aim 
+     * all weapons at the same target, depending their positioning, gimbal and the size of the target)
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getFirepower = function (armorRating) {
+        var result = 0, i;
+        for (i = 0; i < this._weapons.length; i++) {
+            result += this._weapons[i].getFirepower(armorRating);
+        }
+        return result;
+    };
+    /**
      * Returns whether this spacecraft object can be reused to represent a new
      * spacecraft.
      * @returns {Boolean}

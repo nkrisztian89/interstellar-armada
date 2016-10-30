@@ -17,6 +17,7 @@
  * @param strings Used for translation support
  * @param audio Used for music management (switching track when launching a mission)
  * @param armadaScreens Used for navigation
+ * @param spacecraft Used for creating the spacecraft representing the player craft in missions for previewing its data
  * @param missions Used for accessing information about missions
  */
 define([
@@ -27,8 +28,9 @@ define([
     "armada/strings",
     "armada/audio",
     "armada/screens/shared",
+    "armada/logic/spacecraft",
     "armada/logic/missions"
-], function (utils, game, screens, components, strings, audio, armadaScreens, missions) {
+], function (utils, game, screens, components, strings, audio, armadaScreens, spacecraft, missions) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -40,7 +42,14 @@ define([
             LAUNCH_BUTTON_ID = "launchButton",
             MISSION_TITLE_ID = "missionTitle",
             MISSION_DESCRIPTION_ID = "missionDescription",
-            LIST_COMPONENT_NAME = "list";
+            LIST_COMPONENT_NAME = "list",
+            // ------------------------------------------------------------------------------
+            // private variables
+            /**
+             * Used to represent the player's spacecraft in the currently selected mission to show information about it
+             * @type Spacecraft
+             */
+            _spacecraft;
     // #########################################################################
     /**
      * @class Provides the behaviour for the Missions screen
@@ -165,12 +174,14 @@ define([
             this._playerSpacecraftData.hide();
             missions.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
                 var
-                        /** @type SpacecraftClass */
-                        pilotedSpacecraftClass,
                         /** @type String[] */
                         objectives;
                 if (this._listComponent.getSelectedIndex() === index) {
-                    pilotedSpacecraftClass = missionDescriptor.getPilotedSpacecraftClass();
+                    if (_spacecraft) {
+                        _spacecraft.destroy();
+                    }
+                    _spacecraft = new spacecraft.Spacecraft();
+                    _spacecraft.loadFromJSON(missionDescriptor.getPilotedSpacecraftDescriptor());
                     objectives = missionDescriptor.getMissionObjectives().map(function (objective) {
                         return "<li>" + objective + "</li>";
                     });
@@ -179,7 +190,8 @@ define([
                     });
                     this._missionObjectives.setContent(objectives.join(""));
                     this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
-                        class: pilotedSpacecraftClass.getDisplayName()
+                        class: _spacecraft.getClass().getDisplayName(),
+                        firepower: Math.round(_spacecraft.getFirepower() * 10) / 10
                     });
                     this._missionObjectivesTitle.show();
                     this._missionObjectives.show();
