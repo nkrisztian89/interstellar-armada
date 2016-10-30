@@ -46,7 +46,7 @@ define([
     "armada/screens/shared",
     "armada/graphics",
     "armada/audio",
-    "armada/classes",
+    "armada/logic/classes",
     "armada/configuration",
     "armada/control",
     "armada/logic/missions",

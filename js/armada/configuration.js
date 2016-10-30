@@ -21,7 +21,7 @@ define([
     "utils/types",
     "modules/async-resource",
     "modules/scene/camera",
-    "armada/classes"
+    "armada/logic/classes"
 ], function (utils, types, asyncResource, camera, classes) {
     "use strict";
     var

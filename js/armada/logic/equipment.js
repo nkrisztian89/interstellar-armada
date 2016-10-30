@@ -38,7 +38,7 @@ define([
     "modules/scene/lights",
     "modules/scene/scene-graph",
     "armada/graphics",
-    "armada/classes",
+    "armada/logic/classes",
     "armada/configuration",
     "armada/logic/constants",
     "armada/logic/explosion",

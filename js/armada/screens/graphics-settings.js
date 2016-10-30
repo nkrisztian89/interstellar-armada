@@ -31,7 +31,7 @@ define([
     "armada/strings",
     "armada/screens/shared",
     "armada/graphics",
-    "armada/classes",
+    "armada/logic/classes",
     "utils/polyfill"
 ], function (utils, application, components, screens, managedGL, game, strings, armadaScreens, graphics, classes) {
     "use strict";

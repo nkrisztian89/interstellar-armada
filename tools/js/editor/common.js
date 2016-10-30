@@ -19,7 +19,7 @@
 define([
     "utils/utils",
     "modules/media-resources",
-    "armada/classes",
+    "armada/logic/classes",
     "armada/logic/missions"
 ], function (utils, resources, classes, missions) {
     "use strict";

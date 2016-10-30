@@ -21,7 +21,7 @@ define([
     "utils/utils",
     "modules/media-resources",
     "armada/configuration",
-    "armada/classes",
+    "armada/logic/classes",
     "editor/descriptors",
     "editor/common"
 ], function (utils, resources, config, classes, descriptors, common) {

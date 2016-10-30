@@ -46,7 +46,7 @@ define([
     "modules/scene/scene-graph",
     "armada/constants",
     "armada/graphics",
-    "armada/classes",
+    "armada/logic/classes",
     "armada/configuration",
     "armada/strings",
     "armada/logic/spacecraft",

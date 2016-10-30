@@ -44,7 +44,7 @@ define([
     "modules/scene/scene-graph",
     "armada/graphics",
     "armada/audio",
-    "armada/classes",
+    "armada/logic/classes",
     "armada/configuration",
     "armada/strings",
     "armada/logic/constants",

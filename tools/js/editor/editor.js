@@ -34,7 +34,7 @@ define([
     "armada/constants",
     "armada/configuration",
     "armada/graphics",
-    "armada/classes",
+    "armada/logic/classes",
     "armada/logic/missions",
     "editor/common",
     "editor/descriptors",

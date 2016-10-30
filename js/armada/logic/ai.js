@@ -22,7 +22,7 @@ define([
     "utils/matrices",
     "modules/physics",
     "armada/configuration",
-    "armada/classes"
+    "armada/logic/classes"
 ], function (vec, mat, physics, config, classes) {
     "use strict";
     var

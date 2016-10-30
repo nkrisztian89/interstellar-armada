@@ -28,7 +28,7 @@ define([
     "modules/media-resources",
     "armada/configuration",
     "armada/graphics",
-    "armada/classes"
+    "armada/logic/classes"
 ], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes) {
     "use strict";
     var

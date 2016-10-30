@@ -35,7 +35,7 @@ define([
     "modules/scene/scene-graph",
     "modules/scene/particle-system",
     "armada/graphics",
-    "armada/classes",
+    "armada/logic/classes",
     "armada/configuration",
     "armada/logic/constants",
     "utils/polyfill"

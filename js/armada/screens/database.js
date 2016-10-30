@@ -38,7 +38,7 @@ define([
     "armada/screens/shared",
     "armada/strings",
     "armada/graphics",
-    "armada/classes",
+    "armada/logic/classes",
     "armada/configuration",
     "armada/logic/missions",
     "armada/logic/spacecraft",

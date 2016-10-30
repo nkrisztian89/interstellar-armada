@@ -36,7 +36,7 @@ define([
     "modules/scene/scene-graph",
     "armada/graphics",
     "armada/configuration",
-    "armada/classes",
+    "armada/logic/classes",
     "editor/common"
 ], function (
         utils, vec, mat,
