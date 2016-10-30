@@ -221,7 +221,7 @@ define([
          */
         this._class = null;
         /**
-         * A unique string ID that can identify this spacecraft within a level.
+         * A unique string ID that can identify this spacecraft within a mission.
          * @type String
          */
         this._id = null;
@@ -555,7 +555,7 @@ define([
         return this._class.isFighterClass();
     };
     /**
-     * Returns the id of this spacecraft that can be used to identify it within a level.
+     * Returns the id of this spacecraft that can be used to identify it within a mission.
      * @returns {String}
      */
     Spacecraft.prototype.getID = function () {
@@ -882,7 +882,7 @@ define([
     };
     /**
      * Sets a new spacecraft array which contains the other spacecrafts participating
-     * in the same simulation. Called by e.g. the Level, when it adds the spacecrafts.
+     * in the same simulation. Called by e.g. the Mission, when it adds the spacecrafts.
      * @param {Spacecraft[]} spacecraftArray
      */
     Spacecraft.prototype.setSpacecraftArray = function (spacecraftArray) {

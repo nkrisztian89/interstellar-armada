@@ -16,7 +16,7 @@
  * @param resources Used to access the loaded media (graphics and sound) resources
  * @param pools Used to access the common pool of particles
  * @param renderableObjects Used for creating visual models for game objects
- * @param lights Used for creating light sources for game objects and levels
+ * @param lights Used for creating light sources for game objects
  * @param sceneGraph Creating and managing the scene graph for visual simulation is done using this module
  * @param particleSystem Used for creating particle systems for explosions
  * @param graphics Used to access graphics settings

@@ -1,8 +1,8 @@
 {
     "config": {
-        "sourceFolder": "level"
+        "sourceFolder": "mission"
     },
-    "levels": [
+    "missions": [
         {
             "source": "targetPracticeBoxes.json"
         }, {
@@ -30,7 +30,7 @@
         }, {
             "source": "defendFrigates.json"
         }, {
-            "source": "level.json"
+            "source": "test.json"
         }, {
             "source": "libraTest.json"
         }, {

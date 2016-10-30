@@ -86,8 +86,8 @@ define([
         ARMOR: {name: "spacecraftStats.armor"},
         ARMOR_RATING: {name: "spacecraftStats.armorRating"}
     };
-    strings.LEVEL = {
-        PREFIX: {name: "level.", optional: true},
+    strings.MISSION = {
+        PREFIX: {name: "mission.", optional: true},
         NAME_SUFFIX: {name: ".name", optional: true},
         DESCRIPTION_SUFFIX: {name: ".description", optional: true}
     };
@@ -109,7 +109,7 @@ define([
         HUD_VIEW: {name: "battle.hud.view"},
         HUD_FLIGHT_MODE: {name: "battle.hud.flightMode"},
         HUD_SPEED: {name: "battle.hud.speed"},
-        LOADING_BOX_LOADING_LEVEL: {name: "battle.loadingBox.loadingLevel"},
+        LOADING_BOX_LOADING_MISSION: {name: "battle.loadingBox.loadingMission"},
         LOADING_BOX_ADDING_RANDOM_ELEMENTS: {name: "battle.loadingBox.addingRandomElements"},
         LOADING_BOX_BUILDING_SCENE: {name: "battle.loadingBox.buildingScene"},
         MESSAGE_READY: {name: "battle.message.ready"},

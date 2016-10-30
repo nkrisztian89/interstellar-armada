@@ -14,8 +14,7 @@
         "texture": "{{data}}/textures/",
         "soundEffect": "{{data}}/sfx/",
         "music": "{{data}}/music/",
-        "level": "{{data}}/levels/",
-        "environment": "{{data}}/levels/environments/"
+        "mission": "{{data}}/missions/"
     },
     "defaultLanguage": "English",
     "configFiles": {
@@ -48,10 +47,10 @@
             },
             "environments": {
                 "filename": "environments.json",
-                "folder": "environment"
+                "folder": "data"
             },
-            "levels": {
-                "filename": "levels.json",
+            "missions": {
+                "filename": "missions.json",
                 "folder": "data"
             }
         }

@@ -15,7 +15,7 @@
  * @param renderableObjects Used for accessing uniform name constants
  * @param lights Used for creating the light sources for the preview scene
  * @param config Used to access default camera configuration settings
- * @param level Used to access the environments
+ * @param missions Used to access the environments
  * @param spacecraft Used to create the spacecraft for preview
  * @param common Used to create selectors
  * @param descriptors Used to access enums
@@ -27,7 +27,7 @@ define([
     "modules/scene/renderable-objects",
     "modules/scene/lights",
     "armada/configuration",
-    "armada/logic/level",
+    "armada/logic/missions",
     "armada/logic/spacecraft",
     "editor/common",
     "editor/descriptors",
@@ -35,7 +35,7 @@ define([
 ], function (
         utils, mat,
         renderableObjects, lights,
-        config, level, spacecraft,
+        config, missions, spacecraft,
         common, descriptors, preview) {
     "use strict";
     var
@@ -309,7 +309,7 @@ define([
                     preview.setupWireframeModel(model);
                 });
         if (params.environmentName && (environmentChanged || shouldReload)) {
-            level.getEnvironment(params.environmentName).addToScene(preview.getScene());
+            missions.getEnvironment(params.environmentName).addToScene(preview.getScene());
         }
         _environmentName = params.environmentName;
         _updateEngineStateEditor();
@@ -384,7 +384,7 @@ define([
      */
     function _createOptions() {
         // environment selector
-        _optionElements.environmentSelector = common.createSelector(level.getEnvironmentNames(), _environmentName, true, function () {
+        _optionElements.environmentSelector = common.createSelector(missions.getEnvironmentNames(), _environmentName, true, function () {
             preview.updateCanvas({
                 preserve: true,
                 clearScene: true,

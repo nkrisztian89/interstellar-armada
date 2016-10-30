@@ -74,10 +74,10 @@ define([
     function GeneralController(dataJSON) {
         control.Controller.call(this, dataJSON);
         /**
-         * The level which this controller controls.
-         * @type Level
+         * The mission which this controller controls.
+         * @type Mission
          */
-        this._level = null;
+        this._mission = null;
         /**
          * @type Battle
          */
@@ -100,7 +100,7 @@ define([
         }.bind(this));
         // switching to pilot mode
         this.setActionFunction("switchToPilotMode", true, function () {
-            _context.switchToPilotMode(this._level.getPilotedSpacecraft());
+            _context.switchToPilotMode(this._mission.getPilotedSpacecraft());
         }.bind(this));
         // switching to spectator mode
         this.setActionFunction("switchToSpectatorMode", true, function () {
@@ -108,7 +108,7 @@ define([
         });
         // toggling the visibility of hitboxes
         this.setActionFunction("toggleHitboxVisibility", true, function () {
-            this._level.toggleHitboxVisibility();
+            this._mission.toggleHitboxVisibility();
         }.bind(this));
         // toggling the visibility of development-related info (version, FPS count) on screen
         this.setActionFunction("toggleDevInfoVisibility", true, function () {
@@ -146,11 +146,11 @@ define([
         return "general";
     };
     /**
-     * Sets the controlled level to the one passed as parameter.
-     * @param {Level} level
+     * Sets the controlled mission to the one passed as parameter.
+     * @param {Mission} mission
      */
-    GeneralController.prototype.setLevel = function (level) {
-        this._level = level;
+    GeneralController.prototype.setMission = function (mission) {
+        this._mission = mission;
     };
     /**
      * Sets the controlled battle to the one passed as parameter.

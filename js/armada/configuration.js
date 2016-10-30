@@ -270,8 +270,8 @@ define([
             name: "environments",
             type: _customTypes.FILE_DESCRIPTOR
         },
-        LEVEL_FILES: {
-            name: "levels",
+        MISSION_FILES: {
+            name: "missions",
             type: {
                 baseType: "object",
                 properties: {

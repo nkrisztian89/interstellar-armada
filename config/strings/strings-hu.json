@@ -116,7 +116,7 @@
         "serpent": "Kígyó",
         "reaper": "Kaszás"
     },
-    "level": {
+    "mission": {
         "targetPracticeBoxes": {
             "name": "Kezdő lőgyakorlat",
             "description": "Gyakorold a célzást fegyvertelen, egy helyben álló konténerek felrobbantásával! Az űrhajódat gyakorló fegyverekkel szereltük fel, amelyek maguktól pontosan a célra állnak, ha felé nézel, így könnyítve a dolgod."
@@ -157,7 +157,7 @@
         "defendFrigates": {
             "name": "Védd meg a fregattokat"
         },
-        "level": {
+        "test": {
             "name": "Teszt"
         },
         "libraTest": {
@@ -185,15 +185,15 @@
             "speed": "sebesség"
         },
         "loadingBox": {
-            "loadingLevel": "szint leíró fájl betöltése...",
+            "loadingMission": "küldetésleíró fájl betöltése...",
             "addingRandomElements": "véletlen elemek hozzáadása...",
             "buildingScene": "színtér felépítése..."
         },
         "message": {
             "ready": "Kész!<br/>Játék közven az {menuKey} billentyűvel hívhatod elő a menüt, ahol az irányítást is beállíthatod.",
             "paused": "Játék szüneteltetve.",
-            "victory": "<strong>Győzelem!</strong><br/>Gratulálok, sikeresen teljesítetted ezt a szintet!<br/>Pontszám: <strong>{score}</strong><br/>Kilőtt űrhajók: {kills}<br/>Találati arány bónusz: {hitRatio}<br/>Páncélzat épsége bónusz: {hullIntegrity}<br/>Csapat túlélési bónusz: {teamSurvival}<br/>Az {menuKey} billentyűvel hívhatod elő a menüt.",
-            "defeat": "<strong>Vereség!</strong><br/>Az űrhajód megsemmisült. Az {menuKey} billentyűvel hívhatod elő a menüt, ahonnan újrakezdheted a szintet.",
+            "victory": "<strong>Győzelem!</strong><br/>Gratulálok, sikeresen teljesítetted ezt a küldetést!<br/>Pontszám: <strong>{score}</strong><br/>Kilőtt űrhajók: {kills}<br/>Találati arány bónusz: {hitRatio}<br/>Páncélzat épsége bónusz: {hullIntegrity}<br/>Csapat túlélési bónusz: {teamSurvival}<br/>Az {menuKey} billentyűvel hívhatod elő a menüt.",
+            "defeat": "<strong>Vereség!</strong><br/>Az űrhajód megsemmisült. Az {menuKey} billentyűvel hívhatod elő a menüt, ahonnan újrakezdheted a küldetést.",
             "fail": "<strong>Vereség!<strong><br/>Nem sikerült teljesítened a küldetés feladatait. <br/>Az {menuKey} billentyűvel hívhatod elő a menüt."
         }
     },

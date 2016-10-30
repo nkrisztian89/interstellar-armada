@@ -17,7 +17,7 @@
  * @param graphics Used to load the graphics settings
  * @param audio Used to load the audio settings
  * @param config Used to load general game configuration and settings
- * @param level Used to load the environments
+ * @param missions Used to load the environments
  * @param control Used to load the control configuration and setings of the game and access main functionality
  * @param strings Used to load the game translation strings
  */
@@ -28,10 +28,10 @@ define([
     "armada/graphics",
     "armada/audio",
     "armada/configuration",
-    "armada/logic/level",
+    "armada/logic/missions",
     "armada/control",
     "armada/strings"
-], function (game, components, constants, graphics, audio, config, level, control, strings) {
+], function (game, components, constants, graphics, audio, config, missions, control, strings) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -57,8 +57,8 @@ define([
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
         config.executeWhenReady(function () {
-            level.requestLoad();
-            level.executeWhenReady(function () {
+            missions.requestLoad();
+            missions.executeWhenReady(function () {
                 _progressBar.value = 2;
                 callback();
             });
@@ -84,9 +84,9 @@ define([
             "armada/screens/audio-settings",
             "armada/screens/control-settings",
             "armada/screens/about"
-        ], function (armadaScreens, menus, missions, battle, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
+        ], function (armadaScreens, menus, missionsScreen, battle, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
             game.addScreen(menus.mainMenuScreen);
-            game.addScreen(missions.missionsScreen);
+            game.addScreen(missionsScreen.missionsScreen);
             game.addScreen(battle.battleScreen);
             game.addScreen(database.databaseScreen);
             game.addScreen(menus.settingsMenuScreen);

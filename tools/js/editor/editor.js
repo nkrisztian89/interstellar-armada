@@ -17,7 +17,7 @@
  * @param config Used to load game configuration and settings from file
  * @param graphics Used to load the graphics settings from file
  * @param classes Used to display the class structure in the Items window and access the selected class for preview and properties
- * @param level Used to load the environments 
+ * @param missions Used to load the environments 
  * @param common Used for clearing open popups
  * @param skyboxPreview Used to create previews for skybox classes
  * @param explosionPreview Used to create previews for explosion classes
@@ -35,7 +35,7 @@ define([
     "armada/configuration",
     "armada/graphics",
     "armada/classes",
-    "armada/logic/level",
+    "armada/logic/missions",
     "editor/common",
     "editor/descriptors",
     "editor/properties",
@@ -48,7 +48,7 @@ define([
         utils,
         application, resources,
         constants, config, graphics, classes,
-        level,
+        missions,
         common, descriptors, properties,
         skyboxPreview, explosionPreview, projectilePreview, weaponPreview, spacecraftPreview) {
     "use strict";
@@ -86,7 +86,7 @@ define([
             ELEMENT_INSERTING_CLASS = "inserting",
             ELEMENT_DRAGOVER_CLASS = "dragover",
             ENVIRONMENTS_CATEGORY = "environments",
-            LEVELS_CATEGORY = "levels",
+            MISSIONS_CATEGORY = "missions",
             ID_SEPARATOR = "_",
             ELEMENT_LI_ID_PREFIX = "element_",
             PREVIEW_OPTIONS_ID = "previewOptions",
@@ -128,7 +128,7 @@ define([
             _resourceList,
             _classList,
             _environmentList,
-            _levelList;
+            _missionList;
     // ------------------------------------------------------------------------------
     // Private functions
     /**
@@ -340,7 +340,7 @@ define([
         }
         resources.executeForAllResources(nameChangeHandler);
         classes.executeForAllClasses(nameChangeHandler);
-        level.executeForAllEnvironments(nameChangeHandler);
+        missions.executeForAllEnvironments(nameChangeHandler);
     }
     /**
      * Loads the content of the Properties window for the currently selected element.
@@ -605,9 +605,9 @@ define([
                                     exportName.value,
                                     exportAuthor.value,
                                     [ENVIRONMENTS_CATEGORY],
-                                    level.getEnvironmentNames,
+                                    missions.getEnvironmentNames,
                                     function (categoryName, itemName) {
-                                        return (categoryName === ENVIRONMENTS_CATEGORY) ? level.getEnvironment(itemName) : null;
+                                        return (categoryName === ENVIRONMENTS_CATEGORY) ? missions.getEnvironment(itemName) : null;
                                     }));
                     break;
                 default:
@@ -641,11 +641,11 @@ define([
                 break;
             case common.ItemType.ENVIRONMENT:
                 categories = [ENVIRONMENTS_CATEGORY];
-                getItems = level.getEnvironmentNames;
+                getItems = missions.getEnvironmentNames;
                 break;
-            case common.ItemType.LEVEL:
-                categories = [LEVELS_CATEGORY];
-                getItems = config.getLevelFileNames;
+            case common.ItemType.MISSION:
+                categories = [MISSIONS_CATEGORY];
+                getItems = missions.getMissionNames;
                 break;
             default:
                 application.crash();
@@ -716,11 +716,11 @@ define([
         }
         _environmentList = _createCategoryList(common.ItemType.ENVIRONMENT);
         windowContent.appendChild(_environmentList);
-        if (_levelList) {
-            windowContent.removeChild(_levelList);
+        if (_missionList) {
+            windowContent.removeChild(_missionList);
         }
-        _levelList = _createCategoryList(common.ItemType.LEVEL);
-        windowContent.appendChild(_levelList);
+        _missionList = _createCategoryList(common.ItemType.MISSION);
+        windowContent.appendChild(_missionList);
     }
     /**
      * Loads the default values and sets the change handlers for the contents of the New item dialog
@@ -766,15 +766,15 @@ define([
                     break;
                 case common.ItemType.ENVIRONMENT:
                     common.setSelectorOptions(newItemCategory, [ENVIRONMENTS_CATEGORY]);
-                    getItems = level.getEnvironmentNames;
+                    getItems = missions.getEnvironmentNames;
                     create = function () {
                         var newItemData = ((newItemBase.selectedIndex > 0) ?
-                                utils.deepCopy(level.getEnvironment(newItemBase.value).getData()) :
+                                utils.deepCopy(missions.getEnvironment(newItemBase.value).getData()) :
                                 properties.getDefaultItemData(
                                         descriptors.itemDescriptors[newItemCategory.value],
                                         newItemName.value));
                         newItemData.name = newItemName.value;
-                        level.createEnvironment(newItemData);
+                        missions.createEnvironment(newItemData);
                     };
                     break;
                 default:
@@ -843,8 +843,8 @@ define([
             graphics.loadSettingsFromLocalStorage();
             config.loadSettingsFromJSON(settingsJSON.logic);
             config.executeWhenReady(function () {
-                level.requestLoad();
-                level.executeWhenReady(function () {
+                missions.requestLoad();
+                missions.executeWhenReady(function () {
                     application.log("Game settings loaded.", 1);
                     localStorage[constants.VERSION_LOCAL_STORAGE_ID] = application.getVersion();
                     application.log("Initialization completed.");

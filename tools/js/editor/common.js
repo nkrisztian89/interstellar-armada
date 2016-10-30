@@ -14,14 +14,14 @@
  * @param utils Used for converting between float / hex colors
  * @param resources Used for obtaining resource references
  * @param classes Used for obtaining class references
- * @param level Used for obtaining environments and levels
+ * @param missions Used for obtaining environments and missions
  */
 define([
     "utils/utils",
     "modules/media-resources",
     "armada/classes",
-    "armada/logic/level"
-], function (utils, resources, classes, level) {
+    "armada/logic/missions"
+], function (utils, resources, classes, missions) {
     "use strict";
     /**
      * @typedef {Object} Editor~Item
@@ -51,7 +51,7 @@ define([
                 RESOURCE: "resources",
                 CLASS: "classes",
                 ENVIRONMENT: "environments",
-                LEVEL: "levels"
+                MISSION: "missions"
             },
             // ------------------------------------------------------------------------------
             // Constants
@@ -95,8 +95,8 @@ define([
             case ItemType.CLASS:
                 return classes.getClass(item.category, item.name);
             case ItemType.ENVIRONMENT:
-                return level.getEnvironment(item.name);
-            case ItemType.LEVEL:
+                return missions.getEnvironment(item.name);
+            case ItemType.MISSION:
                 return {
                     getData: function () {
                         return null;
@@ -128,12 +128,12 @@ define([
                 }
                 break;
             case ItemType.ENVIRONMENT:
-                names = level.getEnvironmentNames();
+                names = missions.getEnvironmentNames();
                 for (i = 0; i < names.length; i++) {
-                    result.push(level.getEnvironment(names[i]));
+                    result.push(missions.getEnvironment(names[i]));
                 }
                 break;
-            case ItemType.LEVEL:
+            case ItemType.MISSION:
                 break;
             default:
                 document.crash();

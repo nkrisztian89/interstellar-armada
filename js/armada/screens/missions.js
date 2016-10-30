@@ -17,7 +17,7 @@
  * @param strings Used for translation support
  * @param audio Used for music management (switching track when launching a mission)
  * @param armadaScreens Used for navigation
- * @param level Used for accessing information about missions
+ * @param missions Used for accessing information about missions
  */
 define([
     "utils/utils",
@@ -27,8 +27,8 @@ define([
     "armada/strings",
     "armada/audio",
     "armada/screens/shared",
-    "armada/logic/level"
-], function (utils, game, screens, components, strings, audio, armadaScreens, level) {
+    "armada/logic/missions"
+], function (utils, game, screens, components, strings, audio, armadaScreens, missions) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -139,10 +139,10 @@ define([
      * @returns {ListComponent~ListElement[]} 
      */
     MissionsScreen.prototype._getListElements = function () {
-        var result = [], levelNames = level.getLevelNames(), i;
-        for (i = 0; i < levelNames.length; i++) {
+        var result = [], missionNames = missions.getMissionNames(), i;
+        for (i = 0; i < missionNames.length; i++) {
             result.push({
-                captionID: strings.LEVEL.PREFIX.name + utils.getFilenameWithoutExtension(levelNames[i]) + strings.LEVEL.NAME_SUFFIX.name,
+                captionID: strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(missionNames[i]) + strings.MISSION.NAME_SUFFIX.name,
                 subcaptionID: strings.MISSIONS.NOT_COMPLETED.name
             });
         }
@@ -153,29 +153,29 @@ define([
      * @param {Number} index
      */
     MissionsScreen.prototype._selectMission = function (index) {
-        var levelFilename, levelName;
+        var missionFilename, missionName;
         if (index >= 0) {
-            levelFilename = level.getLevelNames()[index];
-            levelName = utils.getFilenameWithoutExtension(levelFilename);
-            this._missionTitle.setContent(strings.get({name: strings.LEVEL.PREFIX.name + levelName + strings.LEVEL.NAME_SUFFIX.name}));
+            missionFilename = missions.getMissionNames()[index];
+            missionName = utils.getFilenameWithoutExtension(missionFilename);
+            this._missionTitle.setContent(strings.get({name: strings.MISSION.PREFIX.name + missionName + strings.MISSION.NAME_SUFFIX.name}));
             this._missionDescription.setContent(strings.get(strings.MISSIONS.LOADING_DESCRIPTION));
             this._missionObjectivesTitle.hide();
             this._missionObjectives.hide();
             this._playerSpacecraftTitle.hide();
             this._playerSpacecraftData.hide();
-            level.requestLevelDescriptor(levelFilename, function (levelDescriptor) {
+            missions.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
                 var
                         /** @type SpacecraftClass */
                         pilotedSpacecraftClass,
                         /** @type String[] */
                         objectives;
                 if (this._listComponent.getSelectedIndex() === index) {
-                    pilotedSpacecraftClass = levelDescriptor.getPilotedSpacecraftClass();
-                    objectives = levelDescriptor.getMissionObjectives().map(function (objective) {
+                    pilotedSpacecraftClass = missionDescriptor.getPilotedSpacecraftClass();
+                    objectives = missionDescriptor.getMissionObjectives().map(function (objective) {
                         return "<li>" + objective + "</li>";
                     });
                     this._missionDescription.setContent(strings.get(strings.MISSIONS.DESCRIPTION), {
-                        description: levelDescriptor.getDisplayDescription()
+                        description: missionDescriptor.getDisplayDescription()
                     });
                     this._missionObjectives.setContent(objectives.join(""));
                     this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
@@ -218,7 +218,7 @@ define([
         }.bind(this);
         keyCommands.enter = keyCommands.enter || function () {
             if ((this._listComponent.getSelectedIndex() >= 0) && (this._listComponent.getHighlightedIndex() === this._listComponent.getSelectedIndex())) {
-                this._launchLevel(false);
+                this._launchMission(false);
             } else {
                 this._listComponent.selectHighlighted();
             }
@@ -236,13 +236,13 @@ define([
      * Updates the subcaption for all missions in the displayed list with the current best score for the mission
      */
     MissionsScreen.prototype._updateScores = function () {
-        var levelDescriptors, i;
-        levelDescriptors = level.getLevelDescriptors();
+        var missionDescriptors, i;
+        missionDescriptors = missions.getMissionDescriptors();
         i = 0;
         this._listComponent.executeForListElements(function (listElement) {
             var
-                    score = levelDescriptors[i].getBestScore(),
-                    winCount = levelDescriptors[i].getWinCount(),
+                    score = missionDescriptors[i].getBestScore(),
+                    winCount = missionDescriptors[i].getWinCount(),
                     subcaption = listElement.querySelector("." + armadaScreens.SUBCAPTION_CLASS_NAME);
             subcaption.innerHTML = utils.formatString(
                     ((winCount > 0) ?
@@ -271,16 +271,16 @@ define([
         }
     };
     /**
-     * Launches the currently selected level
-     * @param {Boolean} demoMode whether to load the level in demo mode
+     * Launches the currently selected mission
+     * @param {Boolean} demoMode whether to load the mission in demo mode
      */
-    MissionsScreen.prototype._launchLevel = function (demoMode) {
-        var levelIndex = this._listComponent.getSelectedIndex();
-        if (levelIndex >= 0) {
+    MissionsScreen.prototype._launchMission = function (demoMode) {
+        var missionIndex = this._listComponent.getSelectedIndex();
+        if (missionIndex >= 0) {
             audio.playMusic(null);
             game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
             game.getScreen().startNewBattle({
-                levelSourceFilename: level.getLevelNames()[levelIndex],
+                missionSourceFilename: missions.getMissionNames()[missionIndex],
                 demoMode: demoMode});
         }
     };
@@ -294,11 +294,11 @@ define([
             return false;
         }.bind(this);
         this._demoButton.getElement().onclick = function () {
-            this._launchLevel(true);
+            this._launchMission(true);
             return false;
         }.bind(this);
         this._launchButton.getElement().onclick = function () {
-            this._launchLevel(false);
+            this._launchMission(false);
             return false;
         }.bind(this);
     };

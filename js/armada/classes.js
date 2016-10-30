@@ -607,7 +607,7 @@ define([
      * @class A skybox represents the background picture rendered for the 
      * environment using a cubemap sampler and a full viewport quad. Skybox classes 
      * can be defined with different properties (in classes.json) for different 
-     * backgrounds, and then the right one can be instantiated for each level.
+     * backgrounds, and then the right one can be instantiated for each mission.
      * @augments ShadedModelClass
      * @param {Object} [dataJSON] 
      */
@@ -844,7 +844,7 @@ define([
     };
     // ##############################################################################
     /**
-     * @class Environments (levels) in the game can have several background objects,
+     * @class Environments in the game can have several background objects,
      * like stars or nebulae, which provide the lighting for the environment.
      * @augments GenericClass
      * @param {Object} [dataJSON] 
@@ -864,7 +864,7 @@ define([
         GenericClass.prototype._loadData.call(this, dataJSON);
         /**
          * The color of the light this object emits. A directional light source with
-         * this color will be added to levels where this object it present, coming
+         * this color will be added to environments where this object it present, coming
          * from the object's direction.
          * @type Number[3]
          */
@@ -925,7 +925,7 @@ define([
      * visual clue about the velocity. Dust cloud classes can be defined (in 
      * classes.json) for different environments (such as denser in an asteroid field 
      * or the rings of a planet, or having different color), and then the right one 
-     * instantiated (with the DustCloud class) for the level.
+     * instantiated (with the DustCloud class) for the environment.
      * @param {Object} [dataJSON]
      */
     function DustCloudClass(dataJSON) {

@@ -27,7 +27,7 @@
  * @param classes Used for HUD elements for convenient acquiry of their resources.
  * @param config Used to access game setting / configuration.
  * @param control Used for global game control functions.
- * @param level Used for creating the Level object, accessing enums.
+ * @param missions Used for creating the Mission object, accessing enums.
  * @param equipment Used to access flight mode constants
  * @param ai Used for performing the AI control operations in the battle simulation loop.
  */
@@ -49,7 +49,7 @@ define([
     "armada/classes",
     "armada/configuration",
     "armada/control",
-    "armada/logic/level",
+    "armada/logic/missions",
     "armada/logic/equipment",
     "armada/logic/ai",
     "utils/polyfill"
@@ -57,7 +57,7 @@ define([
         utils, vec, mat,
         application, components, screens, resources, egomModel,
         renderableObjects, sceneGraph,
-        strings, armadaScreens, graphics, audio, classes, config, control, level, equipment, ai) {
+        strings, armadaScreens, graphics, audio, classes, config, control, missions, equipment, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ define([
             LOADING_INIT_WEBGL_PROGRESS = LOADING_RESOURCES_START_PROGRESS + LOADING_RESOURCE_PROGRESS,
             /**
              * When creating the battle scene, the camera will be created with this FOV, but it will be immediately overwritten by the 
-             * FOV set for the first scene view of the loaded level, therefore no point in making this settable.
+             * FOV set for the first scene view of the loaded mission, therefore no point in making this settable.
              * @type Number
              */
             INITIAL_CAMERA_FOV = 40,
@@ -96,10 +96,10 @@ define([
             // ------------------------------------------------------------------------------
             // private variables
             /**
-             * The level object storing and simulating the game-logic model of the battle
-             * @type Level
+             * The mission object storing and simulating the game-logic model of the battle
+             * @type Mission
              */
-            _level,
+            _mission,
             /**
              * The scene that is used to render the battle
              * @type Scene
@@ -136,10 +136,10 @@ define([
              */
             _battle = {},
             /**
-             * The name (including the path within the level folder) of the loaded level file.
+             * The name (including the path within the mission folder) of the loaded mission file.
              * @type String
              */
-            _levelSourceFilename,
+            _missionSourceFilename,
             /**
              * Whether the game is in demo mode, in which all spacecrafts are controlled by AI and automatic camera switching is performed.
              * @type Boolean
@@ -559,9 +559,9 @@ define([
             dt = curDate - _prevDate;
             control.control(dt);
             ai.control(dt);
-            followedCraft = _level.getFollowedSpacecraftForScene(_battleScene);
+            followedCraft = _mission.getFollowedSpacecraftForScene(_battleScene);
             if (!_isTimeStopped) {
-                _level.tick(dt, _battleScene);
+                _mission.tick(dt, _battleScene);
                 if (!_gameStateShown) {
                     _timeSinceLastFire += dt;
                     if (_timeSinceLastFire > _combatThemeDurationAfterFire) {
@@ -597,10 +597,10 @@ define([
      * Removes the stored renferences to the logic and graphical models of the battle.
      */
     function _clearData() {
-        if (_level) {
-            _level.destroy();
+        if (_mission) {
+            _mission.destroy();
         }
-        _level = null;
+        _mission = null;
         if (_battleScene) {
             _battleScene.clearNodes();
             _battleScene.clearDirectionalLights();
@@ -1126,8 +1126,8 @@ define([
                         this.resumeBattle();
                         resumeTime();
                         if (!_demoMode) {
-                            if (_level.getPilotedSpacecraft()) {
-                                control.switchToPilotMode(_level.getPilotedSpacecraft());
+                            if (_mission.getPilotedSpacecraft()) {
+                                control.switchToPilotMode(_mission.getPilotedSpacecraft());
                             }
                         } else {
                             control.switchToSpectatorMode(false, true);
@@ -1466,7 +1466,7 @@ define([
     BattleScreen.prototype._updateHUD = function (dt) {
         var
                 /** @type Spacecraft */
-                craft = _level ? _level.getFollowedSpacecraftForScene(_battleScene) : null,
+                craft = _mission ? _mission.getFollowedSpacecraftForScene(_battleScene) : null,
                 target,
                 /** @type Number */
                 distance, aspect, i, scale, futureDistance, animationProgress,
@@ -1938,7 +1938,7 @@ define([
         if (_battleScene) {
             if (application.isDebugVersion()) {
                 this._stats.setContent(
-                        level.getDebugInfo() + "<br/>" +
+                        missions.getDebugInfo() + "<br/>" +
                         sceneGraph.getDebugInfo() + "<br/>" +
                         mat.getMatrixCount() + " <br/>" +
                         this.getFPS() + "<br/>" +
@@ -1954,16 +1954,16 @@ define([
                 // we wait a little after the state changes to victory or defeat so that incoming projectiles destroying the player's ship
                 // right after it destroyed the last enemy can change the state from victory to defeat
                 if (!_gameStateChanged) {
-                    if (_level && (_level.isWon() || _level.isLost())) {
+                    if (_mission && (_mission.isWon() || _mission.isLost())) {
                         _gameStateChanged = true;
                         _timeSinceGameStateChanged = 0;
                     }
                 } else if (!_gameStateShown) {
                     _timeSinceGameStateChanged += dt;
                     if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
-                        victory = !_level.isLost();
-                        craft = _level.getPilotedSpacecraft();
-                        level.getLevelDescriptor(_level.getName()).increasePlaythroughCount(victory);
+                        victory = !_mission.isLost();
+                        craft = _mission.getPilotedSpacecraft();
+                        missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
                         if (victory) {
                             isTeamMission = craft.getTeam().getInitialCount() > 1;
                             baseScore = craft.getScore();
@@ -1972,10 +1972,10 @@ define([
                                     config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY_TEAM) :
                                     config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY)));
                             teamSurvivalBonus = isTeamMission ?
-                                    Math.round((_level.getSpacecraftCountForTeam(craft.getTeam()) - 1) / (craft.getTeam().getInitialCount() - 1) * config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_TEAM_SURVIVAL)) :
+                                    Math.round((_mission.getSpacecraftCountForTeam(craft.getTeam()) - 1) / (craft.getTeam().getInitialCount() - 1) * config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_TEAM_SURVIVAL)) :
                                     0;
                             score = Math.round(baseScore * (1 + hitRatio)) + hullIntegrityBonus + teamSurvivalBonus;
-                            level.getLevelDescriptor(_level.getName()).updateBestScore(score);
+                            missions.getMissionDescriptor(_mission.getName()).updateBestScore(score);
                         }
                         this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : (craft ? strings.BATTLE.MESSAGE_FAIL : strings.BATTLE.MESSAGE_DEFEAT)), {
                             menuKey: _getMenuKeyHTMLString(),
@@ -1994,7 +1994,7 @@ define([
                 }
             } else {
                 if (!_gameStateChanged) {
-                    if (_level && _level.noHostilesPresent()) {
+                    if (_mission && _mission.noHostilesPresent()) {
                         _gameStateChanged = true;
                         _gameStateShown = true;
                         audio.playMusic(AMBIENT_THEME);
@@ -2005,13 +2005,13 @@ define([
     };
     /**
      * @typedef {Object} BattleScreen~BattleParams
-     * @property {String} [levelSourceFilename]
-     * @property {Boolean} [demoMode] If true, AIs are added to all spacecrafts and the piloted spacecraft is not set, when loading the level.
+     * @property {String} [missionSourceFilename]
+     * @property {Boolean} [demoMode] If true, AIs are added to all spacecrafts and the piloted spacecraft is not set, when loading the mission.
      * @property {Boolean} [restart]
      */
     /**
-     * Loads the specified level description file and sets a callback to create a new game-logic model and scene for the simulated battle
-     * based on the level description and current settings
+     * Loads the specified mission description file and sets a callback to create a new game-logic model and scene for the simulated battle
+     * based on the mission description and current settings
      * @param {BattleScreen~BattleParams} [params]
      */
     BattleScreen.prototype.startNewBattle = function (params) {
@@ -2024,8 +2024,8 @@ define([
         if (params.restart) {
             this.pauseBattle();
         }
-        if (params.levelSourceFilename !== undefined) {
-            _levelSourceFilename = params.levelSourceFilename;
+        if (params.missionSourceFilename !== undefined) {
+            _missionSourceFilename = params.missionSourceFilename;
         }
         if (params.demoMode !== undefined) {
             _demoMode = params.demoMode;
@@ -2037,17 +2037,17 @@ define([
         control.setScreenCenter(
                 canvas.width / 2,
                 canvas.height / 2);
-        this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_LEVEL), 0);
-        level.requestLevel(_levelSourceFilename, _demoMode, function (createdLevel) {
-            _level = createdLevel;
+        this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_MISSION), 0);
+        missions.requestMission(_missionSourceFilename, _demoMode, function (createdMission) {
+            _mission = createdMission;
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
-            _level.addRandomShips(undefined, _demoMode);
-            // for levels that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
+            _mission.addRandomShips(undefined, _demoMode);
+            // for missions that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
             // victory / defeat message
-            if ((!_demoMode && (_level.isWon() || _level.isLost())) || (_demoMode && _level.noHostilesPresent())) {
+            if ((!_demoMode && (_mission.isWon() || _mission.isLost())) || (_demoMode && _mission.noHostilesPresent())) {
                 _gameStateShown = true;
                 if (!_demoMode) {
-                    level.getLevelDescriptor(_level.getName()).increasePlaythroughCount(true);
+                    missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(true);
                 }
             }
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
@@ -2089,7 +2089,7 @@ define([
                         transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
                         transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     });
-            _level.addToScene(_battleScene, _targetScene);
+            _mission.addToScene(_battleScene, _targetScene);
             _addHUDToScene();
             this._addUITexts();
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.AMBIENT_MUSIC), AMBIENT_THEME, true);
@@ -2097,7 +2097,7 @@ define([
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC), COMBAT_THEME, true);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC), VICTORY_THEME, false);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEFEAT_MUSIC), DEFEAT_THEME, false);
-            control.getController(control.GENERAL_CONTROLLER_NAME).setLevel(_level);
+            control.getController(control.GENERAL_CONTROLLER_NAME).setMission(_mission);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
             control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());
             this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_RESOURCES_START_PROGRESS);
@@ -2117,12 +2117,12 @@ define([
                     _smallHeaderText.setText(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
                     document.body.classList.remove("wait");
                     control.switchToSpectatorMode(false, true);
-                    this.setHeaderContent(strings.get(strings.LEVEL.PREFIX, utils.getFilenameWithoutExtension(_levelSourceFilename) + strings.LEVEL.NAME_SUFFIX.name));
+                    this.setHeaderContent(strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(_missionSourceFilename) + strings.MISSION.NAME_SUFFIX.name));
                     _battleCursor = document.body.style.cursor;
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
                         menuKey: _getMenuKeyHTMLString()
                     }));
-                    _level.applyToSpacecrafts(function (spacecraft) {
+                    _mission.applyToSpacecrafts(function (spacecraft) {
                         spacecraft.setOnFired(_handleSpacecraftFired);
                     });
                     this._loadingBox.hide();

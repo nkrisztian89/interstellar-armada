@@ -1,6 +1,6 @@
 /**
  * Copyright 2014-2016 Krisztián Nagy
- * @file Implementation of loading and managing environments and levels - including the main game simulation loop
+ * @file Implementation of loading and managing environments and missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 2.0
@@ -16,11 +16,11 @@
  * @param application Used for file loading and logging functionality
  * @param asyncResource LogicContext is a subclass of AsyncResource
  * @param resources Used to access the loaded media (graphics and sound) resources
- * @param resourceManager Used for storing the level descriptors in a resource manager 
+ * @param resourceManager Used for storing the mission descriptors in a resource manager 
  * @param pools Used to access the pools for particles and projectiles
  * @param camera Used for creating camera configurations for views
  * @param renderableObjects Used for creating visual models for game objects
- * @param lights Used for creating light sources for game objects and levels
+ * @param lights Used for creating light sources for game objects and environments
  * @param sceneGraph Creating and managing the scene graph for visual simulation is done using this module
  * @param constants Used for Accessing global localStorage prefixes
  * @param graphics Used to access graphics settings
@@ -29,7 +29,7 @@
  * @param strings Used for translation support
  * @param spacecraft Used for creating spacecrafts
  * @param equipment Used for accessing the common projectile pool
- * @param ai Used for setting the artificial intelligence pilots when creating a level.
+ * @param ai Used for setting the artificial intelligence pilots when creating a mission.
  */
 define([
     "utils/utils",
@@ -103,17 +103,17 @@ define([
             // ------------------------------------------------------------------------------
             // constants
             /**
-             * Level related local storage IDs start with this prefix
+             * Mission related local storage IDs start with this prefix
              * @type String
              */
             MODULE_LOCAL_STORAGE_PREFIX = constants.LOCAL_STORAGE_PREFIX + "missions_",
             /**
-             * Used to choose the array of level descriptors when loading the configuration of the level resource manager
+             * Used to choose the array of mission descriptors when loading the configuration of the mission resource manager
              * @type String
              */
-            LEVEL_ARRAY_NAME = "levels",
+            MISSION_ARRAY_NAME = "missions",
             /**
-             * When adding random ships or ships without a team to a level in demo mode, they will be automatically put into a team with
+             * When adding random ships or ships without a team to a mission in demo mode, they will be automatically put into a team with
              * this name, with an ID that equals the index of the spacecraft added + 1 (converted to string).
              * @type String
              */
@@ -960,12 +960,12 @@ define([
     /**
      * Gathers and caches references to the spacecrafts in the passed mission that are subjects of this condition, for faster future 
      * evaluation
-     * @param {Level} level
+     * @param {Mission} mission
      */
-    Condition.prototype._cacheSubjects = function (level) {
+    Condition.prototype._cacheSubjects = function (mission) {
         var i, spacecrafts;
         this._spacecrafts = [];
-        spacecrafts = level.getSpacecrafts();
+        spacecrafts = mission.getSpacecrafts();
         for (i = 0; i < spacecrafts.length; i++) {
             if (this._isSubject(spacecrafts[i])) {
                 this._spacecrafts.push(spacecrafts[i]);
@@ -974,13 +974,13 @@ define([
     };
     /**
      * Returns whether the condition is considered to be satisfied (true) according to the current state of the passed mission
-     * @param {Level} level
+     * @param {Mission} mission
      * @returns {Boolean}
      */
-    Condition.prototype.isSatisfied = function (level) {
+    Condition.prototype.isSatisfied = function (mission) {
         var i, count;
         if (!this._spacecrafts) {
-            this._cacheSubjects(level);
+            this._cacheSubjects(mission);
         }
         switch (this._type) {
             case ConditionType.DESTROYED:
@@ -1114,7 +1114,7 @@ define([
     // #########################################################################
     /**
      * @callback Trigger~onFireCallback
-     * @param {Level} level 
+     * @param {Mission} mission 
      */
     /**
      * @class Missions contain triggers, which fire based on a set of conditions that they evaluate in every simulation step, and can have
@@ -1200,34 +1200,34 @@ define([
     };
     /**
      * Fires the trigger, invoking every callback previously added to it
-     * @param {Level} level 
+     * @param {Mission} mission 
      */
-    Trigger.prototype.fire = function (level) {
+    Trigger.prototype.fire = function (mission) {
         var i;
         for (i = 0; i < this._onFireHandlers.length; i++) {
-            this._onFireHandlers[i](level);
+            this._onFireHandlers[i](mission);
         }
         this._fired = true;
     };
     /**
      * Checks the state of the passed mission to determine whether the trigger should fire, and fires it if necessary.
      * Should be called in every simulation step of the mission.
-     * @param {Level} level
+     * @param {Mission} mission
      */
-    Trigger.prototype.simulate = function (level) {
+    Trigger.prototype.simulate = function (mission) {
         var conditionState, i;
         if (this._oneShot && this._fired) {
             return;
         }
         if (this._fireWhen === TriggerFireWhen.MISSION_STARTS) {
-            this.fire(level);
+            this.fire(mission);
             return;
         }
         switch (this._conditionsRequired) {
             case TriggerConditionsRequired.ALL:
                 conditionState = true;
                 for (i = 0; i < this._conditions.length; i++) {
-                    if (!this._conditions[i].isSatisfied(level)) {
+                    if (!this._conditions[i].isSatisfied(mission)) {
                         conditionState = false;
                         break;
                     }
@@ -1236,7 +1236,7 @@ define([
             case TriggerConditionsRequired.ANY:
                 conditionState = false;
                 for (i = 0; i < this._conditions.length; i++) {
-                    if (this._conditions[i].isSatisfied(level)) {
+                    if (this._conditions[i].isSatisfied(mission)) {
                         conditionState = true;
                         break;
                     }
@@ -1248,27 +1248,27 @@ define([
         switch (this._fireWhen) {
             case TriggerFireWhen.TRUE:
                 if (conditionState) {
-                    this.fire(level);
+                    this.fire(mission);
                 }
                 break;
             case TriggerFireWhen.FALSE:
                 if (!conditionState) {
-                    this.fire(level);
+                    this.fire(mission);
                 }
                 break;
             case TriggerFireWhen.CHANGE:
                 if (conditionState !== this._previousConditionState) {
-                    this.fire(level);
+                    this.fire(mission);
                 }
                 break;
             case TriggerFireWhen.CHANGE_TO_TRUE:
                 if (conditionState && !this._previousConditionState) {
-                    this.fire(level);
+                    this.fire(mission);
                 }
                 break;
             case TriggerFireWhen.CHANGE_TO_FALSE:
                 if (!conditionState && this._previousConditionState) {
-                    this.fire(level);
+                    this.fire(mission);
                 }
                 break;
             default:
@@ -1301,9 +1301,9 @@ define([
     /**
      * An action to be executed whenever the associated trigger fires during the simulation of the mission
      * @param {Object} dataJSON The object storing the data to initialize this action
-     * @param {Level} level
+     * @param {Mission} mission
      */
-    function Action(dataJSON, level) {
+    function Action(dataJSON, mission) {
         /**
          * (enum ActionType) Determines what the action to execute actually is
          * @type String
@@ -1313,7 +1313,7 @@ define([
          * A reference to the trigger that needs to fire to execute this action
          * @type Trigger
          */
-        this._trigger = level.getTrigger(dataJSON.trigger);
+        this._trigger = mission.getTrigger(dataJSON.trigger);
         this._trigger.addFireHandler(this._execute.bind(this));
     }
     /**
@@ -1325,15 +1325,15 @@ define([
     };
     /**
      * Executes the action - does whatever its type defines. Called whenever the associated trigger fires.
-     * @param {Level} level 
+     * @param {Mission} mission 
      */
-    Action.prototype._execute = function (level) {
+    Action.prototype._execute = function (mission) {
         switch (this._type) {
             case ActionType.WIN:
-                level.completeMission();
+                mission.completeMission();
                 break;
             case ActionType.LOSE:
-                level.failMission();
+                mission.failMission();
                 break;
             default:
                 application.showError("Unrecognized action type: '" + this._type + "'!");
@@ -1359,34 +1359,34 @@ define([
      * projectiles. Can create scenes for visual representation using the held
      * references as well as perform the game logic and physics simulation
      * among the contained objects.
-     * @param {String} name The name of the level (typically same as the filename e.g. someLevel.json)
+     * @param {String} name The name of the mission (typically same as the filename e.g. someMission.json)
      */
-    function Level(name) {
+    function Mission(name) {
         /**
-         * The name of the level (typically same as the filename e.g. someLevel.json)
+         * The name of the mission (typically same as the filename e.g. someMission.json)
          * @type String
          */
         this._name = name;
         /**
-         * Stores the attributes of the environment where this level is situated.
+         * Stores the attributes of the environment where this mission is situated.
          * @type Environment
          */
         this._environment = null;
         /**
-         * Whether this level has an own environment created by itself (described in the level JSON)
+         * Whether this mission has an own environment created by itself (described in the mission JSON)
          * or just refers one from the common environments. (if the latter is the case, the referred environment cannot be destroyed when
-         * this level is destroyed)
+         * this mission is destroyed)
          * @type Boolean
          */
         this._ownsEnvironment = false;
         /**
-         * The list of views that will be used to add camera configurations to the scene of this level. The first element of this list
+         * The list of views that will be used to add camera configurations to the scene of this mission. The first element of this list
          * will be the starting camera configuration.
          * @type SceneView[]
          */
         this._views = null;
         /**
-         * The list of valid string IDs for teams in this level (so that IDs can be validated against this list to detect typos)
+         * The list of valid string IDs for teams in this mission (so that IDs can be validated against this list to detect typos)
          * @type String[]
          */
         this._teams = null;
@@ -1411,7 +1411,7 @@ define([
          */
         this._loseActions = null;
         /**
-         * The list of spacecrafts that are placed on the map of this level.
+         * The list of spacecrafts that are placed on the map of this mission.
          * @type Spacecraft[]
          */
         this._spacecrafts = null;
@@ -1422,13 +1422,13 @@ define([
         this._pilotedCraft = null;
         /**
          * A list of references to all the physical objects that take part in
-         * collision / hit check in this level to easily pass them to such
+         * collision / hit check in this mission to easily pass them to such
          * simulation methods.
          * @type PhysicalObject[]
          */
         this._hitObjects = null;
         /**
-         * The amount of randomly positioned ships to add to the level at start by class
+         * The amount of randomly positioned ships to add to the mission at start by class
          * @type Object.<String, Number>
          */
         this._randomShips = null;
@@ -1459,10 +1459,10 @@ define([
         this._state = MissionState.NONE;
     }
     /**
-     * Return the name identifying this level (typically same as the filename e.g. someLevel.json)
+     * Return the name identifying this mission (typically same as the filename e.g. someMission.json)
      * @returns {String}
      */
-    Level.prototype.getName = function () {
+    Mission.prototype.getName = function () {
         return this._name;
     };
     // #########################################################################
@@ -1471,18 +1471,18 @@ define([
      * Returns the currently piloted spacecraft.
      * @returns {Spacecraft}
      */
-    Level.prototype.getPilotedSpacecraft = function () {
+    Mission.prototype.getPilotedSpacecraft = function () {
         if (this._pilotedCraft !== null && !this._pilotedCraft.canBeReused()) {
             return this._pilotedCraft;
         }
         return null;
     };
     /**
-     * Returns the spacecraft added to this level that is identified by the given id. Returns null if such spacecraft does not exist.
+     * Returns the spacecraft added to this mission that is identified by the given id. Returns null if such spacecraft does not exist.
      * @param {String} id
      * @returns {Spacecraft}
      */
-    Level.prototype.getSpacecraft = function (id) {
+    Mission.prototype.getSpacecraft = function (id) {
         var i;
         for (i = 0; i < this._spacecrafts.length; i++) {
             if (this._spacecrafts[i].getID() === id) {
@@ -1495,14 +1495,14 @@ define([
      * Returns the list of spacecrafts (both alive and destroyed) in this mission
      * @returns {Spacecraft[]}
      */
-    Level.prototype.getSpacecrafts = function () {
+    Mission.prototype.getSpacecrafts = function () {
         return this._spacecrafts;
     };
     /**
-     * Calls the passed function for every spacecraft this level has, passing each of the spacecrafts as its single argument
+     * Calls the passed function for every spacecraft this mission has, passing each of the spacecrafts as its single argument
      * @param {Function} method
      */
-    Level.prototype.applyToSpacecrafts = function (method) {
+    Mission.prototype.applyToSpacecrafts = function (method) {
         var i;
         for (i = 0; i < this._spacecrafts.length; i++) {
             method(this._spacecrafts[i]);
@@ -1512,26 +1512,26 @@ define([
      * Returns whether this mission has explicitly set objectives
      * @returns {Boolean}
      */
-    Level.prototype.hasObjectives = function () {
+    Mission.prototype.hasObjectives = function () {
         return this._state !== MissionState.NONE;
     };
     /**
      * Marks the mission as completed (by achieving its objectives)
      */
-    Level.prototype.completeMission = function () {
+    Mission.prototype.completeMission = function () {
         this._state = MissionState.COMPLETED;
     };
     /**
      * Marks the mission as failed (by failing one of its objectives)
      */
-    Level.prototype.failMission = function () {
+    Mission.prototype.failMission = function () {
         this._state = MissionState.FAILED;
     };
     /**
-     * Returns whether according to the current state of the level, the controlled spacecraft has won.
+     * Returns whether according to the current state of the mission, the controlled spacecraft has won.
      * @returns {Boolean}
      */
-    Level.prototype.isWon = function () {
+    Mission.prototype.isWon = function () {
         var i, craft = this.getPilotedSpacecraft();
         if (craft) {
             if (this._winActions.length > 0) {
@@ -1547,10 +1547,10 @@ define([
         return false;
     };
     /**
-     * Returns whether there are no spacecrafts present in the level that are hostiles towards each other
+     * Returns whether there are no spacecrafts present in the mission that are hostiles towards each other
      * @returns {Boolean}
      */
-    Level.prototype.noHostilesPresent = function () {
+    Mission.prototype.noHostilesPresent = function () {
         var i, team = null, spacecraftTeam;
         for (i = 0; i < this._spacecrafts.length; i++) {
             if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
@@ -1564,10 +1564,10 @@ define([
         return true;
     };
     /**
-     * Returns whether according to the current state of the level, the controlled spacecraft has lost. 
+     * Returns whether according to the current state of the mission, the controlled spacecraft has lost. 
      * @returns {Boolean}
      */
-    Level.prototype.isLost = function () {
+    Mission.prototype.isLost = function () {
         return !this._pilotedCraft || this._pilotedCraft.canBeReused() || (this._state === MissionState.FAILED);
     };
     /**
@@ -1575,7 +1575,7 @@ define([
      * @param {Team} team
      * @returns {Number}
      */
-    Level.prototype.getSpacecraftCountForTeam = function (team) {
+    Mission.prototype.getSpacecraftCountForTeam = function (team) {
         var i, result = 0;
         for (i = 0; i < this._spacecrafts.length; i++) {
             if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
@@ -1592,25 +1592,25 @@ define([
      * @param {Spacecraft} spacecraft
      * @returns {Boolean}
      */
-    Level.prototype._spacecraftHasVisualModel = function (visualModel, spacecraft) {
+    Mission.prototype._spacecraftHasVisualModel = function (visualModel, spacecraft) {
         return spacecraft.getVisualModel() === visualModel;
     };
     /**
-     * Returns the spacecraft from this level that the current view is following in the passed scene, if any.
+     * Returns the spacecraft from this mission that the current view is following in the passed scene, if any.
      * @param {Scene} scene
      * @returns {Spacecraft|null}
      */
-    Level.prototype.getFollowedSpacecraftForScene = function (scene) {
+    Mission.prototype.getFollowedSpacecraftForScene = function (scene) {
         return scene.getCamera().getFollowedNode() ?
                 this._spacecrafts.find(this._spacecraftHasVisualModel.bind(this, scene.getCamera().getFollowedNode().getRenderableObject())) :
                 null;
     };
     /**
-     * Returns the team with the given ID from the list of teams added to this level.
+     * Returns the team with the given ID from the list of teams added to this mission.
      * @param {String} id
      * @returns {Team}
      */
-    Level.prototype.getTeam = function (id) {
+    Mission.prototype.getTeam = function (id) {
         var i;
         for (i = 0; i < this._teams.length; i++) {
             if (this._teams[i].getID() === id) {
@@ -1625,7 +1625,7 @@ define([
      * @param {String} name
      * @returns {Trigger}
      */
-    Level.prototype.getTrigger = function (name) {
+    Mission.prototype.getTrigger = function (name) {
         var i;
         for (i = 0; i < this._triggers.length; i++) {
             if (this._triggers[i].getName() === name) {
@@ -1639,7 +1639,7 @@ define([
      * Returns a list of translated HTML strings that can be used to dislay the objectives of this mission to the player.
      * @returns {String[]}
      */
-    Level.prototype.getObjectives = function () {
+    Mission.prototype.getObjectives = function () {
         var i, result = [];
         if (this._winActions.length === 0) {
             result.push(strings.get(strings.MISSIONS.OBJECTIVE_WIN_PREFIX, strings.MISSIONS.OBJECTIVE_DESTROY_ALL_SUFFIX.name));
@@ -1659,7 +1659,7 @@ define([
      * Loads the required data and sets up the triggers and actions for this mission, so that mission objectives can be determined
      * @param {Object} dataJSON The object storing the mission data
      */
-    Level.prototype.loadObjectives = function (dataJSON) {
+    Mission.prototype.loadObjectives = function (dataJSON) {
         var i, actionType;
         this._triggers = [];
         if (dataJSON.triggers) {
@@ -1689,19 +1689,19 @@ define([
         }
     };
     /**
-     * Loads all the data describing this level from the passed JSON object. Does not add random ships to the level, only loads their 
+     * Loads all the data describing this mission from the passed JSON object. Does not add random ships to the mission, only loads their 
      * configuration - they can be added by calling addRandomShips() later, which will use the loaded configuration.
      * @param {Object} dataJSON
      * @param {Boolean} demoMode If true, the data from the JSON object will be loaded in demo mode, so that the piloted craft is not set
      * and a suitable AI is added to all spacecrafts if possible.
      */
-    Level.prototype.loadFromJSON = function (dataJSON, demoMode) {
+    Mission.prototype.loadFromJSON = function (dataJSON, demoMode) {
         var i, craft, teamID, team, aiType;
-        application.log("Loading level from JSON file...", 2);
+        application.log("Loading mission from JSON file...", 2);
         if (dataJSON.environment.createFrom) {
             this._environment = _context.getEnvironment(dataJSON.environment.createFrom);
             if (!this._environment) {
-                application.showError("Cannot load environment '" + dataJSON.environment.createFrom + "' for level: no such environment exists!");
+                application.showError("Cannot load environment '" + dataJSON.environment.createFrom + "' for mission: no such environment exists!");
             }
             this._ownsEnvironment = false;
         } else {
@@ -1770,14 +1770,14 @@ define([
         this._randomShipsHeadingAngle = dataJSON.randomShipsHeadingAngle || 0;
         this._randomShipsRandomHeading = dataJSON.randomShipsRandomHeading || false;
         this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME;
-        application.log("Level successfully loaded.", 2);
+        application.log("Mission successfully loaded.", 2);
     };
     /**
-     * Adds spacecrafts to the level at random positions based on the configuration loaded from JSON before.
+     * Adds spacecrafts to the mission at random positions based on the configuration loaded from JSON before.
      * @param {Number} [randomSeed]
      * @param {Boolean} demoMode If true, a suitable AI and a unique team will be set for each added random ship.
      */
-    Level.prototype.addRandomShips = function (randomSeed, demoMode) {
+    Mission.prototype.addRandomShips = function (randomSeed, demoMode) {
         var random, shipClass, craft, team, i, orientation, orientationMatrix = mat.rotation4([0, 0, 1], Math.radians(this._randomShipsHeadingAngle));
         randomSeed = randomSeed || config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
         random = Math.seed(randomSeed);
@@ -1820,7 +1820,7 @@ define([
      * @param {Scene} scene
      * @returns {CameraConfiguration} The created camera configuration.
      */
-    Level.prototype.createCameraConfigurationForSceneView = function (view, scene) {
+    Mission.prototype.createCameraConfigurationForSceneView = function (view, scene) {
         var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(view.getOrientationMatrix());
         positionConfiguration = new camera.CameraPositionConfiguration(
                 !view.isMovable(),
@@ -1853,12 +1853,12 @@ define([
                 view.resetsOnFocusChange());
     };
     /**
-     * Adds renderable objects representing all visual elements of the level to
+     * Adds renderable objects representing all visual elements of the mission to
      * the passed scene.
      * @param {Scene} battleScene
      * @param {Scene} targetScene
      */
-    Level.prototype.addToScene = function (battleScene, targetScene) {
+    Mission.prototype.addToScene = function (battleScene, targetScene) {
         var i;
         if (this._environment) {
             this._environment.addToScene(battleScene);
@@ -1897,9 +1897,9 @@ define([
         }.bind(this));
     };
     /**
-     * Toggles the visibility of the hitboxes of all spacecrafts in the level.
+     * Toggles the visibility of the hitboxes of all spacecrafts in the mission.
      */
-    Level.prototype.toggleHitboxVisibility = function () {
+    Mission.prototype.toggleHitboxVisibility = function () {
         var i;
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].toggleHitboxVisibility();
@@ -1912,7 +1912,7 @@ define([
      * @param {Projectile} projectile The projectile to handle 
      * @param {Number} indexInPool The index of the projectile within the projectile pool
      */
-    Level._handleProjectile = function (dt, octree, projectile, indexInPool) {
+    Mission._handleProjectile = function (dt, octree, projectile, indexInPool) {
         projectile.simulate(dt, octree);
         if (projectile.canBeReused()) {
             _projectilePool.markAsFree(indexInPool);
@@ -1923,18 +1923,17 @@ define([
      * @param {Particle} particle The particle to handle
      * @param {Number} indexInPool The index of the particle within the particle pool
      */
-    Level._handleParticle = function (particle, indexInPool) {
+    Mission._handleParticle = function (particle, indexInPool) {
         if (particle.canBeReused()) {
             _particlePool.markAsFree(indexInPool);
         }
     };
     /**
-     * Performs the physics and game logic simulation of all the object in the
-     * level.
+     * Performs the physics and game logic simulation of all the object in the mission.
      * @param {Number} dt The time passed since the last simulation step, in milliseconds.
      * @param {Scene} mainScene When given, this scene is updated according to the simulation.
      */
-    Level.prototype.tick = function (dt, mainScene) {
+    Mission.prototype.tick = function (dt, mainScene) {
         var i, v, octree;
         if (this._environment) {
             this._environment.simulate();
@@ -1957,10 +1956,10 @@ define([
         }
         if (_projectilePool.hasLockedObjects()) {
             octree = new Octree(this._hitObjects, 2, 1, true);
-            _projectilePool.executeForLockedObjects(Level._handleProjectile.bind(this, dt, octree));
+            _projectilePool.executeForLockedObjects(Mission._handleProjectile.bind(this, dt, octree));
         }
         if (_particlePool.hasLockedObjects()) {
-            _particlePool.executeForLockedObjects(Level._handleParticle);
+            _particlePool.executeForLockedObjects(Mission._handleParticle);
         }
         // moving the scene back to the origo if the camera is too far away to avoid floating point errors becoming visible
         if (mainScene) {
@@ -1978,7 +1977,7 @@ define([
     /**
      * Removes all references to other objects for proper cleanup of memory.
      */
-    Level.prototype.destroy = function () {
+    Mission.prototype.destroy = function () {
         var i;
         if (this._environment && this._ownsEnvironment) {
             this._environment.destroy();
@@ -2009,57 +2008,57 @@ define([
     };
     // #########################################################################
     /**
-     * @typedef {Object} LevelDescriptor~LocalData
+     * @typedef {Object} MissionDescriptor~LocalData
      * @property {Number} bestScore 
      * @property {Number} winCount
      * @property {Number} loseCount
      */
     /**
-     * @class Stores the data needed to initialize a level. Used so that the data can be accessed (such as description, objectives) before
-     * creating the Level object itself (with all spacecrafts etc for the battle simulation) i.e. during mission briefing
+     * @class Stores the data needed to initialize a mission. Used so that the data can be accessed (such as description, objectives) before
+     * creating the Mission object itself (with all spacecrafts etc for the battle simulation) i.e. during mission briefing
      * @extends JSONResource
-     * @param {Object} dataJSON The object storing the level data or a reference to the file which stores the data
+     * @param {Object} dataJSON The object storing the mission data or a reference to the file which stores the data
      * @param {String} folder The ID of the folder from where to load the data file in case the data passed here just stores a reference
      */
-    function LevelDescriptor(dataJSON, folder) {
+    function MissionDescriptor(dataJSON, folder) {
         resourceManager.JSONResource.call(this, dataJSON, folder, true);
         /**
          * The data that is saved to / loaded from local storage about this mission
-         * @type LevelDescriptor~LocalData
+         * @type MissionDescriptor~LocalData
          */
         this._localData = JSON.parse(localStorage[this._getLocalStorageID()] || "{}");
         this._localData.winCount = this._localData.winCount || 0;
         this._localData.loseCount = this._localData.loseCount || 0;
     }
-    LevelDescriptor.prototype = new resourceManager.JSONResource();
-    LevelDescriptor.prototype.constructor = LevelDescriptor;
+    MissionDescriptor.prototype = new resourceManager.JSONResource();
+    MissionDescriptor.prototype.constructor = MissionDescriptor;
     /**
      * Returns the location ID to use when saving/loading the best score value to/from local storage
      * @returns {String}
      */
-    LevelDescriptor.prototype._getLocalStorageID = function () {
+    MissionDescriptor.prototype._getLocalStorageID = function () {
         return MODULE_LOCAL_STORAGE_PREFIX + this.getName();
     };
     /**
      * Updates the data saved of this mission in local storage
      */
-    LevelDescriptor.prototype._saveLocalData = function () {
+    MissionDescriptor.prototype._saveLocalData = function () {
         localStorage[this._getLocalStorageID()] = JSON.stringify(this._localData);
     };
     /**
      * Returns the raw description of this mission (as given in the data JSON)
      * @returns {String} 
      */
-    LevelDescriptor.prototype.getDescription = function () {
+    MissionDescriptor.prototype.getDescription = function () {
         return this._dataJSON.description || "";
     };
     /**
      * Returns the user-friendly, translated and fallback protected version of the description of this mission.
      * @returns {String} 
      */
-    LevelDescriptor.prototype.getDisplayDescription = function () {
+    MissionDescriptor.prototype.getDisplayDescription = function () {
         return strings.get(
-                strings.LEVEL.PREFIX, utils.getFilenameWithoutExtension(this.getName()) + strings.LEVEL.DESCRIPTION_SUFFIX.name,
+                strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(this.getName()) + strings.MISSION.DESCRIPTION_SUFFIX.name,
                 (this.getDescription() ?
                         utils.formatString(strings.get(strings.MISSIONS.NO_TRANSLATED_DESCRIPTION), {
                             originalDescription: this.getDescription()
@@ -2070,7 +2069,7 @@ define([
      * Returns the class of the spacecraft the user is piloting in this mission.
      * @returns {SpacecraftClass}
      */
-    LevelDescriptor.prototype.getPilotedSpacecraftClass = function () {
+    MissionDescriptor.prototype.getPilotedSpacecraftClass = function () {
         var i;
         for (i = 0; i < this._dataJSON.spacecrafts.length; i++) {
             if (this._dataJSON.spacecrafts[i].piloted) {
@@ -2084,46 +2083,46 @@ define([
      * Only works if the mission data file has already been loaded!
      * @returns {String[]}
      */
-    LevelDescriptor.prototype.getMissionObjectives = function () {
-        var level = null;
+    MissionDescriptor.prototype.getMissionObjectives = function () {
+        var mission = null;
         if (this.isReadyToUse()) {
-            level = new Level(this.getName());
-            level.loadObjectives(this._dataJSON);
-            return level.getObjectives();
+            mission = new Mission(this.getName());
+            mission.loadObjectives(this._dataJSON);
+            return mission.getObjectives();
         }
         application.showError("Cannot get mission objectives from mission descriptor that has not yet been initialized!");
         return null;
     };
     /**
-     * Creates and returns a Level object based on the data stored in this descriptor. Only works if the data has been loaded - either it
+     * Creates and returns a Mission object based on the data stored in this descriptor. Only works if the data has been loaded - either it
      * was given when constructing this object, or it was requested and has been loaded
-     * @param {Boolean} demoMode Whether to load the created level in demo mode
-     * @returns {Level}
+     * @param {Boolean} demoMode Whether to load the created mission in demo mode
+     * @returns {Mission}
      */
-    LevelDescriptor.prototype.createLevel = function (demoMode) {
+    MissionDescriptor.prototype.createMission = function (demoMode) {
         var result = null;
         if (this.isReadyToUse()) {
-            result = new Level(this.getName());
+            result = new Mission(this.getName());
             result.loadFromJSON(this._dataJSON, demoMode);
         } else {
-            application.showError("Cannot create level from descriptor that has not yet been initialized!");
+            application.showError("Cannot create mission from descriptor that has not yet been initialized!");
         }
         return result;
     };
     /**
-     * Returns the current best score for the level (also stored in local storage)
+     * Returns the current best score for the mission (also stored in local storage)
      * @returns {Number}
      */
-    LevelDescriptor.prototype.getBestScore = function () {
+    MissionDescriptor.prototype.getBestScore = function () {
         return this._localData.bestScore;
     };
     /**
-     * Checks whether the passed score exceeds the current best score of the level, and if so, updates the value both in this object and in
+     * Checks whether the passed score exceeds the current best score of the mission, and if so, updates the value both in this object and in
      * local storage
      * @param {Number} score
      * @returns {Boolean}
      */
-    LevelDescriptor.prototype.updateBestScore = function (score) {
+    MissionDescriptor.prototype.updateBestScore = function (score) {
         if ((this._localData.bestScore === undefined) || (score > this._localData.bestScore)) {
             this._localData.bestScore = score;
             this._saveLocalData();
@@ -2135,7 +2134,7 @@ define([
      * Increases the win or lose count of the mission depending on the passed parameter, and saves the new data to local storage
      * @param {Boolean} victory
      */
-    LevelDescriptor.prototype.increasePlaythroughCount = function (victory) {
+    MissionDescriptor.prototype.increasePlaythroughCount = function (victory) {
         if (victory) {
             this._localData.winCount++;
         } else {
@@ -2147,7 +2146,7 @@ define([
      * Returns the number of times this mission has been won by the player
      * @returns {Number}
      */
-    LevelDescriptor.prototype.getWinCount = function () {
+    MissionDescriptor.prototype.getWinCount = function () {
         return this._localData.winCount;
     };
     // #########################################################################
@@ -2160,16 +2159,16 @@ define([
         asyncResource.AsyncResource.call(this);
         /**
          * An associative array storing the reusable Environment objects that 
-         * describe possible environments for levels. The keys are the names
+         * describe possible environments for missions. The keys are the names
          * of the environments.
          * @type Object.<String, Environment>
          */
         this._environments = null;
         /**
-         * Stores (and manages the loading of) the descriptors for the levels.
+         * Stores (and manages the loading of) the descriptors for the missions.
          * @type ResourceManager
          */
-        this._levelManager = new resourceManager.ResourceManager();
+        this._missionManager = new resourceManager.ResourceManager();
     }
     LogicContext.prototype = new asyncResource.AsyncResource();
     LogicContext.prototype.constructor = LogicContext;
@@ -2217,13 +2216,13 @@ define([
                 config.getConfigurationSetting(config.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).folder,
                 config.getConfigurationSetting(config.CONFIGURATION.ENVIRONMENTS_SOURCE_FILE).filename,
                 function (responseText) {
-                    var levelAssignment = {};
-                    levelAssignment[LEVEL_ARRAY_NAME] = LevelDescriptor;
+                    var missionAssignment = {};
+                    missionAssignment[MISSION_ARRAY_NAME] = MissionDescriptor;
                     this.loadEnvironmentsFromJSON(JSON.parse(responseText));
-                    this._levelManager.requestConfigLoad(
-                            config.getConfigurationSetting(config.CONFIGURATION.LEVEL_FILES).filename,
-                            config.getConfigurationSetting(config.CONFIGURATION.LEVEL_FILES).folder,
-                            levelAssignment,
+                    this._missionManager.requestConfigLoad(
+                            config.getConfigurationSetting(config.CONFIGURATION.MISSION_FILES).filename,
+                            config.getConfigurationSetting(config.CONFIGURATION.MISSION_FILES).folder,
+                            missionAssignment,
                             this.setToReady.bind(this)
                             );
                 }.bind(this));
@@ -2242,65 +2241,65 @@ define([
         }
     };
     /**
-     * Returns the (file)names of the level( descriptor)s stored in the level manager
+     * Returns the (file)names of the mission( descriptor)s stored in the mission manager
      * @returns {String[]}
      */
-    LogicContext.prototype.getLevelNames = function () {
+    LogicContext.prototype.getMissionNames = function () {
         var result = [];
-        this._levelManager.executeForAllResourcesOfType(LEVEL_ARRAY_NAME, function (levelDescriptor) {
-            result.push(levelDescriptor.getName());
+        this._missionManager.executeForAllResourcesOfType(MISSION_ARRAY_NAME, function (missionDescriptor) {
+            result.push(missionDescriptor.getName());
         });
         return result;
     };
     /**
-     * Returns a (new) array containing all of the level descriptors (both loaded and not yet loaded ones)
-     * @returns {LevelDescriptor[]}
+     * Returns a (new) array containing all of the mission descriptors (both loaded and not yet loaded ones)
+     * @returns {MissionDescriptor[]}
      */
-    LogicContext.prototype.getLevelDescriptors = function () {
+    LogicContext.prototype.getMissionDescriptors = function () {
         var result = [];
-        this._levelManager.executeForAllResourcesOfType(LEVEL_ARRAY_NAME, function (levelDescriptor) {
-            result.push(levelDescriptor);
+        this._missionManager.executeForAllResourcesOfType(MISSION_ARRAY_NAME, function (missionDescriptor) {
+            result.push(missionDescriptor);
         });
         return result;
     };
     /**
-     * Returns the level descriptor identified by the passed name (typically the filename e.g. someLevel.json)
+     * Returns the mission descriptor identified by the passed name (typically the filename e.g. someMission.json)
      * @param {String} name
-     * @returns {LevelDescriptor}
+     * @returns {MissionDescriptor}
      */
-    LogicContext.prototype.getLevelDescriptor = function (name) {
-        return this._levelManager.getResource(LEVEL_ARRAY_NAME, name);
+    LogicContext.prototype.getMissionDescriptor = function (name) {
+        return this._missionManager.getResource(MISSION_ARRAY_NAME, name);
     };
     /**
-     * Requests the data (descriptor) for the level with the passed name to be loaded (if it is not loaded already) and calls the passed 
+     * Requests the data (descriptor) for the mission with the passed name to be loaded (if it is not loaded already) and calls the passed 
      * callback with the descriptor as its argument when it is loaded
      * @param {String} name
      * @param {Function} callback
      */
-    LogicContext.prototype.requestLevelDescriptor = function (name, callback) {
-        var levelDescriptor = this._levelManager.getResource(LEVEL_ARRAY_NAME, name);
-        if (levelDescriptor) {
-            this._levelManager.requestResourceLoad();
-            this._levelManager.executeWhenReady(function () {
-                callback(levelDescriptor);
+    LogicContext.prototype.requestMissionDescriptor = function (name, callback) {
+        var missionDescriptor = this._missionManager.getResource(MISSION_ARRAY_NAME, name);
+        if (missionDescriptor) {
+            this._missionManager.requestResourceLoad();
+            this._missionManager.executeWhenReady(function () {
+                callback(missionDescriptor);
             });
         } else {
             callback(null);
         }
     };
     /**
-     * Requests the data (descriptor) for the level with the passed name to be loaded (if it is not loaded already), creates a level based 
-     * on it and calls the passed callback with the created level as its argument when it is loaded
+     * Requests the data (descriptor) for the mission with the passed name to be loaded (if it is not loaded already), creates a mission based 
+     * on it and calls the passed callback with the created mission as its argument when it is loaded
      * @param {String} name
-     * @param {Boolean} demoMode Whether to load the created level in demo mode
+     * @param {Boolean} demoMode Whether to load the created mission in demo mode
      * @param {Function} callback
      */
-    LogicContext.prototype.requestLevel = function (name, demoMode, callback) {
-        var levelDescriptor = this._levelManager.getResource(LEVEL_ARRAY_NAME, name);
-        if (levelDescriptor) {
-            this._levelManager.requestResourceLoad();
-            this._levelManager.executeWhenReady(function () {
-                callback(levelDescriptor.createLevel(demoMode));
+    LogicContext.prototype.requestMission = function (name, demoMode, callback) {
+        var missionDescriptor = this._missionManager.getResource(MISSION_ARRAY_NAME, name);
+        if (missionDescriptor) {
+            this._missionManager.requestResourceLoad();
+            this._missionManager.executeWhenReady(function () {
+                callback(missionDescriptor.createMission(demoMode));
             });
         } else {
             callback(null);
@@ -2326,11 +2325,11 @@ define([
         getEnvironmentNames: _context.getEnvironmentNames.bind(_context),
         createEnvironment: _context.createEnvironment.bind(_context),
         executeForAllEnvironments: _context.executeForAllEnvironments.bind(_context),
-        getLevelNames: _context.getLevelNames.bind(_context),
-        getLevelDescriptor: _context.getLevelDescriptor.bind(_context),
-        getLevelDescriptors: _context.getLevelDescriptors.bind(_context),
-        requestLevelDescriptor: _context.requestLevelDescriptor.bind(_context),
-        requestLevel: _context.requestLevel.bind(_context),
+        getMissionNames: _context.getMissionNames.bind(_context),
+        getMissionDescriptor: _context.getMissionDescriptor.bind(_context),
+        getMissionDescriptors: _context.getMissionDescriptors.bind(_context),
+        requestMissionDescriptor: _context.requestMissionDescriptor.bind(_context),
+        requestMission: _context.requestMission.bind(_context),
         Skybox: Skybox
     };
 });

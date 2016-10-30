@@ -23,7 +23,7 @@
  * @param graphics Used for accessing graphics settings and shaders appropriate for current graphics settings.
  * @param classes Used for accessing the array of displayable spacecraft classes.
  * @param config Used for accessing settings 
- * @param level Used for waiting for environment loading
+ * @param missions Used for waiting for environment loading
  * @param spacecraft Used for creating the spacecraft to be shown in the item view box.
  */
 define([
@@ -40,14 +40,14 @@ define([
     "armada/graphics",
     "armada/classes",
     "armada/configuration",
-    "armada/logic/level",
+    "armada/logic/missions",
     "armada/logic/spacecraft",
     "utils/polyfill"
 ], function (
         utils, mat,
         components, screens, game, resources,
         lights, sceneGraph,
-        armadaScreens, strings, graphics, classes, config, level, spacecraft) {
+        armadaScreens, strings, graphics, classes, config, missions, spacecraft) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -727,7 +727,7 @@ define([
         }
         _currentItem = null;
         this.render();
-        level.executeWhenReady(function () {
+        missions.executeWhenReady(function () {
             this._updateItemInfo();
             _setupCurrentItemAndModels();
             // set the loading box to update when a new resource is loaded
