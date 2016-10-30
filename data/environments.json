@@ -8,6 +8,7 @@
     },
     "environments": [{
             "name": "deepSpaceTwoStars",
+            "location": "Cathagan",
             "skyboxes": [{
                     "class": "stars_medium"
                 }],
@@ -31,6 +32,7 @@
                 }]
         }, {
             "name": "deepSpaceWhiteRedStars",
+            "location": "Reddim",
             "skyboxes": [{
                     "class": "stars_sparse"
                 }],
@@ -54,6 +56,7 @@
                 }]
         }, {
             "name": "deepSpaceWhiteRedStarsFromSides",
+            "location": "Blovell",
             "skyboxes": [{
                     "class": "redNebula_medium"
                 }],
@@ -77,6 +80,7 @@
                 }]
         }, {
             "name": "deepSpaceBlueNebula",
+            "location": "Mera",
             "skyboxes": [{
                     "class": "blueNebula_sparse"
                 }],
@@ -100,6 +104,7 @@
                 }]
         }, {
             "name": "deepSpaceBrownPlanet",
+            "location": "Varanock",
             "skyboxes": [{
                     "class": "stars_dense"
                 }],
@@ -131,6 +136,7 @@
                 }]
         }, {
             "name": "deepSpaceBluePlanet",
+            "location": "Luxilian",
             "skyboxes": [{
                     "class": "stars_veryDense"
                 }],
@@ -162,6 +168,7 @@
                 }]
         }, {
             "name": "deepSpaceGrayPlanet",
+            "location": "Corice",
             "skyboxes": [{
                     "class": "stars_medium"
                 }],
@@ -193,6 +200,7 @@
                 }]
         }, {
             "name": "crescent_blueGasGiant",
+            "location": "Sheenuba",
             "skyboxes": [{
                     "class": "crescentNebula_veryDense"
                 }],

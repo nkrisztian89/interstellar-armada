@@ -186,7 +186,8 @@ define([
                         return "<li>" + objective + "</li>";
                     });
                     this._missionDescription.setContent(strings.get(strings.MISSIONS.DESCRIPTION), {
-                        description: missionDescriptor.getDisplayDescription()
+                        description: missionDescriptor.getDisplayDescription(),
+                        location: missionDescriptor.getEnvironment().getDisplayName()
                     });
                     this._missionObjectives.setContent(objectives.join(""));
                     this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {

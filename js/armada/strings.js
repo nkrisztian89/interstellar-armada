@@ -58,6 +58,10 @@ define([
         OBJECTIVE_DESTROY_SUFFIX: {name: "destroy", optional: true},
         OBJECTIVE_COUNT_BELOW_SUFFIX: {name: "countBelow", optional: true}
     };
+    strings.LOCATION = {
+        UNKNOWN: {name: "location.unknown"},
+        SYSTEM: {name: "location.system"}
+    };
     strings.SETTINGS = {
         GENERAL: {name: "settings.general"},
         GRAPHICS: {name: "settings.graphics"},

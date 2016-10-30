@@ -51,7 +51,7 @@
         "loadingDescription": "Betöltés...",
         "noTranslatedDescription": "A küldetéshez nem érhető el leírás magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
         "noDescription": "A küldetéshez nem érhető el leírás.",
-        "description": "{description}",
+        "description": "Helyszín: {location}<br/><br/>{description}",
         "missionObjectivesTitle": "Feladatok:",
         "playerSpacecraftTitle": "Űrhajó:",
         "playerSpacecraftData": "Osztály: {class}<br/>Tűzerő: {firepower}",
@@ -70,6 +70,10 @@
             "destroy": "Nem semmisülhet meg {subjects}.",
             "countBelow": "Legalább {count} maradjon meg a következőkből: {subjects}."
         }
+    },
+    "location": {
+        "unknown": "Ismeretlen",
+        "system": "{systemName} rendszer"  
     },
     "settings": {
         "general": "Általános beállítások",
@@ -119,7 +123,7 @@
     "mission": {
         "targetPracticeBoxes": {
             "name": "Kezdő lőgyakorlat",
-            "description": "Gyakorold a célzást fegyvertelen, egy helyben álló konténerek felrobbantásával! Az űrhajódat gyakorló fegyverekkel szereltük fel, amelyek maguktól pontosan a célra állnak, ha felé nézel, így könnyítve a dolgod."
+            "description": "Gyakorold a célzást fegyvertelen, egy helyben álló konténerek felrobbantásával! Hogy megkönnyítsük a dolgod, az űrhajódat gyakorló fegyverekkel szereltük fel, amelyek maguktól pontosan a célra állnak, ha felé nézel."
         },
         "targetPracticeDrones": {
             "name": "Középhaladó lőgyakorlat"

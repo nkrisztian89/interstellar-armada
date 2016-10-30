@@ -26,7 +26,7 @@
         "loadingDescription": "Loading...",
         "noTranslatedDescription": "{originalDescription}",
         "noDescription": "No mission description available.",
-        "description": "{description}",
+        "description": "Location: {location}<br/><br/>{description}",
         "missionObjectivesTitle": "Objectives:",
         "playerSpacecraftTitle": "Spacecraft:",
         "playerSpacecraftData": "Class: {class}<br/>Firepower: {firepower}",
@@ -45,6 +45,10 @@
             "destroy": "Protect {subjects}.",
             "countBelow": "Protect at least {count} out of {subjects}."
         }
+    },
+    "location": {
+        "unknown": "Unknown",
+        "system": "{systemName} system"  
     },
     "settings": {
         "general": "General settings",

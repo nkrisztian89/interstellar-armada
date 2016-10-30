@@ -468,6 +468,11 @@ define([
          */
         this._name = null;
         /**
+         * The name of the star system this environment is associated with
+         * @type String
+         */
+        this._location = null;
+        /**
          * The list of skyboxes this environment contains as background.
          * @type Skybox[]
          */
@@ -506,6 +511,7 @@ define([
         var i, backgroundObjectClass;
         this._dataJSON = dataJSON;
         this._name = dataJSON.name;
+        this._location = dataJSON.location;
         this._skyboxes = [];
         for (i = 0; i < dataJSON.skyboxes.length; i++) {
             this._skyboxes.push(new Skybox(classes.getSkyboxClass(dataJSON.skyboxes[i].class)));
@@ -530,6 +536,17 @@ define([
         for (i = 0; i < dataJSON.dustClouds.length; i++) {
             this._dustClouds.push(new DustCloud(classes.getDustCloudClass(dataJSON.dustClouds[i].class)));
         }
+    };
+    /**
+     * Returns a string that can be displayed to the player to represent this environment as a location for a mission.
+     * @returns {String}
+     */
+    Environment.prototype.getDisplayName = function () {
+        return this._location ?
+                utils.formatString(strings.get(strings.LOCATION.SYSTEM), {
+                    systemName: this._location
+                }) :
+                strings.get(strings.LOCATION.UNKNOWN);
     };
     /**
      * Returns the object this environment was initialized from
@@ -1606,6 +1623,13 @@ define([
                 null;
     };
     /**
+     * Returns the environment of this mission
+     * @returns {Environment}
+     */
+    Mission.prototype.getEnvironment = function () {
+        return this._environment;
+    };
+    /**
      * Returns the team with the given ID from the list of teams added to this mission.
      * @param {String} id
      * @returns {Team}
@@ -1656,6 +1680,22 @@ define([
     // #########################################################################
     // methods
     /**
+     * Loads the required data and sets up the environment for this mission, so that its data can be accessed
+     * @param {Object} dataJSON The object storing the mission data
+     */
+    Mission.prototype.loadEnvironment = function (dataJSON) {
+        if (dataJSON.environment.createFrom) {
+            this._environment = _context.getEnvironment(dataJSON.environment.createFrom);
+            if (!this._environment) {
+                application.showError("Cannot load environment '" + dataJSON.environment.createFrom + "' for mission: no such environment exists!");
+            }
+            this._ownsEnvironment = false;
+        } else {
+            this._environment = new Environment(dataJSON.environment);
+            this._ownsEnvironment = true;
+        }
+    };
+    /**
      * Loads the required data and sets up the triggers and actions for this mission, so that mission objectives can be determined
      * @param {Object} dataJSON The object storing the mission data
      */
@@ -1698,16 +1738,7 @@ define([
     Mission.prototype.loadFromJSON = function (dataJSON, demoMode) {
         var i, craft, teamID, team, aiType;
         application.log("Loading mission from JSON file...", 2);
-        if (dataJSON.environment.createFrom) {
-            this._environment = _context.getEnvironment(dataJSON.environment.createFrom);
-            if (!this._environment) {
-                application.showError("Cannot load environment '" + dataJSON.environment.createFrom + "' for mission: no such environment exists!");
-            }
-            this._ownsEnvironment = false;
-        } else {
-            this._environment = new Environment(dataJSON.environment);
-            this._ownsEnvironment = true;
-        }
+        this.loadEnvironment(dataJSON);
         this._teams = [];
         if (dataJSON.teams) {
             for (i = 0; i < dataJSON.teams.length; i++) {
@@ -2076,6 +2107,21 @@ define([
                 return this._dataJSON.spacecrafts[i];
             }
         }
+        return null;
+    };
+    /**
+     * Returns the environment of the described mission.
+     * Only works after the mission data has been loaded!
+     * @returns {Environment}
+     */
+    MissionDescriptor.prototype.getEnvironment = function () {
+        var mission = null;
+        if (this.isReadyToUse()) {
+            mission = new Mission(this.getName());
+            mission.loadEnvironment(this._dataJSON);
+            return mission.getEnvironment();
+        }
+        application.showError("Cannot get mission environment from mission descriptor that has not yet been initialized!");
         return null;
     };
     /**
