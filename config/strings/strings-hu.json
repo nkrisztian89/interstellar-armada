@@ -179,14 +179,11 @@
         "spectatorMode": "Nézelődő mód",
         "score": "Pontszám: {score}",
         "hud": {
-            "target": "célpont",
             "distance": "Távolság",
             "velocity": "Sebesség",
             "spacecraftNameUnknown": "Azonosító nélküli",
             "teamUnknown": "-",
-            "view": "{view} nézet",
             "flightMode": "Repülési mód:",
-            "speed": "sebesség",
             "objectives": "Feladatok:"
         },
         "objectiveSubjects": {
