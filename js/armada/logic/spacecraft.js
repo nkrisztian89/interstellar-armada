@@ -453,7 +453,9 @@ define([
                 this._class.getBodies());
         this._class.acquireResources();
         resources.executeWhenReady(function () {
-            this._physicalModel.setScalingMatrix(mat.scaling4(this._class.getModel().getScale()));
+            if (this.isAlive()) {
+                this._physicalModel.setScalingMatrix(mat.scaling4(this._class.getModel().getScale()));
+            }
         }.bind(this));
         this._weapons = [];
         this._maneuveringComputer = new equipment.ManeuveringComputer(this);

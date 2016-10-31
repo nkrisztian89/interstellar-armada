@@ -476,6 +476,38 @@
                     "fontName": "gameFont",
                     "position": [-1.0, -0.7]
                 },
+                "objectivesBackground": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "left": -0.98,
+                        "top": 0.4,
+                        "width": 0.7,
+                        "height": 0.24,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
+                    },
+                    "color": [0, 0, 0, 0.5]
+                },
+                "objectivesHeaderText": {
+                    "color": [1, 1, 1, 1],
+                    "fontSize": 0.2,
+                    "fontName": "gameFont",
+                    "position": [-0.95, 0.55]
+                },
+                "objectivesText": {
+                    "colors": {
+                        "inProgress": [0.3, 0.6, 1, 1],
+                        "completed": [0, 1, 0, 1],
+                        "failed": [1, 0, 0, 1]
+                    },
+                    "fontSize": 0.2,
+                    "fontName": "gameFont",
+                    "position": [-0.95, 0.05]
+                },
+                "objectivesTextOffset": -0.45,
+                "maxObjectivesDisplayed": 3,
                 "targetSwitchSound": {
                     "name": "beep_targeting",
                     "volume": 0.2

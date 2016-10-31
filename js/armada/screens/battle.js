@@ -429,6 +429,28 @@ define([
              * @type CanvasText
              */
             _scoreText,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // objectives indicator
+            /**
+             * A rectangle displayed as the background for the mission objective indicator panel.
+             * @type HUDElement
+             */
+            _objectivesBackground,
+            /**
+             * Houses the texts of the mission objective indicator panel.
+             * @type TextLayer
+             */
+            _objectivesTextLayer,
+            /**
+             * Displays the header text (i.e. "Objectives:") on the mission objective indicator panel.
+             * @type CanvasText
+             */
+            _objectivesHeaderText,
+            /**
+             * Displays the objectives on the mission objective indicator panel.
+             * @type CanvasText[]
+             */
+            _objectivesTexts,
             // ................................................................................................
             // cached references of setting values used for the layout of the HUD
             /**
@@ -476,6 +498,11 @@ define([
              * @type ClipSpaceLayout
              */
             _targetHullIntegrityQuickViewBarLayout,
+            /**
+             * Stores a reference to the layout used for the mission objective indicator background HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _objectivesBackgroundLayout,
             // ................................................................................................
             // other cached setting values used for the HUD
             /**
@@ -998,6 +1025,16 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).mapping);
         _flightModeIndicatorBackground.addToScene(_battleScene);
+        _objectivesBackground = _objectivesBackground || new HUDElement(
+                UI_2D_MIX_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).texture,
+                _objectivesBackgroundLayout.getClipSpacePosition(),
+                _objectivesBackgroundLayout.getClipSpaceSize(),
+                _objectivesBackgroundLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).color,
+                undefined,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).mapping);
+        _objectivesBackground.addToScene(_battleScene);
         _targetHullIntegrityBar = _targetHullIntegrityBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).texture,
@@ -1263,7 +1300,7 @@ define([
      * Adds the text layers and texts of the HUD to the screen if needed.
      */
     BattleScreen.prototype._addUITexts = function () {
-        var
+        var i, n,
                 screenCanvas = this.getScreenCanvas(BATTLE_CANVAS_ID),
                 getTargetInfoText = function (textPosition) {
                     return new screens.CanvasText(
@@ -1282,6 +1319,17 @@ define([
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).fontSize,
                             _speedBarLayout.getScaleMode(),
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
+                },
+                getObjectiveText = function (index) {
+                    var position = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).position;
+                    position = [position[0], position[1] + index * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT_OFFSET)];
+                    return new screens.CanvasText(
+                            position,
+                            "",
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).fontName,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).fontSize,
+                            _objectivesBackgroundLayout.getScaleMode(),
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.inProgress);
                 };
         // ..............................................................................
         // target info
@@ -1406,6 +1454,31 @@ define([
                     "left");
             _topLeftTextLayer.addText(_scoreText);
         }
+        // ..............................................................................
+        // objectives
+        if (!_objectivesTextLayer) {
+            _objectivesTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).layout);
+            screenCanvas.addTextLayer(_objectivesTextLayer);
+        }
+        if (!_objectivesHeaderText) {
+            _objectivesHeaderText = new screens.CanvasText(
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT).position,
+                    "",
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT).fontSize,
+                    _objectivesBackgroundLayout.getScaleMode(),
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT).color);
+            _objectivesTextLayer.addText(_objectivesHeaderText);
+        }
+        _objectivesHeaderText.setText(strings.get(strings.BATTLE.HUD_OBJECTIVES));
+        if (!_objectivesTexts) {
+            _objectivesTexts = [];
+            n = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MAX_OBJECTIVES_DISPLAYED);
+            for (i = 0; i < n; i++) {
+                _objectivesTexts.push(getObjectiveText(i));
+                _objectivesTextLayer.addText(_objectivesTexts[i]);
+            }
+        }
     };
     /**
      * Shows the stats (FPS, draw stats) component.
@@ -1487,7 +1560,9 @@ define([
                 /** @type Boolean */
                 isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched,
                 /** @type MouseInputIntepreter */
-                mouseInputInterpreter;
+                mouseInputInterpreter,
+                /** @type String[] */
+                objectivesState;
         if (craft && _isHUDVisible) {
             isInAimingView = craft.getView(_battleScene.getCamera().getConfiguration().getName()).isAimingView();
             // .....................................................................................................
@@ -1676,6 +1751,29 @@ define([
                     application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
             }
             _flightModeIndicatorTextLayer.show();
+            // .....................................................................................................
+            // objectives
+            _objectivesBackground.applyLayout(_objectivesBackgroundLayout, canvas.width, canvas.height);
+            objectivesState = _mission.getObjectivesState();
+            for (i = 0; i < _objectivesTexts.length; i++) {
+                if (i < objectivesState.length) {
+                    _objectivesTexts[i].setText(objectivesState[i].text);
+                    switch (objectivesState[i].state) {
+                        case missions.ObjectiveState.IN_PROGRESS:
+                            _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.inProgress);
+                            break;
+                        case missions.ObjectiveState.COMPLETED:
+                            _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.completed);
+                            break;
+                        case missions.ObjectiveState.FAILED:
+                            _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.failed);
+                            break;
+                    }
+                } else {
+                    _objectivesTexts[i].setText("");
+                }
+            }
+            _objectivesTextLayer.show();
             // .....................................................................................................
             // target related information
             target = craft.getTarget();
@@ -1918,6 +2016,7 @@ define([
             _targetInfoTextLayer.hide();
             _speedTextLayer.hide();
             _flightModeIndicatorTextLayer.hide();
+            _objectivesTextLayer.hide();
         }
     };
     /**
@@ -2147,6 +2246,7 @@ define([
         _speedBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).layout);
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).layout);
         _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).layout);
+        _objectivesBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).layout);
         _hudTargetSwitchAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_ANIMATION_DURATION);
         _hudHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
         _hudTargetHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);

@@ -67,7 +67,7 @@
             "countBelow": "Kevesebb, mint {count} maradhat meg a következőkből: {subjects}."
         },
         "loseObjective": {
-            "destroy": "Nem semmisülhet meg {subjects}.",
+            "destroy": "Megvédendő: {subjects}.",
             "countBelow": "Legalább {count} maradjon meg a következőkből: {subjects}."
         }
     },
@@ -186,7 +186,22 @@
             "teamUnknown": "-",
             "view": "{view} nézet",
             "flightMode": "Repülési mód:",
-            "speed": "sebesség"
+            "speed": "sebesség",
+            "objectives": "Feladatok:"
+        },
+        "objectiveSubjects": {
+            "spacecrafts": "{count} űrhajó",
+            "squads": "{count} osztag",
+            "teams": "{count} csapat"
+        },
+        "winObjective": {
+            "destroyAll": "Célpont: minden ellenség",
+            "destroy": "Célpont: {subjects}",
+            "countBelow": "Célpont ({count}): {subjects}"
+        },
+        "loseObjective": {
+            "destroy": "Megvédendő: {subjects}",
+            "countBelow": "Megvédendő: {count}/{subjects}"
         },
         "loadingBox": {
             "loadingMission": "küldetésleíró fájl betöltése...",

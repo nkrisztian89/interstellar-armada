@@ -53,10 +53,12 @@ define([
         OBJECTIVE_SUBJECTS_TEAM: {name: "missions.objectiveSubjects.team"},
         OBJECTIVE_SUBJECTS_TEAMS: {name: "missions.objectiveSubjects.teams"},
         OBJECTIVE_WIN_PREFIX: {name: "missions.winObjective.", optional: true},
-        OBJECTIVE_LOSE_PREFIX: {name: "missions.loseObjective.", optional: true},
-        OBJECTIVE_DESTROY_ALL_SUFFIX: {name: "destroyAll", optional: true},
-        OBJECTIVE_DESTROY_SUFFIX: {name: "destroy", optional: true},
-        OBJECTIVE_COUNT_BELOW_SUFFIX: {name: "countBelow", optional: true}
+        OBJECTIVE_LOSE_PREFIX: {name: "missions.loseObjective.", optional: true}
+    };
+    strings.OBJECTIVE = {
+        DESTROY_ALL_SUFFIX: {name: "destroyAll", optional: true},
+        DESTROY_SUFFIX: {name: "destroy", optional: true},
+        COUNT_BELOW_SUFFIX: {name: "countBelow", optional: true}
     };
     strings.LOCATION = {
         UNKNOWN: {name: "location.unknown"},
@@ -113,6 +115,12 @@ define([
         HUD_VIEW: {name: "battle.hud.view"},
         HUD_FLIGHT_MODE: {name: "battle.hud.flightMode"},
         HUD_SPEED: {name: "battle.hud.speed"},
+        HUD_OBJECTIVES: {name: "battle.hud.objectives"},
+        OBJECTIVE_SUBJECTS_SPACECRAFTS: {name: "battle.objectiveSubjects.spacecrafts"},
+        OBJECTIVE_SUBJECTS_SQUADS: {name: "battle.objectiveSubjects.squads"},
+        OBJECTIVE_SUBJECTS_TEAMS: {name: "battle.objectiveSubjects.teams"},
+        OBJECTIVE_WIN_PREFIX: {name: "battle.winObjective.", optional: true},
+        OBJECTIVE_LOSE_PREFIX: {name: "battle.loseObjective.", optional: true},
         LOADING_BOX_LOADING_MISSION: {name: "battle.loadingBox.loadingMission"},
         LOADING_BOX_ADDING_RANDOM_ELEMENTS: {name: "battle.loadingBox.addingRandomElements"},
         LOADING_BOX_BUILDING_SCENE: {name: "battle.loadingBox.buildingScene"},

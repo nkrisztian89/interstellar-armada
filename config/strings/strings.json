@@ -160,7 +160,22 @@
             "teamUnknown": "-",
             "view": "{view} view",
             "flightMode": "Flight mode:",
-            "speed": "speed"
+            "speed": "speed",
+            "objectives": "Objectives:"
+        },
+        "objectiveSubjects": {
+            "spacecrafts": "{count} spacecrafts",
+            "squads": "{count} squads",
+            "teams": "{count} teams"
+        },
+        "winObjective": {
+            "destroyAll": "Destroy all enemies",
+            "destroy": "Destroy: {subjects}",
+            "countBelow": "Decimate to {count}: {subjects}"
+        },
+        "loseObjective": {
+            "destroy": "Protect: {subjects}",
+            "countBelow": "Protect: {count}/{subjects}"
         },
         "loadingBox": {
             "loadingMission": "loading mission information...",

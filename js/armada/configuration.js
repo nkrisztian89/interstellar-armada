@@ -1045,6 +1045,26 @@ define([
                 name: "scoreText",
                 type: _customTypes.TEXT_DESCRIPTOR
             },
+            OBJECTIVES_BACKGROUND: {
+                name: "objectivesBackground",
+                type: _customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR
+            },
+            OBJECTIVES_HEADER_TEXT: {
+                name: "objectivesHeaderText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
+            OBJECTIVES_TEXT: {
+                name: "objectivesText",
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["inProgress", "completed", "failed"]})
+            },
+            OBJECTIVES_TEXT_OFFSET: {
+                name: "objectivesTextOffset",
+                type: "number"
+            },
+            MAX_OBJECTIVES_DISPLAYED: {
+                name: "maxObjectivesDisplayed",
+                type: "number"
+            },
             TARGET_SWITCH_SOUND: {
                 name: "targetSwitchSound",
                 type: classes.SOUND_EFFECT_2D

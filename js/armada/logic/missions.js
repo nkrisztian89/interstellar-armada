@@ -100,6 +100,14 @@ define([
                 COMPLETED: 2,
                 FAILED: 3
             },
+            /**
+             * Objectives displayed on the HUD are colored based on this
+             */
+            ObjectiveState = {
+                IN_PROGRESS: 0,
+                COMPLETED: 1,
+                FAILED: 2
+            },
             // ------------------------------------------------------------------------------
             // constants
             /**
@@ -945,6 +953,11 @@ define([
          * @type Spacecraft[]
          */
         this._spacecrafts = null;
+        /**
+         * The cached string that can be used to display the subjects of the condition to the user in a short way, to be used on the HUD
+         * @type String
+         */
+        this._shortSubjectString = null;
         this._checkParams();
     }
     /**
@@ -1071,7 +1084,7 @@ define([
         return strings.getList(subjectIDs.map(Condition._mapTeamID));
     };
     /**
-     * Returns a translated string that can be used to display the subjects of this condition to the player
+     * Returns a translated string that can be used to display the subjects of this condition to the player (used in the Missions screen)
      * @returns {String}
      */
     Condition.prototype._getSubjectsString = function () {
@@ -1104,29 +1117,107 @@ define([
     /**
      * Returns a translated sentence that can be used to display a mission objective to the user that is based on this condition (for either
      * winning or losing). The prefix to be passed determines whether it should be considered a winning or losing condition
-     * @param {Object} stringPrefix A translation string descriptor containing the prexif to be used for translating the string
+     * @param {Object} stringPrefix A translation string descriptor containing the prefix to be used for translating the string
      * @returns {String}
      */
     Condition.prototype.getObjectiveString = function (stringPrefix) {
         var result;
         switch (this._type) {
             case ConditionType.DESTROYED:
-                result = utils.formatString(strings.get(stringPrefix, strings.MISSIONS.OBJECTIVE_DESTROY_SUFFIX.name), {
+                result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
                     subjects: this._getSubjectsString()
                 });
-                result = result.charAt(0).toUpperCase() + result.slice(1);
-                return result;
+                break;
             case ConditionType.COUNT_BELOW:
-                result = utils.formatString(strings.get(stringPrefix, strings.MISSIONS.OBJECTIVE_COUNT_BELOW_SUFFIX.name), {
+                result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
                     subjects: this._getSubjectsString(),
                     count: this._params.count
                 });
-                result = result.charAt(0).toUpperCase() + result.slice(1);
-                return result;
+                break;
             default:
                 application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
                 return null;
         }
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
+    };
+    /**
+     * Returns how many of the subjects of this condition are still alive
+     * @returns {Number}
+     */
+    Condition.prototype._getLiveSubjectCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i].isAlive()) {
+                result++;
+            }
+        }
+        return result;
+    };
+    /**
+     * Returns a short translated string that can be used to display the subjects of this condition to the player (used on the HUD in battle)
+     * @returns {String}
+     */
+    Condition.prototype._getShortSubjectsString = function () {
+        if (!this._shortSubjectString) {
+            if (this._subjects.spacecrafts && !this._subjects.squads && !this._subjects.teams) {
+                if (this._spacecrafts.length > 1) {
+                    this._shortSubjectString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
+                } else {
+                    this._shortSubjectString = this._spacecrafts[0].getDisplayName();
+                }
+            } else if (!this._subjects.spacecrafts && this._subjects.squads && !this._subjects.teams) {
+                if (this._subjects.squads.length > 1) {
+                    this._shortSubjectString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SQUADS), {count: this._subjects.squads.length});
+                } else {
+                    this._shortSubjectString = strings.get(strings.SQUAD.PREFIX, this._subjects.squads[0]);
+                }
+            } else if (!this._subjects.spacecrafts && !this._subjects.squads && this._subjects.teams) {
+                if (this._subjects.teams.length > 1) {
+                    this._shortSubjectString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_TEAMS), {count: this._subjects.teams.length});
+                } else {
+                    this._shortSubjectString = strings.get(strings.TEAM.PREFIX, this._subjects.teams[0]);
+                }
+            } else {
+                this._shortSubjectString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
+            }
+        }
+        return this._shortSubjectString;
+    };
+    /**
+     * Returns a translated string that can be used to display a mission objective and its status to the player based on this condition 
+     * (for either winning or losing). The prefix to be passed determines whether it should be considered a winning or losing condition
+     * To be used on the HUD for displaying live status of objectives
+     * @param {Object} stringPrefix A translation string descriptor containing the prefix to be used for translating the string
+     * @returns {String}
+     */
+    Condition.prototype.getObjectiveStateString = function (stringPrefix) {
+        var result, count, suffix;
+        if (!this._spacecrafts) {
+            return "";
+        }
+        switch (this._type) {
+            case ConditionType.DESTROYED:
+                count = this._getLiveSubjectCount();
+                suffix = (count > 1) ? (" (" + count + ")") : "";
+                result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
+                    subjects: this._getShortSubjectsString()
+                }) + suffix;
+                break;
+            case ConditionType.COUNT_BELOW:
+                count = this._getLiveSubjectCount();
+                suffix = " (" + count + ")";
+                result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
+                    subjects: this._getShortSubjectsString(),
+                    count: this._params.count
+                }) + suffix;
+                break;
+            default:
+                application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
+                return null;
+        }
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
     };
     // #########################################################################
     /**
@@ -1314,6 +1405,44 @@ define([
         }
         return result;
     };
+    /**
+     * @typedef {Object} ObjectiveWithState
+     * @property {String} text A text to display the objective and its current state to the player
+     * @property {Number} state (enum ObjectiveState)
+     */
+    /**
+     * Returns the list of translated strings that can be used to display the objectives and their states associated with the conditions 
+     * of this trigger. To be used on the HUD.
+     * @param {Boolean} triggersWinAction Whether this trigger firing causes the player to win 
+     * @param {String} missionState The current state of the mission
+     * @returns {ObjectiveWithState[]}
+     */
+    Trigger.prototype.getObjectivesState = function (triggersWinAction, missionState) {
+        var i, result = [];
+        if (this._conditionsRequired !== TriggerConditionsRequired.ALL) {
+            application.showError("Triggers for mission objectives must be set to conditionsRequired state of '" + TriggerConditionsRequired.ALL + "'!");
+            return null;
+        }
+        if (this._fireWhen !== TriggerFireWhen.CHANGE_TO_TRUE) {
+            application.showError("Triggers for mission objectives must be set to fireWhen state of '" + TriggerFireWhen.CHANGE_TO_TRUE + "'!");
+            return null;
+        }
+        for (i = 0; i < this._conditions.length; i++) {
+            result.push({
+                text: this._conditions[i].getObjectiveStateString(triggersWinAction ?
+                        strings.BATTLE.OBJECTIVE_WIN_PREFIX :
+                        strings.BATTLE.OBJECTIVE_LOSE_PREFIX),
+                state: this._conditions[i].isSatisfied() ?
+                        (triggersWinAction ?
+                                ObjectiveState.COMPLETED :
+                                ObjectiveState.FAILED) :
+                        ((missionState === MissionState.COMPLETED) ?
+                                ObjectiveState.COMPLETED :
+                                ObjectiveState.IN_PROGRESS)
+            });
+        }
+        return result;
+    };
     // #########################################################################
     /**
      * An action to be executed whenever the associated trigger fires during the simulation of the mission
@@ -1357,8 +1486,9 @@ define([
         }
     };
     /**
-     * Returns a list of strings that contain translated HTML text which can be used to display the mission objectives associate with this
-     * action (if it is a win or lose action)
+     * Returns a list of strings that contain translated HTML text which can be used to display the mission objectives associated with this
+     * action (if it is a win or lose action). Used on the Missions screen.
+     * @returns {String[]}
      */
     Action.prototype.getObjectiveStrings = function () {
         if (this._type === ActionType.WIN) {
@@ -1366,6 +1496,22 @@ define([
         }
         if (this._type === ActionType.LOSE) {
             return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_LOSE_PREFIX);
+        }
+        application.showError("Action of type '" + this._type + "' does no correspond to a mission objective!");
+        return null;
+    };
+    /**
+     * Returns a list of translated strings along objective state values for displaying the current states of the objectives for the player
+     * (used on the HUD) Works for win or lose events only.
+     * @param {String} missionState (enum MissionState) 
+     * @returns {ObjectiveWithState[]}
+     */
+    Action.prototype.getObjectivesState = function (missionState) {
+        if (this._type === ActionType.WIN) {
+            return this._trigger.getObjectivesState(true, missionState);
+        }
+        if (this._type === ActionType.LOSE) {
+            return this._trigger.getObjectivesState(false, missionState);
         }
         application.showError("Action of type '" + this._type + "' does no correspond to a mission objective!");
         return null;
@@ -1559,6 +1705,7 @@ define([
                     return false;
                 }
             }
+            this._state = MissionState.COMPLETED;
             return true;
         }
         return false;
@@ -1597,6 +1744,22 @@ define([
         for (i = 0; i < this._spacecrafts.length; i++) {
             if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
                 if (this._spacecrafts[i].getTeam() === team) {
+                    result++;
+                }
+            }
+        }
+        return result;
+    };
+    /**
+     * Returns how many spacecrafts hostile to the given spacecraft are currently alive 
+     * @param {Spacecraft} craft
+     * @returns {Number}
+     */
+    Mission.prototype.getHostileSpacecraftCount = function (craft) {
+        var i, result = 0;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
+                if (this._spacecrafts[i].isHostile(craft)) {
                     result++;
                 }
             }
@@ -1666,7 +1829,7 @@ define([
     Mission.prototype.getObjectives = function () {
         var i, result = [];
         if (this._winActions.length === 0) {
-            result.push(strings.get(strings.MISSIONS.OBJECTIVE_WIN_PREFIX, strings.MISSIONS.OBJECTIVE_DESTROY_ALL_SUFFIX.name));
+            result.push(strings.get(strings.MISSIONS.OBJECTIVE_WIN_PREFIX, strings.OBJECTIVE.DESTROY_ALL_SUFFIX.name));
         } else {
             for (i = 0; i < this._winActions.length; i++) {
                 result = result.concat(this._winActions[i].getObjectiveStrings());
@@ -1674,6 +1837,38 @@ define([
         }
         for (i = 0; i < this._loseActions.length; i++) {
             result = result.concat(this._loseActions[i].getObjectiveStrings());
+        }
+        return result;
+    };
+    /**
+     * Returns a list of translated strings along with objective state values for displaying the current state of mission objectives for
+     * the player on the HUD
+     * @returns {ObjectivesWithState[]}
+     */
+    Mission.prototype.getObjectivesState = function () {
+        var i, result = [], suffix, hostiles, craft;
+        // handling the default "destroy all enemies" implicit mission objective
+        if (this._winActions.length === 0) {
+            craft = this.getPilotedSpacecraft();
+            suffix = "";
+            if (craft) {
+                hostiles = this.getHostileSpacecraftCount(craft);
+                if (hostiles > 0) {
+                    suffix = " (" + hostiles + ")";
+                }
+            }
+            result.push({
+                text: strings.get(strings.BATTLE.OBJECTIVE_WIN_PREFIX, strings.OBJECTIVE.DESTROY_ALL_SUFFIX.name) + suffix,
+                state: craft ? ((hostiles > 0) ? ObjectiveState.IN_PROGRESS : ObjectiveState.COMPLETED) : ObjectiveState.FAILED
+            });
+            // handling explicit mission objectives
+        } else {
+            for (i = 0; i < this._winActions.length; i++) {
+                result = result.concat(this._winActions[i].getObjectivesState(this._state));
+            }
+        }
+        for (i = 0; i < this._loseActions.length; i++) {
+            result = result.concat(this._loseActions[i].getObjectivesState(this._state));
         }
         return result;
     };
@@ -2364,6 +2559,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        ObjectiveState: ObjectiveState,
         requestLoad: _context.requestLoad.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
         getDebugInfo: getDebugInfo,
