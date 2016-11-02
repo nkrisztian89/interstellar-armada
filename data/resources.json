@@ -1133,5 +1133,8 @@
         }, {
             "name": "defeat",
             "sample": "defeat.ogg"
+        }, {
+            "name": "debriefing",
+            "sample": "debriefing.ogg"
         }]
 }

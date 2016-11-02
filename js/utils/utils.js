@@ -499,6 +499,18 @@ define(function () {
         return str;
     };
     /**
+     * Returns a MM:SS format string representing the time duration / interval of the passed amount of milliseconds
+     * (if longer than 60 minutes, the full amount will be in minutes, e.g. 120:00 would be 2 hours)
+     * @param {Number} milliseconds
+     * @returns {String}
+     */
+    exports.formatTimeToMinutes = function (milliseconds) {
+        var min, sec;
+        min = Math.floor(milliseconds / 60000);
+        sec = Math.floor(milliseconds / 1000) % 60;
+        return exports.getPaddedStringForNumber(min, 2) + ":" + exports.getPaddedStringForNumber(sec, 2);
+    };
+    /**
      * Adds the passed function to the event queue without any delay.
      * @param {Function} functionToExecute
      */

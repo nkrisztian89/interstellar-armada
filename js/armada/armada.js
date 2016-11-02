@@ -78,16 +78,18 @@ define([
             "armada/screens/menus",
             "armada/screens/missions",
             "armada/screens/battle",
+            "armada/screens/debriefing",
             "armada/screens/database",
             "armada/screens/general-settings",
             "armada/screens/graphics-settings",
             "armada/screens/audio-settings",
             "armada/screens/control-settings",
             "armada/screens/about"
-        ], function (armadaScreens, menus, missionsScreen, battle, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
+        ], function (armadaScreens, menus, missionsScreen, battle, debriefing, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
             game.addScreen(menus.mainMenuScreen);
             game.addScreen(missionsScreen.missionsScreen);
             game.addScreen(battle.battleScreen);
+            game.addScreen(debriefing.debriefingScreen);
             game.addScreen(database.databaseScreen);
             game.addScreen(menus.settingsMenuScreen);
             game.addScreen(generalSettings.generalSettingsScreen);

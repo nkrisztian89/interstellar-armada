@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0-dev:415 (2016.10.31.)",
+    "version": "0.4.0-dev:416 (2016.11.02.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -458,6 +458,8 @@
                     }, {
                         "name": "rollRight",
                         "continuous": true
+                    }, {
+                        "name": "jumpOut"
                     }
                 ]
             },

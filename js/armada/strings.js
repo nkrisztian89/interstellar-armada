@@ -127,6 +127,30 @@ define([
         MESSAGE_DEFEAT: {name: "battle.message.defeat"},
         MESSAGE_FAIL: {name: "battle.message.fail"}
     };
+    strings.DEBRIEFING = {
+        BACK: {name: "debriefing.backButton"},
+        VICTORY_TITLE: {name: "debriefing.victoryTitle"},
+        DEFEAT_TITLE: {name: "debriefing.defeatTitle"},
+        SCORE: {name: "debriefing.score"},
+        NEW_RECORD: {name: "debriefing.newRecord"},
+        DESCRIPTION_VICTORY: {name: "debriefing.description.victory"},
+        DESCRIPTION_FAIL: {name: "debriefing.description.fail"},
+        DESCRIPTION_DEFEAT: {name: "debriefing.description.defeat"},
+        DESCRIPTION_LEFT_EARLY: {name: "debriefing.description.leftEarly"},
+        STATISTICS_HEADER: {name: "debriefing.statisticsHeader"},
+        TIME_LABEL_CELL: {name: "debriefing.timeLabelCell"},
+        KILLS_LABEL_CELL: {name: "debriefing.killsLabelCell"},
+        DAMAGE_LABEL_CELL: {name: "debriefing.damageLabelCell"},
+        HIT_RATIO_LABEL_CELL: {name: "debriefing.hitRatioLabelCell"},
+        HULL_INTEGRITY_LABEL_CELL: {name: "debriefing.hullIntegrityLabelCell"},
+        TEAM_SURVIVAL_LABEL_CELL: {name: "debriefing.teamSurvivalLabelCell"},
+        BASE_SCORE_LABEL_CELL: {name: "debriefing.baseScoreLabelCell"},
+        HIT_RATIO_BONUS_LABEL_CELL: {name: "debriefing.hitRatioBonusLabelCell"},
+        HULL_INTEGRITY_BONUS_LABEL_CELL: {name: "debriefing.hullIntegrityBonusLabelCell"},
+        TEAM_SURVIVAL_BONUS_LABEL_CELL: {name: "debriefing.teamSurvivalBonusLabelCell"},
+        SCORE_BREAKDOWN_HEADER: {name: "debriefing.scoreBreakdownHeader"},
+        RESTART_BUTTON: {name: "debriefing.restartButton"}
+    };
     strings.DATABASE = {
         BACK: {name: "database.backButton"},
         TITLE: {name: "database.title"},

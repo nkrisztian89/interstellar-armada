@@ -29,6 +29,7 @@ define([
                 // Constants
                 // music
                 MENU_THEME: "menu",
+                DEBRIEFING_THEME: "debriefing",
                 // components
                 SELECTOR_SOURCE: "selector.html",
                 SELECTOR_CSS: "selector.css",
@@ -66,6 +67,9 @@ define([
                 BATTLE_SCREEN_NAME: "battle",
                 BATTLE_SCREEN_SOURCE: "battle.html",
                 BATTLE_SCREEN_CSS: "battle.css",
+                DEBRIEFING_SCREEN_NAME: "debriefing",
+                DEBRIEFING_SCREEN_SOURCE: "debriefing.html",
+                DEBRIEFING_SCREEN_CSS: "debriefing.css",
                 DATABASE_SCREEN_NAME: "database",
                 DATABASE_SCREEN_SOURCE: "database.html",
                 DATABASE_SCREEN_CSS: "database.css",

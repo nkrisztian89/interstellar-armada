@@ -1170,6 +1170,13 @@ define([
             type: "string"
         },
         /**
+         * The ID (resource name) of the song (MusicResource) that should play while at the mission debriefing screen
+         */
+        DEBRIEFING_MUSIC: {
+            name: "debriefingMusic",
+            type: "string"
+        },
+        /**
          * The duration while the combat theme is kept playing during battle after a spacecraft fires at a hostile target, in seconds
          */
         COMBAT_THEME_DURATION_AFTER_FIRE: {
@@ -1181,6 +1188,13 @@ define([
          */
         END_THEME_CROSSFADE_DURATION: {
             name: "endThemeCrossfadeDuration",
+            type: "number"
+        },
+        /**
+         * The duration of the fade in of the debriefing music theme after exiting the battle, in seconds
+         */
+        DEBRIEFING_THEME_FADE_IN_DURATION: {
+            name: "debriefingThemeFadeInDuration",
             type: "number"
         },
         /**

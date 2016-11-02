@@ -362,6 +362,17 @@ define([
         }
     };
     /**
+     * Shows / hides the component, if needed to achieve the passed visibility (also calling the appropriate event handlers)
+     * @param {Boolean} visible The desired visibility of the component
+     */
+    SimpleComponent.prototype.setVisible = function (visible) {
+        if (visible) {
+            this.show();
+        } else {
+            this.hide();
+        }
+    };
+    /**
      * Returns whether the component is currently in enabled state.
      * @returns {Boolean}
      */

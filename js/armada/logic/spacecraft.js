@@ -283,6 +283,11 @@ define([
          */
         this._alive = true;
         /**
+         * True when the spacecraft has jumped out from or has not jumped in yet to the current mission scene.
+         * @type Boolean
+         */
+        this._away = false;
+        /**
          * Negative, while the ship is not destoyed, set to zero upon start of destruction animation so
          * that deletion of the spacecraft can take place at the appropriate time
          * @type Number
@@ -407,6 +412,11 @@ define([
          */
         this._score = 0;
         /**
+         * The amount of damage dealt to enemies by this spacecraft during the current mission
+         * @type Number
+         */
+        this._damageDealt = 0;
+        /**
          * A counter for the shots fired during  the current mission (for hit ratio calculation)
          * @type Number
          */
@@ -470,6 +480,11 @@ define([
         }
         this._spacecraftArray = spacecraftArray || null;
         this._team = null;
+        this._kills = 0;
+        this._score = 0;
+        this._damageDealt = 0;
+        this._shotsFired = 0;
+        this._hitsOnEnemies = 0;
         this._hitSounds = {};
         this._hitSoundTimestamp = 0;
         this._updateIDAndName();
@@ -494,6 +509,13 @@ define([
      */
     Spacecraft.prototype.isAlive = function () {
         return this._alive;
+    };
+    /**
+     * Returns true when the spacecraft has jumped out from or has not jumped in yet to the current mission scene.
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isAway = function () {
+        return this._away;
     };
     /**
      * Sets a new team affiliation for the spacecraft.
@@ -699,6 +721,20 @@ define([
      */
     Spacecraft.prototype.gainScore = function (score) {
         this._score += score;
+    };
+    /**
+     * Returns the amount of damage dealt to enemies by this spacecraft during the current mission
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getDamageDealt = function () {
+        return this._damageDealt;
+    };
+    /**
+     * Call if this spacecrafts deals damage to an enemy to update the stored total of damage dealt
+     * @param {Number} damage The amount of damage dealt to the enemy
+     */
+    Spacecraft.prototype.gainDamageDealt = function (damage) {
+        this._damageDealt += damage;
     };
     /**
      * Returns how much score destroying this spacecraft should grant (completely, including dealing damage and scoring the final hit)
@@ -1689,8 +1725,10 @@ define([
             // granting kill and score to the spacecraft that destroyed this one
             if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
                 scoreValue = this.getScoreValue();
+                damage += this._hitpoints; // this subtracts the overkill hitpoints
+                hitBy.gainDamageDealt(damage);
                 // gain score for dealing the damage
-                hitBy.gainScore((1 - _scoreFactorForKill) * (damage + this._hitpoints) / this._class.getHitpoints() * scoreValue);
+                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._class.getHitpoints() * scoreValue);
                 // gain score and kill for delivering the final hit
                 hitBy.gainScore(_scoreFactorForKill * scoreValue);
                 hitBy.gainKill();
@@ -1714,6 +1752,7 @@ define([
             }
             // granting score to the spacecraft that hit this one for the damage
             if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
+                hitBy.gainDamageDealt(damage);
                 hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._class.getHitpoints() * this.getScoreValue());
             }
         }
@@ -1744,6 +1783,12 @@ define([
                 this._weapons[i].rotateToDefaultPosition(turnThreshold, dt);
             }
         }
+    };
+    /**
+     * Engages jump engines to leave the scene of the mission
+     */
+    Spacecraft.prototype.jumpOut = function () {
+        this._away = true;
     };
     /**
      * Returns a 3D vector that can be used to position the sound source of this spacecraft in the soundscape

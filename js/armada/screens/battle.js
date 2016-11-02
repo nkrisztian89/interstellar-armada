@@ -14,6 +14,7 @@
  * @param vec Used for vector operation for the HUD elements.
  * @param mat Used for matrix operation for the HUD elements, displaying matrix stats and orienting random ships.
  * @param application Used for displaying errors and logging.
+ * @param game Used for navigation
  * @param components Used for the components of the screen (e.g. loading box)
  * @param screens The battle screen is a HTMLScreenWithCanvases.
  * @param renderableObjects Used for creating the HUD elements
@@ -36,6 +37,7 @@ define([
     "utils/vectors",
     "utils/matrices",
     "modules/application",
+    "modules/game",
     "modules/components",
     "modules/screens",
     "modules/media-resources",
@@ -55,7 +57,7 @@ define([
     "utils/polyfill"
 ], function (
         utils, vec, mat,
-        application, components, screens, resources, egomModel,
+        application, game, components, screens, resources, egomModel,
         renderableObjects, sceneGraph,
         strings, armadaScreens, graphics, audio, classes, config, control, missions, equipment, ai) {
     "use strict";
@@ -145,6 +147,11 @@ define([
              * @type Boolean
              */
             _demoMode,
+            /**
+             * The total time elapsed in simulation since the battle began, in milliseconds
+             * @type Number
+             */
+            _elapsedTime,
             /**
              * The time elapsed since last switching view in demo mode, in milliseconds.
              * @type Number
@@ -589,6 +596,7 @@ define([
             followedCraft = _mission.getFollowedSpacecraftForScene(_battleScene);
             if (!_isTimeStopped) {
                 _mission.tick(dt, _battleScene);
+                _elapsedTime += dt;
                 if (!_gameStateShown) {
                     _timeSinceLastFire += dt;
                     if (_timeSinceLastFire > _combatThemeDurationAfterFire) {
@@ -1115,6 +1123,15 @@ define([
      */
     function _getMenuKeyHTMLString() {
         return "<span class='highlightedText'>" + control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("quit") + "</span>";
+    }
+    /**
+     * Returns the HTML string to insert to messages that contains the key to engage jump engines in a highlighted style, with
+     * a definite article added
+     * @returns {String}
+     */
+    function _getJumpKeyHTMLString() {
+        var result = control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("jumpOut");
+        return strings.getDefiniteArticleForWord(result) + " <span class='highlightedText'>" + result + "</span>";
     }
     // ##############################################################################
     /**
@@ -1753,27 +1770,31 @@ define([
             _flightModeIndicatorTextLayer.show();
             // .....................................................................................................
             // objectives
-            _objectivesBackground.applyLayout(_objectivesBackgroundLayout, canvas.width, canvas.height);
-            objectivesState = _mission.getObjectivesState();
-            for (i = 0; i < _objectivesTexts.length; i++) {
-                if (i < objectivesState.length) {
-                    _objectivesTexts[i].setText(objectivesState[i].text);
-                    switch (objectivesState[i].state) {
-                        case missions.ObjectiveState.IN_PROGRESS:
-                            _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.inProgress);
-                            break;
-                        case missions.ObjectiveState.COMPLETED:
-                            _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.completed);
-                            break;
-                        case missions.ObjectiveState.FAILED:
-                            _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.failed);
-                            break;
+            if (!_demoMode) {
+                _objectivesBackground.applyLayout(_objectivesBackgroundLayout, canvas.width, canvas.height);
+                objectivesState = _mission.getObjectivesState();
+                for (i = 0; i < _objectivesTexts.length; i++) {
+                    if (i < objectivesState.length) {
+                        _objectivesTexts[i].setText(objectivesState[i].text);
+                        switch (objectivesState[i].state) {
+                            case missions.ObjectiveState.IN_PROGRESS:
+                                _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.inProgress);
+                                break;
+                            case missions.ObjectiveState.COMPLETED:
+                                _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.completed);
+                                break;
+                            case missions.ObjectiveState.FAILED:
+                                _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.failed);
+                                break;
+                        }
+                    } else {
+                        _objectivesTexts[i].setText("");
                     }
-                } else {
-                    _objectivesTexts[i].setText("");
                 }
+                _objectivesTextLayer.show();
+            } else {
+                _objectivesTextLayer.hide();
             }
-            _objectivesTextLayer.show();
             // .....................................................................................................
             // target related information
             target = craft.getTarget();
@@ -2024,7 +2045,10 @@ define([
      * @param {Number} dt
      */
     BattleScreen.prototype._render = function (dt) {
-        var /**@type Boolean*/ victory, isTeamMission, /**@type Spacecraft*/ craft, /**@type Number*/ baseScore, hitRatio, hullIntegrityBonus, teamSurvivalBonus, score;
+        var
+                /**@type Boolean*/ victory, isTeamMission, isRecord,
+                /**@type Spacecraft*/ craft,
+                /**@type Number*/ baseScore, hitRatio, hullIntegrityBonus, teamSurvival, teamSurvivalBonus, score;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -2050,6 +2074,45 @@ define([
         // displaying the victory or defeat message
         if ((_simulationLoop !== LOOP_CANCELED)) {
             if (!_demoMode) {
+                craft = _mission.getPilotedSpacecraft();
+                if (craft && craft.isAlive() && craft.isAway()) {
+                    victory = !_mission.isLost() && _mission.isWon();
+                    missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
+                    hitRatio = craft.getHitRatio();
+                    if (victory) {
+                        // calculating score from base score and bonuses
+                        isTeamMission = craft.getTeam().getInitialCount() > 1;
+                        baseScore = Math.round(craft.getScore());
+                        hullIntegrityBonus = Math.round(craft.getHullIntegrity() * (isTeamMission ?
+                                config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY_TEAM) :
+                                config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY)));
+                        if (isTeamMission) {
+                            teamSurvival = (_mission.getSpacecraftCountForTeam(craft.getTeam()) - 1) / (craft.getTeam().getInitialCount() - 1);
+                            teamSurvivalBonus = Math.round(teamSurvival * config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_TEAM_SURVIVAL));
+                        }
+                        score = Math.round(baseScore * (1 + hitRatio)) + hullIntegrityBonus + (isTeamMission ? teamSurvivalBonus : 0);
+                        isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(score);
+                    }
+                    game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
+                        victory: victory,
+                        survived: true,
+                        leftEarly: !victory && !_mission.isLost(),
+                        score: score || 0,
+                        isRecord: isRecord,
+                        elapsedTime: _elapsedTime,
+                        kills: craft ? craft.getKills() : 0,
+                        damageDealt: craft ? craft.getDamageDealt() : 0,
+                        baseScore: baseScore || 0,
+                        hitRatio: hitRatio,
+                        hitRatioBonus: Math.round((baseScore || 0) * hitRatio),
+                        hullIntegrity: craft.getHullIntegrity(),
+                        hullIntegrityBonus: hullIntegrityBonus,
+                        teamSurvival: teamSurvival,
+                        teamSurvivalBonus: teamSurvivalBonus
+                    });
+                    game.setScreen(armadaScreens.DEBRIEFING_SCREEN_NAME);
+                    return;
+                }
                 // we wait a little after the state changes to victory or defeat so that incoming projectiles destroying the player's ship
                 // right after it destroyed the last enemy can change the state from victory to defeat
                 if (!_gameStateChanged) {
@@ -2061,28 +2124,8 @@ define([
                     _timeSinceGameStateChanged += dt;
                     if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = !_mission.isLost();
-                        craft = _mission.getPilotedSpacecraft();
-                        missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
-                        if (victory) {
-                            isTeamMission = craft.getTeam().getInitialCount() > 1;
-                            baseScore = craft.getScore();
-                            hitRatio = craft.getHitRatio();
-                            hullIntegrityBonus = Math.round(craft.getHullIntegrity() * (isTeamMission ?
-                                    config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY_TEAM) :
-                                    config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY)));
-                            teamSurvivalBonus = isTeamMission ?
-                                    Math.round((_mission.getSpacecraftCountForTeam(craft.getTeam()) - 1) / (craft.getTeam().getInitialCount() - 1) * config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_TEAM_SURVIVAL)) :
-                                    0;
-                            score = Math.round(baseScore * (1 + hitRatio)) + hullIntegrityBonus + teamSurvivalBonus;
-                            missions.getMissionDescriptor(_mission.getName()).updateBestScore(score);
-                        }
                         this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : (craft ? strings.BATTLE.MESSAGE_FAIL : strings.BATTLE.MESSAGE_DEFEAT)), {
-                            menuKey: _getMenuKeyHTMLString(),
-                            score: score || 0,
-                            kills: craft ? craft.getKills() : 0,
-                            hitRatio: Math.round(100 * hitRatio) + "%",
-                            hullIntegrity: hullIntegrityBonus,
-                            teamSurvival: isTeamMission ? teamSurvivalBonus : "-"
+                            jumpKey: _getJumpKeyHTMLString()
                         }));
                         _gameStateShown = true;
                         audio.playMusic(
@@ -2196,6 +2239,7 @@ define([
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC), COMBAT_THEME, true);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC), VICTORY_THEME, false);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEFEAT_MUSIC), DEFEAT_THEME, false);
+            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_MUSIC), armadaScreens.DEBRIEFING_THEME, true);
             control.getController(control.GENERAL_CONTROLLER_NAME).setMission(_mission);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
             control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());
@@ -2227,6 +2271,7 @@ define([
                     this._loadingBox.hide();
                     showHUD();
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
+                    _elapsedTime = 0;
                     _timeSinceLastFire = 0;
                     audio.playMusic(_gameStateShown ? AMBIENT_THEME : ANTICIPATION_THEME);
                 }.bind(this));

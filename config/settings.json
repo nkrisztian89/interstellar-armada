@@ -532,8 +532,10 @@
             "combatMusic": "combat",
             "victoryMusic": "victory",
             "defeatMusic": "defeat",
+            "debriefingMusic": "debriefing",
             "combatThemeDurationAfterFire": 10,
             "endThemeCrossfadeDuration": 0.2,
+            "debriefingThemeFadeInDuration": 1.5,
             "scoreFractionForKill": 0.5,
             "scoreBonusForHullIntegrity": 200,
             "scoreBonusForHullIntegrityTeam": 100,
@@ -611,6 +613,9 @@
                         "action": "rollLeft",
                         "key": "q"
                     }, {
+                        "action": "jumpOut",
+                        "key": "j"
+                    }, { 
                         "action": "cameraTurnLeft",
                         "key": "left"
                     }, {

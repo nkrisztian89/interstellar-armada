@@ -208,10 +208,36 @@
         "message": {
             "ready": "Kész!<br/>Játék közven az {menuKey} billentyűvel hívhatod elő a menüt, ahol az irányítást is beállíthatod.",
             "paused": "Játék szüneteltetve.",
-            "victory": "<strong>Győzelem!</strong><br/>Gratulálok, sikeresen teljesítetted ezt a küldetést!<br/>Pontszám: <strong>{score}</strong><br/>Kilőtt űrhajók: {kills}<br/>Találati arány bónusz: {hitRatio}<br/>Páncélzat épsége bónusz: {hullIntegrity}<br/>Csapat túlélési bónusz: {teamSurvival}<br/>Az {menuKey} billentyűvel hívhatod elő a menüt.",
+            "victory": "<strong>Győzelem!</strong><br/>Gratulálok, sikeresen teljesítetted az összes feladatot!<br/>Használd {jumpKey} billentyűt, hogy elhagyd a harcmezőt, és lezárd a küldetést.",
             "defeat": "<strong>Vereség!</strong><br/>Az űrhajód megsemmisült. Az {menuKey} billentyűvel hívhatod elő a menüt, ahonnan újrakezdheted a küldetést.",
             "fail": "<strong>Vereség!<strong><br/>Nem sikerült teljesítened a küldetés feladatait. <br/>Az {menuKey} billentyűvel hívhatod elő a menüt."
         }
+    },
+    "debriefing": {
+        "backButton": "Vissza a küldetésekhez",
+        "victoryTitle": "Küldetés teljesítve",
+        "defeatTitle": "Küldetés sikertelen",
+        "score": "Pontszám: {score}",
+        "newRecord": "Új rekord!",
+        "description": {
+            "victory": "Sikeresen teljesítetted ezt a küldetést.",
+            "fail": "Nem sikerült teljesítened a küldetés összes feladatát.",
+            "defeat": "Az űrhajód megsemmisült a küldetés során.",
+            "leftEarly": "Elhagytad a küldetés helyszínét, mielőtt teljesítetted volna a feladatokat."
+        },
+        "statisticsHeader": "Statisztika",
+        "timeLabelCell": "Eltelt idő:",
+        "killsLabelCell": "Kilőtt űrhajók:",
+        "damageLabelCell": "Bevitt sebzés:",
+        "hitRatioLabelCell": "Találati arány:",
+        "hullIntegrityLabelCell": "Páncélzat megmaradt épsége:",
+        "teamSurvivalLabelCell": "Csapat túlélési arány:",
+        "baseScoreLabelCell": "Alappontszám:",
+        "hitRatioBonusLabelCell": "Találati arány bónusz:",
+        "hullIntegrityBonusLabelCell": "Páncélzat épsége bónusz:",
+        "teamSurvivalBonusLabelCell": "Csapat túlélési bónusz:",
+        "scoreBreakdownHeader": "Pontok lebontása",
+        "restartButton": "Küldetés újraindítása"
     },
     "database": {
         "backButton": "Vissza a menübe",
@@ -335,6 +361,7 @@
         "pitchDown": "Gép döntése lefelé",
         "rollLeft": "Gép döntése balra",
         "rollRight": "Gép döntése jobbra",
+        "jumpOut": "Hiperhajtómű aktiválása és a csatamező elhagyása",
         "controlCamera": "Amíg lenyomva van tartva, a vadászgép helyett a kamera irányítható elsődlegesen",
         "cameraMoveLeft": "Kamera mozgatása balra (ha a nézet engedi)",
         "cameraMoveRight": "Kamera mozgatása jobbra (ha a nézet engedi)",

@@ -182,10 +182,36 @@
         "message": {
             "ready": "Ready!<br/>During the game, press the {menuKey} key to open the menu, where you can also check and adjust the controls.",
             "paused": "Game paused.",
-            "victory": "<strong>Victory!</strong><br/>Congratulations, you have completed this mission!<br/>Score: <strong>{score}</strong><br/>Kills: {kills}<br/>Hit ratio bonus: {hitRatio}<br/>Hull integrity bonus: {hullIntegrity}<br/>Team survival bonus: {teamSurvival}<br/>You can keep flying around or press the {menuKey} key to open the menu.",
+            "victory": "<strong>Victory!</strong><br/>Congratulations, you have completed all mission objectives!<br/>Press {jumpKey} key to leave the battlefield and conclude the mission.",
             "defeat": "<strong>Defeat!<strong><br/>You ship has been destroyed. You can keep looking around in spectator mode or press the {menuKey} key to open the menu.",
             "fail": "<strong>Defeat!<strong><br/>You have failed the mission objectives. <br/>You can keep flying around or press the {menuKey} key to open the menu."
         }
+    },
+    "debriefing": {
+        "backButton": "Back to missions",
+        "victoryTitle": "Mission accomplished",
+        "defeatTitle": "Mission failed",
+        "score": "Score: {score}",
+        "newRecord": "New record!",
+        "description": {
+            "victory": "You have successfully completed this mission.",
+            "fail": "You did not manage to complete all the objectives for this mission.",
+            "defeat": "Your spacecraft has been destroyed during the mission.",
+            "leftEarly": "You left the battlefield before completing all the mission objectives."
+        },
+        "statisticsHeader": "Statistics",
+        "timeLabelCell": "Elapsed time:",
+        "killsLabelCell": "Kills:",
+        "damageLabelCell": "Damage dealt:",
+        "hitRatioLabelCell": "Hit ratio:",
+        "hullIntegrityLabelCell": "Hull integrity left:",
+        "teamSurvivalLabelCell": "Team survival:",
+        "baseScoreLabelCell": "Base score:",
+        "hitRatioBonusLabelCell": "Hit ratio bonus:",
+        "hullIntegrityBonusLabelCell": "Hull integrity bonus:",
+        "teamSurvivalBonusLabelCell": "Team survival bonus:",
+        "scoreBreakdownHeader": "Score breakdown",
+        "restartButton": "Restart mission"
     },
     "database": {
         "backButton": "Back to menu",
@@ -309,6 +335,7 @@
         "pitchDown": "Turn downwards",
         "rollLeft": "Roll to the left",
         "rollRight": "Roll to the right",
+        "jumpOut": "Engage jump engines and leave the battlefield",
         "controlCamera": "Hold this button to control the camera instead of your spacecraft if you have the same controls assigned",
         "cameraMoveLeft": "Move the camera to the left (if possible for the current view)",
         "cameraMoveRight": "Move the camera to the right (if possible for the current view)",

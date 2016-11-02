@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <title>Interstellar Armada</title>
+        <!-- The content of this page is dynamically loaded from the JS code,
+             not opened by the browser. Since only the body is loaded, the
+             head tags are not needed here. The ones in index.html remain in
+             effect for the whole time the application is running. -->
+    </head>
+
+    <body>
+        <div class="pageGhost">
+            <div class="anyHeightCentered outerContainer pageContainer">
+                <div class="horizontallyCentered contentWide innerContainer">
+                    <div class="fullWide separatorBar">
+                        <a id="backButton" class="horizontallyCentered separate button translatable" href="#">
+                            Back to menu
+                        </a>
+                    </div>
+                    <h1 id="title" class="debriefing">Mission debriefing</h1>
+                    <div class="horizontallyCentered">
+                        <img id="medal" src="images/empire_white100.png" alt="Medal" />
+                    </div>
+                    <div>
+                        <span id="score" class="score"></span>
+                        <div id="newRecord" class="newRecord translatable">New record!</div>
+                    </div>
+                    <p id="description" class="debriefingDescription"></p>
+                    <div id="infoContainer" class="infoContainer">
+                        <div id="statisticsContainer" class="statisticsContainer">
+                            <h2 id="statisticsHeader" class="translatable">
+                                Statistics
+                            </h2>
+                            <table class="debriefing">
+                                <tr>
+                                    <td class="statLabelCell translatable" id="timeLabelCell">Elapsed time:</td>
+                                    <td class="statValueCell" id="timeCell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="statLabelCell translatable" id="killsLabelCell">Kills:</td>
+                                    <td class="statValueCell" id="killsCell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="statLabelCell translatable" id="damageLabelCell">Damage dealt:</td>
+                                    <td class="statValueCell" id="damageCell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="statLabelCell translatable" id="hitRatioLabelCell">Hit ratio:</td>
+                                    <td class="statValueCell" id="hitRatioCell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="statLabelCell translatable" id="hullIntegrityLabelCell">Hull integrity left:</td>
+                                    <td class="statValueCell" id="hullIntegrityCell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="statLabelCell translatable" id="teamSurvivalLabelCell">Team survival:</td>
+                                    <td class="statValueCell" id="teamSurvivalCell"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div id="scoreBreakdownContainer" class="scoreBreakdownContainer">
+                            <h2 id="scoreBreakdownHeader" class="translatable">
+                                Score breakdown
+                            </h2>
+                            <table class="debriefing">
+                                <tr>
+                                    <td class="statLabelCell translatable" id="baseScoreLabelCell">Base score:</td>
+                                    <td class="statValueCell" id="baseScoreCell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="statLabelCell translatable" id="hitRatioBonusLabelCell">Hit ratio bonus:</td>
+                                    <td class="statValueCell" id="hitRatioBonusCell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="statLabelCell translatable" id="hullIntegrityBonusLabelCell">Hull integrity bonus:</td>
+                                    <td class="statValueCell" id="hullIntegrityBonusCell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="statLabelCell translatable" id="teamSurvivalBonusLabelCell">Team survival bonus:</td>
+                                    <td class="statValueCell" id="teamSurvivalBonusCell"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="fullWide separatorBar">
+                        <a id="restartButton" class="horizontallyCentered separate button translatable" href="#">
+                            Restart mission
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+
+</html>

@@ -58,7 +58,8 @@ define([
                         action: function () {
                             game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                         }
-                    }], armadaScreens.MAIN_MENU_CONTAINER_ID,
+                    }], 
+                armadaScreens.MAIN_MENU_CONTAINER_ID,
                 {
                     show: function () {
                         audio.resetMasterVolume();

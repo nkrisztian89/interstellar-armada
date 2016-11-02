@@ -278,6 +278,9 @@ define([
         this.setActionFunction("rollRight", true, function (i) {
             this._controlledSpacecraft.rollRight(i);
         }.bind(this));
+        this.setActionFunction("jumpOut", true, function () {
+            this._controlledSpacecraft.jumpOut();
+        }.bind(this));
     }
     FighterController.prototype = new control.Controller();
     FighterController.prototype.constructor = FighterController;

@@ -64,7 +64,13 @@ define([
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
-                undefined, // no screen event handlers as of yet
+                {
+                    show: function () {
+                        audio.resetMasterVolume();
+                        audio.resetMusicVolume();
+                        audio.playMusic(armadaScreens.MENU_THEME);
+                    }
+                },
                 this._getKeyCommands(),
                 armadaScreens.BUTTON_EVENT_HANDLERS);
         /**

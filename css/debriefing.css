@@ -1,0 +1,43 @@
+h1.debriefing {
+    margin-bottom: 0.2em;
+}
+
+.score {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.newRecord {
+    color: #44ff44;
+    text-shadow:
+        #00FF00 0 0 0.2em,
+        #00FF00 0 0 0.2em;
+}
+
+.debriefingDescription {
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.infoContainer {
+    min-width: 300px;
+}
+
+.statisticsContainer {
+    display: inline-block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.scoreBreakdownContainer {
+    display: inline-block;
+    margin-left: 1.5em;
+}
+
+.statLabelCell {
+    text-align: left;
+}
+
+.statValueCell {
+    text-align: right;
+}
