@@ -560,10 +560,10 @@
                         "key": "space"
                     }, {
                         "action": "nextHostileTarget",
-                        "key": "t"
+                        "key": "T"
                     }, {
                         "action": "nextNonHostileTarget",
-                        "key": "z"
+                        "key": "Z"
                     }, {
                         "action": "toggleAutoTargeting",
                         "key": "-"
@@ -572,22 +572,22 @@
                         "key": "tab"
                     }, {
                         "action": "forward",
-                        "key": "w"
+                        "key": "W"
                     }, {
                         "action": "reverse",
-                        "key": "s"
+                        "key": "S"
                     }, {
                         "action": "strafeLeft",
-                        "key": "a"
+                        "key": "A"
                     }, {
                         "action": "strafeRight",
-                        "key": "d"
+                        "key": "D"
                     }, {
                         "action": "raise",
-                        "key": "r"
+                        "key": "R"
                     }, {
                         "action": "lower",
-                        "key": "f"
+                        "key": "F"
                     }, {
                         "action": "resetSpeed",
                         "key": "0"
@@ -608,13 +608,13 @@
                         "key": "down"
                     }, {
                         "action": "rollRight",
-                        "key": "e"
+                        "key": "E"
                     }, {
                         "action": "rollLeft",
-                        "key": "q"
+                        "key": "Q"
                     }, {
                         "action": "jumpOut",
-                        "key": "j"
+                        "key": "J"
                     }, { 
                         "action": "cameraTurnLeft",
                         "key": "left"
@@ -629,28 +629,28 @@
                         "key": "down"
                     }, {
                         "action": "cameraRollLeft",
-                        "key": "q"
+                        "key": "Q"
                     }, {
                         "action": "cameraRollRight",
-                        "key": "e"
+                        "key": "E"
                     }, {
                         "action": "cameraMoveLeft",
-                        "key": "a"
+                        "key": "A"
                     }, {
                         "action": "cameraMoveRight",
-                        "key": "d"
+                        "key": "D"
                     }, {
                         "action": "cameraMoveUp",
-                        "key": "r"
+                        "key": "R"
                     }, {
                         "action": "cameraMoveDown",
-                        "key": "f"
+                        "key": "F"
                     }, {
                         "action": "cameraMoveForward",
-                        "key": "w"
+                        "key": "W"
                     }, {
                         "action": "cameraMoveBackward",
-                        "key": "s"
+                        "key": "S"
                     }, {
                         "action": "cameraDecreaseFOV",
                         "key": "numpad +"
@@ -659,49 +659,49 @@
                         "key": "numpad -"
                     }, {
                         "action": "nextView",
-                        "key": "v"
+                        "key": "V"
                     }, {
                         "action": "previousView",
-                        "key": "g"
+                        "key": "G"
                     }, {
                         "action": "followNext",
-                        "key": "c"
+                        "key": "C"
                     }, {
                         "action": "followPrevious",
-                        "key": "x"
+                        "key": "X"
                     }, {
                         "action": "resetView",
-                        "key": "b"
+                        "key": "B"
                     }, {
                         "action": "pause",
-                        "key": "p"
+                        "key": "P"
                     }, {
                         "action": "stopTime",
-                        "key": "o"
+                        "key": "O"
                     }, {
                         "action": "switchToPilotMode",
-                        "key": "m"
+                        "key": "M"
                     }, {
                         "action": "switchToSpectatorMode",
-                        "key": "n"
+                        "key": "N"
                     }, {
                         "action": "toggleHitboxVisibility",
-                        "key": "h"
+                        "key": "H"
                     }, {
                         "action": "quit",
                         "key": "escape"
                     }, {
                         "action": "toggleDevInfoVisibility",
-                        "key": "i"
+                        "key": "I"
                     }, {
                         "action": "toggleHUDVisibility",
                         "key": "delete"
                     }, {
                         "action": "toggleMouseControls",
-                        "key": "l"
+                        "key": "L"
                     }, {
                         "action": "toggleJoystickControls",
-                        "key": "k"
+                        "key": "K"
                     }
                 ]
             },
