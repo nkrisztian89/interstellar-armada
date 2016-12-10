@@ -265,10 +265,16 @@ a:hover:not(.disabled):not(.menu):not(.listElement), a.button.selected {
     text-shadow:
         #00FF00 0 0 0.2em,
         #00FF00 0 0 0.2em;
+    transition: all 0s;
 }
 
 a.button:hover:not(.disabled):not(.menu), a.button.selected {
     background-color: #333333;
+    transition: all 0s;
+}
+
+a {
+    transition: all 0.2s;
 }
 
 a.button.disabled {

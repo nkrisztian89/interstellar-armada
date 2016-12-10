@@ -70,6 +70,7 @@
 .listElement.highlighted {
     text-shadow: none;
     box-shadow: inset 0em 0em 0.75em #00FF00;
+    transition: all 0s;
 }
 
 .listElement.highlighted > .caption {
