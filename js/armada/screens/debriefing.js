@@ -34,6 +34,7 @@ define([
             BACK_BUTTON_ID = "backButton",
             TITLE_ID = "title",
             MEDAL_ID = "medal",
+            MEDAL_IMAGE_SOURCE = "images/empire_{performance}_100.png",
             SCORE_SPAN_ID = "score",
             NEW_RECORD_ID = "newRecord",
             DESCRIPTION_PARAGRAPH_ID = "description",
@@ -145,6 +146,7 @@ define([
     /**
      * @typedef {Object} DebreifingScreen~Data
      * @property {Boolean} victory 
+     * @property {String} performance
      * @property {Boolean} survived 
      * @property {Boolean} leftEarly 
      * @property {Number} score 
@@ -168,6 +170,9 @@ define([
         this._title.setContent(data.victory ?
                 strings.get(strings.DEBRIEFING.VICTORY_TITLE) :
                 strings.get(strings.DEBRIEFING.DEFEAT_TITLE));
+        this._medal.getElement().src = utils.formatString(MEDAL_IMAGE_SOURCE, {
+            performance: data.performance
+        });
         this._scoreSpan.setVisible(data.victory);
         if (this._scoreSpan.isVisible()) {
             this._scoreSpan.setContent(strings.get(strings.DEBRIEFING.SCORE), {

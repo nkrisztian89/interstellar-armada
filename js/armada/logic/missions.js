@@ -111,6 +111,12 @@ define([
             // ------------------------------------------------------------------------------
             // constants
             /**
+             * The ID for mission performance indicating that the mission failed. Performance level IDs for successful missions are defined
+             * in config.json
+             * @type String
+             */
+            FAILED_MISSION_PERFORMACE = "failed",
+            /**
              * Mission related local storage IDs start with this prefix
              * @type String
              */
@@ -1620,6 +1626,13 @@ define([
          * @type Number
          */
         this._state = MissionState.NONE;
+        /**
+         * How much score falls on the player in this mission, based on the total score that can be achieved and the number of teammates.
+         * (e.g. in a 3v3 match, this would be the score value of one enemy, in a 3v6 match, the value of 2 enemies etc)
+         * Needs to be calculated at the start of missions.
+         * @type Number
+         */
+        this._referenceScore = 0;
     }
     /**
      * Return the name identifying this mission (typically same as the filename e.g. someMission.json)
@@ -1745,6 +1758,22 @@ define([
             if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
                 if (this._spacecrafts[i].getTeam() === team) {
                     result++;
+                }
+            }
+        }
+        return result;
+    };
+    /**
+     * Returns the sum of the score values of spacecrafts hostile to the given spacecraft are currently alive 
+     * @param {Spacecraft} craft
+     * @returns {Number}
+     */
+    Mission.prototype.getTotalHostileSpacecraftValue = function (craft) {
+        var i, result = 0;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
+                if (this._spacecrafts[i].isHostile(craft)) {
+                    result += this._spacecrafts[i].getScoreValue();
                 }
             }
         }
@@ -1924,6 +1953,12 @@ define([
         }
     };
     /**
+     * Calculates and stores the reference score for this mission.
+     */
+    Mission.prototype._updateReferenceScore = function () {
+        this._referenceScore = this._pilotedCraft ? (this.getTotalHostileSpacecraftValue(this._pilotedCraft) / this.getSpacecraftCountForTeam(this._pilotedCraft.getTeam())) : 0;
+    };
+    /**
      * Loads all the data describing this mission from the passed JSON object. Does not add random ships to the mission, only loads their 
      * configuration - they can be added by calling addRandomShips() later, which will use the loaded configuration.
      * @param {Object} dataJSON
@@ -1996,6 +2031,7 @@ define([
         this._randomShipsHeadingAngle = dataJSON.randomShipsHeadingAngle || 0;
         this._randomShipsRandomHeading = dataJSON.randomShipsRandomHeading || false;
         this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME;
+        this._updateReferenceScore();
         application.log("Mission successfully loaded.", 2);
     };
     /**
@@ -2039,6 +2075,20 @@ define([
                 }
             }
         }
+        this._updateReferenceScore();
+    };
+    /**
+     * Returns the ID of the performance level the player achieved in this mission based on the passed performance metrics.
+     * Assumes that the objectives have been successfully completed.
+     * @param {Number} baseScore The score achieved by the player before adding any bonuses
+     * @param {Number} hitRatio Number of hits / fired projectiles
+     * @param {Number} hullIntegrity Current / full hitpoints
+     * @param {Number} teamSurvival Surviving / initial teammates
+     * @returns {String}
+     */
+    Mission.prototype.getPerformance = function (baseScore, hitRatio, hullIntegrity, teamSurvival) {
+        var baseScoreRatio = baseScore / this._referenceScore;
+        return _context.getPerformance(baseScoreRatio, hitRatio, hullIntegrity, teamSurvival);
     };
     /**
      * Creates and returns a camera configuration for this given view set up according to the scene view's parameters.
@@ -2392,6 +2442,63 @@ define([
     };
     // #########################################################################
     /**
+     * @class The performance of players during missions is evaluated and classified into one of several levels upon the completion of the
+     * missions. A corresponding medal can be earned for each performance level. The levels can be defined in config.json.
+     * @param {Object} dataJSON Contains the data to initialize the performance level from
+     */
+    function MissionPerformanceLevel(dataJSON) {
+        /**
+         * The string ID of this performance level
+         * @type String
+         */
+        this._name = dataJSON.name;
+        /*
+         * To achieve this performance level, the player needs to earn a base score that is not less than the reference score for the 
+         * mission multiplied by this factor (for team missions only)
+         * @type Number
+         */
+        this._referenceBaseScoreFactor = dataJSON.referenceBaseScoreFactor;
+        /*
+         * To achieve this performance level, the player needs to complete the mission with a hit ratio not less than this value
+         * @type Number
+         */
+        this._referenceHitRatio = dataJSON.referenceHitRatio;
+        /*
+         * To achieve this performance level, the player needs to complete the mission with a hull integrity not less than this value
+         * @type Number
+         */
+        this._referenceHullIntegrity = dataJSON.referenceHullIntegrity;
+        /*
+         * To achieve this performance level, the player needs to complete the mission with a team survival rate not less than this value
+         * (for team missions only)
+         * @type Number
+         */
+        this._referenceTeamSurvival = dataJSON.referenceTeamSurvival;
+    }
+    /**
+     * Returns the string ID for this performance level
+     * @returns {String}
+     */
+    MissionPerformanceLevel.prototype.getName = function () {
+        return this._name;
+    };
+    /**
+     * Returns whether this performance level is achieved given the passed performance metrics
+     * @param {Number} baseScoreRatio Player base score / mission reference score
+     * @param {Number} hitRatio Number of hits / fired projectiles
+     * @param {Number} hullIntegrity Current / full hitpoints
+     * @param {Number} teamSurvival Surviving / initial teammates
+     * @returns {Boolean}
+     */
+    MissionPerformanceLevel.prototype.isReached = function (baseScoreRatio, hitRatio, hullIntegrity, teamSurvival) {
+        return (this._referenceBaseScoreFactor === undefined) || (
+                ((teamSurvival === undefined) || (baseScoreRatio >= this._referenceBaseScoreFactor)) &&
+                (hitRatio >= this._referenceHitRatio) &&
+                (hullIntegrity >= this._referenceHullIntegrity) &&
+                ((teamSurvival === undefined) || (teamSurvival >= this._referenceTeamSurvival)));
+    };
+    // #########################################################################
+    /**
      * @class A class responsible for loading and storing game logic related 
      * settings and data as well and provide an interface to access them.
      * @extends AsyncResource
@@ -2405,6 +2512,11 @@ define([
          * @type Object.<String, Environment>
          */
         this._environments = null;
+        /**
+         * Stores them achievable mission performance levels defined in config.json
+         * @type MissionPerformanceLevel[]
+         */
+        this._missionPerformanceLevels = null;
         /**
          * Stores (and manages the loading of) the descriptors for the missions.
          * @type ResourceManager
@@ -2444,6 +2556,36 @@ define([
         var i, environmentNames = this.getEnvironmentNames();
         for (i = 0; i < environmentNames.length; i++) {
             callback(this._environments[environmentNames[i]], ENVIRONMENTS_CATEGORY_NAME);
+        }
+    };
+    /**
+     * Returns the string ID of the highest performance level the player has achieved given the passed performance metrics.
+     * (assuming the mission has been successfully completed)
+     * @param {Number} baseScoreRatio Player base score / mission reference score
+     * @param {Number} hitRatio Number of hits / fired projectiles
+     * @param {Number} hullIntegrity Current / full hitpoints
+     * @param {Number} teamSurvival Surviving / initial teammates
+     * @returns {String}
+     */
+    LogicContext.prototype.getPerformance = function (baseScoreRatio, hitRatio, hullIntegrity, teamSurvival) {
+        var i;
+        for (i = this._missionPerformanceLevels.length - 1; i >= 0; i--) {
+            if (this._missionPerformanceLevels[i].isReached(baseScoreRatio, hitRatio, hullIntegrity, teamSurvival)) {
+                return this._missionPerformanceLevels[i].getName();
+            }
+        }
+        return FAILED_MISSION_PERFORMACE;
+    };
+    /**
+     * Loads the general game logic configuration defined in the passed JSON object (from config.json), such as available mission 
+     * performance levels.
+     * @param {Object} dataJSON
+     */
+    LogicContext.prototype.loadConfigurationFromJSON = function (dataJSON) {
+        var i;
+        this._missionPerformanceLevels = [];
+        for (i = 0; i < dataJSON.missionPerformanceLevels.length; i++) {
+            this._missionPerformanceLevels.push(new MissionPerformanceLevel(dataJSON.missionPerformanceLevels[i]));
         }
     };
     // methods
@@ -2560,6 +2702,8 @@ define([
     // The public interface of the module
     return {
         ObjectiveState: ObjectiveState,
+        FAILED_MISSION_PERFORMACE: FAILED_MISSION_PERFORMACE,
+        loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         requestLoad: _context.requestLoad.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
         getDebugInfo: getDebugInfo,

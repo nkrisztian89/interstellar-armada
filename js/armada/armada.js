@@ -68,6 +68,7 @@ define([
         config.loadConfigurationFromJSON(configJSON.dataFiles.logic);
         graphics.loadConfigurationFromJSON(configJSON.graphics);
         audio.loadConfigurationFromJSON(configJSON.audio);
+        missions.loadConfigurationFromJSON(configJSON.logic);
         control.loadConfigurationFromJSON(configJSON.control);
         _progressBar.value = 1;
         callback();

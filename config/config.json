@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0-dev:417 (2016.11.03.)",
+    "version": "0.4.0-dev:418 (2016.12.10.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -376,6 +376,27 @@
     "audio": {
         "rolloffFactor": 0.01,
         "panningModel": "equalpower"
+    },
+    "logic": {
+        "missionPerformanceLevels": [
+            {
+                "name": "bronze"
+            },
+            {
+                "name": "silver",
+                "referenceBaseScoreFactor": 1.5,
+                "referenceHitRatio": 0.05,
+                "referenceHullIntegrity": 0.8,
+                "referenceTeamSurvival": 0.5
+            },
+            {
+                "name": "gold",
+                "referenceBaseScoreFactor": 2.0,
+                "referenceHitRatio": 0.10,
+                "referenceHullIntegrity": 0.9,
+                "referenceTeamSurvival": 0.75
+            }
+        ]
     },
     "control": {
         "controllers": [

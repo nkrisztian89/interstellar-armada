@@ -111,7 +111,7 @@ define([
              * The ID of the loop function that is set to run the game simulation
              * @type Number
              */
-            _simulationLoop,
+            _simulationLoop = LOOP_CANCELED,
             /**
              * This stores the value of the cursor as it was used in the battle, while some menu is active
              * @type String
@@ -2095,6 +2095,7 @@ define([
                     }
                     game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
                         victory: victory,
+                        performance: victory ? _mission.getPerformance(baseScore, hitRatio, craft.getHullIntegrity(), teamSurvival) : missions.FAILED_MISSION_PERFORMACE,
                         survived: true,
                         leftEarly: !victory && !_mission.isLost(),
                         score: score || 0,
