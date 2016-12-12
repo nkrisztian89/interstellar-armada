@@ -1,4 +1,4 @@
-![Logo](http://nkrisztian89.github.io/interstellar-armada/images/thumb.png)
+![Logo](http://nkrisztian89.github.io/interstellar-armada/images/splash/1.png)
 
 Interstellar Armada is JavaScript-WebGL based space combat simulator game in the 
 early development phase by Krisztián Nagy 
@@ -29,7 +29,7 @@ to default settings), where you can also check the controls.
 For developers
 ==============
 
-I use [NetBeans](https://netbeans.org/) (8.1) with its web development (+
+I use [NetBeans](https://netbeans.org/) (8.2) with its web development (+
 [JSLint](http://plugins.netbeans.org/plugin/40893/jslint),
 [GLSL](http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter) and 
 [Markdown](http://plugins.netbeans.org/plugin/50964/markdown-support)) plugins 
