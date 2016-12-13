@@ -76,12 +76,6 @@ canvas {
     white-space: normal;
 }
 
-.withBackgroundSign {
-    background-image: url(../images/empire_back_dark350.png);
-    background-position: center top;
-    background-repeat: no-repeat;
-}
-
 .withSmallBackgroundSign {
     background-image: url(../images/empire_back_dark200.png);
     background-position: center top;
@@ -304,6 +298,10 @@ a.button.disabled {
 
 img {
     margin: 0.5em;
+}
+
+img.menuHeaderImage {
+    margin: 0.5em 0 0.5em 0;
 }
 
 @media screen and (max-width: 600px) {
