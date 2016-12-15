@@ -44,7 +44,7 @@
         "launchButton": "Indítás",
         "demoButton": "Demo",
         "notCompleted": "Nem teljesített",
-        "bestScore": "Legjobb pontszám: {score}",
+        "bestScore": "Legjobb pontszám: {score} ({medal})",
         "sandboxCompleted": "teszt kipróbálva",
         "noSelectedName": "Küldetésválasztás",
         "noSelectedDescription": "Válassz egy küldetést a listából.",

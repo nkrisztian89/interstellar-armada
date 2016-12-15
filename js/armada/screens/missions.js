@@ -43,6 +43,7 @@ define([
             MISSION_TITLE_ID = "missionTitle",
             MISSION_DESCRIPTION_ID = "missionDescription",
             LIST_COMPONENT_NAME = "list",
+            MEDAL_IMAGE_HTML = "<img class='missionMedal' src='images/empire_{performance}_20.png' alt='{performance}'>",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -261,6 +262,7 @@ define([
         this._listComponent.executeForListElements(function (listElement) {
             var
                     score = missionDescriptors[i].getBestScore(),
+                    performance = missionDescriptors[i].getBestPerformance(),
                     winCount = missionDescriptors[i].getWinCount(),
                     subcaption = listElement.querySelector("." + armadaScreens.SUBCAPTION_CLASS_NAME);
             subcaption.innerHTML = utils.formatString(
@@ -269,7 +271,10 @@ define([
                                     strings.get(strings.MISSIONS.SANDBOX_COMPLETED) :
                                     strings.get(strings.MISSIONS.BEST_SCORE)) :
                             strings.get(strings.MISSIONS.NOT_COMPLETED)), {
-                score: score
+                score: score,
+                medal: performance ? utils.formatString(MEDAL_IMAGE_HTML, {
+                    performance: performance
+                }) : " - "
             });
             if (winCount > 0) {
                 subcaption.classList.add(COMPLETED_CLASS);

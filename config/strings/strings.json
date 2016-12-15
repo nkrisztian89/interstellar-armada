@@ -19,7 +19,7 @@
         "launchButton": "Launch mission",
         "demoButton": "Launch demo",
         "notCompleted": "Not yet completed",
-        "bestScore": "Best score: {score}",
+        "bestScore": "Best score: {score} ({medal})",
         "sandboxCompleted": "Test checked",
         "noSelectedName": "Choose mission",
         "noSelectedDescription": "Choose a mission from the list.",

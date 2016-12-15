@@ -65,3 +65,8 @@
     font-size: 14px;
     padding: 0;
 }
+
+img.missionMedal {
+    vertical-align: bottom;
+    margin: 0 0.1em 0.2em 0.1em;
+}

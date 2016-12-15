@@ -2286,6 +2286,7 @@ define([
     /**
      * @typedef {Object} MissionDescriptor~LocalData
      * @property {Number} bestScore 
+     * @property {String} bestPerformance
      * @property {Number} winCount
      * @property {Number} loseCount
      */
@@ -2401,21 +2402,30 @@ define([
         return result;
     };
     /**
-     * Returns the current best score for the mission (also stored in local storage)
+     * Returns the current best score reached for the mission (also stored in local storage)
      * @returns {Number}
      */
     MissionDescriptor.prototype.getBestScore = function () {
         return this._localData.bestScore;
     };
     /**
+     * Returns the ID of the best performance level reached for the mission (also stored in local storage)
+     * @returns {String}
+     */
+    MissionDescriptor.prototype.getBestPerformance = function () {
+        return this._localData.bestPerformance;
+    };
+    /**
      * Checks whether the passed score exceeds the current best score of the mission, and if so, updates the value both in this object and in
      * local storage
      * @param {Number} score
+     * @param {String} performance The ID of the achieved performance level
      * @returns {Boolean}
      */
-    MissionDescriptor.prototype.updateBestScore = function (score) {
+    MissionDescriptor.prototype.updateBestScore = function (score, performance) {
         if ((this._localData.bestScore === undefined) || (score > this._localData.bestScore)) {
             this._localData.bestScore = score;
+            this._localData.bestPerformance = performance;
             this._saveLocalData();
             return true;
         }

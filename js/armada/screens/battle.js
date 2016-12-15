@@ -2048,7 +2048,8 @@ define([
         var
                 /**@type Boolean*/ victory, isTeamMission, isRecord,
                 /**@type Spacecraft*/ craft,
-                /**@type Number*/ baseScore, hitRatio, hullIntegrityBonus, teamSurvival, teamSurvivalBonus, score;
+                /**@type Number*/ baseScore, hitRatio, hullIntegrityBonus, teamSurvival, teamSurvivalBonus, score,
+                /**@type String*/ performance;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -2091,11 +2092,12 @@ define([
                             teamSurvivalBonus = Math.round(teamSurvival * config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_TEAM_SURVIVAL));
                         }
                         score = Math.round(baseScore * (1 + hitRatio)) + hullIntegrityBonus + (isTeamMission ? teamSurvivalBonus : 0);
-                        isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(score);
+                        performance = _mission.getPerformance(baseScore, hitRatio, craft.getHullIntegrity(), teamSurvival);
+                        isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(score, performance);
                     }
                     game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
                         victory: victory,
-                        performance: victory ? _mission.getPerformance(baseScore, hitRatio, craft.getHullIntegrity(), teamSurvival) : missions.FAILED_MISSION_PERFORMACE,
+                        performance: victory ? performance : missions.FAILED_MISSION_PERFORMACE,
                         survived: true,
                         leftEarly: !victory && !_mission.isLost(),
                         score: score || 0,
