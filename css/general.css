@@ -361,14 +361,14 @@ progress[value] {
     /* Styling of the container in Firefox */
     background-color: #444444;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
-    height: 10px;
+    width: 180px;
+    height: 6px;
 }
 
 /* Styling of the container in Webkit browsers */
 progress[value]::-webkit-progress-bar {
     background-color: #444444;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
-    height: 10px;
 }
 
 /* Styling of the value bar in Webkit browsers */
@@ -381,7 +381,6 @@ progress[value]::-webkit-progress-value {
         );
 
     box-shadow: 0em 0em 0.4em #00dd00;
-    height: 10px;
 }
 
 /* Styling of the value bar in Firefox */
@@ -394,7 +393,6 @@ progress[value]::-moz-progress-bar {
         );
 
     box-shadow: 0em 0em 0.4em #00dd00;
-    height: 10px;
 }
 
 
