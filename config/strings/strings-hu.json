@@ -213,6 +213,11 @@
             "fail": "<strong>Vereség!<strong><br/>Nem sikerült teljesítened a küldetés feladatait. <br/>Az {menuKey} billentyűvel hívhatod elő a menüt."
         }
     },
+    "performanceLevel": {
+        "bronze": "bronz",
+        "silver": "ezüst",
+        "gold": "arany"
+    },
     "debriefing": {
         "backButton": "Vissza a küldetésekhez",
         "victoryTitle": "Küldetés teljesítve",
@@ -220,7 +225,8 @@
         "score": "Pontszám: {score}",
         "newRecord": "Új rekord!",
         "description": {
-            "victory": "Sikeresen teljesítetted ezt a küldetést.",
+            "victory": "A teljesítményeddel megszerezted {performance} kitüntetést ehhez a küldetéshez.",
+            "nextPerformance": "<br/>Érj el {score} vagy több pontot a következő kitüntetés megszerzéséhez.",
             "fail": "Nem sikerült teljesítened a küldetés összes feladatát.",
             "defeat": "Az űrhajód megsemmisült a küldetés során.",
             "leftEarly": "Elhagytad a küldetés helyszínét, mielőtt teljesítetted volna a feladatokat."

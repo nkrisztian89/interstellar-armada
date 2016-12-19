@@ -147,6 +147,7 @@ define([
      * @typedef {Object} DebreifingScreen~Data
      * @property {Boolean} victory 
      * @property {String} performance
+     * @property {String} nextPerformanceScore
      * @property {Boolean} survived 
      * @property {Boolean} leftEarly 
      * @property {Number} score 
@@ -167,6 +168,7 @@ define([
      * @param {DebreifingScreen~Data} data
      */
     DebriefingScreen.prototype.setData = function (data) {
+        var medalText = data.victory ? strings.get(strings.PERFORMANCE_LEVEL.PREFIX, data.performance) : "";
         this._title.setContent(data.victory ?
                 strings.get(strings.DEBRIEFING.VICTORY_TITLE) :
                 strings.get(strings.DEBRIEFING.DEFEAT_TITLE));
@@ -181,12 +183,19 @@ define([
         }
         this._newRecord.setVisible(data.isRecord);
         this._descriptionParagraph.setContent(data.victory ?
-                strings.get(strings.DEBRIEFING.DESCRIPTION_VICTORY) :
-                (data.leftEarly ?
-                        strings.get(strings.DEBRIEFING.DESCRIPTION_LEFT_EARLY) :
-                        (data.survived ?
-                                strings.get(strings.DEBRIEFING.DESCRIPTION_FAIL) :
-                                strings.get(strings.DEBRIEFING.DESCRIPTION_DEFEAT))));
+                // victory text
+                utils.formatString(strings.get(strings.DEBRIEFING.DESCRIPTION_VICTORY), {
+                    performance: strings.getDefiniteArticleForWord(medalText) + " <strong>" + medalText + "</strong>"
+                }) +
+                (data.nextPerformanceScore ? utils.formatString(strings.get(strings.DEBRIEFING.DESCRIPTION_NEXT_PERFORMANCE), {
+                    score: data.nextPerformanceScore
+                }) : "") :
+                // defeat text  - explaining the reason
+                        (data.leftEarly ?
+                                strings.get(strings.DEBRIEFING.DESCRIPTION_LEFT_EARLY) :
+                                (data.survived ?
+                                        strings.get(strings.DEBRIEFING.DESCRIPTION_FAIL) :
+                                        strings.get(strings.DEBRIEFING.DESCRIPTION_DEFEAT))));
         this._timeCell.setContent(utils.formatTimeToMinutes(data.elapsedTime));
         this._killsCell.setContent(data.kills.toString());
         this._damageCell.setContent(data.damageDealt.toString());

@@ -187,6 +187,11 @@
             "fail": "<strong>Defeat!<strong><br/>You have failed the mission objectives. <br/>You can keep flying around or press the {menuKey} key to open the menu."
         }
     },
+    "performanceLevel": {
+        "bronze": "bronze",
+        "silver": "silver",
+        "gold": "gold"
+    },
     "debriefing": {
         "backButton": "Back to missions",
         "victoryTitle": "Mission accomplished",
@@ -194,7 +199,8 @@
         "score": "Score: {score}",
         "newRecord": "New record!",
         "description": {
-            "victory": "You have successfully completed this mission.",
+            "victory": "You have earned {performance} medal for your performance in this mission.",
+            "nextPerformance": "<br/>Achieve a performance score of {score} or more to earn a higher level distinction.",
             "fail": "You did not manage to complete all the objectives for this mission.",
             "defeat": "Your spacecraft has been destroyed during the mission.",
             "leftEarly": "You left the battlefield before completing all the mission objectives."

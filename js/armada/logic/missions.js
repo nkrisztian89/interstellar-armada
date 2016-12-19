@@ -1953,6 +1953,13 @@ define([
         }
     };
     /**
+     * Returns the how much base score falls on the player in this mission (out of the total enemy score value, based on the team)
+     * @returns {Number}
+     */
+    Mission.prototype.getReferenceScore = function () {
+        return this._referenceScore;
+    };
+    /**
      * Calculates and stores the reference score for this mission.
      */
     Mission.prototype._updateReferenceScore = function () {
@@ -2078,17 +2085,65 @@ define([
         this._updateReferenceScore();
     };
     /**
-     * Returns the ID of the performance level the player achieved in this mission based on the passed performance metrics.
-     * Assumes that the objectives have been successfully completed.
+     * Returns whether the mission is starting (has been started) with the player having teammates.
+     * @returns {Boolean}
+     */
+    Mission.prototype.isTeamMission = function () {
+        return this.getPilotedSpacecraft() && this.getPilotedSpacecraft().getTeam() && (this.getPilotedSpacecraft().getTeam().getInitialCount() > 1);
+    };
+    /**
+     * Returns an object containing the final score and score breakdown granted in this mission for the performance described by the passed 
+     * metrics.
      * @param {Number} baseScore The score achieved by the player before adding any bonuses
      * @param {Number} hitRatio Number of hits / fired projectiles
      * @param {Number} hullIntegrity Current / full hitpoints
      * @param {Number} teamSurvival Surviving / initial teammates
-     * @returns {String}
+     * @returns {Object}
      */
-    Mission.prototype.getPerformance = function (baseScore, hitRatio, hullIntegrity, teamSurvival) {
-        var baseScoreRatio = baseScore / this._referenceScore;
-        return _context.getPerformance(baseScoreRatio, hitRatio, hullIntegrity, teamSurvival);
+    Mission.prototype.getScoreStatistics = function (baseScore, hitRatio, hullIntegrity, teamSurvival) {
+        var
+                isTeamMission = this.isTeamMission(),
+                hitRatioBonus, hullIntegrityBonus, teamSurvivalBonus, score;
+        baseScore = Math.round(baseScore);
+        hitRatioBonus = Math.round((baseScore || 0) * hitRatio);
+        hullIntegrityBonus = Math.round(hullIntegrity * (isTeamMission ?
+                config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY_TEAM) :
+                config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY)));
+        if (isTeamMission) {
+            teamSurvivalBonus = Math.round(teamSurvival * config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_TEAM_SURVIVAL));
+        }
+        score = baseScore + hitRatioBonus + hullIntegrityBonus + (isTeamMission ? teamSurvivalBonus : 0);
+        return {
+            baseScore: baseScore,
+            hitRatioBonus: hitRatioBonus,
+            hullIntegrityBonus: hullIntegrityBonus,
+            teamSurvivalBonus: teamSurvivalBonus,
+            score: score
+        };
+    };
+    /**
+     * Returns an object containing the score breakdown and performance information achieved by the player in this mission.
+     * (assuming the mission has been completed successfully)
+     * @returns {Object}
+     */
+    Mission.prototype.getPerformanceStatistics = function () {
+        var
+                /**@type Spacecraft */craft = this.getPilotedSpacecraft(),
+                /**@type Boolean */isTeamMission = this.isTeamMission(),
+                /**@type Number */teamSurvival = isTeamMission ? (this.getSpacecraftCountForTeam(craft.getTeam()) - 1) / (craft.getTeam().getInitialCount() - 1) : 0,
+                /**@type Object */scoreStats = this.getScoreStatistics(craft.getScore(), craft.getHitRatio(), craft.getHullIntegrity(), teamSurvival),
+                /**@type Object */perfInfo = _context.getPerformanceInfo(this, scoreStats.score);
+        return {
+            baseScore: scoreStats.baseScore,
+            hitRationBonus: scoreStats.hitRatioBonus,
+            hullIntegrityBonus: scoreStats.hullIntegrityBonus,
+            teamSurvival: isTeamMission ? teamSurvival : undefined,
+            teamSurvivalBonus: scoreStats.teamSurvivalBonus,
+            score: scoreStats.score,
+            performance: perfInfo.performance,
+            nextPerformance: perfInfo.nextPerformance,
+            nextPerformanceScore: perfInfo.nextPerformanceScore
+        };
     };
     /**
      * Creates and returns a camera configuration for this given view set up according to the scene view's parameters.
@@ -2493,19 +2548,16 @@ define([
         return this._name;
     };
     /**
-     * Returns whether this performance level is achieved given the passed performance metrics
-     * @param {Number} baseScoreRatio Player base score / mission reference score
-     * @param {Number} hitRatio Number of hits / fired projectiles
-     * @param {Number} hullIntegrity Current / full hitpoints
-     * @param {Number} teamSurvival Surviving / initial teammates
-     * @returns {Boolean}
+     * Returns the amount of score points required in the passed mission to earn this performance level.
+     * @param {Mission} mission
+     * @returns {Number}
      */
-    MissionPerformanceLevel.prototype.isReached = function (baseScoreRatio, hitRatio, hullIntegrity, teamSurvival) {
-        return (this._referenceBaseScoreFactor === undefined) || (
-                ((teamSurvival === undefined) || (baseScoreRatio >= this._referenceBaseScoreFactor)) &&
-                (hitRatio >= this._referenceHitRatio) &&
-                (hullIntegrity >= this._referenceHullIntegrity) &&
-                ((teamSurvival === undefined) || (teamSurvival >= this._referenceTeamSurvival)));
+    MissionPerformanceLevel.prototype.getRequiredScore = function (mission) {
+        return this._referenceBaseScoreFactor ? mission.getScoreStatistics(
+                mission.getReferenceScore() * (mission.isTeamMission() ? this._referenceBaseScoreFactor : 1),
+                this._referenceHitRatio,
+                this._referenceHullIntegrity,
+                this._referenceTeamSurvival).score : 0;
     };
     // #########################################################################
     /**
@@ -2569,22 +2621,24 @@ define([
         }
     };
     /**
-     * Returns the string ID of the highest performance level the player has achieved given the passed performance metrics.
+     * Returns an object containing the performance level the player earned in this mission as well as (if available) the next (one level
+     * higher) performance level that can be achieved and how many score points are necessary for earning it.
      * (assuming the mission has been successfully completed)
-     * @param {Number} baseScoreRatio Player base score / mission reference score
-     * @param {Number} hitRatio Number of hits / fired projectiles
-     * @param {Number} hullIntegrity Current / full hitpoints
-     * @param {Number} teamSurvival Surviving / initial teammates
-     * @returns {String}
+     * @param {Mission} mission The mission the player completed
+     * @param {Number} score The final score the player achieved
+     * @returns {Object}
      */
-    LogicContext.prototype.getPerformance = function (baseScoreRatio, hitRatio, hullIntegrity, teamSurvival) {
-        var i;
-        for (i = this._missionPerformanceLevels.length - 1; i >= 0; i--) {
-            if (this._missionPerformanceLevels[i].isReached(baseScoreRatio, hitRatio, hullIntegrity, teamSurvival)) {
-                return this._missionPerformanceLevels[i].getName();
+    LogicContext.prototype.getPerformanceInfo = function (mission, score) {
+        var i, result = {}, length = this._missionPerformanceLevels.length;
+        for (i = 0; i < length; i++) {
+            if (score < this._missionPerformanceLevels[i].getRequiredScore(mission)) {
+                break;
             }
         }
-        return FAILED_MISSION_PERFORMACE;
+        result.performance = (i > 0) ? this._missionPerformanceLevels[i - 1].getName() : FAILED_MISSION_PERFORMACE;
+        result.nextPerformance = (i < length) ? this._missionPerformanceLevels[i].getName() : null;
+        result.nextPerformanceScore = result.nextPerformance ? this._missionPerformanceLevels[i].getRequiredScore(mission) : 0;
+        return result;
     };
     /**
      * Loads the general game logic configuration defined in the passed JSON object (from config.json), such as available mission 

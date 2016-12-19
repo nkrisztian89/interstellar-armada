@@ -2046,10 +2046,10 @@ define([
      */
     BattleScreen.prototype._render = function (dt) {
         var
-                /**@type Boolean*/ victory, isTeamMission, isRecord,
+                /**@type Boolean*/ victory, isRecord,
                 /**@type Spacecraft*/ craft,
-                /**@type Number*/ baseScore, hitRatio, hullIntegrityBonus, teamSurvival, teamSurvivalBonus, score,
-                /**@type String*/ performance;
+                /**@type Number*/ hitRatio,
+                /**@type Object*/ perfStats;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -2082,36 +2082,30 @@ define([
                     hitRatio = craft.getHitRatio();
                     if (victory) {
                         // calculating score from base score and bonuses
-                        isTeamMission = craft.getTeam().getInitialCount() > 1;
-                        baseScore = Math.round(craft.getScore());
-                        hullIntegrityBonus = Math.round(craft.getHullIntegrity() * (isTeamMission ?
-                                config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY_TEAM) :
-                                config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY)));
-                        if (isTeamMission) {
-                            teamSurvival = (_mission.getSpacecraftCountForTeam(craft.getTeam()) - 1) / (craft.getTeam().getInitialCount() - 1);
-                            teamSurvivalBonus = Math.round(teamSurvival * config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_TEAM_SURVIVAL));
-                        }
-                        score = Math.round(baseScore * (1 + hitRatio)) + hullIntegrityBonus + (isTeamMission ? teamSurvivalBonus : 0);
-                        performance = _mission.getPerformance(baseScore, hitRatio, craft.getHullIntegrity(), teamSurvival);
-                        isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(score, performance);
+                        perfStats = _mission.getPerformanceStatistics();
+                        isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(perfStats.score, perfStats.performance);
+                    } else {
+                        perfStats = {};
                     }
                     game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
                         victory: victory,
-                        performance: victory ? performance : missions.FAILED_MISSION_PERFORMACE,
+                        performance: victory ? perfStats.performance : missions.FAILED_MISSION_PERFORMACE,
+                        nextPerformance: victory ? perfStats.nextPerformance : null,
+                        nextPerformanceScore: victory ? perfStats.nextPerformanceScore : 0,
                         survived: true,
                         leftEarly: !victory && !_mission.isLost(),
-                        score: score || 0,
+                        score: perfStats.score || 0,
                         isRecord: isRecord,
                         elapsedTime: _elapsedTime,
                         kills: craft ? craft.getKills() : 0,
                         damageDealt: craft ? craft.getDamageDealt() : 0,
-                        baseScore: baseScore || 0,
+                        baseScore: perfStats.baseScore || 0,
                         hitRatio: hitRatio,
-                        hitRatioBonus: Math.round((baseScore || 0) * hitRatio),
+                        hitRatioBonus: perfStats.hitRationBonus,
                         hullIntegrity: craft.getHullIntegrity(),
-                        hullIntegrityBonus: hullIntegrityBonus,
-                        teamSurvival: teamSurvival,
-                        teamSurvivalBonus: teamSurvivalBonus
+                        hullIntegrityBonus: perfStats.hullIntegrityBonus,
+                        teamSurvival: perfStats.teamSurvival,
+                        teamSurvivalBonus: perfStats.teamSurvivalBonus
                     });
                     game.setScreen(armadaScreens.DEBRIEFING_SCREEN_NAME);
                     return;

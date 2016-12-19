@@ -127,6 +127,9 @@ define([
         MESSAGE_DEFEAT: {name: "battle.message.defeat"},
         MESSAGE_FAIL: {name: "battle.message.fail"}
     };
+    strings.PERFORMANCE_LEVEL = {
+        PREFIX: {name: "performanceLevel.", optional: true}
+    };
     strings.DEBRIEFING = {
         BACK: {name: "debriefing.backButton"},
         VICTORY_TITLE: {name: "debriefing.victoryTitle"},
@@ -134,6 +137,7 @@ define([
         SCORE: {name: "debriefing.score"},
         NEW_RECORD: {name: "debriefing.newRecord"},
         DESCRIPTION_VICTORY: {name: "debriefing.description.victory"},
+        DESCRIPTION_NEXT_PERFORMANCE: {name: "debriefing.description.nextPerformance"},
         DESCRIPTION_FAIL: {name: "debriefing.description.fail"},
         DESCRIPTION_DEFEAT: {name: "debriefing.description.defeat"},
         DESCRIPTION_LEFT_EARLY: {name: "debriefing.description.leftEarly"},
