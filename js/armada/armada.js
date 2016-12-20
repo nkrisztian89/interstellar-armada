@@ -8,7 +8,7 @@
  */
 
 /*jslint nomen: true, white: true */
-/*global define, require, location, document, JSON, localStorage */
+/*global define, requirejs, location, document, JSON, localStorage */
 
 /**
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
@@ -74,7 +74,7 @@ define([
         callback();
     };
     game._buildScreensAndExecuteCallback = function (callback) {
-        require([
+        requirejs([
             "armada/screens/shared",
             "armada/screens/menus",
             "armada/screens/missions",

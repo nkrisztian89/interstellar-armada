@@ -16,7 +16,7 @@
  */
 
 /*jslint nomen: true, plusplus: true, white: true */
-/*global define, require, alert, console, XMLHttpRequest, DOMParser, document, performance */
+/*global define, requirejs, alert, console, XMLHttpRequest, DOMParser, document, performance */
 
 /**
  * @module modules/application
@@ -213,7 +213,7 @@ define(function () {
          */
         setVersion: function (value) {
             _version = value;
-            require.config({
+            requirejs.config({
                 urlArgs: this.getVersionURLArg()
             });
         },

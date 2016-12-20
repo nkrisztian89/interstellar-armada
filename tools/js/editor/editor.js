@@ -6,7 +6,7 @@
  * @version 1.0
  */
 
-/*global define, document, localStorage, require, Blob, window */
+/*global define, document, localStorage, requirejs, Blob, window */
 /*jslint white: true, nomen: true, plusplus: true */
 
 /**
@@ -869,7 +869,7 @@ define([
             application.setVersion(configJSON.version);
             application.setDebugVersion(configJSON.debugVersion);
             application.log("Game version is: " + application.getVersion(), 1);
-            require([
+            requirejs([
                 "modules/media-resources"
             ], function (resources) {
                 config.loadConfigurationFromJSON(configJSON.dataFiles.logic);

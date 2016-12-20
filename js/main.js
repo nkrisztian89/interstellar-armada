@@ -6,11 +6,11 @@
  * @version 1.0
  */
 
-/*global require */
+/*global requirejs */
 /**
  * @param armada
  */
-require(["armada/armada"], function (armada) {
+requirejs(["armada/armada"], function (armada) {
     "use strict";
     armada.initialize();
 });

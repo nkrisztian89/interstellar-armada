@@ -6,11 +6,11 @@
  * @version 1.0
  */
 
-/*global require */
+/*global requirejs */
 /**
  * @param editor
  */
-require(["editor/editor"], function (editor) {
+requirejs(["editor/editor"], function (editor) {
     "use strict";
     editor.initialize();
 });

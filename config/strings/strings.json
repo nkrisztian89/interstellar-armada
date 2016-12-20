@@ -11,7 +11,8 @@
         "newGame": "New game",
         "database": "Database",
         "settings": "Settings",
-        "about": "About"
+        "about": "About",
+        "quit": "Quit"
     },
     "missions": {
         "backButton": "Back to menu",

@@ -18,7 +18,7 @@
  */
 
 /*jslint nomen: true, white: true */
-/*global define, require, location, document, JSON */
+/*global define, requirejs, location, document, JSON */
 
 /**
  * @param application This module augments the generic application module
@@ -132,7 +132,7 @@ define([
                     application.log("Game version is: " + application.getVersion(), 1);
                     _defaultLanguage = configJSON.defaultLanguage;
                     _stringsFileDescriptors = configJSON.configFiles.strings;
-                    require([
+                    requirejs([
                         "modules/media-resources"
                     ], function (resources) {
                         application._loadGameConfigurationAndExecuteCallback(configJSON, function () {
@@ -263,6 +263,7 @@ define([
      */
     application.initialize = function () {
         application.log("Initializing " + _gameName + "...");
+        // needs to be commented out for Electron:
         if (location.protocol === "file:") {
             this.showError("Trying to run the game from the local filesystem!",
                     application.ErrorSeverity.CRITICAL,
@@ -273,6 +274,7 @@ define([
                     "you can start the game by entering 'localhost/game' in your browser's address bar.");
             return;
         }
+        // ...until this point
         _requestConfigLoad();
     };
     // globally available functions

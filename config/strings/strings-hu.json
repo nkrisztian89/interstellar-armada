@@ -36,7 +36,8 @@
         "newGame": "Új játék",
         "database": "Adatbázis",
         "settings": "Beállítások",
-        "about": "Információ"
+        "about": "Információ",
+        "quit": "Kilépés"
     },
     "missions": {
         "backButton": "Vissza a menübe",

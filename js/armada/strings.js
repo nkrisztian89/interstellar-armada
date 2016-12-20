@@ -29,7 +29,8 @@ define([
         NEW_GAME: {name: "mainMenu.newGame"},
         DATABASE: {name: "mainMenu.database"},
         SETTINGS: {name: "mainMenu.settings"},
-        ABOUT: {name: "mainMenu.about"}
+        ABOUT: {name: "mainMenu.about"},
+        QUIT: {name: "mainMenu.quit"}
     };
     strings.MISSIONS = {
         BACK: {name: "missions.backButton"},

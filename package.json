@@ -1,9 +1,10 @@
 {
-  "name": "armada",
-  "version": "0.1.0",
+  "name": "interstellar-armada",
+  "version": "0.4.0",
   "description": "The Interstellar Armada WebGL space combat game.",
-  "main": "js/main.js",
+  "main": "main.js",
   "scripts": {
+    "start": "armada .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

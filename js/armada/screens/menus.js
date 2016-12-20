@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true*/
-/*global define */
+/*global define, window */
 
 /**
  * @param screens The menu screens are instances of MenuScreen.
@@ -58,7 +58,13 @@ define([
                         action: function () {
                             game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                         }
-                    }], 
+                        // Quit option for Electron                        
+//                    }, {
+//                        id: strings.MAIN_MENU.QUIT.name,
+//                        action: function () {
+//                            window.close();
+//                        }
+                    }],
                 armadaScreens.MAIN_MENU_CONTAINER_ID,
                 {
                     show: function () {
