@@ -125,7 +125,7 @@ define([
                 if (_context.getInputInterpreter(MOUSE_NAME).isEnabled()) {
                     document.body.style.cursor = 'none';
                 } else {
-                    document.body.style.cursor = 'default';
+                    document.body.style.cursor = game.getDefaultCursor();
                 }
             }
         });
@@ -402,7 +402,7 @@ define([
             this.enableAction("followNext");
             this.enableAction("followPrevious");
             game.getScreen().setHeaderContent(strings.get(strings.BATTLE.SPECTATOR_MODE));
-            document.body.style.cursor = 'default';
+            document.body.style.cursor = game.getDefaultCursor();
         }
     };
     _context = new ArmadaControlContext();

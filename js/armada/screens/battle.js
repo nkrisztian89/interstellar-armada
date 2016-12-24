@@ -1240,7 +1240,7 @@ define([
     BattleScreen.prototype.pauseBattle = function () {
         control.stopListening();
         _battleCursor = document.body.style.cursor;
-        document.body.style.cursor = 'default';
+        document.body.style.cursor = game.getDefaultCursor();
         if (_simulationLoop !== LOOP_REQUESTANIMFRAME) {
             clearInterval(_simulationLoop);
         }
@@ -1257,7 +1257,7 @@ define([
      * Resumes the simulation and control of the battle and the render loop
      */
     BattleScreen.prototype.resumeBattle = function () {
-        document.body.style.cursor = _battleCursor || 'default';
+        document.body.style.cursor = _battleCursor || game.getDefaultCursor();
         if (_simulationLoop === LOOP_CANCELED) {
             _prevDate = performance.now();
             if (_battleScene) {

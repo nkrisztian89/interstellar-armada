@@ -18,6 +18,7 @@
 body,html {
     width: auto;
     height: auto;
+    cursor: url(../images/cursor.png) 6 6, auto;
 }
 
 body {
@@ -275,13 +276,17 @@ a.button.disabled {
     color: #AAAAAA;
     background-color: #1A1A1A;
     
-    cursor: default;
+    cursor: url(../images/cursor.png) 6 6, default;
+}
+
+a, a:hover {
+    cursor: url(../images/cursor-light.png) 6 6, pointer;
 }
 
 .clickable:hover {
     color: #FFFFFF;
     background-color: #333333;
-    cursor: pointer;
+    cursor: url(../images/cursor-light.png) 6 6, pointer;
 }
 
 .highlightedItem {

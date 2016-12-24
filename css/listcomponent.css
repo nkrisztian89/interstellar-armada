@@ -39,7 +39,7 @@
 }
 
 .listElement:not(.disabled) {
-    cursor: pointer;
+    cursor: url(../images/cursor-light.png) 6 6, pointer;
 }
 
 .caption {

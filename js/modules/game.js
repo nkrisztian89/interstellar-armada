@@ -78,6 +78,11 @@ define([
              * @type Object.<String, {folder: String, filename: String}>
              */
             _stringsFileDescriptors = null,
+            /**
+             * The default cursor style set in CSS for the game
+             * @type String
+             */
+            _defaultCursor = null,
             // -------------------------------------------------------------------------
             // Private methods
             /**
@@ -222,6 +227,13 @@ define([
         return Object.keys(_stringsFileDescriptors);
     };
     /**
+     * 
+     * @returns {String}
+     */
+    application.getDefaultCursor = function () {
+        return _defaultCursor;
+    };
+    /**
      * If needed, launches an asynchronous request to load the language file for the given language and changes
      * the language of the application to it when it is loaded, then executes the callback. If the
      * language file had already been loaded previously, just switches the language and executes the
@@ -274,6 +286,7 @@ define([
                     "you can start the game by entering 'localhost/game' in your browser's address bar.");
             return;
         }
+        _defaultCursor = document.body.style.cursor;
         // ...until this point
         _requestConfigLoad();
     };

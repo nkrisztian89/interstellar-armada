@@ -80,7 +80,7 @@ define([
     GeneralSettingsScreen.prototype._applyAndClose = function () {
         document.body.style.cursor = "wait";
         game.requestLanguageChange(this._languageSelector.getSelectedValue(), strings, function () {
-            document.body.style.cursor = "default";
+            document.body.style.cursor = game.getDefaultCursor();
             localStorage.setItem(constants.LANGUAGE_LOCAL_STORAGE_ID, game.getLanguage());
             game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
         });
@@ -114,7 +114,7 @@ define([
             localStorage.removeItem(constants.LANGUAGE_LOCAL_STORAGE_ID);
             document.body.style.cursor = "wait";
             game.requestLanguageChange(game.getDefaultLanguage(), strings, function () {
-                document.body.style.cursor = "default";
+                document.body.style.cursor = game.getDefaultCursor();
             });
             this._updateValues();
             return false;
