@@ -37,16 +37,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <link href="css/general.css" rel="stylesheet" type="text/css"/>
     </head>
     <body ondragstart="return false;" ondrop="return false;">
-        <div id="splashContainer" class="horizontallyCentered contentWide outerContainer pageContainer">
-            <script>
-                var splashImage = new Image();
-                splashImage.id = "splashImage";
-                splashImage.class = "horizontallyCentered";
-                splashImage.src = "images/splash/" + (Math.floor(Math.random() * 4.9999) + 1).toString() + ".png";
-                document.getElementById("splashContainer").appendChild(splashImage);
-                splashImage = undefined;
-            </script>
-            <progress id="splashProgress" class="horizontallyCentered" value="0" max="100"></progress>
+        <div id="splashBackground">
+            <div id="splashContainer" class="horizontallyCentered contentWide outerContainer pageContainer">
+                <script>
+                    var splashImage = new Image();
+                    splashImage.id = "splashImage";
+                    splashImage.class = "horizontallyCentered";
+                    splashImage.src = "images/splash/" + (Math.floor(Math.random() * 4.9999) + 1).toString() + ".png";
+                    document.getElementById("splashContainer").appendChild(splashImage);
+                    splashImage = undefined;
+                </script>
+                <progress id="splashProgress" class="horizontallyCentered" value="0" max="100"></progress>
+            </div>
         </div>
         <script data-main="js/main.js" src="js/libs/require.js"></script>
     </body>
