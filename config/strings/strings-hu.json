@@ -176,7 +176,7 @@
         }
     },
     "battle": {
-        "developmentVersionNotice": "ez az Interstellar Armada korai teszt verziója ({version})",
+        "developmentVersionNotice": "Interstellar Armada: Galactic Ace - fejlesztői verzió: {version}",
         "spectatorMode": "Nézelődő mód",
         "score": "Pontszám: {score}",
         "hud": {
@@ -264,11 +264,11 @@
     "about": {
         "backButton": "Vissza a menübe",
         "title": "Információ",
-        "aboutGameHeader": "Az Interstellar Armada játékról",
-        "versionParagraph": "A játék verziója: {version}",
+        "aboutGameHeader": "Az Interstellar Armada: Galactic Ace játékról",
+        "versionParagraph": "Verziószám: {version}",
         "aboutGameParagraph": "Ez a játék tanulási célú projektként indult, és még a fejlesztés korai szakaszában jár. Ez a verzió csupán a már elkészült, kezdeti funkciók tesztelésére szolgál. Egyelőre még a játék alapvető részét képező funkciók sem készültek el teljesen. Ez a verzió emellett számos hibát is tartalmazhat.",
         "aboutAuthorLicenseHeader": "A készítőről és a licenszről",
-        "aboutAuthorLicenseParagraph": "Ezt a játékot Nagy Krisztián, a BME-n 2013-ban BSc-t végzett végzett mérnök informatikus fejleszti. A program {license} licensz alatt kerül kiadásra, ami a forráskóddal együtt részleteiben megtekinthető a projekt {github} oldalán.<br/> A játékban a Bernd Montag által készített, freeware {sansation} betűtípus  is szerepel.<br/> A forráskód részét képezi a fejlesztéshez használt {requireJS} függvénykönyvtár, mely {requireJSLicense} alatt érhető el és került felhasználásra.<br/>Egyes, a játékban szereplő hangeffektek készítéséhez ingyenesen elérhető hangminták szolgáltak alapul, melyek forrását {soundSources} találod.",
+        "aboutAuthorLicenseParagraph": "Ezt a játékot Nagy Krisztián, a BME-n 2013-ban BSc-t végzett végzett mérnök informatikus fejleszti. A program {license} licensz alatt kerül kiadásra, ami a forráskóddal együtt részleteiben megtekinthető a projekt {github} oldalán.<br/> A játékban a Bernd Montag által készített, freeware {sansation} betűtípus, valamint a Google Fonts gyűjteményből az {aldrich} és az {audiowide} ({openFontLicense} alatt elérhető) betűtípusok is szerepelnek.<br/> A forráskód részét képezi a fejlesztéshez használt {requireJS} függvénykönyvtár, mely {requireJSLicense} alatt érhető el és került felhasználásra.<br/>Egyes, a játékban szereplő hangeffektek készítéséhez ingyenesen elérhető hangminták szolgáltak alapul, melyek forrását {soundSources} találod.",
         "theNewBSDOrMITLicenses": "az új BSD vagy az MIT licenszek",
         "here": "itt",
         "aboutUsedSoftwareHeader": "A felhasznált szoftverekről",
@@ -436,7 +436,7 @@
     },
     "flightMode": {
         "free": "szabad",
-        "compensated": "kompenzált",
-        "restricted": "korlátozott"
+        "compensated": "harc",
+        "restricted": "cirkálás"
     }
 }

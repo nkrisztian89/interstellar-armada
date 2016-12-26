@@ -296,7 +296,7 @@
                         "friendly": [0, 1, 0, 1]
                     },
                     "fontSize": 0.15,
-                    "fontName": "gameFont",
+                    "fontName": "hudFont",
                     "positions": {
                         "name": [-0.95, 0.76],
                         "class": [-0.95, 0.41],
@@ -340,7 +340,7 @@
                         "reverse": [1, 0.75, 0, 0.75]
                     },
                     "fontSize": 0.35,
-                    "fontName": "gameFont",
+                    "fontName": "hudFont",
                     "positions": {
                         "maxForward": [-0.9, 0.875],
                         "maxReverse": [-0.9, -0.985]
@@ -377,7 +377,7 @@
                     "layout": {
                         "right": 0.98,
                         "top": -0.2,
-                        "width": 0.34,
+                        "width": 0.36,
                         "height": 0.15,
                         "scaleMode": "minimum",
                         "xScaleMode": "minimum",
@@ -388,7 +388,7 @@
                 "flightModeHeaderText": {
                     "color": [0, 1, 0, 1],
                     "fontSize": 0.3,
-                    "fontName": "gameFont",
+                    "fontName": "hudFont",
                     "position": [-0.9, 0.25]
                 },
                 "flightModeText": {
@@ -398,7 +398,7 @@
                         "restricted": [0.8, 0.1, 0.8, 1]
                     },
                     "fontSize": 0.3,
-                    "fontName": "gameFont",
+                    "fontName": "hudFont",
                     "position": [-0.9, -0.5]
                 },
                 "driftArrow": {
@@ -473,7 +473,7 @@
                 "scoreText": {
                     "color": [1, 1, 1, 1],
                     "fontSize": 1.0,
-                    "fontName": "gameFont",
+                    "fontName": "hudFont",
                     "position": [-1.0, -0.7]
                 },
                 "objectivesBackground": {
@@ -482,7 +482,7 @@
                     "layout": {
                         "left": -0.98,
                         "top": 0.4,
-                        "width": 0.7,
+                        "width": 0.75,
                         "height": 0.24,
                         "scaleMode": "minimum",
                         "xScaleMode": "minimum",
@@ -493,7 +493,7 @@
                 "objectivesHeaderText": {
                     "color": [1, 1, 1, 1],
                     "fontSize": 0.2,
-                    "fontName": "gameFont",
+                    "fontName": "hudFont",
                     "position": [-0.95, 0.55]
                 },
                 "objectivesText": {
@@ -503,7 +503,7 @@
                         "failed": [1, 0, 0, 1]
                     },
                     "fontSize": 0.2,
-                    "fontName": "gameFont",
+                    "fontName": "hudFont",
                     "position": [-0.95, 0.05]
                 },
                 "objectivesTextOffset": -0.45,

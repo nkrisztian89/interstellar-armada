@@ -89,6 +89,9 @@ define([
             license: '<a target="_blank" href="http://www.gnu.org/licenses/gpl-3.0-standalone.html">GPLv3</a>',
             github: '<a target="_blank" href="https://github.com/nkrisztian89/interstellar-armada" >github</a>',
             sansation: '<a target="_blank" href="http://www.dafont.com/sansation.font">Sansation</a>',
+            aldrich: '<a target="_blank" href="https://fonts.google.com/specimen/Aldrich">Aldrich</a>',
+            audiowide: '<a target="_blank" href="https://fonts.google.com/specimen/Audiowide">Audiowide</a>',
+            openFontLicense: '<a target="_blank" href="http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL_web">Open Font License</a>',
             requireJS: '<a target="_blank" href="http://requirejs.org/">RequireJS</a>',
             requireJSLicense: '<a target="_blank" href="https://github.com/jrburke/requirejs/blob/master/LICENSE">' + strings.get(strings.ABOUT.REQUIRE_JS_LICENSES) + '</a>',
             soundSources: '<a target="_blank" href="sound_sources.txt">' + strings.get(strings.ABOUT.HERE) + '</a>'

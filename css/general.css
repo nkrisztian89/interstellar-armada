@@ -9,6 +9,11 @@
     font-weight: bold;
 }
 
+@font-face {
+    font-family: hudFont;
+    src: url(../fonts/Aldrich_Regular.ttf);
+}
+
 /* In order to size elements according to screen size relatively, all
    their parents' size must be explicit, so give them explicit auto. This
    will mean 100% together with padding, border and margin. (instead of explicit
@@ -33,7 +38,7 @@ body {
 
 /* Adding this class to the body of the document will ensure the cursor will show wait above all elements */
 body.wait, body.wait * {
-    cursor: wait !important;
+    cursor: url(../images/cursor.png) 6 6, wait;
 }
 
 canvas {
@@ -279,7 +284,7 @@ a.button.disabled {
     cursor: url(../images/cursor.png) 6 6, default;
 }
 
-a, a:hover {
+a, a:hover, a:active {
     cursor: url(../images/cursor-light.png) 6 6, pointer;
 }
 
