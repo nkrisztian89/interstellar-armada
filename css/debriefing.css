@@ -2,6 +2,10 @@ h1.debriefing {
     margin-bottom: 0.2em;
 }
 
+.scoreContainer {
+    margin-bottom: 1em;
+}
+
 .score {
     font-weight: bold;
     font-size: 1.2em;
@@ -15,6 +19,7 @@ h1.debriefing {
 }
 
 .debriefingDescription {
+    margin-top: 0;
     margin-bottom: 0;
     text-align: center;
 }

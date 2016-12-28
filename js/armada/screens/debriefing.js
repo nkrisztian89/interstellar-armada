@@ -35,6 +35,7 @@ define([
             TITLE_ID = "title",
             MEDAL_ID = "medal",
             MEDAL_IMAGE_SOURCE = "images/empire_{performance}_100.png",
+            SCORE_CONTAINER_ID = "scoreContainer",
             SCORE_SPAN_ID = "score",
             NEW_RECORD_ID = "newRecord",
             DESCRIPTION_PARAGRAPH_ID = "description",
@@ -86,6 +87,8 @@ define([
         this._title = this.registerSimpleComponent(TITLE_ID);
         /** @type SimpleComponent */
         this._medal = this.registerSimpleComponent(MEDAL_ID);
+        /** @type SimpleComponent */
+        this._scoreContainer = this.registerSimpleComponent(SCORE_CONTAINER_ID);
         /** @type SimpleComponent */
         this._scoreSpan = this.registerSimpleComponent(SCORE_SPAN_ID);
         /** @type SimpleComponent */
@@ -175,6 +178,7 @@ define([
         this._medal.getElement().src = utils.formatString(MEDAL_IMAGE_SOURCE, {
             performance: data.performance
         });
+        this._scoreContainer.setVisible(data.victory);
         this._scoreSpan.setVisible(data.victory);
         if (this._scoreSpan.isVisible()) {
             this._scoreSpan.setContent(strings.get(strings.DEBRIEFING.SCORE), {
