@@ -1540,7 +1540,12 @@ define([
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
         this._speedTarget = this._compensated ?
-                Math.min(this._speedTarget + (intensity || this._speedIncrement), this._maxCompensatedForwardSpeed) :
+                Math.min(
+                        Math.max(
+                                this._spacecraft.getRelativeVelocityMatrix()[13],
+                                this._speedTarget
+                                ) + (intensity || this._speedIncrement),
+                        this._maxCompensatedForwardSpeed) :
                 Number.MAX_VALUE;
     };
     /**
@@ -1562,7 +1567,12 @@ define([
      */
     ManeuveringComputer.prototype.reverse = function (intensity) {
         this._speedTarget = this._compensated ?
-                Math.max(this._speedTarget - (intensity || this._speedIncrement), this._maxCompensatedReverseSpeed) :
+                Math.max(
+                        Math.min(
+                                this._spacecraft.getRelativeVelocityMatrix()[13],
+                                this._speedTarget
+                                ) - (intensity || this._speedIncrement),
+                        this._maxCompensatedReverseSpeed) :
                 -Number.MAX_VALUE;
     };
     /**

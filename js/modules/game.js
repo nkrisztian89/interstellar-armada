@@ -286,8 +286,8 @@ define([
                     "you can start the game by entering 'localhost/game' in your browser's address bar.");
             return;
         }
-        _defaultCursor = document.body.style.cursor;
         // ...until this point
+        _defaultCursor = document.body.style.cursor;
         _requestConfigLoad();
     };
     // globally available functions
