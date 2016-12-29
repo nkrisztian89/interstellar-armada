@@ -602,7 +602,7 @@ define([
          * The current text to render.
          * @type String
          */
-        this._text = text;
+        this._text = null;
         /**
          * The name of the font to use (as in CSS font-family)
          * @type String
@@ -625,7 +625,7 @@ define([
          * The RGBA color to use when rendering
          * @type Number[4]
          */
-        this._color = color;
+        this._color = null;
         /**
          * The horizontal alignment mode for the text
          * @type String
@@ -636,36 +636,116 @@ define([
          * @type Boolean
          */
         this._visible = true;
+        // cache variables
+        /**
+         * The width of the viewport when the text was last rendered, in pixels
+         * @type Number
+         */
+        this._lastWidth = -1;
+        /**
+         * The height of the viewport when the text was last rendered, in pixels
+         * @type Number
+         */
+        this._lastHeight = -1;
+        /**
+         * The measured width of the whole (raw) text based on the last render settings and
+         * viewport. -1 marks invalid (to-be-updated) value.
+         * @type Number
+         */
+        this._textWidth = -1;
+        /**
+         * The string to set as the context.font property when rendering
+         * @type String
+         */
+        this._cssFont = null;
+        /**
+         * The string to set as the context.fillStyle property when rendering
+         * @type String
+         */
+        this._cssColor = null;
+        /**
+         * The set text split into lines and then words for multiline support
+         * @type String[][]
+         */
+        this._words = null;
+        /**
+         * The lines as they were actually rendered last time (considering word wrapping for the last
+         * last canvas size)
+         * @type String[]
+         */
+        this._lines = null;
+        /**
+         * The last measured value for offsetting lines, in pixels (based on the width of the letter 'M')
+         * @type Number
+         */
+        this._lineHeight = -1;
+        this.setText(text);
+        this.setColor(color);
     }
     /**
-     * Returns a string defining the font and its settings to be used for rendering to a canvas with the passed viewport size.
+     * Updates the stored string defining the font and its settings to be used for rendering to a canvas with the passed viewport size.
      * @param {Number} viewportWidth
      * @param {Number} viewportHeight
-     * @returns {String}
      */
-    CanvasText.prototype._getCSSFont = function (viewportWidth, viewportHeight) {
-        var result;
+    CanvasText.prototype._updateCSSFont = function (viewportWidth, viewportHeight) {
         if (utils.scalesWithWidth(this._scaleMode, viewportWidth, viewportHeight)) {
-            result = this._size * viewportWidth + "px";
+            this._cssFont = this._size * viewportWidth + "px";
         } else {
-            result = this._size * viewportHeight + "px";
+            this._cssFont = this._size * viewportHeight + "px";
         }
-        result = result + " " + this._font;
-        return result;
+        this._cssFont = this._cssFont + " " + this._font;
+    };
+    /**
+     * Updates the cached variables that depend on the viewport size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     */
+    CanvasText.prototype._updateSize = function (viewportWidth, viewportHeight) {
+        if ((viewportWidth !== this._lastWidth) || (viewportHeight !== this._lastHeight)) {
+            this._lastWidth = viewportWidth;
+            this._lastHeight = viewportHeight;
+            this._updateCSSFont(viewportWidth, viewportHeight);
+            this._textWidth = -1;
+        }
     };
     /**
      * Renders the text using the passed 2D rendering context (of a canvas) according to its current settings.
      * @param {CanvasRenderingContext2D} context
      */
     CanvasText.prototype.render = function (context) {
-        var width, height;
+        var i, j;
         if (this._visible) {
-            context.fillStyle = utils.getCSSColor(this._color);
-            width = context.canvas.width;
-            height = context.canvas.height;
-            context.font = this._getCSSFont(width, height);
+            context.fillStyle = this._cssColor;
+            this._updateSize(context.canvas.width, context.canvas.height);
+            context.font = this._cssFont;
             context.textAlign = this._align;
-            context.fillText(this._text, (this._x + 1) / 2 * width, (1 - this._y) / 2 * height);
+            // the below code is only executed when rendering on a canvas with a new size
+            if (this._textWidth < 0) {
+                // multiline support:
+                // split the text into lines, taking into account deliberate line breaks as well as wrapping the
+                // text for the canvas size
+                this._textWidth = context.measureText(this._text).width;
+                if ((this._textWidth < this._lastWidth) && (this._words.length < 2)) {
+                    this._lines = [this._text];
+                } else {
+                    this._lineHeight = context.measureText("M").width;
+                    this._lines = [];
+                    for (i = 0; i < this._words.length; i++) {
+                        this._lines.push("");
+                        for (j = 0; j < this._words[i].length; j++) {
+                            if (context.measureText(this._lines[this._lines.length - 1] + this._words[i][j]).width < this._lastWidth) {
+                                this._lines[this._lines.length - 1] += this._words[i][j] + " ";
+                            } else {
+                                this._lines.push(this._words[i][j] + " ");
+                            }
+                        }
+                    }
+                }
+            }
+            // separately render each line as multiline support is not built into the Canvas API
+            for (i = 0; i < this._lines.length; i++) {
+                context.fillText(this._lines[i], (this._x + 1) / 2 * this._lastWidth, (1 - this._y) / 2 * this._lastHeight + (i * this._lineHeight));
+            }
         }
     };
     /**
@@ -683,7 +763,18 @@ define([
      * provided in this object. (e.g. "hello, {w}", {w: "world"} -> "hello, world"
      */
     CanvasText.prototype.setText = function (text, replacements) {
-        this._text = replacements ? utils.formatString(text, replacements) : text;
+        var i, lines;
+        text = replacements ? utils.formatString(text, replacements) : text;
+        if (text !== this._text) {
+            this._text = text;
+            // updating cache variables
+            lines = this._text.split("\n");
+            this._words = [];
+            for (i = 0; i < lines.length; i++) {
+                this._words.push(lines[i].split(" "));
+            }
+            this._textWidth = -1;
+        }
     };
     /**
      * Sets a new RGBA color to use when rendering this text
@@ -691,6 +782,7 @@ define([
      */
     CanvasText.prototype.setColor = function (color) {
         this._color = color;
+        this._cssColor = utils.getCSSColor(this._color);
     };
     /**
      * After calling this, the text is rendered whenever calling render() (until hidden)

@@ -461,6 +461,26 @@
                     "fontName": "gameFont",
                     "position": [0, -0.85]
                 },
+                "messageBackground": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "centerX": 0,
+                        "top": 0.8,
+                        "width": 0.75,
+                        "height": 0.12,
+                        "scaleMode": "maximum",
+                        "xScaleMode": "maximum",
+                        "yScaleMode": "maximum"
+                    },
+                    "color": [0, 0, 0, 0.5]
+                },
+                "messageText": {
+                    "color": [1, 1, 1, 1],
+                    "fontSize": 0.04,
+                    "fontName": "hudFont",
+                    "position": [0, 0.5]
+                },
                 "topLeftTextLayerLayout": {
                     "left": -0.98,
                     "top": 0.97,

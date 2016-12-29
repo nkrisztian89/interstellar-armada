@@ -81,7 +81,11 @@
     },
     "mission": {
         "targetPracticeBoxes": {
-            "name": "Basic target practice"
+            "name": "Basic target practice",
+            "messages": {
+                "tutorial1": "An arrow marks the targets which are not visible in front of you.",
+                "tutorial2": "Use T to cycle through hostile targets."
+            }
         },
         "targetPracticeDrones": {
             "name": "Intermediate target practice"

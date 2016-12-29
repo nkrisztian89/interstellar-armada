@@ -14,6 +14,7 @@
  * @param vec Vector operations are needed for several logic functions
  * @param mat Matrices are widely used for 3D simulation
  * @param application Used for file loading and logging functionality
+ * @param game Used to dispatch messages to BattleScreen
  * @param asyncResource LogicContext is a subclass of AsyncResource
  * @param resources Used to access the loaded media (graphics and sound) resources
  * @param resourceManager Used for storing the mission descriptors in a resource manager 
@@ -36,6 +37,7 @@ define([
     "utils/vectors",
     "utils/matrices",
     "modules/application",
+    "modules/game",
     "modules/async-resource",
     "modules/resource-manager",
     "modules/media-resources",
@@ -55,7 +57,7 @@ define([
     "utils/polyfill"
 ], function (
         utils, vec, mat,
-        application, asyncResource, resourceManager, resources, pools,
+        application, game, asyncResource, resourceManager, resources, pools,
         camera, renderableObjects, lights, sceneGraph,
         constants, graphics, classes, config, strings, spacecraft, equipment, ai) {
     "use strict";
@@ -92,7 +94,11 @@ define([
                 /** Executing this action marks the mission as complete */
                 WIN: "win",
                 /** Executing this action marks the mission as failed */
-                LOSE: "lose"
+                LOSE: "lose",
+                /** Executing this action queues a message to be displayed on the HUD */
+                MESSAGE: "message",
+                /** Executing this action clears the HUD message queue */
+                CLEAR_MESSAGES: "clearMessages"
             },
             MissionState = {
                 NONE: 0,
@@ -1467,6 +1473,11 @@ define([
          */
         this._trigger = mission.getTrigger(dataJSON.trigger);
         this._trigger.addFireHandler(this._execute.bind(this));
+        /**
+         * Specific parameters of the action depending on its type.
+         * @type Object
+         */
+        this._params = dataJSON.params;
     }
     /**
      * Return the value that identifies the nature of this action - i.e. what it does
@@ -1486,6 +1497,16 @@ define([
                 break;
             case ActionType.LOSE:
                 mission.failMission();
+                break;
+            case ActionType.MESSAGE:
+                game.getScreen().queueHUDMessage({
+                    text: strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID),
+                    duration: this._params.duration,
+                    permanent: this._params.permanent
+                }, this._params.urgent);
+                break;
+            case ActionType.CLEAR_MESSAGES:
+                game.getScreen().clearHUDMessages();
                 break;
             default:
                 application.showError("Unrecognized action type: '" + this._type + "'!");

@@ -96,7 +96,8 @@ define([
     strings.MISSION = {
         PREFIX: {name: "mission.", optional: true},
         NAME_SUFFIX: {name: ".name", optional: true},
-        DESCRIPTION_SUFFIX: {name: ".description", optional: true}
+        DESCRIPTION_SUFFIX: {name: ".description", optional: true},
+        MESSAGES_SUFFIX: {name: ".messages.", optional: true}
     };
     strings.TEAM = {
         PREFIX: {name: "team.", optional: true}

@@ -1037,6 +1037,14 @@ define([
                 name: "subheaderText",
                 type: _customTypes.TEXT_DESCRIPTOR
             },
+            MESSAGE_BACKGROUND: {
+                name: "messageBackground",
+                type: _customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR
+            },
+            MESSAGE_TEXT: {
+                name: "messageText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
             TOP_LEFT_TEXT_LAYER_LAYOUT: {
                 name: "topLeftTextLayerLayout",
                 type: _customTypes.LAYOUT_DESCRIPTOR

@@ -95,6 +95,9 @@ define([
             COMBAT_THEME = "combat",
             VICTORY_THEME = "victory",
             DEFEAT_THEME = "defeat",
+            // HUD messages
+            HUD_MESSAGE_DURATION_PER_CHAR = 70, // based on average ~900 char per minute human reading speed
+            HUD_MESSAGE_BASE_DURATION = 400, // fix extra time added to the duration of all HUD messages without explicit duration
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -207,6 +210,20 @@ define([
              * @type Number
              */
             _targetSwitchTime,
+            /**
+             * @typedef {Object} Battle~HUDMessage The properties of a message that can be displayed for
+             * the player on the HUD
+             * @property {String} text The text of the message (translated, formatted, can contain '\n'-s)
+             * @property {Number} duration The duration to display the message for, in milliseconds
+             * @property {Number} timeLeft How much time is still left from displaying this message, in milliseconds
+             * @property {Boolean} permanent If true, the message keeps being displayed until a new urgent
+             * message is added or the queue is cleared
+             */
+            /**
+             * The list of messages to be displayed on the HUD. The messages are displayed in the order they are in the queue.
+             * @type Battle~HUDMessage[]
+             */
+            _messages,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // music related
             /**
@@ -424,6 +441,18 @@ define([
              * @type CanvasText
              */
             _subheaderText,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // message
+            /**
+             * Houses the message text.
+             * @type TextLayer
+             */
+            _messageTextLayer,
+            /**
+             * A message that can be displayed to the user (status of the mission, tutorial, radio chatter...)
+             * @type CanvasText
+             */
+            _messageText,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // top left
             /**
@@ -643,6 +672,7 @@ define([
             _battleScene.clearSpotLights();
         }
         _battleScene = null;
+        _messages = null;
         audio.playMusic(null);
     }
     // ------------------------------------------------------------------------------
@@ -1455,6 +1485,23 @@ define([
             _headerTextLayer.addText(_subheaderText);
         }
         // ..............................................................................
+        // message
+        if (!_messageTextLayer) {
+            _messageTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).layout);
+            screenCanvas.addTextLayer(_messageTextLayer);
+        }
+        if (!_messageText) {
+            _messageText = new screens.CanvasText(
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).position,
+                    "",
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).fontSize,
+                    _messageTextLayer.getLayout().getScaleMode(),
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).color,
+                    "center");
+            _messageTextLayer.addText(_messageText);
+        }
+        // ..............................................................................
         // top left
         if (!_topLeftTextLayer) {
             _topLeftTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TOP_LEFT_TEXT_LAYER_LAYOUT));
@@ -1548,6 +1595,26 @@ define([
         if (_subheaderText) {
             _subheaderText.setText(content, replacements);
         }
+    };
+    /**
+     * Adds a new HUD message to the queue.
+     * @param {Battle~HUDMessage} message The properties of the message to add
+     * @param {Boolean} urgent If true, the message will be appended to the front of the queue, otherwise to the
+     * back of the queue.
+     */
+    BattleScreen.prototype.queueHUDMessage = function (message, urgent) {
+        message.timeLeft = message.duration || Math.round(message.text.length * HUD_MESSAGE_DURATION_PER_CHAR + HUD_MESSAGE_BASE_DURATION);
+        if (urgent) {
+            _messages.unshift(message);
+        } else {
+            _messages.push(message);
+        }
+    };
+    /**
+     * Clears all HUD messages from the queue.
+     */
+    BattleScreen.prototype.clearHUDMessages = function () {
+        _messages = [];
     };
     /**
      * Updates the contents of the HUDF with information about the currently followed spacecraft
@@ -1794,6 +1861,21 @@ define([
                 _objectivesTextLayer.show();
             } else {
                 _objectivesTextLayer.hide();
+            }
+            // .....................................................................................................
+            // HUD messages
+            if (_messages.length > 0) {
+                _messageText.setText(_messages[0].text);
+                if (!_messages[0].permanent) {
+                    _messages[0].timeLeft -= dt;
+                    if (_messages[0].timeLeft <= 0) {
+                        _messages.shift();
+                    }
+                }
+                _messageText.show();
+            } else {
+                _messageText.setText("");
+                _messageText.hide();
             }
             // .....................................................................................................
             // target related information
@@ -2232,6 +2314,7 @@ define([
             _mission.addToScene(_battleScene, _targetScene);
             _addHUDToScene();
             this._addUITexts();
+            _messages = [];
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.AMBIENT_MUSIC), AMBIENT_THEME, true);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.ANTICIPATION_MUSIC), ANTICIPATION_THEME, true);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC), COMBAT_THEME, true);

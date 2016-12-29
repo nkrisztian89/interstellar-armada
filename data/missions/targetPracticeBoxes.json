@@ -21,6 +21,74 @@
             ]
         }
     ],
+    "triggers": [{
+            "name": "message1",
+            "conditions": [{
+                    "type": "countBelow",
+                    "subjects": {
+                        "teams": ["practiceTargets"]
+                    },
+                    "params": {
+                        "count": 28
+                    }
+                }
+            ],
+            "conditionsRequired": "all",
+            "fireWhen": "changeToTrue",
+            "oneShot": true
+        }, {
+            "name": "message2",
+            "conditions": [{
+                    "type": "countBelow",
+                    "subjects": {
+                        "teams": ["practiceTargets"]
+                    },
+                    "params": {
+                        "count": 27
+                    }
+                }
+            ],
+            "conditionsRequired": "all",
+            "fireWhen": "changeToTrue",
+            "oneShot": true
+        }, {
+            "name": "clear",
+            "conditions": [{
+                    "type": "countBelow",
+                    "subjects": {
+                        "teams": ["practiceTargets"]
+                    },
+                    "params": {
+                        "count": 26
+                    }
+                }
+            ],
+            "conditionsRequired": "all",
+            "fireWhen": "changeToTrue",
+            "oneShot": true
+        }
+    ],
+    "actions": [{
+            "type": "message",
+            "trigger": "message1",
+            "params": {
+                "textID": "tutorial1",
+                "permanent": true,
+                "urgent": true
+            }
+        }, {
+            "type": "message",
+            "trigger": "message2",
+            "params": {
+                "textID": "tutorial2",
+                "permanent": true,
+                "urgent": true
+            }
+        }, {
+            "type": "clearMessages",
+            "trigger": "clear"
+        }
+    ],
     "spacecrafts": [
         {
             "team": "empire",
