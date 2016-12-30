@@ -87,8 +87,29 @@ define([
             ConditionType = {
                 /** The condition is evaluated true when all of its subjects are destroyed */
                 DESTROYED: "destroyed",
-                /** The condition is evaluated true when the count of still alive spacecrafts from its subjects is below a given value */
-                COUNT_BELOW: "countBelow"
+                /** The condition is evaluated true based on the count of still alive spacecrafts from its subjects */
+                COUNT: "count",
+                /** The condition is evaluated true based on the time elapsed since the start of the mission or the firing of a trigger */
+                TIME_ELAPSED: "timeElapsed"
+            },
+            CountConditionRelation = {
+                /** The condition is satisfied when there are less subjects alive than the specified count */
+                BELOW: "below",
+                /** The condition is satisfied when there are more subjects alive than the specified count */
+                ABOVE: "above",
+                /** The condition is satisfied when there are exactly as many subjects alive as the specified count */
+                EQUALS: "equals"
+            },
+            TimeConditionSatisfiedWhen = {
+                /** The condition is satisfied until the specified time has elapsed */
+                BEFORE: "before",
+                /** The condition is satisfied starting from when the specified time has elapsed */
+                AFTER: "after",
+                /** The condition is satisfied when exactly the specified time has elapsed (if the start
+                 * is a trigger, counted from the first time the trigger is fired) */
+                ONCE: "once",
+                /** The condition is satisfied every time the specified time has been elapsed, in a looping fashion */
+                REPEAT: "repeat"
             },
             ActionType = {
                 /** Executing this action marks the mission as complete */
@@ -167,6 +188,11 @@ define([
              */
             _context,
             /**
+             * Contains the constructor function of the Condition subclass for each ConditionType identifier.
+             * @type Object.<String, Function>
+             */
+            _conditionConstructors,
+            /**
              * This string is available to other modules through a public function so that an arbitrary piece of information from this 
              * module can be exposed for debug purposes.
              * @type String
@@ -177,6 +203,7 @@ define([
     Object.freeze(TriggerConditionsRequired);
     Object.freeze(TriggerFireWhen);
     Object.freeze(ConditionType);
+    Object.freeze(TimeConditionSatisfiedWhen);
     Object.freeze(ActionType);
     Object.freeze(MissionState);
     // -------------------------------------------------------------------------
@@ -940,6 +967,10 @@ define([
     /**
      * @class A condition that can be evaluated in every simulation step of the mission to be found either true (satisfied) or false, and 
      * can be used to fire triggers.
+     * This is a base class that needs to be subclassed for each different condition type:
+     * - override _checkParams() and isSatisfied() 
+     * - add a new corresponding ConditionType and register the subclass for it in _conditionConstructors
+     * - if the condition can correspond to a mission objective, override getObjectiveString() and getObjectiveStateString()
      * @param {Object} dataJSON The object storing the data for the condition
      */
     function Condition(dataJSON) {
@@ -948,17 +979,12 @@ define([
          * The nature of this condition, ultimately decides how the condition is evaluated
          * @type String
          */
-        this._type = utils.getSafeEnumValue(ConditionType, dataJSON.type, null);
+        this._type = dataJSON ? utils.getSafeEnumValue(ConditionType, dataJSON.type, null) : null;
         /**
          * The identifiers of the spacecrafts / groups of spacecrafts that determine the subjects of the condition
          * @type Condition~Subjects
          */
-        this._subjects = dataJSON.subjects;
-        /**
-         * Holds the parameters (apart from the subjects) of the condition for those types that need them
-         * @type Object
-         */
-        this._params = dataJSON.params;
+        this._subjects = dataJSON ? dataJSON.subjects : null;
         /**
          * References to the actual spacecrafts in the mission that are identified by this._subjects are stored in this field for quicker 
          * evaluation
@@ -970,24 +996,25 @@ define([
          * @type String
          */
         this._shortSubjectString = null;
-        this._checkParams();
+        if (dataJSON) {
+            this._checkParams(dataJSON.params);
+        }
     }
     /**
-     * Based on the type of the condition, checks whether it has all the appropriate parameters set in this._params, and outputs errors if
-     * it doesn't
+     * Shows the error message indicating that there was a problem validating the parameters defined for this condition
+     */
+    Condition.prototype._handleWrongParams = function () {
+        application.showError("Wrong parameters specified for condition of type: '" + this._type + "'!");
+    };
+    /**
+     * Based on the type of the condition, checks whether it has all the appropriate parameters set in the passed object, 
+     * and outputs errors if it doesn't
+     * Override this to add the appropriate checks!
+     * @returns {Boolean} Whether the parameters passed are valid for this condition
      */
     Condition.prototype._checkParams = function () {
-        switch (this._type) {
-            case ConditionType.DESTROYED:
-                break;
-            case ConditionType.COUNT_BELOW:
-                if (!this._params || ((typeof this._params.count) !== "number")) {
-                    application.showError("Wrong parameters specified for condition of type: '" + this._type + "'!");
-                }
-                break;
-            default:
-                application.showError("Unrecognized condition type: '" + this._type + "'!");
-        }
+        application.showError("Unrecognized condition type: '" + this._type + "'!");
+        return false;
     };
     /**
      * Returns whether the passed spacecraft is a subject of this condition based on the identifiers in this._subjects
@@ -1016,34 +1043,12 @@ define([
     };
     /**
      * Returns whether the condition is considered to be satisfied (true) according to the current state of the passed mission
-     * @param {Mission} mission
+     * Override this to add the appropriate satisfaction checks!
      * @returns {Boolean}
      */
-    Condition.prototype.isSatisfied = function (mission) {
-        var i, count;
-        if (!this._spacecrafts) {
-            this._cacheSubjects(mission);
-        }
-        switch (this._type) {
-            case ConditionType.DESTROYED:
-                for (i = 0; i < this._spacecrafts.length; i++) {
-                    if (this._spacecrafts[i].isAlive()) {
-                        return false;
-                    }
-                }
-                return true;
-            case ConditionType.COUNT_BELOW:
-                count = 0;
-                for (i = 0; i < this._spacecrafts.length; i++) {
-                    if (this._spacecrafts[i].isAlive()) {
-                        count++;
-                    }
-                }
-                return count < this._params.count;
-            default:
-                application.showError("Unrecognized condition type: '" + this._type + "'!");
-                return false;
-        }
+    Condition.prototype.isSatisfied = function () {
+        application.showError("Unrecognized condition type: '" + this._type + "'!");
+        return false;
     };
     /**
      * 
@@ -1129,29 +1134,12 @@ define([
     /**
      * Returns a translated sentence that can be used to display a mission objective to the user that is based on this condition (for either
      * winning or losing). The prefix to be passed determines whether it should be considered a winning or losing condition
-     * @param {Object} stringPrefix A translation string descriptor containing the prefix to be used for translating the string
+     * Override this for conditions that can correspond to mission objectives.
      * @returns {String}
      */
-    Condition.prototype.getObjectiveString = function (stringPrefix) {
-        var result;
-        switch (this._type) {
-            case ConditionType.DESTROYED:
-                result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
-                    subjects: this._getSubjectsString()
-                });
-                break;
-            case ConditionType.COUNT_BELOW:
-                result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
-                    subjects: this._getSubjectsString(),
-                    count: this._params.count
-                });
-                break;
-            default:
-                application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
-                return null;
-        }
-        result = result.charAt(0).toUpperCase() + result.slice(1);
-        return result;
+    Condition.prototype.getObjectiveString = function () {
+        application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
+        return null;
     };
     /**
      * Returns how many of the subjects of this condition are still alive
@@ -1200,36 +1188,288 @@ define([
      * Returns a translated string that can be used to display a mission objective and its status to the player based on this condition 
      * (for either winning or losing). The prefix to be passed determines whether it should be considered a winning or losing condition
      * To be used on the HUD for displaying live status of objectives
-     * @param {Object} stringPrefix A translation string descriptor containing the prefix to be used for translating the string
+     * Overidde this for conditions that can correspond to mission objectives.
      * @returns {String}
      */
-    Condition.prototype.getObjectiveStateString = function (stringPrefix) {
+    Condition.prototype.getObjectiveStateString = function () {
+        application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
+        return null;
+    };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied when all of its subjects have been destroyed
+     * @extends Condition
+     * @param {Object} dataJSON
+     */
+    function DestroyedCondition(dataJSON) {
+        Condition.call(this, dataJSON);
+    }
+    DestroyedCondition.prototype = new Condition();
+    DestroyedCondition.prototype.constructor = DestroyedCondition;
+    /**
+     * @override
+     * This condition has no parameters - always returns true.
+     */
+    DestroyedCondition.prototype._checkParams = function () {
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    DestroyedCondition.prototype.isSatisfied = function (mission) {
+        var i;
+        if (!this._spacecrafts) {
+            this._cacheSubjects(mission);
+        }
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i].isAlive()) {
+                return false;
+            }
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Object} stringPrefix 
+     * @returns {String}
+     */
+    DestroyedCondition.prototype.getObjectiveString = function (stringPrefix) {
+        var result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
+            subjects: this._getSubjectsString()
+        });
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
+    };
+    /**
+     * @override
+     * @param {Object} stringPrefix 
+     * @returns {String}
+     */
+    DestroyedCondition.prototype.getObjectiveStateString = function (stringPrefix) {
         var result, count, suffix;
         if (!this._spacecrafts) {
             return "";
         }
-        switch (this._type) {
-            case ConditionType.DESTROYED:
-                count = this._getLiveSubjectCount();
-                suffix = (count > 1) ? (" (" + count + ")") : "";
-                result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
-                    subjects: this._getShortSubjectsString()
-                }) + suffix;
-                break;
-            case ConditionType.COUNT_BELOW:
-                count = this._getLiveSubjectCount();
-                suffix = " (" + count + ")";
-                result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
-                    subjects: this._getShortSubjectsString(),
-                    count: this._params.count
-                }) + suffix;
-                break;
-            default:
-                application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
-                return null;
-        }
+        count = this._getLiveSubjectCount();
+        suffix = (count > 1) ? (" (" + count + ")") : "";
+        result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
+            subjects: this._getShortSubjectsString()
+        }) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
+    };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied based on the number of its currently alive subjects
+     * @extends Condition
+     * @param {Object} dataJSON
+     */
+    function CountCondition(dataJSON) {
+        Condition.call(this, dataJSON);
+    }
+    CountCondition.prototype = new Condition();
+    CountCondition.prototype.constructor = CountCondition;
+    /**
+     * @typedef CountCondition~Params
+     * @property {Number} count The number relative to which to evaluate the number of alive subjects
+     * @property {String} relation (enum CountConditionRelation) The relation determining when is this condition satisfied
+     */
+    /**
+     * @override
+     * @param {CountCondition~Params} params
+     * @returns {Boolean}
+     */
+    CountCondition.prototype._checkParams = function (params) {
+        /**
+         * @type CountCondition~Params
+         */
+        this._params = params;
+        if (!this._params ||
+                ((typeof this._params.count) !== "number") ||
+                !utils.getSafeEnumValue(CountConditionRelation, this._params.relation)) {
+            this._handleWrongParams();
+            return false;
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    CountCondition.prototype.isSatisfied = function (mission) {
+        var i, count;
+        if (!this._spacecrafts) {
+            this._cacheSubjects(mission);
+        }
+        count = 0;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i].isAlive()) {
+                count++;
+            }
+        }
+        switch (this._params.relation) {
+            case CountConditionRelation.BELOW:
+                return count < this._params.count;
+            case CountConditionRelation.ABOVE:
+                return count > this._params.count;
+            case CountConditionRelation.EQUALS:
+                return count === this._params.count;
+        }
+        return false;
+    };
+    /**
+     * @override
+     * @param {Object} stringPrefix
+     * @returns {String}
+     */
+    CountCondition.prototype.getObjectiveString = function (stringPrefix) {
+        var result;
+        if (this._params.relation !== CountConditionRelation.BELOW) {
+            application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
+            return null;
+        }
+        result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
+            subjects: this._getSubjectsString(),
+            count: this._params.count
+        });
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
+    };
+    /**
+     * @override
+     * @param {Object} stringPrefix 
+     * @returns {String}
+     */
+    CountCondition.prototype.getObjectiveStateString = function (stringPrefix) {
+        var result, count, suffix;
+        if (this._params.relation !== CountConditionRelation.BELOW) {
+            application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
+            return null;
+        }
+        if (!this._spacecrafts) {
+            return "";
+        }
+        count = this._getLiveSubjectCount();
+        suffix = " (" + count + ")";
+        result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
+            subjects: this._getShortSubjectsString(),
+            count: this._params.count
+        }) + suffix;
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
+    };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied based on the time elapsed since a start event (start of mission or
+     * first firing of a specified trigger)
+     * @extends Condition
+     * @param {Object} dataJSON
+     */
+    function TimeCondition(dataJSON) {
+        Condition.call(this, dataJSON);
+        /**
+         * Whether the timer for this condition is currently running.
+         * @type Boolean
+         */
+        this._running = !this._params.start;
+        /**
+         * A reference to the trigger setting off the timer for this condition (if any)
+         * @type Trigger
+         */
+        this._trigger = null;
+        /**
+         * The time elapsed while running the timer for this condition, in milliseconds
+         * @type Number
+         */
+        this._timeElapsed = this._params.startOffset || 0;
+        /**
+         * The number of times this condition has already been satisfied (for repeat mode)
+         * @type Number
+         */
+        this._count = 0;
+    }
+    TimeCondition.prototype = new Condition();
+    TimeCondition.prototype.constructor = TimeCondition;
+    /**
+     * @typedef TimeCondition~Params
+     * @property {Number} time The amount of time this condition refers to, in milliseconds
+     * @property {String} satisfiedWhen (enum TimeConditionSatisfiedWhen) How to determine when the condition is satisfied
+     * @property {String} [start] The name of the trigger starting the timer for this condition (not set: start of mission)
+     * @property {Number} [maxCount] The maximum number of times this condition can be satisfied (only for repeat mode)
+     * @property {Number} [startOffset] The value of the timer when started (for repeat mode)
+     */
+    /**
+     * @override
+     * @param {TimeCondition~Params} params 
+     * @returns {Boolean}
+     */
+    TimeCondition.prototype._checkParams = function (params) {
+        /**
+         * @type TimeCondition~Params
+         */
+        this._params = params;
+        if (!this._params ||
+                ((typeof this._params.time) !== "number") ||
+                !(utils.getSafeEnumValue(TimeConditionSatisfiedWhen, this._params.satisfiedWhen)) ||
+                ((this._params.start !== undefined) && (typeof this._params.start !== "string")) ||
+                ((this._params.satisfiedWhen !== TimeConditionSatisfiedWhen.REPEAT) && (this._params.maxCount !== undefined)) ||
+                ((this._params.satisfiedWhen === TimeConditionSatisfiedWhen.REPEAT) && (this._params.maxCount !== undefined) && (typeof this._params.maxCount !== "number")) ||
+                ((this._params.startOffset !== undefined) && (typeof this._params.startOffset !== "number"))) {
+            this._handleWrongParams();
+            return false;
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission
+     * @param {Number} dt
+     * @returns {Boolean}
+     */
+    TimeCondition.prototype.isSatisfied = function (mission, dt) {
+        var result = false;
+        if (this._params.start && !this._trigger) {
+            this._trigger = mission.getTrigger(this._params.start);
+        }
+        if (!this._running && this._trigger && this._trigger.hasFired()) {
+            this._running = true;
+        }
+        if (this._running) {
+            this._timeElapsed += dt;
+            switch (this._params.satisfiedWhen) {
+                case TimeConditionSatisfiedWhen.BEFORE:
+                    if (this._timeElapsed < this._params.time) {
+                        return true;
+                    }
+                case TimeConditionSatisfiedWhen.AFTER:
+                    if (this._timeElapsed > this._params.time) {
+                        return true;
+                    }
+                case TimeConditionSatisfiedWhen.ONCE:
+                    if ((this._timeElapsed >= this._params.time) && (this._count === 0)) {
+                        this._running = false;
+                        this._count = 1;
+                        return true;
+                    }
+                case TimeConditionSatisfiedWhen.REPEAT:
+                    if (!this._params.maxCount || (this._count < this._params.maxCount)) {
+                        while (this._timeElapsed >= this._params.time) {
+                            this._timeElapsed -= this._params.time;
+                            result = true;
+                        }
+                        if (result) {
+                            this._count++;
+                            return true;
+                        }
+                    } else {
+                        this._running = false;
+                    }
+            }
+        }
+        return false;
     };
     // #########################################################################
     /**
@@ -1257,7 +1497,7 @@ define([
         if (dataJSON.conditions) {
             this._conditions = [];
             for (i = 0; i < dataJSON.conditions.length; i++) {
-                this._conditions.push(new Condition(dataJSON.conditions[i]));
+                this._conditions.push(new (_conditionConstructors[dataJSON.conditions[i].type] || Condition)(dataJSON.conditions[i]));
             }
         }
         /**
@@ -1330,11 +1570,19 @@ define([
         this._fired = true;
     };
     /**
+     * Returns whether the trigger has already fired (at least once) during this mission
+     * @returns {Boolean}
+     */
+    Trigger.prototype.hasFired = function () {
+        return this._fired;
+    };
+    /**
      * Checks the state of the passed mission to determine whether the trigger should fire, and fires it if necessary.
      * Should be called in every simulation step of the mission.
      * @param {Mission} mission
+     * @param {Number} dt The time elapsed since the last simulation step, in milliseconds
      */
-    Trigger.prototype.simulate = function (mission) {
+    Trigger.prototype.simulate = function (mission, dt) {
         var conditionState, i;
         if (this._oneShot && this._fired) {
             return;
@@ -1347,7 +1595,7 @@ define([
             case TriggerConditionsRequired.ALL:
                 conditionState = true;
                 for (i = 0; i < this._conditions.length; i++) {
-                    if (!this._conditions[i].isSatisfied(mission)) {
+                    if (!this._conditions[i].isSatisfied(mission, dt)) {
                         conditionState = false;
                         break;
                     }
@@ -1356,7 +1604,7 @@ define([
             case TriggerConditionsRequired.ANY:
                 conditionState = false;
                 for (i = 0; i < this._conditions.length; i++) {
-                    if (this._conditions[i].isSatisfied(mission)) {
+                    if (this._conditions[i].isSatisfied(mission, dt)) {
                         conditionState = true;
                         break;
                     }
@@ -2291,7 +2539,7 @@ define([
             this._environment.simulate();
         }
         for (i = 0; i < this._triggers.length; i++) {
-            this._triggers[i].simulate(this);
+            this._triggers[i].simulate(this, dt);
         }
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].simulate(dt);
@@ -2779,6 +3027,11 @@ define([
     _projectilePool = pools.getPool(equipment.Projectile);
     // creating the default context
     _context = new LogicContext();
+    // associating condition constructors
+    _conditionConstructors = {};
+    _conditionConstructors[ConditionType.DESTROYED] = DestroyedCondition;
+    _conditionConstructors[ConditionType.COUNT] = CountCondition;
+    _conditionConstructors[ConditionType.TIME_ELAPSED] = TimeCondition;
     // caching configuration settings
     config.executeWhenReady(function () {
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);

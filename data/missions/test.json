@@ -57,6 +57,55 @@
             "resetsWhenLeavingConfines": true
         }
     ],
+    "triggers": [{
+            "name": "message",
+            "conditions": [{
+                    "type": "timeElapsed",
+                    "params": {
+                        "time": 10000,
+                        "satisfiedWhen": "repeat",
+                        "maxCount": 5,
+                        "startOffset": 8000
+                    }
+                }
+            ],
+            "conditionsRequired": "all",
+            "fireWhen": "changeToTrue",
+            "oneShot": false
+        }, {
+            "name": "message2",
+            "conditions": [{
+                    "type": "timeElapsed",
+                    "params": {
+                        "time": 5000,
+                        "satisfiedWhen": "once",
+                        "start": "message"
+                    }
+                }
+            ],
+            "conditionsRequired": "all",
+            "fireWhen": "changeToTrue",
+            "oneShot": true
+        }
+    ],
+    "actions": [{
+            "type": "message",
+            "trigger": "message",
+            "params": {
+                "textID": "test",
+                "duration": 4000,
+                "urgent": true
+            }
+        }, {
+            "type": "message",
+            "trigger": "message2",
+            "params": {
+                "textID": "test2",
+                "duration": 4000,
+                "urgent": true
+            }
+        }
+    ],
     "spacecrafts": [
         {
             "class": "falcon",

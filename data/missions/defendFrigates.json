@@ -31,11 +31,12 @@
     "triggers": [{
             "name": "frigateCountBelow",
             "conditions": [{
-                    "type": "countBelow",
+                    "type": "count",
                     "subjects": {
                         "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
                     },
                     "params": {
+                        "relation": "below",
                         "count": 3
                     }
                 }

@@ -22,13 +22,40 @@
         }
     ],
     "triggers": [{
-            "name": "message1",
+            "name": "message0",
+            "fireWhen": "missionStarts",
+            "oneShot": true
+        }, {
+            "name": "message0b",
             "conditions": [{
-                    "type": "countBelow",
+                    "type": "timeElapsed",
+                    "params": {
+                        "time": 15000,
+                        "satisfiedWhen": "once"
+                    }
+                }, {
+                    "type": "count",
                     "subjects": {
                         "teams": ["practiceTargets"]
                     },
                     "params": {
+                        "relation": "equals",
+                        "count": 28
+                    }
+                }
+            ],
+            "conditionsRequired": "all",
+            "fireWhen": "changeToTrue",
+            "oneShot": true
+        }, {
+            "name": "message1",
+            "conditions": [{
+                    "type": "count",
+                    "subjects": {
+                        "teams": ["practiceTargets"]
+                    },
+                    "params": {
+                        "relation": "below",
                         "count": 28
                     }
                 }
@@ -39,11 +66,12 @@
         }, {
             "name": "message2",
             "conditions": [{
-                    "type": "countBelow",
+                    "type": "count",
                     "subjects": {
                         "teams": ["practiceTargets"]
                     },
                     "params": {
+                        "relation": "below",
                         "count": 27
                     }
                 }
@@ -54,11 +82,12 @@
         }, {
             "name": "clear",
             "conditions": [{
-                    "type": "countBelow",
+                    "type": "count",
                     "subjects": {
                         "teams": ["practiceTargets"]
                     },
                     "params": {
+                        "relation": "below",
                         "count": 26
                     }
                 }
@@ -69,6 +98,22 @@
         }
     ],
     "actions": [{
+            "type": "message",
+            "trigger": "message0",
+            "params": {
+                "textID": "tutorial0",
+                "permanent": true,
+                "urgent": true
+            }
+        }, {
+            "type": "message",
+            "trigger": "message0b",
+            "params": {
+                "textID": "tutorial0b",
+                "permanent": true,
+                "urgent": true
+            }
+        }, {
             "type": "message",
             "trigger": "message1",
             "params": {

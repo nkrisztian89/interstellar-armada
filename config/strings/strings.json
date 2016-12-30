@@ -83,6 +83,8 @@
         "targetPracticeBoxes": {
             "name": "Basic target practice",
             "messages": {
+                "tutorial0": "Welcome to the target practice tutorial!\nUse the mouse to aim and left click to fire at the target container in front of you.",
+                "tutorial0b": "Destroy the target container. Hold the left mouse button for continuous fire. Keep hitting it until it explodes.",
                 "tutorial1": "An arrow marks the targets which are not visible in front of you.",
                 "tutorial2": "Use T to cycle through hostile targets."
             }
@@ -124,7 +126,11 @@
             "name": "Defend the frigates"
         },
         "test": {
-            "name": "Sandbox test"
+            "name": "Sandbox test",
+            "messages": {
+                "test": "This is a test mission. Fly around and do as you please.\nThis reminder will be displayed 5 times.",
+                "test2": "You can freely destroy other spacecrafts."
+            }
         },
         "libraTest": {
             "name": "Libra test"
