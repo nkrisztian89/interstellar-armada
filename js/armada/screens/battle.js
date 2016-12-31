@@ -444,6 +444,11 @@ define([
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // message
             /**
+             * A rectangle displayed as the background for the HUD message.
+             * @type HUDElement
+             */
+            _messageBackground,
+            /**
              * Houses the message text.
              * @type TextLayer
              */
@@ -539,6 +544,11 @@ define([
              * @type ClipSpaceLayout
              */
             _objectivesBackgroundLayout,
+            /**
+             * Stores a reference to the layout used for the message background HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _messageBackgroundLayout,
             // ................................................................................................
             // other cached setting values used for the HUD
             /**
@@ -1073,6 +1083,16 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).mapping);
         _objectivesBackground.addToScene(_battleScene);
+        _messageBackground = _messageBackground || new HUDElement(
+                UI_2D_MIX_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).texture,
+                _messageBackgroundLayout.getClipSpacePosition(),
+                _messageBackgroundLayout.getClipSpaceSize(),
+                _messageBackgroundLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).color,
+                undefined,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).mapping);
+        _messageBackground.addToScene(_battleScene);
         _targetHullIntegrityBar = _targetHullIntegrityBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).texture,
@@ -1347,7 +1367,7 @@ define([
      * Adds the text layers and texts of the HUD to the screen if needed.
      */
     BattleScreen.prototype._addUITexts = function () {
-        var i, n,
+        var i, n, layoutDescriptor,
                 screenCanvas = this.getScreenCanvas(BATTLE_CANVAS_ID),
                 getTargetInfoText = function (textPosition) {
                     return new screens.CanvasText(
@@ -1487,7 +1507,9 @@ define([
         // ..............................................................................
         // message
         if (!_messageTextLayer) {
-            _messageTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).layout);
+            layoutDescriptor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).layout;
+            layoutDescriptor.width -= config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT_MARGIN);
+            _messageTextLayer = new screens.TextLayer(layoutDescriptor);
             screenCanvas.addTextLayer(_messageTextLayer);
         }
         if (!_messageText) {
@@ -1864,7 +1886,7 @@ define([
             }
             // .....................................................................................................
             // HUD messages
-            if (_messages.length > 0) {
+            if ((control.isInPilotMode()) && (_messages.length > 0)) {
                 _messageText.setText(_messages[0].text);
                 if (!_messages[0].permanent) {
                     _messages[0].timeLeft -= dt;
@@ -1872,10 +1894,12 @@ define([
                         _messages.shift();
                     }
                 }
-                _messageText.show();
+                _messageBackground.applyLayout(_messageBackgroundLayout, canvas.width, canvas.height);
+                _messageBackground.show();
+                _messageTextLayer.show();
             } else {
-                _messageText.setText("");
-                _messageText.hide();
+                _messageTextLayer.hide();
+                _messageBackground.hide();
             }
             // .....................................................................................................
             // target related information
@@ -2120,6 +2144,7 @@ define([
             _speedTextLayer.hide();
             _flightModeIndicatorTextLayer.hide();
             _objectivesTextLayer.hide();
+            _messageTextLayer.hide();
         }
     };
     /**
@@ -2373,6 +2398,7 @@ define([
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).layout);
         _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).layout);
         _objectivesBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).layout);
+        _messageBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).layout);
         _hudTargetSwitchAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_ANIMATION_DURATION);
         _hudHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
         _hudTargetHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);

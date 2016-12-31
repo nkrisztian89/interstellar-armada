@@ -466,21 +466,22 @@
                     "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
                     "layout": {
                         "centerX": 0,
-                        "top": 0.8,
-                        "width": 0.75,
-                        "height": 0.12,
-                        "scaleMode": "maximum",
-                        "xScaleMode": "maximum",
-                        "yScaleMode": "maximum"
+                        "centerY": 0.65,
+                        "width": 1.2,
+                        "height": 0.25,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
                     },
-                    "color": [0, 0, 0, 0.5]
+                    "color": [0, 0, 0, 0.3]
                 },
                 "messageText": {
                     "color": [1, 1, 1, 1],
-                    "fontSize": 0.04,
+                    "fontSize": 0.2,
                     "fontName": "hudFont",
-                    "position": [0, 0.5]
+                    "position": [0, 0.54]
                 },
+                "messageTextMargin": 0.04,
                 "topLeftTextLayerLayout": {
                     "left": -0.98,
                     "top": 0.97,

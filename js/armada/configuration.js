@@ -1045,6 +1045,10 @@ define([
                 name: "messageText",
                 type: _customTypes.TEXT_DESCRIPTOR
             },
+            MESSAGE_TEXT_MARGIN: {
+                name: "messageTextMargin",
+                type: "number"
+            },
             TOP_LEFT_TEXT_LAYER_LAYOUT: {
                 name: "topLeftTextLayerLayout",
                 type: _customTypes.LAYOUT_DESCRIPTOR

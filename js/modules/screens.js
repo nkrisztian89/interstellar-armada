@@ -711,6 +711,7 @@ define([
     /**
      * Renders the text using the passed 2D rendering context (of a canvas) according to its current settings.
      * @param {CanvasRenderingContext2D} context
+     * @returns {Boolean} Whether text has actually been rendered
      */
     CanvasText.prototype.render = function (context) {
         var i, j;
@@ -728,7 +729,7 @@ define([
                 if ((this._textWidth < this._lastWidth) && (this._words.length < 2)) {
                     this._lines = [this._text];
                 } else {
-                    this._lineHeight = context.measureText("M").width;
+                    this._lineHeight = context.measureText("M").width * 1.2;
                     this._lines = [];
                     for (i = 0; i < this._words.length; i++) {
                         this._lines.push("");
@@ -746,7 +747,17 @@ define([
             for (i = 0; i < this._lines.length; i++) {
                 context.fillText(this._lines[i], (this._x + 1) / 2 * this._lastWidth, (1 - this._y) / 2 * this._lastHeight + (i * this._lineHeight));
             }
+            return this._text.length > 0;
         }
+        return false;
+    };
+    /**
+     * Clears the cache variables depending on the size of the canvas the text is rendered to.
+     */
+    CanvasText.prototype.invalidate = function () {
+        this._lastWidth = -1;
+        this._lastHeight = -1;
+        this._textWidth = -1;
     };
     /**
      * Sets a new position for the text (in the clip space of the canvas it is rendered to)
@@ -788,13 +799,19 @@ define([
      * After calling this, the text is rendered whenever calling render() (until hidden)
      */
     CanvasText.prototype.show = function () {
-        this._visible = true;
+        if (!this._visible) {
+            this._visible = true;
+            this.invalidate();
+        }
     };
     /**
      * After calling this, the text is not rendered anymore when calling render() (until shown)
      */
     CanvasText.prototype.hide = function () {
-        this._visible = false;
+        if (this._visible) {
+            this._visible = false;
+            this.invalidate();
+        }
     };
     // #########################################################################
     /**
@@ -1293,10 +1310,13 @@ define([
      * @param {String} [borderStyle] If given, a border with this style will be drawn at the edges of the area of this text layer.
      */
     TextLayer.prototype.clearContext = function (borderStyle) {
-        this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
-        if (borderStyle) {
-            this._context.strokeStyle = borderStyle;
-            this._context.strokeRect(0, 0, this._canvas.width, this._canvas.height);
+        if (!this._cleared) {
+            this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
+            if (borderStyle) {
+                this._context.strokeStyle = borderStyle;
+                this._context.strokeRect(0, 0, this._canvas.width, this._canvas.height);
+            }
+            this._cleared = true;
         }
     };
     /**
@@ -1314,9 +1334,8 @@ define([
         if (this._visible) {
             this.clearContext();
             for (i = 0; i < this._texts.length; i++) {
-                this._texts[i].render(this._context);
+                this._cleared = !this._texts[i].render(this._context) && this._cleared;
             }
-            this._cleared = false;
         }
     };
     /**
@@ -1329,6 +1348,7 @@ define([
         this._canvas.style.left = this._clipSpaceLayout.getLeft(viewportWidth, viewportHeight) + "px";
         this._canvas.width = this._clipSpaceLayout.getWidth(viewportWidth, viewportHeight);
         this._canvas.height = this._clipSpaceLayout.getHeight(viewportWidth, viewportHeight);
+        this._cleared = false;
     };
     /**
      * Sets a new containing canvas the position and size of which will determine the position and size of this text layer.
@@ -1344,17 +1364,26 @@ define([
      * After calling this, the (visible) texts on this layer are rendered whenever calling render()
      */
     TextLayer.prototype.show = function () {
-        this._visible = true;
+        var i;
+        if (!this._visible) {
+            for (i = 0; i < this._texts.length; i++) {
+                this._texts[i].invalidate();
+            }
+            this._visible = true;
+        }
     };
     /**
      * Clears the text layer and after calling this, no texts on this layer are rendered when calling render()
      */
     TextLayer.prototype.hide = function () {
-        if (!this._cleared) {
+        var i;
+        if (this._visible) {
             this.clearContext();
-            this._cleared = true;
+            for (i = 0; i < this._texts.length; i++) {
+                this._texts[i].invalidate();
+            }
+            this._visible = false;
         }
-        this._visible = false;
     };
     /**
      * Returns the layout object specifying the positioning and sizing rules for this text layer.
