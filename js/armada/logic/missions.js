@@ -1748,7 +1748,10 @@ define([
                 break;
             case ActionType.MESSAGE:
                 game.getScreen().queueHUDMessage({
-                    text: strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID),
+                    text: strings.get(
+                            strings.MISSION.PREFIX,
+                            utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
+                            (typeof this._params.text === "object") ? this._params.text[strings.getLanguage()] : this._params.text),
                     duration: this._params.duration,
                     permanent: this._params.permanent
                 }, this._params.urgent);
