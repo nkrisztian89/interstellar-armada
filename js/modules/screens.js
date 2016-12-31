@@ -714,7 +714,7 @@ define([
      * @returns {Boolean} Whether text has actually been rendered
      */
     CanvasText.prototype.render = function (context) {
-        var i, j;
+        var i, j, line, newLine;
         if (this._visible) {
             context.fillStyle = this._cssColor;
             this._updateSize(context.canvas.width, context.canvas.height);
@@ -734,10 +734,12 @@ define([
                     for (i = 0; i < this._words.length; i++) {
                         this._lines.push("");
                         for (j = 0; j < this._words[i].length; j++) {
-                            if (context.measureText(this._lines[this._lines.length - 1] + this._words[i][j]).width < this._lastWidth) {
-                                this._lines[this._lines.length - 1] += this._words[i][j] + " ";
+                            line = this._lines[this._lines.length - 1];
+                            newLine = line + ((line.length > 0) ? " " : "") + this._words[i][j];
+                            if (context.measureText(newLine).width < this._lastWidth) {
+                                this._lines[this._lines.length - 1] = newLine;
                             } else {
-                                this._lines.push(this._words[i][j] + " ");
+                                this._lines.push(this._words[i][j]);
                             }
                         }
                     }
