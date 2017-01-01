@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Implementation of the Explosion game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, Element, this, Float32Array, performance */
+/*global define, Element, Float32Array, performance */
 
 /**
  * @param vec Vector operations are needed for several logic functions

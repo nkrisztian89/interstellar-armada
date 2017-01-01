@@ -19,6 +19,12 @@ module.exports = function (grunt) {
         rawClean: {
             dev: ["js/main-optimized.js"]
         },
+        eslint: {
+            options: {
+                configFile: ".eslintrc.js"
+            },
+            target: ["js/"]
+        },
         replace: {
             dist: {
                 src: ['index.html'],
@@ -110,9 +116,11 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
     grunt.loadNpmTasks('grunt-text-replace');
+    grunt.loadNpmTasks('grunt-eslint');
     // Tasks
     grunt.registerTask('default', ['build']);
     grunt.registerTask('build', ['replace:preOptimize', 'requirejs', 'replace:dist', 'replace:optimize', 'replace:postOptimize']);
     grunt.renameTask('clean', 'rawClean');
     grunt.registerTask('clean', ['rawClean:dev', 'replace:dev']);
+    grunt.registerTask('lint', ['eslint']);
 };

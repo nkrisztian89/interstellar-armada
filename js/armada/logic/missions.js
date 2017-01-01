@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Implementation of loading and managing environments and missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, Element, this, Float32Array, performance, localStorage */
+/*global define, Element, Float32Array, performance, localStorage */
 
 /**
  * @param utils Used for format strings and useful constants
@@ -1444,16 +1444,19 @@ define([
                     if (this._timeElapsed < this._params.time) {
                         return true;
                     }
+                    break;
                 case TimeConditionSatisfiedWhen.AFTER:
                     if (this._timeElapsed > this._params.time) {
                         return true;
                     }
+                    break;
                 case TimeConditionSatisfiedWhen.ONCE:
                     if ((this._timeElapsed >= this._params.time) && (this._count === 0)) {
                         this._running = false;
                         this._count = 1;
                         return true;
                     }
+                    break;
                 case TimeConditionSatisfiedWhen.REPEAT:
                     if (!this._params.maxCount || (this._count < this._params.maxCount)) {
                         while (this._timeElapsed >= this._params.time) {
@@ -1467,6 +1470,7 @@ define([
                     } else {
                         this._running = false;
                     }
+                    break;
             }
         }
         return false;

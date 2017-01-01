@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides a pool class that can be used to minimize the creation of object from which many are created and destroyed.
  * Also provides a way to create and access common pools for different types of objects.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -8,7 +8,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, Element, this, Float32Array, performance */
+/*global define, Element, Float32Array, performance */
 
 define(function () {
     "use strict";
