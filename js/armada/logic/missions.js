@@ -193,6 +193,11 @@ define([
              */
             _conditionConstructors,
             /**
+             * Contains the constructor function of the Action subclass for each ActionType identifier.
+             * @type Object.<String, Function>
+             */
+            _actionConstructors,
+            /**
              * This string is available to other modules through a public function so that an arbitrary piece of information from this 
              * module can be exposed for debug purposes.
              * @type String
@@ -1709,7 +1714,10 @@ define([
     };
     // #########################################################################
     /**
+     * @class 
      * An action to be executed whenever the associated trigger fires during the simulation of the mission
+     * This is a base class, subclasses need to be created for each specific action type that is supported.
+     * The subclasses need to implement _checkParams() and _execute().
      * @param {Object} dataJSON The object storing the data to initialize this action
      * @param {Mission} mission
      */
@@ -1718,18 +1726,18 @@ define([
          * (enum ActionType) Determines what the action to execute actually is
          * @type String
          */
-        this._type = utils.getSafeEnumValue(ActionType, dataJSON.type, null);
+        this._type = dataJSON ? utils.getSafeEnumValue(ActionType, dataJSON.type, null) : null;
         /**
          * A reference to the trigger that needs to fire to execute this action
          * @type Trigger
          */
-        this._trigger = mission.getTrigger(dataJSON.trigger);
-        this._trigger.addFireHandler(this._execute.bind(this));
-        /**
-         * Specific parameters of the action depending on its type.
-         * @type Object
-         */
-        this._params = dataJSON.params;
+        this._trigger = dataJSON ? mission.getTrigger(dataJSON.trigger) : null;
+        if (this._trigger) {
+            this._trigger.addFireHandler(this._execute.bind(this));
+        }
+        if (dataJSON) {
+            this._checkParams(dataJSON.params);
+        }
     }
     /**
      * Return the value that identifies the nature of this action - i.e. what it does
@@ -1739,33 +1747,28 @@ define([
         return this._type;
     };
     /**
-     * Executes the action - does whatever its type defines. Called whenever the associated trigger fires.
-     * @param {Mission} mission 
+     * Shows the error message indicating that there was a problem validating the parameters defined for this action
      */
-    Action.prototype._execute = function (mission) {
-        switch (this._type) {
-            case ActionType.WIN:
-                mission.completeMission();
-                break;
-            case ActionType.LOSE:
-                mission.failMission();
-                break;
-            case ActionType.MESSAGE:
-                game.getScreen().queueHUDMessage({
-                    text: strings.get(
-                            strings.MISSION.PREFIX,
-                            utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
-                            (typeof this._params.text === "object") ? this._params.text[strings.getLanguage()] : this._params.text),
-                    duration: this._params.duration,
-                    permanent: this._params.permanent
-                }, this._params.urgent);
-                break;
-            case ActionType.CLEAR_MESSAGES:
-                game.getScreen().clearHUDMessages();
-                break;
-            default:
-                application.showError("Unrecognized action type: '" + this._type + "'!");
-        }
+    Action.prototype._handleWrongParams = function () {
+        application.showError("Wrong parameters specified for action of type: '" + this._type + "'!");
+    };
+    /**
+     * Based on the type of the action, checks whether it has all the appropriate parameters set in the passed object, 
+     * and outputs errors if it doesn't
+     * Override this to add the appropriate checks!
+     * @returns {Boolean} Whether the parameters passed are valid for this condition
+     */
+    Action.prototype._checkParams = function () {
+        application.showError("Unrecognized action type: '" + this._type + "'!");
+        return false;
+    };
+    /**
+     * Executes the action - does whatever its type defines. Called whenever the associated trigger fires.
+     * Override this implementing the specific logic for the corresponding Action sublcasses!
+     * The mission is passed as the only argument when called.
+     */
+    Action.prototype._execute = function () {
+        application.showError("Unrecognized action type: '" + this._type + "'!");
     };
     /**
      * Returns a list of strings that contain translated HTML text which can be used to display the mission objectives associated with this
@@ -1773,30 +1776,191 @@ define([
      * @returns {String[]}
      */
     Action.prototype.getObjectiveStrings = function () {
-        if (this._type === ActionType.WIN) {
-            return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_WIN_PREFIX);
-        }
-        if (this._type === ActionType.LOSE) {
-            return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_LOSE_PREFIX);
-        }
         application.showError("Action of type '" + this._type + "' does no correspond to a mission objective!");
         return null;
     };
     /**
      * Returns a list of translated strings along objective state values for displaying the current states of the objectives for the player
      * (used on the HUD) Works for win or lose events only.
+     * @returns {ObjectiveWithState[]}
+     */
+    Action.prototype.getObjectivesState = function () {
+        application.showError("Action of type '" + this._type + "' does no correspond to a mission objective!");
+        return null;
+    };
+    // #########################################################################
+    /**
+     * @class 
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Mission} mission
+     */
+    function WinAction(dataJSON, mission) {
+        Action.call(this, dataJSON, mission);
+    }
+
+    WinAction.prototype = new Action();
+    WinAction.prototype.constructor = WinAction;
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    WinAction.prototype._checkParams = function () {
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission 
+     */
+    WinAction.prototype._execute = function (mission) {
+        mission.completeMission();
+    };
+    /**
+     * @override
+     * @returns {String[]}
+     */
+    WinAction.prototype.getObjectiveStrings = function () {
+        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_WIN_PREFIX);
+    };
+    /**
+     * @override
      * @param {String} missionState (enum MissionState) 
      * @returns {ObjectiveWithState[]}
      */
-    Action.prototype.getObjectivesState = function (missionState) {
-        if (this._type === ActionType.WIN) {
-            return this._trigger.getObjectivesState(true, missionState);
+    WinAction.prototype.getObjectivesState = function (missionState) {
+        return this._trigger.getObjectivesState(true, missionState);
+    };
+    // #########################################################################
+    /**
+     * @class 
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Mission} mission
+     */
+    function LoseAction(dataJSON, mission) {
+        Action.call(this, dataJSON, mission);
+    }
+
+    LoseAction.prototype = new Action();
+    LoseAction.prototype.constructor = LoseAction;
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    LoseAction.prototype._checkParams = function () {
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission 
+     */
+    LoseAction.prototype._execute = function (mission) {
+        mission.failMission();
+    };
+    /**
+     * @override
+     * @returns {String[]}
+     */
+    LoseAction.prototype.getObjectiveStrings = function () {
+        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_LOSE_PREFIX);
+    };
+    /**
+     * @override
+     * @param {String} missionState (enum MissionState) 
+     * @returns {ObjectiveWithState[]}
+     */
+    LoseAction.prototype.getObjectivesState = function (missionState) {
+        return this._trigger.getObjectivesState(false, missionState);
+    };
+    // #########################################################################
+    /**
+     * @class 
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Mission} mission
+     */
+    function MessageAction(dataJSON, mission) {
+        Action.call(this, dataJSON, mission);
+    }
+
+    MessageAction.prototype = new Action();
+    MessageAction.prototype.constructor = MessageAction;
+    /**
+     * @typedef MessageAction~Params
+     * @property {String|Object} [text] The text of the message (formatted, can contain '\n'-s). Used when no
+     * translation (or no translation ID) is available. Alternatively, an object can be given with multiple language
+     * versions of the text, with the language IDs as the keys.
+     * @property {String} [textID] The translation ID to use for the text to be displayed. The full translation
+     * ID will be mission.<missionName>.messages.<textID>
+     * If a translation is found, it overrides the value of the text property.
+     * @property {Number} [duration] The duration to display the message for, in milliseconds. If not given, an automatic
+     * duration will be set based on the length of the text
+     * @property {Boolean} [permanent] If true, the message keeps being displayed until a new urgent
+     * message is added or the queue is cleared
+     * @property {Boolean} [urgent] Whether the message should be displayed before non-urgent messages (interrupting already displayed
+     * non-urgent messages)
+     */
+    /**
+     * @override
+     * @param {MessageAction~Params} params 
+     * @returns {Boolean}
+     */
+    MessageAction.prototype._checkParams = function (params) {
+        /**
+         * @type MessageAction~Params
+         */
+        this._params = params;
+        if (!this._params ||
+                ((!this._params.text) && (!this._params.textID)) ||
+                ((this._params.text !== undefined) && (typeof this._params.text !== "string") && (typeof this._params.text !== "object")) ||
+                ((this._params.textID !== undefined) && (typeof this._params.textID !== "string")) ||
+                ((this._params.duration !== undefined) && (typeof this._params.duration !== "number")) ||
+                ((this._params.permanent !== undefined) && (typeof this._params.permanent !== "boolean")) ||
+                ((this._params.urgent !== undefined) && (typeof this._params.urgent !== "boolean"))) {
+            this._handleWrongParams();
+            return false;
         }
-        if (this._type === ActionType.LOSE) {
-            return this._trigger.getObjectivesState(false, missionState);
-        }
-        application.showError("Action of type '" + this._type + "' does no correspond to a mission objective!");
-        return null;
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission 
+     */
+    MessageAction.prototype._execute = function (mission) {
+        game.getScreen().queueHUDMessage({
+            text: strings.get(
+                    strings.MISSION.PREFIX,
+                    utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
+                    (typeof this._params.text === "object") ? this._params.text[strings.getLanguage()] : this._params.text),
+            duration: this._params.duration,
+            permanent: this._params.permanent
+        }, this._params.urgent);
+    };
+    // #########################################################################
+    /**
+     * @class 
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Mission} mission
+     */
+    function ClearMessagesAction(dataJSON, mission) {
+        Action.call(this, dataJSON, mission);
+    }
+
+    ClearMessagesAction.prototype = new Action();
+    ClearMessagesAction.prototype.constructor = ClearMessagesAction;
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    ClearMessagesAction.prototype._checkParams = function () {
+        return true;
+    };
+    /**
+     * @override
+     */
+    ClearMessagesAction.prototype._execute = function () {
+        game.getScreen().clearHUDMessages();
     };
     // #########################################################################
     /**
@@ -2210,7 +2374,7 @@ define([
         this._actions = [];
         if (dataJSON.actions) {
             for (i = 0; i < dataJSON.actions.length; i++) {
-                this._actions.push(new Action(dataJSON.actions[i], this));
+                this._actions.push(new (_actionConstructors[dataJSON.actions[i].type] || Action)(dataJSON.actions[i], this));
             }
         }
         this._state = MissionState.NONE;
@@ -3039,6 +3203,12 @@ define([
     _conditionConstructors[ConditionType.DESTROYED] = DestroyedCondition;
     _conditionConstructors[ConditionType.COUNT] = CountCondition;
     _conditionConstructors[ConditionType.TIME_ELAPSED] = TimeCondition;
+    // associating action constructors
+    _actionConstructors = {};
+    _actionConstructors[ActionType.WIN] = WinAction;
+    _actionConstructors[ActionType.LOSE] = LoseAction;
+    _actionConstructors[ActionType.MESSAGE] = MessageAction;
+    _actionConstructors[ActionType.CLEAR_MESSAGES] = ClearMessagesAction;
     // caching configuration settings
     config.executeWhenReady(function () {
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);

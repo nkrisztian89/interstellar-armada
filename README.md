@@ -30,7 +30,7 @@ For developers
 ==============
 
 I use [NetBeans](https://netbeans.org/) (8.2) with its web development (+
-[JSLint](http://plugins.netbeans.org/plugin/40893/jslint),
+[ESLint](http://plugins.netbeans.org/plugin/63486/eslint),
 [GLSL](http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter) and 
 [Markdown](http://plugins.netbeans.org/plugin/50964/markdown-support)) plugins 
 to develop this application.

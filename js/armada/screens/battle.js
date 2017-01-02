@@ -211,14 +211,8 @@ define([
              */
             _targetSwitchTime,
             /**
-             * @typedef {Object} Battle~HUDMessage The properties of a message that can be displayed for
-             * the player on the HUD
-             * @property {String|Object} [text] The text of the message (formatted, can contain '\n'-s). Used when no
-             * translation (or no translation ID) is available. Alternatively, an object can be given with multiple language
-             * versions of the text, with the language IDs as the keys.
-             * @property {String} [textID] The translation ID to use for the text to be displayed. The full translation
-             * ID will be mission.<missionName>.messages.<textID>
-             * If a translation is found, it overrides the value of the text property.
+             * @typedef {Object} Battle~HUDMessage The properties of a message that can be displayed for the player on the HUD
+             * @property {String} [text] The text of the message (formatted, translated, can contain '\n'-s)
              * @property {Number} [duration] The duration to display the message for, in milliseconds. If not given, an automatic
              * duration will be set based on the length of the text
              * @property {Number} timeLeft How much time is still left from displaying this message, in milliseconds
