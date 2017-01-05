@@ -28,29 +28,28 @@
             ]
         }
     ],
-    "triggers": [{
-            "name": "frigateCountBelow",
-            "conditions": [{
-                    "type": "count",
-                    "subjects": {
-                        "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
-                    },
-                    "params": {
-                        "relation": "below",
-                        "count": 3
+    "events": [{
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 3
+                        }
                     }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "lose"
                 }
-            ],
-            "conditionsRequired": "all",
-            "fireWhen": "changeToTrue",
-            "oneShot": true
-        }
-    ],
-    "actions": [{
-            "type": "lose",
-            "trigger": "frigateCountBelow"
-        }
-    ],
+            ]
+        }],
     "spacecrafts": [
         {
             "class": "taurus",

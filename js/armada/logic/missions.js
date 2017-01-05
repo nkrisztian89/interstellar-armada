@@ -1402,7 +1402,7 @@ define([
      * @typedef TimeCondition~Params
      * @property {Number} time The amount of time this condition refers to, in milliseconds
      * @property {String} satisfiedWhen (enum TimeConditionSatisfiedWhen) How to determine when the condition is satisfied
-     * @property {String} [start] The name of the trigger starting the timer for this condition (not set: start of mission)
+     * @property {String} [start] The name of the event starting the timer for this condition (not set: start of mission)
      * @property {Number} [maxCount] The maximum number of times this condition can be satisfied (only for repeat mode)
      * @property {Number} [startOffset] The value of the timer when started (for repeat mode)
      */
@@ -1437,7 +1437,10 @@ define([
     TimeCondition.prototype.isSatisfied = function (mission, dt) {
         var result = false;
         if (this._params.start && !this._trigger) {
-            this._trigger = mission.getTrigger(this._params.start);
+            this._trigger = mission.getEvent(this._params.start) && mission.getEvent(this._params.start).getTrigger();
+            if (!this._trigger) {
+                this._params.start = null;
+            }
         }
         if (!this._running && this._trigger && this._trigger.hasFired()) {
             this._running = true;
@@ -1494,11 +1497,6 @@ define([
     function Trigger(dataJSON) {
         var i;
         /**
-         * This name can be used to identify the trigger within a mission when referenced from an action
-         * @type String
-         */
-        this._name = dataJSON.name;
-        /**
          * The list of conditions to evaluate when deciding whether to fire
          * @type Condition[]
          */
@@ -1553,13 +1551,6 @@ define([
             }
         }
     }
-    /**
-     * Returns the string that identifies this trigger within a mission
-     * @returns {String}
-     */
-    Trigger.prototype.getName = function () {
-        return this._name;
-    };
     /**
      * Adds the passed callback function to be executed whenever this trigger fires
      * @param {Trigger~onFireCallback} value
@@ -1719,9 +1710,9 @@ define([
      * This is a base class, subclasses need to be created for each specific action type that is supported.
      * The subclasses need to implement _checkParams() and _execute().
      * @param {Object} dataJSON The object storing the data to initialize this action
-     * @param {Mission} mission
+     * @param {Trigger} trigger
      */
-    function Action(dataJSON, mission) {
+    function Action(dataJSON, trigger) {
         /**
          * (enum ActionType) Determines what the action to execute actually is
          * @type String
@@ -1731,7 +1722,7 @@ define([
          * A reference to the trigger that needs to fire to execute this action
          * @type Trigger
          */
-        this._trigger = dataJSON ? mission.getTrigger(dataJSON.trigger) : null;
+        this._trigger = trigger;
         if (this._trigger) {
             this._trigger.addFireHandler(this._execute.bind(this));
         }
@@ -1793,10 +1784,10 @@ define([
      * @class 
      * @extends Action
      * @param {Object} dataJSON
-     * @param {Mission} mission
+     * @param {Trigger} trigger
      */
-    function WinAction(dataJSON, mission) {
-        Action.call(this, dataJSON, mission);
+    function WinAction(dataJSON, trigger) {
+        Action.call(this, dataJSON, trigger);
     }
 
     WinAction.prototype = new Action();
@@ -1835,10 +1826,10 @@ define([
      * @class 
      * @extends Action
      * @param {Object} dataJSON
-     * @param {Mission} mission
+     * @param {Trigger} trigger
      */
-    function LoseAction(dataJSON, mission) {
-        Action.call(this, dataJSON, mission);
+    function LoseAction(dataJSON, trigger) {
+        Action.call(this, dataJSON, trigger);
     }
 
     LoseAction.prototype = new Action();
@@ -1877,10 +1868,10 @@ define([
      * @class 
      * @extends Action
      * @param {Object} dataJSON
-     * @param {Mission} mission
+     * @param {Trigger} trigger
      */
-    function MessageAction(dataJSON, mission) {
-        Action.call(this, dataJSON, mission);
+    function MessageAction(dataJSON, trigger) {
+        Action.call(this, dataJSON, trigger);
     }
 
     MessageAction.prototype = new Action();
@@ -1964,6 +1955,63 @@ define([
     };
     // #########################################################################
     /**
+     * @class A game event is a set of actions that are executed whenever an associated trigger (a set of conditions and parameters) fires 
+     * during the mission.
+     * @param {Object} dataJSON
+     */
+    function MissionEvent(dataJSON) {
+        var i;
+        /**
+         * A string to identify this event Might be needed to refer to it for example, as a timed trigger might start its countdown after 
+         * a referred event happens.
+         * @type String
+         */
+        this._name = dataJSON.name;
+        /**
+         * The trigger that is checked every simulation step whether to fire and invoke the associated actions or not
+         * @type Trigger[]
+         */
+        this._trigger = new Trigger(dataJSON.trigger);
+        /**
+         * Actions that are executed in every simulation step when their associated triggers fire
+         * @type Action[]
+         */
+        this._actions = [];
+        for (i = 0; i < dataJSON.actions.length; i++) {
+            this._actions.push(new (_actionConstructors[dataJSON.actions[i].type] || Action)(dataJSON.actions[i], this._trigger));
+        }
+    }
+    /**
+     * Returns the string that identifies this event within the mission.
+     * @returns {String}
+     */
+    MissionEvent.prototype.getName = function () {
+        return this._name;
+    };
+    /**
+     * Returns the trigger that sets this event off.
+     * @returns {Trigger}
+     */
+    MissionEvent.prototype.getTrigger = function () {
+        return this._trigger;
+    };
+    /**
+     * Returns the set of actions that are executed when this event happens.
+     * @returns {Action[]}
+     */
+    MissionEvent.prototype.getActions = function () {
+        return this._actions;
+    };
+    /**
+     * Checks the triggers and executes the actions if needed for the current mission simulation step.
+     * @param {Mission} mission The mission we are simulating.
+     * @param {Number} dt The time elapsed since the last simulation step, in milliseconds
+     */
+    MissionEvent.prototype.simulate = function (mission, dt) {
+        this._trigger.simulate(mission, dt);
+    };
+    // #########################################################################
+    /**
      * @class Represents a battle scene with an environment, spacecrafts, 
      * projectiles. Can create scenes for visual representation using the held
      * references as well as perform the game logic and physics simulation
@@ -2000,15 +2048,10 @@ define([
          */
         this._teams = null;
         /**
-         * The list of triggers that are checked every simulation step whether to fire and invoke their associated actions or not
-         * @type Trigger[]
+         * The events that can happen during this mission. 
+         * @type MissionEvent[]
          */
-        this._triggers = null;
-        /**
-         * Actions that are executed in every simulation sten when their associated triggers fire
-         * @type Action[]
-         */
-        this._actions = null;
+        this._events = null;
         /**
          * References to those actions of the mission that, when executed, cause it to be completed 
          * @type Action[]
@@ -2277,18 +2320,18 @@ define([
         return null;
     };
     /**
-     * Returns the trigger identified by the passed string
+     * Returns the event identified by the passed string
      * @param {String} name
-     * @returns {Trigger}
+     * @returns {MissionEvent}
      */
-    Mission.prototype.getTrigger = function (name) {
+    Mission.prototype.getEvent = function (name) {
         var i;
-        for (i = 0; i < this._triggers.length; i++) {
-            if (this._triggers[i].getName() === name) {
-                return this._triggers[i];
+        for (i = 0; i < this._events.length; i++) {
+            if (this._events[i].getName() === name) {
+                return this._events[i];
             }
         }
-        application.showError("No trigger exists with name '" + name + "'!");
+        application.showError("No mission event exists with name '" + name + "'!");
         return null;
     };
     /**
@@ -2364,28 +2407,25 @@ define([
      * @param {Object} dataJSON The object storing the mission data
      */
     Mission.prototype.loadObjectives = function (dataJSON) {
-        var i, actionType;
-        this._triggers = [];
-        if (dataJSON.triggers) {
-            for (i = 0; i < dataJSON.triggers.length; i++) {
-                this._triggers.push(new Trigger(dataJSON.triggers[i]));
-            }
-        }
-        this._actions = [];
-        if (dataJSON.actions) {
-            for (i = 0; i < dataJSON.actions.length; i++) {
-                this._actions.push(new (_actionConstructors[dataJSON.actions[i].type] || Action)(dataJSON.actions[i], this));
+        var i, j, actions, actionType;
+        this._events = [];
+        if (dataJSON.events) {
+            for (i = 0; i < dataJSON.events.length; i++) {
+                this._events.push(new MissionEvent(dataJSON.events[i], this));
             }
         }
         this._state = MissionState.NONE;
         this._winActions = [];
         this._loseActions = [];
-        for (i = 0; i < this._actions.length; i++) {
-            actionType = this._actions[i].getType();
-            if (actionType === ActionType.WIN) {
-                this._winActions.push(this._actions[i]);
-            } else if (actionType === ActionType.LOSE) {
-                this._loseActions.push(this._actions[i]);
+        for (i = 0; i < this._events.length; i++) {
+            actions = this._events[i].getActions();
+            for (j = 0; j < actions.length; j++) {
+                actionType = actions[j].getType();
+                if (actionType === ActionType.WIN) {
+                    this._winActions.push(actions[j]);
+                } else if (actionType === ActionType.LOSE) {
+                    this._loseActions.push(actions[j]);
+                }
             }
         }
         if ((this._winActions.length > 0) || (this._loseActions.length > 0)) {
@@ -2709,8 +2749,8 @@ define([
         if (this._environment) {
             this._environment.simulate();
         }
-        for (i = 0; i < this._triggers.length; i++) {
-            this._triggers[i].simulate(this, dt);
+        for (i = 0; i < this._events.length; i++) {
+            this._events[i].simulate(this, dt);
         }
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].simulate(dt);
