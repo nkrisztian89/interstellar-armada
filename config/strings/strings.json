@@ -123,7 +123,10 @@
             "name": "Patrol vs patrol"
         },
         "defendFrigates": {
-            "name": "Defend the frigates"
+            "name": "Defend the frigates",
+            "messages": {
+                "caution": "Nice work taking out the bombers! Now stay clear of the Mississippi and let the frigates do their job."
+            }
         },
         "test": {
             "name": "Sandbox test",

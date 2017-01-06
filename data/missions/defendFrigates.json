@@ -49,6 +49,44 @@
                     "type": "lose"
                 }
             ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "squads": ["phantom", "reaper"]
+                        }
+                    }, {
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["rebels"]
+                        },
+                        "params": {
+                            "relation": "above",
+                            "count": 0
+                        }
+                    }, {
+                        "type": "count",
+                        "subjects": {
+                            "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                        },
+                        "params": {
+                            "relation": "above",
+                            "count": 2
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "caution"
+                    }
+                }
+            ]
         }],
     "spacecrafts": [
         {

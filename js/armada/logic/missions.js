@@ -1674,10 +1674,10 @@ define([
      * Returns the list of translated strings that can be used to display the objectives and their states associated with the conditions 
      * of this trigger. To be used on the HUD.
      * @param {Boolean} triggersWinAction Whether this trigger firing causes the player to win 
-     * @param {String} missionState The current state of the mission
+     * @param {Mission} mission 
      * @returns {ObjectiveWithState[]}
      */
-    Trigger.prototype.getObjectivesState = function (triggersWinAction, missionState) {
+    Trigger.prototype.getObjectivesState = function (triggersWinAction, mission) {
         var i, result = [];
         if (this._conditionsRequired !== TriggerConditionsRequired.ALL) {
             application.showError("Triggers for mission objectives must be set to conditionsRequired state of '" + TriggerConditionsRequired.ALL + "'!");
@@ -1692,11 +1692,11 @@ define([
                 text: this._conditions[i].getObjectiveStateString(triggersWinAction ?
                         strings.BATTLE.OBJECTIVE_WIN_PREFIX :
                         strings.BATTLE.OBJECTIVE_LOSE_PREFIX),
-                state: this._conditions[i].isSatisfied() ?
+                state: this._conditions[i].isSatisfied(mission) ?
                         (triggersWinAction ?
                                 ObjectiveState.COMPLETED :
                                 ObjectiveState.FAILED) :
-                        ((missionState === MissionState.COMPLETED) ?
+                        ((mission.getState() === MissionState.COMPLETED) ?
                                 ObjectiveState.COMPLETED :
                                 ObjectiveState.IN_PROGRESS)
             });
@@ -1815,11 +1815,11 @@ define([
     };
     /**
      * @override
-     * @param {String} missionState (enum MissionState) 
+     * @param {Mission} mission
      * @returns {ObjectiveWithState[]}
      */
-    WinAction.prototype.getObjectivesState = function (missionState) {
-        return this._trigger.getObjectivesState(true, missionState);
+    WinAction.prototype.getObjectivesState = function (mission) {
+        return this._trigger.getObjectivesState(true, mission);
     };
     // #########################################################################
     /**
@@ -1857,11 +1857,11 @@ define([
     };
     /**
      * @override
-     * @param {String} missionState (enum MissionState) 
+     * @param {Mission} mission
      * @returns {ObjectiveWithState[]}
      */
-    LoseAction.prototype.getObjectivesState = function (missionState) {
-        return this._trigger.getObjectivesState(false, missionState);
+    LoseAction.prototype.getObjectivesState = function (mission) {
+        return this._trigger.getObjectivesState(false, mission);
     };
     // #########################################################################
     /**
@@ -2168,6 +2168,13 @@ define([
         }
     };
     /**
+     * Return a value from the enum MissionState
+     * @returns {Number}
+     */
+    Mission.prototype.getState = function () {
+        return this._state;
+    };
+    /**
      * Returns whether this mission has explicitly set objectives
      * @returns {Boolean}
      */
@@ -2376,11 +2383,11 @@ define([
             // handling explicit mission objectives
         } else {
             for (i = 0; i < this._winActions.length; i++) {
-                result = result.concat(this._winActions[i].getObjectivesState(this._state));
+                result = result.concat(this._winActions[i].getObjectivesState(this));
             }
         }
         for (i = 0; i < this._loseActions.length; i++) {
-            result = result.concat(this._loseActions[i].getObjectivesState(this._state));
+            result = result.concat(this._loseActions[i].getObjectivesState(this));
         }
         return result;
     };
