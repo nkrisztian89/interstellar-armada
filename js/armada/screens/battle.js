@@ -2187,12 +2187,11 @@ define([
                     victory = !_mission.isLost() && _mission.isWon();
                     missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
                     hitRatio = craft.getHitRatio();
+                    // calculating score from base score and bonuses
+                    perfStats = _mission.getPerformanceStatistics();
                     if (victory) {
-                        // calculating score from base score and bonuses
-                        perfStats = _mission.getPerformanceStatistics();
+                        // updating the record if needed
                         isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(perfStats.score, perfStats.performance);
-                    } else {
-                        perfStats = {};
                     }
                     game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
                         victory: victory,
