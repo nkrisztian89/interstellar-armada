@@ -17,6 +17,6 @@ thruster.ogg: (edited)
 http://freesound.org/people/qubodup/sounds/146770/
 Author/copyright: freesound user qubodup
 
-The copyright belongs to respective the authors.
+The copyright belongs to the respective authors.
 
 The sound effects not mentioned above are the original works of the game's author (Krisztián Nagy). The changes to the above files (where indicated) were also made by him.
