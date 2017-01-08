@@ -873,6 +873,10 @@ define([
                 name: "targetHullIntegrityDecreaseAnimationDuration",
                 type: "number"
             },
+            SHIP_INDICATOR_HIGHLIGHT_ANIMATION_INTERVAL: {
+                name: "shipIndicatorHighlightAnimationInterval",
+                type: "number"
+            },
             CENTER_CROSSHAIR: {
                 name: "centerCrosshair",
                 type: _customTypes.UI_IMAGE_DESCRIPTOR
@@ -881,21 +885,21 @@ define([
                 name: "cursor",
                 type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["still", "turn"]})
             },
-            TARGET_ARROW: {
-                name: "targetArrow",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly"]})
+            SHIP_ARROW: {
+                name: "shipArrow",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "hostileTarget", "friendlyTarget"]})
             },
-            TARGET_ARROW_POSITION_RADIUS: {
-                name: "targetArrowPositionRadius",
+            SHIP_ARROW_POSITION_RADIUS: {
+                name: "shipArrowPositionRadius",
                 type: "number"
             },
             TARGET_ARROW_SWITCH_SCALE: {
                 name: "targetArrowSwitchScale",
                 type: "number"
             },
-            TARGET_INDICATOR: {
-                name: "targetIndicator",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly"]})
+            SHIP_INDICATOR: {
+                name: "shipIndicator",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "hostileTarget", "friendlyTarget"]})
             },
             TARGET_INDICATOR_SWITCH_SCALE: {
                 name: "targetIndicatorSwitchScale",

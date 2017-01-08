@@ -1528,6 +1528,13 @@ define([
         this._targetedBy.splice(this._targetedBy.indexOf(targetedBy), 1);
     };
     /**
+     * Returns the array of spacecrafts targeting this one
+     * @returns {Spacecraft[]}
+     */
+    Spacecraft.prototype.getTargetingSpacecrafts = function () {
+        return this._targetedBy;
+    };
+    /**
      * Targets the given spacecraft and executes related operations, such as changing target views. 
      * @param {Spacecraft|null} target If null is given, the current target will be canceled.
      */
