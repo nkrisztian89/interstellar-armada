@@ -10,13 +10,13 @@
 /*jslint white: true, nomen: true, plusplus: true */
 
 /**
- * @param missions Used to create the skybox
+ * @param environments Used to create the skybox
  * @param preview Used for common WebGL preview functionality
  */
 define([
-    "armada/logic/missions",
+    "armada/logic/environments",
     "editor/preview/webgl-preview"
-], function (missions, preview) {
+], function (environments, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -72,7 +72,7 @@ define([
         params = params || {};
         shouldReload = !params.preserve || params.reload;
         if (shouldReload) {
-            _skybox = new missions.Skybox(_skyboxClass);
+            _skybox = new environments.Skybox(_skyboxClass);
         }
         _skybox.addToScene(preview.getScene());
     }

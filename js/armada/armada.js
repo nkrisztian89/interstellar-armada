@@ -17,7 +17,8 @@
  * @param graphics Used to load the graphics settings
  * @param audio Used to load the audio settings
  * @param config Used to load general game configuration and settings
- * @param missions Used to load the environments
+ * @param environments Used to load the environments
+ * @param missions Used to load the missions
  * @param control Used to load the control configuration and setings of the game and access main functionality
  * @param strings Used to load the game translation strings
  */
@@ -28,15 +29,16 @@ define([
     "armada/graphics",
     "armada/audio",
     "armada/configuration",
+    "armada/logic/environments",
     "armada/logic/missions",
     "armada/control",
     "armada/strings"
-], function (game, components, constants, graphics, audio, config, missions, control, strings) {
+], function (game, components, constants, graphics, audio, config, environments, missions, control, strings) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
     var _progressBar = document.getElementById("splashProgress");
-    _progressBar.max = 5;
+    _progressBar.max = 6;
     // -------------------------------------------------------------------------
     // setting game properties
     game.setGameName(constants.GAME_NAME);
@@ -57,10 +59,14 @@ define([
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
         config.executeWhenReady(function () {
-            missions.requestLoad();
-            missions.executeWhenReady(function () {
+            environments.requestLoad();
+            environments.executeWhenReady(function () {
                 _progressBar.value = 2;
-                callback();
+                missions.requestLoad();
+                missions.executeWhenReady(function () {
+                    _progressBar.value = 3;
+                    callback();
+                });
             });
         });
     };
@@ -99,11 +105,11 @@ define([
             game.addScreen(controlsScreen.controlsScreen);
             game.addScreen(aboutScreen.aboutScreen);
             game.addScreen(menus.ingameMenuScreen);
-            _progressBar.value = 3;
+            _progressBar.value = 4;
             game.executeWhenAllScreensReady(function () {
-                _progressBar.value = 4;
+                _progressBar.value = 5;
                 game.requestLanguageChange(localStorage.getItem(constants.LANGUAGE_LOCAL_STORAGE_ID) || game.getDefaultLanguage(), strings, function () {
-                    _progressBar.value = 5;
+                    _progressBar.value = 6;
                     components.clearStoredDOMModels();
                     localStorage[constants.VERSION_LOCAL_STORAGE_ID] = game.getVersion();
                     armadaScreens.initAudio(callback);

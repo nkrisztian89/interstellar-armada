@@ -318,6 +318,10 @@ span.element.selected {
     font-weight: bold;
 }
 
+li.element {
+    transition: padding 0.1s;
+}
+
 li.element.inserting {
     opacity: 0.3;
 }

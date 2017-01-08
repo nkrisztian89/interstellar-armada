@@ -17,7 +17,8 @@
  * @param config Used to load game configuration and settings from file
  * @param graphics Used to load the graphics settings from file
  * @param classes Used to display the class structure in the Items window and access the selected class for preview and properties
- * @param missions Used to load the environments 
+ * @param environments Used to load the environments 
+ * @param missions Used to load the missions 
  * @param common Used for clearing open popups
  * @param skyboxPreview Used to create previews for skybox classes
  * @param explosionPreview Used to create previews for explosion classes
@@ -35,6 +36,7 @@ define([
     "armada/configuration",
     "armada/graphics",
     "armada/logic/classes",
+    "armada/logic/environments",
     "armada/logic/missions",
     "editor/common",
     "editor/descriptors",
@@ -48,7 +50,7 @@ define([
         utils,
         application, resources,
         constants, config, graphics, classes,
-        missions,
+        environments, missions,
         common, descriptors, properties,
         skyboxPreview, explosionPreview, projectilePreview, weaponPreview, spacecraftPreview) {
     "use strict";
@@ -340,7 +342,7 @@ define([
         }
         resources.executeForAllResources(nameChangeHandler);
         classes.executeForAllClasses(nameChangeHandler);
-        missions.executeForAllEnvironments(nameChangeHandler);
+        environments.executeForAllEnvironments(nameChangeHandler);
     }
     /**
      * Loads the content of the Properties window for the currently selected element.
@@ -605,9 +607,9 @@ define([
                                     exportName.value,
                                     exportAuthor.value,
                                     [ENVIRONMENTS_CATEGORY],
-                                    missions.getEnvironmentNames,
+                                    environments.getEnvironmentNames,
                                     function (categoryName, itemName) {
-                                        return (categoryName === ENVIRONMENTS_CATEGORY) ? missions.getEnvironment(itemName) : null;
+                                        return (categoryName === ENVIRONMENTS_CATEGORY) ? environments.getEnvironment(itemName) : null;
                                     }));
                     break;
                 default:
@@ -641,7 +643,7 @@ define([
                 break;
             case common.ItemType.ENVIRONMENT:
                 categories = [ENVIRONMENTS_CATEGORY];
-                getItems = missions.getEnvironmentNames;
+                getItems = environments.getEnvironmentNames;
                 break;
             case common.ItemType.MISSION:
                 categories = [MISSIONS_CATEGORY];
@@ -766,15 +768,15 @@ define([
                     break;
                 case common.ItemType.ENVIRONMENT:
                     common.setSelectorOptions(newItemCategory, [ENVIRONMENTS_CATEGORY]);
-                    getItems = missions.getEnvironmentNames;
+                    getItems = environments.getEnvironmentNames;
                     create = function () {
                         var newItemData = ((newItemBase.selectedIndex > 0) ?
-                                utils.deepCopy(missions.getEnvironment(newItemBase.value).getData()) :
+                                utils.deepCopy(environments.getEnvironment(newItemBase.value).getData()) :
                                 properties.getDefaultItemData(
                                         descriptors.itemDescriptors[newItemCategory.value],
                                         newItemName.value));
                         newItemData.name = newItemName.value;
-                        missions.createEnvironment(newItemData);
+                        environments.createEnvironment(newItemData);
                     };
                     break;
                 default:
@@ -843,15 +845,18 @@ define([
             graphics.loadSettingsFromLocalStorage();
             config.loadSettingsFromJSON(settingsJSON.logic);
             config.executeWhenReady(function () {
-                missions.requestLoad();
-                missions.executeWhenReady(function () {
-                    application.log("Game settings loaded.", 1);
-                    localStorage[constants.VERSION_LOCAL_STORAGE_ID] = application.getVersion();
-                    application.log("Initialization completed.");
-                    _setLabel(document.getElementById(PREVIEW_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
-                    _setLabel(document.getElementById(PROPERTIES_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
-                    _loadItems();
-                    _loadDialogs();
+                environments.requestLoad();
+                environments.executeWhenReady(function () {
+                    missions.requestLoad();
+                    missions.executeWhenReady(function () {
+                        application.log("Game settings loaded.", 1);
+                        localStorage[constants.VERSION_LOCAL_STORAGE_ID] = application.getVersion();
+                        application.log("Initialization completed.");
+                        _setLabel(document.getElementById(PREVIEW_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
+                        _setLabel(document.getElementById(PROPERTIES_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
+                        _loadItems();
+                        _loadDialogs();
+                    });
                 });
             });
         });
