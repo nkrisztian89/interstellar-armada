@@ -580,10 +580,15 @@ define([
              */
             _shipIndicatorHighlightAnimationInterval,
             /**
-             * The horizontal and vertical base size of the target indicator reticle
-             * @type Number[2]
+             * The horizontal and vertical min/max sizes of the target indicator reticle
+             * @type Object.<String, Number[2]>
              */
-            _shipIndicatorSize,
+            _shipIndicatorSizes,
+            /**
+             * The factor by which to multiply the visible size of spacecrafts to get the size of their indicator
+             * @type type
+             */
+            _shipIndicatorSizeFactor,
             /**
              * The scaling to apply to the target indicator reticle at the start of the target switch HUD animation
              * @type Number
@@ -593,7 +598,7 @@ define([
              * The horizontal and vertical base size of the target indicator arrow
              * @type Number[2]
              */
-            _shipArrowSize,
+            _shipArrowSizes,
             /**
              * The scaling to apply to the target indicator arrow at the start of the target switch HUD animation
              * @type Number
@@ -996,7 +1001,7 @@ define([
                 UI_3D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).texture,
                 [0, 0, 0],
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).sizes.maximum,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).scaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostile,
                 undefined,
@@ -1011,7 +1016,7 @@ define([
                 UI_2D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).texture,
                 [0, 0],
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).size,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).sizes.default,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).scaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostile,
                 undefined,
@@ -1689,13 +1694,13 @@ define([
                 craft = _mission ? _mission.getFollowedSpacecraftForScene(_battleScene) : null,
                 target,
                 /** @type Number */
-                distance, aspect, i, scale, futureDistance, animationProgress, targetSwitchAnimationProgress,
+                distance, aspect, i, scale, futureDistance, animationProgress, targetSwitchAnimationProgress, shipWidth,
                 hullIntegrity,
                 acceleration, speed, absSpeed, maxSpeed, stepFactor, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
                 /** @type Weapon[] */
                 weapons,
                 /** @type Number[2] */
-                position2D, direction2D, maxSpeedTextPosition, maxReverseSpeedTextPosition,
+                position2D, direction2D, maxSpeedTextPosition, maxReverseSpeedTextPosition, shipIndicatorSize, shipIndicatorMinSize,
                 /** @type Number[3] */
                 position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, basePointPosition, relativeVelocity,
                 /** @type Number[4] */
@@ -2006,7 +2011,7 @@ define([
                         }
                         // scaling according to the target switch animation
                         if (_targetSwitchTime > 0) {
-                            _weaponImpactIndicators[i].setSize(vec.scaled2(_weaponImpactIndicatorSize, 1 + (_weaponImpactIndicatorSwitchScale - 1) * animationProgress));
+                            _weaponImpactIndicators[i].setSize(vec.scaled2(_weaponImpactIndicatorSize, 1 + (_weaponImpactIndicatorSwitchScale - 1) * targetSwitchAnimationProgress));
                         } else {
                             _weaponImpactIndicators[i].setSize(_weaponImpactIndicatorSize);
                         }
@@ -2167,6 +2172,12 @@ define([
                 indicator = _shipIndicators[i];
                 indicator.setPosition(targetPosition);
                 targetIsHostile = ships[i].isHostile(craft);
+                shipWidth = ships[i].getVisualModel().getVisibleSize({camera: _battleScene.getCamera()}).width * _shipIndicatorSizeFactor;
+                shipIndicatorMinSize = (ships[i] === target) ? _shipIndicatorSizes.targetMinimum : _shipIndicatorSizes.minimum;
+                shipIndicatorSize = [
+                    Math.min(Math.max(shipIndicatorMinSize[0], shipWidth), _shipIndicatorSizes.maximum[0]),
+                    Math.min(Math.max(shipIndicatorMinSize[1], shipWidth), _shipIndicatorSizes.maximum[1])
+                ];
                 if (ships[i] === target) {
                     indicator.setColor(
                             (targetIsHostile ?
@@ -2174,9 +2185,9 @@ define([
                                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.friendlyTarget));
                     // scaling according to the target switch animation
                     if (_targetSwitchTime > 0) {
-                        indicator.setSize(vec.scaled2(_shipIndicatorSize, 1 + (_targetIndicatorSwitchScale - 1) * targetSwitchAnimationProgress));
+                        indicator.setSize(vec.scaled2(shipIndicatorSize, 1 + (_targetIndicatorSwitchScale - 1) * targetSwitchAnimationProgress));
                     } else {
-                        indicator.setSize(_shipIndicatorSize);
+                        indicator.setSize(shipIndicatorSize);
                     }
                 } else {
                     indicator.setColor((highlightedShips.indexOf(ships[i]) >= 0) ?
@@ -2186,7 +2197,7 @@ define([
                             (targetIsHostile ?
                                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostile :
                                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.friendly));
-                    indicator.setSize(_shipIndicatorSize);
+                    indicator.setSize(shipIndicatorSize);
                 }
                 indicator.show();
                 // ship indicating arrow, if ship target is not visible on the screen
@@ -2215,9 +2226,9 @@ define([
                                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendlyTarget));
                         // scaling according to the target switch animation
                         if (_targetSwitchTime > 0) {
-                            indicator.setSize(vec.scaled2(_shipArrowSize, 1 + (_targetArrowSwitchScale - 1) * targetSwitchAnimationProgress));
+                            indicator.setSize(vec.scaled2(_shipArrowSizes.target, 1 + (_targetArrowSwitchScale - 1) * targetSwitchAnimationProgress));
                         } else {
-                            indicator.setSize(_shipArrowSize);
+                            indicator.setSize(_shipArrowSizes.target);
                         }
                     } else {
                         indicator.setColor((highlightedShips.indexOf(ships[i]) >= 0) ?
@@ -2227,7 +2238,7 @@ define([
                                 (targetIsHostile ?
                                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostile :
                                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendly));
-                        indicator.setSize(_shipArrowSize);
+                        indicator.setSize(_shipArrowSizes.default);
                     }
                 } else {
                     indicator.hide();
@@ -2515,9 +2526,10 @@ define([
         _hudHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
         _hudTargetHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
         _shipIndicatorHighlightAnimationInterval = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR_HIGHLIGHT_ANIMATION_INTERVAL);
-        _shipIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).size;
+        _shipIndicatorSizes = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).sizes;
+        _shipIndicatorSizeFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR_SIZE_FACTOR);
         _targetIndicatorSwitchScale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR_SWITCH_SCALE);
-        _shipArrowSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).size;
+        _shipArrowSizes = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).sizes;
         _targetArrowSwitchScale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW_SWITCH_SCALE);
         _weaponImpactIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).size;
         _weaponImpactIndicatorSwitchScale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR_SWITCH_SCALE);

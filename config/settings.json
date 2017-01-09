@@ -195,15 +195,18 @@
                 "shipArrow": {
                     "texture": "hud-atlas",
                     "mapping": [[0.25, 0.25], [0.5, 0.5]],
-                    "size": [0.12, 0.12],
+                    "sizes": {
+                        "default": [0.085, 0.085],
+                        "target": [0.12, 0.12]
+                    },
                     "scaleMode": "minimum",
                     "colors": {
                         "hostile": [1, 0, 0, 0.2],
                         "friendly": [0, 1, 0, 0.2],
                         "hostileHighlight": [1, 0, 0, 0.5],
                         "friendlyHighlight": [0, 1, 0, 0.5],
-                        "hostileTarget": [1, 0, 0, 0.75],
-                        "friendlyTarget": [0, 1, 0, 0.75]
+                        "hostileTarget": [1, 0, 0, 0.8],
+                        "friendlyTarget": [0, 1, 0, 0.8]
                     }
                 },
                 "shipArrowPositionRadius": 0.45,
@@ -211,17 +214,22 @@
                 "shipIndicator": {
                     "texture": "hud-atlas",
                     "mapping": [[0.0, 0.0], [0.25, 0.25]],
-                    "size": [0.15, 0.15],
+                    "sizes": {
+                        "minimum": [0.05, 0.05],
+                        "targetMinimum": [0.1, 0.1],
+                        "maximum": [0.2, 0.2]
+                    },
                     "scaleMode": "maximum",
                     "colors": {
                         "hostile": [1, 0, 0, 0.2],
                         "friendly": [0, 1, 0, 0.2],
                         "hostileHighlight": [1, 0, 0, 0.5],
                         "friendlyHighlight": [0, 1, 0, 0.5],
-                        "hostileTarget": [1, 0, 0, 0.75],
-                        "friendlyTarget": [0, 1, 0, 0.75]
+                        "hostileTarget": [1, 0, 0, 0.8],
+                        "friendlyTarget": [0, 1, 0, 0.8]
                     }
                 },
+                "shipIndicatorSizeFactor": 2,
                 "targetIndicatorSwitchScale": 1.5,
                 "aimAssistIndicator": {
                     "texture": "hud-atlas",

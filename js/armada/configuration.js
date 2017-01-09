@@ -887,7 +887,7 @@ define([
             },
             SHIP_ARROW: {
                 name: "shipArrow",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "hostileTarget", "friendlyTarget"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "hostileTarget", "friendlyTarget"], SIZE: ["default", "target"]})
             },
             SHIP_ARROW_POSITION_RADIUS: {
                 name: "shipArrowPositionRadius",
@@ -899,7 +899,11 @@ define([
             },
             SHIP_INDICATOR: {
                 name: "shipIndicator",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "hostileTarget", "friendlyTarget"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "hostileTarget", "friendlyTarget"], SIZE: ["minimum", "targetMinimum", "maximum"]})
+            },
+            SHIP_INDICATOR_SIZE_FACTOR: {
+                name: "shipIndicatorSizeFactor",
+                type: "number"
             },
             TARGET_INDICATOR_SWITCH_SCALE: {
                 name: "targetIndicatorSwitchScale",
