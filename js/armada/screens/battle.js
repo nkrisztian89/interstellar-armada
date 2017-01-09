@@ -299,6 +299,16 @@ define([
              */
             _shipArrows,
             /**
+             * Houses the texts displaying the distance from the target at its indicator reticle
+             * @type TextLayer
+             */
+            _distanceTextLayer,
+            /**
+             * Displays the current calculated distance from the target at its indicator reticle
+             * @type CanvasText
+             */
+            _distanceText,
+            /**
              * A reticle that is shown at the estimated location towards which the followed spacecraft has to fire in order to hit the
              * current target, given the current velocity of both and the speed of the first fired projectile of the first equipped weapon.
              * @type HUDElement
@@ -506,6 +516,11 @@ define([
              * @type String
              */
             _centerCrosshairScaleMode,
+            /**
+             * Stores a reference to the layout used for distance text layer
+             * @type LayoutDescriptor
+             */
+            _distanceTextLayerLayoutDescriptor,
             /**
              * Stores a reference to the layout used for the target view scene for quicker access.
              * @type ClipSpaceLayout
@@ -1229,6 +1244,14 @@ define([
     function _spacecraftShouldBeIndicated(craft) {
         return  craft.isAlive() && (craft !== _spacecraft);
     }
+    /**
+     * 
+     * @param {Number} distance
+     * @returns {String}
+     */
+    function _getDistanceString(distance) {
+        return (distance > 1000) ? (distance / 1000).toPrecision(3) + "k" : Math.round(distance).toString();
+    }
     // ##############################################################################
     /**
      * @class Represents the battle screen.
@@ -1444,6 +1467,23 @@ define([
                             _objectivesBackgroundLayout.getScaleMode(),
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.inProgress);
                 };
+        // ..............................................................................
+        // target distance
+        if (!_distanceTextLayer) {
+            _distanceTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT_LAYER_LAYOUT));
+            screenCanvas.addTextLayer(_distanceTextLayer);
+        }
+        if (!_distanceText) {
+            _distanceText = new screens.CanvasText(
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).position,
+                    "",
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).fontSize,
+                    _distanceTextLayer.getLayout().getScaleMode(),
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).colors.hostile,
+                    "left");
+            _distanceTextLayer.addText(_distanceText);
+        }
         // ..............................................................................
         // target info
         if (!_targetInfoTextLayer) {
@@ -2128,9 +2168,6 @@ define([
                 for (i = 0; i < _weaponImpactIndicators.length; i++) {
                     _weaponImpactIndicators[i].hide();
                 }
-                for (i = 0; i < _shipArrows.length; i++) {
-                    _shipArrows[i].hide();
-                }
                 if (_targetViewItem) {
                     _targetScene.clearNodes();
                     _targetViewItem = null;
@@ -2138,6 +2175,7 @@ define([
                 _targetHullIntegrityBar.hide();
                 _targetInfoTextLayer.hide();
                 _targetHullIntegrityQuickViewBar.hide();
+                _distanceTextLayer.hide();
             }
             // .....................................................................................................
             // ship indicators and arrows
@@ -2230,6 +2268,7 @@ define([
                         } else {
                             indicator.setSize(_shipArrowSizes.target);
                         }
+                        _distanceTextLayer.hide();
                     } else {
                         indicator.setColor((highlightedShips.indexOf(ships[i]) >= 0) ?
                                 (targetIsHostile ?
@@ -2242,6 +2281,20 @@ define([
                     }
                 } else {
                     indicator.hide();
+                    // if no arrow is displayed for the target, display the distance text next to its reticle
+                    if (ships[i] === target) {
+                        _distanceText.setText(_getDistanceString(distance));
+                        _distanceText.setColor(targetIsHostile ?
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).colors.hostile :
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).colors.friendly);
+                        // if to be changed to positioning to left/right, the ship indicator size needs to be
+                        // divided by the aspect ratio
+                        _distanceTextLayer.getLayout().setPosition(
+                                direction[0] + _distanceTextLayerLayoutDescriptor.width * 0.25,
+                                direction[1] - shipIndicatorSize[1] - _distanceTextLayerLayoutDescriptor.height * 0.25);
+                        _distanceTextLayer.updateLayout();
+                        _distanceTextLayer.show();
+                    }
                 }
             }
             while (i < _shipIndicators.length) {
@@ -2267,6 +2320,7 @@ define([
             _flightModeIndicatorTextLayer.hide();
             _objectivesTextLayer.hide();
             _messageTextLayer.hide();
+            _distanceTextLayer.hide();
         }
         _shipIndicatorHighlightTime = (_shipIndicatorHighlightTime + dt) % _shipIndicatorHighlightAnimationInterval;
     };
@@ -2514,6 +2568,7 @@ define([
         // hud
         _centerCrosshairScaleMode = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).scaleMode;
         _speedTargetIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).size;
+        _distanceTextLayerLayoutDescriptor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT_LAYER_LAYOUT);
         _targetViewLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_LAYOUT));
         _targetInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).layout);
         _targetHullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).layout);

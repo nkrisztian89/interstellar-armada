@@ -909,6 +909,14 @@ define([
                 name: "targetIndicatorSwitchScale",
                 type: "number"
             },
+            DISTANCE_TEXT_LAYER_LAYOUT: {
+                name: "distanceTextLayerLayout",
+                type: _customTypes.LAYOUT_DESCRIPTOR
+            },
+            DISTANCE_TEXT: {
+                name: "distanceText",
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["hostile", "friendly"]})
+            },
             AIM_ASSIST_INDICATOR: {
                 name: "aimAssistIndicator",
                 type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly"]})

@@ -1144,6 +1144,16 @@ define([
         return viewportHeight - (this.getClipSpaceBottom() + 1) / 2 * scale - this.getHeight(viewportWidth, viewportHeight) / 2;
     };
     /**
+     * Sets a new position (center X-Y) to be used for the layout - does not do validation, call only
+     * to update the center X-Y coordinates of a layout that already has them set
+     * @param {Number} centerX
+     * @param {Number} centerY
+     */
+    ClipSpaceLayout.prototype.setPosition = function (centerX, centerY) {
+        this._centerX = centerX;
+        this._centerY = centerY;
+    };
+    /**
      * Returns the position of the center of the rectangle specified by this layout in pixels when scaled to a viewport of the given size.
      * @param {Number} viewportWidth
      * @param {Number} viewportHeight
@@ -1306,6 +1316,16 @@ define([
          * @type Boolean
          */
         this._cleared = true;
+        /**
+         * The width of the viewport this canvas has last been laid out to
+         * @type Number
+         */
+        this._viewportWidth = -1;
+        /**
+         * The height of the viewport this canvas has last been laid out to
+         * @type Number
+         */
+        this._viewportHeight = -1;
     }
     /**
      * Clears the whole area of this text layer of all the previously rendered texts.
@@ -1341,16 +1361,25 @@ define([
         }
     };
     /**
+     * Recalculates the position and dimensions of the text layer based on its set layout (call after
+     * the layout has been altered)
+     */
+    TextLayer.prototype.updateLayout = function () {
+        this._canvas.style.top = this._clipSpaceLayout.getTop(this._viewportWidth, this._viewportHeight) + "px";
+        this._canvas.style.left = this._clipSpaceLayout.getLeft(this._viewportWidth, this._viewportHeight) + "px";
+        this._canvas.width = this._clipSpaceLayout.getWidth(this._viewportWidth, this._viewportHeight);
+        this._canvas.height = this._clipSpaceLayout.getHeight(this._viewportWidth, this._viewportHeight);
+        this._cleared = false;
+    };
+    /**
      * Repositions and resizes the text layer area accordingly if the size of the containing viewport has changed as given.
      * @param {Number} viewportWidth
      * @param {Number} viewportHeight
      */
     TextLayer.prototype.handleResize = function (viewportWidth, viewportHeight) {
-        this._canvas.style.top = this._clipSpaceLayout.getTop(viewportWidth, viewportHeight) + "px";
-        this._canvas.style.left = this._clipSpaceLayout.getLeft(viewportWidth, viewportHeight) + "px";
-        this._canvas.width = this._clipSpaceLayout.getWidth(viewportWidth, viewportHeight);
-        this._canvas.height = this._clipSpaceLayout.getHeight(viewportWidth, viewportHeight);
-        this._cleared = false;
+        this._viewportWidth = viewportWidth;
+        this._viewportHeight = viewportHeight;
+        this.updateLayout();
     };
     /**
      * Sets a new containing canvas the position and size of which will determine the position and size of this text layer.
