@@ -228,6 +228,11 @@ define([
             POSITION: {
                 name: "position",
                 type: types.VECTOR2
+            },
+            LAYOUT: {
+                name: "layout",
+                type: _customTypes.LAYOUT_DESCRIPTOR,
+                optional: true
             }
         }
     };

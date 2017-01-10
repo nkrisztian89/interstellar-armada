@@ -577,246 +577,6 @@ define([
     };
     // #########################################################################
     /**
-     * @class
-     * A text with associated state (layout and style) that can be rendered on 2D canvases.
-     * @param {Number[2]} position The starting position of the text in the clip space of the canvas.
-     * @param {String} text The starting value of the text to display.
-     * @param {String} font The name of the font to use (as in CSS font-family)
-     * @param {Number} size The relative size of the font to use (relative to the width or height (depending on the scaling mode) of the canvas in pixels)
-     * @param {String} scaleMode enum ScaleMode The scaling mode to use when determining the font size for rendering
-     * @param {Number[4]} color The RGBA color to use when rendering
-     * @param {String} [align="left"] The horizontal alignment mode for the text
-     */
-    function CanvasText(position, text, font, size, scaleMode, color, align) {
-        /**
-         * The X coordinate of the relative position of the text in the clip space of the canvas it is rendered to.
-         * @type Number
-         */
-        this._x = position[0];
-        /**
-         * The Y coordinate of the relative position of the text in the clip space of the canvas it is rendered to.
-         * @type Number
-         */
-        this._y = position[1];
-        /**
-         * The current text to render.
-         * @type String
-         */
-        this._text = null;
-        /**
-         * The name of the font to use (as in CSS font-family)
-         * @type String
-         */
-        this._font = font;
-        /**
-         * The relative size of the font to use (relative to the width or height (depending on the scaling mode) of the canvas in pixels)
-         * @type Number
-         */
-        this._size = size;
-        /**
-         * (enum ScaleMode) The scaling mode to use when determining the font size for rendering
-         * @type String
-         */
-        this._scaleMode = types.getEnumValue(utils.ScaleMode, scaleMode);
-        if (this._scaleMode === utils.ScaleMode.ASPECT) {
-            application.showError("Cannot set the scaling mode to aspect for fonts!");
-        }
-        /**
-         * The RGBA color to use when rendering
-         * @type Number[4]
-         */
-        this._color = null;
-        /**
-         * The horizontal alignment mode for the text
-         * @type String
-         */
-        this._align = align || "left";
-        /**
-         * Whether the text is currently visible (should be rendered when calling render())
-         * @type Boolean
-         */
-        this._visible = true;
-        // cache variables
-        /**
-         * The width of the viewport when the text was last rendered, in pixels
-         * @type Number
-         */
-        this._lastWidth = -1;
-        /**
-         * The height of the viewport when the text was last rendered, in pixels
-         * @type Number
-         */
-        this._lastHeight = -1;
-        /**
-         * The measured width of the whole (raw) text based on the last render settings and
-         * viewport. -1 marks invalid (to-be-updated) value.
-         * @type Number
-         */
-        this._textWidth = -1;
-        /**
-         * The string to set as the context.font property when rendering
-         * @type String
-         */
-        this._cssFont = null;
-        /**
-         * The string to set as the context.fillStyle property when rendering
-         * @type String
-         */
-        this._cssColor = null;
-        /**
-         * The set text split into lines and then words for multiline support
-         * @type String[][]
-         */
-        this._words = null;
-        /**
-         * The lines as they were actually rendered last time (considering word wrapping for the last
-         * last canvas size)
-         * @type String[]
-         */
-        this._lines = null;
-        /**
-         * The last measured value for offsetting lines, in pixels (based on the width of the letter 'M')
-         * @type Number
-         */
-        this._lineHeight = -1;
-        this.setText(text);
-        this.setColor(color);
-    }
-    /**
-     * Updates the stored string defining the font and its settings to be used for rendering to a canvas with the passed viewport size.
-     * @param {Number} viewportWidth
-     * @param {Number} viewportHeight
-     */
-    CanvasText.prototype._updateCSSFont = function (viewportWidth, viewportHeight) {
-        if (utils.scalesWithWidth(this._scaleMode, viewportWidth, viewportHeight)) {
-            this._cssFont = this._size * viewportWidth + "px";
-        } else {
-            this._cssFont = this._size * viewportHeight + "px";
-        }
-        this._cssFont = this._cssFont + " " + this._font;
-    };
-    /**
-     * Updates the cached variables that depend on the viewport size.
-     * @param {Number} viewportWidth
-     * @param {Number} viewportHeight
-     */
-    CanvasText.prototype._updateSize = function (viewportWidth, viewportHeight) {
-        if ((viewportWidth !== this._lastWidth) || (viewportHeight !== this._lastHeight)) {
-            this._lastWidth = viewportWidth;
-            this._lastHeight = viewportHeight;
-            this._updateCSSFont(viewportWidth, viewportHeight);
-            this._textWidth = -1;
-        }
-    };
-    /**
-     * Renders the text using the passed 2D rendering context (of a canvas) according to its current settings.
-     * @param {CanvasRenderingContext2D} context
-     * @returns {Boolean} Whether text has actually been rendered
-     */
-    CanvasText.prototype.render = function (context) {
-        var i, j, line, newLine;
-        if (this._visible) {
-            context.fillStyle = this._cssColor;
-            this._updateSize(context.canvas.width, context.canvas.height);
-            context.font = this._cssFont;
-            context.textAlign = this._align;
-            // the below code is only executed when rendering on a canvas with a new size
-            if (this._textWidth < 0) {
-                // multiline support:
-                // split the text into lines, taking into account deliberate line breaks as well as wrapping the
-                // text for the canvas size
-                this._textWidth = context.measureText(this._text).width;
-                if ((this._textWidth < this._lastWidth) && (this._words.length < 2)) {
-                    this._lines = [this._text];
-                } else {
-                    this._lineHeight = context.measureText("M").width * 1.2;
-                    this._lines = [];
-                    for (i = 0; i < this._words.length; i++) {
-                        this._lines.push("");
-                        for (j = 0; j < this._words[i].length; j++) {
-                            line = this._lines[this._lines.length - 1];
-                            newLine = line + ((line.length > 0) ? " " : "") + this._words[i][j];
-                            if (context.measureText(newLine).width < this._lastWidth) {
-                                this._lines[this._lines.length - 1] = newLine;
-                            } else {
-                                this._lines.push(this._words[i][j]);
-                            }
-                        }
-                    }
-                }
-            }
-            // separately render each line as multiline support is not built into the Canvas API
-            for (i = 0; i < this._lines.length; i++) {
-                context.fillText(this._lines[i], (this._x + 1) / 2 * this._lastWidth, (1 - this._y) / 2 * this._lastHeight + (i * this._lineHeight));
-            }
-            return this._text.length > 0;
-        }
-        return false;
-    };
-    /**
-     * Clears the cache variables depending on the size of the canvas the text is rendered to.
-     */
-    CanvasText.prototype.invalidate = function () {
-        this._lastWidth = -1;
-        this._lastHeight = -1;
-        this._textWidth = -1;
-    };
-    /**
-     * Sets a new position for the text (in the clip space of the canvas it is rendered to)
-     * @param {Number[2]} position
-     */
-    CanvasText.prototype.setPosition = function (position) {
-        this._x = position[0];
-        this._y = position[1];
-    };
-    /**
-     * Sets a new value for the actual text that is displayed when rendering this object.
-     * @param {String} text
-     * @param {Object} [replacements] If given, the provided text is taken as a format strings, with its references replaced by the values
-     * provided in this object. (e.g. "hello, {w}", {w: "world"} -> "hello, world"
-     */
-    CanvasText.prototype.setText = function (text, replacements) {
-        var i, lines;
-        text = replacements ? utils.formatString(text, replacements) : text;
-        if (text !== this._text) {
-            this._text = text;
-            // updating cache variables
-            lines = this._text.split("\n");
-            this._words = [];
-            for (i = 0; i < lines.length; i++) {
-                this._words.push(lines[i].split(" "));
-            }
-            this._textWidth = -1;
-        }
-    };
-    /**
-     * Sets a new RGBA color to use when rendering this text
-     * @param {Number[4]} color
-     */
-    CanvasText.prototype.setColor = function (color) {
-        this._color = color;
-        this._cssColor = utils.getCSSColor(this._color);
-    };
-    /**
-     * After calling this, the text is rendered whenever calling render() (until hidden)
-     */
-    CanvasText.prototype.show = function () {
-        if (!this._visible) {
-            this._visible = true;
-            this.invalidate();
-        }
-    };
-    /**
-     * After calling this, the text is not rendered anymore when calling render() (until shown)
-     */
-    CanvasText.prototype.hide = function () {
-        if (this._visible) {
-            this._visible = false;
-            this.invalidate();
-        }
-    };
-    // #########################################################################
-    /**
      * @typedef {Object} LayoutDescriptor
      * @property {Number} [left]
      * @property {Number} [centerX]
@@ -1280,6 +1040,340 @@ define([
     // #########################################################################
     /**
      * @class
+     * A text with associated state (layout and style) that can be rendered on 2D canvases.
+     * @param {Number[2]} position The starting position of the text in the clip space of the canvas.
+     * @param {String} text The starting value of the text to display.
+     * @param {String} font The name of the font to use (as in CSS font-family)
+     * @param {Number} size The relative size of the font to use (relative to the width or height (depending on the scaling mode) of the canvas in pixels)
+     * @param {String} scaleMode enum ScaleMode The scaling mode to use when determining the font size for rendering
+     * @param {Number[4]} color The RGBA color to use when rendering
+     * @param {String} [align="left"] The horizontal alignment mode for the text
+     * @param {LayoutDescriptor} [boxLayoutDescriptor] When given, the text will wrap itself within the box defined by this layout (with any
+     * overflowing elements clipped) and take care of clearing itself off by clearing the box, thus not triggering the clearing of the whole 
+     * text layer it is part of. Both the box layout and the text position needs to be set relative to the text layer - when changing one,
+     * it is needed to keep it up-to-date with the other.
+     * Useful for texts that are small but are frequently repositioned within a large area to avoid clearing the large text layer every frame.
+     * 
+     */
+    function CanvasText(position, text, font, size, scaleMode, color, align, boxLayoutDescriptor) {
+        /**
+         * The X coordinate of the relative position of the text in the clip space of the canvas it is rendered to.
+         * @type Number
+         */
+        this._x = position[0];
+        /**
+         * The Y coordinate of the relative position of the text in the clip space of the canvas it is rendered to.
+         * @type Number
+         */
+        this._y = position[1];
+        /**
+         * The current text to render.
+         * @type String
+         */
+        this._text = null;
+        /**
+         * The name of the font to use (as in CSS font-family)
+         * @type String
+         */
+        this._font = font;
+        /**
+         * The relative size of the font to use (relative to the width or height (depending on the scaling mode) of the canvas in pixels)
+         * @type Number
+         */
+        this._size = size;
+        /**
+         * (enum ScaleMode) The scaling mode to use when determining the font size for rendering
+         * @type String
+         */
+        this._scaleMode = types.getEnumValue(utils.ScaleMode, scaleMode);
+        if (this._scaleMode === utils.ScaleMode.ASPECT) {
+            application.showError("Cannot set the scaling mode to aspect for fonts!");
+        }
+        /**
+         * The RGBA color to use when rendering
+         * @type Number[4]
+         */
+        this._color = null;
+        /**
+         * The horizontal alignment mode for the text
+         * @type String
+         */
+        this._align = align || "left";
+        // fields related to the clearing box
+        /**
+         * The layout settings of the clearing box
+         * @type ClipSpaceLayout
+         */
+        this._boxLayout = boxLayoutDescriptor ? new ClipSpaceLayout(boxLayoutDescriptor) : null;
+        /**
+         * The last calculated left edge x coordinate of the clearing box (in pixels)
+         * @type Number
+         */
+        this._boxLeft = -1;
+        /**
+         * The last calculated top edge y coordinate of the clearing box (in pixels)
+         * @type Number
+         */
+        this._boxTop = -1;
+        /**
+         * The last calculated width of the clearing box (in pixels)
+         * @type Number
+         */
+        this._boxWidth = -1;
+        /**
+         * The last calculated height of the clearing box (in pixels)
+         * @type Number
+         */
+        this._boxHeight = -1;
+        /**
+         * Whether the last calculated box coordinates and dimensions should be considered up-to-date and valid
+         * @type Number
+         */
+        this._boxValid = false;
+        /**
+         * @type Boolean
+         */
+        this._boxCleared = false;
+        /**
+         * Whether the text is currently visible (should be rendered when calling render())
+         * @type Boolean
+         */
+        this._visible = true;
+        // cache variables
+        /**
+         * The width of the viewport when the text was last rendered, in pixels
+         * @type Number
+         */
+        this._lastWidth = -1;
+        /**
+         * The height of the viewport when the text was last rendered, in pixels
+         * @type Number
+         */
+        this._lastHeight = -1;
+        /**
+         * The measured width of the whole (raw) text based on the last render settings and
+         * viewport. -1 marks invalid (to-be-updated) value.
+         * @type Number
+         */
+        this._textWidth = -1;
+        /**
+         * The string to set as the context.font property when rendering
+         * @type String
+         */
+        this._cssFont = null;
+        /**
+         * The string to set as the context.fillStyle property when rendering
+         * @type String
+         */
+        this._cssColor = null;
+        /**
+         * The set text split into lines and then words for multiline support
+         * @type String[][]
+         */
+        this._words = null;
+        /**
+         * The lines as they were actually rendered last time (considering word wrapping for the last
+         * last canvas size)
+         * @type String[]
+         */
+        this._lines = null;
+        /**
+         * The last measured value for offsetting lines, in pixels (based on the width of the letter 'M')
+         * @type Number
+         */
+        this._lineHeight = -1;
+        this.setText(text);
+        this.setColor(color);
+    }
+    /**
+     * Updates the stored string defining the font and its settings to be used for rendering to a canvas with the passed viewport size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     */
+    CanvasText.prototype._updateCSSFont = function (viewportWidth, viewportHeight) {
+        if (utils.scalesWithWidth(this._scaleMode, viewportWidth, viewportHeight)) {
+            this._cssFont = this._size * viewportWidth + "px";
+        } else {
+            this._cssFont = this._size * viewportHeight + "px";
+        }
+        this._cssFont = this._cssFont + " " + this._font;
+    };
+    /**
+     * Causes the clearing box layout to be recalculated during the next render
+     */
+    CanvasText.prototype.invalidateLayout = function () {
+        this._boxValid = false;
+    };
+    /**
+     * Recalculates the clearing box layout if it is invalid
+     */
+    CanvasText.prototype._updateLayout = function () {
+        if (this._boxLayout && !this._boxValid) {
+            this._boxTop = this._boxLayout.getTop(this._lastWidth, this._lastHeight);
+            this._boxLeft = this._boxLayout.getLeft(this._lastWidth, this._lastHeight);
+            this._boxWidth = this._boxLayout.getWidth(this._lastWidth, this._lastHeight);
+            this._boxHeight = this._boxLayout.getHeight(this._lastWidth, this._lastHeight);
+            this._boxValid = true;
+        }
+    };
+    /**
+     * Updates the cached variables that depend on the viewport size.
+     * @param {Number} viewportWidth
+     * @param {Number} viewportHeight
+     */
+    CanvasText.prototype._updateSize = function (viewportWidth, viewportHeight) {
+        if ((viewportWidth !== this._lastWidth) || (viewportHeight !== this._lastHeight)) {
+            this._lastWidth = viewportWidth;
+            this._lastHeight = viewportHeight;
+            this._updateCSSFont(viewportWidth, viewportHeight);
+            this._textWidth = -1;
+            this._boxValid = false;
+        }
+    };
+    /**
+     * Clears the area of the clearing box (if there is one) if it is not cleared
+     * @param {CanvasRenderingContext2D} context
+     */
+    CanvasText.prototype._clearBox = function (context) {
+        if (this._boxLayout && (this._boxWidth >= 0) && !this._boxCleared) {
+            context.clearRect(this._boxLeft, this._boxTop, this._boxWidth, this._boxHeight);
+            this._boxCleared = true;
+        }
+    };
+    /**
+     * Renders the text using the passed 2D rendering context (of a canvas) according to its current settings.
+     * @param {CanvasRenderingContext2D} context
+     * @returns {Boolean} Whether text that needs to be cleared before the next render has been rendered
+     */
+    CanvasText.prototype.render = function (context) {
+        var i, j, line, newLine, maxLineWidth;
+        if (this._visible) {
+            this._clearBox(context);
+            context.fillStyle = this._cssColor;
+            this._updateSize(context.canvas.width, context.canvas.height);
+            this._updateLayout();
+            context.font = this._cssFont;
+            context.textAlign = this._align;
+            if (this._boxLayout && (this._boxWidth >= 0)) {
+                context.save();
+                context.rect(this._boxLeft, this._boxTop, this._boxWidth, this._boxHeight);
+                context.clip();
+            }
+            // the below code is only executed when rendering on a canvas with a new size
+            if (this._textWidth < 0) {
+                // multiline support:
+                // split the text into lines, taking into account deliberate line breaks as well as wrapping the
+                // text for the canvas size
+                maxLineWidth = this._boxLayout ? this._boxWidth : this._lastWidth;
+                this._textWidth = context.measureText(this._text).width;
+                if ((this._textWidth < maxLineWidth) && (this._words.length < 2)) {
+                    this._lines = [this._text];
+                } else {
+                    this._lineHeight = context.measureText("M").width * 1.2;
+                    this._lines = [];
+                    for (i = 0; i < this._words.length; i++) {
+                        this._lines.push("");
+                        for (j = 0; j < this._words[i].length; j++) {
+                            line = this._lines[this._lines.length - 1];
+                            newLine = line + ((line.length > 0) ? " " : "") + this._words[i][j];
+                            if (context.measureText(newLine).width < maxLineWidth) {
+                                this._lines[this._lines.length - 1] = newLine;
+                            } else {
+                                this._lines.push(this._words[i][j]);
+                            }
+                        }
+                    }
+                }
+            }
+            // separately render each line as multiline support is not built into the Canvas API
+            for (i = 0; i < this._lines.length; i++) {
+                context.fillText(this._lines[i], (this._x + 1) / 2 * this._lastWidth, (1 - this._y) / 2 * this._lastHeight + (i * this._lineHeight));
+            }
+            if (this._boxLayout) {
+                context.restore();
+                this._boxCleared = (this._text.length === 0);
+                // return false as there is no need to clear the whole text layer
+                return false;
+            } else {
+                return this._text.length > 0;
+            }
+        } else {
+            this._clearBox(context);
+        }
+        return false;
+    };
+    /**
+     * Clears the cache variables depending on the size of the canvas the text is rendered to.
+     */
+    CanvasText.prototype.invalidate = function () {
+        this._lastWidth = -1;
+        this._lastHeight = -1;
+        this._textWidth = -1;
+    };
+    /**
+     * Sets a new position for the text (in the clip space of the canvas it is rendered to)
+     * @param {Number[2]} position
+     */
+    CanvasText.prototype.setPosition = function (position) {
+        this._x = position[0];
+        this._y = position[1];
+    };
+    /**
+     * Sets a new value for the actual text that is displayed when rendering this object.
+     * @param {String} text
+     * @param {Object} [replacements] If given, the provided text is taken as a format strings, with its references replaced by the values
+     * provided in this object. (e.g. "hello, {w}", {w: "world"} -> "hello, world"
+     */
+    CanvasText.prototype.setText = function (text, replacements) {
+        var i, lines;
+        text = replacements ? utils.formatString(text, replacements) : text;
+        if (text !== this._text) {
+            this._text = text;
+            // updating cache variables
+            lines = this._text.split("\n");
+            this._words = [];
+            for (i = 0; i < lines.length; i++) {
+                this._words.push(lines[i].split(" "));
+            }
+            this._textWidth = -1;
+        }
+    };
+    /**
+     * Sets a new RGBA color to use when rendering this text
+     * @param {Number[4]} color
+     */
+    CanvasText.prototype.setColor = function (color) {
+        this._color = color;
+        this._cssColor = utils.getCSSColor(this._color);
+    };
+    /**
+     * After calling this, the text is rendered whenever calling render() (until hidden)
+     */
+    CanvasText.prototype.show = function () {
+        if (!this._visible) {
+            this._visible = true;
+            this.invalidate();
+        }
+    };
+    /**
+     * After calling this, the text is not rendered anymore when calling render() (until shown)
+     */
+    CanvasText.prototype.hide = function () {
+        if (this._visible) {
+            this._visible = false;
+            this.invalidate();
+        }
+    };
+    /**
+     * Returns the layout of the clearing box associated with this text (if any)
+     * @returns {ClipSpaceLayout}
+     */
+    CanvasText.prototype.getBoxLayout = function () {
+        return this._boxLayout;
+    };
+    // #########################################################################
+    /**
+     * @class
      * Represents a rectangular area to which texts can be added and rendered to, with a layout specified in the clip-space of a containing 
      * larger viewport. Implemented using a 2D canvas.
      * @param {LayoutDescriptor} layoutDescriptor The object describing the layout settings for the area
@@ -1392,6 +1486,13 @@ define([
         this._canvas.zIndex = container.zIndex + 1;
     };
     /**
+     * Returns whether the text layer is currently visible
+     * @returns {Boolean}
+     */
+    TextLayer.prototype.isVisible = function () {
+        return this._visible;
+    };
+    /**
      * After calling this, the (visible) texts on this layer are rendered whenever calling render()
      */
     TextLayer.prototype.show = function () {
@@ -1401,6 +1502,7 @@ define([
                 this._texts[i].invalidate();
             }
             this._visible = true;
+            this._canvas.style.display = "block";
         }
     };
     /**
@@ -1414,6 +1516,7 @@ define([
                 this._texts[i].invalidate();
             }
             this._visible = false;
+            this._canvas.style.display = "none";
         }
     };
     /**

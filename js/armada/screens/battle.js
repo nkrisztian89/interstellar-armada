@@ -517,10 +517,10 @@ define([
              */
             _centerCrosshairScaleMode,
             /**
-             * Stores a reference to the layout used for distance text layer
+             * Stores a reference to the layout used for distance text's clearing box
              * @type LayoutDescriptor
              */
-            _distanceTextLayerLayoutDescriptor,
+            _distanceTextBoxLayoutDescriptor,
             /**
              * Stores a reference to the layout used for the target view scene for quicker access.
              * @type ClipSpaceLayout
@@ -884,6 +884,13 @@ define([
      */
     HUDElement.prototype.getScale = function () {
         return this._scale;
+    };
+    /**
+     * Returns the scale mode (enum: utils.ScaleMode) set for this HUD element
+     * @returns {String}
+     */
+    HUDElement.prototype.getScaleMode = function () {
+        return this._scaleMode;
     };
     /**
      * Marks all needed resources for loading and sets a callback to add the visual model of this element to the passed scene if when all
@@ -1366,7 +1373,6 @@ define([
         _simulationLoop = LOOP_CANCELED;
         if (_battleScene) {
             _battleScene.setShouldAnimate(false);
-            _battleScene.setShouldUpdateCamera(false);
         }
         this.stopRenderLoop();
         audio.resetMusicVolume();
@@ -1383,7 +1389,6 @@ define([
                 if (!_isTimeStopped) {
                     _battleScene.setShouldAnimate(true);
                 }
-                _battleScene.setShouldUpdateCamera(true);
             }
             if (config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME)) {
                 _simulationLoop = LOOP_REQUESTANIMFRAME;
@@ -1479,9 +1484,10 @@ define([
                     "",
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).fontName,
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).fontSize,
-                    _distanceTextLayer.getLayout().getScaleMode(),
+                    new screens.ClipSpaceLayout(_distanceTextBoxLayoutDescriptor).getScaleMode(),
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).colors.hostile,
-                    "left");
+                    "left",
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).layout);
             _distanceTextLayer.addText(_distanceText);
         }
         // ..............................................................................
@@ -1740,7 +1746,7 @@ define([
                 /** @type Weapon[] */
                 weapons,
                 /** @type Number[2] */
-                position2D, direction2D, maxSpeedTextPosition, maxReverseSpeedTextPosition, shipIndicatorSize, shipIndicatorMinSize,
+                position2D, direction2D, maxSpeedTextPosition, maxReverseSpeedTextPosition, shipIndicatorSize, shipIndicatorMinSize, size2D,
                 /** @type Number[3] */
                 position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, basePointPosition, relativeVelocity,
                 /** @type Number[4] */
@@ -1750,7 +1756,7 @@ define([
                 /** @type HTMLCanvasElement */
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
                 /** @type Boolean */
-                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched,
+                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth,
                 /** @type MouseInputIntepreter */
                 mouseInputInterpreter,
                 /** @type String[] */
@@ -2287,12 +2293,18 @@ define([
                         _distanceText.setColor(targetIsHostile ?
                                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).colors.hostile :
                                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).colors.friendly);
-                        // if to be changed to positioning to left/right, the ship indicator size needs to be
-                        // divided by the aspect ratio
-                        _distanceTextLayer.getLayout().setPosition(
-                                direction[0] + _distanceTextLayerLayoutDescriptor.width * 0.25,
-                                direction[1] - shipIndicatorSize[1] - _distanceTextLayerLayoutDescriptor.height * 0.25);
-                        _distanceTextLayer.updateLayout();
+                        // calculate and set the current position for the text box and the text itself
+                        position2D = [direction[0], direction[1] - 0.5 * shipIndicatorSize[1] * (utils.scalesWithWidth(_shipIndicators[i].getScaleMode(), aspect, 1) ? aspect : 1)];
+                        scalesWithWidth = utils.scalesWithWidth(_distanceText.getBoxLayout().getScaleMode(), aspect, 1);
+                        size2D = [_distanceTextBoxLayoutDescriptor.width / (scalesWithWidth ? 1 : aspect), _distanceTextBoxLayoutDescriptor.height * (scalesWithWidth ? aspect : 1)];
+                        _distanceText.getBoxLayout().setPosition(
+                                position2D[0] + size2D[0] * 0.5,
+                                position2D[1] - size2D[1] * 0.5);
+                        _distanceText.invalidateLayout();
+                        _distanceText.setPosition([
+                            position2D[0] + size2D[0] * 0.05,
+                            position2D[1] - size2D[1] * 0.95
+                        ]);
                         _distanceTextLayer.show();
                     }
                 }
@@ -2338,6 +2350,10 @@ define([
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
             _simulationLoopFunction();
+        }
+        // manually updating the camera so the HUD update has up-to-date information
+        if (_simulationLoop !== LOOP_CANCELED) {
+            _battleScene.getCamera().update(dt);
         }
         if (_battleScene) {
             this._updateHUD(dt);
@@ -2493,6 +2509,8 @@ define([
                         transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
                         transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     });
+            // we manually update the camera separately before the HUD rendering to make sure it is up-to-date
+            _battleScene.setShouldUpdateCamera(false);
             _targetScene = new sceneGraph.Scene(
                     _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),
                     _targetViewLayout.getPositiveBottom(canvas.width, canvas.height),
@@ -2568,7 +2586,7 @@ define([
         // hud
         _centerCrosshairScaleMode = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).scaleMode;
         _speedTargetIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).size;
-        _distanceTextLayerLayoutDescriptor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT_LAYER_LAYOUT);
+        _distanceTextBoxLayoutDescriptor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).layout;
         _targetViewLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_LAYOUT));
         _targetInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).layout);
         _targetHullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).layout);
