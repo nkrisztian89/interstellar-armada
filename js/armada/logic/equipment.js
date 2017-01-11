@@ -1479,6 +1479,7 @@ define([
          * The maximum angle between vectors of the relative angular acceleration 
          * matrix and the identity axes on each 2D plane (yaw, pitch, roll)
          * (representing rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms turn)
+         * This is the general limit based on the ship's engines, does not consider flight mode restrictions!
          * @type Number
          */
         this._turningLimit = 0;
@@ -1530,6 +1531,16 @@ define([
         this.updateTurningLimit();
         this._maxMoveBurnLevel = this._spacecraft.getMaxThrusterMoveBurnLevel();
         this._maxTurnBurnLevel = this._spacecraft.getMaxThrusterTurnBurnLevel();
+    };
+    /**
+     * Returns the turning limit restricted to disallow drifting (use for restricted flight modes)
+     * @param {Number} [speed] The speed of the spacecraft at which to calculate the limit. If omitted, the current speed will be used
+     * @returns {Number}
+     */
+    ManeuveringComputer.prototype.getRestrictedTurningLimit = function (speed) {
+        return Math.min(
+                this._turningLimit,
+                this._spacecraft.getMaxTurnRateAtSpeed((speed === undefined) ? this._spacecraft.getRelativeVelocityMatrix()[13] : speed) * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S);
     };
     /**
      * Returns a string representation of the current flight mode.
@@ -1734,7 +1745,7 @@ define([
             // if a specific intensity was set, set the target to it, capping it out at
             // the maximum allowed turning speed
         } else if (intensity > 0) {
-            this._yawTarget = -intensity * this._turningLimit;
+            this._yawTarget = -intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
             // if a zero or negative intensity was given, set the target to zero,
             // but only if it is set to turn to left
         } else if (this._yawTarget < 0) {
@@ -1751,7 +1762,7 @@ define([
         if (intensity === undefined) {
             this._yawTarget = this._turningLimit;
         } else if (intensity > 0) {
-            this._yawTarget = intensity * this._turningLimit;
+            this._yawTarget = intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
         } else if (this._yawTarget > 0) {
             this._yawTarget = 0;
         }
@@ -1766,7 +1777,7 @@ define([
         if (intensity === undefined) {
             this._pitchTarget = -this._turningLimit;
         } else if (intensity > 0) {
-            this._pitchTarget = -intensity * this._turningLimit;
+            this._pitchTarget = -intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
         } else if (this._pitchTarget < 0) {
             this._pitchTarget = 0;
         }
@@ -1781,7 +1792,7 @@ define([
         if (intensity === undefined) {
             this._pitchTarget = this._turningLimit;
         } else if (intensity > 0) {
-            this._pitchTarget = intensity * this._turningLimit;
+            this._pitchTarget = intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
         } else if (this._pitchTarget > 0) {
             this._pitchTarget = 0;
         }
@@ -1832,7 +1843,7 @@ define([
                 turningMatrix = this._spacecraft.getTurningMatrix(),
                 turnThreshold = physics.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD,
                 // cache possibly restricted turn parameters (in rad / ANGULAR_VELOCITY_MATRIX_DURATION ms)
-                turningLimit = this._turningLimit,
+                turningLimit,
                 yawTarget = this._yawTarget,
                 pitchTarget = this._pitchTarget,
                 yawAngle, pitchAngle, rollAngle;
@@ -1841,7 +1852,7 @@ define([
         // restrict turning according to current speed in restricted mode
         if (this._restricted && (speed !== 0.0)) {
             // restrict the limit if needed (convert from rad/sec to rad / ANGULAR_VELOCITY_MATRIX_DURATION ms)
-            turningLimit = Math.min(turningLimit, this._spacecraft.getMaxTurnRateAtSpeed(speed) * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S);
+            turningLimit = this.getRestrictedTurningLimit(speed);
             //apply the restricted limit
             yawTarget = Math.min(Math.max(yawTarget, -turningLimit), turningLimit);
             pitchTarget = Math.min(Math.max(pitchTarget, -turningLimit), turningLimit);
