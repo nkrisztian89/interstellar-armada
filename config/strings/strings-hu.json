@@ -436,7 +436,7 @@
     },
     "flightMode": {
         "free": "szabad",
-        "compensated": "harc",
-        "restricted": "cirkálás"
+        "combat": "harc",
+        "cruise": "cirkálás"
     }
 }

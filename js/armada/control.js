@@ -197,7 +197,7 @@ define([
         this.setActionFunction("fire", true, function () {
             this._controlledSpacecraft.fire();
         }.bind(this));
-        // changing flight mode (free or compensated)
+        // changing flight mode (free / combat / cruise)
         this.setActionFunction("changeFlightMode", true, function () {
             this._controlledSpacecraft.changeFlightMode();
         }.bind(this));

@@ -379,7 +379,7 @@
     },
     "flightMode": {
         "free": "free",
-        "compensated": "combat",
-        "restricted": "cruise"
+        "combat": "combat",
+        "cruise": "cruise"
     }
 }

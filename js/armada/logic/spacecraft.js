@@ -949,7 +949,7 @@ define([
     };
     /**
      * Returns a string representation of the current flight mode set for this
-     * craft. (free / compensated / restricted)
+     * craft. (free / combat / cruise)
      * @returns {String}
      */
     Spacecraft.prototype.getFlightMode = function () {
@@ -1060,7 +1060,7 @@ define([
         this._maneuveringComputer.setSpeedTarget(value);
     };
     /**
-     * Return the currently set target for forward (positive) / reverse (negative) speed, in m/s. Only meaninful in compensated flight modes.
+     * Return the currently set target for forward (positive) / reverse (negative) speed, in m/s. Only meaningful in assisted flight modes.
      * @returns {Number}
      */
     Spacecraft.prototype.getSpeedTarget = function () {

@@ -1554,7 +1554,7 @@ define([
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).fontName,
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).fontSize,
                     _flightModeIndicatorBackgroundLayout.getScaleMode(),
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.compensated);
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.combat);
             _flightModeIndicatorTextLayer.addText(_flightModeText);
         }
         // ..............................................................................
@@ -1943,11 +1943,11 @@ define([
                 case equipment.FlightMode.FREE:
                     _flightModeText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.free);
                     break;
-                case equipment.FlightMode.COMPENSATED:
-                    _flightModeText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.compensated);
+                case equipment.FlightMode.COMBAT:
+                    _flightModeText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.combat);
                     break;
-                case equipment.FlightMode.RESTRICTED:
-                    _flightModeText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.restricted);
+                case equipment.FlightMode.CRUISE:
+                    _flightModeText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.cruise);
                     break;
                 default:
                     application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
@@ -2352,9 +2352,7 @@ define([
             _simulationLoopFunction();
         }
         // manually updating the camera so the HUD update has up-to-date information
-        if (_simulationLoop !== LOOP_CANCELED) {
-            _battleScene.getCamera().update(dt);
-        }
+        _battleScene.getCamera().update((_simulationLoop !== LOOP_CANCELED) ? dt : 0);
         if (_battleScene) {
             this._updateHUD(dt);
         }

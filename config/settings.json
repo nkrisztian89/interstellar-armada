@@ -156,8 +156,10 @@
             "momentDuration": 1,
             "backgroundObjectDistance": 4500,
             "turnAccelerationDurationInSeconds": 0.333,
-            "compensatedForwardSpeedFactor": 3,
-            "compensatedReverseSpeedFactor": 1,
+            "maxCombatForwardSpeedFactor": 3,
+            "maxCombatReverseSpeedFactor": 1,
+            "maxCruiseForwardSpeedFactor": 6,
+            "maxCruiseReverseSpeedFactor": 2,
             "strafeSpeedFactor": 2,
             "defaultMuzzleFlashDuration": 500,
             "selfFire": true,
@@ -434,8 +436,8 @@
                 "flightModeText": {
                     "colors": {
                         "free": [1, 0.85, 0.1, 1],
-                        "compensated": [0.3, 0.6, 1, 1],
-                        "restricted": [0.8, 0.1, 0.8, 1]
+                        "combat": [0.3, 0.6, 1, 1],
+                        "cruise": [0.8, 0.1, 0.8, 1]
                     },
                     "fontSize": 0.3,
                     "fontName": "hudFont",

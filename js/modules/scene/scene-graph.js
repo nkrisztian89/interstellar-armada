@@ -2119,7 +2119,9 @@ define([
         application.log_DEBUG("Rendering scene...", 3);
         this._camera.setAspect(widthInPixels / heightInPixels);
         // updating camera
-        this._camera.update(this._shouldUpdateCamera ? dt : 0);
+        if (this._shouldUpdateCamera) {
+            this._camera.update(dt);
+        }
         // reset triangle counter so we can count all triangles for one render
         this._numDrawnTriangles = 0;
         // reset boolean flags as scene uniforms will have to be updated for all used shaders again

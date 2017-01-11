@@ -65,11 +65,11 @@ define([
                 /**
                  * The maneuvering computer automatically adds thrust to compensate for drift and keep the set speed
                  */
-                COMPENSATED: "compensated",
+                COMBAT: "combat",
                 /**
                  * Turning faster than it would be possible to compensate for drift is not allowed by the maneuvering computer 
                  */
-                RESTRICTED: "restricted"
+                CRUISE: "cruise"
             },
             /**
              * @enum {Number}
@@ -154,15 +154,25 @@ define([
              */
             _minimumProjectileCountForInstancing = 0,
             /**
-             * Cached value of the configuration setting for compensated forward speed factor.
+             * Cached value of the configuration setting for maximum combat forward speed factor.
              * @type Number
              */
-            _compensatedForwardSpeedFactor,
+            _maxCombatForwardSpeedFactor,
             /**
-             * Cached value of the configuration setting for compensated  reverse speed factor.
+             * Cached value of the configuration setting for maximum combat reverse speed factor.
              * @type Number
              */
-            _compensatedReverseSpeedFactor,
+            _maxCombatReverseSpeedFactor,
+            /**
+             * Cached value of the configuration setting for maximum cruise forward speed factor.
+             * @type Number
+             */
+            _maxCruiseForwardSpeedFactor,
+            /**
+             * Cached value of the configuration setting for maximum cruise reverse speed factor.
+             * @type Number
+             */
+            _maxCruiseReverseSpeedFactor,
             /**
              * Cached value of the configuration setting for toggling hitbox visibility based on for which objects are hitchecks calculated.
              * @type Boolean
@@ -1377,12 +1387,12 @@ define([
          */
         this._spacecraft = spacecraft;
         /**
-         * Whether automatic inertia (drift) compensation is turned on.
+         * Whether automatic inertia (drift) compensation is turned on. (combat and cruise flight modes)
          * @type Boolean
          */
-        this._compensated = true;
+        this._assisted = true;
         /**
-         * Whether automatic turning restriction is turned on.
+         * Whether automatic turning restriction is turned on. (cruise flight mode)
          * @type Boolean
          */
         this._restricted = false;
@@ -1446,15 +1456,25 @@ define([
          */
         this._speedIncrement = 0;
         /**
-         * In compensated modes, the forward speed target cannot exceed this. (in m/s)
+         * In combat mode, the forward speed target cannot exceed this. (in m/s)
          * @type Number
          */
-        this._maxCompensatedForwardSpeed = 0;
+        this._maxCombatForwardSpeed = 0;
         /**
-         * In compensated modes, the forward speed target cannot go below this. (negative, in m/s)
+         * In combat mode, the forward speed target cannot go below this. (negative, in m/s)
          * @type Number
          */
-        this._maxCompensatedReverseSpeed = 0;
+        this._maxCombatReverseSpeed = 0;
+        /**
+         * In cruise mode, the forward speed target cannot exceed this. (in m/s)
+         * @type Number
+         */
+        this._maxCruiseForwardSpeed = 0;
+        /**
+         * In cruise mode, the forward speed target cannot go below this. (negative, in m/s)
+         * @type Number
+         */
+        this._maxCruiseReverseSpeed = 0;
         /**
          * The maximum angle between vectors of the relative angular acceleration 
          * matrix and the identity axes on each 2D plane (yaw, pitch, roll)
@@ -1501,9 +1521,12 @@ define([
      * @returns {undefined}
      */
     ManeuveringComputer.prototype.updateForNewPropulsion = function () {
+        var maxAcceleration = this._spacecraft.getMaxAcceleration();
         this.updateSpeedIncrementPerSecond();
-        this._maxCompensatedForwardSpeed = _compensatedForwardSpeedFactor * this._spacecraft.getMaxAcceleration();
-        this._maxCompensatedReverseSpeed = _compensatedReverseSpeedFactor * -this._spacecraft.getMaxAcceleration();
+        this._maxCombatForwardSpeed = _maxCombatForwardSpeedFactor * maxAcceleration;
+        this._maxCombatReverseSpeed = _maxCombatReverseSpeedFactor * -maxAcceleration;
+        this._maxCruiseForwardSpeed = _maxCruiseForwardSpeedFactor * maxAcceleration;
+        this._maxCruiseReverseSpeed = _maxCruiseReverseSpeedFactor * -maxAcceleration;
         this.updateTurningLimit();
         this._maxMoveBurnLevel = this._spacecraft.getMaxThrusterMoveBurnLevel();
         this._maxTurnBurnLevel = this._spacecraft.getMaxThrusterTurnBurnLevel();
@@ -1513,23 +1536,27 @@ define([
      * @returns {String} enum FlightMode
      */
     ManeuveringComputer.prototype.getFlightMode = function () {
-        return this._compensated ?
-                (this._restricted ? FlightMode.RESTRICTED : FlightMode.COMPENSATED) : FlightMode.FREE;
+        return this._assisted ?
+                (this._restricted ? FlightMode.CRUISE : FlightMode.COMBAT) : FlightMode.FREE;
     };
     /**
-     * Switches to the next flight mode. (free / compensated / restricted)
+     * Switches to the next flight mode. (free / combat / cruise)
      */
     ManeuveringComputer.prototype.changeFlightMode = function () {
-        if (!this._compensated) {
-            this._compensated = true;
+        if (!this._assisted) {
+            this._assisted = true;
             this._speedTarget = Math.min(Math.max(
-                    this._maxCompensatedReverseSpeed,
+                    this._maxCombatReverseSpeed,
                     this._spacecraft.getRelativeVelocityMatrix()[13]),
-                    this._maxCompensatedForwardSpeed);
+                    this._maxCombatForwardSpeed);
         } else if (!this._restricted) {
             this._restricted = true;
+            this._speedTarget = Math.min(Math.max(
+                    this._maxCruiseReverseSpeed,
+                    this._spacecraft.getRelativeVelocityMatrix()[13]),
+                    this._maxCruiseForwardSpeed);
         } else {
-            this._compensated = false;
+            this._assisted = false;
             this._restricted = false;
         }
     };
@@ -1539,13 +1566,13 @@ define([
      * value instead of the regular continuous increment.
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
-        this._speedTarget = this._compensated ?
+        this._speedTarget = this._assisted ?
                 Math.min(
                         Math.max(
                                 this._spacecraft.getRelativeVelocityMatrix()[13],
                                 this._speedTarget
                                 ) + (intensity || this._speedIncrement),
-                        this._maxCompensatedForwardSpeed) :
+                        (this._restricted ? this._maxCruiseForwardSpeed : this._maxCombatForwardSpeed)) :
                 Number.MAX_VALUE;
     };
     /**
@@ -1553,7 +1580,7 @@ define([
      * in free flight mode.
      */
     ManeuveringComputer.prototype.stopForward = function () {
-        if (!this._compensated) {
+        if (!this._assisted) {
             var speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             if (this._speedTarget > speed) {
                 this._speedTarget = speed;
@@ -1566,13 +1593,13 @@ define([
      * value instead of the regular continuous increment.
      */
     ManeuveringComputer.prototype.reverse = function (intensity) {
-        this._speedTarget = this._compensated ?
+        this._speedTarget = this._assisted ?
                 Math.max(
                         Math.min(
                                 this._spacecraft.getRelativeVelocityMatrix()[13],
                                 this._speedTarget
                                 ) - (intensity || this._speedIncrement),
-                        this._maxCompensatedReverseSpeed) :
+                        (this._restricted ? this._maxCruiseReverseSpeed : this._maxCombatReverseSpeed)) :
                 -Number.MAX_VALUE;
     };
     /**
@@ -1581,7 +1608,7 @@ define([
      */
     ManeuveringComputer.prototype.stopReverse = function () {
         var speed;
-        if (!this._compensated) {
+        if (!this._assisted) {
             speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             if (this._speedTarget < speed) {
                 this._speedTarget = speed;
@@ -1595,7 +1622,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.strafeLeft = function (intensity) {
-        this._strafeTarget = (this._compensated && intensity) ? -intensity : -Number.MAX_VALUE;
+        this._strafeTarget = (this._assisted && intensity) ? -intensity : -Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -1613,7 +1640,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.strafeRight = function (intensity) {
-        this._strafeTarget = (this._compensated && intensity) || Number.MAX_VALUE;
+        this._strafeTarget = (this._assisted && intensity) || Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -1631,7 +1658,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.lower = function (intensity) {
-        this._liftTarget = (this._compensated && intensity) ? -intensity : -Number.MAX_VALUE;
+        this._liftTarget = (this._assisted && intensity) ? -intensity : -Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for lifting to zero, if was set to a speed to lift
@@ -1649,7 +1676,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.raise = function (intensity) {
-        this._liftTarget = (this._compensated && intensity) || Number.MAX_VALUE;
+        this._liftTarget = (this._assisted && intensity) || Number.MAX_VALUE;
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to lift
@@ -1665,7 +1692,7 @@ define([
      * mode)
      */
     ManeuveringComputer.prototype.resetSpeed = function () {
-        if (this._compensated) {
+        if (this._assisted) {
             this._speedTarget = 0;
         }
     };
@@ -1674,12 +1701,12 @@ define([
      * @param {Number} value A positive number means a forward target, a negative one a reverse target, in m/s.
      */
     ManeuveringComputer.prototype.setSpeedTarget = function (value) {
-        if (this._compensated) {
+        if (this._assisted) {
             this._speedTarget = value;
         }
     };
     /**
-     * Return the currently set target for forward (positive) / reverse (negative) speed, in m/s. Only meaninful in compensated flight modes.
+     * Return the currently set target for forward (positive) / reverse (negative) speed, in m/s. Only meaningful in assisted flight modes.
      * @returns {Number}
      */
     ManeuveringComputer.prototype.getSpeedTarget = function () {
@@ -1690,7 +1717,7 @@ define([
      * @returns {Boolean}
      */
     ManeuveringComputer.prototype.hasSpeedTarget = function () {
-        return this._compensated;
+        return this._assisted;
     };
     /**
      * Sets the target angular velocity to yaw to the left with the given intensity 
@@ -1855,7 +1882,7 @@ define([
                     Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget, dt)));
         }
         // controlling horizontal drift
-        if (this._compensated || (this._strafeTarget !== 0)) {
+        if (this._assisted || (this._strafeTarget !== 0)) {
             speed = relativeVelocityMatrix[12];
             if ((this._strafeTarget - speed) > speedThreshold) {
                 this._spacecraft.addThrusterBurn("strafeRight",
@@ -1866,7 +1893,7 @@ define([
             }
         }
         // controlling vertical drift
-        if (this._compensated || (this._liftTarget !== 0)) {
+        if (this._assisted || (this._liftTarget !== 0)) {
             speed = relativeVelocityMatrix[14];
             if ((this._liftTarget - speed) > speedThreshold) {
                 this._spacecraft.addThrusterBurn("raise",
@@ -1901,8 +1928,10 @@ define([
         _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
         _minimumMuzzleFlashParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING);
         _minimumProjectileCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_PROJECTILE_COUNT_FOR_INSTANCING);
-        _compensatedForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_FORWARD_SPEED_FACTOR);
-        _compensatedReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.COMPENSATED_REVERSE_SPEED_FACTOR);
+        _maxCombatForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_FORWARD_SPEED_FACTOR);
+        _maxCombatReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_REVERSE_SPEED_FACTOR);
+        _maxCruiseForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_CRUISE_FORWARD_SPEED_FACTOR);
+        _maxCruiseReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_CRUISE_REVERSE_SPEED_FACTOR);
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
         _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
         _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);

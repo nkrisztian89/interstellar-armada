@@ -752,19 +752,35 @@ define([
             type: types.DURATION
         },
         /**
-         * When moving forward in compensated flight modes, the controlled spacecraft will accelerate to maximum a speed 
+         * When moving forward in combat flight mode, the controlled spacecraft will accelerate to maximum a speed 
          * that equals its acceleration multiplied by this factor.
          */
-        COMPENSATED_FORWARD_SPEED_FACTOR: {
-            name: "compensatedForwardSpeedFactor",
+        MAX_COMBAT_FORWARD_SPEED_FACTOR: {
+            name: "maxCombatForwardSpeedFactor",
             type: "number"
         },
         /**
-         * When moving backward in compensated flight modes, the controlled spacecraft will accelerate to maximum a reverse speed 
+         * When moving backward in combat flight mode, the controlled spacecraft will accelerate to maximum a reverse speed 
          * that equals its acceleration multiplied by this factor.
          */
-        COMPENSATED_REVERSE_SPEED_FACTOR: {
-            name: "compensatedReverseSpeedFactor",
+        MAX_COMBAT_REVERSE_SPEED_FACTOR: {
+            name: "maxCombatReverseSpeedFactor",
+            type: "number"
+        },
+        /**
+         * When moving forward in cruise flight mode, the controlled spacecraft will accelerate to maximum a speed 
+         * that equals its acceleration multiplied by this factor.
+         */
+        MAX_CRUISE_FORWARD_SPEED_FACTOR: {
+            name: "maxCruiseForwardSpeedFactor",
+            type: "number"
+        },
+        /**
+         * When moving backward in cruise flight mode, the controlled spacecraft will accelerate to maximum a reverse speed 
+         * that equals its acceleration multiplied by this factor.
+         */
+        MAX_CRUISE_REVERSE_SPEED_FACTOR: {
+            name: "maxCruiseReverseSpeedFactor",
             type: "number"
         },
         /**
@@ -1020,7 +1036,7 @@ define([
             },
             FLIGHT_MODE_TEXT: {
                 name: "flightModeText",
-                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["free", "compensated", "restricted"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["free", "combat", "cruise"]})
             },
             DRIFT_ARROW: {
                 name: "driftArrow",
