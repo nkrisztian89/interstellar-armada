@@ -199,7 +199,7 @@ define([
                     this._missionObjectives.setContent(objectives.join(""));
                     this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
                         class: _spacecraft.getClass().getDisplayName(),
-                        firepower: Math.round(_spacecraft.getFirepower() * 10) / 10
+                        firepower: _spacecraft.getFirepower().toFixed(1)
                     });
                     this._missionObjectivesTitle.show();
                     this._missionObjectives.show();

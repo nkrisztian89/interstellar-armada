@@ -98,6 +98,14 @@ define([
             // HUD messages
             HUD_MESSAGE_DURATION_PER_CHAR = 70, // based on average ~900 char per minute human reading speed
             HUD_MESSAGE_BASE_DURATION = 400, // fix extra time added to the duration of all HUD messages without explicit duration
+            // target info section names
+            TARGET_INFO_NAME = "name",
+            TARGET_INFO_CLASS = "class",
+            TARGET_INFO_TEAM = "team",
+            TARGET_INFO_FIREPOWER = "firepower",
+            TARGET_INFO_DISTANCE = "distance",
+            TARGET_INFO_VELOCITY = "velocity",
+            TARGET_INFO_SECTIONS = [TARGET_INFO_NAME, TARGET_INFO_CLASS, TARGET_INFO_TEAM, TARGET_INFO_FIREPOWER, TARGET_INFO_DISTANCE, TARGET_INFO_VELOCITY],
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -348,30 +356,11 @@ define([
              */
             _targetInfoTextLayer,
             /**
-             * Displays the name of the currently targeted spacecraft within the target info panel.
-             * @type CanvasText
+             * Stores the texts that Display the various information about the currently targeted spacecraft within the target info panel.
+             * The keys are IDs (defined among the constants)
+             * @type Object.<String, CanvasText>
              */
-            _targetInfoNameText,
-            /**
-             * Displays the name of the class of the currently targeted spacecraft within the target info panel.
-             * @type CanvasText
-             */
-            _targetInfoClassText,
-            /**
-             * Displays the name of the team of the currently targeted spacecraft within the target info panel.
-             * @type CanvasText
-             */
-            _targetInfoTeamText,
-            /**
-             * Displays the distance from the currently targeted spacecraft within the target info panel.
-             * @type CanvasText
-             */
-            _targetInfoDistanceText,
-            /**
-             * Displays the velocity of the currently targeted spacecraft within the target info panel.
-             * @type CanvasText
-             */
-            _targetInfoVelocityText,
+            _targetInfoTexts,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // speed and drift indicators
             /**
@@ -1496,25 +1485,12 @@ define([
             _targetInfoTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT_LAYER_LAYOUT));
             screenCanvas.addTextLayer(_targetInfoTextLayer);
         }
-        if (!_targetInfoNameText) {
-            _targetInfoNameText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.name);
-            _targetInfoTextLayer.addText(_targetInfoNameText);
-        }
-        if (!_targetInfoClassText) {
-            _targetInfoClassText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.class);
-            _targetInfoTextLayer.addText(_targetInfoClassText);
-        }
-        if (!_targetInfoTeamText) {
-            _targetInfoTeamText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.team);
-            _targetInfoTextLayer.addText(_targetInfoTeamText);
-        }
-        if (!_targetInfoDistanceText) {
-            _targetInfoDistanceText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.distance);
-            _targetInfoTextLayer.addText(_targetInfoDistanceText);
-        }
-        if (!_targetInfoVelocityText) {
-            _targetInfoVelocityText = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions.velocity);
-            _targetInfoTextLayer.addText(_targetInfoVelocityText);
+        if (!_targetInfoTexts) {
+            _targetInfoTexts = {};
+            for (i = 0; i < TARGET_INFO_SECTIONS.length; i++) {
+                _targetInfoTexts[TARGET_INFO_SECTIONS[i]] = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions[TARGET_INFO_SECTIONS[i]]);
+                _targetInfoTextLayer.addText(_targetInfoTexts[TARGET_INFO_SECTIONS[i]]);
+            }
         }
         // ..............................................................................
         // speed bar
@@ -2118,16 +2094,18 @@ define([
                 targetInfoTextColor = targetIsHostile ?
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.hostile :
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.friendly;
-                _targetInfoNameText.setColor(targetInfoTextColor);
-                _targetInfoNameText.setText(target.getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
-                _targetInfoTeamText.setColor(targetInfoTextColor);
-                _targetInfoTeamText.setText(target.getTeam() ? target.getTeam().getDisplayName() : strings.get(strings.BATTLE.HUD_TEAM_UNKNOWN));
-                _targetInfoClassText.setColor(targetInfoTextColor);
-                _targetInfoClassText.setText(target.getClass().getDisplayName());
-                _targetInfoDistanceText.setColor(targetInfoTextColor);
-                _targetInfoDistanceText.setText(strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(distance));
-                _targetInfoVelocityText.setColor(targetInfoTextColor);
-                _targetInfoVelocityText.setText(strings.get(strings.BATTLE.HUD_VELOCITY) + ": " + vec.length3(mat.translationVector3(target.getVelocityMatrix())).toFixed() + " m/s");
+                _targetInfoTexts[TARGET_INFO_NAME].setColor(targetInfoTextColor);
+                _targetInfoTexts[TARGET_INFO_NAME].setText(target.getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
+                _targetInfoTexts[TARGET_INFO_TEAM].setColor(targetInfoTextColor);
+                _targetInfoTexts[TARGET_INFO_TEAM].setText(target.getTeam() ? target.getTeam().getDisplayName() : strings.get(strings.BATTLE.HUD_TEAM_UNKNOWN));
+                _targetInfoTexts[TARGET_INFO_CLASS].setColor(targetInfoTextColor);
+                _targetInfoTexts[TARGET_INFO_CLASS].setText(target.getClass().getDisplayName());
+                _targetInfoTexts[TARGET_INFO_FIREPOWER].setColor(targetInfoTextColor);
+                _targetInfoTexts[TARGET_INFO_FIREPOWER].setText(strings.get(strings.BATTLE.HUD_FIREPOWER) + ": " + target.getFirepower().toFixed(1));
+                _targetInfoTexts[TARGET_INFO_DISTANCE].setColor(targetInfoTextColor);
+                _targetInfoTexts[TARGET_INFO_DISTANCE].setText(strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(distance));
+                _targetInfoTexts[TARGET_INFO_VELOCITY].setColor(targetInfoTextColor);
+                _targetInfoTexts[TARGET_INFO_VELOCITY].setText(strings.get(strings.BATTLE.HUD_VELOCITY) + ": " + vec.length3(mat.translationVector3(target.getVelocityMatrix())).toFixed() + " m/s");
                 _targetInfoTextLayer.show();
                 // .....................................................................................................
                 // target integrity quick view bar

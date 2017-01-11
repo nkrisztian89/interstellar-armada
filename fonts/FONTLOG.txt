@@ -1,0 +1,35 @@
+FONTLOG for the Aldrich font
+
+This file provides detailed information on the Aldrich Font Software.
+This information should be distributed along with the Aldrich fonts
+and any derivative works.
+
+Basic Font Information
+
+Aldrich is a rounded yet squarely proportioned font that is reminiscent 
+of early 20th Century gothic styles. With a solid stance and confident 
+mono-weight strokes, Aldrich is a hardworking family with roots in 
+Midwestern ethics.
+
+Documentation can be found at www.madtype.com and to contribute to the 
+project contact Matthew Desmond at mattdesmond@gmail.com.
+
+ChangeLog
+
+11 January 2017 (Krisztián Nagy) Aldrich_Regular version 1.002
+- Added őŐüŰ Hungarian glyphs
+
+Acknowledgements
+
+If you make modifications be sure to add your name (N), email (E), web-address
+(if you have one) (W) and description (D). This list is in alphabetical order.
+
+N: Matthew Desmond
+E: mattdesmond@gmail.com
+W: www.madtype.com
+D: Original author
+
+N: Krisztián Nagy
+E: nkrisztian89@gmail.com
+D: Contributor - Hungarian glyphs
+

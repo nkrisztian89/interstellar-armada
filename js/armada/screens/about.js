@@ -92,6 +92,7 @@ define([
             aldrich: '<a target="_blank" href="https://fonts.google.com/specimen/Aldrich">Aldrich</a>',
             audiowide: '<a target="_blank" href="https://fonts.google.com/specimen/Audiowide">Audiowide</a>',
             openFontLicense: '<a target="_blank" href="http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL_web">Open Font License</a>',
+            fontlog: '<a target="_blank" href="fonts/FONTLOG.txt">fontlog</a>',
             requireJS: '<a target="_blank" href="http://requirejs.org/">RequireJS</a>',
             requireJSLicense: '<a target="_blank" href="https://github.com/jrburke/requirejs/blob/master/LICENSE">' + strings.get(strings.ABOUT.REQUIRE_JS_LICENSES) + '</a>',
             soundSources: '<a target="_blank" href="sound_sources.txt">' + strings.get(strings.ABOUT.HERE) + '</a>'
@@ -103,6 +104,7 @@ define([
             audacity: '<a target="_blank" href="http://www.audacityteam.org">Audacity</a>',
             bfxr: '<a target="_blank" href="http://www.bfxr.net">Bfxr</a>',
             lmms: '<a target="_blank" href="https://lmms.io">LMMS</a>',
+            fontforge: '<a target="_blank" href="https://fontforge.github.io/en-US/">FontForge</a>',
             netbeans: '<a target="_blank" href="https://netbeans.org/">Netbeans</a>',
             lazarus: '<a target="_blank" href="http://www.lazarus-ide.org/">Lazarus</a>',
             chrome: '<a target="_blank" href="https://www.google.com/chrome">Google Chrome</a>',
