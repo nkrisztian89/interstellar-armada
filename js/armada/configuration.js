@@ -992,7 +992,7 @@ define([
             },
             TARGET_INFO_TEXT: {
                 name: "targetInfoText",
-                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["hostile", "friendly"], POSITION: ["name", "class", "team", "firepower", "distance", "velocity"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["hostile", "friendly"], FONT_SIZE: ["name", "others"], POSITION: ["name", "class", "team", "firepower", "distance", "velocity"]})
             },
             SPEED_BAR: {
                 name: "speedBar",

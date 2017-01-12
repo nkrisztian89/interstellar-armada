@@ -337,15 +337,18 @@
                         "hostile": [1, 0, 0, 1],
                         "friendly": [0, 1, 0, 1]
                     },
-                    "fontSize": 0.15,
+                    "fontSizes": {
+                        "name": 0.15,
+                        "others": 0.12
+                    },
                     "fontName": "hudFont",
                     "positions": {
                         "name": [-0.95, 0.76],
-                        "class": [-0.95, 0.41],
-                        "team": [-0.95, 0.06],
-                        "firepower": [-0.95, -0.29],
-                        "distance": [-0.95, -0.64],
-                        "velocity": [-0.95, -0.99]
+                        "class": [-0.95, 0.44],
+                        "team": [-0.95, 0.12],
+                        "firepower": [-0.95, -0.20],
+                        "distance": [-0.95, -0.52],
+                        "velocity": [-0.95, -0.84]
                     }
                 },
                 "speedBar": {

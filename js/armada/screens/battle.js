@@ -1432,12 +1432,12 @@ define([
     BattleScreen.prototype._addUITexts = function () {
         var i, n, layoutDescriptor,
                 screenCanvas = this.getScreenCanvas(BATTLE_CANVAS_ID),
-                getTargetInfoText = function (textPosition) {
+                getTargetInfoText = function (sectionName) {
                     return new screens.CanvasText(
-                            textPosition,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions[sectionName],
                             "",
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).fontName,
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).fontSize,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).fontSizes[(sectionName === "name") ? "name" : "others"],
                             _targetInfoBackgroundLayout.getScaleMode(),
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.friendly);
                 },
@@ -1488,7 +1488,7 @@ define([
         if (!_targetInfoTexts) {
             _targetInfoTexts = {};
             for (i = 0; i < TARGET_INFO_SECTIONS.length; i++) {
-                _targetInfoTexts[TARGET_INFO_SECTIONS[i]] = getTargetInfoText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions[TARGET_INFO_SECTIONS[i]]);
+                _targetInfoTexts[TARGET_INFO_SECTIONS[i]] = getTargetInfoText(TARGET_INFO_SECTIONS[i]);
                 _targetInfoTextLayer.addText(_targetInfoTexts[TARGET_INFO_SECTIONS[i]]);
             }
         }
@@ -1719,6 +1719,7 @@ define([
                 distance, aspect, i, scale, futureDistance, animationProgress, targetSwitchAnimationProgress, shipWidth,
                 hullIntegrity,
                 acceleration, speed, absSpeed, maxSpeed, stepFactor, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
+                armor,
                 /** @type Weapon[] */
                 weapons,
                 /** @type Number[2] */
@@ -2101,7 +2102,8 @@ define([
                 _targetInfoTexts[TARGET_INFO_CLASS].setColor(targetInfoTextColor);
                 _targetInfoTexts[TARGET_INFO_CLASS].setText(target.getClass().getDisplayName());
                 _targetInfoTexts[TARGET_INFO_FIREPOWER].setColor(targetInfoTextColor);
-                _targetInfoTexts[TARGET_INFO_FIREPOWER].setText(strings.get(strings.BATTLE.HUD_FIREPOWER) + ": " + target.getFirepower().toFixed(1));
+                armor = target.getTarget() && target.getTarget().getClass().getArmor();
+                _targetInfoTexts[TARGET_INFO_FIREPOWER].setText(strings.get(strings.BATTLE.HUD_FIREPOWER) + ": " + (armor ? (target.getFirepower(armor).toFixed(1) + " / ") : "") + target.getFirepower().toFixed(1));
                 _targetInfoTexts[TARGET_INFO_DISTANCE].setColor(targetInfoTextColor);
                 _targetInfoTexts[TARGET_INFO_DISTANCE].setText(strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(distance));
                 _targetInfoTexts[TARGET_INFO_VELOCITY].setColor(targetInfoTextColor);
