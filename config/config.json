@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0-dev:454 (2017.01.12.)",
+    "version": "0.4.0-dev:455 (2017.01.12.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -431,14 +431,6 @@
                 "weaponAimThreshold": 0.001,
                 "actions": [
                     {
-                        "name": "changeFlightMode"
-                    }, {
-                        "name": "nextHostileTarget"
-                    }, {
-                        "name": "nextNonHostileTarget"
-                    }, {
-                        "name": "toggleAutoTargeting"
-                    }, {
                         "name": "fire",
                         "continuous": true
                     }, {
@@ -479,6 +471,18 @@
                     }, {
                         "name": "rollRight",
                         "continuous": true
+                    }, {
+                        "name": "nextHostileTarget"
+                    }, {
+                        "name": "nextNonHostileTarget"
+                    }, {
+                        "name": "toggleAutoTargeting"
+                    }, {
+                        "name": "toggleCruise"
+                    }, {
+                        "name": "toggleFlightAssist"
+                    }, {
+                        "name": "changeFlightMode"
                     }, {
                         "name": "jumpOut"
                     }

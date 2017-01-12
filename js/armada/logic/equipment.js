@@ -1378,7 +1378,6 @@ define([
      * a spacecraft (by user input or an AI) to low level thruster commands.
      * @param {Spacecraft} spacecraft The spacecraft the thrusters of which this
      * computer controls.
-     * @returns {ManeuveringComputer}
      */
     function ManeuveringComputer(spacecraft) {
         /**
@@ -1551,25 +1550,55 @@ define([
                 (this._restricted ? FlightMode.CRUISE : FlightMode.COMBAT) : FlightMode.FREE;
     };
     /**
-     * Switches to the next flight mode. (free / combat / cruise)
+     * Switches to the specified (if any) or to the next flight mode. (free / combat / cruise)
+     * @param {String} [flightMode]
      */
-    ManeuveringComputer.prototype.changeFlightMode = function () {
-        if (!this._assisted) {
-            this._assisted = true;
-            this._speedTarget = Math.min(Math.max(
-                    this._maxCombatReverseSpeed,
-                    this._spacecraft.getRelativeVelocityMatrix()[13]),
-                    this._maxCombatForwardSpeed);
-        } else if (!this._restricted) {
-            this._restricted = true;
-            this._speedTarget = Math.min(Math.max(
-                    this._maxCruiseReverseSpeed,
-                    this._spacecraft.getRelativeVelocityMatrix()[13]),
-                    this._maxCruiseForwardSpeed);
-        } else {
-            this._assisted = false;
-            this._restricted = false;
+    ManeuveringComputer.prototype.changeFlightMode = function (flightMode) {
+        if (!flightMode) {
+            if (!this._assisted) {
+                flightMode = FlightMode.COMBAT;
+            } else if (!this._restricted) {
+                flightMode = FlightMode.CRUISE;
+            } else {
+                flightMode = FlightMode.FREE;
+            }
         }
+        switch (flightMode) {
+            case FlightMode.COMBAT:
+                this._speedTarget = Math.min(Math.max(
+                        this._maxCombatReverseSpeed,
+                        this._assisted ? this._speedTarget : this._spacecraft.getRelativeVelocityMatrix()[13]),
+                        this._maxCombatForwardSpeed);
+                this._assisted = true;
+                this._restricted = false;
+                break;
+            case FlightMode.CRUISE:
+                this._speedTarget = Math.min(Math.max(
+                        this._maxCruiseReverseSpeed,
+                        this._assisted ? this._speedTarget : this._spacecraft.getRelativeVelocityMatrix()[13]),
+                        this._maxCruiseForwardSpeed);
+                this._assisted = true;
+                this._restricted = true;
+                break;
+            case FlightMode.FREE:
+                this._assisted = false;
+                this._restricted = false;
+                break;
+            default:
+                application.showError("Cannot switch to unknown flight mode: '" + flightMode + "'!");
+        }
+    };
+    /**
+     * Toggles between free and combat flight modes
+     */
+    ManeuveringComputer.prototype.toggleFlightAssist = function () {
+        this.changeFlightMode(this._assisted ? FlightMode.FREE : FlightMode.COMBAT);
+    };
+    /**
+     * Toggles between cruise and combat flight modes
+     */
+    ManeuveringComputer.prototype.toggleCruise = function () {
+        this.changeFlightMode(this._restricted ? FlightMode.COMBAT : FlightMode.CRUISE);
     };
     /**
      * Increases the target speed or sets it to maximum in free mode.
@@ -1633,7 +1662,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.strafeLeft = function (intensity) {
-        this._strafeTarget = (this._assisted && intensity) ? -intensity : -Number.MAX_VALUE;
+        this._strafeTarget = this._restricted ? 0 : ((this._assisted && intensity) ? -intensity : -Number.MAX_VALUE);
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -1651,7 +1680,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.strafeRight = function (intensity) {
-        this._strafeTarget = (this._assisted && intensity) || Number.MAX_VALUE;
+        this._strafeTarget = this._restricted ? 0 : ((this._assisted && intensity) || Number.MAX_VALUE);
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -1669,7 +1698,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.lower = function (intensity) {
-        this._liftTarget = (this._assisted && intensity) ? -intensity : -Number.MAX_VALUE;
+        this._liftTarget = this._restricted ? 0 : ((this._assisted && intensity) ? -intensity : -Number.MAX_VALUE);
     };
     /**
      * Sets the target speed for lifting to zero, if was set to a speed to lift
@@ -1687,7 +1716,7 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.raise = function (intensity) {
-        this._liftTarget = (this._assisted && intensity) || Number.MAX_VALUE;
+        this._liftTarget = this._restricted ? 0 : ((this._assisted && intensity) || Number.MAX_VALUE);
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to lift

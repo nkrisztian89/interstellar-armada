@@ -635,8 +635,14 @@
                         "action": "toggleAutoTargeting",
                         "key": "-"
                     }, {
-                        "action": "changeFlightMode",
+                        "action": "toggleCruise",
                         "key": "tab"
+                    }, {
+                        "action": "toggleFlightAssist",
+                        "key": ","
+                    }, {
+                        "action": "changeFlightMode",
+                        "key": "."
                     }, {
                         "action": "forward",
                         "key": "W"
@@ -910,7 +916,7 @@
                         "action": "resetSpeed",
                         "button": 4
                     }, {
-                        "action": "changeFlightMode",
+                        "action": "toggleCruise",
                         "button": 5
                     }
                 ]

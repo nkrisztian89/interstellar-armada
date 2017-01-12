@@ -210,6 +210,14 @@ define([
         this.setActionFunction("changeFlightMode", true, function () {
             this._controlledSpacecraft.changeFlightMode();
         }.bind(this));
+        // toggling between cruise and combat flight modes
+        this.setActionFunction("toggleCruise", true, function () {
+            this._controlledSpacecraft.toggleCruise();
+        }.bind(this));
+        // toggling between free and combat flight modes
+        this.setActionFunction("toggleFlightAssist", true, function () {
+            this._controlledSpacecraft.toggleFlightAssist();
+        }.bind(this));
         // switch to next hostile target
         this.setActionFunction("nextHostileTarget", true, function () {
             if (this._controlledSpacecraft.targetNextHostile()) {

@@ -351,7 +351,9 @@
         "toggleHUDVisibility": "Űrhajó irányítófelületének megjelenítése / elrejtése",
         "toggleMouseControls": "Egér irányítás ki-/bekapcsolása",
         "toggleJoystickControls": "Joystick irányítás ki-/bekapcsolása",
-        "changeFlightMode": "Repülési mód váltása",
+        "toggleCruise": "Váltás cirkáló és harci repülési mód között",
+        "toggleFlightAssist": "Repüléssegítő ki-/bekapcsolása (váltás harci és szabad repülési mód között)",
+        "changeFlightMode": "Váltás a következő repülési módba",
         "nextHostileTarget": "Következő ellenséges célpont kijelölése",
         "nextNonHostileTarget": "Következő nem ellenséges (baráti vagy semleges) célpont kijelölése",
         "toggleAutoTargeting": "Ellenséges célpontok automatikus kijelölésének ki-/bekapcsolása",
@@ -362,7 +364,7 @@
         "strafeRight": "Gyorsítás jobbra",
         "raise": "Gyorsítás felfelé",
         "lower": "Gyorsítás lefelé",
-        "resetSpeed": "Kívánt sebesség nullára csökkentése (kontrollált repülési módokban)",
+        "resetSpeed": "Kívánt sebesség nullára csökkentése (repüléssegített módokban)",
         "yawLeft": "Fordulás balra",
         "yawRight": "Fordulás jobbra",
         "pitchUp": "Gép döntése felfelé",
@@ -416,7 +418,7 @@
             "name": "SMCU-11 Konténer"
         },
         "drone": {
-            "name": "Kiképzó drón"
+            "name": "Kiképző drón"
         },
         "falcon": {
             "name": "Sólyom",
