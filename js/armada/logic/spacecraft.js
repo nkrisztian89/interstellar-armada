@@ -1087,6 +1087,13 @@ define([
         return this._maneuveringComputer.hasSpeedTarget();
     };
     /**
+     * If the current flight mode imposes a speed limit, returns it. (in m/s) Otherwise returns undefined.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMaxSpeed = function () {
+        return this._maneuveringComputer.getMaxSpeed();
+    };
+    /**
      * Control command for the maneuvering computer to yaw to the left.
      * @param {Number} [intensity] Optional intensity for the command, if the
      * player uses an input device that has intensity control (e.g. mouse, joystick)

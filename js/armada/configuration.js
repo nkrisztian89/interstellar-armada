@@ -1010,6 +1010,10 @@ define([
                 name: "speedBarMaxSpeedStepFactor",
                 type: "number"
             },
+            SPEED_BAR_MAX_SPEED_STEP_BUFFER: {
+                name: "speedBarMaxSpeedStepBuffer",
+                type: "number"
+            },
             SPEED_TEXT_LAYER_LAYOUT: {
                 name: "speedTextLayerLayout",
                 type: _customTypes.LAYOUT_DESCRIPTOR

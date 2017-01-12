@@ -1718,7 +1718,7 @@ define([
                 /** @type Number */
                 distance, aspect, i, scale, futureDistance, animationProgress, targetSwitchAnimationProgress, shipWidth,
                 hullIntegrity,
-                acceleration, speed, absSpeed, maxSpeed, stepFactor, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
+                acceleration, speed, absSpeed, maxSpeed, stepFactor, stepBuffer, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
                 armor,
                 /** @type Weapon[] */
                 weapons,
@@ -1796,24 +1796,25 @@ define([
             speed = relativeVelocity[13];
             absSpeed = Math.abs(speed);
             acceleration = craft.getMaxAcceleration();
-            maxSpeed = (config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_BASE_MAX_SPEED_FACTOR) * acceleration) ||
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_DEFAULT_BASE_MAX_SPEED);
-            stepFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_MAX_SPEED_STEP_FACTOR);
-            while (maxSpeed < absSpeed) {
-                maxSpeed *= stepFactor;
+            maxSpeed = craft.getMaxSpeed();
+            if (!maxSpeed) {
+                maxSpeed = (config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_BASE_MAX_SPEED_FACTOR) * acceleration) ||
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_DEFAULT_BASE_MAX_SPEED);
+                stepFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_MAX_SPEED_STEP_FACTOR);
+                stepBuffer = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_MAX_SPEED_STEP_BUFFER);
+                while ((maxSpeed + stepBuffer) < absSpeed) {
+                    maxSpeed *= stepFactor;
+                }
             }
             if (craft.hasSpeedTarget()) {
                 speedTarget = craft.getSpeedTarget();
                 if (speed * speedTarget >= 0) {
                     speedTarget = Math.abs(speedTarget);
-                    while (maxSpeed < speedTarget) {
-                        maxSpeed *= stepFactor;
-                    }
                 } else {
                     speedTarget = 0;
                 }
             }
-            speedRatio = absSpeed / maxSpeed;
+            speedRatio = Math.min(absSpeed / maxSpeed, 1.0);
             maxSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxForward;
             maxReverseSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxReverse;
             if (speed >= 0) {
@@ -1822,7 +1823,7 @@ define([
                 _speedBar.clipY(0, speedRatio);
                 _maxSpeedText.setPosition(maxSpeedTextPosition);
                 _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
-                _maxSpeedText.setText(maxSpeed.toFixed());
+                _maxSpeedText.setText(Math.max(maxSpeed, speed).toFixed());
                 _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxReverseSpeedTextPosition[1] + (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
                 _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
                 _currentSpeedText.setText(absSpeed.toFixed());
@@ -1839,7 +1840,7 @@ define([
                 _speedBar.clipY(1 - speedRatio, 1);
                 _maxSpeedText.setPosition(maxReverseSpeedTextPosition);
                 _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.reverse);
-                _maxSpeedText.setText("-" + maxSpeed.toFixed());
+                _maxSpeedText.setText(Math.min(-maxSpeed, speed).toFixed());
                 _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxSpeedTextPosition[1] - (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
                 _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.reverse);
                 _currentSpeedText.setText("-" + absSpeed.toFixed());

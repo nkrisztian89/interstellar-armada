@@ -372,6 +372,7 @@
                 "speedBarBaseMaxSpeedFactor": 3,
                 "speedBarDefaultBaseMaxSpeed": 10,
                 "speedBarMaxSpeedStepFactor": 3,
+                "speedBarMaxSpeedStepBuffer": 2,
                 "speedTextLayerLayout": {
                     "centerX": 0.67,
                     "centerY": 0.0,

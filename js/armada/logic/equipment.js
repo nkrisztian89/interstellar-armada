@@ -1760,6 +1760,13 @@ define([
         return this._assisted;
     };
     /**
+     * If the current flight mode imposes a speed limit, returns it. (in m/s) Otherwise returns undefined.
+     * @returns {Number}
+     */
+    ManeuveringComputer.prototype.getMaxSpeed = function () {
+        return this._assisted ? (this._restricted ? this._maxCruiseForwardSpeed : this._maxCombatForwardSpeed) : undefined;
+    };
+    /**
      * Sets the target angular velocity to yaw to the left with the given intensity 
      * multiplied by the turning limit, or if no intensity was given, with the turning
      * limit.
