@@ -1767,7 +1767,7 @@ define([
             // .....................................................................................................
             // cursor
             mouseInputInterpreter = control.getInputInterpreter(control.MOUSE_NAME);
-            if (control.isListening() && mouseInputInterpreter.isEnabled() && control.isInPilotMode() && !control.isControllerPriority(control.CAMERA_CONTROLLER_NAME)) {
+            if (control.isListening() && mouseInputInterpreter.isEnabled() && control.isInPilotMode() && !control.isControllerPriority(control.CAMERA_CONTROLLER_NAME) && !control.isMouseTurningDisabled()) {
                 position2D = mouseInputInterpreter.getMousePosition();
                 position2D = [
                     (position2D[0] / canvas.width - 0.5) * 2,

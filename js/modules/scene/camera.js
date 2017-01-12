@@ -1801,7 +1801,7 @@ define([
      */
     Camera.prototype.getProjectionMatrix = function () {
         if (!this._projectionMatrix) {
-            this._updateProjectionMatrix(this._currentConfiguration.getFOV(), this._currentConfiguration.getSpan());
+            this._updateProjectionMatrix(this.getFOV(), this.getSpan());
         }
         return this._projectionMatrix;
     };

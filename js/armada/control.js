@@ -59,7 +59,12 @@ define([
              * The context storing the current control settings (controllers, input interpreters) that can be accessed through the interface of this module
              * @type ArmadaControlContext
              */
-            _context;
+            _context,
+            /**
+             * A shortcut reference to the input interpreter that handles mouse input stored in the context
+             * @type MouseInputInterpreter
+             */
+            _mouseInputInterpreter;
     control.setModulePrefix("interstellarArmada_control_");
     // #########################################################################
     /**
@@ -124,6 +129,7 @@ define([
             if (_context.isInPilotMode()) {
                 if (_context.getInputInterpreter(MOUSE_NAME).isEnabled()) {
                     document.body.style.cursor = 'none';
+                    _context.enableMouseTurning();
                 } else {
                     document.body.style.cursor = game.getDefaultCursor();
                 }
@@ -194,8 +200,11 @@ define([
         // The superclass constructor above loads the data from the JSON, so all action
         // properties should have been created
         // fire the primary weapons of the fighter
-        this.setActionFunction("fire", true, function () {
-            this._controlledSpacecraft.fire();
+        this.setActionFunction("fire", true, function (i, source) {
+            this._controlledSpacecraft.fire(false, i);
+            if (source === _mouseInputInterpreter) {
+                _context.enableMouseTurning();
+            }
         }.bind(this));
         // changing flight mode (free / combat / cruise)
         this.setActionFunction("changeFlightMode", true, function () {
@@ -260,17 +269,29 @@ define([
             this._controlledSpacecraft.resetSpeed();
         }.bind(this));
         // turning along the 3 axes
-        this.setActionFunction("yawLeft", true, function (i) {
+        this.setActionFunction("yawLeft", true, function (i, source) {
             this._controlledSpacecraft.yawLeft(i);
+            if (source !== _mouseInputInterpreter) {
+                _context.disableMouseTurning();
+            }
         }.bind(this));
-        this.setActionFunction("yawRight", true, function (i) {
+        this.setActionFunction("yawRight", true, function (i, source) {
             this._controlledSpacecraft.yawRight(i);
+            if (source !== _mouseInputInterpreter) {
+                _context.disableMouseTurning();
+            }
         }.bind(this));
-        this.setActionFunction("pitchUp", true, function (i) {
+        this.setActionFunction("pitchUp", true, function (i, source) {
             this._controlledSpacecraft.pitchUp(i);
+            if (source !== _mouseInputInterpreter) {
+                _context.disableMouseTurning();
+            }
         }.bind(this));
-        this.setActionFunction("pitchDown", true, function (i) {
+        this.setActionFunction("pitchDown", true, function (i, source) {
             this._controlledSpacecraft.pitchDown(i);
+            if (source !== _mouseInputInterpreter) {
+                _context.disableMouseTurning();
+            }
         }.bind(this));
         this.setActionFunction("rollLeft", true, function (i) {
             this._controlledSpacecraft.rollLeft(i);
@@ -340,6 +361,11 @@ define([
          * @type Boolean
          */
         this._pilotingMode = false;
+        /**
+         * Whether mouse turning is currently disabled (automatically happens if the player uses another input device for turning)
+         * @type Boolean
+         */
+        this._mouseTurningDisabled = false;
         this.registerInputInterpreterType(KEYBOARD_NAME, control.KeyboardInputInterpreter);
         this.registerInputInterpreterType(MOUSE_NAME, control.MouseInputInterpreter);
         this.registerInputInterpreterType(JOYSTICK_NAME, control.GamepadInputInterpreter);
@@ -405,7 +431,51 @@ define([
             document.body.style.cursor = game.getDefaultCursor();
         }
     };
+    /**
+     * Disables the turning related actions from the mouse input interpreter.
+     * To be called when the user turn using an input device other than the mouse.
+     */
+    ArmadaControlContext.prototype.disableMouseTurning = function () {
+        if (!this._mouseTurningDisabled) {
+            _mouseInputInterpreter.disableAction("yawLeft");
+            _mouseInputInterpreter.disableAction("yawRight");
+            _mouseInputInterpreter.disableAction("pitchUp");
+            _mouseInputInterpreter.disableAction("pitchDown");
+            _mouseInputInterpreter.disableAction("rollLeft");
+            _mouseInputInterpreter.disableAction("rollRight");
+            this._mouseTurningDisabled = true;
+        }
+    };
+    /**
+     * Enables the turning related actions from the mouse input interpreter
+     * To be called when the user fires using the mouse.
+     */
+    ArmadaControlContext.prototype.enableMouseTurning = function () {
+        if (this._mouseTurningDisabled) {
+            _mouseInputInterpreter.enableAction("yawLeft");
+            _mouseInputInterpreter.enableAction("yawRight");
+            _mouseInputInterpreter.enableAction("pitchUp");
+            _mouseInputInterpreter.enableAction("pitchDown");
+            _mouseInputInterpreter.enableAction("rollLeft");
+            _mouseInputInterpreter.enableAction("rollRight");
+            this._mouseTurningDisabled = false;
+        }
+    };
+    /**
+     * Returns whether mouse turning has been auto-disabled by the player using another input device for turning.
+     * @returns {Boolean}
+     */
+    ArmadaControlContext.prototype.isMouseTurningDisabled = function () {
+        return this._mouseTurningDisabled;
+    };
+    // -------------------------------------------------------------------------
+    // Initialization
     _context = new ArmadaControlContext();
+    // -------------------------------------------------------------------------
+    // Caching input interpreters
+    _context.executeWhenReady(function () {
+        _mouseInputInterpreter = _context.getInputInterpreter(MOUSE_NAME);
+    });
     // -------------------------------------------------------------------------
     // Caching configuration settings
     config.executeWhenReady(function () {
@@ -439,6 +509,7 @@ define([
         executeWhenReady: _context.executeWhenReady.bind(_context),
         isInPilotMode: _context.isInPilotMode.bind(_context),
         switchToPilotMode: _context.switchToPilotMode.bind(_context),
-        switchToSpectatorMode: _context.switchToSpectatorMode.bind(_context)
+        switchToSpectatorMode: _context.switchToSpectatorMode.bind(_context),
+        isMouseTurningDisabled: _context.isMouseTurningDisabled.bind(_context)
     };
 });

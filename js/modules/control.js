@@ -40,9 +40,9 @@ define([
                 MIDDLE: "middle",
                 RIGHT: "right"
             },
-    // ----------------------------------------------------------------------
-    // constants
-    SHIFT_CODE = 16,
+            // ----------------------------------------------------------------------
+            // constants
+            SHIFT_CODE = 16,
             CTRL_CODE = 17,
             ALT_CODE = 18,
             CONTROL_STRING_COMBINE = " + ",
@@ -76,73 +76,73 @@ define([
             // ----------------------------------------------------------------------
             // string definitions for translation of control strings
             KEY_STRING_PREFIX = {name: "key" + strings.CATEGORY_SEPARATOR},
-    MOUSE_LEFT_BUTTON = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "leftButton",
-        defaultValue: "left click"
-    },
-    MOUSE_RIGHT_BUTTON = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "rightButton",
-        defaultValue: "right click"
-    },
-    MOUSE_MIDDLE_BUTTON = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "middleButton",
-        defaultValue: "middle click"
-    },
-    MOUSE_FROM_CENTER = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "fromCenter",
-        defaultValue: "{move} {toDirection} from center"
-    },
-    MOUSE_NOT_FROM_CENTER = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "notFromCenter",
-        defaultValue: "{move} {toDirection}"
-    },
-    MOUSE_MOVE = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "move",
-        defaultValue: "move"
-    },
-    MOUSE_DIRECTION_LEFT = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "leftDirection",
-        defaultValue: "left"
-    },
-    MOUSE_DIRECTION_RIGHT = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "rightDirection",
-        defaultValue: "right"
-    },
-    MOUSE_DIRECTION_UP = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "upDirection",
-        defaultValue: "up"
-    },
-    MOUSE_DIRECTION_DOWN = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "downDirection",
-        defaultValue: "down"
-    },
-    MOUSE_SCROLL = {
-        name: "mouse" + strings.CATEGORY_SEPARATOR + "scroll",
-        defaultValue: "scroll"
-    },
-    JOYSTICK_BUTTON = {
-        name: "joystick" + strings.CATEGORY_SEPARATOR + "button",
-        defaultValue: "button {index}"
-    },
-    JOYSTICK_AXIS = {
-        name: "joystick" + strings.CATEGORY_SEPARATOR + "axis",
-        defaultValue: "axis {index} {direction}"
-    },
-    JOYSTICK_DIRECTION_POSITIVE = {
-        name: "joystick" + strings.CATEGORY_SEPARATOR + "positiveDirection",
-        defaultValue: "positive"
-    },
-    JOYSTICK_DIRECTION_NEGATIVE = {
-        name: "joystick" + strings.CATEGORY_SEPARATOR + "negativeDirection",
-        defaultValue: "negative"
-    },
-    // -------------------------------------------------------------------------
-    // private variables
-    /**
-     * When saving to or loading from local storage, the names of any settings of this module will be prefixed by this string.
-     * @type String
-     */
-    _modulePrefix = "";
+            MOUSE_LEFT_BUTTON = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "leftButton",
+                defaultValue: "left click"
+            },
+            MOUSE_RIGHT_BUTTON = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "rightButton",
+                defaultValue: "right click"
+            },
+            MOUSE_MIDDLE_BUTTON = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "middleButton",
+                defaultValue: "middle click"
+            },
+            MOUSE_FROM_CENTER = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "fromCenter",
+                defaultValue: "{move} {toDirection} from center"
+            },
+            MOUSE_NOT_FROM_CENTER = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "notFromCenter",
+                defaultValue: "{move} {toDirection}"
+            },
+            MOUSE_MOVE = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "move",
+                defaultValue: "move"
+            },
+            MOUSE_DIRECTION_LEFT = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "leftDirection",
+                defaultValue: "left"
+            },
+            MOUSE_DIRECTION_RIGHT = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "rightDirection",
+                defaultValue: "right"
+            },
+            MOUSE_DIRECTION_UP = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "upDirection",
+                defaultValue: "up"
+            },
+            MOUSE_DIRECTION_DOWN = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "downDirection",
+                defaultValue: "down"
+            },
+            MOUSE_SCROLL = {
+                name: "mouse" + strings.CATEGORY_SEPARATOR + "scroll",
+                defaultValue: "scroll"
+            },
+            JOYSTICK_BUTTON = {
+                name: "joystick" + strings.CATEGORY_SEPARATOR + "button",
+                defaultValue: "button {index}"
+            },
+            JOYSTICK_AXIS = {
+                name: "joystick" + strings.CATEGORY_SEPARATOR + "axis",
+                defaultValue: "axis {index} {direction}"
+            },
+            JOYSTICK_DIRECTION_POSITIVE = {
+                name: "joystick" + strings.CATEGORY_SEPARATOR + "positiveDirection",
+                defaultValue: "positive"
+            },
+            JOYSTICK_DIRECTION_NEGATIVE = {
+                name: "joystick" + strings.CATEGORY_SEPARATOR + "negativeDirection",
+                defaultValue: "negative"
+            },
+            // -------------------------------------------------------------------------
+            // private variables
+            /**
+             * When saving to or loading from local storage, the names of any settings of this module will be prefixed by this string.
+             * @type String
+             */
+            _modulePrefix = "";
     // -------------------------------------------------------------------------
     // functions
     /**
@@ -259,6 +259,15 @@ define([
          * @type Object.<String, ControlBinding>
          */
         this._bindings = {};
+        /**
+         * Associative array of the names of disabled actions. The action names are
+         * the keys, and if the corresponding action is disabled, the value is true.
+         * Disabled actions are not passed to the controllers for processing, even
+         * if they would be triggered user input from the device this interpreter
+         * is handles.
+         * @type Object
+         */
+        this._disabledActions = {};
         // if a JSON was specified, initialize the bindings from there
         if (dataJSON !== undefined) {
             this.loadFromJSON(dataJSON);
@@ -455,6 +464,22 @@ define([
         application.showError("Cannot check if action '" + actionName + "' is triggered with a generic input interpreter!");
     };
     /**
+     * Disables the action with the given name. While disabled, this action will not
+     * be passed to the controllers for processing, even if user input would trigger
+     * it.
+     * @param {String} actionName
+     */
+    InputInterpreter.prototype.disableAction = function (actionName) {
+        this._disabledActions[actionName] = true;
+    };
+    /**
+     * Enables the action with the given name. (if it was disabled)
+     * @param {String} actionName
+     */
+    InputInterpreter.prototype.enableAction = function (actionName) {
+        this._disabledActions[actionName] = false;
+    };
+    /**
      * Returns the list of currently triggered actions based on the internally stored input device state and the control bindings.
      * @param {Function} [actionFilterFunction] If given, every triggered action will be tested against this function (by passing its name
      * as a parameter), and only added to the resulting list if the function returns true.
@@ -469,7 +494,7 @@ define([
         }
         for (actionName in this._bindings) {
             if (this._bindings.hasOwnProperty(actionName)) {
-                if (!actionFilterFunction || actionFilterFunction(actionName)) {
+                if (!this._disabledActions[actionName] && (!actionFilterFunction || actionFilterFunction(actionName))) {
                     this._addActionByBinding(actionsByBindings, this.checkAction(actionName), this._bindings[actionName]);
                 }
             }
@@ -775,7 +800,7 @@ define([
      */
     KeyboardInputInterpreter.prototype.checkAction = function (actionName) {
         return (this._bindings[actionName].isTriggered(this._currentlyPressedKeys)) ?
-                {name: actionName} :
+                {name: actionName, source: this} :
                 null;
     };
     // #########################################################################
@@ -1350,7 +1375,8 @@ define([
                     name: actionName,
                     intensity: (this._bindings[actionName].isMeasuredFromCenter() === true) ?
                             Math.min(1, Math.max(0, actionIntensity - this._displacementDeadzone) * this._displacementFactor) :
-                            (actionIntensity * this._moveSensitivity)
+                            (actionIntensity * this._moveSensitivity),
+                    source: this
                 } :
                 null;
     };
@@ -1673,13 +1699,15 @@ define([
                 if ((finalIntensity === undefined) || (finalIntensity > 0)) {
                     return {
                         name: actionName,
-                        intensity: finalIntensity
+                        intensity: finalIntensity,
+                        source: this
                     };
                 }
             }
             return {
                 name: actionName,
-                intensity: baseIntensity
+                intensity: baseIntensity,
+                source: this
             };
         }
         return null;
@@ -1775,6 +1803,11 @@ define([
          * @type Function
          */
         this._executeNonTriggered = null;
+        /**
+         * If the action is triggered, this refers to the input interpreter that triggered it.
+         * @type InputInterpreter
+         */
+        this._source = null;
         // if a JSON was specified, initialize the properties from there
         if (dataJSON !== undefined) {
             this.loadFromJSON(dataJSON);
@@ -1826,14 +1859,17 @@ define([
      * @param {Number} intensity The new intensity of the action to be set. Will
      * be ignored if not given. If multiple triggers try to set the intensity, 
      * the highest one or the one with the  without intensity will be considered.
+     * @param {InputInterpreter} source The input interpreter that triggered
+     * this action
      */
-    Action.prototype.setTriggered = function (triggered, intensity) {
+    Action.prototype.setTriggered = function (triggered, intensity, source) {
         this._triggered = triggered;
         if ((intensity !== undefined) && ((this._intensity === this.INTENSITY_NOT_SPECIFIED) || ((this._intensity >= 0) && intensity > this._intensity))) {
             this._intensity = intensity;
         } else if (intensity === undefined) {
             this._intensity = this.INTENSITY_KEYPRESS;
         }
+        this._source = source;
     };
     /**
      * Sets the function to be executed when the action is triggered.
@@ -1862,7 +1898,7 @@ define([
         if (this._continuous === true) {
             if (this._triggered === true) {
                 if (this._executeTriggered !== null) {
-                    this._executeTriggered((this._intensity >= 0) ? this._intensity : undefined);
+                    this._executeTriggered((this._intensity >= 0) ? this._intensity : undefined, this._source);
                 }
             } else {
                 if (this._executeNonTriggered !== null) {
@@ -1872,7 +1908,7 @@ define([
         } else {
             if ((this._triggered === true) && (this._executed === false)) {
                 if (this._executeTriggered !== null) {
-                    this._executeTriggered((this._intensity >= 0) ? this._intensity : undefined);
+                    this._executeTriggered((this._intensity >= 0) ? this._intensity : undefined, this._source);
                 }
                 this._executed = true;
             } else {
@@ -2013,7 +2049,7 @@ define([
      * be grouped together, and therefore this method expects an array of arrays.
      */
     Controller.prototype.executeActions = function (triggeredActions) {
-        var i, j, actionName, actionIntensity;
+        var i, j, actionName, actionIntensity, actionSource;
         // first we go through the groups of actions
         for (i = 0; i < triggeredActions.length; i++) {
             // in each group, if there are multiple actions that this controller can handle then choose the one with the highest intensity
@@ -2021,13 +2057,15 @@ define([
             // intensity of 0
             actionName = null;
             actionIntensity = -1;
+            actionSource = null;
             for (j = 0; j < triggeredActions[i].length; j++) {
                 if (this._actions[triggeredActions[i][j].name] !== undefined) {
-                    // non-graded (undefined) intensity always beets the graded ones
+                    // non-graded (undefined) intensity always beats the graded ones
                     if (((triggeredActions[i][j].intensity !== undefined) && (actionIntensity !== undefined) && (triggeredActions[i][j].intensity > actionIntensity)) ||
                             ((actionIntensity !== undefined) && (triggeredActions[i][j].intensity === undefined))) {
                         actionName = triggeredActions[i][j].name;
                         actionIntensity = triggeredActions[i][j].intensity;
+                        actionSource = triggeredActions[i][j].source;
                     }
                 }
             }
@@ -2037,7 +2075,7 @@ define([
             // priority controllers will not receive their conflicting actions from the same group
             if (actionName) {
                 if ((actionIntensity === undefined) || (actionIntensity > 0)) {
-                    this._actions[actionName].setTriggered(true, actionIntensity);
+                    this._actions[actionName].setTriggered(true, actionIntensity, actionSource);
                 }
                 triggeredActions[i] = [];
             }
