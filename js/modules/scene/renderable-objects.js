@@ -2109,6 +2109,14 @@ define([
     UIElement.prototype.setClipColor = function (value) {
         this._clipColor = value;
     };
+    /**
+     * Sets a new model to be used for this UI element.
+     * After adding this element to contexts, only use this with models that also have been added to them!
+     * @param {Model} value
+     */
+    UIElement.prototype.setModel = function (value) {
+        this._model = value;
+    };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

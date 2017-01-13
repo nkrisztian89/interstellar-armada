@@ -172,6 +172,7 @@
             "velocity": "Velocity",
             "spacecraftNameUnknown": "Unknown designation",
             "teamUnknown": "-",
+            "wingmenHeader": "Wingmen:",
             "flightMode": "Flight mode:",
             "objectives": "Objectives:"
         },

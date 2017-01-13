@@ -114,6 +114,7 @@ define([
         HUD_VELOCITY: {name: "battle.hud.velocity"},
         HUD_SPACECRAFT_NAME_UNKNOWN: {name: "battle.hud.spacecraftNameUnknown"},
         HUD_TEAM_UNKNOWN: {name: "battle.hud.teamUnknown"},
+        HUD_WINGMEN_HEADER: {name: "battle.hud.wingmenHeader"},
         HUD_FLIGHT_MODE: {name: "battle.hud.flightMode"},
         HUD_OBJECTIVES: {name: "battle.hud.objectives"},
         OBJECTIVE_SUBJECTS_SPACECRAFTS: {name: "battle.objectiveSubjects.spacecrafts"},

@@ -351,6 +351,69 @@
                         "velocity": [-0.95, -0.84]
                     }
                 },
+                "wingmenStatusBackground": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "right": 0.98,
+                        "top": 0.16,
+                        "width": 0.6,
+                        "height": 0.25,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
+                    },
+                    "color": [0, 0, 0, 0.4]
+                },
+                "wingmenStatusHeaderText": {
+                    "color": [0, 1, 0, 1],
+                    "fontSize": 0.15,
+                    "fontName": "hudFont",
+                    "position": [-0.95, 0.65]
+                },
+                "wingmenStatusCraftIndicator": {
+                    "texture": "hud-atlas",
+                    "mappings": {
+                        "player": [[0.3125, 0.5625], [0.375, 0.625]],
+                        "general": [[0.3125, 0.6875], [0.375, 0.75]],
+                        "interceptor": [[0.3125, 0.8125], [0.375, 0.875]],
+                        "bomber": [[0.3125, 0.9375], [0.375, 1.0]]
+                    },
+                    "size": [0.33, 0.33],
+                    "scaleMode": "minimum",
+                    "colors": {
+                        "fullIntegrity": [0, 1, 0, 1],
+                        "halfIntegrity": [1, 1, 0, 1],
+                        "zeroIntegrity": [1, 0, 0, 1],
+                        "destroyed": [1, 0, 0, 0.3]
+                    }
+                },
+                "wigmenStatusCraftPositions": [
+                    [[0, 0]],
+                    [[-0.3, 0], [0.3, 0]],
+                    [[0, 0.3], [-0.3, -0.3], [0.3, -0.3]],
+                    [[0, 0.6], [-0.4, 0.0], [0.4, 0.0], [0.0, -0.6]],
+                    [[0, 0.6], [-0.3, 0.0], [0.3, 0.0], [-0.6, -0.6], [0.6, -0.6]],
+                    [[0, 0.6], [-0.3, 0.0], [0.3, 0.0], [-0.6, -0.6], [0.0, -0.6], [0.6, -0.6]],
+                    [[0, 0.6], [-0.6, 0.0], [0.0, 0.0], [0.6, 0.0], [-0.6, -0.6], [0.0, -0.6], [0.6, -0.6]],
+                    [[-0.3, 0.6], [0.3, 0.6], [-0.6, 0.0], [0.0, 0.0], [0.6, 0.0], [-0.6, -0.6], [0.0, -0.6], [0.6, -0.6]],
+                    [[0.0, 0.6], [-0.6, 0.6], [0.6, 0.6], [-0.6, 0.0], [0.0, 0.0], [0.6, 0.0], [-0.6, -0.6], [0.0, -0.6], [0.6, -0.6]]
+                ],
+                "wigmenStatusSquadLayout": {
+                    "right": 0.53,
+                    "top": 0.11,
+                    "width": 0.15,
+                    "height": 0.15,
+                    "scaleMode": "minimum",
+                    "xScaleMode": "minimum",
+                    "yScaleMode": "minimum"
+                },
+                "wingmenStatusSquadText": {
+                    "color": [0, 1, 0, 1],
+                    "fontSize": 0.11,
+                    "fontName": "hudFont",
+                    "position": [-0.75, -0.82]
+                },
                 "speedBar": {
                     "texture": "hud-atlas",
                     "mapping": [[0.0, 0.5], [0.125, 1.0]],
@@ -423,9 +486,9 @@
                     "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
                     "layout": {
                         "right": 0.98,
-                        "top": -0.2,
+                        "top": -0.11,
                         "width": 0.36,
-                        "height": 0.15,
+                        "height": 0.125,
                         "scaleMode": "minimum",
                         "xScaleMode": "minimum",
                         "yScaleMode": "minimum"

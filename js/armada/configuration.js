@@ -236,6 +236,13 @@ define([
             }
         }
     };
+    _customTypes.CRAFT_INDICATOR_POSITIONS = {
+        baseType: "array", // how many crafts are in the wing
+        elementType: {
+            baseType: "array", // which craft is it within the wing
+            elementType: types.VECTOR2 // relative position (within the wing layout) of the craft on the wingmen indicator panel
+        }
+    };
     /**
      * Creates and returns a new type descriptor based on the passed one, changing some of its property descriptors
      * @param {Object} baseDescriptor
@@ -993,6 +1000,42 @@ define([
             TARGET_INFO_TEXT: {
                 name: "targetInfoText",
                 type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["hostile", "friendly"], FONT_SIZE: ["name", "others"], POSITION: ["name", "class", "team", "firepower", "distance", "velocity"]})
+            },
+            WINGMEN_STATUS_BACKGROUND: {
+                name: "wingmenStatusBackground",
+                type: _customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR
+            },
+            WINGMEN_STATUS_HEADER_TEXT: {
+                name: "wingmenStatusHeaderText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
+            /**
+             * Information based on which the indicators for the individual spacecrafts within squads can be created for the wingmen status indicator
+             */
+            WINGMEN_STATUS_CRAFT_INDICATOR: {
+                name: "wingmenStatusCraftIndicator",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["player", "general", "interceptor", "bomber"], COLOR: ["fullIntegrity", "halfIntegrity", "zeroIntegrity", "destroyed"]})
+            },
+            /**
+             * Stores the relative positions (within the area described by the squad layouts) of the individual spacecraft indicators for
+             * each squad size and craft index
+             * (-1,-1): bottom left, (1,1): top right
+             */
+            WINGMEN_STATUS_CRAFT_POSITIONS: {
+                name: "wigmenStatusCraftPositions",
+                type: _customTypes.CRAFT_INDICATOR_POSITIONS
+            },
+            /**
+             * This is a virtual layout that is used indirectly (by dynamically creating layouts based on it) to lay out the individual 
+             * spacecraft indicators within the squad and the squad texts
+             */
+            WINGMEN_STATUS_SQUAD_LAYOUT: {
+                name: "wigmenStatusSquadLayout",
+                type: _customTypes.LAYOUT_DESCRIPTOR
+            },
+            WINGMEN_STATUS_SQUAD_TEXT: {
+                name: "wingmenStatusSquadText",
+                type: _customTypes.TEXT_DESCRIPTOR
             },
             SPEED_BAR: {
                 name: "speedBar",

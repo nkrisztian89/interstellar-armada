@@ -248,6 +248,13 @@ define([
          * @type Number
          */
         this._initialCount = 0;
+        /**
+         * Stores the names and craft references for all squads that are part of this team (i.e. for the wingmen status indicator)
+         * (includes references to already destroyed spacecrafts)
+         * format of one entry: {name: String (name (id) of squad), crafts: Array (references to the spacecrafts in the squad)}
+         * @type Array
+         */
+        this._squads = [];
     }
     /**
      * Returns the unique string ID of this team.
@@ -280,10 +287,45 @@ define([
         return this._initialCount;
     };
     /**
-     * Increases the number of spacecrafts belonging to this team at the start of the current mission
+     * Registers the passed spacecraft as part of this team
+     * @param {Spacecraft} craft 
      */
-    Team.prototype.increaseInitialCount = function () {
+    Team.prototype.addSpacecraft = function (craft) {
+        var i, maxMembers, squad = craft.getSquad();
+        craft.setTeam(this);
+        // setting squad info so that it can be queried later (for example to show wingmen status for this team)
+        if (squad) {
+            // if the squad of this new spacecraft is already registered, add the craft to it
+            for (i = 0; i < this._squads.length; i++) {
+                if (squad === this._squads[i].name) {
+                    this._squads[i].crafts.push(craft);
+                    break;
+                }
+            }
+            // ...if not register the new squad
+            if (i >= this._squads.length) {
+                this._squads.push({
+                    name: squad,
+                    crafts: [craft]
+                });
+            }
+            maxMembers = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS).length;
+            if (this._squads[i].crafts.length > maxMembers) {
+                application.showError("Warning: squad '" + squad + "' of team '" + this._name + "' has more than " + maxMembers + " members, and thus cannot be displayed correctly in the wingmen status panel!");
+            }
+        }
+        // using this counter the survival rate can be calculated at the end of the mission (and in case of the player's team, whether it
+        // is/was a team mission)
         this._initialCount++;
+    };
+    /**
+     * Returns the names and craft references for all squads that are part of this team (i.e. for the wingmen status indicator)
+     * (includes references to already destroyed spacecrafts)
+     * format of one entry: {name: String (name (id) of squad), crafts: Array (references to the spacecrafts in the squad)}
+     * @returns {Array}
+     */
+    Team.prototype.getSquads = function () {
+        return this._squads;
     };
     // #########################################################################
     /**
@@ -2040,8 +2082,7 @@ define([
             if (teamID) {
                 team = this.getTeam(teamID);
                 if (team) {
-                    craft.setTeam(team);
-                    team.increaseInitialCount();
+                    team.addSpacecraft(craft);
                 } else {
                     application.showError("Invalid team ID '" + teamID + "' specified for " + craft.getClassName() + "!");
                 }
@@ -2303,7 +2344,7 @@ define([
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].simulate(dt);
             if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {
-                this._spacecrafts[i].destroy();
+                this._spacecrafts[i].destroy(true);
                 this._spacecrafts[i] = null;
                 this._spacecrafts.splice(i, 1);
                 this._hitObjects[i] = null;

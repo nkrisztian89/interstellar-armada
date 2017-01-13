@@ -1930,7 +1930,7 @@ define([
                 if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getTotalDuration() * this._class.getShowTimeRatioDuringExplosion())) {
                     this._alive = false;
                     if (this.handleDestructed()) {
-                        this.destroy();
+                        this.destroy(true);
                     }
                     return;
                 }
@@ -2084,10 +2084,15 @@ define([
     };
     /**
      * Cancels the held references and marks the renderable object, its node and its subtree as reusable.
+     * @param {Boolean} [preserveClass=false] If true, the reference to the spacecraft's class is preserved (spacecraft classes objects are 
+     * not destroyed during the game anyway, and this way it can be known, what type of spacecraft this was (for example for showing 
+     * destroyed wingmen in the wingmen status panel during a mission)
      */
-    Spacecraft.prototype.destroy = function () {
+    Spacecraft.prototype.destroy = function (preserveClass) {
         var i;
-        this._class = null;
+        if (!preserveClass) {
+            this._class = null;
+        }
         if (this._weapons) {
             for (i = 0; i < this._weapons.length; i++) {
                 if (this._weapons[i]) {

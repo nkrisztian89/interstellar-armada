@@ -189,6 +189,12 @@ define([
              */
             _spacecraft,
             /**
+             * A cached reference to the squads in the team of the currently followed spacecraft, for quicker update of the wingmen status
+             * indicator on the HUD
+             * @type Array
+             */
+            _squads,
+            /**
              * The hull integrity of the followed spacecraft (if any, as last displayed on the HUD)
              * @type Number
              */
@@ -362,6 +368,45 @@ define([
              */
             _targetInfoTexts,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // wingmen status panel
+            /**
+             * A rectangle displayed as the background of the panel showing the information about the wingmen
+             * @type HUDElement
+             */
+            _wingmenStatusBackground,
+            /**
+             * Houses the texts of the wingmen status indicator panel.
+             * @type TextLayer
+             */
+            _wingmenStatusTextLayer,
+            /**
+             * Displays the header text (i.e. "Wingmen:") on the wingmen status indicator panel.
+             * @type CanvasText
+             */
+            _wingmenStatusHeaderText,
+            /**
+             * The indicator laid over the spacecraft indicator that represents the player's spacecraft (if it is within a squad) on the
+             * wingmen status indicator
+             * @type HUDElement
+             */
+            _wingmenStatusPlayerIndicator,
+            /**
+             * The indicators for the individual spacecrafts within the squads for the wingmen status panel
+             * @type HUDElement[]
+             */
+            _wingmenStatusCraftIndicators,
+            /**
+             * Stored layouts for each of the individual spacecraft indicators of the wingmen status panel. This array is cleared whenever
+             * a new spacecraft is followed so that new layouts are automatically generated for the (potentially) different squads
+             * @type ClipSpaceLayout
+             */
+            _wingmenStatusCraftLayouts,
+            /**
+             * Displays the names of the squads on the wingmen status panel
+             * @type CanvasText[]
+             */
+            _wingmenStatusSquadTexts,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // speed and drift indicators
             /**
              * Displays the current forward or reverse speed compared to a calculated maximum in the form of a partially filled bar.
@@ -521,6 +566,11 @@ define([
              */
             _targetInfoBackgroundLayout,
             /**
+             * Stores a reference to the layout used for the wingmen status background HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _wingmenStatusBackgroundLayout,
+            /**
              * Stores a reference to the layout used for the target hull integrity bar HUD element for quicker access.
              * @type ClipSpaceLayout
              */
@@ -628,7 +678,18 @@ define([
              * displayed with the max speed color.
              * @type Number
              */
-            _driftArrowMaxSpeedFactor;
+            _driftArrowMaxSpeedFactor,
+            /**
+             * The settings object for wingmen status craft indicators is used at various points, so we store a cached reference to it
+             * @type Object
+             */
+            _wingmenStatusCraftIndicatorSettings,
+            /**
+             * Stores that based on the configuration, what is the biggest size a squad can be so that there are positions defined for all
+             * individual spacecraft indicators within it, in case it needs to be displayed on the wingmen status indicator panel
+             * @type Number
+             */
+            _wingmenStatusMaxSquadMemberCount;
     // ------------------------------------------------------------------------------
     // private functions
     /**
@@ -834,13 +895,20 @@ define([
         this._node = null;
     }
     /**
+     * Returns the name of the model to be used / created for this HUD element, based on its texture coordinates
+     * @returns {String}
+     */
+    HUDElement.prototype._getModelName = function () {
+        return HUD_ELEMENT_MODEL_NAME_PREFIX + (this._textureCoordinates ?
+                MODEL_NAME_INFIX + (this._textureCoordinates[0].join(MODEL_NAME_INFIX) + MODEL_NAME_INFIX + this._textureCoordinates[1].join(MODEL_NAME_INFIX)) :
+                "");
+    };
+    /**
      * Grabs the references to all needed resource objects and marks them for loading. Automatically called when the element is added to a scene.
      */
     HUDElement.prototype._acquireResources = function () {
         var modelName, model;
-        modelName = HUD_ELEMENT_MODEL_NAME_PREFIX + (this._textureCoordinates ?
-                MODEL_NAME_INFIX + (this._textureCoordinates[0].join(MODEL_NAME_INFIX) + MODEL_NAME_INFIX + this._textureCoordinates[1].join(MODEL_NAME_INFIX)) :
-                "");
+        modelName = this._getModelName();
         model = resources.getModel(modelName, {allowNullResult: true});
         this._class.acquireResources({model: model || egomModel.squareModel(modelName, this._textureCoordinates)});
     };
@@ -882,6 +950,13 @@ define([
         return this._scaleMode;
     };
     /**
+     * Returns the current RGBA color set for this element. (direct reference)
+     * @returns {Number[4]}
+     */
+    HUDElement.prototype.getColor = function () {
+        return this._color;
+    };
+    /**
      * Marks all needed resources for loading and sets a callback to add the visual model of this element to the passed scene if when all
      * resources are loaded (or adds it right away, if the resources are already loaded at the time of call)
      * @param {Scene} scene
@@ -893,6 +968,20 @@ define([
                 this._createVisualModel();
             }
             this._node = scene.addUIObject(this._visualModel);
+        }.bind(this));
+    };
+    /**
+     * Marks all needed resources for loading and sets a callback to add the resources to the passed scene if when all
+     * resources are loaded (or adds it right away, if the resources are already loaded at the time of call)
+     * @param {Scene} scene
+     */
+    HUDElement.prototype.addResourcesToScene = function (scene) {
+        this._acquireResources();
+        resources.executeWhenReady(function () {
+            if (!this._visualModel) {
+                this._createVisualModel();
+            }
+            scene.addResourcesOfObject(this._visualModel);
         }.bind(this));
     };
     /**
@@ -991,6 +1080,18 @@ define([
         }
     };
     /**
+     * Sets new texture coordinates for the HUD element. If it already has a visual model, also changes its model, so in case the element
+     * is already used in a scene, the appropriate model needs to already be loaded! (e.g. with addResourcesToScene() for a HUD element 
+     * with the same texture coordinates, before the loading)
+     * @param {Number[2][2]} value
+     */
+    HUDElement.prototype.setTextureCoordinates = function (value) {
+        this._textureCoordinates = value;
+        if (this._visualModel) {
+            this._visualModel.setModel(graphics.getModel(this._getModelName()).getEgomModel());
+        }
+    };
+    /**
      * Sets new absolute (viewport) coordinates for the position and size of the element applying the rules
      * of the passed clip space layout to a viewport of the given size.
      * @param {ClipSpaceLayout} layout
@@ -1049,12 +1150,77 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).mapping);
     }
     /**
+     * Creates and returns a layout suitable for an individual spacecraft within the wingmen status indicator,
+     * based on the layout defined for squads and the positions defined for spacecrafts
+     * @param {Number} squadIndex
+     * @param {Number} squadSize
+     * @param {Number} craftIndex
+     * @returns {HUDElement}
+     */
+    function _createWingmanCraftIndicatorLayout(squadIndex, squadSize, craftIndex) {
+        var layoutDescriptor, craftPosition, craftSize;
+        // start with a generic (1st) squad layout
+        layoutDescriptor = utils.deepCopy(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_SQUAD_LAYOUT));
+        // shift it to the right based on the index of the squad
+        layoutDescriptor.right += layoutDescriptor.width * squadIndex;
+        // position and resize according to the settings referring to individual spacecraft indicators
+        craftPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS)[squadSize - 1][craftIndex];
+        craftSize = _wingmenStatusCraftIndicatorSettings.size;
+        layoutDescriptor.right -= layoutDescriptor.width * (0.5 - 0.5 * (craftPosition[0] + craftSize[0]));
+        layoutDescriptor.top -= layoutDescriptor.height * (0.5 - 0.5 * (craftPosition[1] + craftSize[1]));
+        layoutDescriptor.width *= craftSize[0];
+        layoutDescriptor.height *= craftSize[1];
+        return new screens.ClipSpaceLayout(layoutDescriptor);
+    }
+    /**
+     * Creates a HUD element suitable as an individual spacecraft indicator within the wingmen status panel
+     * @param {ClipSpaceLayout} layout The layout to be used (create it beforehand using _createWingmanCraftIndicatorLayout())
+     * @param {String} [craftType=general] The string ID of the craft / indicator type (which determines the icon to be used)
+     * Special values are: player, general.
+     * @returns {HUDElement}
+     */
+    function _createWingmanCraftIndicator(layout, craftType) {
+        var mappings;
+        mappings = _wingmenStatusCraftIndicatorSettings.mappings;
+        return new HUDElement(
+                UI_2D_MIX_VIEWPORT_SHADER_NAME,
+                _wingmenStatusCraftIndicatorSettings.texture,
+                layout.getClipSpacePosition(),
+                layout.getClipSpaceSize(),
+                layout.getScaleMode(),
+                _wingmenStatusCraftIndicatorSettings.colors.fullIntegrity,
+                undefined,
+                (craftType && mappings[craftType]) || mappings.general);
+    }
+    /**
+     * 
+     * @param {Number} squadIndex
+     * @returns {CanvasText}
+     */
+    function _createWingmenStatusSquadText(squadIndex) {
+        var position = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_SQUAD_TEXT).position;
+        position = [position[0] + squadIndex * 2 *
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_SQUAD_LAYOUT).width /
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).layout.width,
+            position[1]];
+        return new screens.CanvasText(
+                position,
+                "",
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_SQUAD_TEXT).fontName,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_SQUAD_TEXT).fontSize,
+                _wingmenStatusBackgroundLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_SQUAD_TEXT).color,
+                "center");
+    }
+    /**
      * Creates all HUD elements, marks their resources for loading if they are not loaded yet, and adds their visual models to the scene if
      * they are. If they are not loaded, sets callbacks to add them after the loading has finished.
      */
     function _addHUDToScene() {
-        var i;
+        var i, layout, craftTypes, indicator;
         // keep the ons with the same shader together for faster rendering
+        // ---------------------------------------------------------
+        // UI 2D SHADER
         _centerCrosshair = _centerCrosshair || new HUDElement(
                 UI_2D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).texture,
@@ -1081,6 +1247,8 @@ define([
         for (i = 0; i < _shipArrows.length; i++) {
             _shipArrows[i].addToScene(_battleScene);
         }
+        // ---------------------------------------------------------
+        // UI 3D SHADER
         if (!_shipIndicators) {
             _shipIndicators = [_createShipIndicator()];
         }
@@ -1103,6 +1271,8 @@ define([
         for (i = 0; i < _weaponImpactIndicators.length; i++) {
             _weaponImpactIndicators[i].addToScene(_battleScene);
         }
+        // ---------------------------------------------------------
+        // UI 2D MIX VIEWPORT SHADER
         _targetInfoBackground = _targetInfoBackground || new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).texture,
@@ -1113,6 +1283,16 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).mapping);
         _targetInfoBackground.addToScene(_battleScene);
+        _wingmenStatusBackground = _wingmenStatusBackground || new HUDElement(
+                UI_2D_MIX_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).texture,
+                _wingmenStatusBackgroundLayout.getClipSpacePosition(),
+                _wingmenStatusBackgroundLayout.getClipSpaceSize(),
+                _wingmenStatusBackgroundLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).color,
+                undefined,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).mapping);
+        _wingmenStatusBackground.addToScene(_battleScene);
         _flightModeIndicatorBackground = _flightModeIndicatorBackground || new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).texture,
@@ -1143,6 +1323,20 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).mapping);
         _messageBackground.addToScene(_battleScene);
+        // these are created dynamically so initialize the arrays 
+        if (!_wingmenStatusCraftIndicators) {
+            _wingmenStatusCraftLayouts = [];
+            _wingmenStatusCraftIndicators = [];
+        }
+        // but if they were already created for a previous battle, we need to add them to the current, new scene
+        for (i = 0; i < _wingmenStatusCraftIndicators.length; i++) {
+            _wingmenStatusCraftIndicators[i].addToScene(_battleScene);
+        }
+        if (_wingmenStatusPlayerIndicator) {
+            _wingmenStatusPlayerIndicator.addToScene(_battleScene);
+        }
+        // ---------------------------------------------------------
+        // UI 2D CLIP VIEWPORT SHADER
         _targetHullIntegrityBar = _targetHullIntegrityBar || new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).texture,
@@ -1193,6 +1387,9 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).mapping);
         _targetHullIntegrityQuickViewBar.addToScene(_battleScene);
+        // ---------------------------------------------------------
+        // UI 2D SHADER
+        // these need to render on top of the backgrounds
         _hudStillCursor = _hudStillCursor || new HUDElement(
                 UI_2D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).texture,
@@ -1213,6 +1410,13 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).mappings.turn);
         _hudTurnCursor.addToScene(_battleScene);
+        // mark wingman craft indicator resources for loading
+        layout = _createWingmanCraftIndicatorLayout(0, 1, 0);
+        craftTypes = Object.keys(_wingmenStatusCraftIndicatorSettings.mappings);
+        for (i = 0; i < craftTypes.length; i++) {
+            indicator = _createWingmanCraftIndicator(layout, craftTypes[i]);
+            indicator.addResourcesToScene(_battleScene);
+        }
         // mark HUD sound effects for loading
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND).name);
@@ -1247,6 +1451,25 @@ define([
      */
     function _getDistanceString(distance) {
         return (distance > 1000) ? (distance / 1000).toPrecision(3) + "k" : Math.round(distance).toString();
+    }
+    /**
+     * Returns an interpolated color to be used to represent hull integrities
+     * @param {Number} hullIntegrity The hull integrity to represent (0.0-1.0)
+     * @param {Number[4]} fullColor Color to use when the hull integrity is 1.0
+     * @param {Number[4]} halfColor Color to use when the hull integrity is 0.5
+     * @param {Number[4]} zeroColor Color to use when the hull integrity is 0.0
+     * @returns {Number[4]}
+     */
+    function _getHullIntegrityColor(hullIntegrity, fullColor, halfColor, zeroColor) {
+        return (hullIntegrity > 0.5) ?
+                utils.getMixedColor(
+                        halfColor,
+                        fullColor,
+                        (hullIntegrity - 0.5) * 2) :
+                utils.getMixedColor(
+                        zeroColor,
+                        halfColor,
+                        hullIntegrity * 2);
     }
     // ##############################################################################
     /**
@@ -1432,6 +1655,19 @@ define([
     BattleScreen.prototype._addUITexts = function () {
         var i, n, layoutDescriptor,
                 screenCanvas = this.getScreenCanvas(BATTLE_CANVAS_ID),
+                // general HUD text
+                initText = function (descriptor, layout, layer, alignment) {
+                    var result = new screens.CanvasText(
+                            config.getHUDSetting(descriptor).position,
+                            "",
+                            config.getHUDSetting(descriptor).fontName,
+                            config.getHUDSetting(descriptor).fontSize,
+                            layout.getScaleMode(),
+                            config.getHUDSetting(descriptor).color,
+                            alignment);
+                    layer.addText(result);
+                    return result;
+                },
                 getTargetInfoText = function (sectionName) {
                     return new screens.CanvasText(
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).positions[sectionName],
@@ -1493,6 +1729,20 @@ define([
             }
         }
         // ..............................................................................
+        // wingmen status
+        if (!_wingmenStatusTextLayer) {
+            _wingmenStatusTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).layout);
+            screenCanvas.addTextLayer(_wingmenStatusTextLayer);
+        }
+        _wingmenStatusHeaderText = _wingmenStatusHeaderText || initText(
+                config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_HEADER_TEXT,
+                _wingmenStatusBackgroundLayout,
+                _wingmenStatusTextLayer);
+        _wingmenStatusHeaderText.setText(strings.get(strings.BATTLE.HUD_WINGMEN_HEADER));
+        if (!_wingmenStatusSquadTexts) {
+            _wingmenStatusSquadTexts = [];
+        }
+        // ..............................................................................
         // speed bar
         if (!_speedTextLayer) {
             _speedTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT_LAYER_LAYOUT));
@@ -1512,16 +1762,10 @@ define([
             _flightModeIndicatorTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).layout);
             screenCanvas.addTextLayer(_flightModeIndicatorTextLayer);
         }
-        if (!_flightModeHeaderText) {
-            _flightModeHeaderText = new screens.CanvasText(
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_HEADER_TEXT).position,
-                    "",
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_HEADER_TEXT).fontName,
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_HEADER_TEXT).fontSize,
-                    _flightModeIndicatorBackgroundLayout.getScaleMode(),
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_HEADER_TEXT).color);
-            _flightModeIndicatorTextLayer.addText(_flightModeHeaderText);
-        }
+        _flightModeHeaderText = _flightModeHeaderText || initText(
+                config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_HEADER_TEXT,
+                _flightModeIndicatorBackgroundLayout,
+                _flightModeIndicatorTextLayer);
         _flightModeHeaderText.setText(strings.get(strings.BATTLE.HUD_FLIGHT_MODE));
         if (!_flightModeText) {
             _flightModeText = new screens.CanvasText(
@@ -1539,39 +1783,21 @@ define([
             _headerTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HEADER_TEXT_LAYER_LAYOUT));
             screenCanvas.addTextLayer(_headerTextLayer);
         }
-        if (!_smallHeaderText) {
-            _smallHeaderText = new screens.CanvasText(
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SMALL_HEADER_TEXT).position,
-                    "",
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SMALL_HEADER_TEXT).fontName,
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SMALL_HEADER_TEXT).fontSize,
-                    _headerTextLayer.getLayout().getScaleMode(),
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SMALL_HEADER_TEXT).color,
-                    "center");
-            _headerTextLayer.addText(_smallHeaderText);
-        }
-        if (!_bigHeaderText) {
-            _bigHeaderText = new screens.CanvasText(
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.BIG_HEADER_TEXT).position,
-                    "",
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.BIG_HEADER_TEXT).fontName,
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.BIG_HEADER_TEXT).fontSize,
-                    _headerTextLayer.getLayout().getScaleMode(),
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.BIG_HEADER_TEXT).color,
-                    "center");
-            _headerTextLayer.addText(_bigHeaderText);
-        }
-        if (!_subheaderText) {
-            _subheaderText = new screens.CanvasText(
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SUBHEADER_TEXT).position,
-                    "",
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SUBHEADER_TEXT).fontName,
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SUBHEADER_TEXT).fontSize,
-                    _headerTextLayer.getLayout().getScaleMode(),
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SUBHEADER_TEXT).color,
-                    "center");
-            _headerTextLayer.addText(_subheaderText);
-        }
+        _smallHeaderText = _smallHeaderText || initText(
+                config.BATTLE_SETTINGS.HUD.SMALL_HEADER_TEXT,
+                _headerTextLayer.getLayout(),
+                _headerTextLayer,
+                "center");
+        _bigHeaderText = _bigHeaderText || initText(
+                config.BATTLE_SETTINGS.HUD.BIG_HEADER_TEXT,
+                _headerTextLayer.getLayout(),
+                _headerTextLayer,
+                "center");
+        _subheaderText = _subheaderText || initText(
+                config.BATTLE_SETTINGS.HUD.SUBHEADER_TEXT,
+                _headerTextLayer.getLayout(),
+                _headerTextLayer,
+                "center");
         // ..............................................................................
         // message
         if (!_messageTextLayer) {
@@ -1580,50 +1806,32 @@ define([
             _messageTextLayer = new screens.TextLayer(layoutDescriptor);
             screenCanvas.addTextLayer(_messageTextLayer);
         }
-        if (!_messageText) {
-            _messageText = new screens.CanvasText(
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).position,
-                    "",
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).fontName,
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).fontSize,
-                    _messageTextLayer.getLayout().getScaleMode(),
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).color,
-                    "center");
-            _messageTextLayer.addText(_messageText);
-        }
+        _messageText = _messageText || initText(
+                config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT,
+                _messageTextLayer.getLayout(),
+                _messageTextLayer,
+                "center");
         // ..............................................................................
         // top left
         if (!_topLeftTextLayer) {
             _topLeftTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TOP_LEFT_TEXT_LAYER_LAYOUT));
             screenCanvas.addTextLayer(_topLeftTextLayer);
         }
-        if (!_scoreText) {
-            _scoreText = new screens.CanvasText(
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SCORE_TEXT).position,
-                    "",
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SCORE_TEXT).fontName,
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SCORE_TEXT).fontSize,
-                    _topLeftTextLayer.getLayout().getScaleMode(),
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SCORE_TEXT).color,
-                    "left");
-            _topLeftTextLayer.addText(_scoreText);
-        }
+        _scoreText = _scoreText || initText(
+                config.BATTLE_SETTINGS.HUD.SCORE_TEXT,
+                _topLeftTextLayer.getLayout(),
+                _topLeftTextLayer,
+                "left");
         // ..............................................................................
         // objectives
         if (!_objectivesTextLayer) {
             _objectivesTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).layout);
             screenCanvas.addTextLayer(_objectivesTextLayer);
         }
-        if (!_objectivesHeaderText) {
-            _objectivesHeaderText = new screens.CanvasText(
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT).position,
-                    "",
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT).fontName,
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT).fontSize,
-                    _objectivesBackgroundLayout.getScaleMode(),
-                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT).color);
-            _objectivesTextLayer.addText(_objectivesHeaderText);
-        }
+        _objectivesHeaderText = _objectivesHeaderText || initText(
+                config.BATTLE_SETTINGS.HUD.OBJECTIVES_HEADER_TEXT,
+                _objectivesBackgroundLayout,
+                _objectivesTextLayer);
         _objectivesHeaderText.setText(strings.get(strings.BATTLE.HUD_OBJECTIVES));
         if (!_objectivesTexts) {
             _objectivesTexts = [];
@@ -1714,12 +1922,12 @@ define([
         var
                 /** @type Spacecraft */
                 craft = _mission ? _mission.getFollowedSpacecraftForScene(_battleScene) : null,
-                target,
+                target, wingman,
                 /** @type Number */
-                distance, aspect, i, scale, futureDistance, animationProgress, targetSwitchAnimationProgress, shipWidth,
+                distance, aspect, i, j, count, scale, futureDistance, animationProgress, targetSwitchAnimationProgress, shipWidth,
                 hullIntegrity,
                 acceleration, speed, absSpeed, maxSpeed, stepFactor, stepBuffer, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
-                armor,
+                armor, craftCount,
                 /** @type Weapon[] */
                 weapons,
                 /** @type Number[2] */
@@ -1733,7 +1941,7 @@ define([
                 /** @type HTMLCanvasElement */
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
                 /** @type Boolean */
-                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth,
+                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound,
                 /** @type MouseInputIntepreter */
                 mouseInputInterpreter,
                 /** @type String[] */
@@ -1887,6 +2095,8 @@ define([
             // color change animation when the integrity decreases
             if (craft !== _spacecraft) {
                 _spacecraft = craft;
+                _squads = craft.getTeam() ? craft.getTeam().getSquads() : [];
+                _wingmenStatusCraftLayouts = []; // drop the previous array so new layouts are generated for potentially new squads
                 _spacecraftHullIntegrity = hullIntegrity;
                 animationProgress = 0;
                 _hullIntegrityDecreaseTime = 0;
@@ -2060,15 +2270,10 @@ define([
                 _targetInfoBackground.show();
                 // target view
                 hullIntegrity = target.getHullIntegrity();
-                _targetViewItemColor = (hullIntegrity > 0.5) ?
-                        utils.getMixedColor(
-                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
-                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR),
-                                (hullIntegrity - 0.5) * 2) :
-                        utils.getMixedColor(
-                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR),
-                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
-                                hullIntegrity * 2);
+                _targetViewItemColor = _getHullIntegrityColor(hullIntegrity,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR),
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR));
                 if (_targetViewItem !== target) {
                     _targetScene.clearNodes();
                     _targetViewItem = target;
@@ -2163,6 +2368,89 @@ define([
                 _targetInfoTextLayer.hide();
                 _targetHullIntegrityQuickViewBar.hide();
                 _distanceTextLayer.hide();
+            }
+            // .....................................................................................................
+            // wingmen status
+            if (_squads.length > 0) {
+                _wingmenStatusBackground.applyLayout(_wingmenStatusBackgroundLayout, canvas.width, canvas.height);
+                _wingmenStatusBackground.show();
+                _wingmenStatusTextLayer.show();
+                // create / update squad labels and individual spacecraft indicators
+                count = 0;
+                playerFound = false;
+                for (i = 0; i < _squads.length; i++) {
+                    // create / update the text label for the squad
+                    if (_wingmenStatusSquadTexts.length <= i) {
+                        _wingmenStatusSquadTexts.push(_createWingmenStatusSquadText(i));
+                        _wingmenStatusTextLayer.addText(_wingmenStatusSquadTexts[i]);
+                    }
+                    _wingmenStatusSquadTexts[i].setText(strings.get(strings.SQUAD.PREFIX, _squads[i].name));
+                    _wingmenStatusSquadTexts[i].show();
+                    // only check as many spacecrafts as there are positions defined for, as we cannot display more
+                    craftCount = Math.min(_squads[i].crafts.length, _wingmenStatusMaxSquadMemberCount);
+                    for (j = 0; j < craftCount; j++) {
+                        // create / update individual indicators
+                        wingman = _squads[i].crafts[j];
+                        // generate a new layout if necessary
+                        if (_wingmenStatusCraftLayouts.length <= count) {
+                            _wingmenStatusCraftLayouts.push(_createWingmanCraftIndicatorLayout(i, craftCount, j));
+                            // if the layout changed, it is possible, that the spacecraft type changed too, so update texture coordinates
+                            if (_wingmenStatusCraftIndicators.length > count) {
+                                _wingmenStatusCraftIndicators[count].setTextureCoordinates(
+                                        _wingmenStatusCraftIndicatorSettings.mappings[wingman.getTypeName()] ||
+                                        _wingmenStatusCraftIndicatorSettings.mappings.general);
+                            }
+                        }
+                        // create a new HUD element if necessary
+                        if (_wingmenStatusCraftIndicators.length <= count) {
+                            _wingmenStatusCraftIndicators.push(_createWingmanCraftIndicator(_wingmenStatusCraftLayouts[count], wingman.getTypeName()));
+                            _wingmenStatusCraftIndicators[count].addToScene(_battleScene);
+                        }
+                        // apply the created / stored layout
+                        _wingmenStatusCraftIndicators[count].applyLayout(_wingmenStatusCraftLayouts[count], canvas.width, canvas.height);
+                        // color based on hull integrity
+                        _wingmenStatusCraftIndicators[count].setColor(wingman.isAlive() ?
+                                _getHullIntegrityColor(wingman.getHullIntegrity(),
+                                        _wingmenStatusCraftIndicatorSettings.colors.fullIntegrity,
+                                        _wingmenStatusCraftIndicatorSettings.colors.halfIntegrity,
+                                        _wingmenStatusCraftIndicatorSettings.colors.zeroIntegrity) :
+                                _wingmenStatusCraftIndicatorSettings.colors.destroyed);
+                        _wingmenStatusCraftIndicators[count].show();
+                        // add player indicator for the followed spacecraft
+                        if (wingman === craft) {
+                            if (!_wingmenStatusPlayerIndicator) {
+                                _wingmenStatusPlayerIndicator = _createWingmanCraftIndicator(_wingmenStatusCraftLayouts[count], "player");
+                                _wingmenStatusPlayerIndicator.addToScene(_battleScene);
+                            }
+                            _wingmenStatusPlayerIndicator.applyLayout(_wingmenStatusCraftLayouts[count], canvas.width, canvas.height);
+                            _wingmenStatusPlayerIndicator.setColor(_wingmenStatusCraftIndicators[count].getColor());
+                            _wingmenStatusPlayerIndicator.show();
+                            playerFound = true;
+                        }
+                        count++;
+                    }
+                }
+                // hide any elements that were created before but are not needed currently
+                while (i < _wingmenStatusSquadTexts.length) {
+                    _wingmenStatusSquadTexts[i].hide();
+                    i++;
+                }
+                for (i = count; i < _wingmenStatusCraftIndicators.length; i++) {
+                    _wingmenStatusCraftIndicators[i].hide();
+                }
+                if (!playerFound && _wingmenStatusPlayerIndicator) {
+                    _wingmenStatusPlayerIndicator.hide();
+                }
+            } else {
+                // if there are no squads in the team of the followed spacecraft, just hide the whole panel
+                _wingmenStatusBackground.hide();
+                _wingmenStatusTextLayer.hide();
+                for (i = 0; i < _wingmenStatusCraftIndicators.length; i++) {
+                    _wingmenStatusCraftIndicators[i].hide();
+                }
+                if (_wingmenStatusPlayerIndicator) {
+                    _wingmenStatusPlayerIndicator.hide();
+                }
             }
             // .....................................................................................................
             // ship indicators and arrows
@@ -2314,6 +2602,7 @@ define([
             _objectivesTextLayer.hide();
             _messageTextLayer.hide();
             _distanceTextLayer.hide();
+            _wingmenStatusTextLayer.hide();
         }
         _shipIndicatorHighlightTime = (_shipIndicatorHighlightTime + dt) % _shipIndicatorHighlightAnimationInterval;
     };
@@ -2332,9 +2621,9 @@ define([
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
             _simulationLoopFunction();
         }
-        // manually updating the camera so the HUD update has up-to-date information
-        _battleScene.getCamera().update((_simulationLoop !== LOOP_CANCELED) ? dt : 0);
         if (_battleScene) {
+            // manually updating the camera so the HUD update has up-to-date information
+            _battleScene.getCamera().update((_simulationLoop !== LOOP_CANCELED) ? dt : 0);
             this._updateHUD(dt);
         }
         screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
@@ -2568,6 +2857,7 @@ define([
         _distanceTextBoxLayoutDescriptor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).layout;
         _targetViewLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_LAYOUT));
         _targetInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).layout);
+        _wingmenStatusBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).layout);
         _targetHullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).layout);
         _speedBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).layout);
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).layout);
@@ -2588,6 +2878,8 @@ define([
         _driftArrowMinSpeed = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_MIN_SPEED);
         _driftArrowMaxSpeedFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_MAX_SPEED_FACTOR);
         _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).layout);
+        _wingmenStatusCraftIndicatorSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_INDICATOR);
+        _wingmenStatusMaxSquadMemberCount = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS).length;
         // music
         _combatThemeDurationAfterFire = config.getSetting(config.BATTLE_SETTINGS.COMBAT_THEME_DURATION_AFTER_FIRE) * 1000;
     });

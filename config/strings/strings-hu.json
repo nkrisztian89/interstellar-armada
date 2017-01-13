@@ -185,6 +185,7 @@
             "velocity": "Sebesség",
             "spacecraftNameUnknown": "Azonosító nélküli",
             "teamUnknown": "-",
+            "wingmenHeader": "Kötelékek:",
             "flightMode": "Repülési mód:",
             "objectives": "Feladatok:"
         },
