@@ -1134,7 +1134,10 @@
             "name": "defeat",
             "sample": "defeat.ogg"
         }, {
-            "name": "debriefing",
-            "sample": "debriefing.ogg"
+            "name": "debriefing_victory",
+            "sample": "debriefing_victory.ogg"
+        }, {
+            "name": "debriefing_defeat",
+            "sample": "debriefing_defeat.ogg"
         }]
 }

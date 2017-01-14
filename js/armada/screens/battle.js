@@ -2808,7 +2808,8 @@ define([
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC), COMBAT_THEME, true);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC), VICTORY_THEME, false);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEFEAT_MUSIC), DEFEAT_THEME, false);
-            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_MUSIC), armadaScreens.DEBRIEFING_THEME, true);
+            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_VICTORY_MUSIC), armadaScreens.DEBRIEFING_VICTORY_THEME, true);
+            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_DEFEAT_MUSIC), armadaScreens.DEBRIEFING_DEFEAT_THEME, true);
             control.getController(control.GENERAL_CONTROLLER_NAME).setMission(_mission);
             control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
             control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());

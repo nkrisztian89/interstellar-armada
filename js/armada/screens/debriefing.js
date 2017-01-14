@@ -53,7 +53,10 @@ define([
             HULL_INTEGRITY_BONUS_CELL_ID = "hullIntegrityBonusCell",
             TEAM_SURVIVAL_BONUS_CELL_ID = "teamSurvivalBonusCell",
             // bottom buttons
-            RESTART_BUTTON_ID = "restartButton";
+            RESTART_BUTTON_ID = "restartButton",
+            // ------------------------------------------------------------------------------
+            // private variables
+            _victory;
     // ##############################################################################
     /**
      * @class A class to represent the Mission debriefing screen in the game. Describes the dynamic behaviour on that screen.
@@ -72,7 +75,10 @@ define([
                     show: function () {
                         audio.resetMasterVolume();
                         audio.resetMusicVolume();
-                        audio.playMusic(armadaScreens.DEBRIEFING_THEME, undefined, config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_THEME_FADE_IN_DURATION));
+                        audio.playMusic(
+                                _victory ? armadaScreens.DEBRIEFING_VICTORY_THEME : armadaScreens.DEBRIEFING_DEFEAT_THEME,
+                                undefined,
+                                config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_THEME_FADE_IN_DURATION));
                     }
                 },
                 {
@@ -171,7 +177,9 @@ define([
      * @param {DebreifingScreen~Data} data
      */
     DebriefingScreen.prototype.setData = function (data) {
-        var medalText = data.victory ? strings.get(strings.PERFORMANCE_LEVEL.PREFIX, data.performance) : "";
+        var medalText;
+        _victory = data.victory;
+        medalText = data.victory ? strings.get(strings.PERFORMANCE_LEVEL.PREFIX, data.performance) : "";
         this._title.setContent(data.victory ?
                 strings.get(strings.DEBRIEFING.VICTORY_TITLE) :
                 strings.get(strings.DEBRIEFING.DEFEAT_TITLE));

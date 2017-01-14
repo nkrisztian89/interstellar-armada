@@ -1266,10 +1266,19 @@ define([
             type: "string"
         },
         /**
-         * The ID (resource name) of the song (MusicResource) that should play while at the mission debriefing screen
+         * The ID (resource name) of the song (MusicResource) that should play while at the mission debriefing screen, if the mission was
+         * won
          */
-        DEBRIEFING_MUSIC: {
-            name: "debriefingMusic",
+        DEBRIEFING_VICTORY_MUSIC: {
+            name: "debriefingVictoryMusic",
+            type: "string"
+        },
+        /**
+         * The ID (resource name) of the song (MusicResource) that should play while at the mission debriefing screen, if the mission has
+         * been lost
+         */
+        DEBRIEFING_DEFEAT_MUSIC: {
+            name: "debriefingDefeatMusic",
             type: "string"
         },
         /**

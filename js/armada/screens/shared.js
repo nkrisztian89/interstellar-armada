@@ -29,7 +29,8 @@ define([
                 // Constants
                 // music
                 MENU_THEME: "menu",
-                DEBRIEFING_THEME: "debriefing",
+                DEBRIEFING_VICTORY_THEME: "debriefing_victory",
+                DEBRIEFING_DEFEAT_THEME: "debriefing_defeat",
                 // components
                 SELECTOR_SOURCE: "selector.html",
                 SELECTOR_CSS: "selector.css",
