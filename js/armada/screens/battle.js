@@ -2145,6 +2145,7 @@ define([
             // objectives
             if (!_demoMode) {
                 _objectivesBackground.applyLayout(_objectivesBackgroundLayout, canvas.width, canvas.height);
+                _objectivesBackground.show();
                 objectivesState = _mission.getObjectivesState();
                 for (i = 0; i < _objectivesTexts.length; i++) {
                     if (i < objectivesState.length) {
@@ -2166,6 +2167,7 @@ define([
                 }
                 _objectivesTextLayer.show();
             } else {
+                _objectivesBackground.hide();
                 _objectivesTextLayer.hide();
             }
             // .....................................................................................................

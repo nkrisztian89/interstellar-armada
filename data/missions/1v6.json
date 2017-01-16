@@ -33,10 +33,6 @@
             "team": "empire",
             "class": "falcon",
             "piloted": true,
-            "squad": {
-                "name": "alpha",
-                "index": 1
-            },
             "position": [0, 3200, 0],
             "equipment": {
                 "profile": "full"
