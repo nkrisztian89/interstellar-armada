@@ -117,6 +117,7 @@ define([
         HUD_WINGMEN_HEADER: {name: "battle.hud.wingmenHeader"},
         HUD_FLIGHT_MODE: {name: "battle.hud.flightMode"},
         HUD_OBJECTIVES: {name: "battle.hud.objectives"},
+        HUD_ESCORTED_SHIPS_HEADER: {name: "battle.hud.escortedShipsHeader"},
         OBJECTIVE_SUBJECTS_SPACECRAFTS: {name: "battle.objectiveSubjects.spacecrafts"},
         OBJECTIVE_SUBJECTS_SQUADS: {name: "battle.objectiveSubjects.squads"},
         OBJECTIVE_SUBJECTS_TEAMS: {name: "battle.objectiveSubjects.teams"},

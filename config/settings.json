@@ -412,7 +412,7 @@
                     "color": [0, 1, 0, 1],
                     "fontSize": 0.11,
                     "fontName": "hudFont",
-                    "position": [-0.75, -0.82]
+                    "position": [-0.75, -0.83]
                 },
                 "speedBar": {
                     "texture": "hud-atlas",
@@ -613,7 +613,7 @@
                     "layout": {
                         "left": -0.98,
                         "top": 0.4,
-                        "width": 0.75,
+                        "width": 0.6,
                         "height": 0.24,
                         "scaleMode": "minimum",
                         "xScaleMode": "minimum",
@@ -623,7 +623,7 @@
                 },
                 "objectivesHeaderText": {
                     "color": [1, 1, 1, 1],
-                    "fontSize": 0.2,
+                    "fontSize": 0.16,
                     "fontName": "hudFont",
                     "position": [-0.95, 0.55]
                 },
@@ -633,12 +633,62 @@
                         "completed": [0, 1, 0, 1],
                         "failed": [1, 0, 0, 1]
                     },
-                    "fontSize": 0.2,
+                    "fontSize": 0.15,
                     "fontName": "hudFont",
-                    "position": [-0.95, 0.05]
+                    "position": [-0.95, 0.08]
                 },
-                "objectivesTextOffset": -0.45,
+                "objectivesTextOffset": -0.42,
                 "maxObjectivesDisplayed": 3,
+                "escortsBackground": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "left": -0.98,
+                        "top": 0.14,
+                        "width": 0.6,
+                        "height": 0.32,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
+                    },
+                    "color": [0, 0, 0, 0.5]
+                },
+                "escortsHeaderText": {
+                    "color": [1, 1, 1, 1],
+                    "fontSize": 0.115,
+                    "fontName": "hudFont",
+                    "position": [-0.95, 0.68]
+                },
+                "escortsText": {
+                    "colors": {
+                        "alive": [0, 1, 0, 1],
+                        "destroyed": [1, 0, 0, 1]
+                    },
+                    "fontSize": 0.1,
+                    "fontName": "hudFont",
+                    "position": [-0.35, 0.36]
+                },
+                "escortsHullIntegrityBar": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "left": -0.96,
+                        "top": 0.05,
+                        "width": 0.15,
+                        "height": 0.01,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
+                    },
+                    "colors": {
+                        "fullIntegrity": [0, 1, 0, 1],
+                        "halfIntegrity": [1, 1, 0, 1],
+                        "zeroIntegrity": [1, 0, 0, 1],
+                        "destroyed": [1, 0, 0, 0.3]
+                    }
+                },
+                "escortsTextOffset": -0.3,
+                "maxEscortsDisplayed": 5,
                 "targetSwitchSound": {
                     "name": "beep_targeting",
                     "volume": 0.2

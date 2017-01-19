@@ -187,7 +187,8 @@
             "teamUnknown": "-",
             "wingmenHeader": "Kötelékek:",
             "flightMode": "Repülési mód:",
-            "objectives": "Feladatok:"
+            "objectives": "Feladatok:",
+            "escortedShipsHeader": "Megvédendő:"
         },
         "objectiveSubjects": {
             "spacecrafts": "{count} űrhajó",

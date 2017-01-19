@@ -174,7 +174,8 @@
             "teamUnknown": "-",
             "wingmenHeader": "Wingmen:",
             "flightMode": "Flight mode:",
-            "objectives": "Objectives:"
+            "objectives": "Objectives:",
+            "escortedShipsHeader": "Protect:"
         },
         "objectiveSubjects": {
             "spacecrafts": "{count} spacecrafts",

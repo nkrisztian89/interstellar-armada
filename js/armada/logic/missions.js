@@ -787,6 +787,16 @@ define([
         application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
         return null;
     };
+    /**
+     * If the condition corresponds to a mission objective that requires the player to escort (protect) some spacecrafts, this method
+     * returns the list of these exported spacecrafts.
+     * Overidde this for conditions that can correspond to mission objectives.
+     * @returns {Spacecraft[]}
+     */
+    Condition.prototype.getEscortedSpacecrafts = function () {
+        application.showError("No escorted spacecrafts associated with condition type: '" + this._type + "'!");
+        return null;
+    };
     // ##############################################################################
     /**
      * @class A condition that is satisfied when all of its subjects have been destroyed
@@ -851,6 +861,18 @@ define([
         }) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
+    };
+    /**
+     * @override
+     * Note: this is only correct if this condition belongs to the trigger of a LOSE event
+     * @param {Mission} mission 
+     * @returns {Spacecraft[]}
+     */
+    DestroyedCondition.prototype.getEscortedSpacecrafts = function (mission) {
+        if (!this._spacecrafts) {
+            this._cacheSubjects(mission);
+        }
+        return this._spacecrafts;
     };
     // ##############################################################################
     /**
@@ -952,6 +974,22 @@ define([
         }) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
+    };
+    /**
+     * @override
+     * Note: this is only correct if this condition belongs to the trigger of a LOSE event
+     * @param {Mission} mission 
+     * @returns {Spacecraft[]}
+     */
+    CountCondition.prototype.getEscortedSpacecrafts = function (mission) {
+        if (this._params.relation !== CountConditionRelation.BELOW) {
+            application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
+            return null;
+        }
+        if (!this._spacecrafts) {
+            this._cacheSubjects(mission);
+        }
+        return this._spacecrafts;
     };
     // ##############################################################################
     /**
@@ -1287,6 +1325,19 @@ define([
                                 ObjectiveState.COMPLETED :
                                 ObjectiveState.IN_PROGRESS)
             });
+        }
+        return result;
+    };
+    /**
+     * If the event of the trigger corresponds to a mission objective that requires the player to escort (protect) some spacecrafts, this 
+     * method returns the list of these exported spacecrafts.
+     * @param {Mission} mission 
+     * @returns {Spacecraft[]}
+     */
+    Trigger.prototype.getEscortedSpacecrafts = function (mission) {
+        var i, result = [];
+        for (i = 0; i < this._conditions.length; i++) {
+            result = result.concat(this._conditions[i].getEscortedSpacecrafts(mission));
         }
         return result;
     };
@@ -1699,6 +1750,11 @@ define([
          * @type Number
          */
         this._referenceScore = 0;
+        /**
+         * The cached list of spacecrafts that needs to be escorted (protected) by the player for this mission.
+         * @type Spacecrafts
+         */
+        this._escortedSpacecrafts = null;
     }
     /**
      * Return the name identifying this mission (typically same as the filename e.g. someMission.json)
@@ -1756,6 +1812,13 @@ define([
      */
     Mission.prototype.getState = function () {
         return this._state;
+    };
+    /**
+     * Returns the list of spacecrafts that needs to be escorted (protected) by the player for this mission.
+     * @returns {Spacecraft[]}
+     */
+    Mission.prototype.getEscortedSpacecrafts = function () {
+        return this._escortedSpacecrafts;
     };
     /**
      * Returns whether this mission has explicitly set objectives
@@ -2043,7 +2106,7 @@ define([
      * and a suitable AI is added to all spacecrafts if possible.
      */
     Mission.prototype.loadFromJSON = function (dataJSON, demoMode) {
-        var i, craft, teamID, team, aiType;
+        var i, j, craft, teamID, team, aiType, actions;
         application.log("Loading mission from JSON file...", 2);
         this.loadEnvironment(dataJSON);
         this._teams = [];
@@ -2108,6 +2171,16 @@ define([
         this._randomShipsRandomHeading = dataJSON.randomShipsRandomHeading || false;
         this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME;
         this._updateReferenceScore();
+        // cache escorted spacecrafts
+        this._escortedSpacecrafts = [];
+        for (i = 0; i < this._events.length; i++) {
+            actions = this._events[i].getActions();
+            for (j = 0; j < actions.length; j++) {
+                if (actions[j].getType() === ActionType.LOSE) {
+                    this._escortedSpacecrafts = this._escortedSpacecrafts.concat(this._events[i].getTrigger().getEscortedSpacecrafts(this));
+                }
+            }
+        }
         application.log("Mission successfully loaded.", 2);
     };
     /**

@@ -1161,6 +1161,30 @@ define([
                 name: "maxObjectivesDisplayed",
                 type: "number"
             },
+            ESCORTS_BACKGROUND: {
+                name: "escortsBackground",
+                type: _customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR
+            },
+            ESCORTS_HEADER_TEXT: {
+                name: "escortsHeaderText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
+            ESCORTS_TEXT: {
+                name: "escortsText",
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["alive", "destroyed"]})
+            },
+            ESCORTS_HULL_INTEGRITY_BAR: {
+                name: "escortsHullIntegrityBar",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["fullIntegrity", "halfIntegrity", "zeroIntegrity", "destroyed"]})
+            },
+            ESCORTS_TEXT_OFFSET: {
+                name: "escortsTextOffset",
+                type: "number"
+            },
+            MAX_ESCORTS_DISPLAYED: {
+                name: "maxEscortsDisplayed",
+                type: "number"
+            },
             TARGET_SWITCH_SOUND: {
                 name: "targetSwitchSound",
                 type: classes.SOUND_EFFECT_2D

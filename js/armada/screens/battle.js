@@ -195,6 +195,11 @@ define([
              */
             _squads,
             /**
+             * A cached reference to the spacecrafts that need to be escorted (protected) by the player
+             * @type Array
+             */
+            _escorts,
+            /**
              * The hull integrity of the followed spacecraft (if any, as last displayed on the HUD)
              * @type Number
              */
@@ -543,6 +548,38 @@ define([
              * @type CanvasText[]
              */
             _objectivesTexts,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // escorted ships indicator
+            /**
+             * A rectangle displayed as the background for the escorted ships indicator panel.
+             * @type HUDElement
+             */
+            _escortsBackground,
+            /**
+             * Houses the texts of the escorted ships indicator panel.
+             * @type TextLayer
+             */
+            _escortsTextLayer,
+            /**
+             * Displays the header text (i.e. "Protect:") on the escorted ships indicator panel.
+             * @type CanvasText
+             */
+            _escortsHeaderText,
+            /**
+             * Displays the names of the escorted ships on the indicator panel.
+             * @type CanvasText[]
+             */
+            _escortsTexts,
+            /**
+             * The HUD elements for displaying the hull integrity bars for each escorted ship
+             * @type HUDElement[]
+             */
+            _escortHullIntegrityBars,
+            /**
+             * Stored layouts for each hull integrity bar for escorted ships
+             * @type ClipSpaceLayout
+             */
+            _escortHullIntegrityBarLayouts,
             // ................................................................................................
             // cached references of setting values used for the layout of the HUD
             /**
@@ -605,6 +642,11 @@ define([
              * @type ClipSpaceLayout
              */
             _objectivesBackgroundLayout,
+            /**
+             * Stores a reference to the layout used for the escorted ships indicator background HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _escortsBackgroundLayout,
             /**
              * Stores a reference to the layout used for the message background HUD element for quicker access.
              * @type ClipSpaceLayout
@@ -679,6 +721,11 @@ define([
              * @type Number
              */
             _driftArrowMaxSpeedFactor,
+            /**
+             * The settings object for escorted ship hull integrity bars is used at various points, so we store a cached reference to it
+             * @type Object
+             */
+            _escortsHullIntegrityBarSettings,
             /**
              * The settings object for wingmen status craft indicators is used at various points, so we store a cached reference to it
              * @type Object
@@ -1217,7 +1264,7 @@ define([
      * they are. If they are not loaded, sets callbacks to add them after the loading has finished.
      */
     function _addHUDToScene() {
-        var i, layout, craftTypes, indicator;
+        var i, n, layout, craftTypes, indicator, layoutDescriptor;
         // keep the ons with the same shader together for faster rendering
         // ---------------------------------------------------------
         // UI 2D SHADER
@@ -1313,6 +1360,16 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).mapping);
         _objectivesBackground.addToScene(_battleScene);
+        _escortsBackground = _escortsBackground || new HUDElement(
+                UI_2D_MIX_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).texture,
+                _escortsBackgroundLayout.getClipSpacePosition(),
+                _escortsBackgroundLayout.getClipSpaceSize(),
+                _escortsBackgroundLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).color,
+                undefined,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).mapping);
+        _escortsBackground.addToScene(_battleScene);
         _messageBackground = _messageBackground || new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).texture,
@@ -1387,6 +1444,28 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).mapping);
         _targetHullIntegrityQuickViewBar.addToScene(_battleScene);
+        n = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MAX_ESCORTS_DISPLAYED);
+        if (!_escortHullIntegrityBars) {
+            _escortHullIntegrityBars = [];
+            _escortHullIntegrityBarLayouts = [];
+            for (i = 0; i < n; i++) {
+                layoutDescriptor = utils.deepCopy(_escortsHullIntegrityBarSettings.layout);
+                layoutDescriptor.top += i * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT_OFFSET) * _escortsBackgroundLayout.getClipSpaceHeight() * 0.5;
+                _escortHullIntegrityBarLayouts.push(new screens.ClipSpaceLayout(layoutDescriptor));
+                _escortHullIntegrityBars.push(new HUDElement(
+                        UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                        _escortsHullIntegrityBarSettings.texture,
+                        _escortHullIntegrityBarLayouts[i].getClipSpacePosition(),
+                        _escortHullIntegrityBarLayouts[i].getClipSpaceSize(),
+                        _escortHullIntegrityBarLayouts[i].getScaleMode(),
+                        _escortsHullIntegrityBarSettings.colors.fullIntegrity,
+                        _escortsHullIntegrityBarSettings.colors.destroyed,
+                        _escortsHullIntegrityBarSettings.mapping));
+            }
+        }
+        for (i = 0; i < n; i++) {
+            _escortHullIntegrityBars[i].addToScene(_battleScene);
+        }
         // ---------------------------------------------------------
         // UI 2D SHADER
         // these need to render on top of the backgrounds
@@ -1696,6 +1775,17 @@ define([
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).fontSize,
                             _objectivesBackgroundLayout.getScaleMode(),
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.inProgress);
+                },
+                getEscortText = function (index) {
+                    var position = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).position;
+                    position = [position[0], position[1] + index * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT_OFFSET)];
+                    return new screens.CanvasText(
+                            position,
+                            "",
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).fontName,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).fontSize,
+                            _escortsBackgroundLayout.getScaleMode(),
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.alive);
                 };
         // ..............................................................................
         // target distance
@@ -1839,6 +1929,25 @@ define([
             for (i = 0; i < n; i++) {
                 _objectivesTexts.push(getObjectiveText(i));
                 _objectivesTextLayer.addText(_objectivesTexts[i]);
+            }
+        }
+        // ..............................................................................
+        // escorted ships
+        if (!_escortsTextLayer) {
+            _escortsTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).layout);
+            screenCanvas.addTextLayer(_escortsTextLayer);
+        }
+        _escortsHeaderText = _escortsHeaderText || initText(
+                config.BATTLE_SETTINGS.HUD.ESCORTS_HEADER_TEXT,
+                _escortsBackgroundLayout,
+                _escortsTextLayer);
+        _escortsHeaderText.setText(strings.get(strings.BATTLE.HUD_ESCORTED_SHIPS_HEADER));
+        if (!_escortsTexts) {
+            _escortsTexts = [];
+            n = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MAX_ESCORTS_DISPLAYED);
+            for (i = 0; i < n; i++) {
+                _escortsTexts.push(getEscortText(i));
+                _escortsTextLayer.addText(_escortsTexts[i]);
             }
         }
     };
@@ -2141,9 +2250,9 @@ define([
                     application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
             }
             _flightModeIndicatorTextLayer.show();
-            // .....................................................................................................
-            // objectives
-            if (!_demoMode) {
+            if (!_demoMode && control.isInPilotMode()) {
+                // .....................................................................................................
+                // objectives
                 _objectivesBackground.applyLayout(_objectivesBackgroundLayout, canvas.width, canvas.height);
                 _objectivesBackground.show();
                 objectivesState = _mission.getObjectivesState();
@@ -2161,14 +2270,52 @@ define([
                                 _objectivesTexts[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors.failed);
                                 break;
                         }
+                        _objectivesTexts[i].show();
                     } else {
-                        _objectivesTexts[i].setText("");
+                        _objectivesTexts[i].hide();
                     }
                 }
                 _objectivesTextLayer.show();
+                // .....................................................................................................
+                // escorts
+                if (_escorts.length > 0) {
+                    _escortsBackground.applyLayout(_escortsBackgroundLayout, canvas.width, canvas.height);
+                    _escortsBackground.show();
+                    for (i = 0; i < _escortsTexts.length; i++) {
+                        if (i < _escorts.length) {
+                            _escortsTexts[i].setText(_escorts[i].getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
+                            _escortsTexts[i].setColor(_escorts[i].isAlive() ?
+                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.alive :
+                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.destroyed);
+                            _escortHullIntegrityBars[i].setColor(_getHullIntegrityColor(_escorts[i].getHullIntegrity(),
+                                    _escortsHullIntegrityBarSettings.colors.fullIntegrity,
+                                    _escortsHullIntegrityBarSettings.colors.halfIntegrity,
+                                    _escortsHullIntegrityBarSettings.colors.zeroIntegrity));
+                            _escortHullIntegrityBars[i].clipX(0, _escorts[i].getHullIntegrity());
+                            _escortHullIntegrityBars[i].applyLayout(_escortHullIntegrityBarLayouts[i], canvas.width, canvas.height);
+                            _escortsTexts[i].show();
+                            _escortHullIntegrityBars[i].show();
+                        } else {
+                            _escortsTexts[i].hide();
+                            _escortHullIntegrityBars[i].hide();
+                        }
+                    }
+                    _escortsTextLayer.show();
+                } else {
+                    _escortsBackground.hide();
+                    _escortsTextLayer.hide();
+                    for (i = 0; i < _escortHullIntegrityBars.length; i++) {
+                        _escortHullIntegrityBars[i].hide();
+                    }
+                }
             } else {
                 _objectivesBackground.hide();
                 _objectivesTextLayer.hide();
+                _escortsBackground.hide();
+                _escortsTextLayer.hide();
+                for (i = 0; i < _escortHullIntegrityBars.length; i++) {
+                    _escortHullIntegrityBars[i].hide();
+                }
             }
             // .....................................................................................................
             // HUD messages
@@ -2341,7 +2488,6 @@ define([
                     emptyColor = targetIsHostile ?
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.hostileEmpty :
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.friendlyEmpty;
-
                     if (_targetHullIntegrityDecreaseTime > 0) {
                         _targetHullIntegrityQuickViewBar.setColor(utils.getMixedColor(
                                 filledColor,
@@ -2602,6 +2748,7 @@ define([
             _speedTextLayer.hide();
             _flightModeIndicatorTextLayer.hide();
             _objectivesTextLayer.hide();
+            _escortsTextLayer.hide();
             _messageTextLayer.hide();
             _distanceTextLayer.hide();
             _wingmenStatusTextLayer.hide();
@@ -2751,6 +2898,7 @@ define([
             _mission = createdMission;
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
             _mission.addRandomShips(undefined, _demoMode);
+            _escorts = _mission.getEscortedSpacecrafts();
             // for missions that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
             // victory / defeat message
             if ((!_demoMode && (_mission.isWon() || _mission.isLost())) || (_demoMode && _mission.noHostilesPresent())) {
@@ -2866,6 +3014,7 @@ define([
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).layout);
         _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).layout);
         _objectivesBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).layout);
+        _escortsBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).layout);
         _messageBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).layout);
         _hudTargetSwitchAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_ANIMATION_DURATION);
         _hudHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
@@ -2881,6 +3030,7 @@ define([
         _driftArrowMinSpeed = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_MIN_SPEED);
         _driftArrowMaxSpeedFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_MAX_SPEED_FACTOR);
         _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).layout);
+        _escortsHullIntegrityBarSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_HULL_INTEGRITY_BAR);
         _wingmenStatusCraftIndicatorSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_INDICATOR);
         _wingmenStatusMaxSquadMemberCount = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS).length;
         // music
