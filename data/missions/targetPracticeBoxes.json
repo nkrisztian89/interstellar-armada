@@ -24,7 +24,8 @@
     "events": [{
             "trigger": {
                 "fireWhen": "missionStarts",
-                "oneShot": true
+                "oneShot": true,
+                "delay": 500
             },
             "actions": [{
                     "type": "message",
@@ -80,7 +81,8 @@
                 ],
                 "conditionsRequired": "all",
                 "fireWhen": "changeToTrue",
-                "oneShot": true
+                "oneShot": true,
+                "delay": 500
             },
             "actions": [{
                     "type": "message",
@@ -105,7 +107,8 @@
                 ],
                 "conditionsRequired": "all",
                 "fireWhen": "changeToTrue",
-                "oneShot": true
+                "oneShot": true,
+                "delay": 500
             },
             "actions": [{
                     "type": "message",

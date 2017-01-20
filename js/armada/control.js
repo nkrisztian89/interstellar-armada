@@ -47,12 +47,12 @@ define([
             _strafeSpeedFactor,
             /**
              * Cached value of the configuration setting for target switch sound.
-             * @type SoundSource
+             * @type SoundClip
              */
             _targetSwitchSound,
             /**
              * Cached value of the configuration setting for target switch denied sound.
-             * @type SoundSource
+             * @type SoundClip
              */
             _targetSwitchDeniedSound,
             /**

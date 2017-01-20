@@ -245,12 +245,18 @@ define([
              * @property {Boolean} [permanent] If true, the message keeps being displayed until a new urgent
              * message is added or the queue is cleared
              * @property {Number[4]} [color] When given, the text is displayed using this text color
+             * @property {Boolean} [new=false] When a new message is put at the front of the queue, this flag is set to true
              */
             /**
              * The list of messages to be displayed on the HUD. The messages are displayed in the order they are in the queue.
              * @type Battle~HUDMessage[]
              */
             _messages,
+            /**
+             * The sound played when a new HUD message is displayed.
+             * @type SoundClip
+             */
+            _messageSound,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // music related
             /**
@@ -1500,6 +1506,7 @@ define([
         // mark HUD sound effects for loading
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
     }
     /**
      * Returns the HTML string to insert to messages that contains the key to open the menu in a highlighted style.
@@ -2038,6 +2045,7 @@ define([
             }
         }
         message.text = text;
+        message.new = true;
         // calculating duration based on message length if needed
         message.timeLeft = message.duration || Math.round(message.text.length * HUD_MESSAGE_DURATION_PER_CHAR + HUD_MESSAGE_BASE_DURATION);
         if (urgent) {
@@ -2349,6 +2357,10 @@ define([
             // .....................................................................................................
             // HUD messages
             if ((control.isInPilotMode()) && (_messages.length > 0)) {
+                if (_messages[0].new) {
+                    _messageSound.play();
+                    _messages[0].new = false;
+                }
                 _messageText.setText(_messages[0].text);
                 if (_messages[0].color) {
                     _messageText.setColor(_messages[0].color);
@@ -2359,6 +2371,9 @@ define([
                     _messages[0].timeLeft -= dt;
                     if (_messages[0].timeLeft <= 0) {
                         _messages.shift();
+                        if (_messages.length > 0) {
+                            _messages[0].new = true;
+                        }
                     }
                 }
                 _messageBackground.applyLayout(_messageBackgroundLayout, canvas.width, canvas.height);
@@ -3022,6 +3037,9 @@ define([
                     _mission.applyToSpacecrafts(function (spacecraft) {
                         spacecraft.setOnFired(_handleSpacecraftFired);
                     });
+                    _messageSound = resources.getSoundEffect(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).volume);
                     this._loadingBox.hide();
                     showHUD();
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));

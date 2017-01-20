@@ -1109,6 +1109,9 @@
             "name": "beep_targeting_denied",
             "samples": ["computer/beep_targeting_denied.wav"]
         }, {
+            "name": "blip_message",
+            "samples": ["computer/blip_message.wav"]
+        }, {
             "name": "buttonHover",
             "samples": ["ui/button_hover.wav"]
         }, {

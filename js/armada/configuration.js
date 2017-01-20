@@ -1192,6 +1192,10 @@ define([
             TARGET_SWITCH_DENIED_SOUND: {
                 name: "targetSwitchDeniedSound",
                 type: classes.SOUND_EFFECT_2D
+            },
+            MESSAGE_SOUND: {
+                name: "messageSound",
+                type: classes.SOUND_EFFECT_2D
             }
         },
         WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE: {

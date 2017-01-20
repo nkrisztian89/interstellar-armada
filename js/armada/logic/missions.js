@@ -1150,6 +1150,17 @@ define([
          */
         this._oneShot = dataJSON.oneShot || false;
         /**
+         * For oneShot triggers only - if this is set (to a larger than 0 value), the trigger will fire this much later after the first
+         * time it is evaluated true, in milliseconds.
+         * @type Number
+         */
+        this._delay = dataJSON.delay || 0;
+        /**
+         * A flag to indicate whether the countdown for delayed firing has been started.
+         * @type Boolean
+         */
+        this._countDown = false;
+        /**
          * The callbacks attached which should be invoked when the trigger fires
          * @type Trigger~onFireCallback[]
          */
@@ -1167,13 +1178,17 @@ define([
         // invalid state checks
         if (!this._conditions) {
             if (this._fireWhen !== TriggerFireWhen.MISSION_STARTS) {
-                application.showError("Trigger '" + this._name + "' has no conditions, and so its fireWhen state must be '" + TriggerFireWhen.MISSION_STARTS + "'!");
+                application.showError("A trigger has no conditions, and so its fireWhen state must be '" + TriggerFireWhen.MISSION_STARTS + "'!");
                 this._fireWhen = TriggerFireWhen.MISSION_STARTS;
             }
             if (!this._oneShot) {
-                application.showError("Trigger '" + this._name + "' has no conditions, and so it must be one shot!");
+                application.showError("A trigger has no conditions, and so it must be set as oneShot!");
                 this._oneShot = true;
             }
+        }
+        if (!this._oneShot && this._delay) {
+            application.showError("Only oneShot triggers can have delays!");
+            this._delay = 0;
         }
     }
     /**
@@ -1189,6 +1204,10 @@ define([
      */
     Trigger.prototype.fire = function (mission) {
         var i;
+        if (this._delay > 0) {
+            this._countDown = true;
+            return;
+        }
         for (i = 0; i < this._onFireHandlers.length; i++) {
             this._onFireHandlers[i](mission);
         }
@@ -1209,8 +1228,17 @@ define([
      */
     Trigger.prototype.simulate = function (mission, dt) {
         var conditionState, i;
-        if (this._oneShot && this._fired) {
-            return;
+        if (this._oneShot) {
+            if (this._fired) {
+                return;
+            }
+            if (this._countDown) {
+                this._delay -= dt;
+                if (this._delay <= 0) {
+                    this.fire(mission);
+                }
+                return;
+            }
         }
         if (this._fireWhen === TriggerFireWhen.MISSION_STARTS) {
             this.fire(mission);

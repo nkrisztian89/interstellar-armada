@@ -699,6 +699,10 @@
                 "targetSwitchDeniedSound": {
                     "name": "beep_targeting_denied",
                     "volume": 0.2
+                },
+                "messageSound": {
+                    "name": "blip_message",
+                    "volume": 0.5
                 }
             },
             "weaponFireSoundStackMinimumDistance": 100,
