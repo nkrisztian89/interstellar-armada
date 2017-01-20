@@ -1525,6 +1525,7 @@ define([
      * message is added or the queue is cleared
      * @property {Boolean} [urgent] Whether the message should be displayed before non-urgent messages (interrupting already displayed
      * non-urgent messages)
+     * @property {Number[4]} [color] When given, the message should be displayed using this text color 
      */
     /**
      * @override
@@ -1542,7 +1543,8 @@ define([
                 ((this._params.textID !== undefined) && (typeof this._params.textID !== "string")) ||
                 ((this._params.duration !== undefined) && (typeof this._params.duration !== "number")) ||
                 ((this._params.permanent !== undefined) && (typeof this._params.permanent !== "boolean")) ||
-                ((this._params.urgent !== undefined) && (typeof this._params.urgent !== "boolean"))) {
+                ((this._params.urgent !== undefined) && (typeof this._params.urgent !== "boolean")) ||
+                ((this._params.color !== undefined) && ((typeof this._params.color !== "object") || !(this._params.color instanceof Array)))) {
             this._handleWrongParams();
             return false;
         }
@@ -1559,7 +1561,8 @@ define([
                     utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
                     (typeof this._params.text === "object") ? this._params.text[strings.getLanguage()] : this._params.text),
             duration: this._params.duration,
-            permanent: this._params.permanent
+            permanent: this._params.permanent,
+            color: this._params.color
         }, this._params.urgent);
     };
     // #########################################################################

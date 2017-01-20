@@ -1127,7 +1127,7 @@ define([
             },
             MESSAGE_TEXT: {
                 name: "messageText",
-                type: _customTypes.TEXT_DESCRIPTOR
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["default", "controlString"]})
             },
             MESSAGE_TEXT_MARGIN: {
                 name: "messageTextMargin",

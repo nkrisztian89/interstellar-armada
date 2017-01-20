@@ -8,7 +8,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, document, alert, window, setInterval, clearInterval, performance */
+/*global define, document, alert, window, setInterval, clearInterval, performance, parseFloat */
 
 /**
  * @param utils Used for converting RGBA color to CSS color strings and for format strings
@@ -1039,10 +1039,22 @@ define([
     };
     // #########################################################################
     /**
+     * @typedef {Object} TextSection Defines a renderable piece of text. Texts that span multiple lines or use different settings (such as
+     * color) for different parts need to be rendered in several separate calls, because one text render call can only be one-lined and
+     * us the current settings of the state machine.
+     * @property {String} text The raw text to render, without any new lines or markup
+     * @property {Number} xOffset The relative X position compared to the position of the CanvasText this section is part of 
+     * @property {Number} yOffset The relative Y position compared to the position of the CanvasText this section is part of 
+     * @property {Number[4]} [color] An optional color if a color different than the color of the CanvasText is to be used for this section
+     */
+    /**
      * @class
-     * A text with associated state (layout and style) that can be rendered on 2D canvases.
+     * A text with associated state (layout and style) that can be rendered on 2D canvases. Can contain multiple lines and parts that need
+     * to be rendered with different settings (such as color). See text parameter for details.
      * @param {Number[2]} position The starting position of the text in the clip space of the canvas.
-     * @param {String} text The starting value of the text to display.
+     * @param {String} text The starting value of the text to display. Use "\n" for explicit line breaks (the text will be word-wrapped using
+     * additional lne breaks if it doesn't fit the text layer's canvas or the layour box), and brackets for modifying settings for parts
+     * of the text: "[color:1,0,0,1]This part is red[], this is default color."
      * @param {String} font The name of the font to use (as in CSS font-family)
      * @param {Number} size The relative size of the font to use (relative to the width or height (depending on the scaling mode) of the canvas in pixels)
      * @param {String} scaleMode enum ScaleMode The scaling mode to use when determining the font size for rendering
@@ -1172,11 +1184,11 @@ define([
          */
         this._words = null;
         /**
-         * The lines as they were actually rendered last time (considering word wrapping for the last
-         * last canvas size)
-         * @type String[]
+         * Actually renderable pieces of this text, with explicit relative positions (for mutliline support) and possibly other individual
+         * settings (such as color for multi-color text)
+         * @type TextSection[]
          */
-        this._lines = null;
+        this._sections = null;
         /**
          * The last measured value for offsetting lines, in pixels (based on the width of the letter 'M')
          * @type Number
@@ -1241,19 +1253,188 @@ define([
         }
     };
     /**
+     * Parses the text and generates the renderable sections based on:
+     * - deliberate line breaks in the text
+     * - lines that are too long to fit in the text layer or the layout box (breaking them by word-wrapping)
+     * - modifiers in the text (e.g. "[color:r,g,b,a]colored text[]")
+     * @param {CanvasRenderingContext2D} context This context is used to measure rendered text sizes to calculate the position offsets for
+     * the sections
+     */
+    CanvasText.prototype._breakIntoSections = function (context) {
+        var i, j, lines, sections, align, text, lineIndex, newText, lineWidth, newLineWidth, maxLineWidth, lineHeight, first, section, word, wordLeft, noSpacing, xOffset, start, end, modifier, color,
+                /**
+                 * Goes through the sections that belong to the last line, and adjusts their offset X position according to the text alignment
+                 * used for this text.
+                 */
+                adjustLineSections = function () {
+                    var k;
+                    for (k = first; k < sections.length; k++) {
+                        switch (align) {
+                            case "right":
+                                sections[k].xOffset = -sections[k].xOffset;
+                                break;
+                            case "center":
+                                sections[k].xOffset -= 0.5 * lineWidth;
+                                break;
+                        }
+                    }
+                },
+                /**
+                 * Updates the parsing state for starting a new line (with a new section)
+                 * @param {String} newLineText
+                 */
+                breakLine = function (newLineText) {
+                    // adjust the section X offsets of the finished line
+                    adjustLineSections();
+                    lineIndex++;
+                    sections.push({text: newLineText, xOffset: 0, yOffset: lineIndex * lineHeight});
+                    section = sections[sections.length - 1];
+                    first = sections.length - 1;
+                    xOffset = 0;
+                    lineWidth = (newLineText.length > 0) ? context.measureText(newLineText).width : 0;
+                    noSpacing = false;
+                },
+                /**
+                 * Updates the parsing state for starting a new section in the same line
+                 * @param {Number[4]} [sectionColor] Color to use for this section
+                 */
+                startNewSectionInLine = function (sectionColor) {
+                    xOffset += context.measureText(section.text).width;
+                    sections.push({text: "", xOffset: xOffset, yOffset: lineIndex * lineHeight, color: sectionColor});
+                    section = sections[sections.length - 1];
+                },
+                /**
+                 * Applies the effect of the last parsed modifier by starting a new section with the appropriate new settings
+                 */
+                applyModifier = function () {
+                    // handling closing modifier - cancels all section specific settings
+                    if (modifier.length < 2) {
+                        if (section.text.length > 0) {
+                            startNewSectionInLine();
+                        } else {
+                            delete section.color;
+                        }
+                    } else {
+                        // handling opening modifiers
+                        switch (modifier[0]) {
+                            // handling color modifier
+                            case "color":
+                                color = modifier[1].split(",").map(parseFloat);
+                                // if there is already text in the current section, start a new one with the new color
+                                if (section.text.length > 0) {
+                                    startNewSectionInLine(color);
+                                } else {
+                                    // otherwise just set the color for this new, empty section
+                                    section.color = color;
+                                }
+                                break;
+                            default:
+                                application.showError("Unrecognized text modifier: '" + modifier[0] + "'!");
+                        }
+                    }
+                };
+        // multiline support:
+        // split the text into lines, taking into account deliberate line breaks as well as wrapping the text for the canvas / layout box size
+        // updating cache variables
+        lines = this._text.split("\n");
+        // recalculate words as they might have been altered when the sections were last generated (e.g. modifiers are stripped)
+        this._words = [];
+        for (i = 0; i < lines.length; i++) {
+            this._words.push(lines[i].split(" "));
+        }
+        // lines will be wrapped based on this width limit
+        maxLineWidth = this._boxLayout ? this._boxWidth : this._lastWidth;
+        this._textWidth = context.measureText(this._text).width;
+        this._lineHeight = context.measureText("M").width * 1.2;
+        this._sections = [];
+        // caching properties
+        sections = this._sections;
+        lineHeight = this._lineHeight;
+        align = this._align;
+        // starting parser state
+        lineIndex = -1;
+        xOffset = 0;
+        lineWidth = 0;
+        first = 0;
+        // go through explicitly (\n) broken lines
+        for (i = 0; i < this._words.length; i++) {
+            breakLine("");
+            // go through each word within the current line
+            for (j = 0; j < this._words[i].length; j++) {
+                word = this._words[i][j];
+                // check for modifiers
+                start = word.indexOf("[");
+                if (start >= 0) {
+                    end = word.indexOf("]");
+                    modifier = word.substring(start + 1, end).split(":");
+                    // if the word starts with a modifier
+                    if (start === 0) {
+                        // apply the effects of the modifier
+                        applyModifier();
+                        // if the modifier was part of a longer word, strip it from the word and continue with parsing the stripped word
+                        if (word.length > (end + 1)) {
+                            this._words[i][j] = word.substr(end + 1);
+                            j--;
+                            continue;
+                        } else {
+                            // if this word just a modifier by itself, skip further processing for this round as it doesn't need to be 
+                            // included in the rendered text
+                            continue;
+                        }
+                    } else {
+                        // if there is a modifier somewhere within the word, extract the word for parsing and save the part starting with
+                        // the modifier for the next parsing round
+                        wordLeft = (end < (word.length - 1)) ? word.substr(end + 1) : null;
+                        word = word.substring(0, start);
+                    }
+                } else {
+                    wordLeft = null;
+                }
+                // parse regular words, and wrap them to the next line, if needed
+                text = section.text;
+                newText = text + (((lineWidth > 0) && !noSpacing) ? " " : "") + word;
+                newLineWidth = xOffset + context.measureText(newText).width;
+                // if the new word fits, add it to the current line
+                if ((j === 0) || (newLineWidth < maxLineWidth)) {
+                    section.text = newText;
+                    lineWidth = newLineWidth;
+                } else {
+                    // otherwise start a new line with this word
+                    breakLine(word);
+                }
+                noSpacing = false;
+                // if there was a modifier detected (and stripped) in the word, apply it now that we added the word
+                if (start > 0) {
+                    applyModifier();
+                }
+                // if there was a part of the word after the detected modifier, prepare it for parsing in the next round
+                if (wordLeft) {
+                    this._words[i][j] = wordLeft;
+                    j--;
+                    noSpacing = true;
+                    continue;
+                }
+            }
+        }
+        // adjust the section X offsets of the last line
+        adjustLineSections();
+    };
+    /**
      * Renders the text using the passed 2D rendering context (of a canvas) according to its current settings.
      * @param {CanvasRenderingContext2D} context
      * @returns {Boolean} Whether text that needs to be cleared before the next render has been rendered
      */
     CanvasText.prototype.render = function (context) {
-        var i, j, line, newLine, maxLineWidth;
+        var i, color, newColor;
         if (this._visible) {
             this._clearBox(context);
             context.fillStyle = this._cssColor;
             this._updateSize(context.canvas.width, context.canvas.height);
             this._updateLayout();
             context.font = this._cssFont;
-            context.textAlign = this._align;
+            // actual alignment is taken care of when breaking the text into sections and the appropriate offsets are calculated for the
+            // left alignment
+            context.textAlign = "left";
             if (this._boxLayout && (this._boxWidth >= 0)) {
                 context.save();
                 context.rect(this._boxLeft, this._boxTop, this._boxWidth, this._boxHeight);
@@ -1261,33 +1442,23 @@ define([
             }
             // the below code is only executed when rendering on a canvas with a new size
             if (this._textWidth < 0) {
-                // multiline support:
-                // split the text into lines, taking into account deliberate line breaks as well as wrapping the
-                // text for the canvas size
-                maxLineWidth = this._boxLayout ? this._boxWidth : this._lastWidth;
-                this._textWidth = context.measureText(this._text).width;
-                if ((this._textWidth < maxLineWidth) && (this._words.length < 2)) {
-                    this._lines = [this._text];
-                } else {
-                    this._lineHeight = context.measureText("M").width * 1.2;
-                    this._lines = [];
-                    for (i = 0; i < this._words.length; i++) {
-                        this._lines.push("");
-                        for (j = 0; j < this._words[i].length; j++) {
-                            line = this._lines[this._lines.length - 1];
-                            newLine = line + ((line.length > 0) ? " " : "") + this._words[i][j];
-                            if (context.measureText(newLine).width < maxLineWidth) {
-                                this._lines[this._lines.length - 1] = newLine;
-                            } else {
-                                this._lines.push(this._words[i][j]);
-                            }
-                        }
-                    }
-                }
+                this._breakIntoSections(context);
             }
-            // separately render each line as multiline support is not built into the Canvas API
-            for (i = 0; i < this._lines.length; i++) {
-                context.fillText(this._lines[i], (this._x + 1) / 2 * this._lastWidth, (1 - this._y) / 2 * this._lastHeight + (i * this._lineHeight));
+            // separately render each section for multiline and multi-color support
+            color = this._cssColor;
+            for (i = 0; i < this._sections.length; i++) {
+                // multi-color support
+                if (this._sections[i].color) {
+                    newColor = utils.getCSSColor(this._sections[i].color);
+                } else {
+                    newColor = this._cssColor;
+                }
+                if (color !== newColor) {
+                    color = newColor;
+                    context.fillStyle = color;
+                }
+                // rendering the section
+                context.fillText(this._sections[i].text, (this._x + 1) / 2 * this._lastWidth + this._sections[i].xOffset, (1 - this._y) / 2 * this._lastHeight + this._sections[i].yOffset);
             }
             if (this._boxLayout) {
                 context.restore();
@@ -1325,16 +1496,9 @@ define([
      * provided in this object. (e.g. "hello, {w}", {w: "world"} -> "hello, world"
      */
     CanvasText.prototype.setText = function (text, replacements) {
-        var i, lines;
         text = replacements ? utils.formatString(text, replacements) : text;
         if (text !== this._text) {
             this._text = text;
-            // updating cache variables
-            lines = this._text.split("\n");
-            this._words = [];
-            for (i = 0; i < lines.length; i++) {
-                this._words.push(lines[i].split(" "));
-            }
             this._textWidth = -1;
         }
     };

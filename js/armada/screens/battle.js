@@ -244,6 +244,7 @@ define([
              * @property {Number} timeLeft How much time is still left from displaying this message, in milliseconds
              * @property {Boolean} [permanent] If true, the message keeps being displayed until a new urgent
              * message is added or the queue is cleared
+             * @property {Number[4]} [color] When given, the text is displayed using this text color
              */
             /**
              * The list of messages to be displayed on the HUD. The messages are displayed in the order they are in the queue.
@@ -1736,13 +1737,15 @@ define([
                 screenCanvas = this.getScreenCanvas(BATTLE_CANVAS_ID),
                 // general HUD text
                 initText = function (descriptor, layout, layer, alignment) {
-                    var result = new screens.CanvasText(
-                            config.getHUDSetting(descriptor).position,
+                    var setting, result;
+                    setting = config.getHUDSetting(descriptor);
+                    result = new screens.CanvasText(
+                            setting.position,
                             "",
-                            config.getHUDSetting(descriptor).fontName,
-                            config.getHUDSetting(descriptor).fontSize,
+                            setting.fontName,
+                            setting.fontSize,
                             layout.getScaleMode(),
-                            config.getHUDSetting(descriptor).color,
+                            setting.color || setting.colors[Object.keys(setting.colors)[0]],
                             alignment);
                     layer.addText(result);
                     return result;
@@ -2010,6 +2013,32 @@ define([
      * back of the queue.
      */
     BattleScreen.prototype.queueHUDMessage = function (message, urgent) {
+        var text, start, end, replacementID, replacementText;
+        text = message.text;
+        // replacing references in the text
+        for (start = text.indexOf("{"); start >= 0; start = text.indexOf("{")) {
+            end = text.indexOf("}");
+            if (end >= 0) {
+                replacementID = text.substring(start + 1, end).split("/");
+                switch (replacementID[0]) {
+                    case "controlStrings":
+                        // control strings have a specific color assigned to them, so add the modifier to the string
+                        replacementText =
+                                "[color:" + config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).colors.controlString.join(",") + "]" +
+                                control.getInputInterpreter(replacementID[1]).getControlStringForAction(replacementID[2]) +
+                                "[]";
+                        break;
+                    default:
+                        application.showError("Unknown reference type specified in HUD message: '" + replacementID[0] + "'!");
+                        replacementText = "";
+                }
+                text = text.substring(0, start) + replacementText + text.substr(end + 1);
+            } else {
+                application.showError("Unclosed reference in HUD message: '" + message.text + "'!");
+            }
+        }
+        message.text = text;
+        // calculating duration based on message length if needed
         message.timeLeft = message.duration || Math.round(message.text.length * HUD_MESSAGE_DURATION_PER_CHAR + HUD_MESSAGE_BASE_DURATION);
         if (urgent) {
             _messages.unshift(message);
@@ -2321,6 +2350,11 @@ define([
             // HUD messages
             if ((control.isInPilotMode()) && (_messages.length > 0)) {
                 _messageText.setText(_messages[0].text);
+                if (_messages[0].color) {
+                    _messageText.setColor(_messages[0].color);
+                } else {
+                    _messageText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).colors.default);
+                }
                 if (!_messages[0].permanent) {
                     _messages[0].timeLeft -= dt;
                     if (_messages[0].timeLeft <= 0) {

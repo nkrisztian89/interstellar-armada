@@ -586,7 +586,10 @@
                     "color": [0, 0, 0, 0.3]
                 },
                 "messageText": {
-                    "color": [1, 1, 1, 1],
+                    "colors": {
+                        "default": [1, 1, 1, 1],
+                        "controlString": [0, 1, 0, 1]
+                    },
                     "fontSize": 0.2,
                     "fontName": "hudFont",
                     "position": [0, 0.54]
