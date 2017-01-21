@@ -590,9 +590,9 @@
                         "default": [1, 1, 1, 1],
                         "controlString": [0, 1, 0, 1]
                     },
-                    "fontSize": 0.2,
+                    "fontSize": 0.16,
                     "fontName": "hudFont",
-                    "position": [0, 0.54]
+                    "position": [0, 0.62]
                 },
                 "messageTextMargin": 0.04,
                 "topLeftTextLayerLayout": {

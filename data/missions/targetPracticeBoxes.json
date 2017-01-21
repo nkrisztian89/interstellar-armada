@@ -31,8 +31,14 @@
                     "type": "message",
                     "params": {
                         "textID": "tutorial0",
-                        "permanent": true,
                         "urgent": true
+                    }
+                }, {
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial0a",
+                        "permanent": true,
+                        "urgent": false
                     }
                 }]
         }, {
@@ -85,11 +91,19 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "clearMessages"
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorial1",
-                        "permanent": true,
                         "urgent": true
+                    }
+                }, {
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial1a",
+                        "permanent": true,
+                        "urgent": false
                     }
                 }]
         }, {
@@ -128,6 +142,266 @@
                         "params": {
                             "relation": "below",
                             "count": 26
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial3",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 25
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial4",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 24
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial5",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 23
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial6",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 22
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial7",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 21
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial8",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 20
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial9",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 19
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial10",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 18
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial11",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 17
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorial12",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 16
                         }
                     }
                 ],

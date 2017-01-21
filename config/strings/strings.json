@@ -6,6 +6,31 @@
         }, 
         "and": "and"
     },
+    "key": {
+        "left": "left",
+        "right": "right",
+        "up": "up",
+        "down": "down"
+    },
+    "mouse": {
+        "leftButton": "left button",
+        "middleButton": "middle button",
+        "rightButton": "right button",
+        "fromCenter": "{move} {toDirection} from center",
+        "notFromCenter": "{move} {toDirection}",
+        "move": "move",
+        "scroll": "scroll",
+        "leftDirection": "left",
+        "rightDirection": "right",
+        "upDirection": "up",
+        "downDirection": "down"
+    },
+    "joystick": {
+        "button": "button {index}",
+        "axis": "axis {index} {direction}",
+        "positiveDirection": "backward/right",
+        "negativeDirection": "forward/left"
+    },
     "screen.back": "Back",
     "mainMenu": {
         "newGame": "New game",
@@ -83,10 +108,22 @@
         "targetPracticeBoxes": {
             "name": "Basic target practice",
             "messages": {
-                "tutorial0": "Welcome to the target practice tutorial!\nUse the mouse to aim and {controlStrings/mouse/fire} to fire at the target container in front of you.",
-                "tutorial0b": "Destroy the target container. Hold the left mouse button for continuous fire. Keep hitting it until it explodes.",
-                "tutorial1": "An arrow marks the targets which are not visible in front of you.",
-                "tutorial2": "Press {controlStrings/keyboard/nextHostileTarget} or {controlStrings/mouse/nextHostileTarget} to cycle through hostile targets."
+                "tutorial0": "Welcome to the target practice tutorial!",
+                "tutorial0a": "First, aim and fire at the container in front.\nMouse: move and {controlStrings/mouse/fire}\nKeyboard: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} and {controlStrings/keyboard/fire}\nJoystick: move the stick and {controlStrings/joystick/fire}",
+                "tutorial0b": "Destroy the target container. Keep hitting it until it explodes.\nMouse: move and {controlStrings/mouse/fire}\nKeyboard: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} and {controlStrings/keyboard/fire}\nJoystick: move the stick and {controlStrings/joystick/fire}",
+                "tutorial1": "Good job!\nThe next target is automatically selected. It is marked by a red reticle, or by an arrow if it is not visible in front of you.",
+                "tutorial1a": "This container is farther away. Accelerate and decelarate ({controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse}) to get closer to it. You can press {controlStrings/keyboard/resetSpeed} to come to a full stop. Destroy it when you are close enough!",
+                "tutorial2": "You can also switch targets manually.\n({controlStrings/keyboard/nextHostileTarget} / mouse: {controlStrings/mouse/nextHostileTarget} / joystick: {controlStrings/joystick/nextHostileTarget})\nDestroy another container!",
+                "tutorial3": "The green crosshairs show the estimated positions where your projectiles will hit (or miss) your current target. There are always as many crosshairs as weapons on your ship. Fire when all your crosshairs are locked on your target.",
+                "tutorial4": "Note that unlike these training guns, some weapons cannot be rotated and always face strictly forward. You will need to aim more carefully with such weapons.",
+                "tutorial5": "It is also not always possible to hit the enemy with all your weapons. You have to take your best chances.",
+                "tutorial6": "Notice the smaller red reticle near the center of your target. It shows it's estimated position at the time your projectiles will reach it. You will need to aim at it to hit moving targets.",
+                "tutorial7": "You can practice hitting moving targets by moving your own ship sideways while aiming. Make sharp turns at speed to drift, or strafe ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower}) to achieve this.",
+                "tutorial8": "Strafing ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower}) is also very useful in combat for evading incoming projectiles.\nCombining it with rolling ({controlStrings/keyboard/rollLeft}, {controlStrings/keyboard/rollRight}) makes you a very difficult target for enemies.",
+                "tutorial9": "You can switch between different views. ({controlStrings/keyboard/nextView}/{controlStrings/keyboard/previousView}) Some make it easier to aim, while others are more useful for seeing incoming attacks.",
+                "tutorial10": "In some views it is possible to look around holding down {controlStrings/keyboard/controlCamera} or using the extra axes on your joystick.",
+                "tutorial11": "You can always check and modify the full set of controls in the control settings which you can reach from the menu. ({controlStrings/keyboard/quit})",
+                "tutorial12": "Destroy the rest of the containers to complete this mission! You can see the number of remaining enemies you need to destroy in the mission objective indicator on the left."
             }
         },
         "targetPracticeDrones": {
@@ -199,9 +236,9 @@
         "message": {
             "ready": "Ready!<br/>During the game, press the {menuKey} key to open the menu, where you can also check and adjust the controls.",
             "paused": "Game paused.",
-            "victory": "<strong>Victory!</strong><br/>Congratulations, you have completed all mission objectives!<br/>Press {jumpKey} key to leave the battlefield and conclude the mission.",
+            "victory": "All mission objectives have been completed!\nActivate your jump engines ({controlStrings/keyboard/jumpOut}) to conclude the mission.",
             "defeat": "<strong>Defeat!<strong><br/>You ship has been destroyed. You can keep looking around in spectator mode or press the {menuKey} key to open the menu.",
-            "fail": "<strong>Defeat!<strong><br/>You have failed the mission objectives. <br/>You can keep flying around or press the {menuKey} key to open the menu."
+            "fail": "You have failed one of the mission objectives!\nActivate your jump engines ({controlStrings/keyboard/jumpOut}) to conclude the mission."
         }
     },
     "performanceLevel": {

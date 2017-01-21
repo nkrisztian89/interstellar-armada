@@ -2886,10 +2886,17 @@ define([
                     _timeSinceGameStateChanged += dt;
                     if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = !_mission.isLost();
-                        this.showMessage(utils.formatString(strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : (craft ? strings.BATTLE.MESSAGE_FAIL : strings.BATTLE.MESSAGE_DEFEAT)), {
-                            jumpKey: _getJumpKeyHTMLString(),
-                            menuKey: _getMenuKeyHTMLString()
-                        }));
+                        if (craft) {
+                            this.queueHUDMessage({
+                                text: strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_FAIL),
+                                permanent: true
+                            }, true);
+                        } else {
+                            this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_DEFEAT), {
+                                jumpKey: _getJumpKeyHTMLString(),
+                                menuKey: _getMenuKeyHTMLString()
+                            }));
+                        }
                         _gameStateShown = true;
                         audio.playMusic(
                                 (victory ? VICTORY_THEME : DEFEAT_THEME),

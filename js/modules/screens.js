@@ -1287,7 +1287,7 @@ define([
                     // adjust the section X offsets of the finished line
                     adjustLineSections();
                     lineIndex++;
-                    sections.push({text: newLineText, xOffset: 0, yOffset: lineIndex * lineHeight});
+                    sections.push({text: newLineText, xOffset: 0, yOffset: lineIndex * lineHeight, color: section && section.color});
                     section = sections[sections.length - 1];
                     first = sections.length - 1;
                     xOffset = 0;

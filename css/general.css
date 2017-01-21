@@ -432,6 +432,12 @@ input[type=range] {
     width: 100%; /* Specific width is required for Firefox. */
     background: transparent; /* Otherwise white in Chrome */
     height: 30px;
+    
+    cursor: url(../images/cursor.png) 6 6, pointer;
+}
+
+input[type=range]:hover {
+    cursor: url(../images/cursor-light.png) 6 6, pointer;
 }
 
 input[type=range]:focus {

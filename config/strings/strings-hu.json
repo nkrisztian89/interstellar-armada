@@ -212,9 +212,9 @@
         "message": {
             "ready": "Kész!<br/>Játék közven az {menuKey} billentyűvel hívhatod elő a menüt, ahol az irányítást is beállíthatod.",
             "paused": "Játék szüneteltetve.",
-            "victory": "<strong>Győzelem!</strong><br/>Gratulálok, sikeresen teljesítetted az összes feladatot!<br/>Használd {jumpKey} billentyűt, hogy elhagyd a harcmezőt, és lezárd a küldetést.",
+            "victory": "Minden feladat teljesítve!\nAktiváld a térugró hajtóművet ({controlStrings/keyboard/jumpOut}), hogy befejezd a küldetést.",
             "defeat": "<strong>Vereség!</strong><br/>Az űrhajód megsemmisült. Az {menuKey} billentyűvel hívhatod elő a menüt, ahonnan újrakezdheted a küldetést.",
-            "fail": "<strong>Vereség!<strong><br/>Nem sikerült teljesítened a küldetés feladatait. <br/>Az {menuKey} billentyűvel hívhatod elő a menüt."
+            "fail": "Nem sikerült teljesíteni a küldetést!\nAktiváld a térugró hajtóművet ({controlStrings/keyboard/jumpOut}), hogy elhagyd a harcmezőt."
         }
     },
     "performanceLevel": {
