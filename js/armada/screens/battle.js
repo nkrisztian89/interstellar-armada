@@ -169,15 +169,10 @@ define([
              */
             _timeInSameView,
             /**
-             * Whether the game's end state has already changed to victory or defeat in the current battle.
-             * @type Boolean
+             * (enum missions.MissionState) The last mission state that the player has been made aware of.
+             * @type String
              */
-            _gameStateChanged,
-            /**
-             * Whether the game's end state (victory / defeat) has already been displayed for the player.
-             * @type Boolean
-             */
-            _gameStateShown,
+            _displayedMissionState,
             /**
              * The elapsed simulation time since the game's end state changed to victory or defeat. In milliseconds
              * @type Number
@@ -753,7 +748,7 @@ define([
      * the mood)
      */
     function _handleSpacecraftFired(spacecraft, target) {
-        if (target && target.isHostile(spacecraft) && !_gameStateShown) {
+        if (target && target.isHostile(spacecraft) && !_mission.isFinished()) {
             _timeSinceLastFire = 0;
             audio.playMusic(COMBAT_THEME);
         }
@@ -772,7 +767,7 @@ define([
             if (!_isTimeStopped) {
                 _mission.tick(dt, _battleScene);
                 _elapsedTime += dt;
-                if (!_gameStateShown) {
+                if (!_mission.isFinished() && !_mission.noHostilesPresent()) {
                     _timeSinceLastFire += dt;
                     if (_timeSinceLastFire > _combatThemeDurationAfterFire) {
                         audio.playMusic(ANTICIPATION_THEME);
@@ -2843,7 +2838,7 @@ define([
             if (!_demoMode) {
                 craft = _mission.getPilotedSpacecraft();
                 if (craft && craft.isAlive() && craft.isAway()) {
-                    victory = !_mission.isLost() && _mission.isWon();
+                    victory = _mission.getState() === missions.MissionState.COMPLETED;
                     missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
                     hitRatio = craft.getHitRatio();
                     // calculating score from base score and bonuses
@@ -2858,7 +2853,7 @@ define([
                         nextPerformance: victory ? perfStats.nextPerformance : null,
                         nextPerformanceScore: victory ? perfStats.nextPerformanceScore : 0,
                         survived: true,
-                        leftEarly: !victory && !_mission.isLost(),
+                        leftEarly: !_mission.isFinished(),
                         score: perfStats.score || 0,
                         isRecord: isRecord,
                         elapsedTime: _elapsedTime,
@@ -2877,15 +2872,13 @@ define([
                 }
                 // we wait a little after the state changes to victory or defeat so that incoming projectiles destroying the player's ship
                 // right after it destroyed the last enemy can change the state from victory to defeat
-                if (!_gameStateChanged) {
-                    if (_mission && (_mission.isWon() || _mission.isLost())) {
-                        _gameStateChanged = true;
-                        _timeSinceGameStateChanged = 0;
-                    }
-                } else if (!_gameStateShown) {
+                if (_mission && (_displayedMissionState !== _mission.getState())) {
+                    _displayedMissionState = _mission.getState();
+                    _timeSinceGameStateChanged = 0;
+                } else if (_timeSinceGameStateChanged < config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                     _timeSinceGameStateChanged += dt;
-                    if (_timeSinceGameStateChanged > config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
-                        victory = !_mission.isLost();
+                    if (_timeSinceGameStateChanged >= config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
+                        victory = _mission.getState() === missions.MissionState.COMPLETED;
                         if (craft) {
                             this.queueHUDMessage({
                                 text: strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_FAIL),
@@ -2897,7 +2890,6 @@ define([
                                 menuKey: _getMenuKeyHTMLString()
                             }));
                         }
-                        _gameStateShown = true;
                         audio.playMusic(
                                 (victory ? VICTORY_THEME : DEFEAT_THEME),
                                 (victory ? AMBIENT_THEME : null),
@@ -2905,10 +2897,9 @@ define([
                     }
                 }
             } else {
-                if (!_gameStateChanged) {
-                    if (_mission && _mission.noHostilesPresent()) {
-                        _gameStateChanged = true;
-                        _gameStateShown = true;
+                if (_mission && (_displayedMissionState !== _mission.getState())) {
+                    _displayedMissionState = _mission.getState();
+                    if (_displayedMissionState === missions.MissionState.ENDED) {
                         audio.playMusic(AMBIENT_THEME);
                     }
                 }
@@ -2931,8 +2922,6 @@ define([
                 loadingStartTime = performance.now(),
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
         params = params || {};
-        _gameStateChanged = false;
-        _gameStateShown = false;
         if (params.restart) {
             this.pauseBattle();
         }
@@ -2957,12 +2946,10 @@ define([
             _escorts = _mission.getEscortedSpacecrafts();
             // for missions that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
             // victory / defeat message
-            if ((!_demoMode && (_mission.isWon() || _mission.isLost())) || (_demoMode && _mission.noHostilesPresent())) {
-                _gameStateShown = true;
-                if (!_demoMode) {
-                    missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(true);
-                }
+            if (!_demoMode && ((!_mission.getPilotedSpacecraft() || (_mission.getState() === missions.MissionState.NONE)))) {
+                missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(true);
             }
+            _displayedMissionState = _mission.getState();
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
             if (graphics.shouldUseShadowMapping()) {
                 graphics.getShadowMappingShader();
@@ -3052,7 +3039,7 @@ define([
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
                     _elapsedTime = 0;
                     _timeSinceLastFire = 0;
-                    audio.playMusic(_gameStateShown ? AMBIENT_THEME : ANTICIPATION_THEME);
+                    audio.playMusic(_mission.noHostilesPresent() ? AMBIENT_THEME : ANTICIPATION_THEME);
                 }.bind(this));
             }.bind(this));
             resources.requestResourceLoad();

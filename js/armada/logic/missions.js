@@ -118,10 +118,22 @@ define([
                 CLEAR_MESSAGES: "clearMessages"
             },
             MissionState = {
+                // in progress states
+                /** There is no player or no objectives for the player, and no ships hostile to each other (peaceful sandbox) */
                 NONE: 0,
-                IN_PROGRESS: 1,
-                COMPLETED: 2,
-                FAILED: 3
+                /** There is no player or no objectives for the player, but there are hostiles battling each other (demo, battle sandbox) */
+                BATTLE: 1,
+                /** There are objectives left to complete (regular mission) */
+                IN_PROGRESS: 2,
+                // finished states
+                /** All the objectives have been completed, the mission is a success */
+                COMPLETED: 3,
+                /** The player failed at least one objective, the mission is a failure */
+                FAILED: 4,
+                /** The player's spacecraft has been destroyed */
+                DEFEAT: 5,
+                /** A battle without a piloted spacecraft (player) has ended */
+                ENDED: 6
             },
             /**
              * Objectives displayed on the HUD are colored based on this
@@ -1845,6 +1857,16 @@ define([
         return this._state;
     };
     /**
+     * Returns whether the mission is in one of the finishes state (it has been completed, failed, or it was a sandbox battle that has ended)
+     * @returns {Boolean}
+     */
+    Mission.prototype.isFinished = function () {
+        return (this._state === MissionState.COMPLETED) ||
+                (this._state === MissionState.FAILED) ||
+                (this._state === MissionState.DEFEAT) ||
+                (this._state === MissionState.ENDED);
+    };
+    /**
      * Returns the list of spacecrafts that needs to be escorted (protected) by the player for this mission.
      * @returns {Spacecraft[]}
      */
@@ -1852,43 +1874,55 @@ define([
         return this._escortedSpacecrafts;
     };
     /**
-     * Returns whether this mission has explicitly set objectives
-     * @returns {Boolean}
-     */
-    Mission.prototype.hasObjectives = function () {
-        return this._state !== MissionState.NONE;
-    };
-    /**
      * Marks the mission as completed (by achieving its objectives)
      */
     Mission.prototype.completeMission = function () {
-        this._state = MissionState.COMPLETED;
+        if (this._state === MissionState.IN_PROGRESS) {
+            this._state = MissionState.COMPLETED;
+        }
     };
     /**
      * Marks the mission as failed (by failing one of its objectives)
      */
     Mission.prototype.failMission = function () {
-        this._state = MissionState.FAILED;
+        if (this._state !== MissionState.DEFEAT) {
+            this._state = MissionState.FAILED;
+        }
     };
     /**
-     * Returns whether according to the current state of the mission, the controlled spacecraft has won.
-     * @returns {Boolean}
+     * Updates the stored mission state value based on the current situation.
      */
-    Mission.prototype.isWon = function () {
-        var i, craft = this.getPilotedSpacecraft();
-        if (craft) {
-            if (this._winActions.length > 0) {
-                return this._state === MissionState.COMPLETED;
-            }
-            for (i = 0; i < this._spacecrafts.length; i++) {
-                if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused() && craft.isHostile(this._spacecrafts[i])) {
-                    return false;
+    Mission.prototype._updateState = function () {
+        var i;
+        // first check for missions with a player
+        if (this._pilotedCraft) {
+            // if the player is destroyed, the mission state is always defeat
+            if (this._pilotedCraft.canBeReused()) {
+                this._state = MissionState.DEFEAT;
+                return;
+            } else {
+                // a battle with a player and missions with no win (only lose) objectives can be completed if there are no hostiles left
+                // (missionState cannot change from NONE, and missions with win objectives are completed whenever the objectives are completed,
+                // regardless of remaining hostiles)
+                if (this._state === MissionState.BATTLE || ((this._state === MissionState.IN_PROGRESS) && (this._winActions.length === 0))) {
+                    for (i = 0; i < this._spacecrafts.length; i++) {
+                        if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused() && this._pilotedCraft.isHostile(this._spacecrafts[i])) {
+                            return;
+                        }
+                    }
+                    this._state = MissionState.COMPLETED;
+                    return;
                 }
             }
-            this._state = MissionState.COMPLETED;
-            return true;
+        } else {
+            // checking for missions without a player (demo, sandbox) - these go to the ENDED state after there are no hostiles left
+            if (this._state === MissionState.BATTLE) {
+                if (this.noHostilesPresent()) {
+                    this._state = MissionState.ENDED;
+                    return;
+                }
+            }
         }
-        return false;
     };
     /**
      * Returns whether there are no spacecrafts present in the mission that are hostiles towards each other
@@ -1906,13 +1940,6 @@ define([
             }
         }
         return true;
-    };
-    /**
-     * Returns whether according to the current state of the mission, the controlled spacecraft has lost. 
-     * @returns {Boolean}
-     */
-    Mission.prototype.isLost = function () {
-        return !this._pilotedCraft || this._pilotedCraft.canBeReused() || (this._state === MissionState.FAILED);
     };
     /**
      * Returns how many spacecrafts are currently alive in the passed team
@@ -2212,6 +2239,14 @@ define([
                 }
             }
         }
+        // it doesn't matter if we have objectives when there in no player craft
+        if (!this._pilotedCraft) {
+            this._state = MissionState.NONE;
+        }
+        // missions without objectives or player count as battles if there are hostile ships
+        if ((this._state === MissionState.NONE) && !this.noHostilesPresent()) {
+            this._state = MissionState.BATTLE;
+        }
         application.log("Mission successfully loaded.", 2);
     };
     /**
@@ -2472,6 +2507,7 @@ define([
                 ai.handleSceneMoved(v);
             }
         }
+        this._updateState();
         if (application.isDebugVersion()) {
             _debugInfo =
                     "Part: " + _particlePool._objects.length + "<br/>" +
@@ -2889,6 +2925,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        MissionState: MissionState,
         ObjectiveState: ObjectiveState,
         FAILED_MISSION_PERFORMACE: FAILED_MISSION_PERFORMACE,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),

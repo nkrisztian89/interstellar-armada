@@ -596,10 +596,10 @@
                 },
                 "messageTextMargin": 0.04,
                 "topLeftTextLayerLayout": {
-                    "left": -0.98,
+                    "left": -0.97,
                     "top": 0.97,
                     "width": 0.5,
-                    "height": 0.05,
+                    "height": 0.04,
                     "scaleMode": "minimum",
                     "xScaleMode": "minimum",
                     "yScaleMode": "minimum"
