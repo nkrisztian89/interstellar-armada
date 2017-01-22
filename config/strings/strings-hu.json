@@ -226,6 +226,7 @@
         "backButton": "Vissza a küldetésekhez",
         "victoryTitle": "Küldetés teljesítve",
         "defeatTitle": "Küldetés sikertelen",
+        "genericTitle": "Teszt küldetés lezárva",
         "score": "Pontszám: {score}",
         "newRecord": "Új rekord!",
         "description": {
@@ -233,7 +234,8 @@
             "nextPerformance": "<br/>Érj el {score} vagy több pontot a következő kitüntetés megszerzéséhez.",
             "fail": "Nem sikerült teljesítened a küldetés összes feladatát.",
             "defeat": "Az űrhajód megsemmisült a küldetés során.",
-            "leftEarly": "Elhagytad a küldetés helyszínét, mielőtt teljesítetted volna a feladatokat."
+            "leftEarly": "Elhagytad a küldetés helyszínét, mielőtt teljesítetted volna a feladatokat.",
+            "generic": "Teszt kipróbálva."
         },
         "statisticsHeader": "Statisztika",
         "timeLabelCell": "Eltelt idő:",

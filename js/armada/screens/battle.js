@@ -2839,7 +2839,10 @@ define([
                 craft = _mission.getPilotedSpacecraft();
                 if (craft && craft.isAlive() && craft.isAway()) {
                     victory = _mission.getState() === missions.MissionState.COMPLETED;
-                    missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
+                    // NONE state mission playthrough count is increased right when the mission starts
+                    if (_mission.getState() !== missions.MissionState.NONE) {
+                        missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
+                    }
                     hitRatio = craft.getHitRatio();
                     // calculating score from base score and bonuses
                     perfStats = _mission.getPerformanceStatistics();
@@ -2848,13 +2851,11 @@ define([
                         isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(perfStats.score, perfStats.performance);
                     }
                     game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
-                        victory: victory,
+                        missionState: _mission.getState(),
                         performance: victory ? perfStats.performance : missions.FAILED_MISSION_PERFORMACE,
                         nextPerformance: victory ? perfStats.nextPerformance : null,
                         nextPerformanceScore: victory ? perfStats.nextPerformanceScore : 0,
-                        survived: true,
-                        leftEarly: !_mission.isFinished(),
-                        score: perfStats.score || 0,
+                        score: (_mission.getState() === missions.MissionState.COMPLETED) ? perfStats.score : 0,
                         isRecord: isRecord,
                         elapsedTime: _elapsedTime,
                         kills: craft ? craft.getKills() : 0,

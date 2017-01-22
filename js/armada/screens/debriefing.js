@@ -17,6 +17,7 @@
  * @param strings Used for translation support
  * @param audio Used for setting music theme
  * @param armadaScreens Used for navigation
+ * @param missions Used to access MissionState enum
  */
 define([
     "utils/utils",
@@ -25,8 +26,9 @@ define([
     "armada/configuration",
     "armada/strings",
     "armada/audio",
-    "armada/screens/shared"
-], function (utils, game, screens, config, strings, audio, armadaScreens) {
+    "armada/screens/shared",
+    "armada/logic/missions"
+], function (utils, game, screens, config, strings, audio, armadaScreens, missions) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -35,6 +37,7 @@ define([
             TITLE_ID = "title",
             MEDAL_ID = "medal",
             MEDAL_IMAGE_SOURCE = "images/empire_{performance}_100.png",
+            MEDAL_IMAGE_NO_SCORE = "white",
             SCORE_CONTAINER_ID = "scoreContainer",
             SCORE_SPAN_ID = "score",
             NEW_RECORD_ID = "newRecord",
@@ -56,7 +59,7 @@ define([
             RESTART_BUTTON_ID = "restartButton",
             // ------------------------------------------------------------------------------
             // private variables
-            _victory;
+            _shouldPlayVictoryMusic;
     // ##############################################################################
     /**
      * @class A class to represent the Mission debriefing screen in the game. Describes the dynamic behaviour on that screen.
@@ -76,7 +79,7 @@ define([
                         audio.resetMasterVolume();
                         audio.resetMusicVolume();
                         audio.playMusic(
-                                _victory ? armadaScreens.DEBRIEFING_VICTORY_THEME : armadaScreens.DEBRIEFING_DEFEAT_THEME,
+                                _shouldPlayVictoryMusic ? armadaScreens.DEBRIEFING_VICTORY_THEME : armadaScreens.DEBRIEFING_DEFEAT_THEME,
                                 undefined,
                                 config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_THEME_FADE_IN_DURATION));
                     }
@@ -154,11 +157,9 @@ define([
     };
     /**
      * @typedef {Object} DebreifingScreen~Data
-     * @property {Boolean} victory 
+     * @property {Number} missionState (enum missions.MissionState)
      * @property {String} performance
      * @property {String} nextPerformanceScore
-     * @property {Boolean} survived 
-     * @property {Boolean} leftEarly 
      * @property {Number} score 
      * @property {Boolean} isRecord
      * @property {Number} elapsedTime
@@ -177,44 +178,57 @@ define([
      * @param {DebreifingScreen~Data} data
      */
     DebriefingScreen.prototype.setData = function (data) {
-        var medalText;
-        _victory = data.victory;
-        medalText = data.victory ? strings.get(strings.PERFORMANCE_LEVEL.PREFIX, data.performance) : "";
-        this._title.setContent(data.victory ?
+        var medalText, hasScore, description;
+        hasScore = (data.missionState === missions.MissionState.COMPLETED);
+        _shouldPlayVictoryMusic = (data.missionState === missions.MissionState.COMPLETED) ||
+                (data.missionState === missions.MissionState.NONE);
+        medalText = hasScore ? strings.get(strings.PERFORMANCE_LEVEL.PREFIX, data.performance) : "";
+        this._title.setContent((data.missionState === missions.MissionState.COMPLETED) ?
                 strings.get(strings.DEBRIEFING.VICTORY_TITLE) :
-                strings.get(strings.DEBRIEFING.DEFEAT_TITLE));
+                ((data.missionState === missions.MissionState.NONE) ?
+                        strings.get(strings.DEBRIEFING.GENERIC_TITLE) :
+                        strings.get(strings.DEBRIEFING.DEFEAT_TITLE)));
         this._medal.getElement().src = utils.formatString(MEDAL_IMAGE_SOURCE, {
-            performance: data.performance
+            performance: (data.missionState !== missions.MissionState.NONE) ? data.performance : MEDAL_IMAGE_NO_SCORE
         });
-        this._scoreContainer.setVisible(data.victory);
-        this._scoreSpan.setVisible(data.victory);
+        this._scoreContainer.setVisible(hasScore);
+        this._scoreSpan.setVisible(hasScore);
         if (this._scoreSpan.isVisible()) {
             this._scoreSpan.setContent(strings.get(strings.DEBRIEFING.SCORE), {
                 score: data.score
             });
         }
-        this._newRecord.setVisible(data.isRecord);
-        this._descriptionParagraph.setContent(data.victory ?
-                // victory text
-                utils.formatString(strings.get(strings.DEBRIEFING.DESCRIPTION_VICTORY), {
-                    performance: strings.getDefiniteArticleForWord(medalText) + " <strong>" + medalText + "</strong>"
-                }) +
-                (data.nextPerformanceScore ? utils.formatString(strings.get(strings.DEBRIEFING.DESCRIPTION_NEXT_PERFORMANCE), {
-                    score: data.nextPerformanceScore
-                }) : "") :
-                // defeat text  - explaining the reason
-                        (data.leftEarly ?
-                                strings.get(strings.DEBRIEFING.DESCRIPTION_LEFT_EARLY) :
-                                (data.survived ?
-                                        strings.get(strings.DEBRIEFING.DESCRIPTION_FAIL) :
-                                        strings.get(strings.DEBRIEFING.DESCRIPTION_DEFEAT))));
+        this._newRecord.setVisible(hasScore && data.isRecord);
+        switch (data.missionState) {
+            case missions.MissionState.COMPLETED:
+                description =
+                        utils.formatString(strings.get(strings.DEBRIEFING.DESCRIPTION_VICTORY), {
+                            performance: strings.getDefiniteArticleForWord(medalText) + " <strong>" + medalText + "</strong>"
+                        }) +
+                        (data.nextPerformanceScore ? utils.formatString(strings.get(strings.DEBRIEFING.DESCRIPTION_NEXT_PERFORMANCE), {
+                            score: data.nextPerformanceScore
+                        }) : "");
+                break;
+            case missions.MissionState.NONE:
+                description = strings.get(strings.DEBRIEFING.DESCRIPTION_GENERIC);
+                break;
+            case missions.MissionState.FAILED:
+                description = strings.get(strings.DEBRIEFING.DESCRIPTION_FAIL);
+                break;
+            case missions.MissionState.DEFEAT:
+                description = strings.get(strings.DEBRIEFING.DESCRIPTION_DEFEAT);
+                break;
+            default:
+                description = strings.get(strings.DEBRIEFING.DESCRIPTION_LEFT_EARLY);
+        }
+        this._descriptionParagraph.setContent(description);
         this._timeCell.setContent(utils.formatTimeToMinutes(data.elapsedTime));
         this._killsCell.setContent(data.kills.toString());
         this._damageCell.setContent(data.damageDealt.toString());
         this._hitRatioCell.setContent(Math.round(100 * data.hitRatio) + "%");
         this._hullIntegrityCell.setContent(Math.round(100 * data.hullIntegrity) + "%");
         this._teamSurvivalCell.setContent((data.teamSurvival !== undefined) ? (Math.round(100 * data.teamSurvival) + "%") : "-");
-        this._scoreBreakdownContainer.setVisible(data.victory);
+        this._scoreBreakdownContainer.setVisible(hasScore);
         if (this._scoreBreakdownContainer.isVisible()) {
             this._baseScoreCell.setContent(data.baseScore.toString());
             this._hitRatioBonusCell.setContent(data.hitRatioBonus.toString());
