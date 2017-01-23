@@ -251,8 +251,14 @@
             "ready": "Ready!<br/>During the game, press the {menuKey} key to open the menu, where you can also check and adjust the controls.",
             "paused": "Game paused.",
             "victory": "All mission objectives have been completed!\nActivate your jump engines ({controlStrings/keyboard/jumpOut}) to conclude the mission.",
-            "defeat": "<strong>Defeat!<strong><br/>You ship has been destroyed. You can keep looking around in spectator mode or press the {menuKey} key to open the menu.",
-            "fail": "You have failed one of the mission objectives!\nActivate your jump engines ({controlStrings/keyboard/jumpOut}) to conclude the mission."
+            "fail": "You have failed one of the mission objectives!\nActivate your jump engines ({controlStrings/keyboard/jumpOut}) to conclude the mission.",
+            "defeat": {
+                "header": "Defeat",
+                "message": "You ship has been destroyed. What would you like to do?",
+                "debriefingButton": "Go to debriefing",
+                "restartButton": "Restart mission",
+                "spectateButton": "Continue as spectator"
+            }
         }
     },
     "performanceLevel": {

@@ -396,7 +396,7 @@ define([
      * @param {Spacecraft} pilotedSpacecraft
      */
     ArmadaControlContext.prototype.switchToPilotMode = function (pilotedSpacecraft) {
-        if (!pilotedSpacecraft || this._pilotingMode) {
+        if (!pilotedSpacecraft || !pilotedSpacecraft.isAlive() || this._pilotingMode) {
             return;
         }
         this._pilotingMode = true;

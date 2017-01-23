@@ -1511,15 +1511,6 @@ define([
         return "<span class='highlightedText'>" + control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("quit") + "</span>";
     }
     /**
-     * Returns the HTML string to insert to messages that contains the key to engage jump engines in a highlighted style, with
-     * a definite article added
-     * @returns {String}
-     */
-    function _getJumpKeyHTMLString() {
-        var result = control.getInputInterpreter(control.KEYBOARD_NAME).getControlStringForAction("jumpOut");
-        return strings.getDefiniteArticleForWord(result) + " <span class='highlightedText'>" + result + "</span>";
-    }
-    /**
      * @param {Spacecraft} craft
      * @returns {Boolean}
      */
@@ -1600,9 +1591,7 @@ define([
                         this.resumeBattle();
                         resumeTime();
                         if (!_demoMode) {
-                            if (_mission.getPilotedSpacecraft()) {
-                                control.switchToPilotMode(_mission.getPilotedSpacecraft());
-                            }
+                            control.switchToPilotMode(_mission.getPilotedSpacecraft());
                         } else {
                             control.switchToSpectatorMode(false, true);
                             _battleScene.getCamera().followNextNode();
@@ -2800,15 +2789,55 @@ define([
         _shipIndicatorHighlightTime = (_shipIndicatorHighlightTime + dt) % _shipIndicatorHighlightAnimationInterval;
     };
     /**
-     * @override
-     * @param {Number} dt
+     * Sets up and navigates to the debriefing screen according to the current state of the mission.
      */
-    BattleScreen.prototype._render = function (dt) {
+    function _goToDebriefing() {
         var
                 /**@type Boolean*/ victory, isRecord,
                 /**@type Spacecraft*/ craft,
                 /**@type Number*/ hitRatio,
                 /**@type Object*/ perfStats;
+        craft = _mission.getPilotedSpacecraft();
+        victory = _mission.getState() === missions.MissionState.COMPLETED;
+        // NONE state mission playthrough count is increased right when the mission starts
+        if (_mission.getState() !== missions.MissionState.NONE) {
+            missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
+        }
+        hitRatio = craft ? craft.getHitRatio() : 0;
+        // calculating score from base score and bonuses
+        perfStats = craft ? _mission.getPerformanceStatistics() : {};
+        if (victory) {
+            // updating the record if needed
+            isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(perfStats.score, perfStats.performance);
+        }
+        game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
+            missionState: _mission.getState(),
+            performance: victory ? perfStats.performance : missions.FAILED_MISSION_PERFORMACE,
+            nextPerformance: victory ? perfStats.nextPerformance : null,
+            nextPerformanceScore: victory ? perfStats.nextPerformanceScore : 0,
+            score: victory ? perfStats.score : 0,
+            isRecord: isRecord,
+            elapsedTime: _elapsedTime,
+            kills: craft ? craft.getKills() : 0,
+            damageDealt: craft ? craft.getDamageDealt() : 0,
+            baseScore: perfStats.baseScore || 0,
+            hitRatio: hitRatio,
+            hitRatioBonus: perfStats.hitRatioBonus,
+            hullIntegrity: craft ? craft.getHullIntegrity() : 0,
+            hullIntegrityBonus: perfStats.hullIntegrityBonus,
+            teamSurvival: perfStats.teamSurvival,
+            teamSurvivalBonus: perfStats.teamSurvivalBonus
+        });
+        game.setScreen(armadaScreens.DEBRIEFING_SCREEN_NAME);
+    }
+    /**
+     * @override
+     * @param {Number} dt
+     */
+    BattleScreen.prototype._render = function (dt) {
+        var
+                /**@type Boolean*/ victory,
+                /**@type Spacecraft*/ craft;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -2838,37 +2867,7 @@ define([
             if (!_demoMode) {
                 craft = _mission.getPilotedSpacecraft();
                 if (craft && craft.isAlive() && craft.isAway()) {
-                    victory = _mission.getState() === missions.MissionState.COMPLETED;
-                    // NONE state mission playthrough count is increased right when the mission starts
-                    if (_mission.getState() !== missions.MissionState.NONE) {
-                        missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
-                    }
-                    hitRatio = craft.getHitRatio();
-                    // calculating score from base score and bonuses
-                    perfStats = _mission.getPerformanceStatistics();
-                    if (victory) {
-                        // updating the record if needed
-                        isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(perfStats.score, perfStats.performance);
-                    }
-                    game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
-                        missionState: _mission.getState(),
-                        performance: victory ? perfStats.performance : missions.FAILED_MISSION_PERFORMACE,
-                        nextPerformance: victory ? perfStats.nextPerformance : null,
-                        nextPerformanceScore: victory ? perfStats.nextPerformanceScore : 0,
-                        score: (_mission.getState() === missions.MissionState.COMPLETED) ? perfStats.score : 0,
-                        isRecord: isRecord,
-                        elapsedTime: _elapsedTime,
-                        kills: craft ? craft.getKills() : 0,
-                        damageDealt: craft ? craft.getDamageDealt() : 0,
-                        baseScore: perfStats.baseScore || 0,
-                        hitRatio: hitRatio,
-                        hitRatioBonus: perfStats.hitRationBonus,
-                        hullIntegrity: craft.getHullIntegrity(),
-                        hullIntegrityBonus: perfStats.hullIntegrityBonus,
-                        teamSurvival: perfStats.teamSurvival,
-                        teamSurvivalBonus: perfStats.teamSurvivalBonus
-                    });
-                    game.setScreen(armadaScreens.DEBRIEFING_SCREEN_NAME);
+                    _goToDebriefing();
                     return;
                 }
                 // we wait a little after the state changes to victory or defeat so that incoming projectiles destroying the player's ship
@@ -2880,16 +2879,35 @@ define([
                     _timeSinceGameStateChanged += dt;
                     if (_timeSinceGameStateChanged >= config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = _mission.getState() === missions.MissionState.COMPLETED;
-                        if (craft) {
+                        if (craft && craft.isAlive()) {
                             this.queueHUDMessage({
                                 text: strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_FAIL),
                                 permanent: true
                             }, true);
                         } else {
-                            this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_DEFEAT), {
-                                jumpKey: _getJumpKeyHTMLString(),
-                                menuKey: _getMenuKeyHTMLString()
-                            }));
+                            this.pauseBattle();
+                            armadaScreens.openDialog({
+                                header: strings.get(strings.BATTLE.MESSAGE_DEFEAT_HEADER),
+                                message: strings.get(strings.BATTLE.MESSAGE_DEFEAT_MESSAGE),
+                                buttons: [{
+                                        caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_DEBRIEFING),
+                                        action: _goToDebriefing
+                                    }, {
+                                        caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_RESTART),
+                                        action: function () {
+                                            game.closeSuperimposedScreen();
+                                            this.startNewBattle({
+                                                restart: true
+                                            });
+                                        }.bind(this)
+                                    }, {
+                                        caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_SPECTATE),
+                                        action: function () {
+                                            game.closeSuperimposedScreen();
+                                            this.resumeBattle();
+                                        }.bind(this)
+                                    }]
+                            });
                         }
                         audio.playMusic(
                                 (victory ? VICTORY_THEME : DEFEAT_THEME),

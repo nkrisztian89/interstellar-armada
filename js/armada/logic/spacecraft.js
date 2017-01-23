@@ -1750,7 +1750,7 @@ define([
         this._hitpoints -= damage;
         if (this._hitpoints <= 0) {
             // granting kill and score to the spacecraft that destroyed this one
-            if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
+            if (liveHit && hitBy && this.isHostile(hitBy)) {
                 scoreValue = this.getScoreValue();
                 damage += this._hitpoints; // this subtracts the overkill hitpoints
                 hitBy.gainDamageDealt(damage);

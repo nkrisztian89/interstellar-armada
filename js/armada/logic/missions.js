@@ -1813,10 +1813,7 @@ define([
      * @returns {Spacecraft}
      */
     Mission.prototype.getPilotedSpacecraft = function () {
-        if (this._pilotedCraft !== null && !this._pilotedCraft.canBeReused()) {
-            return this._pilotedCraft;
-        }
-        return null;
+        return this._pilotedCraft;
     };
     /**
      * Returns the spacecraft added to this mission that is identified by the given id. Returns null if such spacecraft does not exist.
@@ -2082,7 +2079,7 @@ define([
             }
             result.push({
                 text: strings.get(strings.BATTLE.OBJECTIVE_WIN_PREFIX, strings.OBJECTIVE.DESTROY_ALL_SUFFIX.name) + suffix,
-                state: craft ? ((hostiles > 0) ? ObjectiveState.IN_PROGRESS : ObjectiveState.COMPLETED) : ObjectiveState.FAILED
+                state: (craft && craft.isAlive()) ? ((hostiles > 0) ? ObjectiveState.IN_PROGRESS : ObjectiveState.COMPLETED) : ObjectiveState.FAILED
             });
             // handling explicit mission objectives
         } else {
@@ -2338,12 +2335,12 @@ define([
         var
                 /**@type Spacecraft */craft = this.getPilotedSpacecraft(),
                 /**@type Boolean */isTeamMission = this.isTeamMission(),
-                /**@type Number */teamSurvival = isTeamMission ? (this.getSpacecraftCountForTeam(craft.getTeam()) - 1) / (craft.getTeam().getInitialCount() - 1) : 0,
+                /**@type Number */teamSurvival = isTeamMission ? (this.getSpacecraftCountForTeam(craft.getTeam()) - (craft.isAlive() ? 1 : 0)) / (craft.getTeam().getInitialCount() - 1) : 0,
                 /**@type Object */scoreStats = this.getScoreStatistics(craft.getScore(), craft.getHitRatio(), craft.getHullIntegrity(), teamSurvival),
                 /**@type Object */perfInfo = _context.getPerformanceInfo(this, scoreStats.score);
         return {
             baseScore: scoreStats.baseScore,
-            hitRationBonus: scoreStats.hitRatioBonus,
+            hitRatioBonus: scoreStats.hitRatioBonus,
             hullIntegrityBonus: scoreStats.hullIntegrityBonus,
             teamSurvival: isTeamMission ? teamSurvival : undefined,
             teamSurvivalBonus: scoreStats.teamSurvivalBonus,
