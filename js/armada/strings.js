@@ -246,7 +246,8 @@ define([
         TITLE: {name: "audio.title"},
         MASTER_VOLUME: {name: "audio.masterVolume"},
         MUSIC_VOLUME: {name: "audio.musicVolume"},
-        SFX_VOLUME: {name: "audio.sfxVolume"}
+        SFX_VOLUME: {name: "audio.sfxVolume"},
+        UI_VOLUME: {name: "audio.uiVolume"}
     };
     strings.CONTOLLER = {
         PREFIX: {name: "controller.", optional: true},

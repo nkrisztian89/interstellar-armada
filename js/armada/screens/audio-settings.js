@@ -35,6 +35,7 @@ define([
             MASTER_VOLUME_SLIDER_ID = "masterVolumeSlider",
             MUSIC_VOLUME_SLIDER_ID = "musicVolumeSlider",
             SFX_VOLUME_SLIDER_ID = "sfxVolumeSlider",
+            UI_VOLUME_SLIDER_ID = "uiVolumeSlider",
             OPTION_PARENT_ID = "settingsDiv";
     // ##############################################################################
     /**
@@ -80,6 +81,12 @@ define([
         this._sfxVolumeSlider = this._registerSlider(SFX_VOLUME_SLIDER_ID,
                 strings.AUDIO.SFX_VOLUME.name,
                 audio.setSFXVolume);
+        /**
+         * @type ExternalComponent
+         */
+        this._uiVolumeSlider = this._registerSlider(UI_VOLUME_SLIDER_ID,
+                strings.AUDIO.UI_VOLUME.name,
+                audio.setUIVolume);
     }
     AudioScreen.prototype = new screens.HTMLScreen();
     AudioScreen.prototype.constructor = AudioScreen;
@@ -90,6 +97,7 @@ define([
         audio.setMasterVolume(this._masterVolumeSlider.getValue());
         audio.setMusicVolume(this._musicVolumeSlider.getValue());
         audio.setSFXVolume(this._sfxVolumeSlider.getValue());
+        audio.setUIVolume(this._uiVolumeSlider.getValue());
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };
     /**
@@ -146,6 +154,7 @@ define([
         this._masterVolumeSlider.setNumericValue(audio.getMasterVolume());
         this._musicVolumeSlider.setNumericValue(audio.getMusicVolume());
         this._sfxVolumeSlider.setNumericValue(audio.getSFXVolume());
+        this._uiVolumeSlider.setNumericValue(audio.getUIVolume());
     };
     /**
      * @override
@@ -156,6 +165,7 @@ define([
             audio.resetMasterVolume();
             audio.resetMusicVolume();
             audio.resetSFXVolume();
+            audio.resetUIVolume();
             this._updateValues();
             return true;
         }

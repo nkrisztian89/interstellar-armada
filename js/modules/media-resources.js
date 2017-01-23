@@ -1272,6 +1272,7 @@ define([
     /**
      * Creates a sound source for a randomly chosen sample corresponding to this effect and returns the reference to it. The samples must be
      * loaded.
+     * @param {Number} soundCategory (enum audio.SoundCategory) Use the SOUND_EFFECT or UI category
      * @param {Number} [volume=1]
      * @param {Boolean} [loop=false]
      * @param {Boolean} [shouldStack=false]
@@ -1280,7 +1281,7 @@ define([
      * @param {SoundSource} [source]
      * @returns {SoundClip}
      */
-    SoundEffectResource.prototype.createSoundClip = function (volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, source) {
+    SoundEffectResource.prototype.createSoundClip = function (soundCategory, volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, source) {
         var sample;
         if (this.isReadyToUse() === false) {
             application.showError("Cannot create sound source for sound effect '" + this.getName() + "', as it has not been loaded from file yet!");
@@ -1288,7 +1289,7 @@ define([
         }
         sample = this._samples[Math.floor(Math.random() * this._samples.length)];
         if (sample) {
-            return new audio.SoundClip(audio.SoundCategory.SOUND_EFFECT, sample, volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, source);
+            return new audio.SoundClip(soundCategory, sample, volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, source);
         }
         application.log("WARNING: cannot create sound source for sample '" + sample + "', as there was a problem while loading it.", 1);
         return null;
@@ -1470,6 +1471,7 @@ define([
     }
     _resourceManager = new MediaResourceManager();
     return {
+        SoundCategory: audio.SoundCategory, // propagated because a category can be chosen when creating sound clips for sound effects
         requestConfigLoad: requestConfigLoad,
         requestResourceLoad: _resourceManager.requestResourceLoad.bind(_resourceManager),
         getTexture: _resourceManager.getTexture.bind(_resourceManager),

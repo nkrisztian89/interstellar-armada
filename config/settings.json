@@ -75,7 +75,8 @@
     "audio": {
         "masterVolume": 1,
         "musicVolume": 1,
-        "sfxVolume": 1
+        "sfxVolume": 1,
+        "uiVolume": 1
     },
     "logic": {
         "general": {
@@ -715,6 +716,7 @@
             "demoViewSwitchInterval": 6000,
             "demoDoubleViewSwitchChance": 0.5,
             "musicVolumeInMenus": 0.5,
+            "sfxVolumeInMenus": 0.1,
             "ambientMusic": "ambient",
             "anticipationMusic": "anticipation",
             "combatMusic": "combat",

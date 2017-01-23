@@ -127,7 +127,11 @@ define([
                 /**
                  * A category for songs to play - typically longer, not spatialized
                  */
-                MUSIC: 2
+                MUSIC: 2,
+                /**
+                 * A category for sounds of the UI - typically short, not spatialized
+                 */
+                UI: 3
             },
             /**
              * @enum {String}
@@ -173,6 +177,11 @@ define([
              * @type GainNode
              */
             _musicGain,
+            /**
+             * Used for setting the master volume for UI - all UI nodes are going through this.
+             * @type GainNode
+             */
+            _uiGain,
             /**
              * Used for setting the master volume for all sounds - all sound nodes are going through this.
              * @type GainNode
@@ -340,7 +349,7 @@ define([
      */
     function SoundClip(soundCategory, sampleName, volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, soundSource) {
         /**
-         * The category of this sound, allowing the user to set a separate master volume per category
+         * (enum SoundCategory) The category of this sound, allowing the user to set a separate master volume per category
          * @type Number
          */
         this._soundCategory = soundCategory;
@@ -520,12 +529,15 @@ define([
                 case SoundCategory.MUSIC:
                     currentNode.connect(_musicGain);
                     break;
+                case SoundCategory.UI:
+                    currentNode.connect(_uiGain);
+                    break;
                 default:
                     application.showError("Cannot play sound '" + this._sampleName + "', because it has an unkown category: " + this._soundCategory);
             }
         }
         this._playing = true;
-        this._sourceNode.start(0, offset);
+        this._sourceNode.start(_context.currentTime, offset);
         this._playbackStartTime = _context.currentTime - offset;
     };
     /**
@@ -637,6 +649,13 @@ define([
         _musicGain.gain.value = value;
     }
     /**
+     * Sets a master volume applied to UI sounds.
+     * @param {Number} value
+     */
+    function setUIVolume(value) {
+        _uiGain.gain.value = value;
+    }
+    /**
      * Sets a master volume applied to all sounds.
      * @param {Number} value
      */
@@ -654,6 +673,8 @@ define([
     _effectGain.connect(_masterGain);
     _musicGain = _context.createGain();
     _musicGain.connect(_masterGain);
+    _uiGain = _context.createGain();
+    _uiGain.connect(_masterGain);
     _clip = new SoundClip();
     _source = new SoundSource();
     // -------------------------------------------------------------------------
@@ -667,6 +688,7 @@ define([
         playSound: playSound,
         setEffectVolume: setEffectVolume,
         setMusicVolume: setMusicVolume,
+        setUIVolume: setUIVolume,
         setMasterVolume: setMasterVolume
     };
 });

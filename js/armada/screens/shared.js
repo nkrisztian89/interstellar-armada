@@ -123,8 +123,12 @@ define([
         audio.initMusic(config.getSetting(config.GENERAL_SETTINGS.MENU_MUSIC), exports.MENU_THEME, true);
         if ((s1 && !s1.isLoaded() && !s1.hasError()) || (s2 && !s2.isLoaded() && !s2.hasError())) {
             resources.executeWhenReady(function () {
-                _buttonSelectSound = s1 && s1.createSoundClip(config.getSetting(config.GENERAL_SETTINGS.BUTTON_SELECT_SOUND).volume);
-                _buttonClickSound = s2 && s2.createSoundClip(config.getSetting(config.GENERAL_SETTINGS.BUTTON_CLICK_SOUND).volume);
+                _buttonSelectSound = s1 && s1.createSoundClip(
+                        resources.SoundCategory.UI,
+                        config.getSetting(config.GENERAL_SETTINGS.BUTTON_SELECT_SOUND).volume);
+                _buttonClickSound = s2 && s2.createSoundClip(
+                        resources.SoundCategory.UI,
+                        config.getSetting(config.GENERAL_SETTINGS.BUTTON_CLICK_SOUND).volume);
             });
         }
         resources.requestResourceLoad();

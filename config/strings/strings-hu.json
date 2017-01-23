@@ -346,7 +346,8 @@
         "title": "Hang beállítások",
         "masterVolume": "Fő hangerő:",
         "musicVolume": "Zene hangereje:",
-        "sfxVolume": "Effektek hangereje:"
+        "sfxVolume": "Effektek hangereje:",
+        "uiVolume": "Vezérlőelemek hangereje:"
     },
     "controller": {
         "general": "Általános",

@@ -61,6 +61,13 @@ define([
              * @type String
              */
             SFX_VOLUME_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "sfxVolume",
+            // ............................................................................................
+            // UI volume
+            /**
+             * The key identifying the location where the UI volume setting is stored in local storage.
+             * @type String
+             */
+            UI_VOLUME_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "uiVolume",
             // --------------------------------------------------------------------------------------------
             // Private variables
             /**
@@ -122,6 +129,11 @@ define([
          */
         this._sfxVolume = 1;
         /**
+         * The current UI volume setting.
+         * @type Number
+         */
+        this._uiVolume = 1;
+        /**
          * The rolloff factor to use when playing 3D spatial sound effects (not specifying it will fall back to the default of the audio module)
          * @type Number
          */
@@ -168,6 +180,7 @@ define([
         this.setMasterVolume(types.getNumberValue("settings.audio.masterVolume", dataJSON.masterVolume, 1), false);
         this.setMusicVolume(types.getNumberValue("settings.audio.musicVolume", dataJSON.musicVolume, 1), false);
         this.setSFXVolume(types.getNumberValue("settings.audio.sfxVolume", dataJSON.sfxVolume, 1), false);
+        this.setUIVolume(types.getNumberValue("settings.audio.uiVolume", dataJSON.uiVolume, 1), false);
     };
     /**
      * Loads the custom audio settings stored in HTML5 local storage.
@@ -192,6 +205,7 @@ define([
         loadSetting(MASTER_VOLUME_LOCAL_STORAGE_ID, "number", this.getMasterVolume(), this.setMasterVolume.bind(this));
         loadSetting(MUSIC_VOLUME_LOCAL_STORAGE_ID, "number", this.getMusicVolume(), this.setMusicVolume.bind(this));
         loadSetting(SFX_VOLUME_LOCAL_STORAGE_ID, "number", this.getSFXVolume(), this.setSFXVolume.bind(this));
+        loadSetting(UI_VOLUME_LOCAL_STORAGE_ID, "number", this.getUIVolume(), this.setUIVolume.bind(this));
         this.setToReady();
     };
     /**
@@ -202,6 +216,7 @@ define([
         localStorage.removeItem(MASTER_VOLUME_LOCAL_STORAGE_ID);
         localStorage.removeItem(MUSIC_VOLUME_LOCAL_STORAGE_ID);
         localStorage.removeItem(SFX_VOLUME_LOCAL_STORAGE_ID);
+        localStorage.removeItem(UI_VOLUME_LOCAL_STORAGE_ID);
     };
     /**
      * Returns the current master volume setting.
@@ -295,6 +310,37 @@ define([
      */
     AudioSettingsContext.prototype.resetSFXVolume = function () {
         this.setSFXVolume((localStorage[SFX_VOLUME_LOCAL_STORAGE_ID] !== undefined) ? localStorage[SFX_VOLUME_LOCAL_STORAGE_ID] : this._dataJSON.sfxVolume);
+    };
+    /**
+     * Returns the current UI volume setting.
+     * @returns {Number}
+     */
+    AudioSettingsContext.prototype.getUIVolume = function () {
+        return this._uiVolume;
+    };
+    /**
+     * Sets a new UI volume setting.
+     * @param {Number} value
+     * @param {Boolean} [saveToLocalStorage=true]
+     * @returns {Boolean} Whether the setting was successfully set to the passed value.
+     */
+    AudioSettingsContext.prototype.setUIVolume = function (value, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        this._uiVolume = value;
+        audio.setUIVolume(this._uiVolume);
+        // saving the original preference
+        if (saveToLocalStorage) {
+            localStorage[UI_VOLUME_LOCAL_STORAGE_ID] = value.toString();
+        }
+        return this._uiVolume === value;
+    };
+    /**
+     * Resets the UI volume to its value stored in local storage / JSON.
+     */
+    AudioSettingsContext.prototype.resetUIVolume = function () {
+        this.setUIVolume((localStorage[UI_VOLUME_LOCAL_STORAGE_ID] !== undefined) ? localStorage[UI_VOLUME_LOCAL_STORAGE_ID] : this._dataJSON.uiVolume);
     };
     /**
      * Creates and return a sound source that can be used for 3D sound effect positioning, using the configuration settings given for the
@@ -400,6 +446,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        SoundCategory: audio.SoundCategory,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
         loadSettingsFromLocalStorage: _context.loadFromLocalStorage.bind(_context),
@@ -413,6 +460,9 @@ define([
         getSFXVolume: _context.getSFXVolume.bind(_context),
         setSFXVolume: _context.setSFXVolume.bind(_context),
         resetSFXVolume: _context.resetSFXVolume.bind(_context),
+        getUIVolume: _context.getUIVolume.bind(_context),
+        setUIVolume: _context.setUIVolume.bind(_context),
+        resetUIVolume: _context.resetUIVolume.bind(_context),
         createSoundSource: _context.createSoundSource.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
         initMusic: initMusic,

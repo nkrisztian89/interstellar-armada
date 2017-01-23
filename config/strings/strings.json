@@ -370,7 +370,8 @@
         "title": "Audio settings",
         "masterVolume": "Master volume:",
         "musicVolume": "Music volume:",
-        "sfxVolume": "Sound effect volume:"
+        "sfxVolume": "Sound effect volume:",
+        "uiVolume": "User interface volume:"
     },
     "controller": {
         "general": "General",

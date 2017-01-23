@@ -403,6 +403,7 @@ define([
     function _createSoundClip(soundEffectDescriptor, loop, soundSource, shouldStack, stackTimeThreshold, stackVolumeFactor) {
         return soundEffectDescriptor.resource ?
                 soundEffectDescriptor.resource.createSoundClip(
+                        resources.SoundCategory.SOUND_EFFECT,
                         soundEffectDescriptor.volume,
                         loop,
                         shouldStack, stackTimeThreshold, stackVolumeFactor,

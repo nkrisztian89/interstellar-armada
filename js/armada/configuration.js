@@ -1258,6 +1258,13 @@ define([
             type: "number"
         },
         /**
+         * When the ingame menu is opened (or another screen is opened from within it), the SFX volume will be changed by this factor
+         */
+        SFX_VOLUME_IN_MENUS: {
+            name: "sfxVolumeInMenus",
+            type: "number"
+        },
+        /**
          * The ID (resource name) of the song (MusicResource) that should play during battles while there are no hostile spacecrafts.
          */
         AMBIENT_MUSIC: {

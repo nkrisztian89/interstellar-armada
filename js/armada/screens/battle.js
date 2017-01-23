@@ -1645,8 +1645,10 @@ define([
     /**
      * Pauses the battle by canceling all control, simulation and the render loop (e.g. for when a menu is 
      * displayed)
+     * @param {Boolean} [dimMusic=true] 
+     * @param {Boolean} [dimSFX=true] 
      */
-    BattleScreen.prototype.pauseBattle = function () {
+    BattleScreen.prototype.pauseBattle = function (dimMusic, dimSFX) {
         control.stopListening();
         _battleCursor = document.body.style.cursor;
         document.body.style.cursor = game.getDefaultCursor();
@@ -1658,8 +1660,14 @@ define([
             _battleScene.setShouldAnimate(false);
         }
         this.stopRenderLoop();
-        audio.resetMusicVolume();
-        audio.setMusicVolume(config.getSetting(config.BATTLE_SETTINGS.MUSIC_VOLUME_IN_MENUS) * audio.getMusicVolume(), false);
+        if (dimMusic !== false) {
+            audio.resetMusicVolume();
+            audio.setMusicVolume(config.getSetting(config.BATTLE_SETTINGS.MUSIC_VOLUME_IN_MENUS) * audio.getMusicVolume(), false);
+        }
+        if (dimSFX !== false) {
+            audio.resetSFXVolume();
+            audio.setSFXVolume(config.getSetting(config.BATTLE_SETTINGS.SFX_VOLUME_IN_MENUS) * audio.getSFXVolume(), false);
+        }
     };
     /**
      * Resumes the simulation and control of the battle and the render loop
@@ -1687,6 +1695,7 @@ define([
                     "No action was taken, to avoid double-running the simulation.");
         }
         audio.resetMusicVolume();
+        audio.resetSFXVolume();
     };
     /**
      * Uses the loading box to show the status to the user.
@@ -2885,7 +2894,7 @@ define([
                                 permanent: true
                             }, true);
                         } else {
-                            this.pauseBattle();
+                            this.pauseBattle(false, true);
                             armadaScreens.openDialog({
                                 header: strings.get(strings.BATTLE.MESSAGE_DEFEAT_HEADER),
                                 message: strings.get(strings.BATTLE.MESSAGE_DEFEAT_MESSAGE),
@@ -3052,6 +3061,7 @@ define([
                     });
                     _messageSound = resources.getSoundEffect(
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
+                            resources.SoundCategory.SOUND_EFFECT,
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).volume);
                     this._loadingBox.hide();
                     showHUD();
