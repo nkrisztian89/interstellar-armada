@@ -10,18 +10,19 @@
 /*global define */
 
 /**
- * 
+ * @param game Used to change the screen in public functions
  * @param resources Used to load and access the sound effects for buttons
  * @param components Used for constants (CSS class names)
  * @param config Used to access which sound effects and music to load
  * @param audio Used to initialize music
  */
 define([
+    "modules/game",
     "modules/media-resources",
     "modules/components",
     "armada/configuration",
     "armada/audio"
-], function (resources, components, config, audio) {
+], function (game, resources, components, config, audio) {
     "use strict";
     var
             exports = {
@@ -90,7 +91,10 @@ define([
                 INGAME_MENU_SCREEN_NAME: "ingameMenu",
                 INGAME_MENU_SCREEN_SOURCE: "ingame-menu.html",
                 INGAME_MENU_SCREEN_CSS: "ingame-menu.css",
-                INGAME_MENU_CONTAINER_ID: "menuContainer"
+                INGAME_MENU_CONTAINER_ID: "menuContainer",
+                DIALOG_SCREEN_NAME: "dialog",
+                DIALOG_SCREEN_SOURCE: "dialog.html",
+                DIALOG_SCREEN_CSS: "dialog.css"
             },
             // ------------------------------------------------------------------------------
             // Private variables
@@ -145,6 +149,14 @@ define([
         if (_buttonClickSound && enabled) {
             _buttonClickSound.play();
         }
+    };
+    /**
+     * Sets up a dialog screen using the passed data and opens it as a superimposed screen
+     * @param {DialogScreen~Data} dialogData
+     */
+    exports.openDialog = function (dialogData) {
+        game.getScreen(exports.DIALOG_SCREEN_NAME).setup(dialogData);
+        game.setScreen(exports.DIALOG_SCREEN_NAME, true, exports.SUPERIMPOSE_BACKGROUND_COLOR);
     };
     // ------------------------------------------------------------------------------
     // Derived constants

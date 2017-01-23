@@ -146,15 +146,51 @@ define([
                     }, {
                         id: strings.INGAME_MENU.RESTART.name,
                         action: function () {
-                            game.closeSuperimposedScreen();
-                            game.getScreen().startNewBattle({
-                                restart: true
+                            armadaScreens.openDialog({
+                                header: strings.get(strings.INGAME_MENU.RESTART_HEADER),
+                                message: strings.get(strings.INGAME_MENU.RESTART_MESSAGE),
+                                buttons: [{
+                                        caption: strings.get(strings.SCREEN.CANCEL),
+                                        action: function () {
+                                            game.closeSuperimposedScreen();
+                                        }
+                                    }, {
+                                        caption: strings.get(strings.INGAME_MENU.RESTART_RESTART),
+                                        action: function () {
+                                            game.closeSuperimposedScreen();
+                                            game.closeSuperimposedScreen();
+                                            game.getScreen().startNewBattle({
+                                                restart: true
+                                            });
+                                        }
+                                    }
+                                ]
                             });
                         }
                     }, {
                         id: strings.INGAME_MENU.QUIT.name,
                         action: function () {
-                            game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                            armadaScreens.openDialog({
+                                header: strings.get(strings.INGAME_MENU.QUIT_HEADER),
+                                message: strings.get(strings.INGAME_MENU.QUIT_MESSAGE),
+                                buttons: [{
+                                        caption: strings.get(strings.SCREEN.CANCEL),
+                                        action: function () {
+                                            game.closeSuperimposedScreen();
+                                        }
+                                    }, {
+                                        caption: strings.get(strings.INGAME_MENU.QUIT_TO_MISSIONS),
+                                        action: function () {
+                                            game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
+                                        }
+                                    }, {
+                                        caption: strings.get(strings.INGAME_MENU.QUIT_TO_MAIN_MENU),
+                                        action: function () {
+                                            game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                                        }
+                                    }
+                                ]
+                            });
                         }
                     }],
                 armadaScreens.INGAME_MENU_CONTAINER_ID,

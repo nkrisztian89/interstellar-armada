@@ -31,7 +31,10 @@
         "positiveDirection": "hátra/jobbra",
         "negativeDirection": "előre/balra"
     },
-    "screen.back": "Vissza",
+    "screen": {
+        "back": "Vissza",
+        "cancel": "Mégse"
+    },
     "mainMenu": {
         "newGame": "Új játék",
         "database": "Adatbázis",
@@ -86,8 +89,19 @@
     "ingameMenu": {
         "title": "Menü",
         "resume": "Vissza a játékba",
-        "restart": "Pálya újrakezdése",
-        "quit": "Kilépés a főmenübe"
+        "restart": "Küldetés újrakezdése",
+        "restartDialog": {
+            "header": "Megerősítés",
+            "message": "Biztos meg akarod szakítani és újrakezdeni a küldetést? Így a küldetés jelenlegi állása elveszik.",
+            "restartButton": "Újrakezdés"
+        },
+        "quit": "Kilépés",
+        "quitDialog": {
+            "header": "Megerősítés",
+            "message": "Biztos meg akarod szakítani a küldetést? A megszakított küldetés elvesztettnek számít.",
+            "quitToMissionsButton": "Kilépés a küldetésekhez",
+            "quitToMainMenuButton": "Kilépés a főmenübe"
+        }
     },
     "infoBox": {
         "header": "Információ",

@@ -23,7 +23,8 @@ define([
         AND: {name: "grammar.and"}
     };
     strings.SCREEN = {
-        BACK: {name: "screen.back"}
+        BACK: {name: "screen.back"},
+        CANCEL: {name: "screen.cancel"}
     };
     strings.MAIN_MENU = {
         NEW_GAME: {name: "mainMenu.newGame"},
@@ -76,7 +77,14 @@ define([
         TITLE: {name: "ingameMenu.title"},
         RESUME: {name: "ingameMenu.resume"},
         RESTART: {name: "ingameMenu.restart"},
-        QUIT: {name: "ingameMenu.quit"}
+        RESTART_HEADER: {name: "ingameMenu.restartDialog.header"},
+        RESTART_MESSAGE: {name: "ingameMenu.restartDialog.message"},
+        RESTART_RESTART: {name: "ingameMenu.restartDialog.restartButton"},
+        QUIT: {name: "ingameMenu.quit"},
+        QUIT_HEADER: {name: "ingameMenu.quitDialog.header"},
+        QUIT_MESSAGE: {name: "ingameMenu.quitDialog.message"},
+        QUIT_TO_MISSIONS: {name: "ingameMenu.quitDialog.quitToMissionsButton"},
+        QUIT_TO_MAIN_MENU: {name: "ingameMenu.quitDialog.quitToMainMenuButton"}
     };
     strings.INFO_BOX = {
         HEADER: {name: "infoBox.header"},

@@ -244,6 +244,7 @@ div.horizontalMenu {
 
 a.horizontalMenu {
     display: table-cell;
+    vertical-align: middle;
     margin: 0.4em;
 }
 

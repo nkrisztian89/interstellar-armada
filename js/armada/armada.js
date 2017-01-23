@@ -91,8 +91,9 @@ define([
             "armada/screens/graphics-settings",
             "armada/screens/audio-settings",
             "armada/screens/control-settings",
-            "armada/screens/about"
-        ], function (armadaScreens, menus, missionsScreen, battle, debriefing, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen) {
+            "armada/screens/about",
+            "armada/screens/dialog"
+        ], function (armadaScreens, menus, missionsScreen, battle, debriefing, database, generalSettings, graphicsScreen, audioScreen, controlsScreen, aboutScreen, dialogScreen) {
             game.addScreen(menus.mainMenuScreen);
             game.addScreen(missionsScreen.missionsScreen);
             game.addScreen(battle.battleScreen);
@@ -105,6 +106,7 @@ define([
             game.addScreen(controlsScreen.controlsScreen);
             game.addScreen(aboutScreen.aboutScreen);
             game.addScreen(menus.ingameMenuScreen);
+            game.addScreen(dialogScreen.dialogScreen);
             _progressBar.value = 4;
             game.executeWhenAllScreensReady(function () {
                 _progressBar.value = 5;

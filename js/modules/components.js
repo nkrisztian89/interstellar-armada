@@ -429,6 +429,7 @@ define([
                 this._onUnselect();
             }
         }
+        this._element.blur();
     };
     // #########################################################################
     /**
@@ -1023,6 +1024,7 @@ define([
         if (index !== this._selectedIndex) {
             if (this._selectedIndex >= 0) {
                 this._menuOptions[this._selectedIndex].element.classList.remove(this._style.selectedButtonClassName);
+                this._menuOptions[this._selectedIndex].element.blur();
             }
             this._selectedIndex = index;
             if (this._selectedIndex >= 0) {

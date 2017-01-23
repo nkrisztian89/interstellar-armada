@@ -31,7 +31,10 @@
         "positiveDirection": "backward/right",
         "negativeDirection": "forward/left"
     },
-    "screen.back": "Back",
+    "screen": {
+        "back": "Back",
+        "cancel": "Cancel"
+    },
     "mainMenu": {
         "newGame": "New game",
         "database": "Database",
@@ -87,7 +90,18 @@
         "title": "Menu",
         "resume": "Resume game",
         "restart": "Restart mission",
-        "quit": "Quit to main menu"
+        "restartDialog": {
+            "header": "Confirmation",
+            "message": "Are you sure you want to abort the mission and restart it? The current progress will be lost.",
+            "restartButton": "Restart"
+        },
+        "quit": "Quit mission",
+        "quitDialog": {
+            "header": "Confirmation",
+            "message": "Are you sure you want to abort the mission and quit? The mission will count as failed.",
+            "quitToMissionsButton": "Quit to missions",
+            "quitToMainMenuButton": "Quit to main menu"
+        }
     },
     "infoBox": {
         "header": "Information",
