@@ -522,6 +522,13 @@ define([
         return this._renderableObject;
     };
     /**
+     * Returns whether the node (and its subnodes) are set to be rendered.
+     * @returns {Boolean}
+     */
+    RenderableNode.prototype.isVisible = function () {
+        return this._visible && (!this._parent || this._parent.isVisible());
+    };
+    /**
      * Sets the node (and its visible subnodes) to be rendered from now on.
      */
     RenderableNode.prototype.show = function () {

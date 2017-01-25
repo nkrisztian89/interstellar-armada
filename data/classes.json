@@ -1294,6 +1294,144 @@
                             "timeToReach": 500
                         }]
                 }]
+        }, {
+            "name": "fighterJumpOutFlash",
+            "particleEmitters": [{
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [0.3, 0.9, 1, 1],
+                            "size": 65,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.3, 1, 1],
+                            "size": 0,
+                            "timeToReach": 350
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1.0, 1.0, 1, 1],
+                            "size": 45,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.1, 0.1, 1],
+                            "size": 0,
+                            "timeToReach": 350
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [0.3, 0.9, 1],
+                    "intensity": 16900,
+                    "timeToReach": 0
+                }, {
+                    "color": [0.3, 0.9, 1],
+                    "intensity": 0,
+                    "timeToReach": 350
+                }],
+            "soundEffect": {
+                "name": "hit",
+                "volume": 1
+            }
+        }, {
+            "name": "smallShipJumpOutFlash",
+            "particleEmitters": [{
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [0.3, 0.9, 1, 1],
+                            "size": 240,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.6, 1, 1],
+                            "size": 0,
+                            "timeToReach": 400
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 1, 1],
+                            "size": 170,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.1, 0.1, 1],
+                            "size": 0,
+                            "timeToReach": 400
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [0.3, 0.9, 1],
+                    "intensity": 230400,
+                    "timeToReach": 0
+                }, {
+                    "color": [0.3, 0.9, 1],
+                    "intensity": 0,
+                    "timeToReach": 400
+                }],
+            "soundEffect": {
+                "name": "hit",
+                "volume": 5
+            }
+        }, {
+            "name": "largeShipJumpOutFlash",
+            "particleEmitters": [{
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [0.3, 0.9, 1, 1],
+                            "size": 1500,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.6, 1, 1],
+                            "size": 0,
+                            "timeToReach": 500
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 1, 1],
+                            "size": 1100,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.1, 0.1, 0.1, 1],
+                            "size": 0,
+                            "timeToReach": 500
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [0.3, 0.9, 1],
+                    "intensity": 5062500,
+                    "timeToReach": 0
+                }, {
+                    "color": [0.3, 0.9, 1],
+                    "intensity": 0,
+                    "timeToReach": 500
+                }],
+            "soundEffect": {
+                "name": "hit",
+                "volume": 10
+            }
         }],
     "projectileClasses": [{
             "name": "training",
@@ -1685,6 +1823,67 @@
                 "volume": 4.0
             },
             "scoreValue": 50
+        }],
+    "jumpEngineClasses": [{
+            "name": "imperialFighterMk1",
+            "engageSound": {
+                "name": "blip_message",
+                "volume": 0.5
+            },
+            "prepareVelocity": 100,
+            "prepareDuration": 5000,
+            "prepareSound": {
+                "name": "jump_prepare",
+                "volume": 0.5
+            },
+            "jumpOutAcceleration": 2500,
+            "jumpOutDuration": 500,
+            "jumpOutScaling": 3,
+            "jumpOutSound": {
+                "name": "thruster",
+                "volume": 3.0
+            },
+            "jumpOutExplosion": "fighterJumpOutFlash"
+        }, {
+            "name": "imperialSmallShipMk1",
+            "engageSound": {
+                "name": "blip_message",
+                "volume": 0.5
+            },
+            "prepareVelocity": 120,
+            "prepareDuration": 5000,
+            "prepareSound": {
+                "name": "jump_prepare",
+                "volume": 1.8
+            },
+            "jumpOutAcceleration": 7000,
+            "jumpOutDuration": 500,
+            "jumpOutScaling": 2,
+            "jumpOutSound": {
+                "name": "thruster",
+                "volume": 10.0
+            },
+            "jumpOutExplosion": "smallShipJumpOutFlash"
+        }, {
+            "name": "imperialLargeShipMk1",
+            "engageSound": {
+                "name": "blip_message",
+                "volume": 0.5
+            },
+            "prepareVelocity": 150,
+            "prepareDuration": 5000,
+            "prepareSound": {
+                "name": "jump_prepare",
+                "volume": 1.8
+            },
+            "jumpOutAcceleration": 20000,
+            "jumpOutDuration": 500,
+            "jumpOutScaling": 1.5,
+            "jumpOutSound": {
+                "name": "thruster",
+                "volume": 20.0
+            },
+            "jumpOutExplosion": "largeShipJumpOutFlash"
         }],
     "spacecraftTypes": [{
             "name": "container",
@@ -2155,6 +2354,17 @@
                     "position": [15, 150, 10],
                     "distanceRange": [15, 200]
                 }, {
+                    "name": "jump",
+                    "isAimingView": true,
+                    "fov": 75,
+                    "fovRange": [75, 75],
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": false,
+                    "rotationCenterIsObject": true,
+                    "position": [0, -12, 6],
+                    "lookAt": "none"
+                }, {
                     "name": "target",
                     "isAimingView": false,
                     "fps": true,
@@ -2177,6 +2387,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "full",
@@ -2191,6 +2404,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "training",
@@ -2200,6 +2416,9 @@
                             "class": "trainingGun"
                         }],
                     "propulsion": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "jumpEngine": {
                         "class": "imperialFighterMk1"
                     }
                 }, {
@@ -2214,6 +2433,9 @@
                             "class": "trainingGun"
                         }],
                     "propulsion": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "jumpEngine": {
                         "class": "imperialFighterMk1"
                     }
                 }],
@@ -3101,6 +3323,17 @@
                     "position": [20, 150, 15],
                     "distanceRange": [22, 200]
                 }, {
+                    "name": "jump",
+                    "isAimingView": true,
+                    "fov": 75,
+                    "fovRange": [75, 75],
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": false,
+                    "rotationCenterIsObject": true,
+                    "position": [0, -14, 7.5],
+                    "lookAt": "none"
+                }, {
                     "name": "target",
                     "isAimingView": false,
                     "fps": true,
@@ -3123,6 +3356,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialBomberMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "full",
@@ -3133,6 +3369,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialBomberMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "heavy",
@@ -3143,6 +3382,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialBomberMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "half",
@@ -3151,6 +3393,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialBomberMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "training",
@@ -3161,6 +3406,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialBomberMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }],
             "humSound": {
@@ -3845,6 +4093,17 @@
                     "position": [85, 300, 40],
                     "distanceRange": [90, 500]
                 }, {
+                    "name": "jump",
+                    "isAimingView": true,
+                    "fov": 75,
+                    "fovRange": [75, 75],
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": false,
+                    "rotationCenterIsObject": true,
+                    "position": [0, -110, 30],
+                    "lookAt": "none"
+                }, {
                     "name": "target",
                     "isAimingView": false,
                     "fps": true,
@@ -3867,6 +4126,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialCorvetteMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialSmallShipMk1"
                     }
                 }, {
                     "name": "full",
@@ -3877,6 +4139,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialCorvetteMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialSmallShipMk1"
                     }
                 }],
             "humSound": {
@@ -4408,6 +4673,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialFrigateMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialSmallShipMk1"
                     }
                 }, {
                     "name": "full",
@@ -4422,6 +4690,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialFrigateMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialSmallShipMk1"
                     }
                 }],
             "humSound": {
@@ -5113,6 +5384,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialCruiserMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialLargeShipMk1"
                     }
                 }],
             "humSound": {

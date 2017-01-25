@@ -376,14 +376,14 @@ define([
          */
         BUTTON_SELECT_SOUND: {
             name: "buttonSelectSound",
-            type: classes.SOUND_EFFECT_2D
+            type: classes.SOUND_EFFECT
         },
         /**
          * The descriptor for the sound effect that should play when the player clicks / activates a button on a screen 
          */
         BUTTON_CLICK_SOUND: {
             name: "buttonClickSound",
-            type: classes.SOUND_EFFECT_2D
+            type: classes.SOUND_EFFECT
         }
     };
     DATABASE_SETTINGS = {
@@ -880,11 +880,34 @@ define([
             values: camera.Camera.prototype.TransitionStyle
         },
         /**
+         * When preparing to jump out with the piloted spacecraft, the camera will switch to the spacecraft's first view (camera 
+         * configuration) with this name, if any.
+         */
+        JUMP_PREPARE_VIEW_NAME: {
+            name: "jumpPrepareViewName",
+            type: "string"
+        },
+        /**
+         * When jumping out with the piloted spacecraft, the camera will switch to the spacecraft's first view (camera configuration) with 
+         * this name, if any. (otherwise switch to free camera)
+         */
+        JUMP_OUT_VIEW_NAME: {
+            name: "jumpOutViewName",
+            type: "string"
+        },
+        /**
          * The amount of time to wait after the game state changes to victory or defeat before actually displaying the result. (as for
          * example incoming projectiles destroying the player's ship right after victory can change the state to defeat)
          */
         GAME_STATE_DISPLAY_DELAY: {
             name: "gameStateDisplayDelay",
+            type: "number"
+        },
+        /**
+         * The amount of time to wait between the player jumping out and showing the mission debriefing screen, in milliseconds.
+         */
+        QUIT_DELAY_AFTER_JUMP_OUT: {
+            name: "quitDelayAfterJumpOut",
             type: "number"
         },
         HUD: {
@@ -1014,7 +1037,7 @@ define([
              */
             WINGMEN_STATUS_CRAFT_INDICATOR: {
                 name: "wingmenStatusCraftIndicator",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["player", "general", "interceptor", "bomber"], COLOR: ["fullIntegrity", "halfIntegrity", "zeroIntegrity", "destroyed"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["player", "general", "interceptor", "bomber"], COLOR: ["fullIntegrity", "halfIntegrity", "zeroIntegrity", "destroyed", "away"]})
             },
             /**
              * Stores the relative positions (within the area described by the squad layouts) of the individual spacecraft indicators for
@@ -1127,7 +1150,7 @@ define([
             },
             MESSAGE_TEXT: {
                 name: "messageText",
-                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["default", "controlString"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["default", "jump", "controlString"]})
             },
             MESSAGE_TEXT_MARGIN: {
                 name: "messageTextMargin",
@@ -1187,15 +1210,15 @@ define([
             },
             TARGET_SWITCH_SOUND: {
                 name: "targetSwitchSound",
-                type: classes.SOUND_EFFECT_2D
+                type: classes.SOUND_EFFECT
             },
             TARGET_SWITCH_DENIED_SOUND: {
                 name: "targetSwitchDeniedSound",
-                type: classes.SOUND_EFFECT_2D
+                type: classes.SOUND_EFFECT
             },
             MESSAGE_SOUND: {
                 name: "messageSound",
-                type: classes.SOUND_EFFECT_2D
+                type: classes.SOUND_EFFECT
             }
         },
         WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE: {

@@ -338,6 +338,13 @@ define([
         return this._canBeReused;
     };
     /**
+     * Returns whether the object is set to be rendered (based on its own state and the visibility settings in the scene graph)
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.isVisible = function () {
+        return this._visible && (!this._node || this._node.isVisible());
+    };
+    /**
      * Called at the beginning of the render of each frame, to reset object,
      * e.g. to invalidate all cached values that were only valid for one frame.
      * Subclasses must extend its functionality to reset their additional 

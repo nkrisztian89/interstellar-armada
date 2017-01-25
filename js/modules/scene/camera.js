@@ -1972,6 +1972,9 @@ define([
             this._currentConfiguration.setCamera(null);
         }
         this._currentConfiguration = configuration;
+        this._updateFOV();
+        this._updateSpan();
+        this._updateProjectionMatrix(this._fov, this._span);
         this._currentConfiguration.setCamera(this, doNotResetConfiguration);
         this._previousConfiguration = null;
     };
@@ -2199,7 +2202,7 @@ define([
      */
     Camera.prototype.followNextNode = function (considerScene, duration, style) {
         var node = this._scene.getNextNode(this._followedNode), originalNode = this._followedNode;
-        while ((node !== originalNode) && node && !node.getNextCameraConfiguration()) {
+        while ((node !== originalNode) && node && (!node.getNextCameraConfiguration() || !node.isVisible())) {
             if (!originalNode) {
                 originalNode = node;
             }
@@ -2224,7 +2227,7 @@ define([
      */
     Camera.prototype.followPreviousNode = function (considerScene, duration, style) {
         var firstNode = this._scene.getFirstNode(), node = this._scene.getPreviousNode(this._followedNode), originalNode = this._followedNode;
-        while ((node !== originalNode) && node && !node.getNextCameraConfiguration()) {
+        while ((node !== originalNode) && node && (!node.getNextCameraConfiguration() || !node.isVisible())) {
             if (!originalNode) {
                 originalNode = node;
             }

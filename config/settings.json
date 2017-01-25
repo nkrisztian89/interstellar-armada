@@ -172,7 +172,10 @@
             "targetViewName": "target",
             "targetChangeTransitonDuration": 300,
             "targetChangeTransitionStyle": "smooth",
+            "jumpPrepareViewName": "jump",
+            "jumpOutViewName": "flyby",
             "gameStateDisplayDelay": 2000,
+            "quitDelayAfterJumpOut": 1500,
             "hud": {
                 "targetSwitchAnimationDuration": 100,
                 "hullIntegrityDecreaseAnimationDuration": 300,
@@ -386,7 +389,8 @@
                         "fullIntegrity": [0, 1, 0, 1],
                         "halfIntegrity": [1, 1, 0, 1],
                         "zeroIntegrity": [1, 0, 0, 1],
-                        "destroyed": [1, 0, 0, 0.3]
+                        "destroyed": [1, 0, 0, 0.3],
+                        "away": [0, 1, 0, 0.3]
                     }
                 },
                 "wigmenStatusCraftPositions": [
@@ -589,6 +593,7 @@
                 "messageText": {
                     "colors": {
                         "default": [1, 1, 1, 1],
+                        "jump": [0, 1, 1, 1],
                         "controlString": [0, 1, 0, 1]
                     },
                     "fontSize": 0.16,

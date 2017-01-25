@@ -16,6 +16,7 @@
  * @param lights Used for creating the light sources for the preview scene
  * @param config Used to access default camera configuration settings
  * @param environments Used to access the environments
+ * @param SpacecraftEvents Used to set spacecraft event handlers
  * @param spacecraft Used to create the spacecraft for preview
  * @param common Used to create selectors
  * @param descriptors Used to access enums
@@ -28,6 +29,7 @@ define([
     "modules/scene/lights",
     "armada/configuration",
     "armada/logic/environments",
+    "armada/logic/SpacecraftEvents",
     "armada/logic/spacecraft",
     "editor/common",
     "editor/descriptors",
@@ -35,7 +37,7 @@ define([
 ], function (
         utils, mat,
         renderableObjects, lights,
-        config, environments, spacecraft,
+        config, environments, SpacecraftEvents, spacecraft,
         common, descriptors, preview) {
     "use strict";
     var
@@ -421,7 +423,7 @@ define([
         _optionElements.explodeButton = common.createButton("Explode", function () {
             if (_spacecraft.getHitpoints() > 0) {
                 _spacecraft.setHitpointsToZero();
-                _spacecraft.setOnDestructed(function () {
+                _spacecraft.setEventHandler(SpacecraftEvents.DESTRUCTED, function () {
                     _spacecraft.getVisualModel().getNode().hide();
                     _updateExplodeButton();
                     return false;

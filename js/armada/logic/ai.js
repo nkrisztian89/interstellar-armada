@@ -15,6 +15,7 @@
  * @param mat Used for matrix operations the AIs need to calculate their actions.
  * @param physics Used for accessing the constant of how long rotation does a rotation matrix represent.
  * @param config Used for accessing game configuration/settings.
+ * @param SpacecraftEvents Used for setting spacecraft event handlers
  * @param classes used for accessing spacecraft turn style enum type
  */
 define([
@@ -22,8 +23,9 @@ define([
     "utils/matrices",
     "modules/physics",
     "armada/configuration",
+    "armada/logic/SpacecraftEvents",
     "armada/logic/classes"
-], function (vec, mat, physics, config, classes) {
+], function (vec, mat, physics, config, SpacecraftEvents, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -46,13 +48,13 @@ define([
                  */
                 EVADE: 1
             },
-    // ------------------------------------------------------------------------------
-    // constants
-    /**
-     * The type identifier to be used when creating fighter AIs.
-     * @type String
-     */
-    FIGHTER_AI_NAME = "fighter",
+            // ------------------------------------------------------------------------------
+            // constants
+            /**
+             * The type identifier to be used when creating fighter AIs.
+             * @type String
+             */
+            FIGHTER_AI_NAME = "fighter",
             /**
              * The type identifier to be used when creating ship AIs.
              * @type String
@@ -426,10 +428,10 @@ define([
          */
         this._targetDistance = 0;
         // attaching handlers to the various spacecraft events
-        this._spacecraft.setOnBeingHit(this._handleBeingHit.bind(this));
-        this._spacecraft.setOnTargetHit(this._handleTargetHit.bind(this));
-        this._spacecraft.setOnAnySpacecraftHit(this._handleAnySpacecraftHit.bind(this));
-        this._spacecraft.setOnTargetFired(this._handleTargetFired.bind(this));
+        this._spacecraft.setEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
+        this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
+        this._spacecraft.setEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
+        this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_FIRED, this._handleTargetFired.bind(this));
     }
     FighterAI.prototype = new SpacecraftAI();
     FighterAI.prototype.constructor = FighterAI;
@@ -456,17 +458,17 @@ define([
     };
     /**
      * Updates the AI state for when the fighter has been hit.
-     * @param {Spacecraft} spacecraft The spacecraft that fired the projectile which hit the controlled fighter.
-     * @param {Number[3]} hitPosition The relative position where the projectile has hit the controlled fighter (in object-space)
+     * @param {SpacecraftEvents~BeingHitData} data 
      */
-    FighterAI.prototype._handleBeingHit = function (spacecraft, hitPosition) {
+    FighterAI.prototype._handleBeingHit = function (data) {
+        var spacecraft = data.spacecraft;
         // initiating a new evasive maneuver in case one is not already in progress
         // if the attack path is blocked by a spacecraft, then we are already strafing, so no evasive maneuver is started
         if (!this._isBlockedBy && (this._evasiveManeuverTime < 0)) {
             this._evasiveManeuverTime = 0;
             // marking the direction opposite to the hit position so an appropriate evasive vector can be calculated
-            this._evasiveVelocityVector[0] = -hitPosition[0];
-            this._evasiveVelocityVector[1] = -hitPosition[2];
+            this._evasiveVelocityVector[0] = -data.hitPosition[0];
+            this._evasiveVelocityVector[1] = -data.hitPosition[2];
             vec.normalize2(this._evasiveVelocityVector);
         }
         // if being hit by a (still alive) hostile ship while having different target
@@ -487,9 +489,10 @@ define([
     };
     /**
      * Updates the AI state for when the controlled fighter has hit any spacecraft (including itself and its current target)
-     * @param {Spacecraft} spacecraft The spacecraft that has been hit.
+     * @param {SpacecraftEvents~AnySpacecraftHitData} data
      */
-    FighterAI.prototype._handleAnySpacecraftHit = function (spacecraft) {
+    FighterAI.prototype._handleAnySpacecraftHit = function (data) {
+        var spacecraft = data.spacecraft;
         // if a spacecraft other than the controlled one or the current target is hit while performing either a normal or charge attack
         // (but not evading) we mark the hit spacecraft as blocking the firing path, triggering blocker avoidance strafing maneuvers
         // if a blocking spacecraft is already mark, we overwrite it only if it is hostile, as the new one might be friendly, which means
@@ -823,15 +826,16 @@ define([
          */
         this._targetInRange = false;
         // attaching handlers to the various spacecraft events
-        this._spacecraft.setOnBeingHit(this._handleBeingHit.bind(this));
+        this._spacecraft.setEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
     }
     ShipAI.prototype = new SpacecraftAI();
     ShipAI.prototype.constructor = ShipAI;
     /**
      * Updates the AI state for when the ship has been hit.
-     * @param {Spacecraft} spacecraft The spacecraft that fired the projectile which hit the controlled ship.
+     * @param {SpacecraftEvents~BeingHitData} data 
      */
-    ShipAI.prototype._handleBeingHit = function (spacecraft) {
+    ShipAI.prototype._handleBeingHit = function (data) {
+        var spacecraft = data.spacecraft;
         // if being hit by a (still alive) hostile ship while having different target
         if (this._spacecraft && !this._spacecraft.canBeReused() && !spacecraft.canBeReused() && spacecraft.isHostile(this._spacecraft) && this._spacecraft.getTarget() && (this._spacecraft.getTarget() !== spacecraft)) {
             // switch target in case the current target is not targeting us anyway or is out of range

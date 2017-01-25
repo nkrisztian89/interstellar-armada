@@ -1973,12 +1973,13 @@ define([
     /**
      * Returns how many spacecrafts hostile to the given spacecraft are currently alive 
      * @param {Spacecraft} craft
+     * @param {Boolean} [presentOnly=false] Whether to count only present (= already jumped in, has not jumpoed out yet) spacecrafts
      * @returns {Number}
      */
-    Mission.prototype.getHostileSpacecraftCount = function (craft) {
+    Mission.prototype.getHostileSpacecraftCount = function (craft, presentOnly) {
         var i, result = 0;
         for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
+            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused() && (!presentOnly || !this._spacecrafts[i].isAway())) {
                 if (this._spacecrafts[i].isHostile(craft)) {
                     result++;
                 }
@@ -2072,14 +2073,14 @@ define([
             craft = this.getPilotedSpacecraft();
             suffix = "";
             if (craft) {
-                hostiles = this.getHostileSpacecraftCount(craft);
+                hostiles = this.getHostileSpacecraftCount(craft, true);
                 if (hostiles > 0) {
                     suffix = " (" + hostiles + ")";
                 }
             }
             result.push({
                 text: strings.get(strings.BATTLE.OBJECTIVE_WIN_PREFIX, strings.OBJECTIVE.DESTROY_ALL_SUFFIX.name) + suffix,
-                state: (craft && craft.isAlive()) ? ((hostiles > 0) ? ObjectiveState.IN_PROGRESS : ObjectiveState.COMPLETED) : ObjectiveState.FAILED
+                state: (craft && craft.isAlive()) ? ((this.getHostileSpacecraftCount(craft, false) > 0) ? ObjectiveState.IN_PROGRESS : ObjectiveState.COMPLETED) : ObjectiveState.FAILED
             });
             // handling explicit mission objectives
         } else {
@@ -2178,10 +2179,11 @@ define([
             }
         }
         this._spacecrafts = [];
+        this._hitObjects = [];
         ai.clearAIs();
         for (i = 0; i < dataJSON.spacecrafts.length; i++) {
             craft = new spacecraft.Spacecraft();
-            craft.loadFromJSON(dataJSON.spacecrafts[i], this._spacecrafts);
+            craft.loadFromJSON(dataJSON.spacecrafts[i], this._hitObjects);
             if (!demoMode && dataJSON.spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
             }
@@ -2269,7 +2271,7 @@ define([
                             mat.translation4(random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2),
                             orientation,
                             this._randomShipsEquipmentProfileName,
-                            this._spacecrafts);
+                            this._hitObjects);
                     if (demoMode) {
                         if (craft.isFighter()) {
                             ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE), craft);
@@ -2399,7 +2401,6 @@ define([
         if (this._environment) {
             this._environment.addToScene(battleScene);
         }
-        this._hitObjects = [];
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].addToScene(battleScene, undefined, false, {
                 hitboxes: true,
@@ -2409,7 +2410,8 @@ define([
                 explosion: true,
                 cameraConfigurations: true,
                 lightSources: true,
-                blinkers: true
+                blinkers: true,
+                jumpEngine: true
             }, {
                 randomAnimationTime: true
             });
@@ -2420,7 +2422,9 @@ define([
                     shaderName: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_SHADER)
                 });
             }
-            this._hitObjects.push(this._spacecrafts[i]);
+            if (!this._spacecrafts[i].isAway()) {
+                this._hitObjects.push(this._spacecrafts[i]);
+            }
         }
         resources.executeWhenReady(function () {
             for (i = 0; i < this._views.length; i++) {
@@ -2470,7 +2474,7 @@ define([
      * @param {Scene} mainScene When given, this scene is updated according to the simulation.
      */
     Mission.prototype.tick = function (dt, mainScene) {
-        var i, v, octree;
+        var i, v, octree, index;
         if (this._environment) {
             this._environment.simulate();
         }
@@ -2479,13 +2483,18 @@ define([
         }
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].simulate(dt);
-            if ((this._spacecrafts[i] === undefined) || (this._spacecrafts[i].canBeReused())) {
-                this._spacecrafts[i].destroy(true);
-                this._spacecrafts[i] = null;
-                this._spacecrafts.splice(i, 1);
-                this._hitObjects[i] = null;
-                this._hitObjects.splice(i, 1);
-                i--;
+            if (this._spacecrafts[i].canBeReused() || this._spacecrafts[i].isAway()) {
+                index = this._hitObjects.indexOf(this._spacecrafts[i]);
+                if (index >= 0) {
+                    this._hitObjects[index] = null;
+                    this._hitObjects.splice(index, 1);
+                }
+                if (this._spacecrafts[i].canBeReused()) {
+                    this._spacecrafts[i].destroy(true);
+                    this._spacecrafts[i] = null;
+                    this._spacecrafts.splice(i, 1);
+                    i--;
+                }
             } else if (_showHitboxesForHitchecks) {
                 this._spacecrafts[i].hideHitbox();
             }

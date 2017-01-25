@@ -140,6 +140,11 @@ define([
              */
             PROPULSION_CLASS_ARRAY_NAME = "propulsionClasses",
             /**
+             * In the class description file, jump engine classes will be initialized from the array with this name
+             * @type String
+             */
+            JUMP_ENGINE_CLASS_ARRAY_NAME = "jumpEngineClasses",
+            /**
              * In the class description file, spacecraft types will be initialized from the array with this name
              * @type String
              */
@@ -186,10 +191,10 @@ define([
              */
             SHADER_VARIANT_INSTANCED_NAME = "instanced",
             /**
-             * A definition object with the structure of 2D sound effect descriptors used for type verification.
+             * A definition object with the structure of a non-spatialized sound effect descriptors, used for type verification.
              * @type Object
              */
-            SOUND_EFFECT_2D = {
+            SOUND_EFFECT = {
                 NAME: {
                     name: "name",
                     type: "string"
@@ -199,10 +204,15 @@ define([
                     type: "number",
                     range: [0, 10],
                     defaultValue: 1
+                },
+                RESOURCE: {
+                    name: "resource",
+                    type: "object",
+                    optional: true
                 }
             },
             /**
-             * A definition object with the structure of 3D sound effect descriptors used for type verification.
+             * A definition object with the structure of 3D sound effect descriptors, used for type verification.
              * @type Object
              */
             SOUND_EFFECT_3D = {
@@ -295,6 +305,14 @@ define([
      */
     function getPropulsionClass(name) {
         return _classManager.getResource(PROPULSION_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the jump engine class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {JumpEngineClass}
+     */
+    function getJumpEngineClass(name) {
+        return _classManager.getResource(JUMP_ENGINE_CLASS_ARRAY_NAME, name);
     }
     /**
      * Return the spacecraft type with the given name if it exists, otherwise null.
@@ -392,7 +410,7 @@ define([
     /**
      * Creates a sound clip for a (randomly chosen) sound sample corresponding to the sound effect described by the passed descriptor 
      * (needs to be loaded), and returns the reference to it.
-     * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
+     * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT or SOUND_EFFECT_3D
      * @param {Boolean} [loop=false] Whether to create a looping sound source
      * @param {SoundSource} [soundSource] The sound source to be used for 3D spatial positioning of the clip
      * @param {Boolean} [shouldStack=false] If true, the sound clip will be created with stacking enabled
@@ -1918,6 +1936,142 @@ define([
     };
     // ##############################################################################
     /**
+     * @class Each spacecraft can be equipped with a jump engine. This class
+     * represents one of the classes to which such an engine can belong, describing
+     * the properties of such a jump engine.
+     * @augments GenericClass
+     * @param {Object} [dataJSON]
+     */
+    function JumpEngineClass(dataJSON) {
+        GenericClass.call(this, dataJSON);
+    }
+    JumpEngineClass.prototype = new GenericClass();
+    JumpEngineClass.prototype.constructor = JumpEngineClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     * @returns {Boolean}
+     */
+    JumpEngineClass.prototype._loadData = function (dataJSON) {
+        GenericClass.prototype._loadData.call(this, dataJSON);
+        /**
+         * The descriptor of the sound effect to be played when a jump engine of this class is engaged. (i.e. computer blips)
+         * @type Object
+         */
+        this._engageSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].engageSound", dataJSON.engageSound, SOUND_EFFECT) : null;
+        /**
+         * The forward velocity that should be set as the speed target for the spacecraft for the jump preparation, in m/s.
+         * @type Number
+         */
+        this._prepareVelocity = dataJSON ? (dataJSON.prepareVelocity || _showMissingPropertyError(this, "prepareVelocity")) : 0;
+        /**
+         * The duration such a jump engine takes to initiate the jump, after eliminating drift vectors, in milliseconds.
+         * @type Number
+         */
+        this._prepareDuration = dataJSON ? (dataJSON.prepareDuration || _showMissingPropertyError(this, "prepareDuration")) : 0;
+        /**
+         * The descriptor of the sound effect to be played when a jump engine of this class is preparing to jump out.
+         * @type Object
+         */
+        this._prepareSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].prepareSound", dataJSON.prepareSound, SOUND_EFFECT_3D) : null;
+        /**
+         * The forward acceleration that is added to the spacecraft (by exerting an appropriate force) when initiating a jump out, in m/s.
+         * @type Number
+         */
+        this._jumpOutAcceleration = dataJSON ? (dataJSON.jumpOutAcceleration || _showMissingPropertyError(this, "jumpOutAcceleration")) : 0;
+        /**
+         * The factor by which to stretch the jumping spacecraft along the Y axis at the end of the jump sequence (linearly increasing from 1.0)
+         * @type Number
+         */
+        this._jumpOutScaling = dataJSON ? (dataJSON.jumpOutScaling || _showMissingPropertyError(this, "jumpOutScaling")) : 0;
+        /**
+         * The duration of the jump itself (from initiating the jump to the particle effect), in milliseconds.
+         * @type Number
+         */
+        this._jumpOutDuration = dataJSON ? (dataJSON.jumpOutDuration || _showMissingPropertyError(this, "jumpOutDuration")) : 0;
+        /**
+         * The descriptor of the sound effect to be played when the jump is initiated.
+         * @type Object
+         */
+        this._jumpOutSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].jumpOutSound", dataJSON.jumpOutSound, SOUND_EFFECT_3D) : null;
+        /**
+         * The class of the explosion that is created when the jump out is finished.
+         * @type ExplosionClass
+         */
+        this._jumpOutExplosionClass = dataJSON ? (getExplosionClass(dataJSON.jumpOutExplosion || _showMissingPropertyError(this, "jumpOutExplosion")) || application.crash()) : null;
+        return true;
+    };
+    /**
+     * Call before resource loading to ensure all resources required for jump engines of this class will be loaded
+     */
+    JumpEngineClass.prototype.acquireResources = function () {
+        _loadSoundEffect(this._engageSound);
+        _loadSoundEffect(this._prepareSound);
+        _loadSoundEffect(this._jumpOutSound);
+        this._jumpOutExplosionClass.acquireResources();
+    };
+    /**
+     * Creates a sound clip for the engage sound effect and returns a reference to it.
+     * @returns {SoundClip}
+     */
+    JumpEngineClass.prototype.createEngageSoundClip = function () {
+        return _createSoundClip(this._engageSound, false);
+    };
+    /**
+     * @returns {Number}
+     */
+    JumpEngineClass.prototype.getPrepareVelocity = function () {
+        return this._prepareVelocity;
+    };
+    /**
+     * @returns {Number}
+     */
+    JumpEngineClass.prototype.getPrepareDuration = function () {
+        return this._prepareDuration;
+    };
+    /**
+     * Creates a sound clip for the prepare sound effect and returns a reference to it.
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
+     * @returns {SoundClip}
+     */
+    JumpEngineClass.prototype.createPrepareSoundClip = function (soundSource) {
+        return _createSoundClip(this._prepareSound, false, soundSource);
+    };
+    /**
+     * @returns {Number}
+     */
+    JumpEngineClass.prototype.getJumpOutDuration = function () {
+        return this._jumpOutDuration;
+    };
+    /**
+     * @returns {Number}
+     */
+    JumpEngineClass.prototype.getJumpOutAcceleration = function () {
+        return this._jumpOutAcceleration;
+    };
+    /**
+     * @returns {Number}
+     */
+    JumpEngineClass.prototype.getJumpOutScaling = function () {
+        return this._jumpOutScaling;
+    };
+    /**
+     * Creates a sound clip for the jump out sound effect and returns a reference to it.
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
+     * @returns {SoundClip}
+     */
+    JumpEngineClass.prototype.createJumpOutSoundClip = function (soundSource) {
+        return _createSoundClip(this._jumpOutSound, false, soundSource);
+    };
+    /**
+     * 
+     * @returns {ExplosionClass}
+     */
+    JumpEngineClass.prototype.getJumpOutExplosionClass = function () {
+        return this._jumpOutExplosionClass;
+    };
+    // ##############################################################################
+    /**
      * @class A type of spacecraft. This a more general classification of 
      * spacecraft than a class. An example would be shuttle, interceptor, cruiser, 
      * space station or freighter.
@@ -2096,6 +2250,19 @@ define([
     }
     // ##############################################################################
     /**
+     * @struct A jump engine descriptor can be used to equip a jump engine on a 
+     * spacecraft, by describing the parameters of the equipment. 
+     * @param {Object} [dataJSON]
+     */
+    function JumpEngineDescriptor(dataJSON) {
+        /**
+         * The name of the class of the jump engine to be equipped.
+         * @type String
+         */
+        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
+    }
+    // ##############################################################################
+    /**
      * @class Every ship (class) can have several equipment profiles, each defining a 
      * specific set of equipment. These can then be used to more easily equip the
      * ships, by only referencing the profile to equip all the different pieces of
@@ -2123,6 +2290,11 @@ define([
          * @type PropulsionDescriptor
          */
         this._propulsionDescriptor = dataJSON.propulsion ? new PropulsionDescriptor(dataJSON.propulsion) : null;
+        /**
+         * The descriptor of the jump engine for this profile to be equipped.
+         * @type JumpEngineDescriptor
+         */
+        this._jumpEngineDescriptor = dataJSON.jumpEngine ? new JumpEngineDescriptor(dataJSON.jumpEngine) : null;
     }
     /**
      * Returns the name of this equipment profile.
@@ -2145,6 +2317,13 @@ define([
      */
     EquipmentProfile.prototype.getPropulsionDescriptor = function () {
         return this._propulsionDescriptor;
+    };
+    /**
+     * Returns the jump engine descriptor of this profile.
+     * @returns {JumpEngineDescriptor}
+     */
+    EquipmentProfile.prototype.getJumpEngineDescriptor = function () {
+        return this._jumpEngineDescriptor;
     };
     // ##############################################################################
     /**
@@ -3450,6 +3629,7 @@ define([
         classAssignment[PROJECTILE_CLASS_ARRAY_NAME] = ProjectileClass;
         classAssignment[WEAPON_CLASS_ARRAY_NAME] = WeaponClass;
         classAssignment[PROPULSION_CLASS_ARRAY_NAME] = PropulsionClass;
+        classAssignment[JUMP_ENGINE_CLASS_ARRAY_NAME] = JumpEngineClass;
         classAssignment[SPACECRAFT_TYPE_ARRAY_NAME] = SpacecraftType;
         classAssignment[SPACECRAFT_CLASS_ARRAY_NAME] = SpacecraftClass;
         _classManager.requestConfigLoad(
@@ -3479,7 +3659,7 @@ define([
     // The public interface of the module
     return {
         SHADER_VARIANT_INSTANCED_NAME: SHADER_VARIANT_INSTANCED_NAME,
-        SOUND_EFFECT_2D: SOUND_EFFECT_2D,
+        SOUND_EFFECT: SOUND_EFFECT,
         ParticleEmitterType: ParticleEmitterType,
         ObjectViewLookAtMode: ObjectViewLookAtMode,
         WeaponRotationStyle: WeaponRotationStyle,
@@ -3492,6 +3672,7 @@ define([
         getProjectileClass: getProjectileClass,
         getWeaponClass: getWeaponClass,
         getPropulsionClass: getPropulsionClass,
+        getJumpEngineClass: getJumpEngineClass,
         getSpacecraftType: getSpacecraftType,
         getSpacecraftClass: getSpacecraftClass,
         getSpacecraftClassesInArray: getSpacecraftClassesInArray,

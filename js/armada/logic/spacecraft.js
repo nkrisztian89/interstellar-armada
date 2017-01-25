@@ -27,6 +27,7 @@
  * @param strings Used for translation support
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param constants Used for light priority values
+ * @param SpacecraftEvents Used for event handling
  * @param equipment Used for equipping spacecrafts
  * @param explosion Used to create the explosion for exploding spacecrafts
  */
@@ -48,6 +49,7 @@ define([
     "armada/configuration",
     "armada/strings",
     "armada/logic/constants",
+    "armada/logic/SpacecraftEvents",
     "armada/logic/equipment",
     "armada/logic/explosion",
     "utils/polyfill"
@@ -56,7 +58,7 @@ define([
         application, managedGL, egomModel, physics, resources,
         renderableObjects, lights, sceneGraph,
         graphics, audio, classes, config, strings,
-        constants, equipment, explosion) {
+        constants, SpacecraftEvents, equipment, explosion) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -185,19 +187,6 @@ define([
     };
     // #########################################################################
     /**
-     * @typedef {Function} Spacecraft~beingTargetedCallback
-     * @param {Spacecraft} targetedBy
-     */
-    /**
-     * @typedef {Function} Spacecraft~beingHitCallback
-     * @param {Spacecraft} spacecraft The spacecraft that fired the projectile.
-     * @param {Number[3]} hitPosition The position where the projectile has hit the spacecraft, in model-space.
-     */
-    /**
-     * @typedef {Function} Spacecraft~anySpacecraftHitCallback
-     * @param {Spacecraft} spacecraft The spacecraft that was hit.
-     */
-    /**
      * @class Represents a specific spacecraft (fighter, warship, freighter, space
      * station etc.) in the game.
      * @param {SpacecraftClass} spacecraftClass The class of the spacecraft that
@@ -265,6 +254,11 @@ define([
          */
         this._propulsion = null;
         /**
+         * The jump engine this spacecraft is equipped with.
+         * @type JumpEngine
+         */
+        this._jumpEngine = null;
+        /**
          * The maneuvering computer of this spacecraft that translates high
          * level maneuvering commands issued to this craft into thruster control.
          * @type ManeuveringComputer
@@ -329,43 +323,13 @@ define([
          * An array of references to the spacecrafts that have this spacecraft targeted currently.
          * @type Spacecraft[]
          */
-        this._targetedBy = [];
+        this._targetedBy = null;
         /**
-         * A callback function to execute when another spacecraft targets this spacecraft.
-         * @type Spacecraft~beingTargetedCallback
+         * The functions to call when the various spacecraft events happen (see SpacecraftEvents.js for possible types) to this spacecraft.
+         * The keys are the event type IDs. (one function per event type supported)
+         * @type Object.<String, Function>
          */
-        this._onBeingTargeted = null;
-        /**
-         * A callback function to execute when a projectile hits this spacecraft.
-         * @type Spacecraft~beingHitCallback
-         */
-        this._onBeingHit = null;
-        /**
-         * A callback to execute when a projectile fired by this spacecraft successfully hits the current target.
-         * @type Function
-         */
-        this._onTargetHit = null;
-        /**
-         * A callback to execute when a projectile fired by this spacecraft hits any spacecraft (including itself or its current target)
-         * @type Spacecraft~anySpacecraftHitCallback
-         */
-        this._onAnySpacecraftHit = null;
-        /**
-         * A callback to execute when the current target of this spacecraft fires.
-         * @type Function
-         */
-        this._onTargetFired = null;
-        /**
-         * A callback to execute when this spacecraft fires.
-         * @type Function
-         */
-        this._onFired = null;
-        /**
-         * A callback to execute when this spacecraft is destructed (gets to the point in its explosion where the original spacecraft should be deleted)
-         * Should return a boolean that determines whether the spacecraft object should be destroyed (true) or not (false, in which case it can be respawned)
-         * @type Function
-         */
-        this._onDestructed = null;
+        this._eventHandlers = null;
         /**
          * A reference to the team this spacecraft belongs to (governing who is friend or foe).
          * @type Team
@@ -479,6 +443,8 @@ define([
             this.equipProfile(this._class.getEquipmentProfile(equipmentProfileName));
         }
         this._spacecraftArray = spacecraftArray || null;
+        this._targetedBy = [];
+        this._eventHandlers = {};
         this._team = null;
         this._kills = 0;
         this._score = 0;
@@ -516,6 +482,28 @@ define([
      */
     Spacecraft.prototype.isAway = function () {
         return this._away;
+    };
+    /**
+     * Sets a new away state for the spacecraft (to be used when it jumps in/out to/from the battlefield)
+     * @param {Boolean} value 
+     */
+    Spacecraft.prototype.setAway = function (value) {
+        if (this._away !== value) {
+            this._away = value;
+            if (this._away) {
+                this.setTarget(null);
+                if (this._visualModel) {
+                    this._visualModel.getNode().hide();
+                }
+                if (this._humSoundClip) {
+                    this._humSoundClip.stopPlaying();
+                }
+                if (this._propulsion) {
+                    this._propulsion.resetThrusterBurn();
+                    this._propulsion.simulate(this.getSoundSource(), false);
+                }
+            }
+        }
     };
     /**
      * Sets a new team affiliation for the spacecraft.
@@ -948,6 +936,25 @@ define([
         this._physicalModel.moveByVector(v);
     };
     /**
+     * Returns whether the maneuvering computer is currently locked (not accepting new maneuvering commands)
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isManeuveringLocked = function () {
+        return this._maneuveringComputer.isLocked();
+    };
+    /**
+     * Locks maneuvering controls.
+     */
+    Spacecraft.prototype.lockManeuvering = function () {
+        this._maneuveringComputer.setLocked(true);
+    };
+    /**
+     * Unlocks maneuvering controls.
+     */
+    Spacecraft.prototype.unlockManeuvering = function () {
+        this._maneuveringComputer.setLocked(false);
+    };
+    /**
      * Returns a string representation of the current flight mode set for this
      * craft. (free / combat / cruise)
      * @returns {String}
@@ -1212,6 +1219,7 @@ define([
      * @property {Boolean} cameraConfigurations
      * @property {Boolean} lightSources
      * @property {Boolean} blinkers
+     * @property {Boolean} jumpEngine
      * @property {Boolean} [self=true]
      */
     /**
@@ -1265,6 +1273,11 @@ define([
             if (this._propulsion) {
                 this._propulsion.addThrusters(this._class.getThrusterSlots());
                 this._propulsion.acquireResources();
+            }
+        }
+        if (addSupplements.jumpEngine === true) {
+            if (this._jumpEngine) {
+                this._jumpEngine.acquireResources();
             }
         }
         if (addSupplements.explosion === true) {
@@ -1466,6 +1479,14 @@ define([
         this._maneuveringComputer.updateTurningLimit();
     };
     /**
+     * Equips a jump engine of the given class to the ship, replacing the
+     * previous jump engine, if one was equipped.
+     * @param {JumpEngineClass} jumpEngineClass
+     */
+    Spacecraft.prototype._addJumpEngine = function (jumpEngineClass) {
+        this._jumpEngine = new equipment.JumpEngine(jumpEngineClass, this);
+    };
+    /**
      * Removes all equipment from the spacecraft.
      */
     Spacecraft.prototype.unequip = function () {
@@ -1492,6 +1513,9 @@ define([
             }
             if (equipmentProfile.getPropulsionDescriptor() !== null) {
                 this._addPropulsion(classes.getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
+            }
+            if (equipmentProfile.getJumpEngineDescriptor() !== null) {
+                this._addJumpEngine(classes.getJumpEngineClass(equipmentProfile.getJumpEngineDescriptor().className));
             }
         } else {
             application.log("WARNING: equipping empty profile on " + this._class.getName() + "!");
@@ -1527,10 +1551,16 @@ define([
         // executing callbacks
         if (fired) {
             for (i = 0; i < this._targetedBy.length; i++) {
-                this._targetedBy[i].handleTargetFired();
+                this._targetedBy[i].handleEvent(SpacecraftEvents.TARGET_FIRED);
             }
-            this.handleFired();
+            this.handleEvent(SpacecraftEvents.FIRED);
         }
+    };
+    /*
+     * Increases the number of hits on enemies registered for this spacecraft (for hit ratio calculation)
+     */
+    Spacecraft.prototype.increaseHitsOnEnemies = function () {
+        this._hitsOnEnemies++;
     };
     /**
      * Sets up this spacecraft as being targeted by the passed spacecraft. (updating target reference list and executing the related callback)
@@ -1538,14 +1568,18 @@ define([
      */
     Spacecraft.prototype._setBeingTargeted = function (targetedBy) {
         this._targetedBy.push(targetedBy);
-        this.handleBeingTargeted(targetedBy);
+        this.handleEvent(SpacecraftEvents.BEING_TARGETED, {
+            spacecraft: targetedBy
+        });
     };
     /**
      * Sets up this spacecraft as not being targeted by the passed spacecraft anymore.
      * @param {Spacecraft} targetedBy
      */
     Spacecraft.prototype._setBeingUntargeted = function (targetedBy) {
-        this._targetedBy.splice(this._targetedBy.indexOf(targetedBy), 1);
+        if (this._targetedBy) {
+            this._targetedBy.splice(this._targetedBy.indexOf(targetedBy), 1);
+        }
     };
     /**
      * Returns the array of spacecrafts targeting this one
@@ -1644,7 +1678,7 @@ define([
      * @returns {Spacecraft|null}
      */
     Spacecraft.prototype.getTarget = function () {
-        if (this._target && this._target.canBeReused()) {
+        if (this._target && (this._target.canBeReused() || this._target.isAway())) {
             this.setTarget(null);
         }
         return this._target;
@@ -1784,11 +1818,18 @@ define([
             }
         }
         // callbacks
-        this.handleBeingHit(hitBy, damagePosition);
-        if (hitBy.getTarget() === this) {
-            hitBy.handleTargetHit();
+        this.handleEvent(SpacecraftEvents.BEING_HIT, {spacecraft: hitBy, hitPosition: damagePosition});
+        if (hitBy.isAlive() && !hitBy.isAway()) {
+            if (hitBy.getTarget() === this) {
+                hitBy.handleEvent(SpacecraftEvents.TARGET_HIT);
+            }
+            hitBy.handleEvent(SpacecraftEvents.ANY_SPACECRAFT_HIT, {
+                spacecraft: this
+            });
         }
-        hitBy.handleAnySpacecraftHit(this);
+        if (this.isHostile(hitBy)) {
+            hitBy.increaseHitsOnEnemies();
+        }
     };
     /**
      * Rotates all the non-fixed weapons of the spacecraft to aim towards the calculated hitting position of the current target.
@@ -1815,7 +1856,9 @@ define([
      * Engages jump engines to leave the scene of the mission
      */
     Spacecraft.prototype.jumpOut = function () {
-        this._away = true;
+        if (this._jumpEngine) {
+            this._jumpEngine.jumpOut();
+        }
     };
     /**
      * Returns a 3D vector that can be used to position the sound source of this spacecraft in the soundscape
@@ -1896,8 +1939,11 @@ define([
         if (!this._alive) {
             return;
         }
+        if (this._away) {
+            return;
+        }
         params = params || Spacecraft.DEFAULT_SIMULATE_PARAMS;
-        if (this._target && this._target.canBeReused()) {
+        if (this._target && (this._target.canBeReused() || this._target.isAway())) {
             this.setTarget(null);
         }
         // update the sound source position - will be used either way (for the explosion or for hum / thrusters / weapons... )
@@ -1929,7 +1975,7 @@ define([
                 this._timeElapsedSinceDestruction += dt;
                 if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getTotalDuration() * this._class.getShowTimeRatioDuringExplosion())) {
                     this._alive = false;
-                    if (this.handleDestructed()) {
+                    if (this.handleEvent(SpacecraftEvents.DESTRUCTED) !== false) {
                         this.destroy(true);
                     }
                     return;
@@ -1945,6 +1991,9 @@ define([
                     this._maneuveringComputer.controlThrusters(dt);
                 }
                 this._propulsion.simulate(this._soundSource, params.applyThrusterForces);
+            }
+            if (this._jumpEngine) {
+                this._jumpEngine.simulate(dt);
             }
             if (this._class.hasHumSound()) {
                 if (!this._humSoundClip) {
@@ -1966,121 +2015,24 @@ define([
         }
     };
     /**
-     * Sets a function that will be executed every time this spacecraft gets targeted by another one.
-     * @param {Spacecraft~beingTargetedCallback} value
+     * Sets a new event handler function (overwriting any possible previous ones) for events of the passed type
+     * @param {String} eventID Identifies the event type - see SpacecraftEvents
+     * @param {Function} handler The function to call when an event of the given type happens with this spacecraft
      */
-    Spacecraft.prototype.setOnBeingTargeted = function (value) {
-        this._onBeingTargeted = value;
+    Spacecraft.prototype.setEventHandler = function (eventID, handler) {
+        this._eventHandlers[eventID] = handler;
     };
     /**
-     * Executes the callback for being targeted, if any.
-     */
-    Spacecraft.prototype.handleBeingTargeted = function () {
-        if (this._onBeingTargeted) {
-            this._onBeingTargeted();
-        }
-    };
-    /**
-     * Sets a function that will be executed every time this spacecraft gets hit by a projectile.
-     * @param {Spacecraft~beingHitCallback} value
-     */
-    Spacecraft.prototype.setOnBeingHit = function (value) {
-        this._onBeingHit = value;
-    };
-    /**
-     * Executes the callback for being hit, if any.
-     * @param {Spacecraft} spacecraft The spacecraft that fired the projectile which hit this spacecraft.
-     * @param {Number[3]} hitPosition The position vector of the hit in model space.
-     */
-    Spacecraft.prototype.handleBeingHit = function (spacecraft, hitPosition) {
-        if (this._onBeingHit) {
-            this._onBeingHit(spacecraft, hitPosition);
-        }
-    };
-    /**
-     * Sets a function that will be executed every time the current target of this spacecraft is successfully hit by a projectile fired from
-     * this spacecraft.
-     * @param {Function} value
-     */
-    Spacecraft.prototype.setOnTargetHit = function (value) {
-        this._onTargetHit = value;
-    };
-    /**
-     * Executed the callback for the target being hit, if any.
-     */
-    Spacecraft.prototype.handleTargetHit = function () {
-        if (this._onTargetHit) {
-            this._onTargetHit();
-        }
-    };
-    /**
-     * Sets a function that will be executed every time any spacecraft (including itself and its target) gets hit by a projectile fired from
-     * this spacecraft.
-     * @param {Spacecraft~anySpacecraftHitCallback} value
-     */
-    Spacecraft.prototype.setOnAnySpacecraftHit = function (value) {
-        this._onAnySpacecraftHit = value;
-    };
-    /**
-     * Executes the callback for any spacecraft being hit a projectile of this spacecraft, if it is set.
-     * @param {Spacecraft} spacecraft The spacecraft that was hit.
-     */
-    Spacecraft.prototype.handleAnySpacecraftHit = function (spacecraft) {
-        if (this._onAnySpacecraftHit) {
-            this._onAnySpacecraftHit(spacecraft);
-        }
-        if (spacecraft.isHostile(this)) {
-            this._hitsOnEnemies++;
-        }
-    };
-    /**
-     * Sets a function that will be executed every time the current target of this spacecraft fires.
-     * @param {Function} value
-     */
-    Spacecraft.prototype.setOnTargetFired = function (value) {
-        this._onTargetFired = value;
-    };
-    /**
-     * Executes the callback for the target of this spacecraft firing, if it is set.
-     */
-    Spacecraft.prototype.handleTargetFired = function () {
-        if (this._onTargetFired) {
-            this._onTargetFired();
-        }
-    };
-    /**
-     * Sets a function that will be executed every time this spacecraft fires.
-     * @param {Function} value
-     */
-    Spacecraft.prototype.setOnFired = function (value) {
-        this._onFired = value;
-    };
-    /**
-     * Executes the callback for the spacecraft firing, if it is set.
-     */
-    Spacecraft.prototype.handleFired = function () {
-        if (this._onFired) {
-            this._onFired(this, this._target);
-        }
-    };
-    /**
-     * Sets a new destruction handler (overwriting any previous ones) for the spacecraft, that is called whenever the spacecraft has been
-     * destructed (it has exploded and the time comes during the explosion when the spacecraft should no longer be visible)
-     * @param {Function} value A parameterless function that should return a boolean, determining whether the spacecraft object should be
-     * destroyed (true) or kept (false, in which case it can be respawned later)
-     */
-    Spacecraft.prototype.setOnDestructed = function (value) {
-        this._onDestructed = value;
-    };
-    /**
-     * Executed the destruction handler, if set, and returns whether the spacecraft object should be destroyed
+     * Executes the previously set event handler for the passed event type.
+     * Public, because equipment (e.g. jump engine) can trigger events for the spacecraft it is placed on.
+     * @param {String} eventID (enum SpacecraftEvents)
+     * @param {Object} data Data to pass to the event hanlder (the exact structure depends on the event type)
      * @returns {Boolean}
      */
-    Spacecraft.prototype.handleDestructed = function () {
-        if (this._onDestructed) {
-            return this._onDestructed();
+    Spacecraft.prototype.handleEvent = function (eventID, data) {
+        if (this._eventHandlers && this._eventHandlers[eventID]) {
+            return this._eventHandlers[eventID](data);
         }
-        return true;
     };
     /**
      * Cancels the held references and marks the renderable object, its node and its subtree as reusable.
@@ -2106,6 +2058,10 @@ define([
             this._propulsion.destroy();
             this._propulsion = null;
         }
+        if (this._jumpEngine) {
+            this._jumpEngine.destroy();
+            this._jumpEngine = null;
+        }
         if (this._maneuveringComputer) {
             this._maneuveringComputer.destroy();
             this._maneuveringComputer = null;
@@ -2113,6 +2069,8 @@ define([
         this._spacecraftArray = null;
         this._target = null;
         this._targetHitPosition = null;
+        this._targetedBy = null;
+        this._eventHandlers = null;
         this._explosion = null; // do not destroy the explosion - it might still be animating!
         if (this._hitbox) {
             this._hitbox.markAsReusable();

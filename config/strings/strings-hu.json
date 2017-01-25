@@ -234,6 +234,10 @@
                 "debriefingButton": "Küldetés értékelése",
                 "restartButton": "Küldetés újrakezdése",
                 "spectateButton": "Folytatás nézőként"
+            },
+            "jump": {
+                "engaged": "TÉRUGRÓ HAJTÓMŰ AKTIVÁLVA\nSebesség beállítása...\n\nMegszakítás: {controlStrings/keyboard/jumpOut} gomb",
+                "preparing": "TÉRUGRÓ HAJTÓMŰ AKTIVÁLVA\nFelkészülés...\n{timeLeft}\nMegszakítás: {controlStrings/keyboard/jumpOut} gomb"
             }
         }
     },

@@ -23,6 +23,7 @@
  * @param graphics Used to access graphics settings
  * @param config Used to access game settings/configuration
  * @param classes Used to load and access the classes of Interstellar Armada
+ * @param SpacecraftEvents Used to call spacecraft events handlers for events triggered by equipment
  * @param constants Used to access the light priorities
  * @param explosion Used to create explosion for e.g. hits
  */
@@ -39,6 +40,7 @@ define([
     "modules/scene/scene-graph",
     "armada/graphics",
     "armada/logic/classes",
+    "armada/logic/SpacecraftEvents",
     "armada/configuration",
     "armada/logic/constants",
     "armada/logic/explosion",
@@ -47,7 +49,7 @@ define([
         vec, mat,
         application, managedGL, physics, resources, pools,
         renderableObjects, lights, sceneGraph,
-        graphics, classes, config,
+        graphics, classes, SpacecraftEvents, config,
         constants, explosion) {
     "use strict";
     var
@@ -130,6 +132,11 @@ define([
              * @type Number
              */
             THRUSTER_SOUND_VOLUME_RAMP_DURATION = 0.020,
+            /**
+             * When creating the force pulling the spacecraft into jumping out, it has this id
+             * @type String
+             */
+            JUMP_FORCE_ID = "jump",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -1441,6 +1448,11 @@ define([
          */
         this._liftTarget = 0;
         /**
+         * When true, the maneuvering computer does not accept new commands.
+         * @type Boolean
+         */
+        this._locked = false;
+        /**
          * How much speed should be added to the target when the pilot accelerates
          * continuously for one second, in m/s. This is always updated to be the same
          * as how much the spacecraft can accelerate with the current propulsion, whenever
@@ -1542,6 +1554,25 @@ define([
                 this._spacecraft.getMaxTurnRateAtSpeed((speed === undefined) ? this._spacecraft.getRelativeVelocityMatrix()[13] : speed) * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S);
     };
     /**
+     * Returns whether the maneuvering computer is currently locked (not accepting new commands)
+     * @returns {Boolean}
+     */
+    ManeuveringComputer.prototype.isLocked = function () {
+        return this._locked;
+    };
+    /**
+     * Locks / unlocks the maneuvering computer. While locked, no new commands are accepted.
+     * @param {Boolean} value
+     */
+    ManeuveringComputer.prototype.setLocked = function (value) {
+        this._locked = value;
+        if (this._locked) {
+            this._yawTarget = 0;
+            this._pitchTarget = 0;
+            this._rollTarget = 0;
+        }
+    };
+    /**
      * Returns a string representation of the current flight mode.
      * @returns {String} enum FlightMode
      */
@@ -1554,6 +1585,9 @@ define([
      * @param {String} [flightMode]
      */
     ManeuveringComputer.prototype.changeFlightMode = function (flightMode) {
+        if (this._locked) {
+            return;
+        }
         if (!flightMode) {
             if (!this._assisted) {
                 flightMode = FlightMode.COMBAT;
@@ -1606,14 +1640,16 @@ define([
      * value instead of the regular continuous increment.
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
-        this._speedTarget = this._assisted ?
-                Math.min(
-                        Math.max(
-                                this._spacecraft.getRelativeVelocityMatrix()[13],
-                                this._speedTarget
-                                ) + (intensity || this._speedIncrement),
-                        (this._restricted ? this._maxCruiseForwardSpeed : this._maxCombatForwardSpeed)) :
-                Number.MAX_VALUE;
+        if (!this._locked) {
+            this._speedTarget = this._assisted ?
+                    Math.min(
+                            Math.max(
+                                    this._spacecraft.getRelativeVelocityMatrix()[13],
+                                    this._speedTarget
+                                    ) + (intensity || this._speedIncrement),
+                            (this._restricted ? this._maxCruiseForwardSpeed : this._maxCombatForwardSpeed)) :
+                    Number.MAX_VALUE;
+        }
     };
     /**
      * Sets the target speed to the current speed if it is bigger. Only works 
@@ -1633,14 +1669,16 @@ define([
      * value instead of the regular continuous increment.
      */
     ManeuveringComputer.prototype.reverse = function (intensity) {
-        this._speedTarget = this._assisted ?
-                Math.max(
-                        Math.min(
-                                this._spacecraft.getRelativeVelocityMatrix()[13],
-                                this._speedTarget
-                                ) - (intensity || this._speedIncrement),
-                        (this._restricted ? this._maxCruiseReverseSpeed : this._maxCombatReverseSpeed)) :
-                -Number.MAX_VALUE;
+        if (!this._locked) {
+            this._speedTarget = this._assisted ?
+                    Math.max(
+                            Math.min(
+                                    this._spacecraft.getRelativeVelocityMatrix()[13],
+                                    this._speedTarget
+                                    ) - (intensity || this._speedIncrement),
+                            (this._restricted ? this._maxCruiseReverseSpeed : this._maxCombatReverseSpeed)) :
+                    -Number.MAX_VALUE;
+        }
     };
     /**
      * Sets the target speed to the current speed if it is smaller. Only works 
@@ -1662,7 +1700,9 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.strafeLeft = function (intensity) {
-        this._strafeTarget = this._restricted ? 0 : ((this._assisted && intensity) ? -intensity : -Number.MAX_VALUE);
+        if (!this._locked) {
+            this._strafeTarget = this._restricted ? 0 : ((this._assisted && intensity) ? -intensity : -Number.MAX_VALUE);
+        }
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -1680,7 +1720,9 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.strafeRight = function (intensity) {
-        this._strafeTarget = this._restricted ? 0 : ((this._assisted && intensity) || Number.MAX_VALUE);
+        if (!this._locked) {
+            this._strafeTarget = this._restricted ? 0 : ((this._assisted && intensity) || Number.MAX_VALUE);
+        }
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to the
@@ -1698,7 +1740,9 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.lower = function (intensity) {
-        this._liftTarget = this._restricted ? 0 : ((this._assisted && intensity) ? -intensity : -Number.MAX_VALUE);
+        if (!this._locked) {
+            this._liftTarget = this._restricted ? 0 : ((this._assisted && intensity) ? -intensity : -Number.MAX_VALUE);
+        }
     };
     /**
      * Sets the target speed for lifting to zero, if was set to a speed to lift
@@ -1716,7 +1760,9 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.raise = function (intensity) {
-        this._liftTarget = this._restricted ? 0 : ((this._assisted && intensity) || Number.MAX_VALUE);
+        if (!this._locked) {
+            this._liftTarget = this._restricted ? 0 : ((this._assisted && intensity) || Number.MAX_VALUE);
+        }
     };
     /**
      * Sets the target speed for strafing to zero, if was set to a speed to lift
@@ -1732,8 +1778,10 @@ define([
      * mode)
      */
     ManeuveringComputer.prototype.resetSpeed = function () {
-        if (this._assisted) {
-            this._speedTarget = 0;
+        if (!this._locked) {
+            if (this._assisted) {
+                this._speedTarget = 0;
+            }
         }
     };
     /**
@@ -1741,8 +1789,10 @@ define([
      * @param {Number} value A positive number means a forward target, a negative one a reverse target, in m/s.
      */
     ManeuveringComputer.prototype.setSpeedTarget = function (value) {
-        if (this._assisted) {
-            this._speedTarget = value;
+        if (!this._locked) {
+            if (this._assisted) {
+                this._speedTarget = value;
+            }
         }
     };
     /**
@@ -1773,19 +1823,21 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.yawLeft = function (intensity) {
-        // if no intensity was given for the turn, turn with maximum power (mouse or
-        // joystick control can have fine intensity control, while with keyboard,
-        // when the key is pressed, we just call this without parameter)
-        if (intensity === undefined) {
-            this._yawTarget = -this._turningLimit;
-            // if a specific intensity was set, set the target to it, capping it out at
-            // the maximum allowed turning speed
-        } else if (intensity > 0) {
-            this._yawTarget = -intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
-            // if a zero or negative intensity was given, set the target to zero,
-            // but only if it is set to turn to left
-        } else if (this._yawTarget < 0) {
-            this._yawTarget = 0;
+        if (!this._locked) {
+            // if no intensity was given for the turn, turn with maximum power (mouse or
+            // joystick control can have fine intensity control, while with keyboard,
+            // when the key is pressed, we just call this without parameter)
+            if (intensity === undefined) {
+                this._yawTarget = -this._turningLimit;
+                // if a specific intensity was set, set the target to it, capping it out at
+                // the maximum allowed turning speed
+            } else if (intensity > 0) {
+                this._yawTarget = -intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
+                // if a zero or negative intensity was given, set the target to zero,
+                // but only if it is set to turn to left
+            } else if (this._yawTarget < 0) {
+                this._yawTarget = 0;
+            }
         }
     };
     /**
@@ -1795,12 +1847,14 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.yawRight = function (intensity) {
-        if (intensity === undefined) {
-            this._yawTarget = this._turningLimit;
-        } else if (intensity > 0) {
-            this._yawTarget = intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
-        } else if (this._yawTarget > 0) {
-            this._yawTarget = 0;
+        if (!this._locked) {
+            if (intensity === undefined) {
+                this._yawTarget = this._turningLimit;
+            } else if (intensity > 0) {
+                this._yawTarget = intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
+            } else if (this._yawTarget > 0) {
+                this._yawTarget = 0;
+            }
         }
     };
     /**
@@ -1810,12 +1864,14 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.pitchDown = function (intensity) {
-        if (intensity === undefined) {
-            this._pitchTarget = -this._turningLimit;
-        } else if (intensity > 0) {
-            this._pitchTarget = -intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
-        } else if (this._pitchTarget < 0) {
-            this._pitchTarget = 0;
+        if (!this._locked) {
+            if (intensity === undefined) {
+                this._pitchTarget = -this._turningLimit;
+            } else if (intensity > 0) {
+                this._pitchTarget = -intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
+            } else if (this._pitchTarget < 0) {
+                this._pitchTarget = 0;
+            }
         }
     };
     /**
@@ -1825,12 +1881,14 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.pitchUp = function (intensity) {
-        if (intensity === undefined) {
-            this._pitchTarget = this._turningLimit;
-        } else if (intensity > 0) {
-            this._pitchTarget = intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
-        } else if (this._pitchTarget > 0) {
-            this._pitchTarget = 0;
+        if (!this._locked) {
+            if (intensity === undefined) {
+                this._pitchTarget = this._turningLimit;
+            } else if (intensity > 0) {
+                this._pitchTarget = intensity * (this._restricted ? this.getRestrictedTurningLimit() : this._turningLimit);
+            } else if (this._pitchTarget > 0) {
+                this._pitchTarget = 0;
+            }
         }
     };
     /**
@@ -1840,12 +1898,14 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.rollLeft = function (intensity) {
-        if (intensity === undefined) {
-            this._rollTarget = -this._turningLimit;
-        } else if (intensity > 0) {
-            this._rollTarget = -intensity * this._turningLimit;
-        } else if (this._rollTarget < 0) {
-            this._rollTarget = 0;
+        if (!this._locked) {
+            if (intensity === undefined) {
+                this._rollTarget = -this._turningLimit;
+            } else if (intensity > 0) {
+                this._rollTarget = -intensity * this._turningLimit;
+            } else if (this._rollTarget < 0) {
+                this._rollTarget = 0;
+            }
         }
     };
     /**
@@ -1855,12 +1915,14 @@ define([
      * @param {Number} [intensity]
      */
     ManeuveringComputer.prototype.rollRight = function (intensity) {
-        if (intensity === undefined) {
-            this._rollTarget = this._turningLimit;
-        } else if (intensity > 0) {
-            this._rollTarget = intensity * this._turningLimit;
-        } else if (this._rollTarget > 0) {
-            this._rollTarget = 0;
+        if (!this._locked) {
+            if (intensity === undefined) {
+                this._rollTarget = this._turningLimit;
+            } else if (intensity > 0) {
+                this._rollTarget = intensity * this._turningLimit;
+            } else if (this._rollTarget > 0) {
+                this._rollTarget = 0;
+            }
         }
     };
     /**
@@ -1965,6 +2027,183 @@ define([
     ManeuveringComputer.prototype.destroy = function () {
         this._spacecraft = null;
     };
+    // #########################################################################
+    /**
+     * @class This piece of equipment governs the hyperspace jump sequences by managing an internal state about them, triggering 
+     * corresponding spacecraft events, controlling the spacecraft itself, adding the appripriate effects to the scene and playing sound 
+     * effects
+     * @param {JumpEngineClass} jumpEngineClass
+     * @param {Spacecraft} spacecraft The spacecraft to equip this jump engine on
+     */
+    function JumpEngine(jumpEngineClass, spacecraft) {
+        /**
+         * The class specifying the characteristics of how the jumps should look / sound like
+         * @type JumpEngineClass
+         */
+        this._class = jumpEngineClass;
+        /**
+         * The spacecraft this engine is equipped on
+         * @type Spacecraft
+         */
+        this._spacecraft = spacecraft;
+        /**
+         * In which overall stage of the jump sequence are we
+         * @type Number
+         */
+        this._state = JumpEngine.JumpState.NONE;
+        /**
+         * How much time is left from the current jump state
+         * @type Number
+         */
+        this._timeLeft = 0;
+        /**
+         * A reference to the currently played sound clip, if any
+         * @type SoundClip
+         */
+        this._soundClip = null;
+        /**
+         * Stores a copy of the original scaling matrix of the spacecraft (it is altered during the jump sequences, stretching the 
+         * spacecraft along the Y axis)
+         * @type Float32Array
+         */
+        this._originalScalingMatrix = null;
+    }
+    /**
+     * The threshold for tolerating drift / speed difference when aligning the velocity of the spacecraft for preparation
+     * @type Number
+     */
+    JumpEngine.VELOCITY_TOLERANCE = 0.01;
+    /**
+     * @enum Defines the possible states a jump engine can be in
+     * @type Object
+     */
+    JumpEngine.JumpState = {
+        /** No jump in progress */
+        NONE: 0,
+        /** A jump out has been initiated, the correct velocity needs to be reached without drift - controls disabled */
+        ALIGNING_VELOCITY: 1,
+        /** The engine is powering up for a jump out, spacecraft travelling with the correct velocity */
+        PREPARING: 2,
+        /** Jump out is in progress, spacecraft rapidly accelerating until it disappears in a flash */
+        JUMPING_OUT: 3
+    };
+    Object.freeze(JumpEngine.JumpOutState);
+    /**
+     * Call to make sure all needed resources are going to be loaded
+     */
+    JumpEngine.prototype.acquireResources = function () {
+        this._class.acquireResources();
+    };
+    /**
+     * Initiates / cancels the jump out sequence (depending on whether it is already in progress)
+     */
+    JumpEngine.prototype.jumpOut = function () {
+        switch (this._state) {
+            // initiating jump out sequence
+            case JumpEngine.JumpState.NONE:
+                this._state = JumpEngine.JumpState.ALIGNING_VELOCITY;
+                // setting up the maneuvering computer to guide the spacecraft to the required velocity
+                this._spacecraft.changeFlightMode(FlightMode.CRUISE);
+                this._spacecraft.setSpeedTarget(this._class.getPrepareVelocity());
+                this._spacecraft.lockManeuvering();
+                // the starting sound effect (computer blips) only need to be played for the piloted spacecraft - the event handler should
+                // return true if the event handling included the HUD and other piloted spacecraft related updates
+                if (this._spacecraft.handleEvent(SpacecraftEvents.JUMP_ENGAGED)) {
+                    this._soundClip = this._class.createEngageSoundClip();
+                    this._soundClip.play();
+                }
+                break;
+                // cancelling jump out sequence
+            case JumpEngine.JumpState.ALIGNING_VELOCITY:
+            case JumpEngine.JumpState.PREPARING:
+                this._state = JumpEngine.JumpState.NONE;
+                this._spacecraft.handleEvent(SpacecraftEvents.JUMP_CANCELLED);
+                this._spacecraft.unlockManeuvering();
+                if (this._soundClip) {
+                    this._soundClip.stopPlaying();
+                    this._soundClip = null;
+                }
+                break;
+        }
+    };
+    /**
+     * Call in every simulation step to update the internal state and initiate the appropriate events / effects
+     * @param {Number} dt The amount of time passed since the last simulation step, in milliseonds
+     */
+    JumpEngine.prototype.simulate = function (dt) {
+        var velocityMatrix, directionVector, exp, physicalModel;
+        switch (this._state) {
+            case JumpEngine.JumpState.ALIGNING_VELOCITY:
+                velocityMatrix = this._spacecraft.getRelativeVelocityMatrix();
+                if ((Math.abs(velocityMatrix[12]) < JumpEngine.VELOCITY_TOLERANCE) &&
+                        (Math.abs(velocityMatrix[14]) < JumpEngine.VELOCITY_TOLERANCE) &&
+                        (Math.abs(velocityMatrix[13] - this._class.getPrepareVelocity()) < JumpEngine.VELOCITY_TOLERANCE)) {
+                    // switching to next state if the alignment is reached
+                    this._state = JumpEngine.JumpState.PREPARING;
+                    this._timeLeft = this._class.getPrepareDuration();
+                    this._soundClip = this._class.createPrepareSoundClip(this._spacecraft.getSoundSource());
+                    this._soundClip.play();
+                }
+                break;
+            case JumpEngine.JumpState.PREPARING:
+                // this event is triggered every step (so that the countdown timer on the HUD can be updated)
+                this._spacecraft.handleEvent(SpacecraftEvents.PREPARING_JUMP, {
+                    duration: this._class.getPrepareDuration(),
+                    timeLeft: this._timeLeft
+                });
+                // switching to the next state when the time is up
+                if (this._timeLeft <= 0) {
+                    this._state = JumpEngine.JumpState.JUMPING_OUT;
+                    this._timeLeft = this._class.getJumpOutDuration();
+                    this._soundClip = this._class.createJumpOutSoundClip(this._spacecraft.getSoundSource());
+                    this._soundClip.play();
+                    physicalModel = this._spacecraft.getPhysicalModel();
+                    directionVector = mat.getRowB4(physicalModel.getOrientationMatrix());
+                    physicalModel.addForce(new physics.Force(JUMP_FORCE_ID, physicalModel.getMass() * this._class.getJumpOutAcceleration(), directionVector, this._class.getJumpOutDuration()));
+                    // make sure the forward engines of the spacecraft are firing during the jump out sequence, despite the high velocity it will reach
+                    this._spacecraft.unlockManeuvering();
+                    this._spacecraft.setSpeedTarget(Number.MAX_VALUE);
+                    this._spacecraft.lockManeuvering();
+                    this._originalScalingMatrix = mat.matrix4(this._spacecraft.getVisualModel().getScalingMatrix());
+                    this._spacecraft.handleEvent(SpacecraftEvents.JUMP_OUT_STARTED);
+                }
+                this._timeLeft -= dt;
+                break;
+            case JumpEngine.JumpState.JUMPING_OUT:
+                // stretching the spacecraft along the Y axis (by a linearly incrasing factor)
+                this._spacecraft.getVisualModel().setScalingMatrix(mat.prod3x3SubOf4(
+                        this._originalScalingMatrix,
+                        mat.scaling4(1, 1 + (1 - this._timeLeft / this._class.getJumpOutDuration()) * (this._class.getJumpOutScaling() - 1), 1)));
+                // finishing up the particle effect when the time is up
+                if (this._timeLeft <= 0) {
+                    this._state = JumpEngine.JumpState.NONE;
+                    exp = new explosion.Explosion(
+                            this._class.getJumpOutExplosionClass(),
+                            mat.matrix4(this._spacecraft.getPhysicalPositionMatrix()),
+                            mat.matrix4(this._spacecraft.getPhysicalOrientationMatrix()),
+                            mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
+                            true,
+                            mat.identity4());
+                    exp.addToScene(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
+                    this._spacecraft.setAway(true);
+                    this._spacecraft.handleEvent(SpacecraftEvents.JUMPED_OUT);
+                }
+                this._timeLeft -= dt;
+                break;
+        }
+    };
+    /**
+     * Deletes stored references, stops sound playback. Call when the spacecraft is destroyed.
+     */
+    JumpEngine.prototype.destroy = function () {
+        this._class = null;
+        this._spacecraft = null;
+        if (this._soundClip) {
+            this._soundClip.destroy();
+            this._soundClip = null;
+        }
+        this._originalScalingMatrix = null;
+    };
     // initializazion
     // obtaining pool references
     _particlePool = pools.getPool(renderableObjects.Particle);
@@ -1992,6 +2231,7 @@ define([
         Projectile: Projectile,
         Weapon: Weapon,
         Propulsion: Propulsion,
+        JumpEngine: JumpEngine,
         ManeuveringComputer: ManeuveringComputer
     };
 });

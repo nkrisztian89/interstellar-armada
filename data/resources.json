@@ -1073,6 +1073,9 @@
             "name": "thruster",
             "samples": ["spacecraft/thruster.ogg"]
         }, {
+            "name": "jump_prepare",
+            "samples": ["spacecraft/jump_prepare.ogg"]
+        }, {
             "name": "trainingShot",
             "samples": ["weapon/weaponshot_training.ogg"]
         }, {

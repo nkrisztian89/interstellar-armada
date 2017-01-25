@@ -1,7 +1,7 @@
 Several sound effects in the game are based on the works of 3rd parties.
 The original sources, authors and licencing information about these files can be found at the following pages:
 
-containerExplosion.ogg, fighterExplosion.ogg (unchanged), smallShipExplosion.ogg (mixed, edited), largeShipExplosion.ogg (mixed, edited), weaponshot_proton.ogg (cut):
+containerExplosion.ogg, fighterExplosion.ogg (unchanged), smallShipExplosion.ogg (mixed, edited), largeShipExplosion.ogg (mixed, edited), weaponshot_proton.ogg (cut), jump_prepare.ogg (cut):
 http://creativesounddesign.com/the-recordist-free-sound-effects/
 Author/copyright: The Recordist/Creative Sound Design, LLC
 

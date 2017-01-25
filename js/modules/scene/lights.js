@@ -334,20 +334,26 @@ define([
             this._positionVector = this._relativePositionVector;
         } else
         if (this._emittingObjects.length === 1) {
-            this._totalIntensity = this._objectIntensity;
-            this._positionVector = vec.sum3(this._emittingObjects[0].getPositionVector(), vec.mulVec3Mat4(this._relativePositionVector, mat.prod3x3SubOf4(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
+            if (this._emittingObjects[0].isVisible()) {
+                this._totalIntensity = this._objectIntensity;
+                this._positionVector = vec.sum3(this._emittingObjects[0].getPositionVector(), vec.mulVec3Mat4(this._relativePositionVector, mat.prod3x3SubOf4(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
+            } else {
+                this._totalIntensity = 0;
+            }
         } else {
             this._positionVector = [0, 0, 0];
             count = 0;
             for (i = 0; i < this._emittingObjects.length; i++) {
-                if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused()) {
+                if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused() && this._emittingObjects[i].isVisible()) {
                     vec.add3(this._positionVector, this._emittingObjects[i].getPositionVector());
                     count++;
                 }
             }
-            this._positionVector[0] /= count;
-            this._positionVector[1] /= count;
-            this._positionVector[2] /= count;
+            if (count > 0) {
+                this._positionVector[0] /= count;
+                this._positionVector[1] /= count;
+                this._positionVector[2] /= count;
+            }
             this._totalIntensity = this._objectIntensity * count;
         }
         if (this._totalIntensity !== previousIntensity) {
@@ -411,7 +417,7 @@ define([
     PointLightSource.prototype.shouldBeRendered = function (camera) {
         var viewMatrix = camera.getViewMatrix();
         // calculating the Z position in camera space by multiplying the world space position vector with the view matrix (only the applicable parts)
-        return (this._positionVector[0] * viewMatrix[2] + this._positionVector[1] * viewMatrix[6] + this._positionVector[2] * viewMatrix[10] + viewMatrix[14]) < this._totalIntensity;
+        return ((this._positionVector[0] * viewMatrix[2] + this._positionVector[1] * viewMatrix[6] + this._positionVector[2] * viewMatrix[10] + viewMatrix[14]) < this._totalIntensity) && (this._totalIntensity > 0);
     };
     /**
      * Sets the animation state of the light source to be the one occuring after the passed amount of time from the start

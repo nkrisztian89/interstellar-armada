@@ -511,6 +511,18 @@ define(function () {
         return exports.getPaddedStringForNumber(min, 2) + ":" + exports.getPaddedStringForNumber(sec, 2);
     };
     /**
+     * Returns a SS.mm format string representing the time duration / interval of the passed amount of milliseconds
+     * (if longer than 60 seconds, the extra time will be ignored)
+     * @param {Number} milliseconds
+     * @returns {String}
+     */
+    exports.formatTimeToSeconds = function (milliseconds) {
+        var sec, ms;
+        sec = Math.floor(milliseconds / 1000) % 60;
+        ms = Math.floor((milliseconds % 1000) / 10);
+        return exports.getPaddedStringForNumber(sec, 2) + "." + exports.getPaddedStringForNumber(ms, 2);
+    };
+    /**
      * Adds the passed function to the event queue without any delay.
      * @param {Function} functionToExecute
      */

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -28,6 +28,7 @@
  * @param classes Used for HUD elements for convenient acquiry of their resources.
  * @param config Used to access game setting / configuration.
  * @param control Used for global game control functions.
+ * @param SpacecraftEvents used for setting spacecraft event handlers
  * @param missions Used for creating the Mission object, accessing enums.
  * @param equipment Used to access flight mode constants
  * @param ai Used for performing the AI control operations in the battle simulation loop.
@@ -51,6 +52,7 @@ define([
     "armada/logic/classes",
     "armada/configuration",
     "armada/control",
+    "armada/logic/SpacecraftEvents",
     "armada/logic/missions",
     "armada/logic/equipment",
     "armada/logic/ai",
@@ -59,7 +61,8 @@ define([
         utils, vec, mat,
         application, game, components, screens, resources, egomModel,
         renderableObjects, sceneGraph,
-        strings, armadaScreens, graphics, audio, classes, config, control, missions, equipment, ai) {
+        strings, armadaScreens, graphics, audio, classes, config, control,
+        SpacecraftEvents, missions, equipment, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -179,6 +182,11 @@ define([
              */
             _timeSinceGameStateChanged,
             /**
+             * The elapsed simulation time since the the player's spacecraft jump out of the battle scene. In milliseconds
+             * @type Number
+             */
+            _timeSincePlayerLeft,
+            /**
              * A reference to the followed spacecraft (if any, as last displayed on the HUD)
              * @type Spacecraft
              */
@@ -230,6 +238,12 @@ define([
              * @type Number
              */
             _shipIndicatorHighlightTime,
+            /**
+             * A reference to the camera configuration that was active at the time an automatic configuration was set instead (i.e. during
+             * jump sequences, to allow going back to the original configuration)
+             * @type CameraConfiguration
+             */
+            _originalCameraConfig,
             // HUD messages
             /**
              * @typedef {Object} Battle~HUDMessage The properties of a message that can be displayed for the player on the HUD
@@ -240,6 +254,7 @@ define([
              * @property {Boolean} [permanent] If true, the message keeps being displayed until a new urgent
              * message is added or the queue is cleared
              * @property {Number[4]} [color] When given, the text is displayed using this text color
+             * @property {Boolean} [silent=false] When true, the message sound effect will not be played for this message
              * @property {Boolean} [new=false] When a new message is put at the front of the queue, this flag is set to true
              */
             /**
@@ -252,6 +267,11 @@ define([
              * @type SoundClip
              */
             _messageSound,
+            /**
+             * The message that is displayed informing the player about engaged jump engines.
+             * @type Battle~HUDMessage
+             */
+            _jumpMessage,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // music related
             /**
@@ -738,21 +758,14 @@ define([
              * individual spacecraft indicators within it, in case it needs to be displayed on the wingmen status indicator panel
              * @type Number
              */
-            _wingmenStatusMaxSquadMemberCount;
+            _wingmenStatusMaxSquadMemberCount,
+            /**
+             * The settings object for message text is used frequently for setting message colors, so we store a cached reference to it
+             * @type Object
+             */
+            _messageTextSettings;
     // ------------------------------------------------------------------------------
     // private functions
-    /**
-     * Updates the state / mood based music theme for the case a spacecraft just fired.
-     * @param {Spacecraft} spacecraft The spacecraft that fired
-     * @param {Spacecraft} target The target of the spacecraft that fired (the player shooting at friends / into emptyness will not change
-     * the mood)
-     */
-    function _handleSpacecraftFired(spacecraft, target) {
-        if (target && target.isHostile(spacecraft) && !_mission.isFinished()) {
-            _timeSinceLastFire = 0;
-            audio.playMusic(COMBAT_THEME);
-        }
-    }
     /**
      * Executes one simulation (and control) step for the battle.
      */
@@ -776,7 +789,7 @@ define([
             }
             if (followedCraft) {
                 // handling the loss of the spacecraft that is followed by the camera
-                if (followedCraft.canBeReused()) {
+                if (followedCraft.canBeReused() || followedCraft.isAway()) {
                     if (control.isInPilotMode()) {
                         control.switchToSpectatorMode(true);
                     } else if (_demoMode) {
@@ -863,6 +876,99 @@ define([
      */
     function toggleHUDVisibility() {
         _isHUDVisible = !_isHUDVisible;
+    }
+    // ------------------------------------------------------------------------------
+    // Spacecraft event handlers
+    /**
+     * Updates the state / mood based music theme for the case a spacecraft just fired.
+     */
+    function _handleSpacecraftFired() {
+        var target = this.getTarget();
+        if (target && target.isHostile(this) && !_mission.isFinished()) {
+            _timeSinceLastFire = 0;
+            audio.playMusic(COMBAT_THEME);
+        }
+    }
+    /**
+     * Handles camera configuration / HUD message features related to the jump engine engaged event
+     * @returns {Boolean} Always true (signals the spacecraft's jump engine that the HUD actions happened so it can play the related sound
+     * effect)
+     */
+    function _handlePilotedSpacecraftJumpEngaged() {
+        _jumpMessage = {
+            text: strings.get(strings.BATTLE.MESSAGE_JUMP_ENGAGED),
+            color: _messageTextSettings.colors.jump,
+            permanent: true
+        };
+        _battle.battleScreen.queueHUDMessage(_jumpMessage, true);
+        _originalCameraConfig = _battleScene.getCamera().getConfiguration();
+        return true;
+    }
+    /**
+     * Handles camera configuration / HUD message features related to the jump engine cancelled event
+     */
+    function _handlePilotedSpacecraftJumpCancelled() {
+        if (_jumpMessage) {
+            _jumpMessage.permanent = false;
+            _jumpMessage.timeLeft = 1;
+            _jumpMessage.silent = true;
+        }
+        _battleScene.getCamera().startTransitionToConfiguration(_originalCameraConfig);
+    }
+    /**
+     * If the given spacecraft has a view with the given name, initiates a transition for the battle scene camera to the corresponding 
+     * camera configuration
+     * @param {Spacecraft} craft
+     * @param {String} viewName
+     * @param {Number} duration The duration of the transition, in milliseconds
+     * @returns {Boolean} Whether there was a view found (and transition initiated)
+     */
+    function _switchToCameraConfig(craft, viewName, duration) {
+        var camConfigs = craft.getVisualModel().getNode().getCameraConfigurationsWithName(viewName);
+        if (camConfigs.length > 0) {
+            _battleScene.getCamera().startTransitionToConfiguration(camConfigs[0], duration);
+            return true;
+        }
+        return false;
+    }
+    /**
+     * Handles camera configuration / HUD message features related to the jump engine prepare event
+     * @param {SpacecraftEvents~PreparingJumpData} data
+     */
+    function _handlePilotedSpacecraftPreparingJump(data) {
+        // when starting the preparation...
+        if (data.duration === data.timeLeft) {
+            _switchToCameraConfig(this, config.getSetting(config.BATTLE_SETTINGS.JUMP_PREPARE_VIEW_NAME), data.duration);
+        }
+        // when finishing the preparation
+        if (data.timeLeft <= 0) {
+            hideHUD();
+            if (!_switchToCameraConfig(this, config.getSetting(config.BATTLE_SETTINGS.JUMP_OUT_VIEW_NAME), 0)) {
+                _battleScene.getCamera().setToFreeCamera();
+            }
+        } else {
+            // during preparation
+            _battle.battleScreen.queueHUDMessage({
+                text: utils.formatString(strings.get(strings.BATTLE.MESSAGE_JUMP_PREPARING), {
+                    timeLeft: utils.formatTimeToSeconds(data.timeLeft)
+                }),
+                color: _messageTextSettings.colors.jump,
+                duration: 1,
+                silent: true
+            }, true);
+        }
+    }
+    /**
+     * Handles camera configuration features related to the jump out event for non-piloted spacecrafts
+     */
+    function _handleSpacecraftJumpOutStarted() {
+        if (this === _mission.getFollowedSpacecraftForScene(_battleScene)) {
+            if (_demoMode) {
+                _switchToCameraConfig(this, config.getSetting(config.BATTLE_SETTINGS.JUMP_OUT_VIEW_NAME), 0);
+            } else {
+                _battleScene.getCamera().setToFreeCamera();
+            }
+        }
     }
     // ##############################################################################
     /**
@@ -1515,7 +1621,14 @@ define([
      * @returns {Boolean}
      */
     function _spacecraftShouldBeIndicated(craft) {
-        return  craft.isAlive() && (craft !== _spacecraft);
+        return  craft.isAlive() && !craft.isAway() && (craft !== _spacecraft);
+    }
+    /**
+     * @param {Spacecraft} craft
+     * @returns {Boolean}
+     */
+    function _escortShouldBeIndicated(craft) {
+        return  !craft.isAway() && (craft !== _spacecraft);
     }
     /**
      * 
@@ -2024,7 +2137,7 @@ define([
                     case "controlStrings":
                         // control strings have a specific color assigned to them, so add the modifier to the string
                         replacementText =
-                                "[color:" + config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).colors.controlString.join(",") + "]" +
+                                "[color:" + _messageTextSettings.colors.controlString.join(",") + "]" +
                                 control.getInputInterpreter(replacementID[1]).getControlStringForAction(replacementID[2]) +
                                 "[]";
                         break;
@@ -2115,7 +2228,12 @@ define([
             // .....................................................................................................
             // cursor
             mouseInputInterpreter = control.getInputInterpreter(control.MOUSE_NAME);
-            if (control.isListening() && mouseInputInterpreter.isEnabled() && control.isInPilotMode() && !control.isControllerPriority(control.CAMERA_CONTROLLER_NAME) && !control.isMouseTurningDisabled()) {
+            if (control.isListening() &&
+                    mouseInputInterpreter.isEnabled() &&
+                    control.isInPilotMode() &&
+                    !control.isControllerPriority(control.CAMERA_CONTROLLER_NAME) &&
+                    !control.isMouseTurningDisabled() &&
+                    !craft.isManeuveringLocked()) {
                 position2D = mouseInputInterpreter.getMousePosition();
                 position2D = [
                     (position2D[0] / canvas.width - 0.5) * 2,
@@ -2308,20 +2426,21 @@ define([
                 _objectivesTextLayer.show();
                 // .....................................................................................................
                 // escorts
-                if (_escorts.length > 0) {
+                ships = _escorts.filter(_escortShouldBeIndicated);
+                if (ships.length > 0) {
                     _escortsBackground.applyLayout(_escortsBackgroundLayout, canvas.width, canvas.height);
                     _escortsBackground.show();
                     for (i = 0; i < _escortsTexts.length; i++) {
-                        if (i < _escorts.length) {
-                            _escortsTexts[i].setText(_escorts[i].getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
-                            _escortsTexts[i].setColor(_escorts[i].isAlive() ?
+                        if (i < ships.length) {
+                            _escortsTexts[i].setText(ships[i].getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
+                            _escortsTexts[i].setColor(ships[i].isAlive() ?
                                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.alive :
                                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.destroyed);
-                            _escortHullIntegrityBars[i].setColor(_getHullIntegrityColor(_escorts[i].getHullIntegrity(),
+                            _escortHullIntegrityBars[i].setColor(_getHullIntegrityColor(ships[i].getHullIntegrity(),
                                     _escortsHullIntegrityBarSettings.colors.fullIntegrity,
                                     _escortsHullIntegrityBarSettings.colors.halfIntegrity,
                                     _escortsHullIntegrityBarSettings.colors.zeroIntegrity));
-                            _escortHullIntegrityBars[i].clipX(0, _escorts[i].getHullIntegrity());
+                            _escortHullIntegrityBars[i].clipX(0, ships[i].getHullIntegrity());
                             _escortHullIntegrityBars[i].applyLayout(_escortHullIntegrityBarLayouts[i], canvas.width, canvas.height);
                             _escortsTexts[i].show();
                             _escortHullIntegrityBars[i].show();
@@ -2351,14 +2470,16 @@ define([
             // HUD messages
             if ((control.isInPilotMode()) && (_messages.length > 0)) {
                 if (_messages[0].new) {
-                    _messageSound.play();
+                    if (!_messages[0].silent) {
+                        _messageSound.play();
+                    }
                     _messages[0].new = false;
                 }
                 _messageText.setText(_messages[0].text);
                 if (_messages[0].color) {
                     _messageText.setColor(_messages[0].color);
                 } else {
-                    _messageText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT).colors.default);
+                    _messageText.setColor(_messageTextSettings.colors.default);
                 }
                 if (!_messages[0].permanent) {
                     _messages[0].timeLeft -= dt;
@@ -2600,10 +2721,12 @@ define([
                         _wingmenStatusCraftIndicators[count].applyLayout(_wingmenStatusCraftLayouts[count], canvas.width, canvas.height);
                         // color based on hull integrity
                         _wingmenStatusCraftIndicators[count].setColor(wingman.isAlive() ?
-                                _getHullIntegrityColor(wingman.getHullIntegrity(),
-                                        _wingmenStatusCraftIndicatorSettings.colors.fullIntegrity,
-                                        _wingmenStatusCraftIndicatorSettings.colors.halfIntegrity,
-                                        _wingmenStatusCraftIndicatorSettings.colors.zeroIntegrity) :
+                                (wingman.isAway() ?
+                                        _wingmenStatusCraftIndicatorSettings.colors.away :
+                                        _getHullIntegrityColor(wingman.getHullIntegrity(),
+                                                _wingmenStatusCraftIndicatorSettings.colors.fullIntegrity,
+                                                _wingmenStatusCraftIndicatorSettings.colors.halfIntegrity,
+                                                _wingmenStatusCraftIndicatorSettings.colors.zeroIntegrity)) :
                                 _wingmenStatusCraftIndicatorSettings.colors.destroyed);
                         _wingmenStatusCraftIndicators[count].show();
                         // add player indicator for the followed spacecraft
@@ -2876,7 +2999,11 @@ define([
             if (!_demoMode) {
                 craft = _mission.getPilotedSpacecraft();
                 if (craft && craft.isAlive() && craft.isAway()) {
-                    _goToDebriefing();
+                    if (_timeSincePlayerLeft > config.getSetting(config.BATTLE_SETTINGS.QUIT_DELAY_AFTER_JUMP_OUT)) {
+                        _goToDebriefing();
+                    } else {
+                        _timeSincePlayerLeft += dt;
+                    }
                     return;
                 }
                 // we wait a little after the state changes to victory or defeat so that incoming projectiles destroying the player's ship
@@ -2978,6 +3105,7 @@ define([
                 missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(true);
             }
             _displayedMissionState = _mission.getState();
+            _timeSincePlayerLeft = 0;
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
             if (graphics.shouldUseShadowMapping()) {
                 graphics.getShadowMappingShader();
@@ -3057,7 +3185,14 @@ define([
                         menuKey: _getMenuKeyHTMLString()
                     }));
                     _mission.applyToSpacecrafts(function (spacecraft) {
-                        spacecraft.setOnFired(_handleSpacecraftFired);
+                        spacecraft.setEventHandler(SpacecraftEvents.FIRED, _handleSpacecraftFired.bind(spacecraft));
+                        if (spacecraft === _mission.getPilotedSpacecraft()) {
+                            spacecraft.setEventHandler(SpacecraftEvents.JUMP_ENGAGED, _handlePilotedSpacecraftJumpEngaged.bind(spacecraft));
+                            spacecraft.setEventHandler(SpacecraftEvents.JUMP_CANCELLED, _handlePilotedSpacecraftJumpCancelled.bind(spacecraft));
+                            spacecraft.setEventHandler(SpacecraftEvents.PREPARING_JUMP, _handlePilotedSpacecraftPreparingJump.bind(spacecraft));
+                        } else {
+                            spacecraft.setEventHandler(SpacecraftEvents.JUMP_OUT_STARTED, _handleSpacecraftJumpOutStarted.bind(spacecraft));
+                        }
                     });
                     _messageSound = resources.getSoundEffect(
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
@@ -3108,6 +3243,7 @@ define([
         _escortsHullIntegrityBarSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_HULL_INTEGRITY_BAR);
         _wingmenStatusCraftIndicatorSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_INDICATOR);
         _wingmenStatusMaxSquadMemberCount = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS).length;
+        _messageTextSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT);
         // music
         _combatThemeDurationAfterFire = config.getSetting(config.BATTLE_SETTINGS.COMBAT_THEME_DURATION_AFTER_FIRE) * 1000;
     });
