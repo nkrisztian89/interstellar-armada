@@ -67,10 +67,12 @@ define([
     var
             // ------------------------------------------------------------------------------
             // constants
+            /** @type String */
             STATS_PARAGRAPH_ID = "stats",
             LOADING_BOX_ID = "loadingBox",
             INFO_BOX_ID = "infoBox",
             BATTLE_CANVAS_ID = "battleCanvas",
+            /** @type Number */
             LOOP_CANCELED = -1,
             LOOP_REQUESTANIMFRAME = -2,
             LOADING_RANDOM_ITEMS_PROGRESS = 5,
@@ -85,6 +87,7 @@ define([
              */
             INITIAL_CAMERA_FOV = 40,
             INITIAL_CAMERA_SPAN = 0.2,
+            /** @type String */
             HUD_ELEMENT_CLASS_NAME = "hudElementClass",
             HUD_ELEMENT_MODEL_NAME_PREFIX = "squareModel",
             MODEL_NAME_INFIX = "-",
@@ -99,15 +102,27 @@ define([
             VICTORY_THEME = "victory",
             DEFEAT_THEME = "defeat",
             // HUD messages
+            /** @type Number */
             HUD_MESSAGE_DURATION_PER_CHAR = 70, // based on average ~900 char per minute human reading speed
             HUD_MESSAGE_BASE_DURATION = 400, // fix extra time added to the duration of all HUD messages without explicit duration
+            /** ID for the HUD message queue for general messages - messages without a specified queue go here @type String */
+            INFO_QUEUE = "info",
+            /** ID for the HUD message queue for mission state updates @type String */
+            MISSION_QUEUE = "mission",
+            /** ID for the HUD message queue for messages from the jump engine of the ship @type String */
+            JUMP_QUEUE = "system",
+            /** In descending priority order @type Array */
+            MESSAGE_QUEUES = [JUMP_QUEUE, MISSION_QUEUE, INFO_QUEUE],
             // target info section names
+            /** @type String */
             TARGET_INFO_NAME = "name",
             TARGET_INFO_CLASS = "class",
             TARGET_INFO_TEAM = "team",
             TARGET_INFO_FIREPOWER = "firepower",
             TARGET_INFO_DISTANCE = "distance",
             TARGET_INFO_VELOCITY = "velocity",
+            /** From top to bottom in the info panel
+             * @type Array */
             TARGET_INFO_SECTIONS = [TARGET_INFO_NAME, TARGET_INFO_CLASS, TARGET_INFO_TEAM, TARGET_INFO_FIREPOWER, TARGET_INFO_DISTANCE, TARGET_INFO_VELOCITY],
             // ------------------------------------------------------------------------------
             // private variables
@@ -251,6 +266,7 @@ define([
              * @property {Number} [duration] The duration to display the message for, in milliseconds. If not given, an automatic
              * duration will be set based on the length of the text
              * @property {Number} timeLeft How much time is still left from displaying this message, in milliseconds
+             * @property {String} [queue] The ID of the message queue this messag should go in
              * @property {Boolean} [permanent] If true, the message keeps being displayed until a new urgent
              * message is added or the queue is cleared
              * @property {Number[4]} [color] When given, the text is displayed using this text color
@@ -258,10 +274,11 @@ define([
              * @property {Boolean} [new=false] When a new message is put at the front of the queue, this flag is set to true
              */
             /**
-             * The list of messages to be displayed on the HUD. The messages are displayed in the order they are in the queue.
-             * @type Battle~HUDMessage[]
+             * Contains the HUD message queues by their IDs. Each queue is the list of messages to be displayed on the HUD for that queue. 
+             * The messages are displayed in the order they are in the queue.
+             * @type Object.<String, Battle~HUDMessage[]>
              */
-            _messages,
+            _messageQueues,
             /**
              * The sound played when a new HUD message is displayed.
              * @type SoundClip
@@ -826,7 +843,7 @@ define([
             _battleScene.clearSpotLights();
         }
         _battleScene = null;
-        _messages = null;
+        _messageQueues = null;
         audio.playMusic(null);
     }
     // ------------------------------------------------------------------------------
@@ -898,6 +915,7 @@ define([
         _jumpMessage = {
             text: strings.get(strings.BATTLE.MESSAGE_JUMP_ENGAGED),
             color: _messageTextSettings.colors.jump,
+            queue: JUMP_QUEUE,
             permanent: true
         };
         _battle.battleScreen.queueHUDMessage(_jumpMessage, true);
@@ -908,11 +926,7 @@ define([
      * Handles camera configuration / HUD message features related to the jump engine cancelled event
      */
     function _handlePilotedSpacecraftJumpCancelled() {
-        if (_jumpMessage) {
-            _jumpMessage.permanent = false;
-            _jumpMessage.timeLeft = 1;
-            _jumpMessage.silent = true;
-        }
+        _battle.battleScreen.clearHUDMessages(JUMP_QUEUE);
         _battleScene.getCamera().startTransitionToConfiguration(_originalCameraConfig);
     }
     /**
@@ -954,6 +968,7 @@ define([
                 }),
                 color: _messageTextSettings.colors.jump,
                 duration: 1,
+                queue: JUMP_QUEUE,
                 silent: true
             }, true);
         }
@@ -2154,17 +2169,28 @@ define([
         message.new = true;
         // calculating duration based on message length if needed
         message.timeLeft = message.duration || Math.round(message.text.length * HUD_MESSAGE_DURATION_PER_CHAR + HUD_MESSAGE_BASE_DURATION);
+        message.queue = message.queue || INFO_QUEUE;
         if (urgent) {
-            _messages.unshift(message);
+            _messageQueues[message.queue].unshift(message);
         } else {
-            _messages.push(message);
+            _messageQueues[message.queue].push(message);
         }
     };
     /**
-     * Clears all HUD messages from the queue.
+     * Clears all HUD messages from the given queue.
+     * @param {String} [queue=INFO_QUEUE] 
      */
-    BattleScreen.prototype.clearHUDMessages = function () {
-        _messages = [];
+    BattleScreen.prototype.clearHUDMessages = function (queue) {
+        _messageQueues[queue || INFO_QUEUE] = [];
+    };
+    /**
+     * Clears all HUD messages from the all queues.
+     */
+    BattleScreen.prototype.clearHUDMessageQueues = function () {
+        var i;
+        for (i = 0; i < MESSAGE_QUEUES.length; i++) {
+            _messageQueues[MESSAGE_QUEUES[i]] = [];
+        }
     };
     /**
      * Updates the contents of the HUDF with information about the currently followed spacecraft
@@ -2201,7 +2227,9 @@ define([
                 /** @type HUDElement */
                 indicator,
                 /** @type Spacecraft[] */
-                ships, highlightedShips;
+                ships, highlightedShips,
+                /** @type Battle~HUDMessage[] */
+                messageQueue;
         if (craft && _isHUDVisible) {
             isInAimingView = craft.getView(_battleScene.getCamera().getConfiguration().getName()).isAimingView();
             // .....................................................................................................
@@ -2468,25 +2496,32 @@ define([
             }
             // .....................................................................................................
             // HUD messages
-            if ((control.isInPilotMode()) && (_messages.length > 0)) {
-                if (_messages[0].new) {
-                    if (!_messages[0].silent) {
+            i = 0;
+            // finding the highest priority non empty queue
+            while ((i < MESSAGE_QUEUES.length) && (_messageQueues[MESSAGE_QUEUES[i]].length === 0)) {
+                i++;
+            }
+            // if such a queue has been found, display the first message in the queue
+            if ((control.isInPilotMode()) && (i < MESSAGE_QUEUES.length)) {
+                messageQueue = _messageQueues[MESSAGE_QUEUES[i]];
+                if (messageQueue[0].new) {
+                    if (!messageQueue[0].silent) {
                         _messageSound.play();
                     }
-                    _messages[0].new = false;
+                    messageQueue[0].new = false;
                 }
-                _messageText.setText(_messages[0].text);
-                if (_messages[0].color) {
-                    _messageText.setColor(_messages[0].color);
+                _messageText.setText(messageQueue[0].text);
+                if (messageQueue[0].color) {
+                    _messageText.setColor(messageQueue[0].color);
                 } else {
                     _messageText.setColor(_messageTextSettings.colors.default);
                 }
-                if (!_messages[0].permanent) {
-                    _messages[0].timeLeft -= dt;
-                    if (_messages[0].timeLeft <= 0) {
-                        _messages.shift();
-                        if (_messages.length > 0) {
-                            _messages[0].new = true;
+                if (!messageQueue[0].permanent) {
+                    messageQueue[0].timeLeft -= dt;
+                    if (messageQueue[0].timeLeft <= 0) {
+                        messageQueue.shift();
+                        if (messageQueue.length > 0) {
+                            messageQueue[0].new = true;
                         }
                     }
                 }
@@ -3018,6 +3053,7 @@ define([
                         if (craft && craft.isAlive()) {
                             this.queueHUDMessage({
                                 text: strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_FAIL),
+                                queue: MISSION_QUEUE,
                                 permanent: true
                             }, true);
                         } else {
@@ -3151,7 +3187,8 @@ define([
             _addHUDToScene();
             _shipIndicatorHighlightTime = 0;
             this._addUITexts();
-            _messages = [];
+            _messageQueues = _messageQueues || {};
+            this.clearHUDMessageQueues();
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.AMBIENT_MUSIC), AMBIENT_THEME, true);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.ANTICIPATION_MUSIC), ANTICIPATION_THEME, true);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC), COMBAT_THEME, true);
