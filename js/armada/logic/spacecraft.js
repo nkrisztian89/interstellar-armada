@@ -204,6 +204,8 @@ define([
      * @returns {Spacecraft}
      */
     function Spacecraft(spacecraftClass, name, positionMatrix, orientationMatrix, equipmentProfileName, spacecraftArray) {
+        // ---------------------------------------
+        // basic info
         /**
          * The class of this spacecraft that describes its general properties.
          * @type SpacecraftClass
@@ -224,6 +226,21 @@ define([
          * @type String
          */
         this._displayName = null;
+        // ---------------------------------------
+        // current state
+        /**
+         * Set to false when the spacecraft object is destroyed and cannot be used anymore. At this
+         * point, some references from it have also been removed. (some are kept as might be required
+         * by for example the wingmen status indicator on the HUD to display fallen wingmen with the
+         * icon appropriate for their class)
+         * @type Boolean
+         */
+        this._alive = true;
+        /**
+         * True when the spacecraft has jumped out from or has not jumped in yet to the current mission scene.
+         * @type Boolean
+         */
+        this._away = false;
         /**
          * The number of hitpoints indicate the amount of damage the ship can take. Successful hits by
          * projectiles on the ship reduce the amount of hitpoints based on the damage value of the 
@@ -231,11 +248,26 @@ define([
          * @type Number
          */
         this._hitpoints = 0;
+        // ---------------------------------------
+        // visuals
         /**
          * The renderable node that represents this spacecraft in a scene.
          * @type ParameterizedMesh
          */
         this._visualModel = null;
+        /**
+         * The renderable object that is used as the parent for the visual
+         * representation of the hitboxes of this craft.
+         * @type RenderableNode
+         */
+        this._hitbox = null;
+        /**
+         * The blinking lights on the spacecraft
+         * @type Blinker[]
+         */
+        this._blinkers = null;
+        // ---------------------------------------
+        // physics
         /**
          * The object representing the physical properties of this spacecraft.
          * Used to calculate the movement and rotation of the craft as well as
@@ -244,10 +276,29 @@ define([
          */
         this._physicalModel = null;
         /**
+         * Cached value of the matrix representing the relative velocity (translation in m/s in the coordinate space of the spacecraft)
+         * of the spacecraft.
+         * @type Float32Array
+         */
+        this._relativeVelocityMatrix = null;
+        /**
+         * Cached value of the matrix representing the turning the current angular velocity of the object causes over 
+         * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds in model space.
+         * @type Float32Array
+         */
+        this._turningMatrix = null;
+        // ---------------------------------------
+        // equipment
+        /**
          * The list of weapons this spacecraft is equipped with.
          * @type Weapon[]
          */
         this._weapons = null;
+        /**
+         * While true, the spacecraft is not allowed to fire (for example during jump sequences)
+         * @type Boolean
+         */
+        this._firingDisabled = false;
         /**
          * The propulsion system this spacecraft is equipped with.
          * @type Propulsion
@@ -264,72 +315,50 @@ define([
          * @type ManeuveringComputer
          */
         this._maneuveringComputer = null;
-        /**
-         * The renderable object that is used as the parent for the visual
-         * representation of the hitboxes of this craft.
-         * @type RenderableNode
-         */
-        this._hitbox = null;
-        /**
-         * Set to false when the spacecraft object is destroyed and cannot be used anymore. At this
-         * point, references from it have also been removed.
-         * @type Boolean
-         */
-        this._alive = true;
-        /**
-         * True when the spacecraft has jumped out from or has not jumped in yet to the current mission scene.
-         * @type Boolean
-         */
-        this._away = false;
-        /**
-         * Negative, while the ship is not destoyed, set to zero upon start of destruction animation so
-         * that deletion of the spacecraft can take place at the appropriate time
-         * @type Number
-         */
-        this._timeElapsedSinceDestruction = -1;
-        /**
-         * The list of damage indicators that are currently visible on the spacecraft.
-         * @type Explosion[]
-         */
-        this._activeDamageIndicators = [];
-        /**
-         * The blinking lights on the spacecraft
-         * @type Blinker[]
-         */
-        this._blinkers = null;
-        /**
-         * The array of other spacecrafts that participate in the same simulation (can be targeted)
-         * @type Spacecraft[]
-         */
-        this._spacecraftArray = null;
+        // ---------------------------------------
+        // targeting
         /**
          * The currently targeted spacecraft.
          * @type Spacecraft
          */
         this._target = null;
         /**
-         * Cached value of the matrix representing the relative velocity (translation in m/s in the coordinate space of the spacecraft)
-         * of the spacecraft.
-         * @type Float32Array
-         */
-        this._relativeVelocityMatrix = null;
-        /**
-         * Cached value of the matrix representing the turning the current angular velocity of the object causes over 
-         * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds in model space.
-         * @type Float32Array
-         */
-        this._turningMatrix = null;
-        /**
-         * An array of references to the spacecrafts that have this spacecraft targeted currently.
+         * The array of other spacecrafts that participate in the same simulation (can be targeted)
          * @type Spacecraft[]
          */
-        this._targetedBy = null;
+        this._spacecraftArray = null;
+        /**
+         * Cached value of the estimated future target position where the spacecraft should fire to hit it.
+         * @type Number[3]
+         */
+        this._targetHitPosition = null;
+        // ---------------------------------------
+        // effects
+        /**
+         * The list of damage indicators that are currently visible on the spacecraft.
+         * @type Explosion[]
+         */
+        this._activeDamageIndicators = [];
+        /**
+         * A reference to the explosion if the spacecraft is exploding
+         * @type Explosion
+         */
+        this._explosion = null;
+        // ---------------------------------------
+        // event handling
         /**
          * The functions to call when the various spacecraft events happen (see SpacecraftEvents.js for possible types) to this spacecraft.
          * The keys are the event type IDs. (one function per event type supported)
          * @type Object.<String, Function>
          */
         this._eventHandlers = null;
+        /**
+         * An array of references to the spacecrafts that have this spacecraft targeted currently.
+         * @type Spacecraft[]
+         */
+        this._targetedBy = null;
+        // ---------------------------------------
+        // affiliation
         /**
          * A reference to the team this spacecraft belongs to (governing who is friend or foe).
          * @type Team
@@ -345,16 +374,8 @@ define([
          * @type Number
          */
         this._indexInSquad = 0;
-        /**
-         * Cached value of the estimated future target position where the spacecraft should fire to hit it.
-         * @type Number[3]
-         */
-        this._targetHitPosition = null;
-        /**
-         * A reference to the explosion if the spacecraft is exploding
-         * @type Explosion
-         */
-        this._explosion = null;
+        // ---------------------------------------
+        // sound
         /**
          * Sound clip used for playing the "hum" sound effect for this spacecraft.
          * @type SoundClip
@@ -365,6 +386,8 @@ define([
          * @type SoundSource
          */
         this._soundSource = null;
+        // ---------------------------------------
+        // statistics
         /**
          * The kill count for this spacecraft (current mission)
          * @type Number
@@ -390,12 +413,20 @@ define([
          * @type Number
          */
         this._hitsOnEnemies = 0;
+        // ---------------------------------------
+        // other
         /**
          * The calculated cached value of how many score points is destroying this spacecraft worth (based on spacecraft class and equipment
          * score values)
          * @type Number
          */
         this._scoreValue = 0;
+        /**
+         * Negative, while the ship is not destoyed, set to zero upon start of destruction animation so
+         * that deletion of the spacecraft can take place at the appropriate time
+         * @type Number
+         */
+        this._timeElapsedSinceDestruction = -1;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, equipmentProfileName, spacecraftArray);
@@ -432,6 +463,7 @@ define([
             }
         }.bind(this));
         this._weapons = [];
+        this._firingDisabled = false;
         this._maneuveringComputer = new equipment.ManeuveringComputer(this);
         this._blinkers = [];
         blinkerDescriptors = this._class.getBlinkerDescriptors();
@@ -645,6 +677,19 @@ define([
      */
     Spacecraft.prototype.getView = function (name) {
         return this._class.getView(name);
+    };
+    /**
+     * Re-enables firing if it is disabled.
+     */
+    Spacecraft.prototype.enableFiring = function () {
+        this._firingDisabled = false;
+    };
+    /**
+     * After calling this, rotating weapons will assume their default positions and calling fire() will have no effect (until firing
+     * controls are re-enabled)
+     */
+    Spacecraft.prototype.disableFiring = function () {
+        this._firingDisabled = true;
     };
     /**
      * Returns the array of weapon equipped on this spacecraft.
@@ -1536,24 +1581,26 @@ define([
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
         var i, scaledOriMatrix, fired = false, projectileCount, posInCameraSpace;
-        scaledOriMatrix = this.getScaledOriMatrix();
-        posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
-        if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
-                (Math.abs(posInCameraSpace[1]) <= _weaponFireSoundStackMinimumDistance) &&
-                (Math.abs(posInCameraSpace[2]) <= _weaponFireSoundStackMinimumDistance)) {
-            posInCameraSpace = null;
-        }
-        for (i = 0; i < this._weapons.length; i++) {
-            projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, posInCameraSpace ? this.getSoundSource() : null);
-            fired = (projectileCount > 0) || fired;
-            this._shotsFired += projectileCount;
-        }
-        // executing callbacks
-        if (fired) {
-            for (i = 0; i < this._targetedBy.length; i++) {
-                this._targetedBy[i].handleEvent(SpacecraftEvents.TARGET_FIRED);
+        if (!this._firingDisabled) {
+            scaledOriMatrix = this.getScaledOriMatrix();
+            posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
+            if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
+                    (Math.abs(posInCameraSpace[1]) <= _weaponFireSoundStackMinimumDistance) &&
+                    (Math.abs(posInCameraSpace[2]) <= _weaponFireSoundStackMinimumDistance)) {
+                posInCameraSpace = null;
             }
-            this.handleEvent(SpacecraftEvents.FIRED);
+            for (i = 0; i < this._weapons.length; i++) {
+                projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, posInCameraSpace ? this.getSoundSource() : null);
+                fired = (projectileCount > 0) || fired;
+                this._shotsFired += projectileCount;
+            }
+            // executing callbacks
+            if (fired) {
+                for (i = 0; i < this._targetedBy.length; i++) {
+                    this._targetedBy[i].handleEvent(SpacecraftEvents.TARGET_FIRED);
+                }
+                this.handleEvent(SpacecraftEvents.FIRED);
+            }
         }
     };
     /*
@@ -1845,7 +1892,7 @@ define([
             futureTargetPosition = this.getTargetHitPosition();
         }
         for (i = 0; i < this._weapons.length; i++) {
-            if (this._target) {
+            if (this._target && !this._firingDisabled) {
                 this._weapons[i].aimTowards(futureTargetPosition, turnThreshold, fireThreshold, this.getScaledOriMatrix(), dt);
             } else {
                 this._weapons[i].rotateToDefaultPosition(turnThreshold, dt);

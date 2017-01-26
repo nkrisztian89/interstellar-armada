@@ -138,7 +138,25 @@
     "mission": {
         "targetPracticeBoxes": {
             "name": "Kezdő lőgyakorlat",
-            "description": "Gyakorold a célzást fegyvertelen, egy helyben álló konténerek felrobbantásával! Hogy megkönnyítsük a dolgod, az űrhajódat gyakorló fegyverekkel szereltük fel, amelyek maguktól pontosan a célra állnak, ha felé nézel."
+            "description": "Gyakorold a célzást fegyvertelen, egy helyben álló konténerek felrobbantásával! Hogy megkönnyítsük a dolgod, az űrhajódat gyakorló fegyverekkel szereltük fel, amelyek maguktól pontosan a célra állnak, ha felé nézel.",
+            "messages": {
+                "tutorial0": "Üdvözöllek a kezdő lőgyakorlaton!",
+                "tutorial0a": "Célozz és tüzelj az előtted lévő konténerre!\nEgér: mozgatás és {controlStrings/mouse/fire}\nBillentyűzet: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} és {controlStrings/keyboard/fire}\nJoystick: botkormány mozgatása és {controlStrings/joystick/fire}",
+                "tutorial0b": "Semmisíts meg a konténert. Lődd, amíg fel nem robban!\nEgér: mozgatás és {controlStrings/mouse/fire}\nBillentyűzet: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} és {controlStrings/keyboard/fire}\nJoystick: botkormány mozgatása és {controlStrings/joystick/fire}",
+                "tutorial1": "Szép munka!\nA következő célpontot automatikusan kijelöli a számítógép. Élénkvörös kerettel van kiemelve, amikor pedig nincs a látótérben, egy ugyanilyen színű nyíl jelöli az irányát.",
+                "tutorial1a": "Ez a konténer messzebb van. Gyorsíts/lassíts ({controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse}), hogy kellően megközelítsd. Teljes megállás: {controlStrings/keyboard/resetSpeed}. Semmisítsd meg, ha a közelébe értél!",
+                "tutorial2": "Manuálisan is kijelölhetsz új célpontokat.\n({controlStrings/keyboard/nextHostileTarget} / egér: {controlStrings/mouse/nextHostileTarget} / joystick: {controlStrings/joystick/nextHostileTarget})\nLőjj ki egy újabb konténert!",
+                "tutorial3": "A zöld célkeresztek mutatják, hogy ha tüzet nyitsz, a lövedékeid várhatóan hol fogják eltalálni (vagy elhibázni) a célpontot. A hajód minden fegyveréhez külön célkereszt tartozik. Akkor tüzelj, ha mindegyik ráállt a célra.",
+                "tutorial4": "A most használt gyakorló fegyvertől eltérően egyes fegyverek nem forgatható módon lehetnek a hajóra szerelve, így mereven előrefelé mutatnak. Az ilyen fegyverekkel gondosabban kell célozni.",
+                "tutorial5": "Nem minden helyzetben lehetséges az összes fegyverrel találatot elérni. Mindig mérlegeld a szituációt, és aszerint tüzelj.",
+                "tutorial6": "Figyeld meg az aktuális célpont közepe körül a kisebb vörös jelzést. Azt mutatja, várhatóan hol lesz a célpont közepe, mire odaérnek a lövedékeid. Ez alapján tudsz mozgó célpontokra pontosan lőni.",
+                "tutorial7": "A konténereken is gyakorolhatod a mozgó célpontra tüzelést, ha oldalirányú mozgás közben célzol. Ehhez tüzelés előtt tegyél éles fordulatokat nagyobb sebességgel, vagy oldalazz! ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower})",
+                "tutorial8": "Az oldalazás ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower}) harc közben is nagyon hasznos a közeledő lövedékek kikerüléséhez.\nOrsózással ({controlStrings/keyboard/rollLeft}, {controlStrings/keyboard/rollRight}) kombinálva rendkívül megnehezíti, hogy pontosan célba vegyenek.",
+                "tutorial9": "Repülési nézetet is válthatsz. ({controlStrings/keyboard/nextView}/{controlStrings/keyboard/previousView})\nEgyes nézetekben könnyebb célozni, mások a támadások elleni kitérésben segítenek jobban.",
+                "tutorial10": "Néhány nézetben a repülési iránytől függetlenül is körül lehet nézni. ({controlStrings/keyboard/controlCamera} lenyomva tartásával, vagy joystickon a nézetváltó kalap segítségével)",
+                "tutorial11": "Az összes irányítási beállítást megtekintheted bármikor a menüből ({controlStrings/keyboard/quit}) elérhető opcióval.",
+                "tutorial12": "A küldetés teljesítéséhez lődd ki az összes konténert! A még megsemmisítendő ellenségek számát nyomon követheted a feladatjelzdő paneljén a képernyő bal oldalán."
+            }
         },
         "targetPracticeDrones": {
             "name": "Középhaladó lőgyakorlat"
@@ -174,10 +192,17 @@
             "name": "Őrjárat őrjárat ellen"
         },
         "defendFrigates": {
-            "name": "Védd meg a fregattokat"
+            "name": "Védd meg a fregattokat",
+            "messages": {
+                "caution": "Szép munka, az összes bombázó megsemmisült! Most dőlj hátra, és figyeld, ahogy a fregattok elvégzik a többit."
+            }
         },
         "test": {
-            "name": "Teszt"
+            "name": "Teszt",
+            "messages": {
+                "test": "Ez egy teszt küldetés. Szabadon repülhetsz, és tehetsz, amit csak szeretnél.\nEz az emlékeztető ötször fog megjelenni.",
+                "test2": "Szabadon kilőheted a többi űrhajót."
+            }
         },
         "libraTest": {
             "name": "Libra teszt"
@@ -236,8 +261,8 @@
                 "spectateButton": "Folytatás nézőként"
             },
             "jump": {
-                "engaged": "TÉRUGRÓ HAJTÓMŰ AKTIVÁLVA\nSebesség beállítása...\n\nMegszakítás: {controlStrings/keyboard/jumpOut} gomb",
-                "preparing": "TÉRUGRÓ HAJTÓMŰ AKTIVÁLVA\nFelkészülés...\n{timeLeft}\nMegszakítás: {controlStrings/keyboard/jumpOut} gomb"
+                "engaged": "TÉRUGRÓ HAJTÓMŰ AKTIVÁLVA\nSebesség beállítása...\n\nMegszakítás: {controlStrings/keyboard/jumpOut}",
+                "preparing": "TÉRUGRÓ HAJTÓMŰ AKTIVÁLVA\nFelkészülés...\n{timeLeft}\nMegszakítás: {controlStrings/keyboard/jumpOut}"
             }
         }
     },

@@ -2062,6 +2062,12 @@ define([
          */
         this._soundClip = null;
         /**
+         * Stores the flight mode that was set on the spacecraft when the jump sequence was initiated, so that it can be reset if the jump
+         * is cancelled.
+         * @type String
+         */
+        this._originalFlightMode = null;
+        /**
          * Stores a copy of the original scaling matrix of the spacecraft (it is altered during the jump sequences, stretching the 
          * spacecraft along the Y axis)
          * @type Float32Array
@@ -2103,9 +2109,11 @@ define([
             case JumpEngine.JumpState.NONE:
                 this._state = JumpEngine.JumpState.ALIGNING_VELOCITY;
                 // setting up the maneuvering computer to guide the spacecraft to the required velocity
+                this._originalFlightMode = this._spacecraft.getFlightMode();
                 this._spacecraft.changeFlightMode(FlightMode.CRUISE);
                 this._spacecraft.setSpeedTarget(this._class.getPrepareVelocity());
                 this._spacecraft.lockManeuvering();
+                this._spacecraft.disableFiring();
                 // the starting sound effect (computer blips) only need to be played for the piloted spacecraft - the event handler should
                 // return true if the event handling included the HUD and other piloted spacecraft related updates
                 if (this._spacecraft.handleEvent(SpacecraftEvents.JUMP_ENGAGED)) {
@@ -2119,6 +2127,8 @@ define([
                 this._state = JumpEngine.JumpState.NONE;
                 this._spacecraft.handleEvent(SpacecraftEvents.JUMP_CANCELLED);
                 this._spacecraft.unlockManeuvering();
+                this._spacecraft.changeFlightMode(this._originalFlightMode);
+                this._spacecraft.enableFiring();
                 if (this._soundClip) {
                     this._soundClip.stopPlaying();
                     this._soundClip = null;
