@@ -29,6 +29,10 @@ define(function () {
      * @property {Number} timeLeft The amount of time left from the preparation, in milliseconds
      * @property {Number} duration The total duration of the preparation, in milliseconds
      */
+    /**
+     * @typedef {Object} SpacecraftEvents~CommandData
+     * @property {String} command The type of command to execute
+     */
     return {
         /** Another spacecraft targets the spacecraft. */
         BEING_TARGETED: "beingTargeted",
@@ -55,6 +59,8 @@ define(function () {
         /** The spacecraft has jumped out. */
         JUMPED_OUT: "jumpedOut",
         /** The spacecraft cancelled the jump process. */
-        JUMP_CANCELLED: "jumpCancelled"
+        JUMP_CANCELLED: "jumpCancelled",
+        /** The spacecraft received a command (to be handled by the AI) */
+        COMMAND_RECEIVED: "commandReceived"
     };
 });

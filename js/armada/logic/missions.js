@@ -26,6 +26,7 @@
  * @param config Used to access game settings/configuration
  * @param strings Used for translation support
  * @param environments Used for creating environments
+ * @param SpacecraftEvents Used to trigger spacecraft events
  * @param spacecraft Used for creating spacecrafts
  * @param equipment Used for accessing the common projectile pool
  * @param ai Used for setting the artificial intelligence pilots when creating a mission.
@@ -47,6 +48,7 @@ define([
     "armada/configuration",
     "armada/strings",
     "armada/logic/environments",
+    "armada/logic/SpacecraftEvents",
     "armada/logic/spacecraft",
     "armada/logic/equipment",
     "armada/logic/ai",
@@ -55,7 +57,7 @@ define([
         utils, mat,
         application, game, asyncResource, resourceManager, resources, pools,
         camera, renderableObjects,
-        constants, graphics, classes, config, strings, environments, spacecraft, equipment, ai) {
+        constants, graphics, classes, config, strings, environments, SpacecraftEvents, spacecraft, equipment, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -115,7 +117,9 @@ define([
                 /** Executing this action queues a message to be displayed on the HUD */
                 MESSAGE: "message",
                 /** Executing this action clears the HUD message queue */
-                CLEAR_MESSAGES: "clearMessages"
+                CLEAR_MESSAGES: "clearMessages",
+                /** Executing this action sends a command to the subject spacecrafts (to be processed by their AIs) */
+                COMMAND: "command"
             },
             MissionState = {
                 // in progress states
@@ -563,11 +567,193 @@ define([
     };
     // #########################################################################
     /**
-     * @typedef {Object} Condition~Subjects
+     * @typedef {Object} Missions~SubjectsDescriptor
      * @property {String[]} [spacecrafts] 
      * @property {String[]} [squads] 
      * @property {String[]} [teams] 
      */
+    /**
+     * @class Represents a group of spacecrafts within a mission. (which can be subjects of conditions or actions)
+     * @param {Missions~SubjectsDescriptor} dataJSON
+     */
+    function SubjectGroup(dataJSON) {
+        /**
+         * Contains the IDs of the spacecrafts, squads and teams this group consists of
+         * @type Missions~SubjectsDescriptor
+         */
+        this._descriptor = dataJSON || {};
+        /**
+         * References to the actual spacecrafts in the mission that are identified by instance are stored in this field for quicker 
+         * access
+         * @type Spacecraft[]
+         */
+        this._spacecrafts = null;
+        /**
+         * The cached string that can be used to display the subjects to the user in a short way, to be used on the HUD
+         * @type String
+         */
+        this._shortString = null;
+    }
+    /**
+     * Returns whether the passed spacecraft is a subject belonging to this subject group
+     * @param {Spacecraft} spacecraft
+     * @returns {Boolean}
+     */
+    SubjectGroup.prototype.has = function (spacecraft) {
+        return (this._descriptor.spacecrafts && (this._descriptor.spacecrafts.indexOf(spacecraft.getID()) >= 0)) ||
+                (this._descriptor.squads && (this._descriptor.squads.indexOf(spacecraft.getSquad()) >= 0)) ||
+                (this._descriptor.teams && (this._descriptor.teams.indexOf(spacecraft.getTeam().getID()) >= 0));
+    };
+    /**
+     * Gathers and caches references to the spacecrafts in the passed mission that are in this subject group, for faster future use
+     * @param {Mission} mission
+     */
+    SubjectGroup.prototype._cacheSpacecrafts = function (mission) {
+        var i, spacecrafts;
+        this._spacecrafts = [];
+        spacecrafts = mission.getSpacecrafts();
+        for (i = 0; i < spacecrafts.length; i++) {
+            if (this.has(spacecrafts[i])) {
+                this._spacecrafts.push(spacecrafts[i]);
+            }
+        }
+    };
+    /**
+     * Returns an array with the spacecrafts that are in this subject group (based on the passed mission)
+     * @param {Mission} mission
+     * @returns {Spacecraft[]}
+     */
+    SubjectGroup.prototype.getSpacecrafts = function (mission) {
+        if (!this._spacecrafts && mission) {
+            this._cacheSpacecrafts(mission);
+        }
+        return this._spacecrafts;
+    };
+    /**
+     * 
+     * @param {String} subjectID
+     * @returns {String}
+     */
+    SubjectGroup._mapSpacecraftID = function (subjectID) {
+        return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
+    };
+    /**
+     * 
+     * @param {Array} subjectIDs
+     * @returns {String}
+     */
+    SubjectGroup._getMappedSpacecraftIDs = function (subjectIDs) {
+        return strings.getList(subjectIDs.map(SubjectGroup._mapSpacecraftID));
+    };
+    /**
+     * 
+     * @param {String} subjectID
+     * @returns {String}
+     */
+    SubjectGroup._mapSquadID = function (subjectID) {
+        subjectID = strings.get(strings.SQUAD.PREFIX, subjectID);
+        return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
+    };
+    /**
+     * 
+     * @param {Array} subjectIDs
+     * @returns {String}
+     */
+    SubjectGroup._getMappedSquadIDs = function (subjectIDs) {
+        return strings.getList(subjectIDs.map(SubjectGroup._mapSquadID));
+    };
+    /**
+     * 
+     * @param {String} subjectID
+     * @returns {String}
+     */
+    SubjectGroup._mapTeamID = function (subjectID) {
+        subjectID = strings.get(strings.TEAM.PREFIX, subjectID);
+        return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
+    };
+    /**
+     * 
+     * @param {Array} subjectIDs
+     * @returns {String}
+     */
+    SubjectGroup._getMappedTeamIDs = function (subjectIDs) {
+        return strings.getList(subjectIDs.map(SubjectGroup._mapTeamID));
+    };
+    /**
+     * Returns a translated string that can be used to display the subjects to the player (used in the Missions screen)
+     * @returns {String}
+     */
+    SubjectGroup.prototype.toString = function () {
+        var result = "";
+        if (this._descriptor.spacecrafts) {
+            result += SubjectGroup._getMappedSpacecraftIDs(this._descriptor.spacecrafts);
+        }
+        if (this._descriptor.squads) {
+            if (result.length > 0) {
+                result += "; ";
+            }
+            result += utils.formatString(strings.get((this._descriptor.squads.length > 1) ?
+                    strings.MISSIONS.OBJECTIVE_SUBJECTS_SQUADS :
+                    strings.MISSIONS.OBJECTIVE_SUBJECTS_SQUAD), {
+                ids: SubjectGroup._getMappedSquadIDs(this._descriptor.squads)
+            });
+        }
+        if (this._descriptor.teams) {
+            if (result.length > 0) {
+                result += "; ";
+            }
+            result += utils.formatString(strings.get((this._descriptor.teams.length > 1) ?
+                    strings.MISSIONS.OBJECTIVE_SUBJECTS_TEAMS :
+                    strings.MISSIONS.OBJECTIVE_SUBJECTS_TEAM), {
+                ids: SubjectGroup._getMappedTeamIDs(this._descriptor.teams)
+            });
+        }
+        return result;
+    };
+    /**
+     * Returns how many of the subjects are still alive
+     * @returns {Number}
+     */
+    SubjectGroup.prototype.getLiveSubjectCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i].isAlive()) {
+                result++;
+            }
+        }
+        return result;
+    };
+    /**
+     * Returns a short translated string that can be used to display the subjects to the player (used on the HUD in battle)
+     * @returns {String}
+     */
+    SubjectGroup.prototype.getShortString = function () {
+        if (!this._shortString) {
+            if (this._descriptor.spacecrafts && !this._descriptor.squads && !this._descriptor.teams) {
+                if (this._spacecrafts.length > 1) {
+                    this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
+                } else {
+                    this._shortString = this._spacecrafts[0].getDisplayName();
+                }
+            } else if (!this._descriptor.spacecrafts && this._descriptor.squads && !this._descriptor.teams) {
+                if (this._descriptor.squads.length > 1) {
+                    this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SQUADS), {count: this._descriptor.squads.length});
+                } else {
+                    this._shortString = strings.get(strings.SQUAD.PREFIX, this._descriptor.squads[0]);
+                }
+            } else if (!this._descriptor.spacecrafts && !this._descriptor.squads && this._descriptor.teams) {
+                if (this._descriptor.teams.length > 1) {
+                    this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_TEAMS), {count: this._descriptor.teams.length});
+                } else {
+                    this._shortString = strings.get(strings.TEAM.PREFIX, this._descriptor.teams[0]);
+                }
+            } else {
+                this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
+            }
+        }
+        return this._shortString;
+    };
+    // #########################################################################
     /**
      * @class A condition that can be evaluated in every simulation step of the mission to be found either true (satisfied) or false, and 
      * can be used to fire triggers.
@@ -585,21 +771,10 @@ define([
          */
         this._type = dataJSON ? utils.getSafeEnumValue(ConditionType, dataJSON.type, null) : null;
         /**
-         * The identifiers of the spacecrafts / groups of spacecrafts that determine the subjects of the condition
-         * @type Condition~Subjects
+         * The spacecrafts / groups of spacecrafts that determine the subjects of the condition
+         * @type SubjectGroup
          */
-        this._subjects = dataJSON ? dataJSON.subjects : null;
-        /**
-         * References to the actual spacecrafts in the mission that are identified by this._subjects are stored in this field for quicker 
-         * evaluation
-         * @type Spacecraft[]
-         */
-        this._spacecrafts = null;
-        /**
-         * The cached string that can be used to display the subjects of the condition to the user in a short way, to be used on the HUD
-         * @type String
-         */
-        this._shortSubjectString = null;
+        this._subjects = dataJSON ? new SubjectGroup(dataJSON.subjects) : null;
         if (dataJSON) {
             this._checkParams(dataJSON.params);
         }
@@ -621,31 +796,6 @@ define([
         return false;
     };
     /**
-     * Returns whether the passed spacecraft is a subject of this condition based on the identifiers in this._subjects
-     * @param {Spacecraft} spacecraft
-     * @returns {Boolean}
-     */
-    Condition.prototype._isSubject = function (spacecraft) {
-        return (this._subjects.spacecrafts && (this._subjects.spacecrafts.indexOf(spacecraft.getID()) >= 0)) ||
-                (this._subjects.squads && (this._subjects.squads.indexOf(spacecraft.getSquad()) >= 0)) ||
-                (this._subjects.teams && (this._subjects.teams.indexOf(spacecraft.getTeam().getID()) >= 0));
-    };
-    /**
-     * Gathers and caches references to the spacecrafts in the passed mission that are subjects of this condition, for faster future 
-     * evaluation
-     * @param {Mission} mission
-     */
-    Condition.prototype._cacheSubjects = function (mission) {
-        var i, spacecrafts;
-        this._spacecrafts = [];
-        spacecrafts = mission.getSpacecrafts();
-        for (i = 0; i < spacecrafts.length; i++) {
-            if (this._isSubject(spacecrafts[i])) {
-                this._spacecrafts.push(spacecrafts[i]);
-            }
-        }
-    };
-    /**
      * Returns whether the condition is considered to be satisfied (true) according to the current state of the passed mission
      * Override this to add the appropriate satisfaction checks!
      * @returns {Boolean}
@@ -653,87 +803,6 @@ define([
     Condition.prototype.isSatisfied = function () {
         application.showError("Unrecognized condition type: '" + this._type + "'!");
         return false;
-    };
-    /**
-     * 
-     * @param {String} subjectID
-     * @returns {String}
-     */
-    Condition._mapSpacecraftID = function (subjectID) {
-        return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
-    };
-    /**
-     * 
-     * @param {Array} subjectIDs
-     * @returns {String}
-     */
-    Condition._getMappedSpacecraftIDs = function (subjectIDs) {
-        return strings.getList(subjectIDs.map(Condition._mapSpacecraftID));
-    };
-    /**
-     * 
-     * @param {String} subjectID
-     * @returns {String}
-     */
-    Condition._mapSquadID = function (subjectID) {
-        subjectID = strings.get(strings.SQUAD.PREFIX, subjectID);
-        return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
-    };
-    /**
-     * 
-     * @param {Array} subjectIDs
-     * @returns {String}
-     */
-    Condition._getMappedSquadIDs = function (subjectIDs) {
-        return strings.getList(subjectIDs.map(Condition._mapSquadID));
-    };
-    /**
-     * 
-     * @param {String} subjectID
-     * @returns {String}
-     */
-    Condition._mapTeamID = function (subjectID) {
-        subjectID = strings.get(strings.TEAM.PREFIX, subjectID);
-        return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
-    };
-    /**
-     * 
-     * @param {Array} subjectIDs
-     * @returns {String}
-     */
-    Condition._getMappedTeamIDs = function (subjectIDs) {
-        return strings.getList(subjectIDs.map(Condition._mapTeamID));
-    };
-    /**
-     * Returns a translated string that can be used to display the subjects of this condition to the player (used in the Missions screen)
-     * @returns {String}
-     */
-    Condition.prototype._getSubjectsString = function () {
-        var result = "";
-        if (this._subjects.spacecrafts) {
-            result += Condition._getMappedSpacecraftIDs(this._subjects.spacecrafts);
-        }
-        if (this._subjects.squads) {
-            if (result.length > 0) {
-                result += "; ";
-            }
-            result += utils.formatString(strings.get((this._subjects.squads.length > 1) ?
-                    strings.MISSIONS.OBJECTIVE_SUBJECTS_SQUADS :
-                    strings.MISSIONS.OBJECTIVE_SUBJECTS_SQUAD), {
-                ids: Condition._getMappedSquadIDs(this._subjects.squads)
-            });
-        }
-        if (this._subjects.teams) {
-            if (result.length > 0) {
-                result += "; ";
-            }
-            result += utils.formatString(strings.get((this._subjects.teams.length > 1) ?
-                    strings.MISSIONS.OBJECTIVE_SUBJECTS_TEAMS :
-                    strings.MISSIONS.OBJECTIVE_SUBJECTS_TEAM), {
-                ids: Condition._getMappedTeamIDs(this._subjects.teams)
-            });
-        }
-        return result;
     };
     /**
      * Returns a translated sentence that can be used to display a mission objective to the user that is based on this condition (for either
@@ -744,49 +813,6 @@ define([
     Condition.prototype.getObjectiveString = function () {
         application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
         return null;
-    };
-    /**
-     * Returns how many of the subjects of this condition are still alive
-     * @returns {Number}
-     */
-    Condition.prototype._getLiveSubjectCount = function () {
-        var result = 0, i;
-        for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i].isAlive()) {
-                result++;
-            }
-        }
-        return result;
-    };
-    /**
-     * Returns a short translated string that can be used to display the subjects of this condition to the player (used on the HUD in battle)
-     * @returns {String}
-     */
-    Condition.prototype._getShortSubjectsString = function () {
-        if (!this._shortSubjectString) {
-            if (this._subjects.spacecrafts && !this._subjects.squads && !this._subjects.teams) {
-                if (this._spacecrafts.length > 1) {
-                    this._shortSubjectString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
-                } else {
-                    this._shortSubjectString = this._spacecrafts[0].getDisplayName();
-                }
-            } else if (!this._subjects.spacecrafts && this._subjects.squads && !this._subjects.teams) {
-                if (this._subjects.squads.length > 1) {
-                    this._shortSubjectString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SQUADS), {count: this._subjects.squads.length});
-                } else {
-                    this._shortSubjectString = strings.get(strings.SQUAD.PREFIX, this._subjects.squads[0]);
-                }
-            } else if (!this._subjects.spacecrafts && !this._subjects.squads && this._subjects.teams) {
-                if (this._subjects.teams.length > 1) {
-                    this._shortSubjectString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_TEAMS), {count: this._subjects.teams.length});
-                } else {
-                    this._shortSubjectString = strings.get(strings.TEAM.PREFIX, this._subjects.teams[0]);
-                }
-            } else {
-                this._shortSubjectString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
-            }
-        }
-        return this._shortSubjectString;
     };
     /**
      * Returns a translated string that can be used to display a mission objective and its status to the player based on this condition 
@@ -833,12 +859,9 @@ define([
      * @returns {Boolean}
      */
     DestroyedCondition.prototype.isSatisfied = function (mission) {
-        var i;
-        if (!this._spacecrafts) {
-            this._cacheSubjects(mission);
-        }
-        for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i].isAlive()) {
+        var i, spacecrafts = this._subjects.getSpacecrafts(mission);
+        for (i = 0; i < spacecrafts.length; i++) {
+            if (spacecrafts[i].isAlive()) {
                 return false;
             }
         }
@@ -851,7 +874,7 @@ define([
      */
     DestroyedCondition.prototype.getObjectiveString = function (stringPrefix) {
         var result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
-            subjects: this._getSubjectsString()
+            subjects: this._subjects.toString()
         });
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
@@ -863,13 +886,13 @@ define([
      */
     DestroyedCondition.prototype.getObjectiveStateString = function (stringPrefix) {
         var result, count, suffix;
-        if (!this._spacecrafts) {
+        if (!this._subjects.getSpacecrafts()) {
             return "";
         }
-        count = this._getLiveSubjectCount();
+        count = this._subjects.getLiveSubjectCount();
         suffix = (count > 1) ? (" (" + count + ")") : "";
         result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
-            subjects: this._getShortSubjectsString()
+            subjects: this._subjects.getShortString()
         }) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
@@ -881,10 +904,7 @@ define([
      * @returns {Spacecraft[]}
      */
     DestroyedCondition.prototype.getEscortedSpacecrafts = function (mission) {
-        if (!this._spacecrafts) {
-            this._cacheSubjects(mission);
-        }
-        return this._spacecrafts;
+        return this._subjects.getSpacecrafts(mission);
     };
     // ##############################################################################
     /**
@@ -926,13 +946,10 @@ define([
      * @returns {Boolean}
      */
     CountCondition.prototype.isSatisfied = function (mission) {
-        var i, count;
-        if (!this._spacecrafts) {
-            this._cacheSubjects(mission);
-        }
+        var i, count, spacecrafts = this._subjects.getSpacecrafts(mission);
         count = 0;
-        for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i].isAlive()) {
+        for (i = 0; i < spacecrafts.length; i++) {
+            if (spacecrafts[i].isAlive()) {
                 count++;
             }
         }
@@ -958,7 +975,7 @@ define([
             return null;
         }
         result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
-            subjects: this._getSubjectsString(),
+            subjects: this._subjects.toString(),
             count: this._params.count
         });
         result = result.charAt(0).toUpperCase() + result.slice(1);
@@ -975,13 +992,13 @@ define([
             application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
             return null;
         }
-        if (!this._spacecrafts) {
+        if (!this._subjects.getSpacecrafts()) {
             return "";
         }
-        count = this._getLiveSubjectCount();
+        count = this._subjects.getLiveSubjectCount();
         suffix = " (" + count + ")";
         result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
-            subjects: this._getShortSubjectsString(),
+            subjects: this._subjects.getShortString(),
             count: this._params.count
         }) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
@@ -998,10 +1015,7 @@ define([
             application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
             return null;
         }
-        if (!this._spacecrafts) {
-            this._cacheSubjects(mission);
-        }
-        return this._spacecrafts;
+        return this._subjects.getSpacecrafts(mission);
     };
     // ##############################################################################
     /**
@@ -1404,6 +1418,11 @@ define([
         if (this._trigger) {
             this._trigger.addFireHandler(this._execute.bind(this));
         }
+        /**
+         * The subjects of this action (used in action types that do things with spacecrafts)
+         * @type SubjectGroup
+         */
+        this._subjects = dataJSON ? new SubjectGroup(dataJSON.subjects) : null;
         if (dataJSON) {
             this._checkParams(dataJSON.params);
         }
@@ -1629,6 +1648,45 @@ define([
      */
     ClearMessagesAction.prototype._execute = function () {
         game.getScreen().clearHUDMessages();
+    };
+    // #########################################################################
+    /**
+     * @class 
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Trigger} trigger
+     */
+    function CommandAction(dataJSON, trigger) {
+        Action.call(this, dataJSON, trigger);
+    }
+    CommandAction.prototype = new Action();
+    CommandAction.prototype.constructor = CommandAction;
+    /**
+     * @override
+     * @param {SpacecraftEvents~CommandData} params 
+     * @returns {Boolean}
+     */
+    CommandAction.prototype._checkParams = function (params) {
+        /**
+         * @type SpacecraftEvents~CommandData
+         */
+        this._params = params;
+        if (!this._params ||
+                ((this._params.command !== undefined) && (typeof this._params.command !== "string"))) {
+            this._handleWrongParams();
+            return false;
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission 
+     */
+    CommandAction.prototype._execute = function (mission) {
+        var i, spacecrafts = this._subjects.getSpacecrafts(mission);
+        for (i = 0; i < spacecrafts.length; i++) {
+            spacecrafts[i].handleEvent(SpacecraftEvents.COMMAND_RECEIVED, this._params);
+        }
     };
     // #########################################################################
     /**
@@ -2924,6 +2982,7 @@ define([
     _actionConstructors[ActionType.LOSE] = LoseAction;
     _actionConstructors[ActionType.MESSAGE] = MessageAction;
     _actionConstructors[ActionType.CLEAR_MESSAGES] = ClearMessagesAction;
+    _actionConstructors[ActionType.COMMAND] = CommandAction;
     // caching configuration settings
     config.executeWhenReady(function () {
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);

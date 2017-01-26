@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file A stateful module providing a collection to which AIs of different types (at the moment only one type, an AI for fighters) can be
  * added which control their respective spacecraft when the control function of the module is called.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -13,6 +13,7 @@
 /**
  * @param vec Used for vector operations the AIs need to calculate their actions.
  * @param mat Used for matrix operations the AIs need to calculate their actions.
+ * @param application Used for displaying error messages
  * @param physics Used for accessing the constant of how long rotation does a rotation matrix represent.
  * @param config Used for accessing game configuration/settings.
  * @param SpacecraftEvents Used for setting spacecraft event handlers
@@ -21,15 +22,24 @@
 define([
     "utils/vectors",
     "utils/matrices",
+    "modules/application",
     "modules/physics",
     "armada/configuration",
     "armada/logic/SpacecraftEvents",
     "armada/logic/classes"
-], function (vec, mat, physics, config, SpacecraftEvents, classes) {
+], function (vec, mat, application, physics, config, SpacecraftEvents, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
             // enums
+            /**
+             * The types (IDs) of spacecraft commands that AIs can interpret and execute
+             * @enum {String}
+             */
+            SpacecraftCommand = {
+                /** A command to activate the jump engines of the spacecraft (to jump in / out) */
+                JUMP: "jump"
+            },
             /**
              * @enum {Number}
              * The possible phases of the charge action of fighters.
@@ -432,6 +442,7 @@ define([
         this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
         this._spacecraft.setEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
         this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_FIRED, this._handleTargetFired.bind(this));
+        this._spacecraft.setEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
     }
     FighterAI.prototype = new SpacecraftAI();
     FighterAI.prototype.constructor = FighterAI;
@@ -519,6 +530,19 @@ define([
             this._evasiveVelocityVector[0] = 1;
             this._evasiveVelocityVector[1] = 0;
             vec.rotate2(this._evasiveVelocityVector, angle);
+        }
+    };
+    /**
+     * Executes the command that the spacecraft received
+     * @param {SpacecraftEvents~CommandData} data
+     */
+    FighterAI.prototype._handleCommand = function (data) {
+        switch (data.command) {
+            case SpacecraftCommand.JUMP:
+                this._spacecraft.jumpOut();
+                break;
+            default:
+                application.showError("Unknown spacecraft command: '" + data.command + "'!");
         }
     };
     /**
