@@ -1130,8 +1130,10 @@ define([
      * @param {Number} spanRange The minimum and maximum span that can be set for a camera using this configuration.
      * @param {Boolean} resetsOnFocusChange An indicator whether this configuration should automatically reset to default state when the camera 
      * switches to it or when the camera controls go out of focus (after being in focus)
+     * @param {Boolean} shouldExcludeFromCycle When true, this configuration should be skipped when switching using cycling (switching to 
+     * next / previous configuration), and should only be possible to invoke it by switching to it explicitly 
      */
-    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, fovRange, span, spanRange, resetsOnFocusChange) {
+    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, fovRange, span, spanRange, resetsOnFocusChange, shouldExcludeFromCycle) {
         object3D.Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         /**
          * An optional, descriptive name of this configuration by which it can be found and referred to.
@@ -1196,6 +1198,12 @@ define([
          * @type Boolean
          */
         this._resetsOnFocusChange = resetsOnFocusChange;
+        /**
+         * When true, this configuration should be skipped when switching using cycling (switching to next / previous configuration), 
+         * and should only be possible to invoke it by switching to it explicitly 
+         * @type Boolean
+         */
+        this._excludeFromCycle = shouldExcludeFromCycle;
         /**
          * A reference to the camera that currently uses this configuration
          * @type Camera
@@ -1378,6 +1386,13 @@ define([
      */
     CameraConfiguration.prototype.resetsOnFocusChange = function () {
         return this._resetsOnFocusChange;
+    };
+    /**
+     * Returns whether this configuration should be skipped when switching using cycling (switching to next / previous configuration)
+     * @returns {Boolean}
+     */
+    CameraConfiguration.prototype.shouldExcludeFromCycle = function () {
+        return this._excludeFromCycle;
     };
     /**
      * Resets all configuration values to their initial state (including position, orientation, field of view and span configuration)

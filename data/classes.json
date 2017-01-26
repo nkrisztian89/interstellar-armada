@@ -2363,7 +2363,8 @@
                     "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -12, 6],
-                    "lookAt": "none"
+                    "lookAt": "none",
+                    "excludeFromCycle": true
                 }, {
                     "name": "target",
                     "isAimingView": false,
@@ -3332,7 +3333,8 @@
                     "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -14, 7.5],
-                    "lookAt": "none"
+                    "lookAt": "none",
+                    "excludeFromCycle": true
                 }, {
                     "name": "target",
                     "isAimingView": false,
@@ -4102,7 +4104,8 @@
                     "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -110, 30],
-                    "lookAt": "none"
+                    "lookAt": "none",
+                    "excludeFromCycle": true
                 }, {
                     "name": "target",
                     "isAimingView": false,

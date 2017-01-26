@@ -633,41 +633,67 @@ define([
      * Returns the camera configuration the comes after the one passed as parameter in the list of associated camera configurations.
      * If the last configuration is passed, returns the first one. Returns the first configuration if called with a null parameter, and
      * crashes if the given configuration is not in the list.
+     * Excludes camera configurations that return true to shouldExcludeFromCycle()
      * @param {CameraConfiguration} currentCameraConfiguration
      * @returns {CameraConfiguration}
      */
     RenderableNode.prototype.getNextCameraConfiguration = function (currentCameraConfiguration) {
-        var i;
-        if (!currentCameraConfiguration) {
-            return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[0] : null;
+        var i, currentIndex, length = this._cameraConfigurations.length;
+        if (length <= 0) {
+            return null;
         }
-        for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (this._cameraConfigurations[i] === currentCameraConfiguration) {
-                return this._cameraConfigurations[(i + 1) % this._cameraConfigurations.length];
+        if (!currentCameraConfiguration) {
+            currentIndex = -1;
+        } else {
+            for (i = 0; i < length; i++) {
+                if (this._cameraConfigurations[i] === currentCameraConfiguration) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+            if (i >= length) {
+                application.crash(); // the current configuration was not in the list
+                return;
             }
         }
-        application.crash(); // the current configuration was not in the list
+        i = (currentIndex + 1) % length;
+        while ((i !== currentIndex) && this._cameraConfigurations[i].shouldExcludeFromCycle()) {
+            i = (i + 1) % length;
+        }
+        return this._cameraConfigurations[i];
     };
     /**
      * Returns the camera configuration the comes before the one passed as parameter in the list of associated camera configurations.
      * If the first configuration is passed, returns the last one. Returns the last configuration if called with a null parameter, and
      * crashes if the given configuration is not in the list.
+     * Excludes camera configurations that return true to shouldExcludeFromCycle()
      * @param {CameraConfiguration} [currentCameraConfiguration]
      * @returns {CameraConfiguration}
      */
     RenderableNode.prototype.getPreviousCameraConfiguration = function (currentCameraConfiguration) {
-        var i;
-        if (!currentCameraConfiguration) {
-            return (this._cameraConfigurations.length > 0) ? this._cameraConfigurations[this._cameraConfigurations.length - 1] : null;
+        var i, currentIndex, length = this._cameraConfigurations.length;
+        if (length <= 0) {
+            return null;
         }
-        for (i = (this._cameraConfigurations.length - 1); i >= 0; i--) {
-            if (this._cameraConfigurations[i] === currentCameraConfiguration) {
-                return (i === 0) ?
-                        this._cameraConfigurations[this._cameraConfigurations.length - 1] :
-                        this._cameraConfigurations[i - 1];
+        if (!currentCameraConfiguration) {
+            currentIndex = length;
+        } else {
+            for (i = (length - 1); i >= 0; i--) {
+                if (this._cameraConfigurations[i] === currentCameraConfiguration) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+            if (i < 0) {
+                application.crash(); // the current configuration was not in the list
+                return;
             }
         }
-        application.crash(); // the current configuration was not in the list
+        i = (currentIndex + length - 1) % length;
+        while ((i !== currentIndex) && this._cameraConfigurations[i].shouldExcludeFromCycle()) {
+            i = (i + length - 1) % length;
+        }
+        return this._cameraConfigurations[i];
     };
     /**
      * Returns a list of the associated camera configurations that have the specified name.

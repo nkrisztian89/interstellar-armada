@@ -2433,6 +2433,12 @@ define([
                                 application.ErrorSeverity.MINOR,
                                 "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
                 null) : null;
+        /**
+         * When true, this view should be skipped when switching between views using cycling (switching to next / previous views), and should
+         * only be possible to invoke it by switching to it explicitly
+         * @type Boolean
+         */
+        this._excludeFromCycle = dataJSON ? ((typeof dataJSON.excludeFromCycle) === "boolean" ? dataJSON.excludeFromCycle : false) : false;
     }
     /**
      * @returns {String}
@@ -2531,6 +2537,12 @@ define([
      */
     GenericView.prototype.getPointToFallback = function () {
         return this._pointToFallback;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    GenericView.prototype.shouldExcludeFromCycle = function () {
+        return this._excludeFromCycle;
     };
     /*
      * Removes all references from the object
@@ -2748,7 +2760,8 @@ define([
                 this.getFOVRange() || defaultFOVRange,
                 this.getSpan() || defaultSpan,
                 this.getSpanRange() || defaultSpanRange,
-                this.resetsOnFocusChange());
+                this.resetsOnFocusChange(),
+                this.shouldExcludeFromCycle());
     };
     /**
      * @override
