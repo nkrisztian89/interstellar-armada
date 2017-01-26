@@ -1337,7 +1337,7 @@
                     "timeToReach": 350
                 }],
             "soundEffect": {
-                "name": "hit",
+                "name": "jump_out_flash",
                 "volume": 1
             }
         }, {
@@ -1383,7 +1383,7 @@
                     "timeToReach": 400
                 }],
             "soundEffect": {
-                "name": "hit",
+                "name": "jump_out_flash",
                 "volume": 5
             }
         }, {
@@ -1429,7 +1429,7 @@
                     "timeToReach": 500
                 }],
             "soundEffect": {
-                "name": "hit",
+                "name": "jump_out_flash",
                 "volume": 10
             }
         }],
@@ -1827,60 +1827,60 @@
     "jumpEngineClasses": [{
             "name": "imperialFighterMk1",
             "engageSound": {
-                "name": "blip_message",
+                "name": "jump_start",
                 "volume": 0.5
             },
             "prepareVelocity": 100,
             "prepareDuration": 5000,
             "prepareSound": {
-                "name": "jump_prepare",
-                "volume": 0.5
+                "name": "jump_prepare_fighter",
+                "volume": 0.38
             },
             "jumpOutAcceleration": 2500,
             "jumpOutDuration": 500,
             "jumpOutScaling": 3,
             "jumpOutSound": {
-                "name": "thruster",
+                "name": "jump_out",
                 "volume": 3.0
             },
             "jumpOutExplosion": "fighterJumpOutFlash"
         }, {
             "name": "imperialSmallShipMk1",
             "engageSound": {
-                "name": "blip_message",
+                "name": "jump_start",
                 "volume": 0.5
             },
             "prepareVelocity": 120,
             "prepareDuration": 5000,
             "prepareSound": {
-                "name": "jump_prepare",
-                "volume": 1.8
+                "name": "jump_prepare_ship",
+                "volume": 3.6
             },
             "jumpOutAcceleration": 7000,
             "jumpOutDuration": 500,
             "jumpOutScaling": 2,
             "jumpOutSound": {
-                "name": "thruster",
+                "name": "jump_out",
                 "volume": 10.0
             },
             "jumpOutExplosion": "smallShipJumpOutFlash"
         }, {
             "name": "imperialLargeShipMk1",
             "engageSound": {
-                "name": "blip_message",
+                "name": "jump_start",
                 "volume": 0.5
             },
             "prepareVelocity": 150,
             "prepareDuration": 5000,
             "prepareSound": {
-                "name": "jump_prepare",
-                "volume": 1.8
+                "name": "jump_prepare_ship",
+                "volume": 6.2
             },
             "jumpOutAcceleration": 20000,
             "jumpOutDuration": 500,
             "jumpOutScaling": 1.5,
             "jumpOutSound": {
-                "name": "thruster",
+                "name": "jump_out",
                 "volume": 20.0
             },
             "jumpOutExplosion": "largeShipJumpOutFlash"

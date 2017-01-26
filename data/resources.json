@@ -1073,8 +1073,17 @@
             "name": "thruster",
             "samples": ["spacecraft/thruster.ogg"]
         }, {
-            "name": "jump_prepare",
-            "samples": ["spacecraft/jump_prepare.ogg"]
+            "name": "jump_prepare_fighter",
+            "samples": ["spacecraft/jump_prepare_fighter.ogg"]
+        }, {
+            "name": "jump_prepare_ship",
+            "samples": ["spacecraft/jump_prepare_ship.ogg"]
+        }, {
+            "name": "jump_out",
+            "samples": ["spacecraft/jump_out.ogg"]
+        }, {
+            "name": "jump_out_flash",
+            "samples": ["spacecraft/jump_out_flash.ogg"]
         }, {
             "name": "trainingShot",
             "samples": ["weapon/weaponshot_training.ogg"]
@@ -1114,6 +1123,9 @@
         }, {
             "name": "blip_message",
             "samples": ["computer/blip_message.wav"]
+        }, {
+            "name": "jump_start",
+            "samples": ["computer/jump_start.ogg"]
         }, {
             "name": "buttonHover",
             "samples": ["ui/button_hover.wav"]

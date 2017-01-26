@@ -1,7 +1,7 @@
 Several sound effects in the game are based on the works of 3rd parties.
 The original sources, authors and licencing information about these files can be found at the following pages:
 
-containerExplosion.ogg, fighterExplosion.ogg (unchanged), smallShipExplosion.ogg (mixed, edited), largeShipExplosion.ogg (mixed, edited), weaponshot_proton.ogg (cut), jump_prepare.ogg (cut):
+containerExplosion.ogg, fighterExplosion.ogg (unchanged), smallShipExplosion.ogg (mixed, edited), largeShipExplosion.ogg (mixed, edited), weaponshot_proton.ogg (cut), jump_prepare_fighter.ogg (cut):
 http://creativesounddesign.com/the-recordist-free-sound-effects/
 Author/copyright: The Recordist/Creative Sound Design, LLC
 
@@ -16,6 +16,19 @@ Author/copyright: freesound user juskinnink
 thruster.ogg: (edited)
 http://freesound.org/people/qubodup/sounds/146770/
 Author/copyright: freesound user qubodup
+
+jump_prepare_ship.ogg: (cut)
+http://freesound.org/people/reacthor/sounds/237790
+Author/copyright: freesound user reacthor
+
+jump_out.ogg: (cut)
+http://freesound.org/people/electroviolence/sounds/234555
+Author/copyright: freesound user electroviolence
+
+jump_out_flash.ogg: (edited)
+http://freesound.org/people/rsilveira-88/sounds/216277/
+http://freesound.org/people/unfa/sounds/259300/
+Author/copyright: freesound users rsilveira-88, unfa
 
 The copyright belongs to the respective authors.
 

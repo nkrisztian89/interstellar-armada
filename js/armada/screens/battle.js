@@ -916,7 +916,8 @@ define([
             text: strings.get(strings.BATTLE.MESSAGE_JUMP_ENGAGED),
             color: _messageTextSettings.colors.jump,
             queue: JUMP_QUEUE,
-            permanent: true
+            permanent: true,
+            silent: true
         };
         _battle.battleScreen.queueHUDMessage(_jumpMessage, true);
         _originalCameraConfig = _battleScene.getCamera().getConfiguration();
