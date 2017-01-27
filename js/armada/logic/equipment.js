@@ -2091,7 +2091,9 @@ define([
         /** The engine is powering up for a jump out, spacecraft travelling with the correct velocity */
         PREPARING: 2,
         /** Jump out is in progress, spacecraft rapidly accelerating until it disappears in a flash */
-        JUMPING_OUT: 3
+        JUMPING_OUT: 3,
+        /** Jump in is in progress, spacecraft rapidly decelerating until it becomes controllable */
+        JUMPING_IN: 4
     };
     Object.freeze(JumpEngine.JumpOutState);
     /**
@@ -2134,6 +2136,37 @@ define([
                     this._soundClip = null;
                 }
                 break;
+        }
+    };
+    /**
+     * Initiates the jump in sequence
+     */
+    JumpEngine.prototype.jumpIn = function () {
+        var directionVector, exp, physicalModel;
+        // initiating jump in sequence
+        if (this._state === JumpEngine.JumpState.NONE) {
+            this._state = JumpEngine.JumpState.JUMPING_IN;
+            this._timeLeft = this._class.getJumpInDuration();
+            this._spacecraft.lockManeuvering();
+            this._spacecraft.disableFiring();
+            exp = new explosion.Explosion(
+                    this._class.getJumpInExplosionClass(),
+                    mat.matrix4(this._spacecraft.getPhysicalPositionMatrix()),
+                    mat.matrix4(this._spacecraft.getPhysicalOrientationMatrix()),
+                    mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
+                    true,
+                    mat.identity4());
+            exp.addToScene(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
+            this._originalScalingMatrix = mat.matrix4(this._spacecraft.getVisualModel().getScalingMatrix());
+            physicalModel = this._spacecraft.getPhysicalModel();
+            directionVector = mat.getRowB4(physicalModel.getOrientationMatrix());
+            // calculate and set the starting velocity based on the set final velocity and total deceleration during the jump in sequence
+            physicalModel.setVelocityMatrix(mat.translation4v(vec.scaled3(directionVector, this._class.getJumpInVelocity() + this._class.getJumpInDeceleration() * this._class.getJumpInDuration() / 1000)));
+            physicalModel.addForce(new physics.Force(JUMP_FORCE_ID, physicalModel.getMass() * this._class.getJumpInDeceleration(), vec.scaled3(directionVector, -1), this._class.getJumpInDuration()));
+            this._soundClip = this._class.createJumpInSoundClip(this._spacecraft.getSoundSource());
+            this._soundClip.play();
+            this._spacecraft.setAway(false);
+            this._spacecraft.handleEvent(SpacecraftEvents.JUMPED_IN);
         }
     };
     /**
@@ -2197,6 +2230,23 @@ define([
                     exp.addToScene(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
                     this._spacecraft.setAway(true);
                     this._spacecraft.handleEvent(SpacecraftEvents.JUMPED_OUT);
+                }
+                this._timeLeft -= dt;
+                break;
+            case JumpEngine.JumpState.JUMPING_IN:
+                // the stretching needs to be poperly calculated - do not allow negative timeLeft values
+                if (this._timeLeft < 0) {
+                    this._timeLeft = 0;
+                }
+                // stretching the spacecraft along the Y axis (by a linearly decreasing factor)
+                this._spacecraft.getVisualModel().setScalingMatrix(mat.prod3x3SubOf4(
+                        this._originalScalingMatrix,
+                        mat.scaling4(1, 1 + (this._timeLeft / this._class.getJumpInDuration()) * (this._class.getJumpInScaling() - 1), 1)));
+                // finishing the sequence if the time is up
+                if (this._timeLeft <= 0) {
+                    this._state = JumpEngine.JumpState.NONE;
+                    this._spacecraft.unlockManeuvering();
+                    this._spacecraft.enableFiring();
                 }
                 this._timeLeft -= dt;
                 break;

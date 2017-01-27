@@ -1372,9 +1372,13 @@ define([
         }
         // for spot lights, only calculate the rendered ones fully, like with point lights, but there are no priorities here
         this._spotLightUniformData = [];
-        for (i = 0, max = Math.min(this._spotLights.length, this._maxRenderedSpotLights); i < max; i++) {
+        count = 0;
+        for (i = 0, max = Math.min(this._spotLights.length, this._maxRenderedSpotLights); (i < this._spotLights.length) && (count < max); i++) {
             this._spotLights[i].update(dt);
-            this._spotLightUniformData.push(this._spotLights[i].getUniformData());
+            if (this._spotLights[i].shouldBeRendered(this._camera)) {
+                this._spotLightUniformData.push(this._spotLights[i].getUniformData());
+                count++;
+            }
         }
         while (i < this._spotLights.length) {
             this._spotLights[i].updateState(dt);

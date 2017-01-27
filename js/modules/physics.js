@@ -622,6 +622,14 @@ define([
         return this._velocityMatrix;
     };
     /**
+     * Directly (by reference) sets the 4x4 translation matrix describing the velocity of the object.
+     * (in m/s)
+     * @param{Float32Array} value
+     */
+    PhysicalObject.prototype.setVelocityMatrix = function (value) {
+        this._velocityMatrix = value;
+    };
+    /**
      * Returns the 4x4 rotation matrix describing the rotation the current angular
      * velocity of the object causes over ANGULAR_VELOCITY_MATRIX_DURATION milliseconds.
      * @returns {Float32Array}

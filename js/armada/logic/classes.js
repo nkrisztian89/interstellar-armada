@@ -1980,17 +1980,17 @@ define([
          */
         this._jumpOutAcceleration = dataJSON ? (dataJSON.jumpOutAcceleration || _showMissingPropertyError(this, "jumpOutAcceleration")) : 0;
         /**
-         * The factor by which to stretch the jumping spacecraft along the Y axis at the end of the jump sequence (linearly increasing from 1.0)
+         * The factor by which to stretch the jumping spacecraft along the Y axis at the end of the jump out sequence (linearly increasing from 1.0)
          * @type Number
          */
         this._jumpOutScaling = dataJSON ? (dataJSON.jumpOutScaling || _showMissingPropertyError(this, "jumpOutScaling")) : 0;
         /**
-         * The duration of the jump itself (from initiating the jump to the particle effect), in milliseconds.
+         * The duration of the outward jump itself (from initiating the jump to the particle effect), in milliseconds.
          * @type Number
          */
         this._jumpOutDuration = dataJSON ? (dataJSON.jumpOutDuration || _showMissingPropertyError(this, "jumpOutDuration")) : 0;
         /**
-         * The descriptor of the sound effect to be played when the jump is initiated.
+         * The descriptor of the sound effect to be played when the outward jump is initiated.
          * @type Object
          */
         this._jumpOutSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].jumpOutSound", dataJSON.jumpOutSound, SOUND_EFFECT_3D) : null;
@@ -1999,6 +1999,36 @@ define([
          * @type ExplosionClass
          */
         this._jumpOutExplosionClass = dataJSON ? (getExplosionClass(dataJSON.jumpOutExplosion || _showMissingPropertyError(this, "jumpOutExplosion")) || application.crash()) : null;
+        /**
+         * The backward acceleration that is added to the spacecraft (by exerting an appropriate force) when initiating a jump in, in m/s.
+         * @type Number
+         */
+        this._jumpInDeceleration = dataJSON ? (dataJSON.jumpInDeceleration || _showMissingPropertyError(this, "jumpInDeceleration")) : 0;
+        /**
+         * The forward velocity that should the spacecraft should arrive to at the end of the jump in sequence, in m/s.
+         * @type Number
+         */
+        this._jumpInVelocity = dataJSON ? (dataJSON.jumpInVelocity || _showMissingPropertyError(this, "jumpInVelocity")) : 0;
+        /**
+         * The factor by which to stretch the jumping spacecraft along the Y axis at the beginning of the jump in sequence (linearly decreasing to 1.0)
+         * @type Number
+         */
+        this._jumpInScaling = dataJSON ? (dataJSON.jumpInScaling || _showMissingPropertyError(this, "jumpInScaling")) : 0;
+        /**
+         * The duration of the inward jump itself (from the particle effect to arrival), in milliseconds.
+         * @type Number
+         */
+        this._jumpInDuration = dataJSON ? (dataJSON.jumpInDuration || _showMissingPropertyError(this, "jumpInDuration")) : 0;
+        /**
+         * The descriptor of the sound effect to be played when the inward jump is initiated.
+         * @type Object
+         */
+        this._jumpInSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].jumpInSound", dataJSON.jumpInSound, SOUND_EFFECT_3D) : null;
+        /**
+         * The class of the explosion that is created at the beginning of the jump in sequence.
+         * @type ExplosionClass
+         */
+        this._jumpInExplosionClass = dataJSON ? (getExplosionClass(dataJSON.jumpInExplosion || _showMissingPropertyError(this, "jumpInExplosion")) || application.crash()) : null;
         return true;
     };
     /**
@@ -2008,7 +2038,9 @@ define([
         _loadSoundEffect(this._engageSound);
         _loadSoundEffect(this._prepareSound);
         _loadSoundEffect(this._jumpOutSound);
+        _loadSoundEffect(this._jumpInSound);
         this._jumpOutExplosionClass.acquireResources();
+        this._jumpInExplosionClass.acquireResources();
     };
     /**
      * Creates a sound clip for the engage sound effect and returns a reference to it.
@@ -2069,6 +2101,45 @@ define([
      */
     JumpEngineClass.prototype.getJumpOutExplosionClass = function () {
         return this._jumpOutExplosionClass;
+    };
+    /**
+     * @returns {Number}
+     */
+    JumpEngineClass.prototype.getJumpInDuration = function () {
+        return this._jumpInDuration;
+    };
+    /**
+     * @returns {Number}
+     */
+    JumpEngineClass.prototype.getJumpInDeceleration = function () {
+        return this._jumpInDeceleration;
+    };
+    /**
+     * @returns {Number}
+     */
+    JumpEngineClass.prototype.getJumpInVelocity = function () {
+        return this._jumpInVelocity;
+    };
+    /**
+     * @returns {Number}
+     */
+    JumpEngineClass.prototype.getJumpInScaling = function () {
+        return this._jumpInScaling;
+    };
+    /**
+     * Creates a sound clip for the jump in sound effect and returns a reference to it.
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
+     * @returns {SoundClip}
+     */
+    JumpEngineClass.prototype.createJumpInSoundClip = function (soundSource) {
+        return _createSoundClip(this._jumpInSound, false, soundSource);
+    };
+    /**
+     * 
+     * @returns {ExplosionClass}
+     */
+    JumpEngineClass.prototype.getJumpInExplosionClass = function () {
+        return this._jumpInExplosionClass;
     };
     // ##############################################################################
     /**

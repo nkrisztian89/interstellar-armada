@@ -2449,6 +2449,16 @@ define([
                 view.resetsOnFocusChange());
     };
     /**
+     * Spacecrafts that start away and jump in during the mission need to be added to the hitObjects when they jump in, so that other will
+     * be able to hit them
+     * @param {Spacecraft} spacecraft
+     */
+    Mission.prototype._handleSpacecraftJumpIn = function (spacecraft) {
+        if (this._hitObjects.indexOf(spacecraft) <= 0) {
+            this._hitObjects.push(spacecraft);
+        }
+    };
+    /**
      * Adds renderable objects representing all visual elements of the mission to
      * the passed scene.
      * @param {Scene} battleScene
@@ -2482,6 +2492,8 @@ define([
             }
             if (!this._spacecrafts[i].isAway()) {
                 this._hitObjects.push(this._spacecrafts[i]);
+            } else {
+                this._spacecrafts[i].setEventHandler(SpacecraftEvents.JUMPED_IN, this._handleSpacecraftJumpIn.bind(this, this._spacecrafts[i]));
             }
         }
         resources.executeWhenReady(function () {

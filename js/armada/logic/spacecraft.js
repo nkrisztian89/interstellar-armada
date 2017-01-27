@@ -448,6 +448,8 @@ define([
         var i, blinkerDescriptors;
         this._class = spacecraftClass;
         this._name = name || "";
+        this._alive = true;
+        this._away = false;
         this._hitpoints = this._class.getHitpoints();
         this._physicalModel = new physics.PhysicalObject(
                 this._class.getMass(),
@@ -533,6 +535,10 @@ define([
                 if (this._propulsion) {
                     this._propulsion.resetThrusterBurn();
                     this._propulsion.simulate(this.getSoundSource(), false);
+                }
+            } else {
+                if (this._visualModel) {
+                    this._visualModel.getNode().show();
                 }
             }
         }
@@ -940,7 +946,7 @@ define([
         this._init(
                 classes.getSpacecraftClass(dataJSON.class),
                 dataJSON.name,
-                mat.translation4v(dataJSON.position),
+                dataJSON.position ? mat.translation4v(dataJSON.position) : null,
                 mat.rotation4FromJSON(dataJSON.rotations),
                 undefined,
                 spacecraftArray);
@@ -963,6 +969,9 @@ define([
             // if there is no equipment tag, attempt to load the default profile
         } else if (this._class.getEquipmentProfile(config.getSetting(config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)) !== undefined) {
             this.equipProfile(this._class.getEquipmentProfile(config.getSetting(config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)));
+        }
+        if (dataJSON.away) {
+            this.setAway(true);
         }
     };
     /**
@@ -1459,6 +1468,10 @@ define([
                     }
                 }
             }
+            // if the spacecraft is away, hide the visuals
+            if (this._away) {
+                node.hide();
+            }
             if (callback) {
                 callback(visualModel);
             }
@@ -1903,8 +1916,16 @@ define([
      * Engages jump engines to leave the scene of the mission
      */
     Spacecraft.prototype.jumpOut = function () {
-        if (this._jumpEngine) {
+        if (!this._away && this._jumpEngine) {
             this._jumpEngine.jumpOut();
+        }
+    };
+    /**
+     * Engages jump engines to enter the scene of the mission
+     */
+    Spacecraft.prototype.jumpIn = function () {
+        if (this._away && this._jumpEngine) {
+            this._jumpEngine.jumpIn();
         }
     };
     /**

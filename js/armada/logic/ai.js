@@ -41,6 +41,14 @@ define([
                 JUMP: "jump"
             },
             /**
+             * Specifies the direction of jump commands
+             * @enum {String}
+             */
+            JumpCommandWay = {
+                IN: "in",
+                OUT: "out"
+            },
+            /**
              * @enum {Number}
              * The possible phases of the charge action of fighters.
              */
@@ -234,6 +242,10 @@ define([
          * @type Number
          */
         this._weaponRange = (this._spacecraft && (this._spacecraft.getWeapons().length > 0)) ? this._spacecraft.getWeapons()[0].getRange() : 0;
+        // attaching handlers to the spacecraft events
+        if (this._spacecraft) {
+            this._spacecraft.setEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
+        }
     }
     /**
      * Controls the spacecraft to turn (yaw and pitch) in the desired direction specified by two angles.
@@ -352,6 +364,29 @@ define([
             this._spacecraft.resetSpeed();
         }
     };
+    /**
+     * Executes the command that the spacecraft received
+     * @param {SpacecraftEvents~CommandData} data
+     */
+    SpacecraftAI.prototype._handleCommand = function (data) {
+        var way;
+        switch (data.command) {
+            case SpacecraftCommand.JUMP:
+                if (data.jump && data.jump.way) {
+                    way = data.jump.way;
+                } else {
+                    way = this._spacecraft.isAway() ? JumpCommandWay.IN : JumpCommandWay.OUT;
+                }
+                if (way === JumpCommandWay.IN) {
+                    this._spacecraft.jumpIn();
+                } else {
+                    this._spacecraft.jumpOut();
+                }
+                break;
+            default:
+                application.showError("Unknown spacecraft command: '" + data.command + "'!");
+        }
+    };
     // ##############################################################################
     /**
      * @class
@@ -442,7 +477,6 @@ define([
         this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
         this._spacecraft.setEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
         this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_FIRED, this._handleTargetFired.bind(this));
-        this._spacecraft.setEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
     }
     FighterAI.prototype = new SpacecraftAI();
     FighterAI.prototype.constructor = FighterAI;
@@ -530,19 +564,6 @@ define([
             this._evasiveVelocityVector[0] = 1;
             this._evasiveVelocityVector[1] = 0;
             vec.rotate2(this._evasiveVelocityVector, angle);
-        }
-    };
-    /**
-     * Executes the command that the spacecraft received
-     * @param {SpacecraftEvents~CommandData} data
-     */
-    FighterAI.prototype._handleCommand = function (data) {
-        switch (data.command) {
-            case SpacecraftCommand.JUMP:
-                this._spacecraft.jumpOut();
-                break;
-            default:
-                application.showError("Unknown spacecraft command: '" + data.command + "'!");
         }
     };
     /**

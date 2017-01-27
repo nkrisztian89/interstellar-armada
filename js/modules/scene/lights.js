@@ -417,7 +417,7 @@ define([
     PointLightSource.prototype.shouldBeRendered = function (camera) {
         var viewMatrix = camera.getViewMatrix();
         // calculating the Z position in camera space by multiplying the world space position vector with the view matrix (only the applicable parts)
-        return ((this._positionVector[0] * viewMatrix[2] + this._positionVector[1] * viewMatrix[6] + this._positionVector[2] * viewMatrix[10] + viewMatrix[14]) < this._totalIntensity) && (this._totalIntensity > 0);
+        return (this._totalIntensity > 0) && ((this._positionVector[0] * viewMatrix[2] + this._positionVector[1] * viewMatrix[6] + this._positionVector[2] * viewMatrix[10] + viewMatrix[14]) < this._totalIntensity);
     };
     /**
      * Sets the animation state of the light source to be the one occuring after the passed amount of time from the start
