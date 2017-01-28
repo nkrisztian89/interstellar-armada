@@ -1684,9 +1684,14 @@ define([
      */
     CommandAction.prototype._execute = function (mission) {
         var i, spacecrafts = this._subjects.getSpacecrafts(mission);
-        for (i = 0; i < spacecrafts.length; i++) {
-            spacecrafts[i].handleEvent(SpacecraftEvents.COMMAND_RECEIVED, this._params);
+        if (spacecrafts.length > 0) {
+            this._params.lead = spacecrafts[0];
+            for (i = 0; i < spacecrafts.length; i++) {
+                this._params.index = i;
+                spacecrafts[i].handleEvent(SpacecraftEvents.COMMAND_RECEIVED, this._params);
+            }
         }
+
     };
     // #########################################################################
     /**
@@ -2254,7 +2259,7 @@ define([
                 }
             }
             if (aiType) {
-                ai.addAI(aiType, craft);
+                ai.addAI(aiType, craft, this);
             }
             teamID = dataJSON.spacecrafts[i].team;
             if (teamID) {
@@ -2332,9 +2337,9 @@ define([
                             this._hitObjects);
                     if (demoMode) {
                         if (craft.isFighter()) {
-                            ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE), craft);
+                            ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE), craft, this);
                         } else {
-                            ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_SHIP_AI_TYPE), craft);
+                            ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_SHIP_AI_TYPE), craft, this);
                         }
                         team = new Team({
                             name: GENERIC_TEAM_NAME,

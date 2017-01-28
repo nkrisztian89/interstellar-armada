@@ -783,6 +783,20 @@ define([
         return this._scoreValue;
     };
     /**
+     * Sets a new position matrix for the physical model of the spacecrafts based on the passed 3D vector.
+     * @param {Number[3]} vector
+     */
+    Spacecraft.prototype.setPhysicalPosition = function (vector) {
+        this._physicalModel.setPositionMatrix(mat.translation4v(vector));
+    };
+    /**
+     * Sets a new orientation matrix (directly) for the physical model of the spacecrafts.
+     * @param {Float32Array} value
+     */
+    Spacecraft.prototype.setPhysicalPositionMatrix = function (value) {
+        this._physicalModel.setPositionMatrix(value);
+    };
+    /**
      * Returns the 4x4 translation matrix describing the position of this 
      * spacecraft in world space.
      * @returns {Float32Array}
@@ -796,6 +810,13 @@ define([
      */
     Spacecraft.prototype.getPhysicalPositionVector = function () {
         return mat.translationVector3(this._physicalModel.getPositionMatrix());
+    };
+    /**
+     * 
+     * @param {Float32Array} value
+     */
+    Spacecraft.prototype.setPhysicalOrientationMatrix = function (value) {
+        this._physicalModel.setOrientationMatrix(value);
     };
     /**
      * Returns the 4x4 rotation matrix describing the orientation of this 

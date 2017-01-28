@@ -230,13 +230,19 @@ define([
      * @class
      * An abstract AI class that provides some generally useful methods for controlling a spacecraft.
      * @param {Spacecraft} spacecraft The AI will control this spacecraft.
+     * @param {Mission} mission The mission within which this AI will control the spacecraft
      */
-    function SpacecraftAI(spacecraft) {
+    function SpacecraftAI(spacecraft, mission) {
         /**
          * The spacecraft this AI is controlling.
          * @type Spacecraft
          */
         this._spacecraft = spacecraft;
+        /**
+         * The mission within which this AI controls the spacecraft.
+         * @type Mission
+         */
+        this._mission = mission;
         /**
          * Cached value of the range of the first weapon of the controlled spacecraft (at still position).
          * @type Number
@@ -369,15 +375,48 @@ define([
      * @param {SpacecraftEvents~CommandData} data
      */
     SpacecraftAI.prototype._handleCommand = function (data) {
-        var way;
+        var /**@type String*/ way, /**@type Spacecraft*/ anchor;
         switch (data.command) {
+            // handling jump command
             case SpacecraftCommand.JUMP:
+                // determining jump direction (inward / outward)
                 if (data.jump && data.jump.way) {
                     way = data.jump.way;
                 } else {
                     way = this._spacecraft.isAway() ? JumpCommandWay.IN : JumpCommandWay.OUT;
                 }
                 if (way === JumpCommandWay.IN) {
+                    // processing parameters for inward jumps
+                    if (data.jump) {
+                        if (data.jump.anchor) {
+                            anchor = this._mission.getSpacecraft(data.jump.anchor);
+                            if (anchor) {
+                                // overwriting position
+                                if (data.jump.position) {
+                                    this._spacecraft.setPhysicalPosition(data.jump.position);
+                                }
+                                // overwriting orientation
+                                if (data.jump.rotations) {
+                                    this._spacecraft.setPhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.rotations));
+                                }
+                                // transforming to anchor-relative position and orientation
+                                if (data.jump.relative) {
+                                    this._spacecraft.setPhysicalPositionMatrix(mat.prodTranslationRotation4(
+                                            this._spacecraft.getPhysicalPositionMatrix(),
+                                            anchor.getPhysicalOrientationMatrix()));
+                                    this._spacecraft.setPhysicalOrientationMatrix(mat.prod4(
+                                            this._spacecraft.getPhysicalOrientationMatrix(),
+                                            anchor.getPhysicalOrientationMatrix()));
+                                }
+                                // adding position of the anchor ship
+                                this._spacecraft.setPhysicalPosition(vec.sum3(
+                                        this._spacecraft.getPhysicalPositionVector(),
+                                        anchor.getPhysicalPositionVector()));
+                            } else {
+                                application.showError("'" + this._spacecraft.getDisplayName() + "' has an invalid anchor for inward jump: '" + data.jump.anchor + "'!");
+                            }
+                        }
+                    }
                     this._spacecraft.jumpIn();
                 } else {
                     this._spacecraft.jumpOut();
@@ -394,9 +433,10 @@ define([
      * An AI that is suitable to control a fighter - that is a spacecraft with the assumptions that it is small, maneuverable and has its
      * guns pointing forward, requiring it to face its target when firing.
      * @param {Spacecraft} fighter The fighter to control
+     * @param {Mission} mission The mission within which this AI will control the fighter
      */
-    function FighterAI(fighter) {
-        SpacecraftAI.call(this, fighter);
+    function FighterAI(fighter, mission) {
+        SpacecraftAI.call(this, fighter, mission);
         /**
          * The time elapsed since finishing the last roll movement while firing (reset when not firing or when a new attack run starts), in 
          * milliseconds.
@@ -862,9 +902,10 @@ define([
      * it has an attack vector and threshold angle defined which determine the direction of the ship while attacking and it has a turning
      * style defined which governs how to orient itself to the proper direction.
      * @param {Spacecraft} ship the ship to control
+     * @param {Mission} mission The mission within which this AI will control the ship
      */
-    function ShipAI(ship) {
-        SpacecraftAI.call(this, ship);
+    function ShipAI(ship, mission) {
+        SpacecraftAI.call(this, ship, mission);
         /**
          * Cached value of the result of the last calculation of whether the current target is in range.
          * @type Boolean
@@ -1051,9 +1092,10 @@ define([
      * Adds a new AI of the type associated with the passed type name and sets it up to control the passed spacecraft.
      * @param {String} aiTypeName
      * @param {Spacecraft} spacecraft
+     * @param {Mission} mission 
      */
-    AIContext.prototype.addAI = function (aiTypeName, spacecraft) {
-        this._ais.push(new _aiConstructors[aiTypeName](spacecraft));
+    AIContext.prototype.addAI = function (aiTypeName, spacecraft, mission) {
+        this._ais.push(new _aiConstructors[aiTypeName](spacecraft, mission));
     };
     /**
      * Performs the control step for all the stored AIs.

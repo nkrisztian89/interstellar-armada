@@ -31,12 +31,24 @@ define(function () {
      */
     /**
      * @typedef {Object} SpacecraftEvents~JumpCommandData
-     * @property {String} [way] 
+     * @property {String} [way] Can be used to specify inward or outward jumps (if not given, the direction is chosen based on whether the
+     * spacecraft is away or not)
+     * @property {String} [anchor] ID of the spacecraft to use as an anchor for inward jumps. The position of the anchor spacecraft is added
+     * to the position of the jumping spacecraft before inward jump.
+     * @property {Boolean} [relative] When true, the position and orientation of the spacecraft should be interpreted relative to the anchor
+     * (transformed by its orientation)
+     * @property {Number[3]} [position] When given, overwrites the spacecraft's position before inward jump
+     * @property {Array} [rotations] When given, overwrites the spacecraft's orientation before inward jump
+     * 
      */
     /**
      * @typedef {Object} SpacecraftEvents~CommandData
      * @property {String} command The type of command to execute
-     * @property {SpacecraftEvents~JumpCommandData} [jump] 
+     * @property {Spacecraft} [lead] The leading (first) spacecraft that received the same command (for example to apply a formation
+     * relative to it) - set when the command is executed
+     * @property {Number} [index] The index of the spacecraft that received the command among the spacecrafts that received it - set when 
+     * the command is executed
+     * @property {SpacecraftEvents~JumpCommandData} [jump] Details of the command if it is a jump command
      */
     return {
         /** Another spacecraft targets the spacecraft. */
