@@ -26,7 +26,8 @@ define([
     "modules/physics",
     "armada/configuration",
     "armada/logic/SpacecraftEvents",
-    "armada/logic/classes"
+    "armada/logic/classes",
+    "utils/polyfill"
 ], function (vec, mat, application, physics, config, SpacecraftEvents, classes) {
     "use strict";
     var
@@ -47,6 +48,14 @@ define([
             JumpCommandWay = {
                 IN: "in",
                 OUT: "out"
+            },
+            /**
+             * The ships can jump in in one of these formations
+             * @enum {String}
+             */
+            JumpCommandFormation = {
+                /** X offset is alternating (+/-), all offset factors increase for every second ship */
+                WEDGE: "wedge"
             },
             /**
              * @enum {Number}
@@ -216,6 +225,12 @@ define([
              */
             _turnIntensityBaseFactor = 0,
             /**
+             * The random generator for creating positions for anchor-distance-based jump in sequences, so that it runs from the
+             * same seed (the seed itself is random generated currently, but can be fixed for testing purposes / later use)
+             * @type Function
+             */
+            _jumpInPositionSeed,
+            /**
              * An associative array storing the constructors for the various types of AI by the string identifiers of the types.
              * @type Object
              */
@@ -371,6 +386,25 @@ define([
         }
     };
     /**
+     * Returns the relative position for a spacecraft in a formation
+     * @param {SpacecraftEvents~JumpFormationData} formation The descriptor of the formation
+     * @param {Number} index The index of the spacecraft within the formation (the lead is 0)
+     * @returns {Number[3]}
+     */
+    SpacecraftAI.prototype._getPositionInFormation = function (formation, index) {
+        var factor = Math.ceil(index / 2);
+        switch (formation.type) {
+            case JumpCommandFormation.WEDGE:
+                return [
+                    (((index % 2) === 1) ? 1 : -1) * factor * formation.spacing[0],
+                    factor * formation.spacing[1],
+                    factor * formation.spacing[2]];
+            default:
+                application.showError("Unknown formation type specified: '" + formation.type + "!");
+                return [0, 0, 0];
+        }
+    };
+    /**
      * Executes the command that the spacecraft received
      * @param {SpacecraftEvents~CommandData} data
      */
@@ -388,16 +422,35 @@ define([
                 if (way === JumpCommandWay.IN) {
                     // processing parameters for inward jumps
                     if (data.jump) {
-                        if (data.jump.anchor) {
+                        if (data.lead && (data.index > 0) && (data.jump.formation)) {
+                            // setting position and orientation based on a formation
+                            this._spacecraft.setPhysicalPosition(vec.sum3(
+                                    data.lead.getPhysicalPositionVector(),
+                                    vec.mulVec3Mat4(
+                                            this._getPositionInFormation(data.jump.formation, data.index),
+                                            data.lead.getPhysicalOrientationMatrix())));
+                            this._spacecraft.setPhysicalOrientationMatrix(mat.matrix4(data.lead.getPhysicalOrientationMatrix()));
+                        } else if (data.jump.anchor) {
+                            // setting position and orientation based on an anchor ship
                             anchor = this._mission.getSpacecraft(data.jump.anchor);
                             if (anchor) {
-                                // overwriting position
-                                if (data.jump.position) {
-                                    this._spacecraft.setPhysicalPosition(data.jump.position);
-                                }
-                                // overwriting orientation
-                                if (data.jump.rotations) {
-                                    this._spacecraft.setPhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.rotations));
+                                // setting random position with matching orientation at given distance
+                                if (data.jump.distance) {
+                                    this._spacecraft.setPhysicalOrientationMatrix(mat.prod3x3SubOf4(
+                                            mat.rotation4([1, 0, 0], (_jumpInPositionSeed() - 0.5) * Math.PI),
+                                            mat.rotation4([0, 0, 1], _jumpInPositionSeed() * 2 * Math.PI)));
+                                    this._spacecraft.setPhysicalPosition(vec.scaled3(
+                                            mat.getRowB4(this._spacecraft.getPhysicalOrientationMatrix()),
+                                            -data.jump.distance));
+                                } else {
+                                    // overwriting position
+                                    if (data.jump.position) {
+                                        this._spacecraft.setPhysicalPosition(data.jump.position);
+                                    }
+                                    // overwriting orientation
+                                    if (data.jump.rotations) {
+                                        this._spacecraft.setPhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.rotations));
+                                    }
                                 }
                                 // transforming to anchor-relative position and orientation
                                 if (data.jump.relative) {
@@ -649,6 +702,10 @@ define([
             // if the controlled spacecraft has been destroyed, remove the reference
             if (this._spacecraft.canBeReused()) {
                 this._spacecraft = null;
+                return;
+            }
+            // if the spacecraft is not on the battlefield, don't do anything
+            if (this._spacecraft.isAway()) {
                 return;
             }
             // .................................................................................................
@@ -971,6 +1028,10 @@ define([
                 this._spacecraft = null;
                 return;
             }
+            // if the spacecraft is not on the battlefield, don't do anything
+            if (this._spacecraft.isAway()) {
+                return;
+            }
             // .................................................................................................
             // targeting
             if (!this._spacecraft.getTarget()) {
@@ -1128,6 +1189,7 @@ define([
     config.executeWhenReady(function () {
         _turnAccelerationDuration = config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S);
         _turnIntensityBaseFactor = 1000 / _turnAccelerationDuration;
+        _jumpInPositionSeed = Math.seed(Math.random());
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

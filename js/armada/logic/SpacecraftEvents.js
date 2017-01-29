@@ -30,6 +30,12 @@ define(function () {
      * @property {Number} duration The total duration of the preparation, in milliseconds
      */
     /**
+     * @typedef {Object} SpacecraftEvents~JumpFormationData
+     * @property {String} type What kind of formation is it (enum JumpCommandFormation defined in ai.js)
+     * @property {Number[3]} spacing A vector based on which the offset position of ships in the formation can be calculated
+     * Its exact meaning depends on the type of formation, but generally it influences the spacing distance / vector between neighbour ships
+     */
+    /**
      * @typedef {Object} SpacecraftEvents~JumpCommandData
      * @property {String} [way] Can be used to specify inward or outward jumps (if not given, the direction is chosen based on whether the
      * spacecraft is away or not)
@@ -39,6 +45,10 @@ define(function () {
      * (transformed by its orientation)
      * @property {Number[3]} [position] When given, overwrites the spacecraft's position before inward jump
      * @property {Array} [rotations] When given, overwrites the spacecraft's orientation before inward jump
+     * @property {Number} [distance] When given, the spacecraft's position will be overridden by a new position generated randomly
+     * to be this distance away from the anchor ship
+     * @property {SpacecraftEvents~JumpFormationData} [formation] When given, the position and orientation is determined based on the 
+     * formation data and the lead spacecraft of the command
      * 
      */
     /**

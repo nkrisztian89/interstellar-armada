@@ -27,6 +27,116 @@
                     "type": "lose"
                 }
             ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "squads": ["wraith"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 1000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["phantom"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Ohio",
+                            "relative": "true",
+                            "distance": 3500,
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "squads": ["phantom"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 2
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 5000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["serpent"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Ohio",
+                            "relative": "true",
+                            "distance": 3000,
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "squads": ["serpent"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 3
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 8000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["reaper"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Ohio",
+                            "relative": "true",
+                            "distance": 2500,
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
+                }
+            ]
         }],
     "views": [
         {
@@ -139,13 +249,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [6000, 6250, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "half"
             }
@@ -158,13 +262,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [5965, 6285, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "half"
             }
@@ -177,13 +275,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [6035, 6285, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "training"
             }
@@ -196,7 +288,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [9000, -9000, -100],
+            "away": true,
             "rotations": [
                 {
                     "axis": "z",
@@ -212,7 +304,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [9035, -9035, -100],
+            "away": true,
             "rotations": [
                 {
                     "axis": "z",
@@ -231,7 +323,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [9035, -8965, -100],
+            "away": true,
             "rotations": [
                 {
                     "axis": "z",
@@ -250,7 +342,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [-12200, 12000, -150],
+            "away": true,
             "rotations": [
                 {
                     "axis": "z",
@@ -269,7 +361,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-12250, 12050, -150],
+            "away": true,
             "rotations": [
                 {
                     "axis": "z",
@@ -288,7 +380,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [-12250, 11950, -150],
+            "away": true,
             "rotations": [
                 {
                     "axis": "z",

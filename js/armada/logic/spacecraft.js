@@ -790,7 +790,7 @@ define([
         this._physicalModel.setPositionMatrix(mat.translation4v(vector));
     };
     /**
-     * Sets a new orientation matrix (directly) for the physical model of the spacecrafts.
+     * Sets a new position matrix (directly) for the physical model of the spacecrafts.
      * @param {Float32Array} value
      */
     Spacecraft.prototype.setPhysicalPositionMatrix = function (value) {
@@ -812,7 +812,7 @@ define([
         return mat.translationVector3(this._physicalModel.getPositionMatrix());
     };
     /**
-     * 
+     * Sets a new orientation matrix (directly) for the physical model of the spacecrafts.
      * @param {Float32Array} value
      */
     Spacecraft.prototype.setPhysicalOrientationMatrix = function (value) {
