@@ -49,7 +49,18 @@ define(function () {
      * to be this distance away from the anchor ship
      * @property {SpacecraftEvents~JumpFormationData} [formation] When given, the position and orientation is determined based on the 
      * formation data and the lead spacecraft of the command
+     * @property {Spacecraft} [anchorSpacecraft] Set the first time the command is executed, so that further AIs executing the same command
+     * will not have to query the anchor spacecraft
      * 
+     */
+    /**
+     * @typedef {Object} SpacecraftEvents~TargetCommandData
+     * @property {String} [single] The ID of the single spacecraft that should be targeted
+     * @property {String[]} [list] The list of IDs of the spacecrafts that should be targeted and destroyed in this order
+     * @property {String[]} [squads] The list of IDs of the squads the spacecrafts in which should be targeted and destroyed in this order
+     * @property {Boolean} [priority] Whether the specified target(s) is/are priority targets
+     * @property {Spacecraft} [targetSpacecrafts] Set the first time the command is executed, so that further AIs executing the same command
+     * will not have to query the target spacecrafts
      */
     /**
      * @typedef {Object} SpacecraftEvents~CommandData
@@ -59,6 +70,7 @@ define(function () {
      * @property {Number} [index] The index of the spacecraft that received the command among the spacecrafts that received it - set when 
      * the command is executed
      * @property {SpacecraftEvents~JumpCommandData} [jump] Details of the command if it is a jump command
+     * @property {SpacecraftEvents~TargetCommandData} [target] Details of the command if it is a target command
      */
     return {
         /** Another spacecraft targets the spacecraft. */

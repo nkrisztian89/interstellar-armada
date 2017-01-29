@@ -39,7 +39,11 @@ define([
              */
             SpacecraftCommand = {
                 /** A command to activate the jump engines of the spacecraft (to jump in / out) */
-                JUMP: "jump"
+                JUMP: "jump",
+                /** A command to set a list of target spacecrafts */
+                TARGET: "target",
+                /** A command to stand down and do nothing */
+                STAND_DOWN: "standDown"
             },
             /**
              * Specifies the direction of jump commands
@@ -259,12 +263,40 @@ define([
          */
         this._mission = mission;
         /**
+         * While true, the spacecraft should come to a halt and not engage any targets.
+         * @type Boolean
+         */
+        this._standingDown = false;
+        /**
+         * The list of targets this spacecraft should destroy, in order of priority
+         * @type Spacecraft
+         */
+        this._targetList = null;
+        /**
+         * While true, the spacecraft should not engage spacecrafts outside of its target list (even if provoked)
+         * @type Boolean
+         */
+        this._priorityTargets = false;
+        /**
+         * The number of hits suffered from ships that are not the current target while facing the current target (reset when not facing the
+         * target or when a new attack run starts)
+         * @type Number
+         */
+        this._hitCountByNonTarget = 0;
+        /**
          * Cached value of the range of the first weapon of the controlled spacecraft (at still position).
          * @type Number
          */
         this._weaponRange = (this._spacecraft && (this._spacecraft.getWeapons().length > 0)) ? this._spacecraft.getWeapons()[0].getRange() : 0;
+        /**
+         * Whether the controlled spacecraft is currently attacking its target
+         * Needs to be updated by the overridden control() method!!
+         * @type Boolean
+         */
+        this._attackingTarget = false;
         // attaching handlers to the spacecraft events
         if (this._spacecraft) {
+            this._spacecraft.setEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
             this._spacecraft.setEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
         }
     }
@@ -386,6 +418,110 @@ define([
         }
     };
     /**
+     * Updates the AI state in case a new target has been selected by the spacecraft.
+     */
+    SpacecraftAI.prototype._handleTargetSwitch = function () {
+        this._hitCountByNonTarget = 0;
+    };
+    /**
+     * Returns whether the passed spacecraft should be kept in the target list
+     * @param {Spacecraft} spacecraft
+     * @returns {Boolean}
+     */
+    SpacecraftAI._targetListFilterFunction = function (spacecraft) {
+        return spacecraft.isAlive();
+    };
+    /**
+     * Sets the appropriate target for the controlled spacecraft based on the current internal state of the AI
+     * @param {Spacecraft} [newTarget] When given, this target will be set if the current state allows it (e.g. not
+     * standing down, no higher priority current target set)
+     */
+    SpacecraftAI.prototype._updateTarget = function (newTarget) {
+        var i, oldTarget;
+        // not engaging any targets while standing down
+        if (this._standingDown) {
+            this._spacecraft.setTarget(null);
+            return;
+        }
+        oldTarget = this._spacecraft.getTarget();
+        // remove destroyed spacecrafts from target list
+        if (this._targetList) {
+            this._targetList = this._targetList.filter(SpacecraftAI._targetListFilterFunction);
+        }
+        // if there is a target list set...
+        if (this._targetList && (this._targetList.length > 0)) {
+            // if the targets are priority...
+            if (this._priorityTargets) {
+                //only allow switching to new targets within the list
+                if (newTarget) {
+                    if (this._targetList.indexOf(newTarget) >= 0) {
+                        this._spacecraft.setTarget(newTarget);
+                    }
+                } else {
+                    // find new targets from within the list first, and also try to find a new target, if the current
+                    // one is not from the list (for example switch when a priority target jumps in)
+                    if (!oldTarget || (this._targetList.indexOf(oldTarget) < 0)) {
+                        for (i = 0; i < this._targetList.length; i++) {
+                            if (!this._targetList[i].isAway()) {
+                                this._spacecraft.setTarget(this._targetList[i]);
+                                break;
+                            }
+                        }
+                        if (!oldTarget && (i >= this._targetList.length)) {
+                            this._spacecraft.targetNextHostile();
+                        }
+                    }
+                }
+            } else {
+                // for non-priority targets, allow switching to any new target (for example when provoked)
+                if (newTarget) {
+                    this._spacecraft.setTarget(newTarget);
+                } else if (!oldTarget) {
+                    // find a new target from the list, if possible, and any hostile, if not
+                    for (i = 0; i < this._targetList.length; i++) {
+                        if (!this._targetList[i].isAway()) {
+                            this._spacecraft.setTarget(this._targetList[i]);
+                            break;
+                        }
+                    }
+                    if (i >= this._targetList.length) {
+                        this._spacecraft.targetNextHostile();
+                    }
+                }
+            }
+        } else {
+            // if there is no specific target list, switch to the new target, if specified, otherwise just find
+            // a new target if the current one has been destroyed
+            if (newTarget) {
+                this._spacecraft.setTarget(newTarget);
+            } else if (!oldTarget) {
+                this._spacecraft.targetNextHostile();
+            }
+        }
+        // call the appropriate handler if the target changed
+        if (this._spacecraft.getTarget() !== oldTarget) {
+            this._handleTargetSwitch();
+        }
+    };
+    /**
+     * Updates the AI state for when the spacecraft has been hit.
+     * @param {SpacecraftEvents~BeingHitData} data 
+     */
+    SpacecraftAI.prototype._handleBeingHit = function (data) {
+        var spacecraft = data.spacecraft;
+        // if being hit by a (still alive and present) hostile ship while having different target
+        if (
+                this._spacecraft && !this._spacecraft.canBeReused() &&
+                !spacecraft.canBeReused() && !spacecraft.isAway() && spacecraft.isHostile(this._spacecraft) &&
+                this._spacecraft.getTarget() && (this._spacecraft.getTarget() !== spacecraft)) {
+            // switch target in case the current target is not targeting us anyway or is out of range
+            if ((this._spacecraft.getTarget().getTarget() !== this._spacecraft) || !this._attackingTarget) {
+                this._updateTarget(spacecraft);
+            }
+            this._hitCountByNonTarget++;
+        }
+    };
+    /**
      * Returns the relative position for a spacecraft in a formation
      * @param {SpacecraftEvents~JumpFormationData} formation The descriptor of the formation
      * @param {Number} index The index of the spacecraft within the formation (the lead is 0)
@@ -409,10 +545,13 @@ define([
      * @param {SpacecraftEvents~CommandData} data
      */
     SpacecraftAI.prototype._handleCommand = function (data) {
-        var /**@type String*/ way, /**@type Spacecraft*/ anchor;
+        var
+                /**@type Number*/ i,
+                /**@type String*/ way,
+                /**@type Spacecraft*/ anchor, target;
         switch (data.command) {
-            // handling jump command
             case SpacecraftCommand.JUMP:
+                // handling jump command
                 // determining jump direction (inward / outward)
                 if (data.jump && data.jump.way) {
                     way = data.jump.way;
@@ -432,8 +571,9 @@ define([
                             this._spacecraft.setPhysicalOrientationMatrix(mat.matrix4(data.lead.getPhysicalOrientationMatrix()));
                         } else if (data.jump.anchor) {
                             // setting position and orientation based on an anchor ship
-                            anchor = this._mission.getSpacecraft(data.jump.anchor);
+                            anchor = data.jump.anchorSpacecraft || this._mission.getSpacecraft(data.jump.anchor);
                             if (anchor) {
+                                data.jump.anchorSpacecraft = anchor;
                                 // setting random position with matching orientation at given distance
                                 if (data.jump.distance) {
                                     this._spacecraft.setPhysicalOrientationMatrix(mat.prod3x3SubOf4(
@@ -475,6 +615,57 @@ define([
                     this._spacecraft.jumpOut();
                 }
                 break;
+            case SpacecraftCommand.TARGET:
+                // handling target command
+                if (data.target) {
+                    // if the target spacecrafts have already been queried, just copy the list
+                    if (data.target.targetSpacecrafts) {
+                        this._targetList = data.target.targetSpacecrafts.slice();
+                    } else {
+                        // otherwise query them, create and save the list now:
+                        if (data.target.single) {
+                            // selecting a single target
+                            target = this._mission.getSpacecraft(data.target.single);
+                            if (target) {
+                                this._targetList = [target];
+                            } else {
+                                application.showError("'" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target + "'!");
+                            }
+                        } else if (data.target.list) {
+                            // selecting a target list
+                            this._targetList = [];
+                            for (i = 0; i < data.target.list.length; i++) {
+                                target = this._mission.getSpacecraft(data.target.list[i]);
+                                if (target) {
+                                    this._targetList.push(target);
+                                } else {
+                                    application.showError("'" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target + "'!");
+                                }
+                            }
+                        } else if (data.target.squads) {
+                            // selecting a list of squads as target
+                            this._targetList = [];
+                            for (i = 0; i < data.target.squads.length; i++) {
+                                this._targetList = this._targetList.concat(this._mission.getSpacecraftsInSquad(data.target.squads[i]));
+                            }
+                        } else {
+                            application.showError("'" + this._spacecraft.getDisplayName() + "' has no target specified for targeting command!");
+                        }
+                        // save the target list for further spacecrafts executing the same command
+                        if (this._targetList) {
+                            data.target.targetSpacecrafts = this._targetList.slice();
+                        }
+                    }
+                    if (this._targetList && (this._targetList.length > 0)) {
+                        this._spacecraft.setTarget(this._targetList[0]);
+                    }
+                    this._priorityTargets = (data.target.priority === true);
+                }
+                break;
+            case SpacecraftCommand.STAND_DOWN:
+                // handling stand down command
+                this._standingDown = true;
+                break;
             default:
                 application.showError("Unknown spacecraft command: '" + data.command + "'!");
         }
@@ -508,12 +699,6 @@ define([
          * @type Number
          */
         this._timeSinceLastClosingIn = 0;
-        /**
-         * The number of hits suffered from ships that are not the current target while facing the current target (reset when not facing the
-         * target or when a new attack run starts)
-         * @type Number
-         */
-        this._hitCountByNonTarget = 0;
         /**
          * The time elapsed since the current evasive maneuver started, in milliseconds, or -1 if there is no evasive maneuver in progress.
          * @type Number
@@ -566,7 +751,6 @@ define([
          */
         this._targetDistance = 0;
         // attaching handlers to the various spacecraft events
-        this._spacecraft.setEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
         this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
         this._spacecraft.setEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
         this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_FIRED, this._handleTargetFired.bind(this));
@@ -589,17 +773,17 @@ define([
         this._rollTime = -1;
     };
     /**
-     * Updates the AI state in case a new target has been selected by the fighter.
+     * @override
      */
     FighterAI.prototype._handleTargetSwitch = function () {
+        SpacecraftAI.prototype._handleTargetSwitch.call(this);
         this._startNewAttackRun();
     };
     /**
-     * Updates the AI state for when the fighter has been hit.
+     * @override
      * @param {SpacecraftEvents~BeingHitData} data 
      */
     FighterAI.prototype._handleBeingHit = function (data) {
-        var spacecraft = data.spacecraft;
         // initiating a new evasive maneuver in case one is not already in progress
         // if the attack path is blocked by a spacecraft, then we are already strafing, so no evasive maneuver is started
         if (!this._isBlockedBy && (this._evasiveManeuverTime < 0)) {
@@ -609,15 +793,7 @@ define([
             this._evasiveVelocityVector[1] = -data.hitPosition[2];
             vec.normalize2(this._evasiveVelocityVector);
         }
-        // if being hit by a (still alive) hostile ship while having different target
-        if (this._spacecraft && !this._spacecraft.canBeReused() && !spacecraft.canBeReused() && spacecraft.isHostile(this._spacecraft) && this._spacecraft.getTarget() && (this._spacecraft.getTarget() !== spacecraft)) {
-            // switch target in case the current target is not targeting us anyway
-            if (this._spacecraft.getTarget().getTarget() !== this._spacecraft) {
-                this._spacecraft.setTarget(spacecraft);
-                this._handleTargetSwitch();
-            }
-            this._hitCountByNonTarget++;
-        }
+        SpacecraftAI.prototype._handleBeingHit.call(this, data);
     };
     /**
      * Updates the AI state for when the controlled fighter has successfully hit its current target.
@@ -713,10 +889,7 @@ define([
             strafingHandled = false;
             // .................................................................................................
             // targeting
-            if (!this._spacecraft.getTarget()) {
-                this._spacecraft.targetNextHostile();
-                this._handleTargetSwitch();
-            }
+            this._updateTarget();
             // .................................................................................................
             // caching / referencing commonly needed variables
             acceleration = this._spacecraft.getMaxAcceleration();
@@ -726,9 +899,11 @@ define([
             inverseOrientationMatrix = mat.inverseOfRotation4(this._spacecraft.getPhysicalOrientationMatrix());
             speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             target = this._spacecraft.getTarget();
+            this._attackingTarget = false;
             // .................................................................................................
             // evade phase of charge maneuver
             if (this._chargePhase === ChargePhase.EVADE) {
+                this._attackingTarget = !!target;
                 vectorToTarget = vec.diff3(this._chargeDestination, positionVector);
                 relativeTargetDirection = vec.mulVec3Mat4(
                         vectorToTarget,
@@ -815,37 +990,42 @@ define([
                         this._timeSinceLastTargetHit = 0;
                         this._hitCountByNonTarget = 0;
                     }
-                    if ((vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) <= weapons[0].getRange(speed)) &&
-                            (Math.abs(targetYawAndPitch.yaw) < fireThresholdAngle) && (Math.abs(targetYawAndPitch.pitch) < fireThresholdAngle) &&
-                            (!this._isBlockedBy || this._isBlockedBy.isHostile(this._spacecraft))) {
-                        this._spacecraft.fire();
-                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
-                        if (!this._isBlockedBy) {
-                            this._timeSinceLastRoll += dt;
-                            this._timeSinceLastTargetHit += dt;
-                            this._timeSinceLastClosingIn += dt;
-                            // starting roll if needed
-                            rollWaitTime = targetHitTime + ROLL_CORRECTION_TRIGGERING_MISS_COUNT * weaponCooldown;
-                            if ((this._timeSinceLastRoll > rollWaitTime) && (this._timeSinceLastTargetHit > rollWaitTime)) {
-                                this._rollTime = 0;
-                            }
-                            // performing coll
-                            if (this._rollTime >= 0) {
-                                this._spacecraft.rollLeft();
-                                this._timeSinceLastRoll = 0;
-                                this._rollTime += dt;
-                                // calculating the duration of rolling based on the angle we would like to roll (in seconds)
-                                angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
-                                maxAngularVelocity = angularAcceleration * _turnAccelerationDuration;
-                                rollDuration = (ROLL_CORRECTION_ANGLE > maxAngularVelocity * _turnAccelerationDuration) ?
-                                        _turnAccelerationDuration + (ROLL_CORRECTION_ANGLE - (maxAngularVelocity * _turnAccelerationDuration)) / maxAngularVelocity :
-                                        Math.sqrt(4 * ROLL_CORRECTION_ANGLE / angularAcceleration) / 2;
-                                // stopping roll (converting to milliseconds)
-                                if (this._rollTime > rollDuration * 1000) {
-                                    this._rollTime = -1;
+                    if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) <= weapons[0].getRange(speed)) {
+                        this._attackingTarget = true;
+                        if ((Math.abs(targetYawAndPitch.yaw) < fireThresholdAngle) &&
+                                (Math.abs(targetYawAndPitch.pitch) < fireThresholdAngle) &&
+                                (!this._isBlockedBy || this._isBlockedBy.isHostile(this._spacecraft))) {
+                            this._spacecraft.fire();
+                            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
+                            if (!this._isBlockedBy) {
+                                this._timeSinceLastRoll += dt;
+                                this._timeSinceLastTargetHit += dt;
+                                this._timeSinceLastClosingIn += dt;
+                                // starting roll if needed
+                                rollWaitTime = targetHitTime + ROLL_CORRECTION_TRIGGERING_MISS_COUNT * weaponCooldown;
+                                if ((this._timeSinceLastRoll > rollWaitTime) && (this._timeSinceLastTargetHit > rollWaitTime)) {
+                                    this._rollTime = 0;
+                                }
+                                // performing coll
+                                if (this._rollTime >= 0) {
+                                    this._spacecraft.rollLeft();
+                                    this._timeSinceLastRoll = 0;
+                                    this._rollTime += dt;
+                                    // calculating the duration of rolling based on the angle we would like to roll (in seconds)
+                                    angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
+                                    maxAngularVelocity = angularAcceleration * _turnAccelerationDuration;
+                                    rollDuration = (ROLL_CORRECTION_ANGLE > maxAngularVelocity * _turnAccelerationDuration) ?
+                                            _turnAccelerationDuration + (ROLL_CORRECTION_ANGLE - (maxAngularVelocity * _turnAccelerationDuration)) / maxAngularVelocity :
+                                            Math.sqrt(4 * ROLL_CORRECTION_ANGLE / angularAcceleration) / 2;
+                                    // stopping roll (converting to milliseconds)
+                                    if (this._rollTime > rollDuration * 1000) {
+                                        this._rollTime = -1;
+                                    }
                                 }
                             }
+                        } else {
+                            this._timeSinceLastRoll = 0;
                         }
                     } else {
                         this._timeSinceLastRoll = 0;
@@ -963,30 +1143,9 @@ define([
      */
     function ShipAI(ship, mission) {
         SpacecraftAI.call(this, ship, mission);
-        /**
-         * Cached value of the result of the last calculation of whether the current target is in range.
-         * @type Boolean
-         */
-        this._targetInRange = false;
-        // attaching handlers to the various spacecraft events
-        this._spacecraft.setEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
     }
     ShipAI.prototype = new SpacecraftAI();
     ShipAI.prototype.constructor = ShipAI;
-    /**
-     * Updates the AI state for when the ship has been hit.
-     * @param {SpacecraftEvents~BeingHitData} data 
-     */
-    ShipAI.prototype._handleBeingHit = function (data) {
-        var spacecraft = data.spacecraft;
-        // if being hit by a (still alive) hostile ship while having different target
-        if (this._spacecraft && !this._spacecraft.canBeReused() && !spacecraft.canBeReused() && spacecraft.isHostile(this._spacecraft) && this._spacecraft.getTarget() && (this._spacecraft.getTarget() !== spacecraft)) {
-            // switch target in case the current target is not targeting us anyway or is out of range
-            if ((this._spacecraft.getTarget().getTarget() !== this._spacecraft) || !this._targetInRange) {
-                this._spacecraft.setTarget(spacecraft);
-            }
-        }
-    };
     /**
      * Updates the AI state for the case when the battle scene with all objects has been moved by a vector, updating stored world-space
      * positions.
@@ -1034,9 +1193,7 @@ define([
             }
             // .................................................................................................
             // targeting
-            if (!this._spacecraft.getTarget()) {
-                this._spacecraft.targetNextHostile();
-            }
+            this._updateTarget();
             // .................................................................................................
             // caching / referencing commonly needed variables
             acceleration = this._spacecraft.getMaxAcceleration();
@@ -1045,7 +1202,7 @@ define([
             positionVector = mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix());
             inverseOrientationMatrix = mat.inverseOfRotation4(this._spacecraft.getPhysicalOrientationMatrix());
             target = this._spacecraft.getTarget();
-            this._targetInRange = false;
+            this._attackingTarget = false;
             if (target) {
                 targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
                 vectorToTarget = vec.diff3(targetPositionVector, positionVector);
@@ -1119,7 +1276,7 @@ define([
                     if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) - baseDistance <=
                             weapons[0].getRange(this._spacecraft.getRelativeVelocityMatrix()[13])) {
                         this._spacecraft.fire(true);
-                        this._targetInRange = true;
+                        this._attackingTarget = true;
                     }
                 }
             } else {

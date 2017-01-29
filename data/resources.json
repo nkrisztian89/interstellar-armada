@@ -1079,11 +1079,11 @@
             "name": "jump_prepare_ship",
             "samples": ["spacecraft/jump_prepare_ship.ogg"]
         }, {
-            "name": "jump_out",
-            "samples": ["spacecraft/jump_out.ogg"]
+            "name": "jump_swoosh",
+            "samples": ["spacecraft/jump_swoosh.ogg"]
         }, {
-            "name": "jump_out_flash",
-            "samples": ["spacecraft/jump_out_flash.ogg"]
+            "name": "jump_flash",
+            "samples": ["spacecraft/jump_flash.ogg"]
         }, {
             "name": "trainingShot",
             "samples": ["weapon/weaponshot_training.ogg"]

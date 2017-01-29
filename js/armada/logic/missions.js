@@ -1893,11 +1893,25 @@ define([
         return null;
     };
     /**
-     * Returns the list of spacecrafts (both alive and destroyed) in this mission
+     * Returns the list of spacecrafts (that are alive) in this mission
      * @returns {Spacecraft[]}
      */
     Mission.prototype.getSpacecrafts = function () {
         return this._spacecrafts;
+    };
+    /**
+     * Returns the list of spacecrafts (that are alive) that are members of the passed squad
+     * @param {String} squad The string ID of the squad
+     * @returns {Spacecraft[]}
+     */
+    Mission.prototype.getSpacecraftsInSquad = function (squad) {
+        var i, result = [];
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i].getSquad() === squad) {
+                result.push(this._spacecrafts[i]);
+            }
+        }
+        return result;
     };
     /**
      * Calls the passed function for every spacecraft this mission has, passing each of the spacecrafts as its single argument

@@ -10,6 +10,198 @@
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],
+    "events": [{
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["Ohio"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["alpha"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true,
+                "delay": 1300
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["wraith"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Ohio",
+                            "relative": "true",
+                            "position": [0, 3200, -100],
+                            "rotations": [
+                                {
+                                    "axis": "z",
+                                    "degrees": 180
+                                }
+                            ],
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true,
+                "delay": 1800
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["phantom"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Ohio",
+                            "relative": "true",
+                            "position": [0, 3250, -150],
+                            "rotations": [
+                                {
+                                    "axis": "z",
+                                    "degrees": 180
+                                }
+                            ],
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
+                }
+            ]
+        }, {
+            "name": "secondWaveStart",
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "squads": ["wraith", "phantom"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 3
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 2500
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["serpent"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Ohio",
+                            "relative": "true",
+                            "distance": 4000,
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "timeElapsed",
+                        "params": {
+                            "time": 750,
+                            "satisfiedWhen": "once",
+                            "start": "secondWaveStart"
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["reaper"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "serpent 1",
+                            "relative": "true",
+                            "position": [0, -200, -50],
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "teams": ["rebels"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 30000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "teams": ["empire"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }
+            ]
+        }],
     "views": [
         {
             "name": "free",
@@ -63,13 +255,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [0, 3200, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "away": true
         },
         {
             "team": "rebels",
@@ -79,13 +265,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-35, 3235, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "away": true
         },
         {
             "team": "rebels",
@@ -95,13 +275,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [35, 3235, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "away": true
         },
         {
             "team": "rebels",
@@ -111,13 +285,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [0, 3250, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "full"
             }
@@ -130,13 +298,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-35, 3285, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "full"
             }
@@ -149,13 +311,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [35, 3285, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "full"
             }
@@ -168,13 +324,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [-7000, 0, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ]
+            "away": true
         },
         {
             "team": "rebels",
@@ -184,13 +334,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-7035, 35, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ]
+            "away": true
         },
         {
             "team": "rebels",
@@ -200,13 +344,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [-7035, -35, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ]
+            "away": true
         },
         {
             "team": "rebels",
@@ -216,13 +354,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [-7200, 0, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "heavy"
             }
@@ -235,13 +367,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-7250, 50, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "full"
             }
@@ -254,13 +380,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [-7250, -50, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "full"
             }

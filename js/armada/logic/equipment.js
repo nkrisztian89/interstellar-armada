@@ -2120,7 +2120,9 @@ define([
                 // return true if the event handling included the HUD and other piloted spacecraft related updates
                 if (this._spacecraft.handleEvent(SpacecraftEvents.JUMP_ENGAGED)) {
                     this._soundClip = this._class.createEngageSoundClip();
-                    this._soundClip.play();
+                    if (this._soundClip) {
+                        this._soundClip.play();
+                    }
                 }
                 break;
                 // cancelling jump out sequence
@@ -2164,7 +2166,9 @@ define([
             physicalModel.setVelocityMatrix(mat.translation4v(vec.scaled3(directionVector, this._class.getJumpInVelocity() + this._class.getJumpInDeceleration() * this._class.getJumpInDuration() / 1000)));
             physicalModel.addForce(new physics.Force(JUMP_FORCE_ID, physicalModel.getMass() * this._class.getJumpInDeceleration(), vec.scaled3(directionVector, -1), this._class.getJumpInDuration()));
             this._soundClip = this._class.createJumpInSoundClip(this._spacecraft.getSoundSource());
-            this._soundClip.play();
+            if (this._soundClip) {
+                this._soundClip.play();
+            }
             this._spacecraft.setAway(false);
             this._spacecraft.handleEvent(SpacecraftEvents.JUMPED_IN);
         }
@@ -2185,7 +2189,9 @@ define([
                     this._state = JumpEngine.JumpState.PREPARING;
                     this._timeLeft = this._class.getPrepareDuration();
                     this._soundClip = this._class.createPrepareSoundClip(this._spacecraft.getSoundSource());
-                    this._soundClip.play();
+                    if (this._soundClip) {
+                        this._soundClip.play();
+                    }
                 }
                 break;
             case JumpEngine.JumpState.PREPARING:
@@ -2199,7 +2205,9 @@ define([
                     this._state = JumpEngine.JumpState.JUMPING_OUT;
                     this._timeLeft = this._class.getJumpOutDuration();
                     this._soundClip = this._class.createJumpOutSoundClip(this._spacecraft.getSoundSource());
-                    this._soundClip.play();
+                    if (this._soundClip) {
+                        this._soundClip.play();
+                    }
                     physicalModel = this._spacecraft.getPhysicalModel();
                     directionVector = mat.getRowB4(physicalModel.getOrientationMatrix());
                     physicalModel.addForce(new physics.Force(JUMP_FORCE_ID, physicalModel.getMass() * this._class.getJumpOutAcceleration(), directionVector, this._class.getJumpOutDuration()));

@@ -25,6 +25,47 @@
             },
             "actions": [{
                     "type": "lose"
+                }, {
+                    "type": "command",
+                    "subjects": {
+                        "teams": ["empire"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true,
+                "delay": 1800
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["wraith"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Ohio",
+                            "relative": "true",
+                            "position": [-3000, 3200, -100],
+                            "rotations": [{
+                                    "axis": "z",
+                                    "degrees": 180
+                                }],
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
                 }
             ]
         }, {
@@ -137,6 +178,33 @@
                     }
                 }
             ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "teams": ["rebels"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 30000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "teams": ["empire"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }
+            ]
         }],
     "views": [
         {
@@ -195,13 +263,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "position": [-3000, 3200, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "trainingFull"
             }
@@ -214,13 +276,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "position": [-3035, 3235, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "trainingFull"
             }
@@ -233,13 +289,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "position": [-2965, 3235, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "away": true
         },
         {
             "team": "rebels",

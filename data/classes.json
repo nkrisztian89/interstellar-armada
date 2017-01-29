@@ -1337,7 +1337,7 @@
                     "timeToReach": 350
                 }],
             "soundEffect": {
-                "name": "jump_out_flash",
+                "name": "jump_flash",
                 "volume": 1
             }
         }, {
@@ -1383,7 +1383,7 @@
                     "timeToReach": 400
                 }],
             "soundEffect": {
-                "name": "jump_out_flash",
+                "name": "jump_flash",
                 "volume": 5
             }
         }, {
@@ -1429,7 +1429,7 @@
                     "timeToReach": 500
                 }],
             "soundEffect": {
-                "name": "jump_out_flash",
+                "name": "jump_flash",
                 "volume": 10
             }
         }],
@@ -1840,7 +1840,7 @@
             "jumpOutDuration": 500,
             "jumpOutScaling": 3,
             "jumpOutSound": {
-                "name": "jump_out",
+                "name": "jump_swoosh",
                 "volume": 2.0
             },
             "jumpOutExplosion": "fighterJumpFlash",
@@ -1849,7 +1849,7 @@
             "jumpInVelocity": 100,
             "jumpInScaling": 3,
             "jumpInSound": {
-                "name": "jump_out",
+                "name": "jump_swoosh",
                 "volume": 2.0
             },
             "jumpInExplosion": "fighterJumpFlash"
@@ -1869,7 +1869,7 @@
             "jumpOutDuration": 500,
             "jumpOutScaling": 2,
             "jumpOutSound": {
-                "name": "jump_out",
+                "name": "jump_swoosh",
                 "volume": 10.0
             },
             "jumpOutExplosion": "smallShipJumpFlash",
@@ -1878,7 +1878,7 @@
             "jumpInVelocity": 120,
             "jumpInScaling": 2,
             "jumpInSound": {
-                "name": "jump_out",
+                "name": "jump_swoosh",
                 "volume": 10.0
             },
             "jumpInExplosion": "smallShipJumpFlash"
@@ -1898,7 +1898,7 @@
             "jumpOutDuration": 500,
             "jumpOutScaling": 1.5,
             "jumpOutSound": {
-                "name": "jump_out",
+                "name": "jump_swoosh",
                 "volume": 20.0
             },
             "jumpOutExplosion": "largeShipJumpFlash",
@@ -1907,7 +1907,7 @@
             "jumpInVelocity": 150,
             "jumpInScaling": 1.5,
             "jumpInSound": {
-                "name": "jump_out",
+                "name": "jump_swoosh",
                 "volume": 20.0
             },
             "jumpInExplosion": "largeShipJumpFlash"

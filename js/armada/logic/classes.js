@@ -1299,11 +1299,15 @@ define([
      * @param {Number} [stackVolumeFactor=1] The factor to multiply the volume of stacked sound clips by
      */
     ExplosionClass.prototype.playSound = function (soundSource, shouldStack, stackTimeThreshold, stackVolumeFactor) {
+        var clip;
         if (this._soundEffect) {
-            _createSoundClip(
+            clip = _createSoundClip(
                     this._soundEffect,
                     false,
-                    soundSource, shouldStack, stackTimeThreshold, stackVolumeFactor).play();
+                    soundSource, shouldStack, stackTimeThreshold, stackVolumeFactor);
+            if (clip) {
+                clip.play();
+            }
         }
     };
     /**
