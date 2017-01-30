@@ -436,6 +436,13 @@ define([
         }
     };
     /**
+     * Returns the volume currently set for this clip (the actual playback volume might be ramping towards this)
+     * @returns {Number}
+     */
+    SoundClip.prototype.getVolume = function () {
+        return (this._volume !== undefined) ? this._volume : 1;
+    };
+    /**
      * Sets a new volume for the clip. Effective only if an initial volume was specified (even if it was 1.0)
      * @param {Number} volume
      */

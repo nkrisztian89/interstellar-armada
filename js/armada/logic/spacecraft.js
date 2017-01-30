@@ -81,6 +81,12 @@ define([
              * @type String
              */
             UNIFORM_REPLACEMENT_FACTION_COLOR_NAME = "replacementFactionColor",
+            /**
+             * The duration while the hum sound effects ramp to their normal volume after being started.
+             * In seconds.
+             * @type Number
+             */
+            HUM_SOUND_VOLUME_RAMP_DURATION = 0.020,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -1977,6 +1983,15 @@ define([
         return this._soundSource;
     };
     /**
+     * Starts the playback of the spacecraft hum sound effect (ramping the volume up from zero to avoid popping)
+     */
+    Spacecraft.prototype._startHumSound = function () {
+        var volume = this._humSoundClip.getVolume();
+        this._humSoundClip.setVolume(0);
+        this._humSoundClip.play();
+        this._humSoundClip.rampVolume(volume, HUM_SOUND_VOLUME_RAMP_DURATION, true, true);
+    };
+    /**
      * If the spacecraft object was not destroyed upon its destruction (by setting an onDestructed handler returning false), it retains its
      * data and can be respawned (returned to full hitpoints) using this method
      * @param {Boolean} [randomAnimationTime=false] If true, the blinking lights on the spacecraft will be set to a random blinking 
@@ -1988,7 +2003,7 @@ define([
         this._hitpoints = this._class.getHitpoints();
         this._timeElapsedSinceDestruction = -1;
         if (this._humSoundClip) {
-            this._humSoundClip.play();
+            this._startHumSound();
         }
         for (i = 0; i < this._blinkers.length; i++) {
             if (randomAnimationTime) {
@@ -2092,7 +2107,7 @@ define([
                 if (!this._humSoundClip) {
                     this._humSoundClip = this._class.createHumSoundClip(this._soundSource);
                     if (this._humSoundClip) {
-                        this._humSoundClip.play();
+                        this._startHumSound();
                     }
                 }
             }
