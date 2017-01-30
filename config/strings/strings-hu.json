@@ -125,10 +125,18 @@
         "practiceTargets": "Gyakorló cél"
     },
     "squad": {
+        "drone": "Drón",
         "alpha": "Alfa",
         "beta": "Béta",
         "gamma": "Gamma",
         "delta": "Delta",
+        "epsilon": "Epszilon",
+        "zeta": "Dzéta",
+        "eta": "Éta",
+        "theta": "Théta",
+        "iota": "Ióta",
+        "kappa": "Kappa",
+        "lambda": "Lambda",
         "omega": "Omega",
         "wraith": "Lidérc",
         "phantom": "Fantom",

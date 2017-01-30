@@ -671,6 +671,7 @@
                 "escortsText": {
                     "colors": {
                         "alive": [0, 1, 0, 1],
+                        "away": [0, 1, 0, 0.3],
                         "destroyed": [1, 0, 0, 1]
                     },
                     "fontSize": 0.1,

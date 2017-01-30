@@ -24,10 +24,117 @@
             ]
         }
     ],
+    "events": [{
+            "name": "secondWaveStart",
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["theta 1"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 1500
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["theta 2"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "position": [500, 2500, 50],
+                            "rotations": [{
+                                    "axis": "z",
+                                    "degrees": -135
+                                }]
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "timeElapsed",
+                        "params": {
+                            "time": 1000,
+                            "start": "secondWaveStart",
+                            "satisfiedWhen": "once"
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["theta 3"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "position": [-500, 2500, 50],
+                            "rotations": [{
+                                    "axis": "z",
+                                    "degrees": 135
+                                }]
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "squads": ["theta"]
+                        },
+                        "params": {
+                            "count": 2,
+                            "relation": "below"
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 1500
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["omega 1"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "distance": 2000
+                        }
+                    }
+                }
+            ]
+        }
+    ],
     "spacecrafts": [
         {
             "team": "empire",
             "class": "falcon",
+            "name": "Rookie",
             "piloted": true,
             "position": [0, 0, 0],
             "equipment": {
@@ -37,6 +144,10 @@
         {
             "team": "practiceTargets",
             "class": "falcon",
+            "squad": {
+                "name": "theta",
+                "index": 1
+            },
             "ai": "fighter",
             "position": [0, 2400, 0],
             "rotations": [
@@ -52,14 +163,12 @@
         {
             "team": "practiceTargets",
             "class": "falcon",
+            "squad": {
+                "name": "theta",
+                "index": 2
+            },
             "ai": "fighter",
-            "position": [6000, 12000, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "training"
             }
@@ -67,14 +176,12 @@
         {
             "team": "practiceTargets",
             "class": "falcon",
+            "squad": {
+                "name": "theta",
+                "index": 3
+            },
             "ai": "fighter",
-            "position": [-6000, 12000, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "training"
             }
@@ -82,14 +189,12 @@
         {
             "team": "practiceTargets",
             "class": "falcon",
+            "squad": {
+                "name": "omega",
+                "index": 1
+            },
             "ai": "fighter",
-            "position": [0, 20000, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "trainingFull"
             }

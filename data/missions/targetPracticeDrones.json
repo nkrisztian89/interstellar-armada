@@ -21,10 +21,85 @@
             ]
         }
     ],
+    "events": [{
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["drone 1"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 1500
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["drone 2"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "position": [500, 1000, 50],
+                            "rotations": [{
+                                    "axis": "z",
+                                    "degrees": -90
+                                }]
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["drone 2"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 2500
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["drone 3", "drone 4"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "position": [-400, 1200, 100],
+                            "rotations": [{
+                                    "axis": "z",
+                                    "degrees": 120
+                                }],
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
     "spacecrafts": [
         {
             "team": "empire",
             "class": "falcon",
+            "name": "Rookie",
             "piloted": true,
             "position": [0, 0, 0],
             "equipment": {
@@ -34,6 +109,10 @@
         {
             "team": "practiceTargets",
             "class": "drone",
+            "squad": {
+                "name": "drone",
+                "index": 1
+            },
             "ai": "fighter",
             "position": [0, 100, 0],
             "rotations": [
@@ -49,14 +128,12 @@
         {
             "team": "practiceTargets",
             "class": "drone",
+            "squad": {
+                "name": "drone",
+                "index": 2
+            },
             "ai": "fighter",
-            "position": [2000, 4100, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "default"
             }
@@ -64,14 +141,12 @@
         {
             "team": "practiceTargets",
             "class": "drone",
+            "squad": {
+                "name": "drone",
+                "index": 3
+            },
             "ai": "fighter",
-            "position": [-4000, 8100, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "default"
             }
@@ -79,14 +154,12 @@
         {
             "team": "practiceTargets",
             "class": "drone",
+            "squad": {
+                "name": "drone",
+                "index": 4
+            },
             "ai": "fighter",
-            "position": [-4200, 8000, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "away": true,
             "equipment": {
                 "profile": "default"
             }

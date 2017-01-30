@@ -51,6 +51,23 @@
             ]
         }, {
             "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "single": "Mississippi"
+                        }
+                    }
+                }]
+        }, {
+            "trigger": {
                 "conditions": [{
                         "type": "destroyed",
                         "subjects": {
@@ -84,6 +101,56 @@
                     "type": "message",
                     "params": {
                         "textID": "caution"
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "squads": ["phantom", "reaper"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["alpha"]
+                    },
+                    "params": {
+                        "command": "standDown"
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "teams": ["rebels"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 45000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "teams": ["empire"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
                     }
                 }
             ]

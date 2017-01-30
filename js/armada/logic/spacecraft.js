@@ -1939,6 +1939,8 @@ define([
     Spacecraft.prototype.jumpOut = function () {
         if (!this._away && this._jumpEngine) {
             this._jumpEngine.jumpOut();
+        } else {
+            application.log("Warning! Spacecraft '" + this.getDisplayName() + "' cannot jump out because it is already away or has no jump engines!");
         }
     };
     /**
@@ -1947,6 +1949,8 @@ define([
     Spacecraft.prototype.jumpIn = function () {
         if (this._away && this._jumpEngine) {
             this._jumpEngine.jumpIn();
+        } else {
+            application.log("Warning! Spacecraft '" + this.getDisplayName() + "' cannot jump in because it is already present or has no jump engines!");
         }
     };
     /**

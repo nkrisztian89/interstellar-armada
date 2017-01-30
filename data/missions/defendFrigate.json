@@ -458,7 +458,7 @@
             "class": "aries",
             "name": "Don",
             "ai": "ship",
-            "position": [-15000, 0, -150],
+            "position": [-14500, 0, -150],
             "rotations": [
                 {
                     "axis": "z",

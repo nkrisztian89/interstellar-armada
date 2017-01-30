@@ -196,6 +196,7 @@
         },
         {
             "class": "libra",
+            "name": "Tiberis",
             "position": [-100, 500, -400],
             "rotations": [
                 {

@@ -1194,7 +1194,7 @@ define([
             },
             ESCORTS_TEXT: {
                 name: "escortsText",
-                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["alive", "destroyed"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["alive", "away", "destroyed"]})
             },
             ESCORTS_HULL_INTEGRITY_BAR: {
                 name: "escortsHullIntegrityBar",

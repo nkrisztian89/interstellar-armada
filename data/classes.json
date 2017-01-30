@@ -3720,11 +3720,17 @@
                         }],
                     "propulsion": {
                         "class": "imperialDrone"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "unarmed",
                     "propulsion": {
                         "class": "imperialDrone"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }],
             "humSound": {

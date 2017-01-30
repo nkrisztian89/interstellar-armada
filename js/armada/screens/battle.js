@@ -1644,7 +1644,7 @@ define([
      * @returns {Boolean}
      */
     function _escortShouldBeIndicated(craft) {
-        return  !craft.isAway() && (craft !== _spacecraft);
+        return  (craft !== _spacecraft);
     }
     /**
      * 
@@ -2463,7 +2463,9 @@ define([
                         if (i < ships.length) {
                             _escortsTexts[i].setText(ships[i].getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
                             _escortsTexts[i].setColor(ships[i].isAlive() ?
-                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.alive :
+                                    (ships[i].isAway() ?
+                                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.away :
+                                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.alive) :
                                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.destroyed);
                             _escortHullIntegrityBars[i].setColor(_getHullIntegrityColor(ships[i].getHullIntegrity(),
                                     _escortsHullIntegrityBarSettings.colors.fullIntegrity,

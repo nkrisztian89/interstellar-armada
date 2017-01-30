@@ -203,10 +203,18 @@
         "practiceTargets": "Practice target"
     },
     "squad": {
+        "drone": "Drone",
         "alpha": "Alpha",
         "beta": "Beta",
         "gamma": "Gamma",
         "delta": "Delta",
+        "epsilon": "Epsilon",
+        "zeta": "Zeta",
+        "eta": "Eta",
+        "theta": "Theta",
+        "iota": "Iota",
+        "kappa": "Kappa",
+        "lambda": "Lambda",
         "omega": "Omega",
         "wraith": "Wraith",
         "phantom": "Phantom",
