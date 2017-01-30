@@ -363,6 +363,15 @@ define([
             case descriptors.BaseType.STRING:
                 return "";
             case descriptors.BaseType.ARRAY:
+                result = [];
+                if (propertyDescriptor.createDefaultElement) {
+                    result.push(_getDefaultValue(
+                            {type: propertyDescriptor.type.elementType},
+                            null,
+                            result,
+                            true));
+                }
+                return result;
             case descriptors.BaseType.PAIRS:
             case descriptors.BaseType.ROTATIONS:
             case descriptors.BaseType.SET:

@@ -111,6 +111,8 @@ define([
              * @property {Boolean} [defaultDerived] If the value is undefined, the value of the property will be derived (calculated) from other properties
              * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
              * @property {String} [settingName] If globalDefault is true, the name of the setting from where the default value is retrieved from can be given here
+             * @property {Boolean} [createDefaultElement] If the property is of an array type, its default value should be an array with one
+             * element having its default value (instead of an empty array)
              */
             /**
              * @typedef {Object.<String, PropertyDescriptor>} Editor~ItemDescriptor
@@ -295,6 +297,13 @@ define([
             PROPULSION_CLASS_REFERENCE = {
                 baseType: BaseType.ENUM,
                 classReference: "propulsionClasses"
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            JUMP_ENGINE_CLASS_REFERENCE = {
+                baseType: BaseType.ENUM,
+                classReference: "jumpEngineClasses"
             },
             /**
              * @type Editor~TypeDescriptor
@@ -700,7 +709,9 @@ define([
                     },
                     SHADER: {
                         name: "shader",
-                        type: SHADER_REFERENCE
+                        type: SHADER_REFERENCE,
+                        globalDefault: true,
+                        settingName: config.EDITOR_SETTINGS.DEFAULT_PARTICLE_SHADER
                     },
                     TEXTURE: {
                         name: "texture",
@@ -708,7 +719,8 @@ define([
                     },
                     PARTICLE_STATES: {
                         name: "particleStates",
-                        type: _createTypedArrayType(PARTICLE_STATE)
+                        type: _createTypedArrayType(PARTICLE_STATE),
+                        createDefaultElement: true
                     }
                 }
             },
@@ -784,7 +796,8 @@ define([
                     SHADER: {
                         name: "shader",
                         type: SHADER_REFERENCE,
-                        defaultValue: "particle"
+                        globalDefault: true,
+                        settingName: config.EDITOR_SETTINGS.DEFAULT_PARTICLE_SHADER
                     },
                     TEXTURE: {
                         name: "texture",
@@ -984,7 +997,7 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: "number"
+                    type: BaseType.NUMBER
                 }
             },
             /**
@@ -1038,7 +1051,77 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: "number"
+                    type: BaseType.NUMBER
+                }
+            },
+            /**
+             * The descriptor object for jump engine classes, describing their properties
+             * @type Editor~ItemDescriptor
+             */
+            JUMP_ENGINE_CLASS = {
+                NAME: {
+                    name: "name",
+                    type: BaseType.STRING
+                },
+                ENGAGE_SOUND: {
+                    name: "engageSound",
+                    type: SOUND_DESCRIPTOR
+                },
+                PREPARE_VELOCITY: {
+                    name: "prepareVelocity",
+                    type: METERS_PER_SECOND
+                },
+                PREPARE_DURATION: {
+                    name: "prepareDuration",
+                    type: MILLISECONDS
+                },
+                PREPARE_SOUND: {
+                    name: "prepareSound",
+                    type: SOUND_DESCRIPTOR
+                },
+                JUMP_OUT_ACCELERATION: {
+                    name: "jumpOutAcceleration",
+                    type: METERS_PER_SECOND_SQUARED
+                },
+                JUMP_OUT_DURATION: {
+                    name: "jumpOutDuration",
+                    type: MILLISECONDS
+                },
+                JUMP_OUT_SCALING: {
+                    name: "jumpOutScaling",
+                    type: BaseType.NUMBER
+                },
+                JUMP_OUT_SOUND: {
+                    name: "jumpOutSound",
+                    type: SOUND_DESCRIPTOR
+                },
+                JUMP_OUT_EXPLOSION: {
+                    name: "jumpOutExplosion",
+                    type: EXPLOSION_CLASS_REFERENCE
+                },
+                JUMP_IN_DECELERATION: {
+                    name: "jumpInDeceleration",
+                    type: METERS_PER_SECOND_SQUARED
+                },
+                JUMP_IN_DURATION: {
+                    name: "jumpInDuration",
+                    type: MILLISECONDS
+                },
+                JUMP_IN_VELOCITY: {
+                    name: "jumpInVelocity",
+                    type: METERS_PER_SECOND
+                },
+                JUMP_IN_SCALING: {
+                    name: "jumpInScaling",
+                    type: BaseType.NUMBER
+                },
+                JUMP_IN_SOUND: {
+                    name: "jumpInSound",
+                    type: SOUND_DESCRIPTOR
+                },
+                JUMP_IN_EXPLOSION: {
+                    name: "jumpInExplosion",
+                    type: EXPLOSION_CLASS_REFERENCE
                 }
             },
             /**
@@ -1370,6 +1453,11 @@ define([
                         name: "resetsOnFocusChange",
                         type: BaseType.BOOLEAN,
                         optional: true
+                    },
+                    EXCLUDE_FROM_CYCLE: {
+                        name: "excludeFromCycle",
+                        type: BaseType.BOOLEAN,
+                        optional: true
                     }
                 }
             },
@@ -1402,6 +1490,19 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            JUMP_ENGINE = {
+                baseType: BaseType.OBJECT,
+                name: "JumpEngine",
+                properties: {
+                    CLASS: {
+                        name: "class",
+                        type: JUMP_ENGINE_CLASS_REFERENCE
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             EQUIPMENT_PROFILE = {
                 baseType: BaseType.OBJECT,
                 name: "EquipmentProfile",
@@ -1419,6 +1520,11 @@ define([
                     PROPULSION: {
                         name: "propulsion",
                         type: PROPULSION,
+                        optional: true
+                    },
+                    JUMP_ENGINE: {
+                        name: "jumpEngine",
+                        type: JUMP_ENGINE,
                         optional: true
                     }
                 }
@@ -1640,7 +1746,7 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: "number"
+                    type: BaseType.NUMBER
                 }
             },
             /**
@@ -1930,6 +2036,7 @@ define([
             "projectileClasses": PROJECTILE_CLASS,
             "weaponClasses": WEAPON_CLASS,
             "propulsionClasses": PROPULSION_CLASS,
+            "jumpEngineClasses": JUMP_ENGINE_CLASS,
             "spacecraftTypes": SPACECRAFT_TYPE,
             "spacecraftClasses": SPACECRAFT_CLASS,
             "environments": ENVIRONMENT
