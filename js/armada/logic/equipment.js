@@ -1744,6 +1744,7 @@ define([
         if (!this._thrusterSoundClip) {
             this._thrusterSoundClip = this._class.createThrusterSoundClip(spacecraftSoundSource);
             if (this._thrusterSoundClip) {
+                this._thrusterSoundClip.setVolume(0);
                 this._thrusterSoundClip.play();
             }
         }

@@ -53,7 +53,7 @@
                             "way": "in",
                             "anchor": "Ohio",
                             "relative": "true",
-                            "position": [0, 3200, -100],
+                            "position": [150, 3200, 70],
                             "rotations": [
                                 {
                                     "axis": "z",
@@ -85,7 +85,7 @@
                             "way": "in",
                             "anchor": "Ohio",
                             "relative": "true",
-                            "position": [0, 3250, -150],
+                            "position": [150, 3250, 20],
                             "rotations": [
                                 {
                                     "axis": "z",
@@ -207,11 +207,15 @@
             "name": "free",
             "movable": true,
             "turnable": true,
-            "position": [0, 3100, -80],
+            "position": [70, 120, 30],
             "rotations": [
                 {
                     "axis": "x",
                     "degrees": -75
+                },
+                {
+                    "axis": "z",
+                    "degrees": 215
                 }
             ]
         }
@@ -287,7 +291,7 @@
             "ai": "fighter",
             "away": true,
             "equipment": {
-                "profile": "full"
+                "profile": "heavy"
             }
         },
         {
@@ -324,7 +328,10 @@
                 "index": 1
             },
             "ai": "fighter",
-            "away": true
+            "away": true,
+            "equipment": {
+                "profile": "full"
+            }
         },
         {
             "team": "rebels",

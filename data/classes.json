@@ -5311,22 +5311,6 @@
                         }],
                     "lookAt": "none"
                 }, {
-                    "name": "cannon",
-                    "isAimingView": true,
-                    "fps": true,
-                    "fov": 60,
-                    "fovRange": [30, 60],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
-                    "position": [142, 50, 19],
-                    "rotations": [{
-                            "axis": "Z",
-                            "degrees": 90
-                        }],
-                    "lookAt": "none"
-                }, {
                     "name": "turrets",
                     "isAimingView": false,
                     "fps": true,

@@ -354,7 +354,7 @@ define([
                 control.Controller.prototype.executeActions.call(this, triggeredActions);
                 // executing automatic actions
                 if (this._autoTargeting && !this._controlledSpacecraft.getTarget()) {
-                    if (this._controlledSpacecraft.targetNextNearestHostile()) {
+                    if (this._controlledSpacecraft.targetNextBestHostile()) {
                         _targetSwitchSound.play();
                     }
                 }

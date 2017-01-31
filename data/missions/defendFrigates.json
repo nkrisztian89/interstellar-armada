@@ -37,7 +37,7 @@
                         },
                         "params": {
                             "relation": "below",
-                            "count": 3
+                            "count": 2
                         }
                     }
                 ],
@@ -65,6 +65,17 @@
                             "single": "Mississippi"
                         }
                     }
+                }, {
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["phantom", "reaper"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "list": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                        }
+                    }
                 }]
         }, {
             "trigger": {
@@ -89,7 +100,7 @@
                         },
                         "params": {
                             "relation": "above",
-                            "count": 2
+                            "count": 1
                         }
                     }
                 ],
@@ -500,7 +511,7 @@
             "name": "Mississippi",
             "ai": "ship",
             "team": "rebels",
-            "position": [-4100, 500, -400],
+            "position": [-3000, 500, -400],
             "rotations": [
                 {
                     "axis": "z",
