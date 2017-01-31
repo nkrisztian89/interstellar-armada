@@ -139,6 +139,24 @@ define([
              * @type String
              */
             JUMP_FORCE_ID = "jump",
+            /**
+             * When mapping potential targets to numerical values for ordering, the bearing angle of the target will be multiplied by this
+             * factor
+             * @type Number
+             */
+            TARGET_MAPPING_ANGLE_FACTOR = 200,
+            /**
+             * When mapping potential targets to numerical values for ordering, the final value will be multiplied by this factor, if the
+             * targeting spacecraft has a spacecraft type effective against the target
+             * @type Number
+             */
+            TARGET_MAPPING_GOOD_AGAINST_FACTOR = 0.5,
+            /**
+             * When mapping potential targets to numerical values for ordering, the final value will be multiplied by this factor, if the
+             * targeting spacecraft has a spacecraft type that is not effective against the target
+             * @type Number
+             */
+            TARGET_MAPPING_BAD_AGAINST_FACTOR = 2.0,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -1130,23 +1148,54 @@ define([
     };
     /**
      * @typedef {Object} TargetingComputer~MappedTarget
-     * @property {Number} index 
-     * @property {Number} value 
+     * @property {Number} index The index of the potential target within the unordered target array
+     * @property {Number} value The numerical value assigned to this potential target based on which it can be ordered (in ascending order)
      */
     /**
-     * Maps the passed spacecraft to an object that contains a numeric value based on which it should be placed in the ordered target list
-     * (ascending), as well as includes the passed, original index in the object
+     * @callback TargetingComputer~mappingFunction
      * @param {Spacecraft} craft
      * @param {Number} index
      * @returns {TargetingComputer~MappedTarget}
      */
-    TargetingComputer.prototype._mapTarget = function (craft, index) {
+    /**
+     * Maps the passed spacecraft to an object that contains a numeric value based on which it should be placed in the ordered target list
+     * (ascending), as well as includes the passed, original index in the object
+     * Calculates the value based on the bearing of the spacecraft, favouring targets that are closer to the direction vector of the
+     * spacecraft.
+     * @param {Spacecraft} craft
+     * @param {Number} index
+     * @returns {TargetingComputer~MappedTarget}
+     */
+    TargetingComputer.prototype._mapTargetByBearing = function (craft, index) {
         return {
             index: index,
             value: vec.angle3u(
                     mat.getRowB43(this._spacecraft.getPhysicalOrientationMatrix()),
                     vec.normal3(vec.diff3(
                             craft.getPhysicalPositionVector(), this._spacecraft.getPhysicalPositionVector())))
+        };
+    };
+    /**
+     * Maps the passed spacecraft to an object that contains a numeric value based on which it should be placed in the ordered target list
+     * (ascending), as well as includes the passed, original index in the object
+     * Calculates the value based on a complex formula that represents how ideal the target is. (to be used for the AI)
+     * @param {Spacecraft} craft
+     * @param {Number} index
+     * @returns {TargetingComputer~MappedTarget}
+     */
+    TargetingComputer.prototype._mapTargetToCombinedValue = function (craft, index) {
+        var
+                vector = vec.diff3(craft.getPhysicalPositionVector(), this._spacecraft.getPhysicalPositionVector()),
+                distance = vec.length3(vector);
+        return {
+            index: index,
+            value: (distance +
+                    TARGET_MAPPING_ANGLE_FACTOR * vec.angle3u(
+                            mat.getRowB43(this._spacecraft.getPhysicalOrientationMatrix()),
+                            vec.scaled3(vector, 1 / distance))
+                    ) *
+                    (this._spacecraft.isGoodAgainst(craft) ? TARGET_MAPPING_GOOD_AGAINST_FACTOR : (
+                            this._spacecraft.isBadAgainst(craft) ? TARGET_MAPPING_BAD_AGAINST_FACTOR : 1))
         };
     };
     /**
@@ -1160,13 +1209,14 @@ define([
     };
     /**
      * If the current cached ordered hostile target list is not valid, created a new ordered list based on the current game state.
+     * @param {TargetingComputer~mappingFunction} mapFunction The mapping function to use on which the order will depend.
      * @returns {Boolean} Whether the list was updated
      */
-    TargetingComputer.prototype._updateHostileOrder = function () {
+    TargetingComputer.prototype._updateHostileOrder = function (mapFunction) {
         var filteredTargets, orderedMappedTargets, i;
         if ((this._timeUntilHostileOrderReset <= 0) && this._spacecraftArray) {
             filteredTargets = this._spacecraftArray.filter(this._filterHostileTarget, this);
-            orderedMappedTargets = filteredTargets.map(this._mapTarget, this).sort(TargetingComputer._compareMappedTargets);
+            orderedMappedTargets = filteredTargets.map(mapFunction, this).sort(TargetingComputer._compareMappedTargets);
             this._orderedHostileTargets = [];
             for (i = 0; i < orderedMappedTargets.length; i++) {
                 this._orderedHostileTargets.push(filteredTargets[orderedMappedTargets[i].index]);
@@ -1183,7 +1233,7 @@ define([
         var filteredTargets, orderedMappedTargets, i;
         if ((this._timeUntilNonHostileOrderReset <= 0) && this._spacecraftArray) {
             filteredTargets = this._spacecraftArray.filter(this._filterNonHostileTarget, this);
-            orderedMappedTargets = filteredTargets.map(this._mapTarget, this).sort(TargetingComputer._compareMappedTargets);
+            orderedMappedTargets = filteredTargets.map(this._mapTargetByBearing, this).sort(TargetingComputer._compareMappedTargets);
             this._orderedNonHostileTargets = [];
             for (i = 0; i < orderedMappedTargets.length; i++) {
                 this._orderedNonHostileTargets.push(filteredTargets[orderedMappedTargets[i].index]);
@@ -1202,12 +1252,12 @@ define([
         return craft.isAlive() && !craft.isAway() && (craft !== this._target);
     };
     /**
-     * Targets the next hostile spacecraft, ordering the hostiles based on the angle between the spacecraft's direction and the vector
-     * pointing to the hostile spacecraft
+     * Targets the next spacecraft, ordering the potential targets using the passed mapping function.
+     * @param {TargetingComputer~mappingFunction} mapFunction
      * @returns {Boolean} Whether a new spacecraft has been targeted
      */
-    TargetingComputer.prototype.targetNextNearestHostile = function () {
-        var index, count, length, newOrder = this._updateHostileOrder();
+    TargetingComputer.prototype._targetNextHostile = function (mapFunction) {
+        var index, count, length, newOrder = this._updateHostileOrder(mapFunction);
         if (this._orderedHostileTargets && (this._orderedHostileTargets.length > 0)) {
             // the game state might have changed since the ordered list was updated, so check until we find a still valid target
             length = this._orderedHostileTargets.length;
@@ -1227,12 +1277,12 @@ define([
         return false;
     };
     /**
-     * Targets the previous hostile spacecraft, ordering the hostiles based on the angle between the spacecraft's direction and the vector
-     * pointing to the hostile spacecraft
+     * Targets the previous spacecraft, ordering the potential targets using the passed mapping function.
+     * @param {TargetingComputer~mappingFunction} mapFunction
      * @returns {Boolean} Whether a new spacecraft has been targeted
      */
-    TargetingComputer.prototype.targetPreviousNearestHostile = function () {
-        var index, count, length, newOrder = this._updateHostileOrder();
+    TargetingComputer.prototype._targetPreviousHostile = function (mapFunction) {
+        var index, count, length, newOrder = this._updateHostileOrder(mapFunction);
         if (this._orderedHostileTargets && (this._orderedHostileTargets.length > 0)) {
             // the game state might have changed since the ordered list was updated, so check until we find a still valid target
             length = this._orderedHostileTargets.length;
@@ -1250,6 +1300,30 @@ define([
         }
         this._timeUntilHostileOrderReset = 0;
         return false;
+    };
+    /**
+     * Targets the next hostile spacecraft, ordering the hostiles based on the angle between the spacecraft's direction and the vector
+     * pointing to the hostile spacecraft
+     * @returns {Boolean} Whether a new spacecraft has been targeted
+     */
+    TargetingComputer.prototype.targetNextNearestHostile = function () {
+        return this._targetNextHostile(this._mapTargetByBearing);
+    };
+    /**
+     * Targets the previous hostile spacecraft, ordering the hostiles based on the angle between the spacecraft's direction and the vector
+     * pointing to the hostile spacecraft
+     * @returns {Boolean} Whether a new spacecraft has been targeted
+     */
+    TargetingComputer.prototype.targetPreviousNearestHostile = function () {
+        return this._targetPreviousHostile(this._mapTargetByBearing);
+    };
+    /**
+     * Targets the next hostile spacecraft, ordering the hostiles based on a complex evaluation of how fitting targets they are.
+     * (to be used by the AI)
+     * @returns {Boolean}
+     */
+    TargetingComputer.prototype.targetNextBestHostile = function () {
+        return this._targetNextHostile(this._mapTargetToCombinedValue);
     };
     /**
      * Targets the next non-hostile (friendly or neutral) spacecraft, ordering the hostiles based on the angle between the spacecraft's 

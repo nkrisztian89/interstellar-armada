@@ -2232,6 +2232,22 @@ define([
             result.push(getSpacecraftType(this._badAgainstTypeNames[i]));
         }
     };
+    /**
+     * Returns whether this spacecraft type is supposed to be effective against the passed spacecraft type
+     * @param {SpacecraftType} otherType
+     * @returns {Boolean}
+     */
+    SpacecraftType.prototype.isGoodAgainst = function (otherType) {
+        return (this._goodAgainstTypeNames.indexOf(otherType.getName()) >= 0);
+    };
+    /**
+     * Returns whether this spacecraft type is supposed to be particularly non-effective against the passed spacecraft type
+     * @param {SpacecraftType} otherType
+     * @returns {Boolean}
+     */
+    SpacecraftType.prototype.isBadAgainst = function (otherType) {
+        return (this._badAgainstTypeNames.indexOf(otherType.getName()) >= 0);
+    };
     // ##############################################################################
     /**
      * @struct Every ship (class) can have several slots where it's weapons can be

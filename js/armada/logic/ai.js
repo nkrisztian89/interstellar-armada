@@ -468,7 +468,7 @@ define([
                             }
                         }
                         if (!oldTarget && (i >= this._targetList.length)) {
-                            this._spacecraft.targetNextNearestHostile();
+                            this._spacecraft.targetNextBestHostile();
                         }
                     }
                 }
@@ -485,7 +485,7 @@ define([
                         }
                     }
                     if (i >= this._targetList.length) {
-                        this._spacecraft.targetNextNearestHostile();
+                        this._spacecraft.targetNextBestHostile();
                     }
                 }
             }
@@ -495,7 +495,7 @@ define([
             if (newTarget) {
                 this._spacecraft.setTarget(newTarget);
             } else if (!oldTarget) {
-                this._spacecraft.targetNextNearestHostile();
+                this._spacecraft.targetNextBestHostile();
             }
         }
         // call the appropriate handler if the target changed

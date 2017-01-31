@@ -671,6 +671,23 @@ define([
         return this._class.getSpacecraftType().getName();
     };
     /**
+     * Returns whether this spacecraft is supposed to be effective against the passed spacecraft, based on the spacecraft types.
+     * @param {Spacecraft} otherCraft
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isGoodAgainst = function (otherCraft) {
+        return this._class.getSpacecraftType().isGoodAgainst(otherCraft.getClass().getSpacecraftType());
+    };
+    /**
+     * Returns whether this spacecraft is supposed to be particularly non-effective against the passed spacecraft, based on the spacecraft
+     * types.
+     * @param {Spacecraft} otherCraft
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isBadAgainst = function (otherCraft) {
+        return this._class.getSpacecraftType().isBadAgainst(otherCraft.getClass().getSpacecraftType());
+    };
+    /**
      * Returns the (first) object view associated with this spacecraft that has the given name.
      * @param {String} name
      * @returns {ObjectView}
@@ -1679,6 +1696,14 @@ define([
      */
     Spacecraft.prototype.targetPreviousNearestHostile = function () {
         return this._targetingComputer.targetPreviousNearestHostile();
+    };
+    /**
+     * Targets the next hostile spacecraft, ordering the hostiles based on a complex evaluation of how fitting targets they are.
+     * (to be used by the AI)
+     * @returns {Boolean} Whether a new spacecraft has been targeted
+     */
+    Spacecraft.prototype.targetNextBestHostile = function () {
+        return this._targetingComputer.targetNextBestHostile();
     };
     /**
      * Targets the next non-hostile (friendly or neutral) spacecraft, ordering the hostiles based on the angle between the spacecraft's 

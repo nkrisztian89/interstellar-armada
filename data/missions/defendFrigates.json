@@ -132,6 +132,32 @@
                 "conditions": [{
                         "type": "destroyed",
                         "subjects": {
+                            "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["alpha"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
                             "teams": ["rebels"]
                         }
                     }

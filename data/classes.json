@@ -1931,14 +1931,14 @@
             "isFighterType": true,
             "fullName": "Interceptor",
             "description": "Interceptors are small, agile space fighters designed to counter enemy fighters and bombers. They are fast and maneuverable with light armor but often considerable firepower, which allows them to take out more heavily armored bombers. Interceptor designers utilize different approaches in their models to offer protection for them in the vicinity of larger enemy ships. However, it is generally highly recommended to stay out of range of enemy ships that have significant anti-fighter capabilities.",
-            "goodAgainst": ["reconFighter", "heavyFighter", "bomber"],
-            "badAgainst": ["corvette", "destroyer", "cruiser"]
+            "goodAgainst": ["interceptor", "reconFighter", "heavyFighter", "bomber"],
+            "badAgainst": ["corvette", "destroyer", "cruiser", "battleship"]
         }, {
             "name": "bomber",
             "isFighterType": true,
             "fullName": "Bomber",
             "description": "Bombers are small spacecraft usually manned by one or two pilots, designed as a cost effective solution against small and medium size warships. Their heavy armor and shielding enables them to survive long enough to deliver their large payload, either taking out critical systems or causing significant shield and hull damage to their target. The additional mass makes them less maneuverable and thus more vulnerable against enemy fighters.",
-            "goodAgainst": ["corvette", "frigate", "destroyer"],
+            "goodAgainst": ["torpedoBoat", "corvette", "frigate", "destroyer"],
             "badAgainst": ["reconFighter", "heavyFighter", "interceptor"]
         }, {
             "name": "reconFighter",
@@ -1966,7 +1966,7 @@
             "isFighterType": false,
             "fullName": "Corvette",
             "description": "Corvettes are the smallest and most lightly armored real warships of contemporary fleets. Due to the limited cargo capacity given their small hull, these ships cannot be sent on long missions alone. They are often found in local patrols and as escort ships in fleets, as their weaponry is usually most effective against fighters and bombers. They are not powerful enough to engage larger enemy warships but can provide supportive precision fire.",
-            "goodAgainst": ["reconFighter", "heavyFighter", "interceptor"],
+            "goodAgainst": ["reconFighter", "heavyFighter", "interceptor", "bomber", "torpedoBoat"],
             "badAgainst": ["frigate", "destroyer", "cruiser", "battleship"]
         }, {
             "name": "frigate",
@@ -1974,7 +1974,7 @@
             "fullName": "Frigate",
             "description": "Frigates are the first warships in size that are big enough to carry a cosiderable amount of supplies and mount devastating firepower. Due to this, their usual weapon arrangement focuses on getting most out of this fact and enables them to successully take on larger ships at the expence of worse defence against fighters, for which they rely on escort. Leading strike teams, these ships can be utilized for longer term missions, engaging critical targets ahead of the larger force, disrupting enemy supply lines or securing poorly defended sectors.",
             "goodAgainst": ["corvette", "destroyer", "cruiser"],
-            "badAgainst": ["heavyFighter", "bomber", "torpedoBoat"]
+            "badAgainst": ["reconFighter", "heavyFighter", "interceptor", "bomber", "torpedoBoat"]
         }, {
             "name": "destroyer",
             "isFighterType": false,
@@ -1988,7 +1988,7 @@
             "fullName": "Cruiser",
             "description": "Cruisers are currently the largest warships in service, representing the pinnacle of starship design and engineering. They are used as flagships of whole fleets, in the role of remote command center, base of operations for a sector or leading planetary sieges or defences. Their large size and advanced weaponry enables them to safely house a large amount of supplies, fighter craft, transports, ground assault forces or equipment and resources for establishing new planetary outposts. They have the strongest armor and shields and no compromises need to be taken when mounting them with anti-fighter and anti-ship weaponry. Due to their important role, they are also among the priority targets for the enemy and when battling a larger force, it is crucial to defend them well against torpedoes and anti-ship fire.",
             "goodAgainst": ["corvette", "destroyer"],
-            "badAgainst": ["torpedoBoat", "frigate", "battleship"]
+            "badAgainst": ["torpedoBoat"]
         }, {
             "name": "battleship",
             "isFighterType": false,
