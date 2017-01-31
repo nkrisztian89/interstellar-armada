@@ -219,16 +219,24 @@ define([
             this._controlledSpacecraft.toggleFlightAssist();
         }.bind(this));
         // switch to next hostile target
-        this.setActionFunction("nextHostileTarget", true, function () {
-            if (this._controlledSpacecraft.targetNextHostile()) {
+        this.setActionFunction("nextNearestHostileTarget", true, function () {
+            if (this._controlledSpacecraft.targetNextNearestHostile()) {
+                _targetSwitchSound.play();
+            } else {
+                _targetSwitchDeniedSound.play();
+            }
+        }.bind(this));
+        // switch to previous hostile target
+        this.setActionFunction("previousNearestHostileTarget", true, function () {
+            if (this._controlledSpacecraft.targetPreviousNearestHostile()) {
                 _targetSwitchSound.play();
             } else {
                 _targetSwitchDeniedSound.play();
             }
         }.bind(this));
         // switch to next target (any)
-        this.setActionFunction("nextNonHostileTarget", true, function () {
-            if (this._controlledSpacecraft.targetNextNonHostile()) {
+        this.setActionFunction("nextNearestNonHostileTarget", true, function () {
+            if (this._controlledSpacecraft.targetNextNearestNonHostile()) {
                 _targetSwitchSound.play();
             } else {
                 _targetSwitchDeniedSound.play();
@@ -346,7 +354,7 @@ define([
                 control.Controller.prototype.executeActions.call(this, triggeredActions);
                 // executing automatic actions
                 if (this._autoTargeting && !this._controlledSpacecraft.getTarget()) {
-                    if (this._controlledSpacecraft.targetNextHostile()) {
+                    if (this._controlledSpacecraft.targetNextNearestHostile()) {
                         _targetSwitchSound.play();
                     }
                 }

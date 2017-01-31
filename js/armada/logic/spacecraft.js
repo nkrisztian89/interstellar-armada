@@ -301,6 +301,11 @@ define([
          */
         this._weapons = null;
         /**
+         * The targeting computer equipped on this spacecraft.
+         * @type TargetingComputer
+         */
+        this._targetingComputer = null;
+        /**
          * While true, the spacecraft is not allowed to fire (for example during jump sequences)
          * @type Boolean
          */
@@ -321,23 +326,6 @@ define([
          * @type ManeuveringComputer
          */
         this._maneuveringComputer = null;
-        // ---------------------------------------
-        // targeting
-        /**
-         * The currently targeted spacecraft.
-         * @type Spacecraft
-         */
-        this._target = null;
-        /**
-         * The array of other spacecrafts that participate in the same simulation (can be targeted)
-         * @type Spacecraft[]
-         */
-        this._spacecraftArray = null;
-        /**
-         * Cached value of the estimated future target position where the spacecraft should fire to hit it.
-         * @type Number[3]
-         */
-        this._targetHitPosition = null;
         // ---------------------------------------
         // effects
         /**
@@ -471,6 +459,7 @@ define([
             }
         }.bind(this));
         this._weapons = [];
+        this._targetingComputer = new equipment.TargetingComputer(this, spacecraftArray);
         this._firingDisabled = false;
         this._maneuveringComputer = new equipment.ManeuveringComputer(this);
         this._blinkers = [];
@@ -482,7 +471,6 @@ define([
         if (equipmentProfileName) {
             this.equipProfile(this._class.getEquipmentProfile(equipmentProfileName));
         }
-        this._spacecraftArray = spacecraftArray || null;
         this._targetedBy = [];
         this._eventHandlers = {};
         this._team = null;
@@ -1000,14 +988,6 @@ define([
         if (dataJSON.away) {
             this.setAway(true);
         }
-    };
-    /**
-     * Sets a new spacecraft array which contains the other spacecrafts participating
-     * in the same simulation. Called by e.g. the Mission, when it adds the spacecrafts.
-     * @param {Spacecraft[]} spacecraftArray
-     */
-    Spacecraft.prototype.setSpacecraftArray = function (spacecraftArray) {
-        this._spacecraftArray = spacecraftArray;
     };
     /**
      * Translates the position of the spacecraft by the given vector.
@@ -1653,17 +1633,19 @@ define([
      * Sets up this spacecraft as being targeted by the passed spacecraft. (updating target reference list and executing the related callback)
      * @param {spacecraft} targetedBy
      */
-    Spacecraft.prototype._setBeingTargeted = function (targetedBy) {
-        this._targetedBy.push(targetedBy);
-        this.handleEvent(SpacecraftEvents.BEING_TARGETED, {
-            spacecraft: targetedBy
-        });
+    Spacecraft.prototype.setBeingTargeted = function (targetedBy) {
+        if (this._targetedBy) {
+            this._targetedBy.push(targetedBy);
+            this.handleEvent(SpacecraftEvents.BEING_TARGETED, {
+                spacecraft: targetedBy
+            });
+        }
     };
     /**
      * Sets up this spacecraft as not being targeted by the passed spacecraft anymore.
      * @param {Spacecraft} targetedBy
      */
-    Spacecraft.prototype._setBeingUntargeted = function (targetedBy) {
+    Spacecraft.prototype.setBeingUntargeted = function (targetedBy) {
         if (this._targetedBy) {
             this._targetedBy.splice(this._targetedBy.indexOf(targetedBy), 1);
         }
@@ -1680,95 +1662,38 @@ define([
      * @param {Spacecraft|null} target If null is given, the current target will be canceled.
      */
     Spacecraft.prototype.setTarget = function (target) {
-        var i, camConfigs;
-        if (target !== this._target) {
-            if (this._target) {
-                this._target._setBeingUntargeted(this);
-            }
-            this._target = target;
-            this._targetHitPosition = null;
-            if (this._visualModel) {
-                // set the target following views to follow the new target
-                camConfigs = this._visualModel.getNode().getCameraConfigurationsWithName(config.getSetting(config.BATTLE_SETTINGS.TARGET_VIEW_NAME));
-                for (i = 0; i < camConfigs.length; i++) {
-                    if (this._visualModel.getNode().getScene().getCamera().getConfiguration() === camConfigs[i]) {
-                        this._visualModel.getNode().getScene().getCamera().transitionToSameConfiguration(
-                                config.getSetting(config.BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_DURATION),
-                                config.getSetting(config.BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_STYLE));
-                    }
-                    camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : [], true);
-                }
-            }
-            if (this._target) {
-                this._target._setBeingTargeted(this);
-            }
-        }
+        this._targetingComputer.setTarget(target);
     };
     /**
-     * Targets the spacecraft that comes after the current target in the list of spacecrafts. Will not target self and will always mark the
-     * target as manual.
+     * Targets the next hostile spacecraft, ordering the hostiles based on the angle between the spacecraft's direction and the vector
+     * pointing to the hostile spacecraft
+     * @returns {Boolean} Whether a new spacecraft has been targeted
      */
-    Spacecraft.prototype.targetNext = function () {
-        var index;
-        if (this._spacecraftArray && (this._spacecraftArray.length > 0)) {
-            index = (this._spacecraftArray.indexOf(this._target) + 1) % this._spacecraftArray.length;
-            if (this._spacecraftArray[index] === this) {
-                index = (index + 1) % this._spacecraftArray.length;
-            }
-            if (this._spacecraftArray[index] !== this) {
-                this.setTarget(this._spacecraftArray[index]);
-            }
-        }
+    Spacecraft.prototype.targetNextNearestHostile = function () {
+        return this._targetingComputer.targetNextNearestHostile();
     };
     /**
-     * Targets the next hostile spacecraft in the lists of spacecrafts and marks it as a manual target.
-     * @returns {Boolean} Whether a hostile spacecraft has been targeted
+     * Targets the previous hostile spacecraft, ordering the hostiles based on the angle between the spacecraft's direction and the vector
+     * pointing to the hostile spacecraft
+     * @returns {Boolean} Whether a new spacecraft has been targeted
      */
-    Spacecraft.prototype.targetNextHostile = function () {
-        var index, count;
-        if (this._spacecraftArray && (this._spacecraftArray.length > 0)) {
-            index = (this._spacecraftArray.indexOf(this._target) + 1) % this._spacecraftArray.length;
-            count = 0;
-            while (count < this._spacecraftArray.length) {
-                if ((this._spacecraftArray[index] !== this) && (this._spacecraftArray[index].isHostile(this))) {
-                    this.setTarget(this._spacecraftArray[index]);
-                    return true;
-                }
-                index = (index + 1) % this._spacecraftArray.length;
-                count++;
-            }
-        }
-        return false;
+    Spacecraft.prototype.targetPreviousNearestHostile = function () {
+        return this._targetingComputer.targetPreviousNearestHostile();
     };
     /**
-     * Targets the next non-hostile (friendly or neutral) spacecraft in the lists of spacecrafts and marks it as a manual target.
-     * @returns {Boolean} Whether a non-hostile spacecraft has been targeted
+     * Targets the next non-hostile (friendly or neutral) spacecraft, ordering the hostiles based on the angle between the spacecraft's 
+     * direction and the vector pointing to the hostile spacecraft
+     * @returns {Boolean} Whether a new spacecraft has been targeted
      */
-    Spacecraft.prototype.targetNextNonHostile = function () {
-        var index, count;
-        if (this._spacecraftArray && (this._spacecraftArray.length > 0)) {
-            index = (this._spacecraftArray.indexOf(this._target) + 1) % this._spacecraftArray.length;
-            count = 0;
-            while (count < this._spacecraftArray.length) {
-                if ((this._spacecraftArray[index] !== this) && (!this._spacecraftArray[index].isHostile(this))) {
-                    this.setTarget(this._spacecraftArray[index]);
-                    return true;
-                }
-                index = (index + 1) % this._spacecraftArray.length;
-                count++;
-            }
-        }
-        return false;
+    Spacecraft.prototype.targetNextNearestNonHostile = function () {
+        return this._targetingComputer.targetNextNearestNonHostile();
     };
     /**
      * Returns the currently targeted spacecraft.
      * @returns {Spacecraft|null}
      */
     Spacecraft.prototype.getTarget = function () {
-        if (this._target && (this._target.canBeReused() || this._target.isAway())) {
-            this.setTarget(null);
-        }
-        return this._target;
+        return this._targetingComputer.getTarget();
     };
     /**
      * Returns the estimated position towards which the spacecraft needs to fire to hit its current target in case both itself and the 
@@ -1776,33 +1701,7 @@ define([
      * @returns {Number[3]}
      */
     Spacecraft.prototype.getTargetHitPosition = function () {
-        var
-                position, targetPosition,
-                relativeTargetVelocity,
-                projectileSpeed,
-                a, b, c, i, hitTime;
-        if (!this._targetHitPosition) {
-            position = this.getPhysicalPositionVector();
-            targetPosition = this._target.getPhysicalPositionVector();
-            relativeTargetVelocity = vec.diff3(mat.translationVector3(this._target.getVelocityMatrix()), mat.translationVector3(this.getVelocityMatrix()));
-            projectileSpeed = this._weapons[0].getProjectileVelocity();
-            a = projectileSpeed * projectileSpeed - (relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
-            b = 0;
-            for (i = 0; i < 3; i++) {
-                b += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
-            }
-            c = 0;
-            for (i = 0; i < 3; i++) {
-                c += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
-            }
-            hitTime = utils.getGreaterSolutionOfQuadraticEquation(a, b, c);
-            this._targetHitPosition = [
-                targetPosition[0] + hitTime * relativeTargetVelocity[0],
-                targetPosition[1] + hitTime * relativeTargetVelocity[1],
-                targetPosition[2] + hitTime * relativeTargetVelocity[2]
-            ];
-        }
-        return this._targetHitPosition;
+        return this._targetingComputer.getTargetHitPosition();
     };
     /**
      * 
@@ -1927,12 +1826,12 @@ define([
      * @param {Number} dt the elapsed time since the last simulation step, based on which the amount of rotation will be calculated.
      */
     Spacecraft.prototype.aimWeapons = function (turnThreshold, fireThreshold, dt) {
-        var futureTargetPosition, i;
-        if (this._target && (this._weapons.length > 0)) {
+        var futureTargetPosition, i, target = this.getTarget();
+        if (target && (this._weapons.length > 0)) {
             futureTargetPosition = this.getTargetHitPosition();
         }
         for (i = 0; i < this._weapons.length; i++) {
-            if (this._target && !this._firingDisabled) {
+            if (target && !this._firingDisabled) {
                 this._weapons[i].aimTowards(futureTargetPosition, turnThreshold, fireThreshold, this.getScaledOriMatrix(), dt);
             } else {
                 this._weapons[i].rotateToDefaultPosition(turnThreshold, dt);
@@ -2051,9 +1950,7 @@ define([
             return;
         }
         params = params || Spacecraft.DEFAULT_SIMULATE_PARAMS;
-        if (this._target && (this._target.canBeReused() || this._target.isAway())) {
-            this.setTarget(null);
-        }
+        this._targetingComputer.simulate(dt);
         // update the sound source position - will be used either way (for the explosion or for hum / thrusters / weapons... )
         p = this._getSoundSourcePosition();
         this.getSoundSource().setPosition(p[0], p[1], p[2]);
@@ -2113,7 +2010,6 @@ define([
             }
         }
         this._physicalModel.simulate(dt);
-        this._targetHitPosition = null;
         this._relativeVelocityMatrix = null;
         this._turningMatrix = null;
         this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
@@ -2174,9 +2070,10 @@ define([
             this._maneuveringComputer.destroy();
             this._maneuveringComputer = null;
         }
-        this._spacecraftArray = null;
-        this._target = null;
-        this._targetHitPosition = null;
+        if (this._targetingComputer) {
+            this._targetingComputer.destroy();
+            this._targetingComputer = null;
+        }
         this._targetedBy = null;
         this._eventHandlers = null;
         this._explosion = null; // do not destroy the explosion - it might still be animating!

@@ -886,6 +886,14 @@ define([
             values: camera.Camera.prototype.TransitionStyle
         },
         /**
+         * The amount of time while the same order in which targets are cycled through is kept valid, in milliseconds.
+         * If the player is switching to the next target after this time has elapsed, a new target order is established.
+         */
+        TARGET_ORDER_DURATION: {
+            name: "targetOrderDuration",
+            type: "number"
+        },
+        /**
          * When preparing to jump out with the piloted spacecraft, the camera will switch to the spacecraft's first view (camera 
          * configuration) with this name, if any.
          */

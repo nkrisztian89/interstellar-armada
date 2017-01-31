@@ -172,6 +172,7 @@
             "targetViewName": "target",
             "targetChangeTransitonDuration": 300,
             "targetChangeTransitionStyle": "smooth",
+            "targetOrderDuration": 750,
             "jumpPrepareViewName": "jump",
             "jumpOutViewName": "flyby",
             "gameStateDisplayDelay": 2000,
@@ -759,10 +760,10 @@
                         "action": "fire",
                         "key": "space"
                     }, {
-                        "action": "nextHostileTarget",
+                        "action": "nextNearestHostileTarget",
                         "key": "T"
                     }, {
-                        "action": "nextNonHostileTarget",
+                        "action": "nextNearestNonHostileTarget",
                         "key": "Z"
                     }, {
                         "action": "toggleAutoTargeting",
@@ -935,7 +936,13 @@
                         "action": "fire",
                         "button": "left"
                     }, {
-                        "action": "nextHostileTarget",
+                        "action": "nextNearestHostileTarget",
+                        "scroll": "down"
+                    }, {
+                        "action": "previousNearestHostileTarget",
+                        "scroll": "up"
+                    }, {
+                        "action": "nextNearestNonHostileTarget",
                         "button": "middle"
                     }, {
                         "action": "yawLeft",
@@ -989,7 +996,7 @@
                         "action": "fire",
                         "button": 0
                     }, {
-                        "action": "nextHostileTarget",
+                        "action": "nextNearestHostileTarget",
                         "button": 1
                     }, {
                         "action": "yawLeft",

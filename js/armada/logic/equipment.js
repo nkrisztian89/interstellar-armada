@@ -10,6 +10,7 @@
 /*global define, Element, Float32Array, performance */
 
 /**
+ * @param utils Used for solving quadratic equations
  * @param vec Vector operations are needed for several logic functions
  * @param mat Matrices are widely used for 3D simulation
  * @param application Used for file loading and logging functionality
@@ -28,6 +29,7 @@
  * @param explosion Used to create explosion for e.g. hits
  */
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -46,7 +48,7 @@ define([
     "armada/logic/explosion",
     "utils/polyfill"
 ], function (
-        vec, mat,
+        utils, vec, mat,
         application, managedGL, physics, resources, pools,
         renderableObjects, lights, sceneGraph,
         graphics, classes, SpacecraftEvents, config,
@@ -1029,6 +1031,321 @@ define([
             this._visualModel.markAsReusable();
         }
         this._visualModel = null;
+    };
+    // #########################################################################
+    /**
+     * @class The targeting computer keeps track of all targeting related data and performs targeting related tasks for the spacecraft it
+     * is equipped on.
+     * @param {Spacecraft} spacecraft The spacecraft this computer is equipped on
+     * @param {Spacecraft[]} spacecraftArray The list of spacecrafts from which this computer can choose its target
+     */
+    function TargetingComputer(spacecraft, spacecraftArray) {
+        /**
+         * The spacecraft this computer is equipped on
+         * @type Spacecraft
+         */
+        this._spacecraft = spacecraft;
+        /**
+         * The currently targeted spacecraft.
+         * @type Spacecraft
+         */
+        this._target = null;
+        /**
+         * The list of spacecrafts from which this computer can choose its target
+         * @type Spacecraft[]
+         */
+        this._spacecraftArray = spacecraftArray || null;
+        /**
+         * Cached value of the estimated future target position where the spacecraft should fire to hit it.
+         * @type Number[3]
+         */
+        this._targetHitPosition = null;
+        /**
+         * A cached list of hostile targets from the list, ordered based on how much the spacecrat needs to turn to face them
+         * @type Spacecraft[]
+         */
+        this._orderedHostileTargets = null;
+        /**
+         * A cached list of non-hostile targets from the list, ordered based on how much the spacecrat needs to turn to face them
+         * @type Spacecraft[]
+         */
+        this._orderedNonHostileTargets = null;
+        /**
+         * The amount of time while the current ordered hostile list is still valid and should be used for cycling targets, in milliseconds
+         * @type Number
+         */
+        this._timeUntilHostileOrderReset = 0;
+        /**
+         * The amount of time while the current ordered non-hostile list is still valid and should be used for cycling targets, in milliseconds
+         * @type Number
+         */
+        this._timeUntilNonHostileOrderReset = 0;
+    }
+    /**
+     * Targets the given spacecraft and executes related operations, such as changing target views. 
+     * @param {Spacecraft|null} target If null is given, the current target will be canceled.
+     */
+    TargetingComputer.prototype.setTarget = function (target) {
+        var i, camConfigs, node, camera;
+        if (target !== this._target) {
+            if (this._target) {
+                this._target.setBeingUntargeted(this._spacecraft);
+            }
+            this._target = target;
+            this._targetHitPosition = null;
+            if (this._spacecraft.getVisualModel()) {
+                node = this._spacecraft.getVisualModel().getNode();
+                camera = node.getScene().getCamera();
+                // set the target following views to follow the new target
+                camConfigs = node.getCameraConfigurationsWithName(config.getSetting(config.BATTLE_SETTINGS.TARGET_VIEW_NAME));
+                for (i = 0; i < camConfigs.length; i++) {
+                    if (camera.getConfiguration() === camConfigs[i]) {
+                        camera.transitionToSameConfiguration(
+                                config.getSetting(config.BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_DURATION),
+                                config.getSetting(config.BATTLE_SETTINGS.TARGET_CHANGE_TRANSITION_STYLE));
+                    }
+                    camConfigs[i].setOrientationFollowedObjects(this._target ? [this._target.getVisualModel()] : [], true);
+                }
+            }
+            if (this._target) {
+                this._target.setBeingTargeted(this._spacecraft);
+            }
+        }
+    };
+    /**
+     * Used to filter the potential target list to include only hostiles
+     * @param {Spacecraft} craft
+     * @returns {unresolved}
+     */
+    TargetingComputer.prototype._filterHostileTarget = function (craft) {
+        return this._spacecraft.isHostile(craft);
+    };
+    /**
+     * Used to filter the potential target list to include only non-hostiles
+     * @param {Spacecraft} craft
+     * @returns {Boolean}
+     */
+    TargetingComputer.prototype._filterNonHostileTarget = function (craft) {
+        return (craft !== this._spacecraft) && !this._spacecraft.isHostile(craft);
+    };
+    /**
+     * @typedef {Object} TargetingComputer~MappedTarget
+     * @property {Number} index 
+     * @property {Number} value 
+     */
+    /**
+     * Maps the passed spacecraft to an object that contains a numeric value based on which it should be placed in the ordered target list
+     * (ascending), as well as includes the passed, original index in the object
+     * @param {Spacecraft} craft
+     * @param {Number} index
+     * @returns {TargetingComputer~MappedTarget}
+     */
+    TargetingComputer.prototype._mapTarget = function (craft, index) {
+        return {
+            index: index,
+            value: vec.angle3u(
+                    mat.getRowB43(this._spacecraft.getPhysicalOrientationMatrix()),
+                    vec.normal3(vec.diff3(
+                            craft.getPhysicalPositionVector(), this._spacecraft.getPhysicalPositionVector())))
+        };
+    };
+    /**
+     * Can be used for sorting the list of mapped target objects
+     * @param {TargetingComputer~MappedTarget} first
+     * @param {TargetingComputer~MappedTarget} second
+     * @returns {Number}
+     */
+    TargetingComputer._compareMappedTargets = function (first, second) {
+        return first.value - second.value;
+    };
+    /**
+     * If the current cached ordered hostile target list is not valid, created a new ordered list based on the current game state.
+     * @returns {Boolean} Whether the list was updated
+     */
+    TargetingComputer.prototype._updateHostileOrder = function () {
+        var filteredTargets, orderedMappedTargets, i;
+        if ((this._timeUntilHostileOrderReset <= 0) && this._spacecraftArray) {
+            filteredTargets = this._spacecraftArray.filter(this._filterHostileTarget, this);
+            orderedMappedTargets = filteredTargets.map(this._mapTarget, this).sort(TargetingComputer._compareMappedTargets);
+            this._orderedHostileTargets = [];
+            for (i = 0; i < orderedMappedTargets.length; i++) {
+                this._orderedHostileTargets.push(filteredTargets[orderedMappedTargets[i].index]);
+            }
+            return true;
+        }
+        return false;
+    };
+    /**
+     * If the current cached ordered non-hostile target list is not valid, created a new ordered list based on the current game state.
+     * @returns {Boolean} Whether the list was updated
+     */
+    TargetingComputer.prototype._updateNonHostileOrder = function () {
+        var filteredTargets, orderedMappedTargets, i;
+        if ((this._timeUntilNonHostileOrderReset <= 0) && this._spacecraftArray) {
+            filteredTargets = this._spacecraftArray.filter(this._filterNonHostileTarget, this);
+            orderedMappedTargets = filteredTargets.map(this._mapTarget, this).sort(TargetingComputer._compareMappedTargets);
+            this._orderedNonHostileTargets = [];
+            for (i = 0; i < orderedMappedTargets.length; i++) {
+                this._orderedNonHostileTargets.push(filteredTargets[orderedMappedTargets[i].index]);
+            }
+            return true;
+        }
+        return false;
+    };
+    /**
+     * Can be used to check whether a target chosen from one of the cached ordered list is a valid new target
+     * @param {Spacecraft} craft
+     * @returns {Boolean}
+     */
+    TargetingComputer.prototype._isValidNewTarget = function (craft) {
+        // the game state might have changed, since the ordered list was cached, so check if the craft is still alive and present
+        return craft.isAlive() && !craft.isAway() && (craft !== this._target);
+    };
+    /**
+     * Targets the next hostile spacecraft, ordering the hostiles based on the angle between the spacecraft's direction and the vector
+     * pointing to the hostile spacecraft
+     * @returns {Boolean} Whether a new spacecraft has been targeted
+     */
+    TargetingComputer.prototype.targetNextNearestHostile = function () {
+        var index, count, length, newOrder = this._updateHostileOrder();
+        if (this._orderedHostileTargets && (this._orderedHostileTargets.length > 0)) {
+            // the game state might have changed since the ordered list was updated, so check until we find a still valid target
+            length = this._orderedHostileTargets.length;
+            index = newOrder ? 0 : (this._orderedHostileTargets.indexOf(this._target) + 1) % length;
+            count = 0;
+            if ((count < length) && !this._isValidNewTarget(this._orderedHostileTargets[index])) {
+                index = (index + 1) % length;
+                count++;
+            }
+            if (count < length) {
+                this.setTarget(this._orderedHostileTargets[index]);
+                this._timeUntilHostileOrderReset = config.getSetting(config.BATTLE_SETTINGS.TARGET_ORDER_DURATION);
+                return true;
+            }
+        }
+        this._timeUntilHostileOrderReset = 0;
+        return false;
+    };
+    /**
+     * Targets the previous hostile spacecraft, ordering the hostiles based on the angle between the spacecraft's direction and the vector
+     * pointing to the hostile spacecraft
+     * @returns {Boolean} Whether a new spacecraft has been targeted
+     */
+    TargetingComputer.prototype.targetPreviousNearestHostile = function () {
+        var index, count, length, newOrder = this._updateHostileOrder();
+        if (this._orderedHostileTargets && (this._orderedHostileTargets.length > 0)) {
+            // the game state might have changed since the ordered list was updated, so check until we find a still valid target
+            length = this._orderedHostileTargets.length;
+            index = newOrder ? (length - 1) : (this._orderedHostileTargets.indexOf(this._target) + length - 1) % length;
+            count = 0;
+            if ((count < length) && !this._isValidNewTarget(this._orderedHostileTargets[index])) {
+                index = (index + length - 1) % length;
+                count++;
+            }
+            if (count < length) {
+                this.setTarget(this._orderedHostileTargets[index]);
+                this._timeUntilHostileOrderReset = config.getSetting(config.BATTLE_SETTINGS.TARGET_ORDER_DURATION);
+                return true;
+            }
+        }
+        this._timeUntilHostileOrderReset = 0;
+        return false;
+    };
+    /**
+     * Targets the next non-hostile (friendly or neutral) spacecraft, ordering the hostiles based on the angle between the spacecraft's 
+     * direction and the vector pointing to the hostile spacecraft
+     * @returns {Boolean} Whether a new spacecraft has been targeted
+     */
+    TargetingComputer.prototype.targetNextNearestNonHostile = function () {
+        var index, count, length, newOrder = this._updateNonHostileOrder();
+        if (this._orderedNonHostileTargets && (this._orderedNonHostileTargets.length > 0)) {
+            // the game state might have changed since the ordered list was updated, so check until we find a still valid target
+            length = this._orderedNonHostileTargets.length;
+            index = newOrder ? 0 : (this._orderedNonHostileTargets.indexOf(this._target) + 1) % length;
+            count = 0;
+            if ((count < length) && !this._isValidNewTarget(this._orderedNonHostileTargets[index])) {
+                index = (index + 1) % length;
+                count++;
+            }
+            if (count < length) {
+                this.setTarget(this._orderedNonHostileTargets[index]);
+                this._timeUntilNonHostileOrderReset = config.getSetting(config.BATTLE_SETTINGS.TARGET_ORDER_DURATION);
+                return true;
+            }
+        }
+        this._timeUntilNonHostileOrderReset = 0;
+        return false;
+    };
+    /**
+     * Returns the currently targeted spacecraft.
+     * @returns {Spacecraft|null}
+     */
+    TargetingComputer.prototype.getTarget = function () {
+        if (this._target && (this._target.canBeReused() || this._target.isAway())) {
+            this.setTarget(null);
+        }
+        return this._target;
+    };
+    /**
+     * Returns the estimated position towards which the spacecraft needs to fire to hit its current target in case both itself and the 
+     * target retain their current velocity, based on the speed of the projectile fired from the first barrel of the first equipped weapon.
+     * @returns {Number[3]}
+     */
+    TargetingComputer.prototype.getTargetHitPosition = function () {
+        var
+                position, targetPosition,
+                relativeTargetVelocity,
+                projectileSpeed,
+                a, b, c, i, hitTime;
+        if (!this._targetHitPosition) {
+            position = this._spacecraft.getPhysicalPositionVector();
+            targetPosition = this._target.getPhysicalPositionVector();
+            relativeTargetVelocity = vec.diff3(mat.translationVector3(this._target.getVelocityMatrix()), mat.translationVector3(this._spacecraft.getVelocityMatrix()));
+            projectileSpeed = this._spacecraft.getWeapons()[0].getProjectileVelocity();
+            a = projectileSpeed * projectileSpeed - (relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
+            b = 0;
+            for (i = 0; i < 3; i++) {
+                b += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
+            }
+            c = 0;
+            for (i = 0; i < 3; i++) {
+                c += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
+            }
+            hitTime = utils.getGreaterSolutionOfQuadraticEquation(a, b, c);
+            this._targetHitPosition = [
+                targetPosition[0] + hitTime * relativeTargetVelocity[0],
+                targetPosition[1] + hitTime * relativeTargetVelocity[1],
+                targetPosition[2] + hitTime * relativeTargetVelocity[2]
+            ];
+        }
+        return this._targetHitPosition;
+    };
+    /**
+     * Updates the internal state of the computer for the current simulation step
+     * @param {Number} dt The time elapsed since the last simulation step, in milliseconds
+     */
+    TargetingComputer.prototype.simulate = function (dt) {
+        if (this._target && (this._target.canBeReused() || this._target.isAway())) {
+            this.setTarget(null);
+        }
+        this._targetHitPosition = null;
+        if (this._timeUntilHostileOrderReset > 0) {
+            this._timeUntilHostileOrderReset -= dt;
+        }
+        if (this._timeUntilNonHostileOrderReset > 0) {
+            this._timeUntilNonHostileOrderReset -= dt;
+        }
+    };
+    /**
+     * Removes all references from this object
+     */
+    TargetingComputer.prototype.destroy = function () {
+        this._spacecraft = null;
+        this._spacecraftArray = null;
+        this._target = null;
+        this._targetHitPosition = null;
+        this._orderedHostileTargets = null;
+        this._orderedNonHostileTargets = null;
     };
     // #########################################################################
     /**
@@ -2298,6 +2615,7 @@ define([
         FlightMode: FlightMode,
         Projectile: Projectile,
         Weapon: Weapon,
+        TargetingComputer: TargetingComputer,
         Propulsion: Propulsion,
         JumpEngine: JumpEngine,
         ManeuveringComputer: ManeuveringComputer
