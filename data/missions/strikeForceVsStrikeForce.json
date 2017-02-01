@@ -1,0 +1,317 @@
+{
+    "description": "Two strike forces of equal strength - three interceptors, three bombers and three small warships on each side - are about to battle. Be the pilot who makes the difference!",
+    "environment": {
+        "createFrom": "crescent_blueGasGiant"
+    },
+    "teams": [
+        "empire",
+        {
+            "name": "rebels",
+            "color": [0.2, 0.2, 0.8, 1.0]
+        }
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, -500, 280],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -70
+                }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["Danube", "Vistula"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "list": ["Tigris", "Ganges", "Volga"],
+                            "priority": true
+                        }
+                    }
+                }, {
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["Tigris", "Ganges"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "list": ["Danube", "Vistula", "Ohio"],
+                            "priority": true
+                        }
+                    }
+                }]
+        }, 
+        {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "teams": ["rebels"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 45000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "teams": ["empire"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "teams": ["empire"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 45000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "teams": ["rebels"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "alpha",
+                "index": 1
+            },
+            "position": [-100, 0, 10]
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "squad": {
+                "name": "alpha",
+                "index": 2
+            },
+            "position": [-65, -35, 20]
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "alpha",
+                "index": 3
+            },
+            "position": [-135, -35, 20]
+        },
+        {
+            "team": "empire",
+            "class": "viper",
+            "ai": "fighter",
+            "squad": {
+                "name": "beta",
+                "index": 1
+            },
+            "position": [100, 0, 10]
+        },
+        {
+            "team": "empire",
+            "class": "viper",
+            "ai": "fighter",
+            "squad": {
+                "name": "beta",
+                "index": 2
+            },
+            "position": [135, -35, 20]
+        },
+        {
+            "team": "empire",
+            "class": "viper",
+            "ai": "fighter",
+            "squad": {
+                "name": "beta",
+                "index": 3
+            },
+            "position": [65, -35, 20]
+        },
+        {
+            "team": "empire",
+            "class": "aries",
+            "name": "Ohio",
+            "ai": "ship",
+            "position": [0, 50, 0],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "empire",
+            "class": "taurus",
+            "name": "Danube",
+            "ai": "ship",
+            "position": [-200, -50, 100]
+        },
+        {
+            "team": "empire",
+            "class": "taurus",
+            "name": "Vistula",
+            "ai": "ship",
+            "position": [200, -50, 100]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "serpent",
+                "index": 1
+            },
+            "position": [100, 5000, 10]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "serpent",
+                "index": 2
+            },
+            "position": [65, 5035, 20],
+            "rotations": [{
+                    "axis": "z",
+                    "degrees": 180
+                }]
+        },
+        {
+            "team": "rebels",
+            "class": "falcon",
+            "ai": "fighter",
+            "squad": {
+                "name": "serpent",
+                "index": 3
+            },
+            "position": [135, 5035, 20],
+            "rotations": [{
+                    "axis": "z",
+                    "degrees": 180
+                }]
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "ai": "fighter",
+            "squad": {
+                "name": "phantom",
+                "index": 1
+            },
+            "position": [-100, 5000, 10],
+            "rotations": [{
+                    "axis": "z",
+                    "degrees": 180
+                }]
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "ai": "fighter",
+            "squad": {
+                "name": "phantom",
+                "index": 2
+            },
+            "position": [-135, 5035, 20],
+            "rotations": [{
+                    "axis": "z",
+                    "degrees": 180
+                }]
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "ai": "fighter",
+            "squad": {
+                "name": "phantom",
+                "index": 3
+            },
+            "position": [-65, 5035, 20],
+            "rotations": [{
+                    "axis": "z",
+                    "degrees": 180
+                }]
+        },
+        {
+            "team": "rebels",
+            "class": "aries",
+            "name": "Volga",
+            "ai": "ship",
+            "position": [0, 4950, 0],
+            "rotations": [{
+                    "axis": "z",
+                    "degrees": 180
+                }],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "taurus",
+            "name": "Tigris",
+            "ai": "ship",
+            "position": [200, 5050, 100],
+            "rotations": [{
+                    "axis": "z",
+                    "degrees": 180
+                }]
+        },
+        {
+            "team": "rebels",
+            "class": "taurus",
+            "name": "Ganges",
+            "ai": "ship",
+            "position": [-200, 5050, 100],
+            "rotations": [{
+                    "axis": "z",
+                    "degrees": 180
+                }]
+        }
+    ]
+}

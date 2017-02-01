@@ -176,6 +176,9 @@
         "patrolVsPatrol": {
             "name": "Patrol vs patrol"
         },
+        "strikeForceVsStrikeForce": {
+            "name": "Strike force battle"
+        },
         "defendFrigates": {
             "name": "Defend the frigates",
             "messages": {

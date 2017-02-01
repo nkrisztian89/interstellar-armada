@@ -202,6 +202,9 @@
         "patrolVsPatrol": {
             "name": "Őrjárat őrjárat ellen"
         },
+        "strikeForceVsStrikeForce": {
+            "name": "Hajóraj összecsapás"
+        },
         "defendFrigates": {
             "name": "Védd meg a fregattokat",
             "messages": {
