@@ -797,7 +797,7 @@
                         "key": "F"
                     }, {
                         "action": "resetSpeed",
-                        "key": "0"
+                        "key": "X"
                     }, {
                         "action": "controlCamera",
                         "key": "shift"
