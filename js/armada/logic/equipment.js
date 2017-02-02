@@ -1369,13 +1369,18 @@ define([
         var
                 position, targetPosition,
                 relativeTargetVelocity,
+                weapons,
                 projectileSpeed,
                 a, b, c, i, hitTime;
         if (!this._targetHitPosition) {
-            position = this._spacecraft.getPhysicalPositionVector();
             targetPosition = this._target.getPhysicalPositionVector();
+            weapons = this._spacecraft.getWeapons();
+            if (weapons.length === 0) {
+                return targetPosition;
+            }
+            position = this._spacecraft.getPhysicalPositionVector();
             relativeTargetVelocity = vec.diff3(mat.translationVector3(this._target.getVelocityMatrix()), mat.translationVector3(this._spacecraft.getVelocityMatrix()));
-            projectileSpeed = this._spacecraft.getWeapons()[0].getProjectileVelocity();
+            projectileSpeed = weapons[0].getProjectileVelocity();
             a = projectileSpeed * projectileSpeed - (relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
             b = 0;
             for (i = 0; i < 3; i++) {

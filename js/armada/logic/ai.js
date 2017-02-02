@@ -209,6 +209,11 @@ define([
              */
             EVASIVE_MANEUVER_DURATION = 1000,
             /**
+             * Fighters will update the offset vector they use to aim at their target in this interval, in milliseconds.
+             * @type Number
+             */
+            TARGET_OFFSET_UPDATE_INTERVAL = 1500,
+            /**
              * When attacking an enemy, ships will approach their targets to at least the distance that is their weapon range
              * multiplied by this factor.
              * @type Number
@@ -760,6 +765,17 @@ define([
          * @type Boolean
          */
         this._targetDistance = 0;
+        /**
+         * When aiming at the target, this regularly (but not continuously) updated offset vector is used to compensate for (approximate) 
+         * its movement
+         * @type Array
+         */
+        this._targetOffset = [0, 0, 0];
+        /**
+         * Countdown timer for when to update the stored target offset vector. In milliseconds.
+         * @type Number
+         */
+        this._targetOffsetUpdateTimeLeft = 0;
         // attaching handlers to the various spacecraft events
         this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
         this._spacecraft.setEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
@@ -781,6 +797,8 @@ define([
         this._maxDistanceFactor = BASE_MAX_DISTANCE_FACTOR;
         this._isBlockedBy = null;
         this._rollTime = -1;
+        this._targetOffset = [0, 0, 0];
+        this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
     };
     /**
      * @override
@@ -930,8 +948,16 @@ define([
                 // attacking current target
             } else if (target) {
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                // in any other case, setting up variables
+                // setting up variables
                 targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
+                // updating target offset, if it is time
+                if (this._targetOffsetUpdateTimeLeft <= 0) {
+                    this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
+                    this._targetOffset = vec.diff3(this._spacecraft.getTargetHitPosition(), targetPositionVector);
+                } else {
+                    this._targetOffsetUpdateTimeLeft -= dt;
+                }
+                vec.add3(targetPositionVector, this._targetOffset);
                 vectorToTarget = vec.diff3(targetPositionVector, positionVector);
                 relativeTargetDirection = vec.mulVec3Mat4(
                         vectorToTarget,
