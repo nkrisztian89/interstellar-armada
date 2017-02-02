@@ -209,6 +209,28 @@ define([
              * @type AudioContext
              */
             _context;
+    // ----------------------------------------------------------------------
+    // Private functions
+    /**
+     * Ramps the gain of the passed node
+     * @param {GainNode} gainNode
+     * @param {Number} volume The target value to change to
+     * @param {Number} [duration=DEFAULT_RAMP_DURATION] The duration of the ramp, in seconds
+     * @param {Boolean} [onlyIfDifferent=false] If true, then the ramp will not be applied in case a ramp is already in progress towards the
+     * same value.
+     * @param {Boolean} [exponential=false] If true, an exponential instead of linear ramp will be used, and the duration will be interpreted
+     * as decay time instead
+     */
+    function _rampVolume(gainNode, volume, duration, exponential) {
+        var currentTime = _context.currentTime;
+        gainNode.gain.cancelScheduledValues(currentTime);
+        gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
+        if (exponential) {
+            gainNode.gain.setTargetAtTime(volume, currentTime, duration || DEFAULT_RAMP_DURATION);
+        } else {
+            gainNode.gain.linearRampToValueAtTime(volume, currentTime + (duration || DEFAULT_RAMP_DURATION));
+        }
+    }
     // ##############################################################################
     /**
      * @class
@@ -472,16 +494,8 @@ define([
      * as decay time instead
      */
     SoundClip.prototype.rampVolume = function (volume, duration, onlyIfDifferent, exponential) {
-        var currentTime;
         if (this._gainNode && (!onlyIfDifferent || (this._volume !== volume))) {
-            currentTime = _context.currentTime;
-            this._gainNode.gain.cancelScheduledValues(currentTime);
-            this._gainNode.gain.setValueAtTime(this._gainNode.gain.value, currentTime);
-            if (exponential) {
-                this._gainNode.gain.setTargetAtTime(volume, currentTime, duration || DEFAULT_RAMP_DURATION);
-            } else {
-                this._gainNode.gain.linearRampToValueAtTime(volume, currentTime + (duration || DEFAULT_RAMP_DURATION));
-            }
+            _rampVolume(this._gainNode, volume, duration, exponential);
         }
         this._volume = volume;
     };
@@ -587,10 +601,16 @@ define([
     };
     /**
      * Stops the playback of the sound (useful mostly for looping sounds)
+     * @param {Number} [rampDuration=0] If given the volume will be ramped to 0 for this duration before stopping, in seconds
      */
-    SoundClip.prototype.stopPlaying = function () {
+    SoundClip.prototype.stopPlaying = function (rampDuration) {
         if (this._sourceNode) {
-            this._sourceNode.stop();
+            if (rampDuration) {
+                this.rampVolume(0, rampDuration);
+                setTimeout(this._sourceNode.stop.bind(this._sourceNode), rampDuration * 1000);
+            } else {
+                this._sourceNode.stop();
+            }
         }
     };
     /**
@@ -644,30 +664,50 @@ define([
     /**
      * Sets a master volume applied to all sound effects.
      * @param {Number} value
+     * @param {Number} [duration=0] If given, the volume will be ramped for this duration, in seconds
      */
-    function setEffectVolume(value) {
-        _effectGain.gain.value = value;
+    function setEffectVolume(value, duration) {
+        if (duration) {
+            _rampVolume(_effectGain, value, duration);
+        } else {
+            _effectGain.gain.value = value;
+        }
     }
     /**
      * Sets a master volume applied to music.
      * @param {Number} value
+     * @param {Number} [duration=0] If given, the volume will be ramped for this duration, in seconds
      */
-    function setMusicVolume(value) {
-        _musicGain.gain.value = value;
+    function setMusicVolume(value, duration) {
+        if (duration) {
+            _rampVolume(_musicGain, value, duration);
+        } else {
+            _musicGain.gain.value = value;
+        }
     }
     /**
      * Sets a master volume applied to UI sounds.
      * @param {Number} value
+     * @param {Number} [duration=0] If given, the volume will be ramped for this duration, in seconds
      */
-    function setUIVolume(value) {
-        _uiGain.gain.value = value;
+    function setUIVolume(value, duration) {
+        if (duration) {
+            _rampVolume(_uiGain, value, duration);
+        } else {
+            _uiGain.gain.value = value;
+        }
     }
     /**
      * Sets a master volume applied to all sounds.
      * @param {Number} value
+     * @param {Number} [duration=0] If given, the volume will be ramped for this duration, in seconds
      */
-    function setMasterVolume(value) {
-        _masterGain.gain.value = value;
+    function setMasterVolume(value, duration) {
+        if (duration) {
+            _rampVolume(_masterGain, value, duration);
+        } else {
+            _masterGain.gain.value = value;
+        }
     }
     // -------------------------------------------------------------------------
     // Initizalization

@@ -22,6 +22,7 @@
  * @param lights Used for creating light sources for game objects
  * @param sceneGraph Creating and managing the scene graph for visual simulation is done using this module
  * @param graphics Used to access graphics settings
+ * @param audio Used to access constants
  * @param config Used to access game settings/configuration
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param SpacecraftEvents Used to call spacecraft events handlers for events triggered by equipment
@@ -41,6 +42,7 @@ define([
     "modules/scene/lights",
     "modules/scene/scene-graph",
     "armada/graphics",
+    "armada/audio",
     "armada/logic/classes",
     "armada/logic/SpacecraftEvents",
     "armada/configuration",
@@ -51,7 +53,7 @@ define([
         utils, vec, mat,
         application, managedGL, physics, resources, pools,
         renderableObjects, lights, sceneGraph,
-        graphics, classes, SpacecraftEvents, config,
+        graphics, audio, classes, SpacecraftEvents, config,
         constants, explosion) {
     "use strict";
     var
@@ -1772,8 +1774,11 @@ define([
         this._drivenPhysicalObject = null;
         this._thrusterUses = null;
         if (this._thrusterSoundClip) {
-            this._thrusterSoundClip.destroy();
-            this._thrusterSoundClip = null;
+            this._thrusterSoundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
+            setTimeout(function () {
+                this._thrusterSoundClip.destroy();
+                this._thrusterSoundClip = null;
+            }.bind(this), audio.SOUND_RAMP_DURATION);
         }
     };
     // #########################################################################
@@ -2531,7 +2536,7 @@ define([
                 this._spacecraft.changeFlightMode(this._originalFlightMode);
                 this._spacecraft.enableFiring();
                 if (this._soundClip) {
-                    this._soundClip.stopPlaying();
+                    this._soundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
                     this._soundClip = null;
                 }
                 break;

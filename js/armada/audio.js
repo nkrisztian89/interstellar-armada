@@ -38,6 +38,11 @@ define([
              * @type String
              */
             MODULE_LOCAL_STORAGE_PREFIX = constants.LOCAL_STORAGE_PREFIX + "audio_",
+            /**
+             * The duration for which stopping sounds should be ramped to volume zero to avoid abrupt sound volume changes, in seconds
+             * @type Number
+             */
+            SOUND_RAMP_DURATION = 0.1,
             // ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
             // Settings
             // ............................................................................................
@@ -446,6 +451,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        SOUND_RAMP_DURATION: SOUND_RAMP_DURATION,
         SoundCategory: audio.SoundCategory,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),

@@ -2129,7 +2129,7 @@ define([
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
      * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
-     * @returns {Boolean} Whether as a result of this call, the camera is not following the specified node. If the node has no associated
+     * @returns {Boolean} Whether as a result of this call, the camera is now following the specified node. If the node has no associated
      * configurations to switch to, this will be false.
      */
     Camera.prototype.followNode = function (node, forceFirstView, duration, style) {
@@ -2163,7 +2163,7 @@ define([
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
      * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
-     * @returns {Boolean} Whether as a result of this call, the camera is not following the specified object's node. If the node has no 
+     * @returns {Boolean} Whether as a result of this call, the camera is now following the specified object's node. If the node has no 
      * associated configurations to switch to, this will be false.
      */
     Camera.prototype.followObject = function (objectToFollow, forceFirstView, duration, style) {
@@ -2214,6 +2214,8 @@ define([
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
      * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
+     * @returns {Boolean} Whether a node has been successfully followed (will be false if considerScene is false and there are no nodes in the
+     * scene which can be followed)
      */
     Camera.prototype.followNextNode = function (considerScene, duration, style) {
         var node = this._scene.getNextNode(this._followedNode), originalNode = this._followedNode;
@@ -2224,13 +2226,14 @@ define([
             node = this._scene.getNextNode(node);
             if (considerScene && this._followedNode && (node === this._scene.getFirstNode())) {
                 if (this.followNode(null, true, duration, style)) {
-                    return;
+                    return true;
                 }
             }
         }
-        if (node && node.getNextCameraConfiguration()) {
-            this.followNode(node, true, duration, style);
+        if (node && node.getNextCameraConfiguration() && node.isVisible()) {
+            return this.followNode(node, true, duration, style);
         }
+        return false;
     };
     /**
      * Start a transition to the first associated camera configuration of the previous renderable node.

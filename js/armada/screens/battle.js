@@ -810,7 +810,10 @@ define([
                     if (control.isInPilotMode()) {
                         control.switchToSpectatorMode(true);
                     } else if (_demoMode) {
-                        _battleScene.getCamera().followNextNode();
+                        // first, try to switch to a new spacecraft, if there are none, switch to free camera
+                        if (!_battleScene.getCamera().followNextNode()) {
+                            control.switchToSpectatorMode(true, true);
+                        }
                         _timeInSameView = 0;
                     }
                 } else if (_demoMode) {

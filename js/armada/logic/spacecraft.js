@@ -524,7 +524,7 @@ define([
                     this._visualModel.getNode().hide();
                 }
                 if (this._humSoundClip) {
-                    this._humSoundClip.stopPlaying();
+                    this._humSoundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
                 }
                 if (this._propulsion) {
                     this._propulsion.resetThrusterBurn();
@@ -1984,7 +1984,7 @@ define([
             if (this._timeElapsedSinceDestruction < 0) {
                 this._timeElapsedSinceDestruction = 0;
                 if (this._humSoundClip) {
-                    this._humSoundClip.stopPlaying();
+                    this._humSoundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
                 }
                 if (this._propulsion) {
                     this._propulsion.resetThrusterBurn();
