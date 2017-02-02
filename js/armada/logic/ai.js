@@ -214,6 +214,25 @@ define([
              */
             TARGET_OFFSET_UPDATE_INTERVAL = 1500,
             /**
+             * When starting a new attack run, a random aiming error will be calculated for fighter in the range of +/- this many degrees
+             * along both axes
+             * @type Number
+             */
+            MAX_AIM_ERROR = Math.radians(2),
+            /**
+             * Every time a new target offset is calculated, if it is not significantly different from the previous one, the maximum aiming
+             * error is reduced by multiplying the current maximum by this factor. (otherwise, a new aiming error with the same maximum is
+             * calculated)
+             * @type Number
+             */
+            AIM_ERROR_REDUCTION_FACTOR = 0.5,
+            /**
+             * The square of the length of the difference between a newly calculated and the previous target offset needs to be less than 
+             * this number in order to reduce the aiming error. (in meters)
+             * @type Number
+             */
+            AIM_ERROR_REDUCTION_THRESHOLD = 5 * 5,
+            /**
              * When attacking an enemy, ships will approach their targets to at least the distance that is their weapon range
              * multiplied by this factor.
              * @type Number
@@ -776,6 +795,16 @@ define([
          * @type Number
          */
         this._targetOffsetUpdateTimeLeft = 0;
+        /**
+         * The current maximum to use when calculating the next aiming error.
+         * @type Number
+         */
+        this._maxAimError = 0;
+        /**
+         * The current aiming error by which the aim angles are offset. (yaw, pitch)
+         * @type Array
+         */
+        this._aimError = [0, 0];
         // attaching handlers to the various spacecraft events
         this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
         this._spacecraft.setEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
@@ -783,6 +812,13 @@ define([
     }
     FighterAI.prototype = new SpacecraftAI();
     FighterAI.prototype.constructor = FighterAI;
+    /**
+     * Calculates a new random aiming error based on the current maximum.
+     */
+    FighterAI.prototype._updateAimError = function () {
+        this._aimError[0] = (Math.random() - 0.5) * 2 * this._maxAimError;
+        this._aimError[1] = (Math.random() - 0.5) * 2 * this._maxAimError;
+    };
     /**
      * Sets up the state of the AI to perform a new attack run, to be used when switching to a new target or after a charge maneuver has 
      * been finished. The approach distance, attack path blocking state and triggers for charge, close-in, roll are reset. Does not cancel
@@ -799,6 +835,8 @@ define([
         this._rollTime = -1;
         this._targetOffset = [0, 0, 0];
         this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
+        this._maxAimError = MAX_AIM_ERROR;
+        this._updateAimError();
     };
     /**
      * @override
@@ -881,7 +919,7 @@ define([
                 /** @type Spacecraft */
                 target,
                 /** @type Number[3] */
-                positionVector, targetPositionVector, vectorToTarget,
+                positionVector, targetPositionVector, vectorToTarget, newOffset,
                 directionToTarget, relativeTargetDirection, relativeBlockerPosition,
                 /** @type Number */
                 targetHitTime,
@@ -950,10 +988,16 @@ define([
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // setting up variables
                 targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
-                // updating target offset, if it is time
+                // updating target offset and aim error, if it is time
                 if (this._targetOffsetUpdateTimeLeft <= 0) {
                     this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
-                    this._targetOffset = vec.diff3(this._spacecraft.getTargetHitPosition(), targetPositionVector);
+                    newOffset = vec.diff3(this._spacecraft.getTargetHitPosition(), targetPositionVector);
+                    if (vec.length3Squared(vec.diff3(this._targetOffset, newOffset)) < AIM_ERROR_REDUCTION_THRESHOLD) {
+                        this._aimError[0] *= AIM_ERROR_REDUCTION_FACTOR;
+                        this._aimError[1] *= AIM_ERROR_REDUCTION_FACTOR;
+                    }
+                    this._targetOffset = newOffset;
+                    this._updateAimError();
                 } else {
                     this._targetOffsetUpdateTimeLeft -= dt;
                 }
@@ -965,6 +1009,8 @@ define([
                 this._targetDistance = vec.length3(relativeTargetDirection);
                 vec.normalize3(relativeTargetDirection);
                 targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
+                targetYawAndPitch.yaw += this._aimError[0];
+                targetYawAndPitch.pitch += this._aimError[1];
                 this._facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // turning towards target
