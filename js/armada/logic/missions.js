@@ -2659,6 +2659,11 @@ define([
     function MissionDescriptor(dataJSON, folder) {
         resourceManager.JSONResource.call(this, dataJSON, folder, true);
         /**
+         * Returns whether the mission described is a test mission (to be listed only in debug mode)
+         * @type Boolean
+         */
+        this._test = (this._dataJSON.test === true);
+        /**
          * The data that is saved to / loaded from local storage about this mission
          * @type MissionDescriptor~LocalData
          */
@@ -2680,6 +2685,13 @@ define([
      */
     MissionDescriptor.prototype._saveLocalData = function () {
         localStorage[this._getLocalStorageID()] = JSON.stringify(this._localData);
+    };
+    /**
+     * Returns whether the mission described is a test mission (to be listed only in debug mode)
+     * @returns {Boolean}
+     */
+    MissionDescriptor.prototype.isTest = function () {
+        return this._test;
     };
     /**
      * Returns the raw description of this mission (as given in the data JSON)
@@ -2938,7 +2950,9 @@ define([
     MissionContext.prototype.getMissionNames = function () {
         var result = [];
         this._missionManager.executeForAllResourcesOfType(MISSION_ARRAY_NAME, function (missionDescriptor) {
-            result.push(missionDescriptor.getName());
+            if (application.isDebugVersion() || !missionDescriptor.isTest()) {
+                result.push(missionDescriptor.getName());
+            }
         });
         return result;
     };
@@ -2949,7 +2963,9 @@ define([
     MissionContext.prototype.getMissionDescriptors = function () {
         var result = [];
         this._missionManager.executeForAllResourcesOfType(MISSION_ARRAY_NAME, function (missionDescriptor) {
-            result.push(missionDescriptor);
+            if (application.isDebugVersion() || !missionDescriptor.isTest()) {
+                result.push(missionDescriptor);
+            }
         });
         return result;
     };

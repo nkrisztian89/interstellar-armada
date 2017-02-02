@@ -24,6 +24,36 @@
             ]
         }
     ],
+    "events": [
+        {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "teams": ["rebels"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 5000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "teams": ["empire"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
     "spacecrafts": [
         {
             "team": "empire",
@@ -42,6 +72,9 @@
             "equipment": {
                 "propulsion": {
                     "class": "imperialCorvetteMk1"
+                },
+                "jumpEngine": {
+                    "class": "imperialSmallShipMk1"
                 }
             }
         },

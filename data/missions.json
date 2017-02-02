@@ -34,11 +34,14 @@
         }, {
             "source": "test.json"
         }, {
-            "source": "libraTest.json"
+            "source": "libraTest.json",
+            "test": true
         }, {
-            "source": "staticAvoidance.json"
+            "source": "staticAvoidance.json",
+            "test": true
         }, {
-            "source": "dynamicAvoidance.json"
+            "source": "dynamicAvoidance.json",
+            "test": true
         }
     ]
 }

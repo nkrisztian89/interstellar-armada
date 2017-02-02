@@ -150,11 +150,17 @@ define([
              */
             APPROACH_SPEED_FACTOR = 3,
             /**
-             * During charge attacks, fighters will approach / evade with a maximum speed equal to their acceleration multiplied by this 
+             * During charge attacks, fighters will approach with a maximum speed equal to their acceleration multiplied by this 
              * factor.
              * @type Number
              */
             CHARGE_SPEED_FACTOR = 5,
+            /**
+             * During charge attacks, fighters will evade with a maximum speed equal to their acceleration multiplied by this 
+             * factor.
+             * @type Number
+             */
+            CHARGE_EVADE_SPEED_FACTOR = 3,
             /**
              * Fighters will initiate a charge attack if they are unable to hit their target after firing this many shots at it.
              * @type Number
@@ -982,7 +988,7 @@ define([
                 vec.normalize3(relativeTargetDirection);
                 targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
                 this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
-                this._spacecraft.setSpeedTarget(acceleration * CHARGE_SPEED_FACTOR);
+                this._spacecraft.setSpeedTarget(acceleration * CHARGE_EVADE_SPEED_FACTOR);
                 if ((this._targetDistance <= EXACT_PLACE_RANGE) || (relativeTargetDirection[1] < 0) || (speed < 0)) {
                     this._startNewAttackRun();
                 }
