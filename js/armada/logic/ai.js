@@ -18,6 +18,7 @@
  * @param config Used for accessing game configuration/settings.
  * @param SpacecraftEvents Used for setting spacecraft event handlers
  * @param classes used for accessing spacecraft turn style enum type
+ * @param equipment Used to access the FlightMode enum
  */
 define([
     "utils/vectors",
@@ -27,8 +28,9 @@ define([
     "armada/configuration",
     "armada/logic/SpacecraftEvents",
     "armada/logic/classes",
+    "armada/logic/equipment",
     "utils/polyfill"
-], function (vec, mat, application, physics, config, SpacecraftEvents, classes) {
+], function (vec, mat, application, physics, config, SpacecraftEvents, classes, equipment) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -826,6 +828,7 @@ define([
      */
     FighterAI.prototype._startNewAttackRun = function () {
         this._chargePhase = ChargePhase.NONE;
+        this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
         this._hitCountByNonTarget = 0;
         this._timeSinceLastTargetHit = 0;
         this._timeSinceLastClosingIn = 0;
@@ -883,6 +886,7 @@ define([
             this._evasiveManeuverTime = -1;
             // charge attacks are canceled so we do not run into the blocking spacecraft
             this._chargePhase = ChargePhase.NONE;
+            this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
         }
     };
     /**
@@ -1116,6 +1120,7 @@ define([
                     // initiating charge
                     if ((this._chargePhase === ChargePhase.NONE) && ((this._hitCountByNonTarget >= CHARGE_TRIGGER_HIT_COUNT) || ((this._timeSinceLastTargetHit > targetHitTime + CHARGE_TRIGGER_MISS_COUNT * weaponCooldown)))) {
                         this._chargePhase = ChargePhase.APPROACH_ATTACK;
+                        this._spacecraft.changeFlightMode(equipment.FlightMode.CRUISE);
                     }
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // managing distance from target based on weapons range
@@ -1140,13 +1145,15 @@ define([
                         // calculating the distance at which the spacecraft will be able to avoid collision at charge speed
                         maxDistance = Math.sqrt((targetSize + ownSize * 0.5) * 2 / acceleration) * acceleration * CHARGE_SPEED_FACTOR;
                         if (!this._facingTarget) {
-                            this._spacecraft.resetSpeed();
                             this._chargePhase = ChargePhase.NONE;
+                            this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
+                            this._spacecraft.resetSpeed();
                         } else {
                             this._spacecraft.setSpeedTarget(acceleration * CHARGE_SPEED_FACTOR);
                             // when the critical distance is reached, mark a destination beyond the target to head towards it
                             if (this._targetDistance <= maxDistance) {
                                 this._chargePhase = ChargePhase.EVADE;
+                                this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
                                 directionToTarget = vec.normal3(vectorToTarget);
                                 this._chargeDestination = vec.sum3(
                                         positionVector,
