@@ -95,6 +95,18 @@
                             "priority": true
                         }
                     }
+                }, {
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["Danube"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "single": "Don",
+                            "priority": true
+                        }
+                    }
                 }
             ]
         }, {

@@ -33,7 +33,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                            "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga", "Vilnius"]
                         },
                         "params": {
                             "relation": "below",
@@ -57,12 +57,13 @@
             "actions": [{
                     "type": "command",
                     "subjects": {
-                        "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                        "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga", "Vilnius"]
                     },
                     "params": {
                         "command": "target",
                         "target": {
-                            "single": "Mississippi"
+                            "single": "Mississippi",
+                            "priority": true
                         }
                     }
                 }, {
@@ -73,7 +74,7 @@
                     "params": {
                         "command": "target",
                         "target": {
-                            "list": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                            "list": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga", "Vilnius"]
                         }
                     }
                 }]
@@ -96,7 +97,7 @@
                     }, {
                         "type": "count",
                         "subjects": {
-                            "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                            "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga", "Vilnius"]
                         },
                         "params": {
                             "relation": "above",
@@ -143,7 +144,7 @@
                 "conditions": [{
                         "type": "destroyed",
                         "subjects": {
-                            "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga"]
+                            "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga", "Vilnius"]
                         }
                     }
                 ],
@@ -268,6 +269,23 @@
             "ai": "ship",
             "initialTarget": "Mississippi",
             "position": [8500, 0, -400],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "class": "taurus",
+            "name": "Vilnius",
+            "team": "empire",
+            "ai": "ship",
+            "initialTarget": "Mississippi",
+            "position": [8500, 750, 0],
             "rotations": [
                 {
                     "axis": "z",

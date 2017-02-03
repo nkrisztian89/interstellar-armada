@@ -69,6 +69,7 @@ define(function () {
      * relative to it) - set when the command is executed
      * @property {Number} [index] The index of the spacecraft that received the command among the spacecrafts that received it - set when 
      * the command is executed
+     * @property {Boolean} [clearCache] When true, the cached properties in the command data should be cleared when executing the command
      * @property {SpacecraftEvents~JumpCommandData} [jump] Details of the command if it is a jump command
      * @property {SpacecraftEvents~TargetCommandData} [target] Details of the command if it is a target command
      */

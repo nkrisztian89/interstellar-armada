@@ -1686,6 +1686,7 @@ define([
         var i, spacecrafts = this._subjects.getSpacecrafts(mission);
         if (spacecrafts.length > 0) {
             this._params.lead = spacecrafts[0];
+            this._params.clearCache = true;
             for (i = 0; i < spacecrafts.length; i++) {
                 this._params.index = i;
                 spacecrafts[i].handleEvent(SpacecraftEvents.COMMAND_RECEIVED, this._params);

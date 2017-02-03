@@ -602,10 +602,10 @@ define([
                                             data.lead.getPhysicalOrientationMatrix())));
                             this._spacecraft.setPhysicalOrientationMatrix(mat.matrix4(data.lead.getPhysicalOrientationMatrix()));
                         } else if (data.jump.anchor) {
-                            // clear cached reference to the anchor spacecraft if this is the lead ship of the command
-                            // (so that executing it a second time - possibly during a new mission - will query the ship again)
-                            if (data.index === 0) {
+                            // clear cached reference to the anchor spacecraft for every new execution of the command
+                            if (data.clearCache) {
                                 data.jump.anchorSpacecraft = null;
+                                data.clearCache = false;
                             }
                             // setting position and orientation based on an anchor ship
                             anchor = data.jump.anchorSpacecraft || this._mission.getSpacecraft(data.jump.anchor);
@@ -655,10 +655,10 @@ define([
             case SpacecraftCommand.TARGET:
                 // handling target command
                 if (data.target) {
-                    // clear cached reference to the target spacecrafts if this is the lead ship of the command
-                    // (so that executing it a second time - possibly during a new mission - will query the ships again)
-                    if (data.index === 0) {
+                    // clear cached reference to the target spacecrafts for every new execution of the command
+                    if (data.clearCache) {
                         data.target.targetSpacecrafts = null;
+                        data.clearCache = false;
                     }
                     // if the target spacecrafts have already been queried, just copy the list
                     if (data.target.targetSpacecrafts) {

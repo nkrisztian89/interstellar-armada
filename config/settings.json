@@ -659,7 +659,7 @@
                         "left": -0.98,
                         "top": 0.14,
                         "width": 0.6,
-                        "height": 0.32,
+                        "height": 0.38,
                         "scaleMode": "minimum",
                         "xScaleMode": "minimum",
                         "yScaleMode": "minimum"
@@ -668,9 +668,9 @@
                 },
                 "escortsHeaderText": {
                     "color": [1, 1, 1, 1],
-                    "fontSize": 0.115,
+                    "fontSize": 0.1,
                     "fontName": "hudFont",
-                    "position": [-0.95, 0.68]
+                    "position": [-0.95, 0.69]
                 },
                 "escortsText": {
                     "colors": {
@@ -678,16 +678,16 @@
                         "away": [0, 1, 0, 0.3],
                         "destroyed": [1, 0, 0, 1]
                     },
-                    "fontSize": 0.1,
+                    "fontSize": 0.085,
                     "fontName": "hudFont",
-                    "position": [-0.35, 0.36]
+                    "position": [-0.35, 0.42]
                 },
                 "escortsHullIntegrityBar": {
                     "texture": "hud-atlas",
                     "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
                     "layout": {
                         "left": -0.96,
-                        "top": 0.05,
+                        "top": 0.047,
                         "width": 0.15,
                         "height": 0.01,
                         "scaleMode": "minimum",
@@ -701,8 +701,8 @@
                         "destroyed": [1, 0, 0, 0.3]
                     }
                 },
-                "escortsTextOffset": -0.3,
-                "maxEscortsDisplayed": 5,
+                "escortsTextOffset": -0.26,
+                "maxEscortsDisplayed": 6,
                 "targetSwitchSound": {
                     "name": "beep_targeting",
                     "volume": 0.2
