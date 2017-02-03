@@ -2657,6 +2657,7 @@ define([
                     this._state = JumpEngine.JumpState.NONE;
                     this._spacecraft.unlockManeuvering();
                     this._spacecraft.enableFiring();
+                    this._spacecraft.handleEvent(SpacecraftEvents.ARRIVED);
                 }
                 this._timeLeft -= dt;
                 break;

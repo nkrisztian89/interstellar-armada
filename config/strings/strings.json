@@ -276,7 +276,8 @@
             "jump": {
                 "engaged": "JUMP ENGINES ENGAGED\nAligning velocity...\n\nPress {controlStrings/keyboard/jumpOut} to cancel",
                 "preparing": "JUMP ENGINES ENGAGED\nPreparing...\n{timeLeft}\nPress {controlStrings/keyboard/jumpOut} to cancel"
-            }
+            },
+            "newHostiles": "New hostiles have arrived!"
         }
     },
     "performanceLevel": {

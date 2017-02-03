@@ -99,6 +99,8 @@ define(function () {
         JUMPED_OUT: "jumpedOut",
         /** The spacecraft has jumped in. */
         JUMPED_IN: "jumpedIn",
+        /** The spacecraft has finished the jump in sequence */
+        ARRIVED: "arrived",
         /** The spacecraft cancelled the jump process. */
         JUMP_CANCELLED: "jumpCancelled",
         /** The spacecraft received a command (to be handled by the AI) */

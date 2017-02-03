@@ -270,6 +270,7 @@ define([
              * @property {Boolean} [permanent] If true, the message keeps being displayed until a new urgent
              * message is added or the queue is cleared
              * @property {Number[4]} [color] When given, the text is displayed using this text color
+             * @property {Number} [blinkInterval] When given, the text will blink with this interval, in milliseconds
              * @property {Boolean} [silent=false] When true, the message sound effect will not be played for this message
              * @property {Boolean} [new=false] When a new message is put at the front of the queue, this flag is set to true
              */
@@ -289,6 +290,21 @@ define([
              * @type Battle~HUDMessage
              */
             _jumpMessage,
+            /**
+             * The message that is displayed informing the player about new hostiles that arrived.
+             * @type Battle~HUDMessage
+             */
+            _newHostilesMessage,
+            /**
+             * The sound played when the new hostiles message is displayed
+             * @type SoundClip
+             */
+            _newHostilesMessageSound,
+            /**
+             * An array holding references to the hostile spacecrafts that should be highlighted as newly arrived
+             * @type Spacecraft[]
+             */
+            _newHostiles,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // music related
             /**
@@ -847,6 +863,8 @@ define([
         }
         _battleScene = null;
         _messageQueues = null;
+        _newHostilesMessage = null;
+        _newHostiles = null;
         audio.playMusic(null);
     }
     // ------------------------------------------------------------------------------
@@ -986,6 +1004,30 @@ define([
                 _switchToCameraConfig(this, config.getSetting(config.BATTLE_SETTINGS.JUMP_OUT_VIEW_NAME), 0);
             } else {
                 _battleScene.getCamera().setToFreeCamera();
+            }
+        }
+    }
+    /**
+     * Issues / updates the HUD message notifying of new hostiles if necessary
+     */
+    function _handleSpacecraftArrived() {
+        /**@type Spacecraft */
+        var craft = _mission.getPilotedSpacecraft();
+        if (craft && craft.isAlive() && !craft.isAway() && craft.isHostile(this)) {
+            if (!_newHostilesMessage || (_newHostilesMessage.timeLeft <= 0)) {
+                _newHostilesMessage = {
+                    text: strings.get(strings.BATTLE.MESSAGE_NEW_HOSTILES),
+                    color: _messageTextSettings.colors.alert,
+                    blinkInterval: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_BLINK_INTERVAL),
+                    duration: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_DURATION),
+                    silent: true,
+                    queue: MISSION_QUEUE
+                };
+                _battle.battleScreen.queueHUDMessage(_newHostilesMessage, true);
+                _newHostiles = [this];
+            } else {
+                _newHostilesMessage.timeLeft = _newHostilesMessage.duration;
+                _newHostiles.push(this);
             }
         }
     }
@@ -1627,6 +1669,7 @@ define([
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name);
     }
     /**
      * Returns the HTML string to insert to messages that contains the key to open the menu in a highlighted style.
@@ -2215,15 +2258,16 @@ define([
                 /** @type Number[2] */
                 position2D, direction2D, maxSpeedTextPosition, maxReverseSpeedTextPosition, shipIndicatorSize, shipIndicatorMinSize, size2D,
                 /** @type Number[3] */
-                position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, basePointPosition, relativeVelocity,
+                position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, basePointPosition, relativeVelocity, color,
                 /** @type Number[4] */
                 direction, targetInfoTextColor, filledColor, emptyColor, hostileColor, friendlyColor, hostileArrowColor, friendlyArrowColor,
+                newHostileColor, newHostileArrowColor,
                 /** @type Float32Array */
                 m, scaledOriMatrix,
                 /** @type HTMLCanvasElement */
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
                 /** @type Boolean */
-                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound,
+                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent,
                 /** @type MouseInputIntepreter */
                 mouseInputInterpreter,
                 /** @type String[] */
@@ -2510,18 +2554,29 @@ define([
             // if such a queue has been found, display the first message in the queue
             if ((control.isInPilotMode()) && (i < MESSAGE_QUEUES.length)) {
                 messageQueue = _messageQueues[MESSAGE_QUEUES[i]];
+                // playing sound
                 if (messageQueue[0].new) {
                     if (!messageQueue[0].silent) {
                         _messageSound.play();
+                    } else if (messageQueue[0] === _newHostilesMessage) {
+                        _newHostilesMessageSound.play();
                     }
                     messageQueue[0].new = false;
                 }
+                // setting text
                 _messageText.setText(messageQueue[0].text);
+                // setting color
                 if (messageQueue[0].color) {
-                    _messageText.setColor(messageQueue[0].color);
+                    color = messageQueue[0].color;
                 } else {
-                    _messageText.setColor(_messageTextSettings.colors.default);
+                    color = _messageTextSettings.colors.default;
                 }
+                if (messageQueue[0].blinkInterval > 0) {
+                    color = color.slice();
+                    color[3] = color[3] * Math.abs(((messageQueue[0].duration - messageQueue[0].timeLeft) % messageQueue[0].blinkInterval) / messageQueue[0].blinkInterval - 0.5) * 2;
+                }
+                _messageText.setColor(color);
+                // managing timing
                 if (!messageQueue[0].permanent) {
                     messageQueue[0].timeLeft -= dt;
                     if (messageQueue[0].timeLeft <= 0) {
@@ -2829,6 +2884,20 @@ define([
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendly,
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendlyHighlight,
                     animationProgress);
+            if (_newHostilesMessage && (_newHostilesMessage.timeLeft > 0)) {
+                newHostilesPresent = true;
+                animationProgress = Math.abs(((_newHostilesMessage.duration - _newHostilesMessage.timeLeft) % _newHostilesMessage.blinkInterval) / _newHostilesMessage.blinkInterval - 0.5) * 2;
+                newHostileColor = utils.getMixedColor(
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostile,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.newHostile,
+                        animationProgress);
+                newHostileArrowColor = utils.getMixedColor(
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostile,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.newHostile,
+                        animationProgress);
+            } else {
+                newHostilesPresent = false;
+            }
             for (i = 0; i < ships.length; i++) {
                 // targeting reticle at the ship position
                 if (_shipIndicators.length <= i) {
@@ -2845,10 +2914,16 @@ define([
                     Math.min(Math.max(shipIndicatorMinSize[0], shipWidth), _shipIndicatorSizes.maximum[0]),
                     Math.min(Math.max(shipIndicatorMinSize[1], shipWidth), _shipIndicatorSizes.maximum[1])
                 ];
+                // current target
                 if (ships[i] === target) {
                     indicator.setColor(
                             (targetIsHostile ?
-                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostileTarget :
+                                    ((newHostilesPresent && (_newHostiles.indexOf(ships[i]) >= 0)) ?
+                                            utils.getMixedColor(
+                                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostileTarget,
+                                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.newHostile,
+                                                    animationProgress) :
+                                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostileTarget) :
                                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.friendlyTarget));
                     // scaling according to the target switch animation
                     if (_targetSwitchTime > 0) {
@@ -2857,13 +2932,16 @@ define([
                         indicator.setSize(shipIndicatorSize);
                     }
                 } else {
-                    indicator.setColor((highlightedShips.indexOf(ships[i]) >= 0) ?
-                            (targetIsHostile ?
-                                    hostileColor :
-                                    friendlyColor) :
-                            (targetIsHostile ?
-                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostile :
-                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.friendly));
+                    // ships other than the target
+                    indicator.setColor((newHostilesPresent && (_newHostiles.indexOf(ships[i]) >= 0)) ?
+                            newHostileColor :
+                            ((highlightedShips.indexOf(ships[i]) >= 0) ?
+                                    (targetIsHostile ?
+                                            hostileColor :
+                                            friendlyColor) :
+                                    (targetIsHostile ?
+                                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostile :
+                                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.friendly)));
                     indicator.setSize(shipIndicatorSize);
                 }
                 indicator.show();
@@ -2886,10 +2964,16 @@ define([
                     arrowPositionRadius = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? (1 / aspect) : 1);
                     indicator.setPosition(vec.scaled2([direction[0], direction[1] * aspect], arrowPositionRadius));
                     indicator.setAngle(vec.angle2u([0, 1], direction) * ((direction[0] < 0) ? -1 : 1));
+                    // current target
                     if (ships[i] === target) {
                         indicator.setColor(
                                 (targetIsHostile ?
-                                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostileTarget :
+                                        ((newHostilesPresent && (_newHostiles.indexOf(ships[i]) >= 0)) ?
+                                                utils.getMixedColor(
+                                                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostileTarget,
+                                                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.newHostile,
+                                                        animationProgress) :
+                                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostileTarget) :
                                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendlyTarget));
                         // scaling according to the target switch animation
                         if (_targetSwitchTime > 0) {
@@ -2899,13 +2983,16 @@ define([
                         }
                         _distanceTextLayer.hide();
                     } else {
-                        indicator.setColor((highlightedShips.indexOf(ships[i]) >= 0) ?
-                                (targetIsHostile ?
-                                        hostileArrowColor :
-                                        friendlyArrowColor) :
-                                (targetIsHostile ?
-                                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostile :
-                                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendly));
+                        // ships other than the target
+                        indicator.setColor((newHostilesPresent && (_newHostiles.indexOf(ships[i]) >= 0)) ?
+                                newHostileArrowColor :
+                                ((highlightedShips.indexOf(ships[i]) >= 0) ?
+                                        (targetIsHostile ?
+                                                hostileArrowColor :
+                                                friendlyArrowColor) :
+                                        (targetIsHostile ?
+                                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostile :
+                                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendly)));
                         indicator.setSize(_shipArrowSizes.default);
                     }
                 } else {
@@ -3228,19 +3315,24 @@ define([
                         menuKey: _getMenuKeyHTMLString()
                     }));
                     _mission.applyToSpacecrafts(function (spacecraft) {
-                        spacecraft.setEventHandler(SpacecraftEvents.FIRED, _handleSpacecraftFired.bind(spacecraft));
+                        spacecraft.addEventHandler(SpacecraftEvents.FIRED, _handleSpacecraftFired.bind(spacecraft));
                         if (spacecraft === _mission.getPilotedSpacecraft()) {
-                            spacecraft.setEventHandler(SpacecraftEvents.JUMP_ENGAGED, _handlePilotedSpacecraftJumpEngaged.bind(spacecraft));
-                            spacecraft.setEventHandler(SpacecraftEvents.JUMP_CANCELLED, _handlePilotedSpacecraftJumpCancelled.bind(spacecraft));
-                            spacecraft.setEventHandler(SpacecraftEvents.PREPARING_JUMP, _handlePilotedSpacecraftPreparingJump.bind(spacecraft));
+                            spacecraft.addEventHandler(SpacecraftEvents.JUMP_ENGAGED, _handlePilotedSpacecraftJumpEngaged.bind(spacecraft));
+                            spacecraft.addEventHandler(SpacecraftEvents.JUMP_CANCELLED, _handlePilotedSpacecraftJumpCancelled.bind(spacecraft));
+                            spacecraft.addEventHandler(SpacecraftEvents.PREPARING_JUMP, _handlePilotedSpacecraftPreparingJump.bind(spacecraft));
                         } else {
-                            spacecraft.setEventHandler(SpacecraftEvents.JUMP_OUT_STARTED, _handleSpacecraftJumpOutStarted.bind(spacecraft));
+                            spacecraft.addEventHandler(SpacecraftEvents.JUMP_OUT_STARTED, _handleSpacecraftJumpOutStarted.bind(spacecraft));
+                            spacecraft.addEventHandler(SpacecraftEvents.ARRIVED, _handleSpacecraftArrived.bind(spacecraft));
                         }
                     });
                     _messageSound = resources.getSoundEffect(
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
                             resources.SoundCategory.SOUND_EFFECT,
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).volume);
+                    _newHostilesMessageSound = resources.getSoundEffect(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name).createSoundClip(
+                            resources.SoundCategory.SOUND_EFFECT,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).volume);
                     this._loadingBox.hide();
                     showHUD();
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));

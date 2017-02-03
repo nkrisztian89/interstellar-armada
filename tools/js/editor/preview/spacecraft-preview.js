@@ -423,7 +423,7 @@ define([
         _optionElements.explodeButton = common.createButton("Explode", function () {
             if (_spacecraft.getHitpoints() > 0) {
                 _spacecraft.setHitpointsToZero();
-                _spacecraft.setEventHandler(SpacecraftEvents.DESTRUCTED, function () {
+                _spacecraft.addEventHandler(SpacecraftEvents.DESTRUCTED, function () {
                     _spacecraft.getVisualModel().getNode().hide();
                     _updateExplodeButton();
                     return false;

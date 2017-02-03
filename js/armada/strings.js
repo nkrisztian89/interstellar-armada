@@ -144,7 +144,8 @@ define([
         MESSAGE_DEFEAT_RESTART: {name: "battle.message.defeat.restartButton"},
         MESSAGE_DEFEAT_SPECTATE: {name: "battle.message.defeat.spectateButton"},
         MESSAGE_JUMP_ENGAGED: {name: "battle.message.jump.engaged"},
-        MESSAGE_JUMP_PREPARING: {name: "battle.message.jump.preparing"}
+        MESSAGE_JUMP_PREPARING: {name: "battle.message.jump.preparing"},
+        MESSAGE_NEW_HOSTILES: {name: "battle.message.newHostiles"}
     };
     strings.PERFORMANCE_LEVEL = {
         PREFIX: {name: "performanceLevel.", optional: true}

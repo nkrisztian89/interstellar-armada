@@ -277,7 +277,8 @@
             "jump": {
                 "engaged": "TÉRUGRÓ HAJTÓMŰ AKTIVÁLVA\nSebesség beállítása...\n\nMegszakítás: {controlStrings/keyboard/jumpOut}",
                 "preparing": "TÉRUGRÓ HAJTÓMŰ AKTIVÁLVA\nFelkészülés...\n{timeLeft}\nMegszakítás: {controlStrings/keyboard/jumpOut}"
-            }
+            },
+            "newHostiles": "Ellenséges gépek érkeztek!"
         }
     },
     "performanceLevel": {

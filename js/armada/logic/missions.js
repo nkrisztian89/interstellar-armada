@@ -2513,7 +2513,7 @@ define([
             if (!this._spacecrafts[i].isAway()) {
                 this._hitObjects.push(this._spacecrafts[i]);
             } else {
-                this._spacecrafts[i].setEventHandler(SpacecraftEvents.JUMPED_IN, this._handleSpacecraftJumpIn.bind(this, this._spacecrafts[i]));
+                this._spacecrafts[i].addEventHandler(SpacecraftEvents.JUMPED_IN, this._handleSpacecraftJumpIn.bind(this, this._spacecrafts[i]));
             }
         }
         resources.executeWhenReady(function () {

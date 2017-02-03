@@ -212,6 +212,7 @@
                         "friendly": [0, 1, 0, 0.2],
                         "hostileHighlight": [1, 0, 0, 0.5],
                         "friendlyHighlight": [0, 1, 0, 0.5],
+                        "newHostile": [1, 1, 0, 0.8],
                         "hostileTarget": [1, 0, 0, 0.8],
                         "friendlyTarget": [0, 1, 0, 0.8]
                     }
@@ -232,6 +233,7 @@
                         "friendly": [0, 1, 0, 0.2],
                         "hostileHighlight": [1, 0, 0, 0.5],
                         "friendlyHighlight": [0, 1, 0, 0.5],
+                        "newHostile": [1, 1, 0, 0.8],
                         "hostileTarget": [1, 0, 0, 0.8],
                         "friendlyTarget": [0, 1, 0, 0.8]
                     }
@@ -595,6 +597,7 @@
                     "colors": {
                         "default": [1, 1, 1, 1],
                         "jump": [0, 1, 1, 1],
+                        "alert": [1, 0.5, 0, 1],
                         "controlString": [0, 1, 0, 1]
                     },
                     "fontSize": 0.16,
@@ -711,7 +714,13 @@
                 "messageSound": {
                     "name": "blip_message",
                     "volume": 0.5
-                }
+                },
+                "newHostilesAlertSound": {
+                    "name": "alert",
+                    "volume": 0.5
+                },
+                "newHostilesAlertDuration": 3250,
+                "newHostilesAlertBlinkInterval": 500
             },
             "weaponFireSoundStackMinimumDistance": 100,
             "hitSoundStackingTimeThreshold": 0.1,

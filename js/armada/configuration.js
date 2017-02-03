@@ -952,7 +952,7 @@ define([
             },
             SHIP_ARROW: {
                 name: "shipArrow",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "hostileTarget", "friendlyTarget"], SIZE: ["default", "target"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "newHostile", "hostileTarget", "friendlyTarget"], SIZE: ["default", "target"]})
             },
             SHIP_ARROW_POSITION_RADIUS: {
                 name: "shipArrowPositionRadius",
@@ -964,7 +964,7 @@ define([
             },
             SHIP_INDICATOR: {
                 name: "shipIndicator",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "hostileTarget", "friendlyTarget"], SIZE: ["minimum", "targetMinimum", "maximum"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "newHostile", "hostileTarget", "friendlyTarget"], SIZE: ["minimum", "targetMinimum", "maximum"]})
             },
             SHIP_INDICATOR_SIZE_FACTOR: {
                 name: "shipIndicatorSizeFactor",
@@ -1164,7 +1164,7 @@ define([
             },
             MESSAGE_TEXT: {
                 name: "messageText",
-                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["default", "jump", "controlString"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["default", "jump", "alert", "controlString"]})
             },
             MESSAGE_TEXT_MARGIN: {
                 name: "messageTextMargin",
@@ -1233,6 +1233,18 @@ define([
             MESSAGE_SOUND: {
                 name: "messageSound",
                 type: classes.SOUND_EFFECT
+            },
+            NEW_HOSTILES_ALERT_SOUND: {
+                name: "newHostilesAlertSound",
+                type: classes.SOUND_EFFECT
+            },
+            NEW_HOSTILES_ALERT_DURATION: {
+                name: "newHostilesAlertDuration",
+                type: "number"
+            },
+            NEW_HOSTILES_ALERT_BLINK_INTERVAL: {
+                name: "newHostilesAlertBlinkInterval",
+                type: "number"
             }
         },
         WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE: {

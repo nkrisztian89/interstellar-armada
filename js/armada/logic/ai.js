@@ -328,8 +328,8 @@ define([
         this._attackingTarget = false;
         // attaching handlers to the spacecraft events
         if (this._spacecraft) {
-            this._spacecraft.setEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
-            this._spacecraft.setEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
+            this._spacecraft.addEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
+            this._spacecraft.addEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
         }
     }
     /**
@@ -814,9 +814,9 @@ define([
          */
         this._aimError = [0, 0];
         // attaching handlers to the various spacecraft events
-        this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
-        this._spacecraft.setEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
-        this._spacecraft.setEventHandler(SpacecraftEvents.TARGET_FIRED, this._handleTargetFired.bind(this));
+        this._spacecraft.addEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
+        this._spacecraft.addEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
+        this._spacecraft.addEventHandler(SpacecraftEvents.TARGET_FIRED, this._handleTargetFired.bind(this));
     }
     FighterAI.prototype = new SpacecraftAI();
     FighterAI.prototype.constructor = FighterAI;

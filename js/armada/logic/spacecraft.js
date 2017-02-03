@@ -342,8 +342,8 @@ define([
         // event handling
         /**
          * The functions to call when the various spacecraft events happen (see SpacecraftEvents.js for possible types) to this spacecraft.
-         * The keys are the event type IDs. (one function per event type supported)
-         * @type Object.<String, Function>
+         * The keys are the event type IDs, the values are the lists of functions to call for each event.
+         * @type Object.<String, Function[]>
          */
         this._eventHandlers = null;
         /**
@@ -2044,24 +2044,30 @@ define([
         }
     };
     /**
-     * Sets a new event handler function (overwriting any possible previous ones) for events of the passed type
+     * Adds a new event handler function for events of the passed type
      * @param {String} eventID Identifies the event type - see SpacecraftEvents
      * @param {Function} handler The function to call when an event of the given type happens with this spacecraft
      */
-    Spacecraft.prototype.setEventHandler = function (eventID, handler) {
-        this._eventHandlers[eventID] = handler;
+    Spacecraft.prototype.addEventHandler = function (eventID, handler) {
+        this._eventHandlers[eventID] = this._eventHandlers[eventID] || [];
+        this._eventHandlers[eventID].push(handler);
     };
     /**
-     * Executes the previously set event handler for the passed event type.
+     * Executes the previously added event handlers for the passed event type.
      * Public, because equipment (e.g. jump engine) can trigger events for the spacecraft it is placed on.
      * @param {String} eventID (enum SpacecraftEvents)
-     * @param {Object} data Data to pass to the event hanlder (the exact structure depends on the event type)
-     * @returns {Boolean}
+     * @param {Object} data Data to pass to the event handlers (the exact structure depends on the event type)
+     * @returns {Boolean} Returns true if all event handlers return true 
      */
     Spacecraft.prototype.handleEvent = function (eventID, data) {
+        var i, result;
         if (this._eventHandlers && this._eventHandlers[eventID]) {
-            return this._eventHandlers[eventID](data);
+            result = true;
+            for (i = 0; i < this._eventHandlers[eventID].length; i++) {
+                result = this._eventHandlers[eventID][i](data) && result;
+            }
         }
+        return result;
     };
     /**
      * Cancels the held references and marks the renderable object, its node and its subtree as reusable.
