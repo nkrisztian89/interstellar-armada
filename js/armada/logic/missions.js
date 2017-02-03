@@ -1959,7 +1959,8 @@ define([
      * Marks the mission as failed (by failing one of its objectives)
      */
     Mission.prototype.failMission = function () {
-        if (this._state !== MissionState.DEFEAT) {
+        // a completed mission can still be failed, if one of the lose conditions is satisfied after the win condition
+        if ((this._state === MissionState.IN_PROGRESS) || (this._state === MissionState.COMPLETED)) {
             this._state = MissionState.FAILED;
         }
     };

@@ -2608,7 +2608,7 @@ define([
                         _weaponImpactIndicators[i].hide();
                         i++;
                     }
-                    if (!targetInRange || (vec.dot3(mat.getRowB43(m), vectorToTarget) < 0)) {
+                    if (!targetInRange || (craft.isFighter() && (vec.dot3(mat.getRowB43(m), vectorToTarget) < 0))) {
                         _aimAssistIndicator.hide();
                     }
                 } else {
