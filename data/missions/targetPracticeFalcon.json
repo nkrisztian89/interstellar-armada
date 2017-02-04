@@ -157,7 +157,7 @@
                 }
             ],
             "equipment": {
-                "profile": "training"
+                "profile": "fixedTraining"
             }
         },
         {
@@ -170,7 +170,7 @@
             "ai": "fighter",
             "away": true,
             "equipment": {
-                "profile": "training"
+                "profile": "fixedTraining"
             }
         },
         {
@@ -183,7 +183,7 @@
             "ai": "fighter",
             "away": true,
             "equipment": {
-                "profile": "training"
+                "profile": "fixedTraining"
             }
         },
         {
@@ -196,7 +196,7 @@
             "ai": "fighter",
             "away": true,
             "equipment": {
-                "profile": "trainingFull"
+                "profile": "fixedTrainingFull"
             }
         }
     ]

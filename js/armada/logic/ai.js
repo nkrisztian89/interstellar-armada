@@ -239,7 +239,13 @@ define([
              * this number in order to reduce the aiming error. (in meters)
              * @type Number
              */
-            AIM_ERROR_REDUCTION_THRESHOLD = 5 * 5,
+            AIM_ERROR_REDUCTION_THRESHOLD = 25 * 25,
+            /**
+             * Once aimed, fighters will start firing after this time elapses, in milliseconds. (to simulate a reaction time and for easing
+             * difficulty)
+             * @type Number
+             */
+            FIRE_DELAY = 350,
             /**
              * When attacking an enemy, ships will approach their targets to at least the distance that is their weapon range
              * multiplied by this factor.
@@ -813,6 +819,11 @@ define([
          * @type Array
          */
         this._aimError = [0, 0];
+        /**
+         * The amount of time to wait before starting to fire after aiming, in milliseconds.
+         * @type Number
+         */
+        this._fireDelayLeft = 0;
         // attaching handlers to the various spacecraft events
         this._spacecraft.addEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
         this._spacecraft.addEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
@@ -845,6 +856,7 @@ define([
         this._targetOffset = [0, 0, 0];
         this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
         this._maxAimError = MAX_AIM_ERROR;
+        this._fireDelayLeft = FIRE_DELAY;
         this._updateAimError();
     };
     /**
@@ -1003,8 +1015,9 @@ define([
                     this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
                     newOffset = vec.diff3(this._spacecraft.getTargetHitPosition(), targetPositionVector);
                     if (vec.length3Squared(vec.diff3(this._targetOffset, newOffset)) < AIM_ERROR_REDUCTION_THRESHOLD) {
-                        this._aimError[0] *= AIM_ERROR_REDUCTION_FACTOR;
-                        this._aimError[1] *= AIM_ERROR_REDUCTION_FACTOR;
+                        this._maxAimError *= AIM_ERROR_REDUCTION_FACTOR;
+                    } else {
+                        this._maxAimError = MAX_AIM_ERROR;
                     }
                     this._targetOffset = newOffset;
                     this._updateAimError();
@@ -1083,44 +1096,52 @@ define([
                         this._hitCountByNonTarget = 0;
                     }
                     if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) <= weapons[0].getRange(speed)) {
+                        // within range...
                         this._attackingTarget = true;
                         if ((Math.abs(targetYawAndPitch.yaw) < fireThresholdAngle) &&
                                 (Math.abs(targetYawAndPitch.pitch) < fireThresholdAngle) &&
                                 (!this._isBlockedBy || this._isBlockedBy.isHostile(this._spacecraft))) {
-                            this._spacecraft.fire();
-                            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                            // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
-                            if (!this._isBlockedBy) {
-                                this._timeSinceLastRoll += dt;
-                                this._timeSinceLastTargetHit += dt;
-                                this._timeSinceLastClosingIn += dt;
-                                // starting roll if needed
-                                rollWaitTime = targetHitTime + ROLL_CORRECTION_TRIGGERING_MISS_COUNT * weaponCooldown;
-                                if ((this._timeSinceLastRoll > rollWaitTime) && (this._timeSinceLastTargetHit > rollWaitTime)) {
-                                    this._rollTime = 0;
-                                }
-                                // performing coll
-                                if (this._rollTime >= 0) {
-                                    this._spacecraft.rollLeft();
-                                    this._timeSinceLastRoll = 0;
-                                    this._rollTime += dt;
-                                    // calculating the duration of rolling based on the angle we would like to roll (in seconds)
-                                    angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
-                                    maxAngularVelocity = angularAcceleration * _turnAccelerationDuration;
-                                    rollDuration = (ROLL_CORRECTION_ANGLE > maxAngularVelocity * _turnAccelerationDuration) ?
-                                            _turnAccelerationDuration + (ROLL_CORRECTION_ANGLE - (maxAngularVelocity * _turnAccelerationDuration)) / maxAngularVelocity :
-                                            Math.sqrt(4 * ROLL_CORRECTION_ANGLE / angularAcceleration) / 2;
-                                    // stopping roll (converting to milliseconds)
-                                    if (this._rollTime > rollDuration * 1000) {
-                                        this._rollTime = -1;
+                            // finished aiming...
+                            if (this._fireDelayLeft > 0) {
+                                this._fireDelayLeft -= dt;
+                            } else {
+                                this._spacecraft.fire();
+                                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
+                                if (!this._isBlockedBy) {
+                                    this._timeSinceLastRoll += dt;
+                                    this._timeSinceLastTargetHit += dt;
+                                    this._timeSinceLastClosingIn += dt;
+                                    // starting roll if needed
+                                    rollWaitTime = targetHitTime + ROLL_CORRECTION_TRIGGERING_MISS_COUNT * weaponCooldown;
+                                    if ((this._timeSinceLastRoll > rollWaitTime) && (this._timeSinceLastTargetHit > rollWaitTime)) {
+                                        this._rollTime = 0;
+                                    }
+                                    // performing coll
+                                    if (this._rollTime >= 0) {
+                                        this._spacecraft.rollLeft();
+                                        this._timeSinceLastRoll = 0;
+                                        this._rollTime += dt;
+                                        // calculating the duration of rolling based on the angle we would like to roll (in seconds)
+                                        angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
+                                        maxAngularVelocity = angularAcceleration * _turnAccelerationDuration;
+                                        rollDuration = (ROLL_CORRECTION_ANGLE > maxAngularVelocity * _turnAccelerationDuration) ?
+                                                _turnAccelerationDuration + (ROLL_CORRECTION_ANGLE - (maxAngularVelocity * _turnAccelerationDuration)) / maxAngularVelocity :
+                                                Math.sqrt(4 * ROLL_CORRECTION_ANGLE / angularAcceleration) / 2;
+                                        // stopping roll (converting to milliseconds)
+                                        if (this._rollTime > rollDuration * 1000) {
+                                            this._rollTime = -1;
+                                        }
                                     }
                                 }
                             }
                         } else {
                             this._timeSinceLastRoll = 0;
+                            this._fireDelayLeft = FIRE_DELAY;
                         }
                     } else {
                         this._timeSinceLastRoll = 0;
+                        this._fireDelayLeft = FIRE_DELAY;
                     }
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // initiating charge

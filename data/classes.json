@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:388 (2016.10.17.)",
-        "creationTime": "Mon Oct 17 2016 03:15:57 GMT+0200 (CEST)"
+        "version": "0.4.0-dev:495 (2017.02.04.)",
+        "creationTime": "Sat Feb 04 2017 04:06:33 GMT+0100 (CET)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -1318,7 +1318,7 @@
                     "shader": "particle",
                     "texture": "flare",
                     "particleStates": [{
-                            "color": [1.0, 1.0, 1, 1],
+                            "color": [1, 1, 1, 1],
                             "size": 45,
                             "timeToReach": 0
                         }, {
@@ -1535,6 +1535,25 @@
             "explosion": "largeHitExplosion"
         }],
     "weaponClasses": [{
+            "name": "fixedTrainingGun",
+            "shader": "ship",
+            "model": "trainingGun",
+            "texture": "libra",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
+            "grade": 1,
+            "cooldown": 750,
+            "barrels": [{
+                    "projectile": "training",
+                    "projectileVelocity": 400,
+                    "position": [0, 210, 0]
+                }],
+            "attachmentPoint": [0, -20, 39.6],
+            "fireSound": {
+                "name": "trainingShot",
+                "volume": 0.5
+            },
+            "scoreValue": 5
+        }, {
             "name": "trainingGun",
             "shader": "ship",
             "model": "trainingGun",
@@ -1569,7 +1588,7 @@
                     "rotationRate": 10,
                     "transformGroupIndex": 1
                 }],
-            "scoreValue": 5
+            "scoreValue": 10
         }, {
             "name": "plasmaGun",
             "shader": "ship",
@@ -1820,7 +1839,7 @@
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
                 "name": "thruster",
-                "volume": 4.0
+                "volume": 4
             },
             "scoreValue": 50
         }],
@@ -1841,7 +1860,7 @@
             "jumpOutScaling": 3,
             "jumpOutSound": {
                 "name": "jump_swoosh",
-                "volume": 2.0
+                "volume": 2
             },
             "jumpOutExplosion": "fighterJumpFlash",
             "jumpInDeceleration": 2500,
@@ -1850,7 +1869,7 @@
             "jumpInScaling": 3,
             "jumpInSound": {
                 "name": "jump_swoosh",
-                "volume": 2.0
+                "volume": 2
             },
             "jumpInExplosion": "fighterJumpFlash"
         }, {
@@ -1870,7 +1889,7 @@
             "jumpOutScaling": 2,
             "jumpOutSound": {
                 "name": "jump_swoosh",
-                "volume": 10.0
+                "volume": 10
             },
             "jumpOutExplosion": "smallShipJumpFlash",
             "jumpInDeceleration": 7000,
@@ -1879,7 +1898,7 @@
             "jumpInScaling": 2,
             "jumpInSound": {
                 "name": "jump_swoosh",
-                "volume": 10.0
+                "volume": 10
             },
             "jumpInExplosion": "smallShipJumpFlash"
         }, {
@@ -1899,7 +1918,7 @@
             "jumpOutScaling": 1.5,
             "jumpOutSound": {
                 "name": "jump_swoosh",
-                "volume": 20.0
+                "volume": 20
             },
             "jumpOutExplosion": "largeShipJumpFlash",
             "jumpInDeceleration": 20000,
@@ -1908,7 +1927,7 @@
             "jumpInScaling": 1.5,
             "jumpInSound": {
                 "name": "jump_swoosh",
-                "volume": 20.0
+                "volume": 20
             },
             "jumpInExplosion": "largeShipJumpFlash"
         }],
@@ -2459,6 +2478,36 @@
                             "class": "trainingGun"
                         }, {
                             "class": "trainingGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    }
+                }, {
+                    "name": "fixedTraining",
+                    "weapons": [{
+                            "class": "fixedTrainingGun"
+                        }, {
+                            "class": "fixedTrainingGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    }
+                }, {
+                    "name": "fixedTrainingFull",
+                    "weapons": [{
+                            "class": "fixedTrainingGun"
+                        }, {
+                            "class": "fixedTrainingGun"
+                        }, {
+                            "class": "fixedTrainingGun"
+                        }, {
+                            "class": "fixedTrainingGun"
                         }],
                     "propulsion": {
                         "class": "imperialFighterMk1"
@@ -3716,7 +3765,7 @@
             "equipmentProfiles": [{
                     "name": "default",
                     "weapons": [{
-                            "class": "trainingGun"
+                            "class": "fixedTrainingGun"
                         }],
                     "propulsion": {
                         "class": "imperialDrone"

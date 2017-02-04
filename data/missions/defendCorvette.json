@@ -301,7 +301,7 @@
             "ai": "fighter",
             "away": true,
             "equipment": {
-                "profile": "half"
+                "profile": "heavy"
             }
         },
         {
@@ -314,7 +314,7 @@
             "ai": "fighter",
             "away": true,
             "equipment": {
-                "profile": "half"
+                "profile": "heavy"
             }
         },
         {
@@ -327,7 +327,7 @@
             "ai": "fighter",
             "away": true,
             "equipment": {
-                "profile": "half"
+                "profile": "full"
             }
         },
         {
@@ -338,13 +338,7 @@
                 "index": 1
             },
             "ai": "fighter",
-            "away": true,
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ]
+            "away": true
         },
         {
             "team": "rebels",
@@ -355,12 +349,6 @@
             },
             "ai": "fighter",
             "away": true,
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
             "equipment": {
                 "profile": "default"
             }
@@ -374,12 +362,6 @@
             },
             "ai": "fighter",
             "away": true,
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
             "equipment": {
                 "profile": "default"
             }
@@ -393,12 +375,6 @@
             },
             "ai": "fighter",
             "away": true,
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
             "equipment": {
                 "profile": "heavy"
             }
@@ -412,14 +388,8 @@
             },
             "ai": "fighter",
             "away": true,
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
             "equipment": {
-                "profile": "full"
+                "profile": "heavy"
             }
         },
         {
@@ -431,14 +401,21 @@
             },
             "ai": "fighter",
             "away": true,
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
             "equipment": {
-                "profile": "half"
+                "profile": "full"
+            }
+        },
+        {
+            "team": "rebels",
+            "class": "viper",
+            "squad": {
+                "name": "reaper",
+                "index": 4
+            },
+            "ai": "fighter",
+            "away": true,
+            "equipment": {
+                "profile": "full"
             }
         }
     ]
