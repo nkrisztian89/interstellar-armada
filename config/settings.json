@@ -717,7 +717,7 @@
                 },
                 "newHostilesAlertSound": {
                     "name": "alert",
-                    "volume": 0.5
+                    "volume": 0.2
                 },
                 "newHostilesAlertDuration": 3250,
                 "newHostilesAlertBlinkInterval": 500

@@ -280,7 +280,8 @@
             "position": [0, 50, 0],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "team": "empire",
@@ -470,7 +471,7 @@
             "class": "aries",
             "name": "Don",
             "ai": "ship",
-            "position": [-14000, 0, -150],
+            "position": [-14500, 0, -150],
             "rotations": [
                 {
                     "axis": "z",
@@ -479,7 +480,8 @@
             ],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         }
     ]
 }

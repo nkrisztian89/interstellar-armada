@@ -181,21 +181,24 @@
             "position": [0, 50, 0],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "team": "empire",
             "class": "taurus",
             "name": "Danube",
             "ai": "ship",
-            "position": [-200, -50, 100]
+            "position": [-200, -50, 100],
+            "excludeFromReferenceScore": true
         },
         {
             "team": "empire",
             "class": "taurus",
             "name": "Vistula",
             "ai": "ship",
-            "position": [200, -50, 100]
+            "position": [200, -50, 100],
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
@@ -289,7 +292,8 @@
                 }],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
@@ -300,7 +304,8 @@
             "rotations": [{
                     "axis": "z",
                     "degrees": 180
-                }]
+                }],
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
@@ -311,7 +316,8 @@
             "rotations": [{
                     "axis": "z",
                     "degrees": 180
-                }]
+                }],
+            "excludeFromReferenceScore": true
         }
     ]
 }

@@ -2228,12 +2228,6 @@ define([
         return this._referenceScore;
     };
     /**
-     * Calculates and stores the reference score for this mission.
-     */
-    Mission.prototype._updateReferenceScore = function () {
-        this._referenceScore = this._pilotedCraft ? (this.getTotalHostileSpacecraftValue(this._pilotedCraft) / this.getSpacecraftCountForTeam(this._pilotedCraft.getTeam())) : 0;
-    };
-    /**
      * Loads all the data describing this mission from the passed JSON object. Does not add random ships to the mission, only loads their 
      * configuration - they can be added by calling addRandomShips() later, which will use the loaded configuration.
      * @param {Object} dataJSON
@@ -2241,7 +2235,7 @@ define([
      * and a suitable AI is added to all spacecrafts if possible.
      */
     Mission.prototype.loadFromJSON = function (dataJSON, demoMode) {
-        var i, j, craft, teamID, team, aiType, actions;
+        var i, j, craft, teamID, team, aiType, actions, count;
         application.log("Loading mission from JSON file...", 2);
         this.loadEnvironment(dataJSON);
         this._teams = [];
@@ -2295,18 +2289,31 @@ define([
             }
             this._spacecrafts.push(craft);
         }
-        // loading predefined initial targets
+        // loading predefined initial targets, calculating reference score (both require that all the spacecrafts already exist)
+        this._referenceScore = 0;
+        team = this._pilotedCraft && this._pilotedCraft.getTeam();
+        count = 0;
         for (i = 0; i < dataJSON.spacecrafts.length; i++) {
             if (dataJSON.spacecrafts[i].initialTarget) {
                 this._spacecrafts[i].setTarget(this.getSpacecraft(dataJSON.spacecrafts[i].initialTarget));
             }
+            if (this._pilotedCraft && !dataJSON.spacecrafts[i].excludeFromReferenceScore) {
+                if (this._pilotedCraft.isHostile(this._spacecrafts[i])) {
+                    this._referenceScore += this._spacecrafts[i].getScoreValue();
+                } else if (this._spacecrafts[i].getTeam() === team) {
+                    count++;
+                }
+            }
         }
+        if (count > 0) {
+            this._referenceScore /= count;
+        }
+        // loading random ship information
         this._randomShips = dataJSON.randomShips || {};
         this._randomShipsMapSize = dataJSON.randomShipsMapSize;
         this._randomShipsHeadingAngle = dataJSON.randomShipsHeadingAngle || 0;
         this._randomShipsRandomHeading = dataJSON.randomShipsRandomHeading || false;
         this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME;
-        this._updateReferenceScore();
         // cache escorted spacecrafts
         this._escortedSpacecrafts = [];
         for (i = 0; i < this._events.length; i++) {
@@ -2368,7 +2375,6 @@ define([
                 }
             }
         }
-        this._updateReferenceScore();
     };
     /**
      * Returns whether the mission is starting (has been started) with the player having teammates.

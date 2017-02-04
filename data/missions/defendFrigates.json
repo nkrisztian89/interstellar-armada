@@ -209,7 +209,8 @@
             ],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "class": "taurus",
@@ -226,7 +227,8 @@
             ],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "class": "taurus",
@@ -243,7 +245,8 @@
             ],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "class": "taurus",
@@ -260,7 +263,8 @@
             ],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "class": "taurus",
@@ -277,7 +281,8 @@
             ],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "class": "taurus",
@@ -294,7 +299,8 @@
             ],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "class": "falcon",
@@ -535,7 +541,8 @@
                     "axis": "z",
                     "degrees": 90
                 }
-            ]
+            ],
+            "excludeFromReferenceScore": true
         }
     ]
 }

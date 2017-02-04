@@ -67,7 +67,8 @@
             "position": [0, 50, 0],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
@@ -106,7 +107,8 @@
             "position": [0, 4950, 0],
             "equipment": {
                 "profile": "full"
-            }
+            },
+            "excludeFromReferenceScore": true
         }
     ]
 }

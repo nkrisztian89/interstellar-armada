@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0-dev:494 (2017.02.03.)",
+    "version": "0.4.0-dev:495 (2017.02.04.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -384,17 +384,17 @@
             },
             {
                 "name": "silver",
-                "referenceBaseScoreFactor": 1.5,
-                "referenceHitRatio": 0.05,
-                "referenceHullIntegrity": 0.8,
-                "referenceTeamSurvival": 0.5
+                "referenceBaseScoreFactor": 1.3,
+                "referenceHitRatio": 0.06,
+                "referenceHullIntegrity": 0.75,
+                "referenceTeamSurvival": 0.4
             },
             {
                 "name": "gold",
-                "referenceBaseScoreFactor": 2.0,
-                "referenceHitRatio": 0.10,
+                "referenceBaseScoreFactor": 1.6,
+                "referenceHitRatio": 0.12,
                 "referenceHullIntegrity": 0.9,
-                "referenceTeamSurvival": 0.75
+                "referenceTeamSurvival": 0.7
             }
         ]
     },
