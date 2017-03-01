@@ -1,0 +1,111 @@
+{
+    "description": "Mission against pirates.",
+    "environment": {
+        "createFrom": "deepSpaceWhiteRedStars"
+    },
+    "teams": [
+        "empire",
+        {
+            "name": "pirates",
+            "color": [0.2, 0.2, 0.8, 1.0]
+        }
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, 3150, -80],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -75
+                }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["raider 1"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 1500
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["raider"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "distance": 2000,
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [150, -50, 0]
+                            }
+                        }
+                    }
+            }]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "name": "Rookie",
+            "position": [0, 0, 0],
+            "equipment": {
+                "profile": "full"
+            }
+        },
+        {
+            "team": "pirates",
+            "class": "wolf",
+            "ai": "fighter",
+            "squad": {
+                "name": "raider",
+                "index": 1
+            },
+            "position": [0, 3200, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "pirates",
+            "class": "wolf",
+            "ai": "fighter",
+            "squad": {
+                "name": "raider",
+                "index": 2
+            },
+            "away": true
+        },
+        {
+            "team": "pirates",
+            "class": "wolf",
+            "ai": "fighter",
+            "squad": {
+                "name": "raider",
+                "index": 3
+            },
+            "away": true
+        }
+    ]
+}

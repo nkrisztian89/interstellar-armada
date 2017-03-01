@@ -4,6 +4,10 @@ module.exports = {
         "es6": true,
 	"amd": true
     },
+    "globals": {
+        "global": true,
+        "module": true
+    },
     "extends": "eslint:recommended",
     "rules": {
         "accessor-pairs": "error",
@@ -196,7 +200,7 @@ module.exports = {
         "no-useless-return": "off",
         "no-var": "off",
         "no-void": "error",
-        "no-warning-comments": "error",
+        "no-warning-comments": "off",
         "no-whitespace-before-property": "error",
         "no-with": "error",
         "object-curly-newline": "off",

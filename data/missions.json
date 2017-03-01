@@ -10,6 +10,8 @@
         }, {
             "source": "targetPracticeFalcon.json"
         }, {
+            "source": "pirates.json"
+        }, {
             "source": "1v1.json"
         }, {
             "source": "3v3.json"

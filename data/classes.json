@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:495 (2017.02.04.)",
-        "creationTime": "Sat Feb 04 2017 04:06:33 GMT+0100 (CET)"
+        "version": "0.4.0-dev:497 (2017.02.05.)",
+        "creationTime": "Wed Mar 01 2017 05:42:26 GMT+0100 (CET)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -651,6 +651,118 @@
                         }, {
                             "color": [1, 0.2, 0, 0],
                             "size": 12,
+                            "timeToReach": 700
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [1, 1, 0.7],
+                    "intensity": 8100,
+                    "timeToReach": 0
+                }, {
+                    "color": [1, 1, 0.3],
+                    "intensity": 3600,
+                    "timeToReach": 300
+                }, {
+                    "color": [1, 0, 0],
+                    "intensity": 0,
+                    "timeToReach": 400
+                }],
+            "soundEffect": {
+                "name": "fighterExplosion",
+                "volume": 2.5
+            }
+        }, {
+            "name": "largeFighterExplosion",
+            "particleEmitters": [{
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 0.7, 1],
+                            "size": 50,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 0,
+                            "timeToReach": 300
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [1, 1, 1],
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 1, 0, 1],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 0, 0, 0],
+                            "size": 40,
+                            "timeToReach": 700
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [4, 4, 4],
+                    "velocity": 65,
+                    "velocitySpread": 40,
+                    "initialNumber": 10,
+                    "spawnNumber": 8,
+                    "spawnTime": 70,
+                    "duration": 280,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 1, 0, 1],
+                            "size": 0.5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 1, 1],
+                            "size": 0.8,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1, 0.8, 0, 1],
+                            "size": 0,
+                            "timeToReach": 400
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [4, 4, 4],
+                    "velocity": 28,
+                    "velocitySpread": 8,
+                    "initialNumber": 14,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 0.5, 0, 1],
+                            "size": 3.5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 14,
+                            "timeToReach": 250
+                        }, {
+                            "color": [1, 0.5, 0, 1],
+                            "size": 0,
+                            "timeToReach": 300
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [8, 8, 8],
+                    "velocity": 28,
+                    "velocitySpread": 8,
+                    "initialNumber": 14,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 0.8, 0, 1],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 0.2, 0, 0],
+                            "size": 16,
                             "timeToReach": 700
                         }]
                 }],
@@ -1494,6 +1606,26 @@
             "lightIntensity": 100,
             "explosion": "smallHitExplosion"
         }, {
+            "name": "redPlasma",
+            "damage": 3,
+            "shader": "billboard",
+            "texture": "redPlasma",
+            "size": 2.5,
+            "mass": 2.5,
+            "duration": 4000,
+            "intersectionPositions": [0],
+            "width": 0.3,
+            "muzzleFlash": {
+                "shader": "particle",
+                "texture": "flare",
+                "color": [1, 0.3, 0.3, 1],
+                "size": 2.5,
+                "duration": 250
+            },
+            "lightColor": [1, 0.3, 0.3],
+            "lightIntensity": 36,
+            "explosion": "smallHitExplosion"
+        }, {
             "name": "proton",
             "damage": 35,
             "shader": "billboard",
@@ -1608,6 +1740,25 @@
                 "volume": 0.4
             },
             "scoreValue": 20
+        }, {
+            "name": "pirateGun",
+            "shader": "ship",
+            "model": "pirateGun",
+            "texture": "libra",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
+            "grade": 1,
+            "cooldown": 500,
+            "barrels": [{
+                    "projectile": "redPlasma",
+                    "projectileVelocity": 450,
+                    "position": [0, 432, 0]
+                }],
+            "attachmentPoint": [0, -20, 48],
+            "fireSound": {
+                "name": "heavyPlasmaShot",
+                "volume": 0.75
+            },
+            "scoreValue": 15
         }, {
             "name": "heavyPlasmaGun",
             "shader": "ship",
@@ -1842,6 +1993,22 @@
                 "volume": 4
             },
             "scoreValue": 50
+        }, {
+            "name": "pirateFighterMk1",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [1, 0.38823529411764707, 0.38823529411764707, 1],
+            "grade": 1,
+            "referenceMass": 25000,
+            "thrust": 30,
+            "angularThrust": 180,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.2
+            },
+            "scoreValue": 10
         }],
     "jumpEngineClasses": [{
             "name": "imperialFighterMk1",
@@ -1930,6 +2097,35 @@
                 "volume": 20
             },
             "jumpInExplosion": "largeShipJumpFlash"
+        }, {
+            "name": "pirateFighterMk1",
+            "engageSound": {
+                "name": "jump_start",
+                "volume": 0.5
+            },
+            "prepareVelocity": 100,
+            "prepareDuration": 5000,
+            "prepareSound": {
+                "name": "jump_prepare_fighter",
+                "volume": 0.38
+            },
+            "jumpOutAcceleration": 2500,
+            "jumpOutDuration": 500,
+            "jumpOutScaling": 3,
+            "jumpOutSound": {
+                "name": "jump_swoosh",
+                "volume": 2
+            },
+            "jumpOutExplosion": "fighterJumpFlash",
+            "jumpInDeceleration": 2500,
+            "jumpInDuration": 500,
+            "jumpInVelocity": 100,
+            "jumpInScaling": 3,
+            "jumpInSound": {
+                "name": "jump_swoosh",
+                "volume": 2
+            },
+            "jumpInExplosion": "fighterJumpFlash"
         }],
     "spacecraftTypes": [{
             "name": "container",
@@ -1950,7 +2146,7 @@
             "isFighterType": true,
             "fullName": "Interceptor",
             "description": "Interceptors are small, agile space fighters designed to counter enemy fighters and bombers. They are fast and maneuverable with light armor but often considerable firepower, which allows them to take out more heavily armored bombers. Interceptor designers utilize different approaches in their models to offer protection for them in the vicinity of larger enemy ships. However, it is generally highly recommended to stay out of range of enemy ships that have significant anti-fighter capabilities.",
-            "goodAgainst": ["interceptor", "reconFighter", "heavyFighter", "bomber"],
+            "goodAgainst": ["interceptor", "reconFighter", "heavyFighter", "bomber", "multiroleFighter"],
             "badAgainst": ["corvette", "destroyer", "cruiser", "battleship"]
         }, {
             "name": "bomber",
@@ -1958,7 +2154,7 @@
             "fullName": "Bomber",
             "description": "Bombers are small spacecraft usually manned by one or two pilots, designed as a cost effective solution against small and medium size warships. Their heavy armor and shielding enables them to survive long enough to deliver their large payload, either taking out critical systems or causing significant shield and hull damage to their target. The additional mass makes them less maneuverable and thus more vulnerable against enemy fighters.",
             "goodAgainst": ["torpedoBoat", "corvette", "frigate", "destroyer"],
-            "badAgainst": ["reconFighter", "heavyFighter", "interceptor"]
+            "badAgainst": ["reconFighter", "heavyFighter", "interceptor", "multiroleFighter"]
         }, {
             "name": "reconFighter",
             "isFighterType": true,
@@ -1971,8 +2167,15 @@
             "isFighterType": true,
             "fullName": "Heavy fighter",
             "description": "Heavy fighters are support craft usually used together with interceptors or bombers. They are the most heavily armored fighters with the highest firepower of primary weapons, providing them fair survivability even when facing anti-fighter weaponry of enemy ships. They are also the least maneuverable of all fighters, making it difficult for them to engage faster targets on their own. Their main role is to draw enemy fire from interceptors or bombers while those can destroy their priority targets. They are also an excellent choice for taking out enemy torpedo boats.",
-            "goodAgainst": ["bomber", "torpedoBoat", "frigate"],
+            "goodAgainst": ["bomber", "torpedoBoat", "frigate", "multiroleFighter"],
             "badAgainst": ["interceptor", "corvette", "destroyer"]
+        }, {
+            "name": "multiroleFighter",
+            "isFighterType": true,
+            "fullName": "Multirole fighter",
+            "description": "Multirole fighters are small strike craft which are designed with a wide range of use-cases in mind. They represent a cost effective solution for peacetime and for powers with a limited military, since maintaining a smaller number of fighters ensures a capable force for most scenarios. These craft are balanced and can accomodate a large variety of equipment. Still, a multirole fighter even when customized for a role is typically at a disadvantage compared to classes that are specialized for that single role.",
+            "goodAgainst": ["bomber", "drone", "reconFighter"],
+            "badAgainst": ["corvette", "destroyer", "cruiser", "battleship", "frigate", "interceptor"]
         }, {
             "name": "torpedoBoat",
             "isFighterType": false,
@@ -1985,7 +2188,7 @@
             "isFighterType": false,
             "fullName": "Corvette",
             "description": "Corvettes are the smallest and most lightly armored real warships of contemporary fleets. Due to the limited cargo capacity given their small hull, these ships cannot be sent on long missions alone. They are often found in local patrols and as escort ships in fleets, as their weaponry is usually most effective against fighters and bombers. They are not powerful enough to engage larger enemy warships but can provide supportive precision fire.",
-            "goodAgainst": ["reconFighter", "heavyFighter", "interceptor", "bomber", "torpedoBoat"],
+            "goodAgainst": ["reconFighter", "heavyFighter", "interceptor", "bomber", "torpedoBoat", "multiroleFighter"],
             "badAgainst": ["frigate", "destroyer", "cruiser", "battleship"]
         }, {
             "name": "frigate",
@@ -1999,7 +2202,7 @@
             "isFighterType": false,
             "fullName": "Destroyer",
             "description": "Destroyers, serving as the lead for battle groups, are the most versatile of all warships. Their large size provides a lot of options for configuring their equipment: they can balance fair anti-fighter and anti-ship firepower or lean towards one side, but can also be equipped for long-range artillery fire or provide larger hangar bays for fighters, bombers or transports. Destroyers, depending on their configuration, are suitable for all types of missions and against most enemy craft up to their size. Without proper escort, concentrated fire from anti-ship weapons can wear them out, and the loss of a destroyer can easily change the tide in a battle. ",
-            "goodAgainst": ["heavyFighter", "torpedoBoat", "corvette"],
+            "goodAgainst": ["heavyFighter", "torpedoBoat", "corvette", "multiroleFighter"],
             "badAgainst": ["bomber", "frigate", "cruiser", "battleship"]
         }, {
             "name": "cruiser",
@@ -5496,5 +5699,452 @@
                 }],
             "blinkers": [],
             "scoreValue": 2500
+        }, {
+            "name": "wolf",
+            "type": "multiroleFighter",
+            "fullName": "Wolf",
+            "description": "A modified version of the original Phoenix class fighters which were the most common strike craft from the earlier days of the empire up until recently. The Phoenixes were versatile fighters capable of carrying out both atmospheric and deep space operations. The large cargo space and jump engine capacity for its size enables it to be used in missions of extended duration. As the empire started to face increasing internal and external threats, the Phoenix multirole fighters were superseded by the more specialized Dragonfly, Falcon, Rhino and Viper classes, as those all outmatch it in their respective roles. Most of the Phoenixes were converted for civilian use, but there is an increasing number of reports about pirates showing up with a modified version of the class, which has been designated as Wolf.",
+            "showInDatabase": true,
+            "hitpoints": 25,
+            "armor": 0,
+            "model": "wolf",
+            "shader": "ship",
+            "texture": "viper",
+            "factionColor": [0, 0, 0, 1],
+            "mass": 25000,
+            "bodies": [{
+                    "position": [0, 10, 0],
+                    "size": [15, 100, 10]
+                }, {
+                    "position": [0, -6, -3],
+                    "size": [100, 27, 8]
+                }, {
+                    "position": [0, -6, -15],
+                    "size": [5, 30, 20]
+                }, {
+                    "position": [0, 2, -22],
+                    "size": [53, 25, 7]
+                }, {
+                    "position": [0, -10, 0],
+                    "size": [25, 50, 20]
+                }],
+            "maxPropulsionGrade": 1,
+            "views": [{
+                    "name": "near",
+                    "isAimingView": true,
+                    "fov": 40,
+                    "fovRange": [40, 40],
+                    "span": 0.2,
+                    "spanRange": [0.2, 0.2],
+                    "fps": false,
+                    "followsPosition": true,
+                    "baseOrientation": "world",
+                    "lookAt": "none",
+                    "movable": false,
+                    "turnable": false,
+                    "alphaRange": [0, 0],
+                    "betaRange": [0, 0],
+                    "rotationCenterIsObject": true,
+                    "position": [0, -30, 6],
+                    "movesRelativeToObject": false
+                }, {
+                    "name": "far",
+                    "isAimingView": true,
+                    "fov": 55,
+                    "fovRange": [55, 55],
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": false,
+                    "rotationCenterIsObject": true,
+                    "position": [0, -50, 15],
+                    "lookAt": "none"
+                }, {
+                    "name": "cockpit",
+                    "isAimingView": true,
+                    "fov": 45,
+                    "fovRange": [45, 45],
+                    "fps": true,
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": true,
+                    "alphaRange": [-120, 120],
+                    "betaRange": [-80, 50],
+                    "rotationCenterIsObject": false,
+                    "position": [0, 1.4, 1.6],
+                    "resetsOnFocusChange": true,
+                    "lookAt": "none"
+                }, {
+                    "name": "front",
+                    "isAimingView": false,
+                    "fov": 55,
+                    "fovRange": [55, 55],
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": false,
+                    "rotationCenterIsObject": false,
+                    "position": [0, 32, 12.5],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": 180
+                        }, {
+                            "axis": "X",
+                            "degrees": -8
+                        }],
+                    "lookAt": "none"
+                }, {
+                    "name": "free",
+                    "isAimingView": false,
+                    "fov": 45,
+                    "fovRange": [30, 60],
+                    "followsPosition": true,
+                    "movable": true,
+                    "turnable": true,
+                    "rotationCenterIsObject": true,
+                    "distanceRange": [15, 75],
+                    "position": [0, -40, 0],
+                    "lookAt": "none"
+                }, {
+                    "name": "flyby",
+                    "isAimingView": false,
+                    "fps": true,
+                    "fov": 45,
+                    "fovRange": [45, 45],
+                    "followsPosition": false,
+                    "baseOrientation": "orientationFollowedObject",
+                    "startsWithRelativePosition": true,
+                    "lookAt": "self",
+                    "movable": false,
+                    "turnable": false,
+                    "position": [24, 150, 7.5],
+                    "distanceRange": [15, 200]
+                }, {
+                    "name": "jump",
+                    "isAimingView": true,
+                    "fov": 75,
+                    "fovRange": [75, 75],
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": false,
+                    "rotationCenterIsObject": true,
+                    "position": [0, -12, 6],
+                    "lookAt": "none",
+                    "excludeFromCycle": true
+                }, {
+                    "name": "target",
+                    "isAimingView": false,
+                    "fps": true,
+                    "fov": 55,
+                    "fovRange": [30, 55],
+                    "followsPosition": true,
+                    "lookAt": "target",
+                    "movable": true,
+                    "turnable": false,
+                    "rotationCenterIsObject": true,
+                    "position": [0, -40, 7.5],
+                    "distanceRange": [25, 80]
+                }],
+            "humSound": {
+                "name": "spacecraftHum",
+                "volume": 0.5
+            },
+            "explosion": "largeFighterExplosion",
+            "showTimeRatioDuringExplosion": 0.25,
+            "damageIndicators": [{
+                    "hullIntegrity": 25,
+                    "class": "smallFire"
+                }, {
+                    "hullIntegrity": 10,
+                    "class": "smallFire"
+                }],
+            "lights": [{
+                    "position": [0, 45, -3.6],
+                    "color": [1, 1, 1],
+                    "intensity": 6400,
+                    "spotDirection": [0, 1, 0],
+                    "spotCutoffAngle": 11,
+                    "spotFullIntensityAngle": 5
+                }],
+            "blinkers": [],
+            "scoreValue": 40,
+            "weaponSlots": [{
+                    "position": [0, 5, -26],
+                    "array": false,
+                    "maxGrade": 1
+                }, {
+                    "position": [48.44, -1, -6.42],
+                    "array": false,
+                    "rotations": [{
+                            "axis": "Y",
+                            "degrees": 80
+                        }],
+                    "maxGrade": 1
+                }, {
+                    "position": [-48.44, -1, -6.42],
+                    "array": false,
+                    "rotations": [{
+                            "axis": "Y",
+                            "degrees": -80
+                        }],
+                    "maxGrade": 1
+                }],
+            "equipmentProfiles": [{
+                    "name": "default",
+                    "weapons": [{
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }],
+                    "propulsion": {
+                        "class": "pirateFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "pirateFighterMk1"
+                    }
+                }, {
+                    "name": "imperial",
+                    "weapons": [{
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    }
+                }],
+            "thrusterSlots": [{
+                    "group": 1,
+                    "uses": ["yawRight"],
+                    "thrusters": [{
+                            "position": [46.47, 8.2, -6.08],
+                            "size": 2,
+                            "groupIndex": 1,
+                            "uses": ["yawRight"]
+                        }, {
+                            "position": [-46.47, -10.2, -6.08],
+                            "size": 2,
+                            "groupIndex": 1,
+                            "uses": ["yawRight"]
+                        }],
+                    "array": false,
+                    "size": 1
+                }, {
+                    "group": 2,
+                    "uses": ["yawLeft"],
+                    "thrusters": [{
+                            "position": [46.47, -10.2, -6.08],
+                            "size": 2,
+                            "groupIndex": 2,
+                            "uses": ["yawLeft"]
+                        }, {
+                            "position": [-46.47, 8.2, -6.08],
+                            "size": 2,
+                            "groupIndex": 2,
+                            "uses": ["yawLeft"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 3,
+                    "uses": ["rollRight"],
+                    "thrusters": [{
+                            "position": [46.94, 1.3, -3.42],
+                            "size": 1.6,
+                            "groupIndex": 3,
+                            "uses": ["rollRight"]
+                        }, {
+                            "position": [46.94, -3.3, -3.42],
+                            "size": 1.6,
+                            "groupIndex": 3,
+                            "uses": ["rollRight"]
+                        }, {
+                            "position": [-46, 1.3, -8.74],
+                            "size": 1.6,
+                            "groupIndex": 3,
+                            "uses": ["rollRight"]
+                        }, {
+                            "position": [-46, -3.3, -8.74],
+                            "size": 1.6,
+                            "groupIndex": 3,
+                            "uses": ["rollRight"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 4,
+                    "uses": ["rollLeft"],
+                    "thrusters": [{
+                            "position": [46, 1.3, -8.74],
+                            "size": 1.6,
+                            "groupIndex": 4,
+                            "uses": ["rollLeft"]
+                        }, {
+                            "position": [46, -3.3, -8.74],
+                            "size": 1.6,
+                            "groupIndex": 4,
+                            "uses": ["rollLeft"]
+                        }, {
+                            "position": [-46.94, 1.3, -3.42],
+                            "size": 1.6,
+                            "groupIndex": 4,
+                            "uses": ["rollLeft"]
+                        }, {
+                            "position": [-46.94, -3.3, -3.42],
+                            "size": 1.6,
+                            "groupIndex": 4,
+                            "uses": ["rollLeft"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 5,
+                    "uses": ["pitchDown", "lower"],
+                    "thrusters": [{
+                            "position": [5, 45.5, 1.2],
+                            "size": 1.5,
+                            "groupIndex": 5,
+                            "uses": ["pitchDown", "lower"]
+                        }, {
+                            "position": [-5, 45.5, 1.2],
+                            "size": 1.5,
+                            "groupIndex": 5,
+                            "uses": ["pitchDown", "lower"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 6,
+                    "uses": ["pitchUp", "raise"],
+                    "thrusters": [{
+                            "position": [5, 45.5, -1.2],
+                            "size": 1.5,
+                            "groupIndex": 6,
+                            "uses": ["pitchUp", "raise"]
+                        }, {
+                            "position": [-5, 45.5, -1.2],
+                            "size": 1.5,
+                            "groupIndex": 6,
+                            "uses": ["pitchUp", "raise"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 7,
+                    "uses": ["reverse"],
+                    "thrusters": [{
+                            "position": [4.07, 11, -23.52],
+                            "size": 1.5,
+                            "groupIndex": 7,
+                            "uses": ["reverse"]
+                        }, {
+                            "position": [-4.07, 11, -23.52],
+                            "size": 1.5,
+                            "groupIndex": 7,
+                            "uses": ["reverse"]
+                        }, {
+                            "position": [3, -5.8, 12],
+                            "size": 1.8,
+                            "groupIndex": 7,
+                            "uses": ["reverse"]
+                        }, {
+                            "position": [-3, -5.8, 12],
+                            "size": 1.8,
+                            "groupIndex": 7,
+                            "uses": ["reverse"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 8,
+                    "uses": ["forward"],
+                    "thrusters": [{
+                            "position": [4.07, -11, -23.52],
+                            "size": 1.5,
+                            "groupIndex": 8,
+                            "uses": ["forward"]
+                        }, {
+                            "position": [-4.07, -11, -23.52],
+                            "size": 1.5,
+                            "groupIndex": 8,
+                            "uses": ["forward"]
+                        }, {
+                            "position": [0, -40.5, 0],
+                            "size": 2.75,
+                            "groupIndex": 8,
+                            "uses": ["forward"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 9,
+                    "uses": ["strafeLeft"],
+                    "thrusters": [{
+                            "position": [7.25, -5, -25.5],
+                            "size": 1.1,
+                            "groupIndex": 9,
+                            "uses": ["strafeLeft"]
+                        }, {
+                            "position": [7.25, -8.5, -25.5],
+                            "size": 1.1,
+                            "groupIndex": 9,
+                            "uses": ["strafeLeft"]
+                        }, {
+                            "position": [6.25, -12, 12],
+                            "size": 1.1,
+                            "groupIndex": 9,
+                            "uses": ["strafeLeft"]
+                        }, {
+                            "position": [6.25, -15.5, 12],
+                            "size": 1.1,
+                            "groupIndex": 9,
+                            "uses": ["strafeLeft"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 10,
+                    "uses": ["strafeRight"],
+                    "thrusters": [{
+                            "position": [-7.25, -5, -25.5],
+                            "size": 1.1,
+                            "groupIndex": 10,
+                            "uses": ["strafeRight"]
+                        }, {
+                            "position": [-7.25, -8.5, -25.5],
+                            "size": 1.1,
+                            "groupIndex": 10,
+                            "uses": ["strafeRight"]
+                        }, {
+                            "position": [-6.25, -12, 12],
+                            "size": 1.1,
+                            "groupIndex": 10,
+                            "uses": ["strafeRight"]
+                        }, {
+                            "position": [-6.25, -15.5, 12],
+                            "size": 1.1,
+                            "groupIndex": 10,
+                            "uses": ["strafeRight"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 11,
+                    "uses": ["pitchUp", "lower"],
+                    "thrusters": [{
+                            "position": [0, -30, 8.75],
+                            "size": 1.7,
+                            "groupIndex": 11,
+                            "uses": ["pitchUp", "lower"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 12,
+                    "uses": ["raise", "pitchDown"],
+                    "thrusters": [{
+                            "position": [0, -30, -8.75],
+                            "size": 1.7,
+                            "groupIndex": 12,
+                            "uses": ["raise", "pitchDown"]
+                        }],
+                    "array": false
+                }],
+            "defaultLuminosityFactors": [[18, 1]]
         }]
 }

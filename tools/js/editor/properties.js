@@ -348,6 +348,9 @@ define([
             }
             return result;
         }
+        if (propertyDescriptor.newValue) {
+            return utils.deepCopy(propertyDescriptor.newValue);
+        }
         if (propertyDescriptor.defaultValue) {
             return utils.deepCopy(propertyDescriptor.defaultValue);
         }

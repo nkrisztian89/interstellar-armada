@@ -149,6 +149,9 @@
         "targetPracticeFalcon": {
             "name": "Advanced target practice"
         },
+        "pirates": {
+            "name": "Pirates"
+        },
         "1v1": {
             "name": "One versus one"
         },
@@ -206,6 +209,7 @@
         "team": "Team {id}",
         "empire": "Galactic Empire",
         "rebels": "Separatist rebels",
+        "pirates": "Pirates",
         "practiceTargets": "Practice target"
     },
     "squad": {
@@ -225,7 +229,9 @@
         "wraith": "Wraith",
         "phantom": "Phantom",
         "serpent": "Serpent",
-        "reaper": "Reaper"
+        "reaper": "Reaper",
+        "raider": "Raider",
+        "marauder": "Marauder"
     },
     "battle": {
         "developmentVersionNotice": "Interstellar Armada: Galactic Ace - development version: {version}",

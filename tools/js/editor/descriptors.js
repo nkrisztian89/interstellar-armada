@@ -61,7 +61,8 @@ define([
                 DEGREES: "degrees",
                 DEGREES_PER_SECOND: "deg/s",
                 DEGREES_PER_SECOND_SQUARED: "deg/s^2",
-                KILOGRAMS: "kg"
+                KILOGRAMS: "kg",
+                PERCENT: "%"
             },
             /**
              * The possible axes for rotations
@@ -107,10 +108,14 @@ define([
              * @property {String} name
              * @property {String|Editor~TypeDescriptor} type (if string: enum BaseType)
              * @property {Boolean} [optional=false] Whether undefined / null (= unset) is actually a valid value for this property
-             * @property {} [defaultValue] If the value is undefined, it means the property will be taken as having this value
+             * @property {} [defaultValue] If the value is undefined, it means the property will be taken as having this value. 
+             * Use this for properties for which the game logic actually replaces undefined values with a proper value upon loading.
+             * When a new object is created having this property, this default value will be set for it. (unless an explicit newValue is 
+             * specified)
              * @property {Boolean} [defaultDerived] If the value is undefined, the value of the property will be derived (calculated) from other properties
              * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
              * @property {String} [settingName] If globalDefault is true, the name of the setting from where the default value is retrieved from can be given here
+             * @property {} [newValue] When a new object is created having this property, this value will be set as its value.
              * @property {Boolean} [createDefaultElement] If the property is of an array type, its default value should be an array with one
              * element having its default value (instead of an empty array)
              */
@@ -199,6 +204,10 @@ define([
             KILOGRAMS = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.KILOGRAMS
+            },
+            PERCENT = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.PERCENT
             },
             /**
              * @type Editor~TypeDescriptor
@@ -1538,7 +1547,8 @@ define([
                 properties: {
                     HULL_INTEGRITY: {
                         name: "hullIntegrity",
-                        type: BaseType.NUMBER
+                        type: PERCENT,
+                        newValue: 50
                     },
                     CLASS: {
                         name: "class",
@@ -1634,11 +1644,13 @@ define([
                 },
                 FULL_NAME: {
                     name: "fullName",
-                    type: BaseType.STRING
+                    type: BaseType.STRING,
+                    newValue: "unnamed"
                 },
                 DESCRIPTION: {
                     name: "description",
-                    type: LONG_STRING
+                    type: LONG_STRING,
+                    newValue: "-"
                 },
                 SHOW_IN_DATABASE: {
                     name: "showInDatabase",
@@ -1646,7 +1658,8 @@ define([
                 },
                 HITPOINTS: {
                     name: "hitpoints",
-                    type: BaseType.NUMBER
+                    type: BaseType.NUMBER,
+                    newValue: 1
                 },
                 ARMOR: {
                     name: "armor",
@@ -1690,7 +1703,8 @@ define([
                 },
                 MASS: {
                     name: "mass",
-                    type: KILOGRAMS
+                    type: KILOGRAMS,
+                    newValue: 1
                 },
                 BODIES: {
                     name: "bodies",
@@ -1703,7 +1717,8 @@ define([
                 },
                 MAX_PROPULSION_GRADE: {
                     name: "maxPropulsionGrade",
-                    type: BaseType.NUMBER
+                    type: BaseType.NUMBER,
+                    newValue: 1
                 },
                 THRUSTER_SLOTS: {
                     name: "thrusterSlots",
@@ -1730,7 +1745,8 @@ define([
                 },
                 SHOW_TIME_RATIO_DURING_EXPLOSION: {
                     name: "showTimeRatioDuringExplosion",
-                    type: BaseType.NUMBER
+                    type: BaseType.NUMBER,
+                    newValue: 1
                 },
                 DAMAGE_INDICATORS: {
                     name: "damageIndicators",
@@ -1746,7 +1762,8 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: BaseType.NUMBER
+                    type: BaseType.NUMBER,
+                    newValue: 1
                 }
             },
             /**

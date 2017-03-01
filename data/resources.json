@@ -3,8 +3,8 @@
         "name": "resources",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:387 (2016.10.12.)",
-        "creationTime": "Thu Oct 13 2016 01:01:11 GMT+0200 (CEST)"
+        "version": "0.4.0-dev:497 (2017.02.05.)",
+        "creationTime": "Tue Feb 21 2017 23:37:14 GMT+0100 (CET)"
     },
     "textures": [{
             "name": "white",
@@ -144,6 +144,18 @@
         }, {
             "name": "heavyPlasma",
             "basepath": "projectile/heavyPlasma_full",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        }, {
+            "name": "redPlasma",
+            "basepath": "projectile/redPlasma_full",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {
@@ -866,6 +878,26 @@
                     "maxLOD": 4
                 }]
         }, {
+            "name": "pirateGun",
+            "basepath": "weapons/pirateGun",
+            "format": "egm",
+            "files": [{
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }]
+        }, {
             "name": "turret",
             "basepath": "weapons/turret",
             "format": "egm",
@@ -1048,6 +1080,26 @@
         }, {
             "name": "libra",
             "basepath": "libra",
+            "format": "egm",
+            "files": [{
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }]
+        }, {
+            "name": "wolf",
+            "basepath": "wolf",
             "format": "egm",
             "files": [{
                     "suffix": "_lod0-0",

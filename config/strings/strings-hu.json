@@ -122,6 +122,7 @@
         "team": "{id}. csapat",
         "empire": "Galaktikus Birodalom",
         "rebels": "Szeparatista lázadók",
+        "pirates": "Kalózok",
         "practiceTargets": "Gyakorló cél"
     },
     "squad": {
@@ -141,7 +142,9 @@
         "wraith": "Lidérc",
         "phantom": "Fantom",
         "serpent": "Kígyó",
-        "reaper": "Kaszás"
+        "reaper": "Kaszás",
+        "raider": "Fosztogató",
+        "marauder": "Martalóc"
     },
     "mission": {
         "targetPracticeBoxes": {
@@ -174,6 +177,9 @@
         },
         "targetPracticeFalcon": {
             "name": "Haladó lőgyakorlat"
+        },
+        "pirates": {
+            "name": "Kalózok"
         },
         "1v1": {
             "name": "Egy egy ellen"
@@ -473,6 +479,9 @@
         "bomber": {
             "name": "bombázó"
         },
+        "multiroleFighter": {
+            "name": "többfeladatú vadász"
+        },
         "corvette": {
             "name": "korvett"
         },
@@ -496,6 +505,9 @@
         },
         "viper": {
             "name": "Vipera"
+        },
+        "wolf": {
+            "name": "Farkas"
         }
     },
     "objectView": {
