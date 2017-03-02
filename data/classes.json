@@ -5709,7 +5709,7 @@
             "armor": 0,
             "model": "wolf",
             "shader": "ship",
-            "texture": "viper",
+            "texture": "wolf",
             "factionColor": [0, 0, 0, 1],
             "mass": 25000,
             "bodies": [{

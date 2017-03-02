@@ -260,6 +260,20 @@
                 "normal": ""
             }
         }, {
+            "name": "wolf",
+            "basepath": "spacecraft/wolf",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        }, {
             "name": "hud-atlas",
             "basepath": "hud/hud-atlas",
             "format": "png",
