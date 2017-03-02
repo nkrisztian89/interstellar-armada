@@ -3171,7 +3171,10 @@ define([
                                             game.closeSuperimposedScreen();
                                             this.resumeBattle();
                                         }.bind(this)
-                                    }]
+                                    }],
+                                onClose: function () {
+                                    this.resumeBattle();
+                                }.bind(this)
                             });
                         }
                         audio.playMusic(

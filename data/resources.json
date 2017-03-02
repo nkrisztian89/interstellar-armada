@@ -1160,6 +1160,9 @@
             "name": "heavyPlasmaShot",
             "samples": ["weapon/weaponshot_heavyPlasma.ogg"]
         }, {
+            "name": "piratePlasmaShot",
+            "samples": ["weapon/weaponshot_pirate.ogg"]
+        }, {
             "name": "protonShot",
             "samples": ["weapon/weaponshot_proton.ogg"]
         }, {

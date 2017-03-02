@@ -49,7 +49,10 @@ define([
                     "enter": this._activateSelected.bind(this),
                     "escape": function () {
                         game.closeSuperimposedScreen();
-                    }
+                        if (this._onClose) {
+                            this._onClose();
+                        }
+                    }.bind(this)
                 });
         /** @type SimpleComponent */
         this._header = this.registerSimpleComponent(HEADER_ID);
@@ -69,6 +72,8 @@ define([
         this._activeButtonCount = 0;
         /** @type Function */
         this._buttonLeaveHandler = this._selectIndex.bind(this, -1);
+        /** @type Function */
+        this._onClose = null;
     }
     DialogScreen.prototype = new screens.HTMLScreen();
     DialogScreen.prototype.constructor = DialogScreen;
@@ -138,6 +143,7 @@ define([
      * @property {String} header
      * @property {String} message
      * @property {DialogScreen~ButtonData[]} buttons
+     * @property {Function} [onClose]
      */
     /**
      * Sets the contents of the screen's HTML element
@@ -145,6 +151,8 @@ define([
      */
     DialogScreen.prototype.setup = function (data) {
         var i;
+        // setting event handlers
+        this._onClose = data.onClose;
         // setting header and message
         this._header.setVisible(data.header && (data.header.length > 0));
         if (this._header.isVisible()) {

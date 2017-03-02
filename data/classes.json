@@ -1755,8 +1755,8 @@
                 }],
             "attachmentPoint": [0, -20, 48],
             "fireSound": {
-                "name": "heavyPlasmaShot",
-                "volume": 0.75
+                "name": "piratePlasmaShot",
+                "volume": 0.4
             },
             "scoreValue": 15
         }, {
@@ -5894,6 +5894,17 @@
                         }, {
                             "class": "pirateGun"
                         }, {
+                            "class": "pirateGun"
+                        }],
+                    "propulsion": {
+                        "class": "pirateFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "pirateFighterMk1"
+                    }
+                }, {
+                    "name": "weak",
+                    "weapons": [{
                             "class": "pirateGun"
                         }],
                     "propulsion": {
