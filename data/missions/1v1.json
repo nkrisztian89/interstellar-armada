@@ -1,6 +1,7 @@
 {
     "description": "Practice mission against a sinlge enemy of the same class, but more lightly armed.",
     "environment": "reddim",
+    "combatTheme": "combat",
     "teams": [
         "empire",
         {

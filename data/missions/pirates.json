@@ -1,6 +1,7 @@
 {
     "description": "Mission against pirates.",
     "environment": "reddim",
+    "combatTheme": "combat2",
     "teams": [
         "empire",
         "pirates"

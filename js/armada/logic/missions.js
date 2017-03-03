@@ -1778,6 +1778,12 @@ define([
          */
         this._ownsEnvironment = false;
         /**
+         * The ID (resource name) of the music that should play while in combat within this mission (if not given, a random one is chosen
+         * from the available combat themes each time the mission starts)
+         * @type String
+         */
+        this._combatTheme = null;
+        /**
          * The list of views that will be used to add camera configurations to the scene of this mission. The first element of this list
          * will be the starting camera configuration.
          * @type SceneView[]
@@ -1870,8 +1876,13 @@ define([
     Mission.prototype.getName = function () {
         return this._name;
     };
-    // #########################################################################
-    // indirect getters and setters
+    /**
+     * Returns the ID (resource name) of the music that should play while in combat within this mission (if it is specified)
+     * @returns {String}
+     */
+    Mission.prototype.getCombatTheme = function () {
+        return this._combatTheme;
+    };
     /**
      * Returns the currently piloted spacecraft.
      * @returns {Spacecraft}
@@ -2240,6 +2251,7 @@ define([
         var i, j, craft, teamID, team, aiType, actions, count;
         application.log("Loading mission from JSON file...", 2);
         this.loadEnvironment(dataJSON);
+        this._combatTheme = dataJSON.combatTheme;
         this._teams = [];
         if (dataJSON.teams) {
             for (i = 0; i < dataJSON.teams.length; i++) {

@@ -1218,6 +1218,9 @@
             "name": "combat",
             "sample": "combat.ogg"
         }, {
+            "name": "combat2",
+            "sample": "combat2.ogg"
+        }, {
             "name": "victory",
             "sample": "victory.ogg"
         }, {

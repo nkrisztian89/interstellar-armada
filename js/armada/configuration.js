@@ -249,6 +249,10 @@ define([
             elementType: types.VECTOR2 // relative position (within the wing layout) of the craft on the wingmen indicator panel
         }
     };
+    _customTypes.STRING_ARRAY = {
+        baseType: "array",
+        elementType: "string"
+    };
     /**
      * Creates and returns a new type descriptor based on the passed one, changing some of its property descriptors
      * @param {Object} baseDescriptor
@@ -1329,11 +1333,12 @@ define([
             type: "string"
         },
         /**
-         * The ID (resource name) of the song (MusicResource) that should play during battles while fighting is going on.
+         * The IDs (resource names) of the songs (MusicResources) that can be played during battles while fighting is going on.
+         * One of these is chosen randomly for each mission when it starts (unless there is a specific track set in the mission data)
          */
         COMBAT_MUSIC: {
             name: "combatMusic",
-            type: "string"
+            type: _customTypes.STRING_ARRAY
         },
         /**
          * The ID (resource name) of the song (MusicResource) that should play when a battle is won.

@@ -98,7 +98,7 @@ define([
             // identifiers for music tracks
             AMBIENT_THEME = "ambient",
             ANTICIPATION_THEME = "anticipation",
-            COMBAT_THEME = "combat",
+            COMBAT_THEME_PREFIX = "combat",
             VICTORY_THEME = "victory",
             DEFEAT_THEME = "defeat",
             // HUD messages
@@ -176,6 +176,13 @@ define([
              * @type Boolean
              */
             _demoMode,
+            /**
+             * The theme identifier of the combat theme of the current mission (might be a combination of the COMBAT_THEME_PREFIX and an
+             * index for songs listed as the general combat themes (in settings.json) or the resource name of the track itself if a custom
+             * track is chosen for the mission)
+             * @type String
+             */
+            _combatTheme,
             /**
              * The total time elapsed in simulation since the battle began, in milliseconds
              * @type Number
@@ -924,7 +931,9 @@ define([
         var target = this.getTarget();
         if (target && target.isHostile(this) && !_mission.isFinished()) {
             _timeSinceLastFire = 0;
-            audio.playMusic(COMBAT_THEME);
+            if (_combatTheme) {
+                audio.playMusic(_combatTheme);
+            }
         }
     }
     /**
@@ -3227,6 +3236,7 @@ define([
                 canvas.height / 2);
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_MISSION), 0);
         missions.requestMission(_missionSourceFilename, _demoMode, function (createdMission) {
+            var combatMusicNames, combatMusic, combatMusicIndex;
             _mission = createdMission;
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
             _mission.addRandomShips(undefined, _demoMode);
@@ -3285,9 +3295,25 @@ define([
             this._addUITexts();
             _messageQueues = _messageQueues || {};
             this.clearHUDMessageQueues();
+            // initializing music
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.AMBIENT_MUSIC), AMBIENT_THEME, true);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.ANTICIPATION_MUSIC), ANTICIPATION_THEME, true);
-            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC), COMBAT_THEME, true);
+            // choose the combat music track
+            combatMusicNames = config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC);
+            // check if there is a specific track given for the mission
+            combatMusic = _mission.getCombatTheme();
+            if (combatMusic) {
+                // check if the specific track is also listed among the general combat tracks (if so, it might already be loaded)
+                combatMusicIndex = combatMusicNames.indexOf(combatMusic);
+            } else {
+                // choose a track randomly, if no specific one was given
+                combatMusicIndex = Math.min(Math.floor(Math.random() * combatMusicNames.length), combatMusicNames.length - 1);
+                combatMusic = combatMusicNames[combatMusicIndex];
+            }
+            // set the theme ID based on whether it is a listed or custom combat theme
+            _combatTheme = (combatMusicIndex >= 0) ? COMBAT_THEME_PREFIX + combatMusicIndex : combatMusic;
+            // load the selected music, associating it with the selected theme ID
+            audio.initMusic(combatMusic, _combatTheme, true);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC), VICTORY_THEME, false);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEFEAT_MUSIC), DEFEAT_THEME, false);
             audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_VICTORY_MUSIC), armadaScreens.DEBRIEFING_VICTORY_THEME, true);

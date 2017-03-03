@@ -735,7 +735,7 @@
             "sfxVolumeInMenus": 0.1,
             "ambientMusic": "ambient",
             "anticipationMusic": "anticipation",
-            "combatMusic": "combat",
+            "combatMusic": ["combat", "combat2"],
             "victoryMusic": "victory",
             "defeatMusic": "defeat",
             "debriefingVictoryMusic": "debriefing_victory",
