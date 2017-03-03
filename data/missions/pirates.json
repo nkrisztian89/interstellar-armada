@@ -62,10 +62,7 @@
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
-            "squad": {
-                "name": "raider",
-                "index": 1
-            },
+            "squad": "raider 1",
             "position": [0, 3200, -100],
             "rotations": ["z+180"]
         },
@@ -73,10 +70,7 @@
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
-            "squad": {
-                "name": "raider",
-                "index": 2
-            },
+            "squad": "raider 2",
             "equipment": "weak",
             "away": true
         },
@@ -84,10 +78,7 @@
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
-            "squad": {
-                "name": "raider",
-                "index": 3
-            },
+            "squad": "raider 3",
             "equipment": "weak",
             "away": true
         }

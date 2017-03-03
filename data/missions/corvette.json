@@ -211,60 +211,42 @@
         {
             "team": "empire",
             "class": "falcon",
-            "squad": {
-                "name": "alpha",
-                "index": 1
-            },
+            "squad": "alpha 1",
             "ai": "fighter",
             "position": [-135, -35, 100]
         },
         {
             "team": "empire",
             "class": "falcon",
-            "squad": {
-                "name": "alpha",
-                "index": 2
-            },
+            "squad": "alpha 2",
             "ai": "fighter",
             "position": [-100, -70, 100]
         },
         {
             "team": "rebels",
             "class": "falcon",
-            "squad": {
-                "name": "wraith",
-                "index": 1
-            },
+            "squad": "wraith 1",
             "ai": "fighter",
             "away": true
         },
         {
             "team": "rebels",
             "class": "falcon",
-            "squad": {
-                "name": "wraith",
-                "index": 2
-            },
+            "squad": "wraith 2",
             "ai": "fighter",
             "away": true
         },
         {
             "team": "rebels",
             "class": "falcon",
-            "squad": {
-                "name": "wraith",
-                "index": 3
-            },
+            "squad": "wraith 3",
             "ai": "fighter",
             "away": true
         },
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "phantom",
-                "index": 1
-            },
+            "squad": "phantom 1",
             "ai": "fighter",
             "away": true,
             "equipment": "heavy"
@@ -272,10 +254,7 @@
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "phantom",
-                "index": 2
-            },
+            "squad": "phantom 2",
             "ai": "fighter",
             "away": true,
             "equipment": "full"
@@ -283,10 +262,7 @@
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "phantom",
-                "index": 3
-            },
+            "squad": "phantom 3",
             "ai": "fighter",
             "away": true,
             "equipment": "full"
@@ -294,10 +270,7 @@
         {
             "team": "rebels",
             "class": "falcon",
-            "squad": {
-                "name": "serpent",
-                "index": 1
-            },
+            "squad": "serpent 1",
             "ai": "fighter",
             "away": true,
             "equipment": "full"
@@ -305,30 +278,21 @@
         {
             "team": "rebels",
             "class": "falcon",
-            "squad": {
-                "name": "serpent",
-                "index": 2
-            },
+            "squad": "serpent 2",
             "ai": "fighter",
             "away": true
         },
         {
             "team": "rebels",
             "class": "falcon",
-            "squad": {
-                "name": "serpent",
-                "index": 3
-            },
+            "squad": "serpent 3",
             "ai": "fighter",
             "away": true
         },
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "reaper",
-                "index": 1
-            },
+            "squad": "reaper 1",
             "ai": "fighter",
             "away": true,
             "equipment": "heavy"
@@ -336,10 +300,7 @@
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "reaper",
-                "index": 2
-            },
+            "squad": "reaper 2",
             "ai": "fighter",
             "away": true,
             "equipment": "full"
@@ -347,10 +308,7 @@
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "reaper",
-                "index": 3
-            },
+            "squad": "reaper 3",
             "ai": "fighter",
             "away": true,
             "equipment": "full"

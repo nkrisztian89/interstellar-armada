@@ -974,7 +974,7 @@ define([
      * participating in the same battle.
      */
     Spacecraft.prototype.loadFromJSON = function (dataJSON, spacecraftArray) {
-        var equipmentProfile;
+        var equipmentProfile, squadData;
         this._init(
                 classes.getSpacecraftClass(dataJSON.class),
                 dataJSON.name,
@@ -983,7 +983,14 @@ define([
                 undefined,
                 spacecraftArray);
         if (dataJSON.squad) {
-            this.setSquad(dataJSON.squad.name, dataJSON.squad.index);
+            if ((typeof dataJSON.squad) === "string") {
+                squadData = dataJSON.squad.split(" ");
+                this.setSquad(squadData[0], parseInt(squadData[1], 10));
+            } else if ((typeof dataJSON.squad) === "object") {
+                this.setSquad(dataJSON.squad.name, dataJSON.squad.index);
+            } else {
+                application.showError("Invalid squad property specified for spacecraft " + this.getID() + "!");
+            }
         }
         // equipping the created spacecraft
         if (dataJSON.equipment) {

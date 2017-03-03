@@ -669,10 +669,7 @@
             "team": "practiceTargets",
             "class": "drone",
             "ai": "fighter",
-            "squad": {
-                "name": "drone",
-                "index": 1
-            },
+            "squad": "drone 1",
             "position": [-4000, -4000, 0],
             "rotations": ["z+45"],
             "away": true,
@@ -682,10 +679,7 @@
             "team": "practiceTargets",
             "class": "drone",
             "ai": "fighter",
-            "squad": {
-                "name": "drone",
-                "index": 2
-            },
+            "squad": "drone 2",
             "away": true,
             "equipment": "unarmed"
         },
@@ -693,10 +687,7 @@
             "team": "practiceTargets",
             "class": "drone",
             "ai": "fighter",
-            "squad": {
-                "name": "drone",
-                "index": 3
-            },
+            "squad": "drone 3",
             "away": true,
             "equipment": "unarmed"
         },
@@ -705,10 +696,7 @@
             "class": "drone",
             "ai": "fighter",
             "position": [-4000, -3000, 0],
-            "squad": {
-                "name": "drone",
-                "index": 4
-            },
+            "squad": "drone 4",
             "away": true,
             "equipment": "unarmed"
         },
@@ -716,10 +704,7 @@
             "team": "practiceTargets",
             "class": "drone",
             "ai": "fighter",
-            "squad": {
-                "name": "drone",
-                "index": 5
-            },
+            "squad": "drone 5",
             "away": true,
             "equipment": "unarmed"
         },
@@ -727,10 +712,7 @@
             "team": "practiceTargets",
             "class": "drone",
             "ai": "fighter",
-            "squad": {
-                "name": "drone",
-                "index": 6
-            },
+            "squad": "drone 6",
             "away": true,
             "equipment": "unarmed"
         },

@@ -51,10 +51,7 @@
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
-            "squad": {
-                "name": "raider",
-                "index": 1
-            },
+            "squad": "raider 1",
             "away": true,
             "position": [0, 0, 0],
             "rotations": ["z-90"]

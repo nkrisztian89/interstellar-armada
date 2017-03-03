@@ -29,40 +29,28 @@
         {
             "team": "rebels",
             "class": "falcon",
-            "squad": {
-                "name": "wraith",
-                "index": 1
-            },
+            "squad": "wraith 1",
             "ai": "fighter",
             "position": [0, 0, -100]
         },
         {
             "team": "rebels",
             "class": "falcon",
-            "squad": {
-                "name": "wraith",
-                "index": 2
-            },
+            "squad": "wraith 2",
             "ai": "fighter",
             "position": [-35, -35, -100]
         },
         {
             "team": "rebels",
             "class": "falcon",
-            "squad": {
-                "name": "wraith",
-                "index": 3
-            },
+            "squad": "wraith 3",
             "ai": "fighter",
             "position": [35, -35, -100]
         },
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "phantom",
-                "index": 1
-            },
+            "squad": "phantom 1",
             "ai": "fighter",
             "position": [0, -50, -150],
             "equipment": "heavy"
@@ -70,10 +58,7 @@
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "phantom",
-                "index": 2
-            },
+            "squad": "phantom 2",
             "ai": "fighter",
             "position": [-35, -85, -150],
             "equipment": "half"
@@ -81,10 +66,7 @@
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "phantom",
-                "index": 3
-            },
+            "squad": "phantom 3",
             "ai": "fighter",
             "position": [35, -85, -150],
             "equipment": "half"

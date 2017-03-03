@@ -94,10 +94,7 @@
         {
             "team": "practiceTargets",
             "class": "drone",
-            "squad": {
-                "name": "drone",
-                "index": 1
-            },
+            "squad": "drone 1",
             "ai": "fighter",
             "position": [0, 100, 0],
             "rotations": ["z+180"],
@@ -106,30 +103,21 @@
         {
             "team": "practiceTargets",
             "class": "drone",
-            "squad": {
-                "name": "drone",
-                "index": 2
-            },
+            "squad": "drone 2",
             "ai": "fighter",
             "away": true
         },
         {
             "team": "practiceTargets",
             "class": "drone",
-            "squad": {
-                "name": "drone",
-                "index": 3
-            },
+            "squad": "drone 3",
             "ai": "fighter",
             "away": true
         },
         {
             "team": "practiceTargets",
             "class": "drone",
-            "squad": {
-                "name": "drone",
-                "index": 4
-            },
+            "squad": "drone 4",
             "ai": "fighter",
             "away": true
         }

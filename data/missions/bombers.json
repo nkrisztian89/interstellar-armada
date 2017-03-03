@@ -22,20 +22,14 @@
             "team": "empire",
             "class": "viper",
             "piloted": true,
-            "squad": {
-                "name": "alpha",
-                "index": 1
-            },
+            "squad": "alpha 1",
             "position": [0, 0, 0],
             "equipment": "heavy"
         },
         {
             "team": "empire",
             "class": "viper",
-            "squad": {
-                "name": "alpha",
-                "index": 2
-            },
+            "squad": "alpha 2",
             "ai": "fighter",
             "position": [35, -35, 0],
             "equipment": "half"
@@ -43,10 +37,7 @@
         {
             "team": "empire",
             "class": "viper",
-            "squad": {
-                "name": "alpha",
-                "index": 3
-            },
+            "squad": "alpha 3",
             "ai": "fighter",
             "position": [-35, -35, 0],
             "equipment": "half"
@@ -54,10 +45,7 @@
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "phantom",
-                "index": 1
-            },
+            "squad": "phantom 1",
             "ai": "fighter",
             "position": [0, 3200, -100],
             "rotations": ["z+180"],
@@ -66,10 +54,7 @@
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "phantom",
-                "index": 2
-            },
+            "squad": "phantom 2",
             "ai": "fighter",
             "position": [-35, 3235, -100],
             "rotations": ["z+180"],
@@ -78,10 +63,7 @@
         {
             "team": "rebels",
             "class": "viper",
-            "squad": {
-                "name": "phantom",
-                "index": 3
-            },
+            "squad": "phantom 3",
             "ai": "fighter",
             "position": [35, 3235, -100],
             "rotations": ["z+180"],

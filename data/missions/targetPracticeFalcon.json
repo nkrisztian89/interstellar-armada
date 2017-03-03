@@ -128,10 +128,7 @@
         {
             "team": "practiceTargets",
             "class": "falcon",
-            "squad": {
-                "name": "theta",
-                "index": 1
-            },
+            "squad": "theta 1",
             "ai": "fighter",
             "position": [0, 2400, 0],
             "rotations": ["z+180"],
@@ -140,10 +137,7 @@
         {
             "team": "practiceTargets",
             "class": "falcon",
-            "squad": {
-                "name": "theta",
-                "index": 2
-            },
+            "squad": "theta 2",
             "ai": "fighter",
             "away": true,
             "equipment": "fixedTraining"
@@ -151,10 +145,7 @@
         {
             "team": "practiceTargets",
             "class": "falcon",
-            "squad": {
-                "name": "theta",
-                "index": 3
-            },
+            "squad": "theta 3",
             "ai": "fighter",
             "away": true,
             "equipment": "fixedTraining"
@@ -162,10 +153,7 @@
         {
             "team": "practiceTargets",
             "class": "falcon",
-            "squad": {
-                "name": "omega",
-                "index": 1
-            },
+            "squad": "omega 1",
             "ai": "fighter",
             "away": true,
             "equipment": "fixedTrainingFull"

@@ -252,10 +252,7 @@
         {
             "class": "falcon",
             "team": "empire",
-            "squad": {
-                "name": "alpha",
-                "index": 1
-            },
+            "squad": "alpha 1",
             "piloted": true,
             "position": [9000, 0, -60],
             "rotations": ["z-90"],
@@ -263,10 +260,7 @@
         },
         {
             "class": "falcon",
-            "squad": {
-                "name": "alpha",
-                "index": 2
-            },
+            "squad": "alpha 2",
             "team": "empire",
             "ai": "fighter",
             "position": [9100, 100, -60],
@@ -276,10 +270,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "phantom",
-                "index": 1
-            },
+            "squad": "phantom 1",
             "ai": "fighter",
             "position": [500, 1000, -200],
             "rotations": ["z+90"],
@@ -288,10 +279,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "phantom",
-                "index": 2
-            },
+            "squad": "phantom 2",
             "ai": "fighter",
             "position": [500, 1050, -200],
             "rotations": ["z+90"],
@@ -300,10 +288,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "phantom",
-                "index": 3
-            },
+            "squad": "phantom 3",
             "ai": "fighter",
             "position": [500, 950, -200],
             "rotations": ["z+90"],
@@ -312,10 +297,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "phantom",
-                "index": 4
-            },
+            "squad": "phantom 4",
             "ai": "fighter",
             "position": [500, 900, -200],
             "rotations": ["z+90"],
@@ -324,10 +306,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "phantom",
-                "index": 5
-            },
+            "squad": "phantom 5",
             "ai": "fighter",
             "position": [500, 1100, -200],
             "rotations": ["z+90"],
@@ -336,10 +315,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "reaper",
-                "index": 1
-            },
+            "squad": "reaper 1",
             "ai": "fighter",
             "position": [-3500, 0, -200],
             "rotations": ["z+90"],
@@ -348,10 +324,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "reaper",
-                "index": 2
-            },
+            "squad": "reaper 2",
             "ai": "fighter",
             "position": [-3500, 50, -200],
             "rotations": ["z+90"],
@@ -360,10 +333,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "reaper",
-                "index": 3
-            },
+            "squad": "reaper 3",
             "ai": "fighter",
             "position": [-3500, -50, -200],
             "rotations": ["z+90"],
@@ -372,10 +342,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "reaper",
-                "index": 4
-            },
+            "squad": "reaper 4",
             "ai": "fighter",
             "position": [-3500, -100, -200],
             "rotations": ["z+90"],
@@ -384,10 +351,7 @@
         {
             "class": "viper",
             "team": "rebels",
-            "squad": {
-                "name": "reaper",
-                "index": 5
-            },
+            "squad": "reaper 5",
             "ai": "fighter",
             "position": [-3500, 100, -200],
             "rotations": ["z+90"],

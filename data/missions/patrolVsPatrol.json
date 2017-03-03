@@ -22,30 +22,21 @@
             "team": "empire",
             "class": "falcon",
             "ai": "fighter",
-            "squad": {
-                "name": "alpha",
-                "index": 1
-            },
+            "squad": "alpha 1",
             "position": [-100, -10, 10]
         },
         {
             "team": "empire",
             "class": "falcon",
             "piloted": true,
-            "squad": {
-                "name": "alpha",
-                "index": 2
-            },
+            "squad": "alpha 2",
             "position": [-65, -50, 20]
         },
         {
             "team": "empire",
             "class": "falcon",
             "ai": "fighter",
-            "squad": {
-                "name": "alpha",
-                "index": 3
-            },
+            "squad": "alpha 3",
             "position": [-135, -50, 20]
         },
         {
@@ -61,30 +52,21 @@
             "team": "rebels",
             "class": "falcon",
             "ai": "fighter",
-            "squad": {
-                "name": "serpent",
-                "index": 1
-            },
+            "squad": "serpent 1",
             "position": [-100, 5010, 10]
         },
         {
             "team": "rebels",
             "class": "falcon",
             "ai": "fighter",
-            "squad": {
-                "name": "serpent",
-                "index": 2
-            },
+            "squad": "serpent 2",
             "position": [-65, 5050, 20]
         },
         {
             "team": "rebels",
             "class": "falcon",
             "ai": "fighter",
-            "squad": {
-                "name": "serpent",
-                "index": 3
-            },
+            "squad": "serpent 3",
             "position": [-135, 5050, 20]
         },
         {
