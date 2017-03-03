@@ -4,11 +4,11 @@
     },
     "missions": [
         {
-            "source": "targetPracticeBoxes.json"
+            "source": "training/targetPracticeBoxes.json"
         }, {
-            "source": "targetPracticeDrones.json"
+            "source": "training/targetPracticeDrones.json"
         }, {
-            "source": "targetPracticeFalcon.json"
+            "source": "training/targetPracticeFalcon.json"
         }, {
             "source": "pirates.json"
         }, {
@@ -34,23 +34,23 @@
         }, {
             "source": "defendFrigates.json"
         }, {
-            "source": "test.json"
+            "source": "tests/test.json"
         }, {
-            "source": "libraTest.json",
+            "source": "tests/libraTest.json",
             "test": true
         }, {
-            "source": "staticAvoidance.json",
+            "source": "tests/staticAvoidance.json",
             "test": true
         }, {
-            "source": "dynamicAvoidance.json",
+            "source": "tests/dynamicAvoidance.json",
             "test": true
         }, {
-            "source": "wolf.json",
+            "source": "tests/wolf.json",
             "test": true
         }, {
-            "source": "lineup.json",
+            "source": "tests/lineup.json",
             "test": true
         }
-        
+
     ]
 }

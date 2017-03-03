@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides various simple, general usage utility methods.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -543,13 +543,15 @@ define(function () {
         return (x >= left) && (x <= right) && (y >= bottom) && (y <= top);
     };
     /**
-     * Trears the passed string as a filename and returns the part of it that comes before its extension (if it has any).
-     * @param {String} filename
+     * Extracts the part after folders and before the extension from the passed file path and returns it.
+     * @param {String} path
      * @returns {String}
      */
-    exports.getFilenameWithoutExtension = function (filename) {
-        var dotIndex = filename.lastIndexOf(".");
-        return (dotIndex > 0) ? filename.substr(0, dotIndex) : filename;
+    exports.getFilenameWithoutExtension = function (path) {
+        var dotIndex = path.lastIndexOf("."), slashIndex = path.lastIndexOf("/");
+        path = (dotIndex > 0) ? path.substr(0, dotIndex) : path;
+        path = (slashIndex > 0) ? path.substr(slashIndex + 1) : path;
+        return path;
     };
     /**
      * 
