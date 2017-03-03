@@ -2179,15 +2179,17 @@ define([
      * @param {Object} dataJSON The object storing the mission data
      */
     Mission.prototype.loadEnvironment = function (dataJSON) {
-        if (dataJSON.environment.createFrom) {
-            this._environment = environments.getEnvironment(dataJSON.environment.createFrom);
+        if ((typeof dataJSON.environment) === "string") {
+            this._environment = environments.getEnvironment(dataJSON.environment);
             if (!this._environment) {
-                application.showError("Cannot load environment '" + dataJSON.environment.createFrom + "' for mission: no such environment exists!");
+                application.showError("Cannot load environment '" + dataJSON.environment + "' for mission: no such environment exists!");
             }
             this._ownsEnvironment = false;
-        } else {
+        } else if ((typeof dataJSON.environment) === "object") {
             this._environment = new environments.Environment(dataJSON.environment);
             this._ownsEnvironment = true;
+        } else {
+            application.showError("Invalid environment specified for mission!");
         }
     };
     /**

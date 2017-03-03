@@ -1,8 +1,6 @@
 {
     "description": "A sandbox test mission containing most of the spacecraft classes in the game, some arranged randomly. The ships sit in one place, but in demo mode, the mission is turned into a huge free-for-all battle, that serves as the stress-test for the game during development.",
-    "environment": {
-        "createFrom": "deepSpaceTwoStars"
-    },
+    "environment": "cathagan",
     "views": [
         {
             "name": "free",

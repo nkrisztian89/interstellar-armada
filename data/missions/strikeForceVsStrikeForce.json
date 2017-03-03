@@ -1,8 +1,6 @@
 {
     "description": "Two strike forces of equal strength - three interceptors, three bombers and three small warships on each side - are about to battle. Be the pilot who makes the difference!",
-    "environment": {
-        "createFrom": "crescent_blueGasGiant"
-    },
+    "environment": "sheenuba",
     "teams": [
         "empire",
         {

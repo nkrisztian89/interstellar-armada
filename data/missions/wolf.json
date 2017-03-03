@@ -1,8 +1,6 @@
 {
     "description": "A test mission to showcase the Wolf fighter. (a single Wolf jumps in with the camera following)",
-    "environment": {
-        "createFrom": "crescent_blueGasGiant"
-    },
+    "environment": "sheenuba",
     "teams": [
         "empire",
         "pirates"

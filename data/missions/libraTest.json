@@ -1,8 +1,6 @@
 {
     "description": "A small test about how the Libra cruiser engages enemies.",
-    "environment": {
-        "createFrom": "deepSpaceWhiteRedStarsFromSides"
-    },
+    "environment": "blovell",
     "teams": [
         "empire",
         {

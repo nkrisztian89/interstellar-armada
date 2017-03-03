@@ -1,8 +1,6 @@
 {
     "description": "You can pilot a whole (if small) warship in this mission. Beware, this is different than dogfighting with an interceptor! Your corvette is much slower, but its turrets automatically track the targeted enemies, so you do not need to aim towards them. Instead, use you maneuverability to avoid incoming fire, as though you are armored, there are many fighters and bombers closing in to destroy you! Use smart targeting to take down the most dangerous or easiest threats first.",
-    "environment": {
-        "createFrom": "deepSpaceBluePlanet"
-    },
+    "environment": "luxilian",
     "teams": [
         "empire",
         {

@@ -1,8 +1,6 @@
 {
     "description": "A test mission to showcase the full lineup of fighter classes in the game.",
-    "environment": {
-        "createFrom": "deepSpaceWhiteRedStars"
-    },
+    "environment": "reddim",
     "teams": [
         "empire",
         "pirates"

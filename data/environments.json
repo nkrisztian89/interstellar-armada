@@ -7,7 +7,7 @@
         "creationTime": "Wed Sep 28 2016 01:27:18 GMT+0200 (CEST)"
     },
     "environments": [{
-            "name": "deepSpaceTwoStars",
+            "name": "cathagan",
             "location": "Cathagan",
             "skyboxes": [{
                     "class": "stars_medium"
@@ -31,7 +31,7 @@
                     "class": "standard"
                 }]
         }, {
-            "name": "deepSpaceWhiteRedStars",
+            "name": "reddim",
             "location": "Reddim",
             "skyboxes": [{
                     "class": "stars_sparse"
@@ -55,7 +55,7 @@
                     "class": "standard"
                 }]
         }, {
-            "name": "deepSpaceWhiteRedStarsFromSides",
+            "name": "blovell",
             "location": "Blovell",
             "skyboxes": [{
                     "class": "redNebula_medium"
@@ -79,7 +79,7 @@
                     "class": "standard"
                 }]
         }, {
-            "name": "deepSpaceBlueNebula",
+            "name": "mera",
             "location": "Mera",
             "skyboxes": [{
                     "class": "blueNebula_sparse"
@@ -103,7 +103,7 @@
                     "class": "standard"
                 }]
         }, {
-            "name": "deepSpaceBrownPlanet",
+            "name": "varanock",
             "location": "Varanock",
             "skyboxes": [{
                     "class": "stars_dense"
@@ -135,7 +135,7 @@
                     "class": "standard"
                 }]
         }, {
-            "name": "deepSpaceBluePlanet",
+            "name": "luxilian",
             "location": "Luxilian",
             "skyboxes": [{
                     "class": "stars_veryDense"
@@ -167,7 +167,7 @@
                     "class": "standard"
                 }]
         }, {
-            "name": "deepSpaceGrayPlanet",
+            "name": "corice",
             "location": "Corice",
             "skyboxes": [{
                     "class": "stars_medium"
@@ -199,7 +199,7 @@
                     "class": "standard"
                 }]
         }, {
-            "name": "crescent_blueGasGiant",
+            "name": "sheenuba",
             "location": "Sheenuba",
             "skyboxes": [{
                     "class": "crescentNebula_veryDense"

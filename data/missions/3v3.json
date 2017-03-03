@@ -1,8 +1,6 @@
 {
     "description": "Practice team fighting in a matchup with three against three interceptors. You are better armed than the rest.",
-    "environment": {
-        "createFrom": "deepSpaceBlueNebula"
-    },
+    "environment": "mera",
     "teams": [
         "empire",
         {

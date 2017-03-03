@@ -1,8 +1,6 @@
 {
     "description": "A small test about how fighters avoid dynamic obstacles blocking their path towards their target.",
-    "environment": {
-        "createFrom": "deepSpaceWhiteRedStars"
-    },
+    "environment": "reddim",
     "teams": [
         "empire",
         {
