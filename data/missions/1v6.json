@@ -14,16 +14,7 @@
             "movable": true,
             "turnable": true,
             "position": [0, 100, -40],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -65
-                },
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "rotations": ["x-65", "z+180"]
         }
     ],
     "spacecrafts": [
@@ -33,12 +24,7 @@
             "piloted": true,
             "position": [0, 3200, 0],
             "equipment": "full",
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "rotations": ["z+180"]
         },
         {
             "team": "rebels",

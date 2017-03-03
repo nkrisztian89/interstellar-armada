@@ -14,16 +14,7 @@
             "movable": true,
             "turnable": true,
             "position": [9600, 750, 0],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -75
-                },
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ]
+            "rotations": ["x-75", "z-90"]
         }
     ],
     "events": [{
@@ -199,12 +190,7 @@
             "ai": "ship",
             "initialTarget": "Mississippi",
             "position": [8500, 750, -800],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full",
             "excludeFromReferenceScore": true
         },
@@ -215,12 +201,7 @@
             "ai": "ship",
             "initialTarget": "Mississippi",
             "position": [8500, 1500, -400],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full",
             "excludeFromReferenceScore": true
         },
@@ -231,12 +212,7 @@
             "ai": "ship",
             "initialTarget": "Mississippi",
             "position": [8500, 1000, -400],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full",
             "excludeFromReferenceScore": true
         },
@@ -247,12 +223,7 @@
             "ai": "ship",
             "initialTarget": "Mississippi",
             "position": [8500, 500, -400],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full",
             "excludeFromReferenceScore": true
         },
@@ -263,12 +234,7 @@
             "ai": "ship",
             "initialTarget": "Mississippi",
             "position": [8500, 0, -400],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full",
             "excludeFromReferenceScore": true
         },
@@ -279,12 +245,7 @@
             "ai": "ship",
             "initialTarget": "Mississippi",
             "position": [8500, 750, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full",
             "excludeFromReferenceScore": true
         },
@@ -297,12 +258,7 @@
             },
             "piloted": true,
             "position": [9000, 0, -60],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full"
         },
         {
@@ -314,12 +270,7 @@
             "team": "empire",
             "ai": "fighter",
             "position": [9100, 100, -60],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full"
         },
         {
@@ -331,12 +282,7 @@
             },
             "ai": "fighter",
             "position": [500, 1000, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -348,12 +294,7 @@
             },
             "ai": "fighter",
             "position": [500, 1050, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -365,12 +306,7 @@
             },
             "ai": "fighter",
             "position": [500, 950, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -382,12 +318,7 @@
             },
             "ai": "fighter",
             "position": [500, 900, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -399,12 +330,7 @@
             },
             "ai": "fighter",
             "position": [500, 1100, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -416,12 +342,7 @@
             },
             "ai": "fighter",
             "position": [-3500, 0, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -433,12 +354,7 @@
             },
             "ai": "fighter",
             "position": [-3500, 50, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -450,12 +366,7 @@
             },
             "ai": "fighter",
             "position": [-3500, -50, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -467,12 +378,7 @@
             },
             "ai": "fighter",
             "position": [-3500, -100, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -484,12 +390,7 @@
             },
             "ai": "fighter",
             "position": [-3500, 100, -200],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "heavy"
         },
         {
@@ -498,12 +399,7 @@
             "ai": "ship",
             "team": "rebels",
             "position": [-3000, 500, -400],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "excludeFromReferenceScore": true
         }
     ]

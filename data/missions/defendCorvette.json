@@ -54,10 +54,7 @@
                             "anchor": "Ohio",
                             "relative": "true",
                             "position": [-3000, 3200, -100],
-                            "rotations": [{
-                                    "axis": "z",
-                                    "degrees": 180
-                                }],
+                            "rotations": ["z+180"],
                             "formation": {
                                 "type": "wedge",
                                 "spacing": [50, -50, 0]
@@ -210,16 +207,7 @@
             "movable": true,
             "turnable": true,
             "position": [60, 200, 45],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -80
-                },
-                {
-                    "axis": "z",
-                    "degrees": 215
-                }
-            ]
+            "rotations": ["x-80", "z+215"]
         }
     ],
     "spacecrafts": [

@@ -11,12 +11,7 @@
             "movable": true,
             "turnable": true,
             "position": [0, 50, 10],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -75
-                }
-            ]
+            "rotations": ["x-75"]
         }
     ],
     "events": [{
@@ -45,10 +40,7 @@
                             "anchor": "Rookie",
                             "relative": "true",
                             "position": [500, 1000, 50],
-                            "rotations": [{
-                                    "axis": "z",
-                                    "degrees": -90
-                                }]
+                            "rotations": ["z-90"]
                         }
                     }
                 }
@@ -79,10 +71,7 @@
                             "anchor": "Rookie",
                             "relative": "true",
                             "position": [-400, 1200, 100],
-                            "rotations": [{
-                                    "axis": "z",
-                                    "degrees": 120
-                                }],
+                            "rotations": ["z+120"],
                             "formation": {
                                 "type": "wedge",
                                 "spacing": [50, -50, 0]
@@ -111,12 +100,7 @@
             },
             "ai": "fighter",
             "position": [0, 100, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ],
+            "rotations": ["z+180"],
             "equipment": "unarmed"
         },
         {

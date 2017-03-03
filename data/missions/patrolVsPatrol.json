@@ -14,16 +14,7 @@
             "movable": true,
             "turnable": true,
             "position": [60, 200, 45],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -80
-                },
-                {
-                    "axis": "z",
-                    "degrees": 215
-                }
-            ]
+            "rotations": ["x-80", "z+215"]
         }
     ],
     "spacecrafts": [

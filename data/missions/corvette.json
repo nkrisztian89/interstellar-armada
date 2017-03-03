@@ -52,12 +52,7 @@
                             "anchor": "Ohio",
                             "relative": "true",
                             "position": [150, 3200, 70],
-                            "rotations": [
-                                {
-                                    "axis": "z",
-                                    "degrees": 180
-                                }
-                            ],
+                            "rotations": ["z+180"],
                             "formation": {
                                 "type": "wedge",
                                 "spacing": [50, -50, 0]
@@ -84,12 +79,7 @@
                             "anchor": "Ohio",
                             "relative": "true",
                             "position": [150, 3250, 20],
-                            "rotations": [
-                                {
-                                    "axis": "z",
-                                    "degrees": 180
-                                }
-                            ],
+                            "rotations": ["z+180"],
                             "formation": {
                                 "type": "wedge",
                                 "spacing": [50, -50, 0]
@@ -206,16 +196,7 @@
             "movable": true,
             "turnable": true,
             "position": [70, 120, 30],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -75
-                },
-                {
-                    "axis": "z",
-                    "degrees": 215
-                }
-            ]
+            "rotations": ["x-75", "z+215"]
         }
     ],
     "spacecrafts": [

@@ -14,12 +14,7 @@
             "movable": true,
             "turnable": true,
             "position": [0, 3150, -80],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -75
-                }
-            ]
+            "rotations": ["x-75"]
         }
     ],
     "spacecrafts": [
@@ -63,12 +58,7 @@
             },
             "ai": "fighter",
             "position": [0, 3200, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "rotations": ["z+180"]
         },
         {
             "team": "rebels",
@@ -79,12 +69,7 @@
             },
             "ai": "fighter",
             "position": [-35, 3235, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "rotations": ["z+180"]
         },
         {
             "team": "rebels",
@@ -95,12 +80,7 @@
             },
             "ai": "fighter",
             "position": [35, 3235, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "rotations": ["z+180"]
         }
     ]
 }

@@ -14,24 +14,14 @@
             "movable": true,
             "turnable": true,
             "position": [0, -850, 300],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -60
-                }
-            ]
+            "rotations": ["x-60"]
         }, {
             "name": "fps",
             "fps": true,
             "movable": true,
             "turnable": true,
             "position": [-400, 200, -350],
-            "rotations": [
-                {
-                    "axis": "Z",
-                    "degrees": 90
-                }
-            ]
+            "rotations": ["z+90"]
         }, {
             "name": "overview",
             "turnAroundAll": true,
@@ -39,12 +29,7 @@
             "turnable": true,
             "position": [0, -2000, 0],
             "distanceRange": [1000, 3000],
-            "rotations": [
-                {
-                    "axis": "X",
-                    "degrees": -90
-                }
-            ]
+            "rotations": ["z-90"]
         }, {
             "name": "lookAtAll",
             "lookAt": "all",
@@ -75,35 +60,20 @@
             "ai": "ship",
             "team": "empire",
             "position": [-100, 500, -400],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ]
+            "rotations": ["z+90"]
         },
         {
             "class": "taurus",
             "team": "rebels",
             "position": [500, 1500, -400],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full"
         },
         {
             "class": "taurus",
             "team": "rebels",
             "position": [500, -500, -400],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ],
+            "rotations": ["z-90"],
             "equipment": "full"
         }
     ]

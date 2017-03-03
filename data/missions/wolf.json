@@ -6,7 +6,7 @@
         "pirates"
     ],
     "views": [{
-             "name": "lookAtAll",
+            "name": "lookAtAll",
             "lookAt": "all",
             "movable": false,
             "turnable": false,
@@ -18,12 +18,7 @@
             "movable": true,
             "turnable": true,
             "position": [0, 3150, -80],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -75
-                }
-            ]
+            "rotations": ["x-75"]
         }
     ],
     "events": [
@@ -48,7 +43,7 @@
                             }
                         }
                     }
-            }]
+                }]
         }
     ],
     "spacecrafts": [
@@ -62,12 +57,7 @@
             },
             "away": true,
             "position": [0, 0, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": -90
-                }
-            ]
+            "rotations": ["z-90"]
         }
     ]
 }

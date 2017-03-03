@@ -11,12 +11,7 @@
             "movable": true,
             "turnable": true,
             "position": [-200, 375, 90],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -55
-                }
-            ]
+            "rotations": ["x-55"]
         }
     ],
     "events": [{
@@ -608,122 +603,67 @@
             "team": "practiceTargets",
             "class": "container",
             "position": [0, 100, 20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 270
-                }
-            ]
+            "rotations": ["z+270"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-240, 500, 20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-200, 460, 20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-200, 500, 20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-160, 500, 20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-200, 540, 20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-240, 500, -20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-200, 460, -20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-200, 500, -20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-160, 500, -20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
             "class": "container",
             "position": [-200, 540, -20],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ]
+            "rotations": ["z+45"]
         },
         {
             "team": "practiceTargets",
@@ -734,12 +674,7 @@
                 "index": 1
             },
             "position": [-4000, -4000, 0],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ],
+            "rotations": ["z+45"],
             "away": true,
             "equipment": "unarmed"
         },
@@ -805,12 +740,7 @@
             "class": "drone",
             "ai": "fighter",
             "position": [-3000, -3000, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 45
-                }
-            ],
+            "rotations": ["z+45"],
             "away": true,
             "equipment": "unarmed"
         }

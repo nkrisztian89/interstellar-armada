@@ -11,12 +11,7 @@
             "movable": true,
             "turnable": true,
             "position": [0, 3175, -87.5],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -60
-                }
-            ]
+            "rotations": ["x-60"]
         }
     ],
     "events": [
@@ -72,12 +67,7 @@
                 "index": 1
             },
             "position": [0, 3200, -100],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 180
-                }
-            ]
+            "rotations": ["z+180"]
         },
         {
             "team": "pirates",

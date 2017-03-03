@@ -14,12 +14,7 @@
             "movable": true,
             "turnable": true,
             "position": [0, -300, 20],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -75
-                }
-            ]
+            "rotations": ["x-75"]
         }
     ],
     "spacecrafts": [

@@ -14,16 +14,7 @@
             "movable": true,
             "turnable": true,
             "position": [60, 200, 20],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -80
-                },
-                {
-                    "axis": "z",
-                    "degrees": 215
-                }
-            ]
+            "rotations": ["x-80", "z+215"]
         }
     ],
     "events": [{
@@ -71,10 +62,7 @@
                             "way": "in",
                             "anchor": "Danube",
                             "position": [0, 4200, -100],
-                            "rotations": [{
-                                    "axis": "z",
-                                    "degrees": 180
-                                }],
+                            "rotations": ["z+180"],
                             "formation": {
                                 "type": "wedge",
                                 "spacing": [50, -50, 0]
@@ -446,12 +434,7 @@
             "name": "Don",
             "ai": "ship",
             "position": [-14500, 0, -150],
-            "rotations": [
-                {
-                    "axis": "z",
-                    "degrees": 90
-                }
-            ],
+            "rotations": ["z+90"],
             "equipment": "full",
             "excludeFromReferenceScore": true
         }

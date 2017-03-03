@@ -14,12 +14,7 @@
             "movable": true,
             "turnable": true,
             "position": [0, -500, 280],
-            "rotations": [
-                {
-                    "axis": "x",
-                    "degrees": -70
-                }
-            ]
+            "rotations": ["x-70"]
         }
     ],
     "events": [
@@ -204,7 +199,8 @@
                 "name": "serpent",
                 "index": 1
             },
-            "position": [100, 5000, 10]
+            "position": [100, 5000, 10],
+            "rotations": ["z+180"]
         },
         {
             "team": "rebels",
@@ -215,10 +211,7 @@
                 "index": 2
             },
             "position": [65, 5035, 20],
-            "rotations": [{
-                    "axis": "z",
-                    "degrees": 180
-                }]
+            "rotations": ["z+180"]
         },
         {
             "team": "rebels",
@@ -229,10 +222,7 @@
                 "index": 3
             },
             "position": [135, 5035, 20],
-            "rotations": [{
-                    "axis": "z",
-                    "degrees": 180
-                }]
+            "rotations": ["z+180"]
         },
         {
             "team": "rebels",
@@ -243,10 +233,7 @@
                 "index": 1
             },
             "position": [-100, 5000, 10],
-            "rotations": [{
-                    "axis": "z",
-                    "degrees": 180
-                }]
+            "rotations": ["z+180"]
         },
         {
             "team": "rebels",
@@ -257,10 +244,7 @@
                 "index": 2
             },
             "position": [-135, 5035, 20],
-            "rotations": [{
-                    "axis": "z",
-                    "degrees": 180
-                }]
+            "rotations": ["z+180"]
         },
         {
             "team": "rebels",
@@ -271,10 +255,7 @@
                 "index": 3
             },
             "position": [-65, 5035, 20],
-            "rotations": [{
-                    "axis": "z",
-                    "degrees": 180
-                }]
+            "rotations": ["z+180"]
         },
         {
             "team": "rebels",
@@ -282,10 +263,7 @@
             "name": "Volga",
             "ai": "ship",
             "position": [0, 4950, 0],
-            "rotations": [{
-                    "axis": "z",
-                    "degrees": 180
-                }],
+            "rotations": ["z+180"],
             "equipment": "full",
             "excludeFromReferenceScore": true
         },
@@ -295,10 +273,7 @@
             "name": "Tigris",
             "ai": "ship",
             "position": [200, 5050, 100],
-            "rotations": [{
-                    "axis": "z",
-                    "degrees": 180
-                }],
+            "rotations": ["z+180"],
             "excludeFromReferenceScore": true
         },
         {
@@ -307,10 +282,7 @@
             "name": "Ganges",
             "ai": "ship",
             "position": [-200, 5050, 100],
-            "rotations": [{
-                    "axis": "z",
-                    "degrees": 180
-                }],
+            "rotations": ["z+180"],
             "excludeFromReferenceScore": true
         }
     ]

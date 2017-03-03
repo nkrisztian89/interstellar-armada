@@ -430,33 +430,39 @@ define([
      * @param {Object[]} jsonArray
      */
     mat.rotation4FromJSON = function (jsonArray) {
-        var i, axis, result = mat.identity4();
+        var i, axis, rotation, result = mat.identity4();
         if (jsonArray) {
             for (i = 0; i < jsonArray.length; i++) {
-                if (typeof jsonArray[i].axis === "string") {
-                    switch (jsonArray[i].axis) {
+                // handle (convert) short notation of rotations
+                rotation = ((typeof jsonArray[i]) === "string") ? {
+                    axis: jsonArray[i][0],
+                    degrees: parseFloat(jsonArray[i].substring(1))
+                } : jsonArray[i];
+                // process rotation
+                if (typeof rotation.axis === "string") {
+                    switch (rotation.axis) {
                         case "x":
                         case "X":
-                            axis = [1, 0, 0];
+                            axis = vec.UNIT3_X;
                             break;
                         case "y":
                         case "Y":
-                            axis = [0, 1, 0];
+                            axis = vec.UNIT3_Y;
                             break;
                         case "z":
                         case "Z":
-                            axis = [0, 0, 1];
+                            axis = vec.UNIT3_Z;
                             break;
                     }
-                } else if (jsonArray[i].axis instanceof Array) {
-                    axis = jsonArray[i].axis;
+                } else if (rotation.axis instanceof Array) {
+                    axis = rotation.axis;
                 }
                 result =
                         mat.prod4(
                                 result,
                                 mat.rotation4(
                                         axis,
-                                        parseFloat(jsonArray[i].degrees) / 180 * Math.PI
+                                        rotation.degrees / 180 * Math.PI
                                         )
                                 );
             }
