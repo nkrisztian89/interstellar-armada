@@ -604,9 +604,7 @@
             "class": "falcon",
             "piloted": true,
             "position": [0, 0, 0],
-            "equipment": {
-                "profile": "training"
-            }
+            "equipment": "training"
         },
         {
             "team": "practiceTargets",
@@ -745,9 +743,7 @@
                 }
             ],
             "away": true,
-            "equipment": {
-                "profile": "unarmed"
-            }
+            "equipment": "unarmed"
         },
         {
             "team": "practiceTargets",
@@ -758,9 +754,7 @@
                 "index": 2
             },
             "away": true,
-            "equipment": {
-                "profile": "unarmed"
-            }
+            "equipment": "unarmed"
         },
         {
             "team": "practiceTargets",
@@ -771,9 +765,7 @@
                 "index": 3
             },
             "away": true,
-            "equipment": {
-                "profile": "unarmed"
-            }
+            "equipment": "unarmed"
         },
         {
             "team": "practiceTargets",
@@ -785,9 +777,7 @@
                 "index": 4
             },
             "away": true,
-            "equipment": {
-                "profile": "unarmed"
-            }
+            "equipment": "unarmed"
         },
         {
             "team": "practiceTargets",
@@ -798,9 +788,7 @@
                 "index": 5
             },
             "away": true,
-            "equipment": {
-                "profile": "unarmed"
-            }
+            "equipment": "unarmed"
         },
         {
             "team": "practiceTargets",
@@ -811,9 +799,7 @@
                 "index": 6
             },
             "away": true,
-            "equipment": {
-                "profile": "unarmed"
-            }
+            "equipment": "unarmed"
         },
         {
             "team": "empire",
@@ -828,9 +814,7 @@
                 }
             ],
             "away": true,
-            "equipment": {
-                "profile": "unarmed"
-            }
+            "equipment": "unarmed"
         }
     ]
 }

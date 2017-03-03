@@ -60,9 +60,7 @@
             "class": "falcon",
             "ai": "fighter",
             "position": [-100, 0, 0],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "empire",

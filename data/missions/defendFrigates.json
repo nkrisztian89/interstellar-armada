@@ -207,9 +207,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         },
         {
@@ -225,9 +223,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         },
         {
@@ -243,9 +239,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         },
         {
@@ -261,9 +255,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         },
         {
@@ -279,9 +271,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         },
         {
@@ -297,9 +287,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         },
         {
@@ -317,9 +305,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "class": "falcon",
@@ -336,9 +322,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "class": "viper",
@@ -355,9 +339,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "viper",
@@ -374,9 +356,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "viper",
@@ -393,9 +373,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "viper",
@@ -412,9 +390,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "viper",
@@ -431,9 +407,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "viper",
@@ -450,9 +424,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "viper",
@@ -469,9 +441,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "viper",
@@ -488,9 +458,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "viper",
@@ -507,9 +475,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "viper",
@@ -526,9 +492,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "class": "libra",

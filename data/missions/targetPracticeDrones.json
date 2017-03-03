@@ -102,9 +102,7 @@
             "name": "Rookie",
             "piloted": true,
             "position": [0, 0, 0],
-            "equipment": {
-                "profile": "training"
-            }
+            "equipment": "training"
         },
         {
             "team": "practiceTargets",
@@ -121,9 +119,7 @@
                     "degrees": 180
                 }
             ],
-            "equipment": {
-                "profile": "unarmed"
-            }
+            "equipment": "unarmed"
         },
         {
             "team": "practiceTargets",
@@ -133,10 +129,7 @@
                 "index": 2
             },
             "ai": "fighter",
-            "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "away": true
         },
         {
             "team": "practiceTargets",
@@ -146,10 +139,7 @@
                 "index": 3
             },
             "ai": "fighter",
-            "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "away": true
         },
         {
             "team": "practiceTargets",
@@ -159,10 +149,7 @@
                 "index": 4
             },
             "ai": "fighter",
-            "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "away": true
         }
     ]
 }

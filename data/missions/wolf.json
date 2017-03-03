@@ -1,0 +1,75 @@
+{
+    "description": "A test mission to showcase the Wolf fighter. (a single Wolf jumps in with the camera following)",
+    "environment": {
+        "createFrom": "crescent_blueGasGiant"
+    },
+    "teams": [
+        "empire",
+        "pirates"
+    ],
+    "views": [{
+             "name": "lookAtAll",
+            "lookAt": "all",
+            "movable": false,
+            "turnable": false,
+            "startsWithRelativePosition": true,
+            "position": [-25, 440, 7.5]
+        },
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, 3150, -80],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -75
+                }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true,
+                "delay": 1500
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["raider"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [150, -50, 0]
+                            }
+                        }
+                    }
+            }]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "pirates",
+            "class": "wolf",
+            "ai": "fighter",
+            "squad": {
+                "name": "raider",
+                "index": 1
+            },
+            "away": true,
+            "position": [0, 0, 0],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": -90
+                }
+            ]
+        }
+    ]
+}

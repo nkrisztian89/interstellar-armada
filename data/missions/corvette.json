@@ -227,9 +227,7 @@
             "piloted": true,
             "name": "Ohio",
             "position": [0, 0, 0],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "empire",
@@ -290,9 +288,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "rebels",
@@ -303,9 +299,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -316,9 +310,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -329,9 +321,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -362,9 +352,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "rebels",
@@ -375,9 +363,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -388,9 +374,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         }
     ]
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file This module manages and provides the Missions screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -169,7 +169,7 @@ define([
      * @param {Number} index
      */
     MissionsScreen.prototype._selectMission = function (index) {
-        var missionFilename, missionName;
+        var missionFilename, missionName, pilotedCraftDescriptor;
         if (index >= 0) {
             missionFilename = missions.getMissionNames()[index];
             missionName = utils.getFilenameWithoutExtension(missionFilename);
@@ -186,9 +186,13 @@ define([
                 if (this._listComponent.getSelectedIndex() === index) {
                     if (_spacecraft) {
                         _spacecraft.destroy();
+                        _spacecraft = null;
                     }
-                    _spacecraft = new spacecraft.Spacecraft();
-                    _spacecraft.loadFromJSON(missionDescriptor.getPilotedSpacecraftDescriptor());
+                    pilotedCraftDescriptor = missionDescriptor.getPilotedSpacecraftDescriptor();
+                    if (pilotedCraftDescriptor) {
+                        _spacecraft = new spacecraft.Spacecraft();
+                        _spacecraft.loadFromJSON(pilotedCraftDescriptor);
+                    }
                     objectives = missionDescriptor.getMissionObjectives().map(function (objective) {
                         return "<li>" + objective + "</li>";
                     });
@@ -197,10 +201,14 @@ define([
                         location: missionDescriptor.getEnvironment().getDisplayName()
                     });
                     this._missionObjectives.setContent(objectives.join(""));
-                    this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
-                        class: _spacecraft.getClass().getDisplayName(),
-                        firepower: _spacecraft.getFirepower().toFixed(1)
-                    });
+                    if (_spacecraft) {
+                        this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
+                            class: _spacecraft.getClass().getDisplayName(),
+                            firepower: _spacecraft.getFirepower().toFixed(1)
+                        });
+                    } else {
+                        this._playerSpacecraftData.setContent("-");
+                    }
                     this._missionObjectivesTitle.show();
                     this._missionObjectives.show();
                     this._playerSpacecraftTitle.show();

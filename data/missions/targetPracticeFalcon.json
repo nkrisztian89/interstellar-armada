@@ -136,10 +136,7 @@
             "class": "falcon",
             "name": "Rookie",
             "piloted": true,
-            "position": [0, 0, 0],
-            "equipment": {
-                "profile": "default"
-            }
+            "position": [0, 0, 0]
         },
         {
             "team": "practiceTargets",
@@ -156,9 +153,7 @@
                     "degrees": 180
                 }
             ],
-            "equipment": {
-                "profile": "fixedTraining"
-            }
+            "equipment": "fixedTraining"
         },
         {
             "team": "practiceTargets",
@@ -169,9 +164,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "fixedTraining"
-            }
+            "equipment": "fixedTraining"
         },
         {
             "team": "practiceTargets",
@@ -182,9 +175,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "fixedTraining"
-            }
+            "equipment": "fixedTraining"
         },
         {
             "team": "practiceTargets",
@@ -195,9 +186,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "fixedTrainingFull"
-            }
+            "equipment": "fixedTrainingFull"
         }
     ]
 }

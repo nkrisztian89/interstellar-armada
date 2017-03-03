@@ -34,9 +34,7 @@
                 "index": 1
             },
             "position": [0, 0, 0],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "empire",

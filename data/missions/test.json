@@ -112,9 +112,7 @@
             "class": "falcon",
             "piloted": true,
             "position": [0, 0, -60],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "class": "falcon",
@@ -127,19 +125,15 @@
         {
             "class": "viper",
             "position": [50, -30, -170],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "class": "viper",
             "position": [50, 50, -160],
             "equipment": {
-                "weapons": [
-                    {
+                "weapons": [{
                         "class": "plasmaGun"
-                    }
-                ]
+                    }]
             }
         },
         {
@@ -190,9 +184,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "class": "libra",

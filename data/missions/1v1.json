@@ -30,9 +30,7 @@
             "class": "falcon",
             "piloted": true,
             "position": [0, 0, 0],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",

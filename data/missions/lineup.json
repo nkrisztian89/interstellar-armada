@@ -1,0 +1,76 @@
+{
+    "description": "A test mission to showcase the full lineup of fighter classes in the game.",
+    "environment": {
+        "createFrom": "deepSpaceWhiteRedStars"
+    },
+    "teams": [
+        "empire",
+        "pirates"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, 150, -80],
+            "rotations": [
+                {
+                    "axis": "x",
+                    "degrees": -75
+                }
+            ]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "falcon",
+            "piloted": true,
+            "position": [0, 0, 0]
+        },
+        {
+            "team": "empire",
+            "class": "drone",
+            "position": [-20, 200, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "empire",
+            "class": "falcon",
+            "position": [0, 199, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        },
+        {
+            "team": "empire",
+            "class": "viper",
+            "position": [20, 203, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        }, 
+        {
+            "team": "pirates",
+            "class": "wolf",
+            "position": [43, 200, -100],
+            "rotations": [
+                {
+                    "axis": "z",
+                    "degrees": 180
+                }
+            ]
+        }
+    ]
+}

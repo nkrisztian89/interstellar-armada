@@ -34,9 +34,7 @@
             "class": "falcon",
             "piloted": true,
             "position": [0, 3200, 0],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "rotations": [
                 {
                     "axis": "z",
@@ -83,9 +81,7 @@
             },
             "ai": "fighter",
             "position": [0, -50, -150],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "rebels",
@@ -96,9 +92,7 @@
             },
             "ai": "fighter",
             "position": [-35, -85, -150],
-            "equipment": {
-                "profile": "half"
-            }
+            "equipment": "half"
         },
         {
             "team": "rebels",
@@ -109,9 +103,7 @@
             },
             "ai": "fighter",
             "position": [35, -85, -150],
-            "equipment": {
-                "profile": "half"
-            }
+            "equipment": "half"
         }
     ]
 }

@@ -70,9 +70,7 @@
             "team": "empire",
             "piloted": true,
             "position": [0, 0, -60],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "class": "libra",
@@ -96,9 +94,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "class": "taurus",
@@ -110,9 +106,7 @@
                     "degrees": -90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         }
     ]
 }

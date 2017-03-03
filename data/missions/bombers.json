@@ -34,9 +34,7 @@
                 "index": 1
             },
             "position": [0, 0, 0],
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "empire",
@@ -47,9 +45,7 @@
             },
             "ai": "fighter",
             "position": [35, -35, 0],
-            "equipment": {
-                "profile": "half"
-            }
+            "equipment": "half"
         },
         {
             "team": "empire",
@@ -60,9 +56,7 @@
             },
             "ai": "fighter",
             "position": [-35, -35, 0],
-            "equipment": {
-                "profile": "half"
-            }
+            "equipment": "half"
         },
         {
             "team": "rebels",
@@ -79,9 +73,7 @@
                     "degrees": 180
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -98,9 +90,7 @@
                     "degrees": 180
                 }
             ],
-            "equipment": {
-                "profile": "half"
-            }
+            "equipment": "half"
         },
         {
             "team": "rebels",
@@ -117,9 +107,7 @@
                     "degrees": 180
                 }
             ],
-            "equipment": {
-                "profile": "half"
-            }
+            "equipment": "half"
         }
     ]
 }

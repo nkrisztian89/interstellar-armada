@@ -5,21 +5,18 @@
     },
     "teams": [
         "empire",
-        {
-            "name": "pirates",
-            "color": [0.2, 0.2, 0.8, 1.0]
-        }
+        "pirates"
     ],
     "views": [
         {
             "name": "free",
             "movable": true,
             "turnable": true,
-            "position": [0, 3150, -80],
+            "position": [0, 3175, -87.5],
             "rotations": [
                 {
                     "axis": "x",
-                    "degrees": -75
+                    "degrees": -60
                 }
             ]
         }
@@ -57,7 +54,7 @@
                             }
                         }
                     }
-            }]
+                }]
         }
     ],
     "spacecrafts": [
@@ -66,10 +63,7 @@
             "class": "falcon",
             "piloted": true,
             "name": "Rookie",
-            "position": [0, 0, 0],
-            "equipment": {
-                "profile": "full"
-            }
+            "position": [0, 0, 0]
         },
         {
             "team": "pirates",
@@ -95,6 +89,7 @@
                 "name": "raider",
                 "index": 2
             },
+            "equipment": "weak",
             "away": true
         },
         {
@@ -105,6 +100,7 @@
                 "name": "raider",
                 "index": 3
             },
+            "equipment": "weak",
             "away": true
         }
     ]

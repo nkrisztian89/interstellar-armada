@@ -179,9 +179,7 @@
             "name": "Ohio",
             "ai": "ship",
             "position": [0, 50, 0],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         },
         {
@@ -290,9 +288,7 @@
                     "axis": "z",
                     "degrees": 180
                 }],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         },
         {

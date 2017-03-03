@@ -278,9 +278,7 @@
             "ai": "ship",
             "initialTarget": "Don",
             "position": [0, 50, 0],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         },
         {
@@ -292,9 +290,7 @@
                 "index": 1
             },
             "position": [-100, -30, 10],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "empire",
@@ -325,9 +321,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -338,9 +332,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "equipment": "default"
         },
         {
             "team": "rebels",
@@ -361,9 +353,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "rebels",
@@ -374,9 +364,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "half"
-            }
+            "equipment": "half"
         },
         {
             "team": "rebels",
@@ -387,9 +375,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "half"
-            }
+            "equipment": "half"
         },
         {
             "team": "rebels",
@@ -410,9 +396,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "equipment": "default"
         },
         {
             "team": "rebels",
@@ -423,9 +407,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "equipment": "default"
         },
         {
             "team": "rebels",
@@ -436,9 +418,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "rebels",
@@ -449,9 +429,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -462,9 +440,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -478,9 +454,7 @@
                     "degrees": 90
                 }
             ],
-            "equipment": {
-                "profile": "full"
-            },
+            "equipment": "full",
             "excludeFromReferenceScore": true
         }
     ]

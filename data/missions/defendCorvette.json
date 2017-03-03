@@ -231,9 +231,7 @@
             "name": "Ohio",
             "ai": "ship",
             "position": [0, 50, 0],
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "empire",
@@ -264,9 +262,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "equipment": "default"
         },
         {
             "team": "rebels",
@@ -277,9 +273,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "equipment": "default"
         },
         {
             "team": "rebels",
@@ -300,9 +294,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "rebels",
@@ -313,9 +305,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "rebels",
@@ -326,9 +316,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -349,9 +337,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "equipment": "default"
         },
         {
             "team": "rebels",
@@ -362,9 +348,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "default"
-            }
+            "equipment": "default"
         },
         {
             "team": "rebels",
@@ -375,9 +359,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "rebels",
@@ -388,9 +370,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "heavy"
-            }
+            "equipment": "heavy"
         },
         {
             "team": "rebels",
@@ -401,9 +381,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         },
         {
             "team": "rebels",
@@ -414,9 +392,7 @@
             },
             "ai": "fighter",
             "away": true,
-            "equipment": {
-                "profile": "full"
-            }
+            "equipment": "full"
         }
     ]
 }

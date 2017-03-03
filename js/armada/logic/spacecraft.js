@@ -986,19 +986,18 @@ define([
             this.setSquad(dataJSON.squad.name, dataJSON.squad.index);
         }
         // equipping the created spacecraft
-        // if there is an quipment tag...
         if (dataJSON.equipment) {
-            // if a profile is referenced in the equipment tag, look up that profile 
-            // and equip according to that
-            if (dataJSON.equipment.profile) {
-                this.equipProfile(this._class.getEquipmentProfile(dataJSON.equipment.profile));
-                // if no profile is referenced, simply create a custom profile from the tags inside
-                // the equipment tag, and equip that
-            } else {
+            // if a profile is referenced, look up that profile and equip according to that
+            if ((typeof dataJSON.equipment) === "string") {
+                this.equipProfile(this._class.getEquipmentProfile(dataJSON.equipment));
+                // if no profile is referenced, simply create a custom profile from the given equipment object, and equip that
+            } else if ((typeof dataJSON.equipment) === "object") {
                 equipmentProfile = new classes.EquipmentProfile(dataJSON.equipment);
                 this.equipProfile(equipmentProfile);
+            } else {
+                application.showError("Invalid equipment property specified for spacecraft " + this.getID() + "!");
             }
-            // if there is no equipment tag, attempt to load the default profile
+            // if there is no equipment specified, attempt to load the default profile
         } else if (this._class.getEquipmentProfile(config.getSetting(config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)) !== undefined) {
             this.equipProfile(this._class.getEquipmentProfile(config.getSetting(config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)));
         }
