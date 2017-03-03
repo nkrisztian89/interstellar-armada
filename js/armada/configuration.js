@@ -1234,6 +1234,10 @@ define([
                 name: "targetSwitchDeniedSound",
                 type: classes.SOUND_EFFECT
             },
+            FLIGHT_MODE_SWITCH_SOUND: {
+                name: "flightModeSwitchSound",
+                type: classes.SOUND_EFFECT
+            },
             MESSAGE_SOUND: {
                 name: "messageSound",
                 type: classes.SOUND_EFFECT

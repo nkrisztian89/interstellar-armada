@@ -1076,6 +1076,10 @@ define([
                     name: "engageSound",
                     type: SOUND_DESCRIPTOR
                 },
+                DISENGAGE_SOUND: {
+                    name: "disengageSound",
+                    type: SOUND_DESCRIPTOR
+                },
                 PREPARE_VELOCITY: {
                     name: "prepareVelocity",
                     type: METERS_PER_SECOND
@@ -1086,6 +1090,10 @@ define([
                 },
                 PREPARE_SOUND: {
                     name: "prepareSound",
+                    type: SOUND_DESCRIPTOR
+                },
+                CANCEL_SOUND: {
+                    name: "cancelSound",
                     type: SOUND_DESCRIPTOR
                 },
                 JUMP_OUT_ACCELERATION: {

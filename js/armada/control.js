@@ -46,15 +46,20 @@ define([
              */
             _strafeSpeedFactor,
             /**
-             * Cached value of the configuration setting for target switch sound.
+             * Sound clip for the target switch sound.
              * @type SoundClip
              */
             _targetSwitchSound,
             /**
-             * Cached value of the configuration setting for target switch denied sound.
+             * Sound clip for the target switch denied sound.
              * @type SoundClip
              */
             _targetSwitchDeniedSound,
+            /**
+             * Sound clip for the flight mode switch sound.
+             * @type SoundClip
+             */
+            _flightModeSwitchSound,
             /**
              * The context storing the current control settings (controllers, input interpreters) that can be accessed through the interface of this module
              * @type ArmadaControlContext
@@ -209,14 +214,23 @@ define([
         // changing flight mode (free / combat / cruise)
         this.setActionFunction("changeFlightMode", true, function () {
             this._controlledSpacecraft.changeFlightMode();
+            if (_flightModeSwitchSound) {
+                _flightModeSwitchSound.play();
+            }
         }.bind(this));
         // toggling between cruise and combat flight modes
         this.setActionFunction("toggleCruise", true, function () {
             this._controlledSpacecraft.toggleCruise();
+            if (_flightModeSwitchSound) {
+                _flightModeSwitchSound.play();
+            }
         }.bind(this));
         // toggling between free and combat flight modes
         this.setActionFunction("toggleFlightAssist", true, function () {
             this._controlledSpacecraft.toggleFlightAssist();
+            if (_flightModeSwitchSound) {
+                _flightModeSwitchSound.play();
+            }
         }.bind(this));
         // switch to next hostile target
         this.setActionFunction("nextNearestHostileTarget", true, function () {
@@ -364,6 +378,19 @@ define([
             }
         }
     };
+    // -------------------------------------------------------------------------
+    // private functions
+    /**
+     * Creates and returns a sound clip based on the name of the configuration settings its data is stored in
+     * @param {String} settingName
+     * @returns {SoundClip}
+     */
+    function _initSound(settingName) {
+        return resources.getSoundEffect(
+                config.getHUDSetting(settingName).name).createSoundClip(
+                resources.SoundCategory.SOUND_EFFECT,
+                config.getHUDSetting(settingName).volume);
+    }
     // #########################################################################
     /**
      * @class The control context used for the game, building on the general control context 
@@ -408,14 +435,9 @@ define([
             return;
         }
         this._pilotingMode = true;
-        _targetSwitchSound = resources.getSoundEffect(
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND).name).createSoundClip(
-                resources.SoundCategory.SOUND_EFFECT,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND).volume);
-        _targetSwitchDeniedSound = resources.getSoundEffect(
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND).name).createSoundClip(
-                resources.SoundCategory.SOUND_EFFECT,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND).volume);
+        _targetSwitchSound = _initSound(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND);
+        _targetSwitchDeniedSound = _initSound(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND);
+        _flightModeSwitchSound = _initSound(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_SWITCH_SOUND);
         this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(pilotedSpacecraft);
         this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(
                 pilotedSpacecraft.getVisualModel(),

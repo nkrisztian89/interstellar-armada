@@ -711,6 +711,10 @@
                     "name": "beep_targeting_denied",
                     "volume": 0.2
                 },
+                "flightModeSwitchSound": {
+                    "name": "flight_mode_switch",
+                    "volume": 0.5
+                },
                 "messageSound": {
                     "name": "blip_message",
                     "volume": 0.5

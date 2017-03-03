@@ -2016,11 +2016,19 @@
                 "name": "jump_start",
                 "volume": 0.5
             },
+            "disengageSound": {
+                "name": "jump_stop",
+                "volume": 0.5
+            },
             "prepareVelocity": 100,
             "prepareDuration": 5000,
             "prepareSound": {
                 "name": "jump_prepare_fighter",
                 "volume": 0.38
+            },
+            "cancelSound": {
+                "name": "jump_cancel_fighter",
+                "volume": 0.6
             },
             "jumpOutAcceleration": 2500,
             "jumpOutDuration": 500,
@@ -2045,11 +2053,19 @@
                 "name": "jump_start",
                 "volume": 0.5
             },
+            "disengageSound": {
+                "name": "jump_stop",
+                "volume": 0.5
+            },
             "prepareVelocity": 120,
             "prepareDuration": 5000,
             "prepareSound": {
                 "name": "jump_prepare_ship",
                 "volume": 3.6
+            },
+            "cancelSound": {
+                "name": "jump_cancel_ship",
+                "volume": 2.0
             },
             "jumpOutAcceleration": 7000,
             "jumpOutDuration": 500,
@@ -2074,11 +2090,19 @@
                 "name": "jump_start",
                 "volume": 0.5
             },
+            "disengageSound": {
+                "name": "jump_stop",
+                "volume": 0.5
+            },
             "prepareVelocity": 150,
             "prepareDuration": 5000,
             "prepareSound": {
                 "name": "jump_prepare_ship",
                 "volume": 6.2
+            },
+            "cancelSound": {
+                "name": "jump_cancel_ship",
+                "volume": 4.0
             },
             "jumpOutAcceleration": 20000,
             "jumpOutDuration": 500,
@@ -2103,11 +2127,19 @@
                 "name": "jump_start",
                 "volume": 0.5
             },
+            "disengageSound": {
+                "name": "jump_stop",
+                "volume": 0.5
+            },
             "prepareVelocity": 100,
             "prepareDuration": 5000,
             "prepareSound": {
                 "name": "jump_prepare_fighter",
                 "volume": 0.38
+            },
+            "cancelSound": {
+                "name": "jump_cancel_fighter",
+                "volume": 0.6
             },
             "jumpOutAcceleration": 2500,
             "jumpOutDuration": 500,

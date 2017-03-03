@@ -955,10 +955,13 @@ define([
     }
     /**
      * Handles camera configuration / HUD message features related to the jump engine cancelled event
+     * @returns {Boolean} Always true (signals the spacecraft's jump engine that the HUD actions happened so it can play the related sound
+     * effect)
      */
     function _handlePilotedSpacecraftJumpCancelled() {
         _battle.battleScreen.clearHUDMessages(JUMP_QUEUE);
         _battleScene.getCamera().startTransitionToConfiguration(_originalCameraConfig);
+        return true;
     }
     /**
      * If the given spacecraft has a view with the given name, initiates a transition for the battle scene camera to the corresponding 
@@ -1677,6 +1680,7 @@ define([
         // mark HUD sound effects for loading
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_SWITCH_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name);
     }

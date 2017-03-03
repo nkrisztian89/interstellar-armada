@@ -1964,6 +1964,11 @@ define([
          */
         this._engageSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].engageSound", dataJSON.engageSound, SOUND_EFFECT) : null;
         /**
+         * The descriptor of the sound effect to be played when a jump engine of this class is disengaged. (i.e. computer blips)
+         * @type Object
+         */
+        this._disengageSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].disengageSound", dataJSON.disengageSound, SOUND_EFFECT) : null;
+        /**
          * The forward velocity that should be set as the speed target for the spacecraft for the jump preparation, in m/s.
          * @type Number
          */
@@ -1978,6 +1983,11 @@ define([
          * @type Object
          */
         this._prepareSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].prepareSound", dataJSON.prepareSound, SOUND_EFFECT_3D) : null;
+        /**
+         * The descriptor of the sound effect to be played when the jump preparation is cancelled.
+         * @type Object
+         */
+        this._cancelSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].cancelSound", dataJSON.cancelSound, SOUND_EFFECT_3D) : null;
         /**
          * The forward acceleration that is added to the spacecraft (by exerting an appropriate force) when initiating a jump out, in m/s.
          * @type Number
@@ -2040,7 +2050,9 @@ define([
      */
     JumpEngineClass.prototype.acquireResources = function () {
         _loadSoundEffect(this._engageSound);
+        _loadSoundEffect(this._disengageSound);
         _loadSoundEffect(this._prepareSound);
+        _loadSoundEffect(this._cancelSound);
         _loadSoundEffect(this._jumpOutSound);
         _loadSoundEffect(this._jumpInSound);
         this._jumpOutExplosionClass.acquireResources();
@@ -2052,6 +2064,13 @@ define([
      */
     JumpEngineClass.prototype.createEngageSoundClip = function () {
         return _createSoundClip(this._engageSound, false);
+    };
+    /**
+     * Creates a sound clip for the disengage sound effect and returns a reference to it.
+     * @returns {SoundClip}
+     */
+    JumpEngineClass.prototype.createDisengageSoundClip = function () {
+        return _createSoundClip(this._disengageSound, false);
     };
     /**
      * @returns {Number}
@@ -2072,6 +2091,14 @@ define([
      */
     JumpEngineClass.prototype.createPrepareSoundClip = function (soundSource) {
         return _createSoundClip(this._prepareSound, false, soundSource);
+    };
+    /**
+     * Creates a sound clip for the cancel sound effect and returns a reference to it.
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
+     * @returns {SoundClip}
+     */
+    JumpEngineClass.prototype.createCancelSoundClip = function (soundSource) {
+        return _createSoundClip(this._cancelSound, false, soundSource);
     };
     /**
      * @returns {Number}

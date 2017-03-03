@@ -1145,6 +1145,12 @@
             "name": "jump_prepare_ship",
             "samples": ["spacecraft/jump_prepare_ship.ogg"]
         }, {
+            "name": "jump_cancel_fighter",
+            "samples": ["spacecraft/jump_cancel_fighter.ogg"]
+        }, {
+            "name": "jump_cancel_ship",
+            "samples": ["spacecraft/jump_cancel_ship.ogg"]
+        }, {
             "name": "jump_swoosh",
             "samples": ["spacecraft/jump_swoosh.ogg"]
         }, {
@@ -1190,6 +1196,9 @@
             "name": "beep_targeting_denied",
             "samples": ["computer/beep_targeting_denied.wav"]
         }, {
+            "name": "flight_mode_switch",
+            "samples": ["computer/flight_mode_switch.ogg"]
+        }, {
             "name": "blip_message",
             "samples": ["computer/blip_message.wav"]
         }, {
@@ -1198,6 +1207,9 @@
         }, {
             "name": "jump_start",
             "samples": ["computer/jump_start.ogg"]
+        }, {
+            "name": "jump_stop",
+            "samples": ["computer/jump_stop.ogg"]
         }, {
             "name": "buttonHover",
             "samples": ["ui/button_hover.wav"]

@@ -2508,6 +2508,7 @@ define([
      * Initiates / cancels the jump out sequence (depending on whether it is already in progress)
      */
     JumpEngine.prototype.jumpOut = function () {
+        var wasPreparing;
         switch (this._state) {
             // initiating jump out sequence
             case JumpEngine.JumpState.NONE:
@@ -2530,14 +2531,30 @@ define([
                 // cancelling jump out sequence
             case JumpEngine.JumpState.ALIGNING_VELOCITY:
             case JumpEngine.JumpState.PREPARING:
+                wasPreparing = this._state === JumpEngine.JumpState.PREPARING;
                 this._state = JumpEngine.JumpState.NONE;
-                this._spacecraft.handleEvent(SpacecraftEvents.JUMP_CANCELLED);
                 this._spacecraft.unlockManeuvering();
                 this._spacecraft.changeFlightMode(this._originalFlightMode);
                 this._spacecraft.enableFiring();
                 if (this._soundClip) {
                     this._soundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
                     this._soundClip = null;
+                }
+                // the disengage sound effect (computer blips) only need to be played for the piloted spacecraft - the event handler should
+                // return true if the event handling included the HUD and other piloted spacecraft related updates
+                if (this._spacecraft.handleEvent(SpacecraftEvents.JUMP_CANCELLED)) {
+                    this._soundClip = this._class.createDisengageSoundClip();
+                    if (this._soundClip) {
+                        this._soundClip.play();
+                    }
+                }
+                // the longer cancellation sound (a "power down" type sound effect) is played (for all spacecrafts) and the reference is set
+                // to this one so that it can be stopped if the spacecraft is destroyed while it is playing
+                if (wasPreparing) {
+                    this._soundClip = this._class.createCancelSoundClip();
+                    if (this._soundClip) {
+                        this._soundClip.play();
+                    }
                 }
                 break;
         }
