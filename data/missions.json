@@ -12,6 +12,8 @@
         }, {
             "source": "pirates.json"
         }, {
+            "source": "headhunt.json"
+        }, {
             "source": "1v1.json"
         }, {
             "source": "3v3.json"

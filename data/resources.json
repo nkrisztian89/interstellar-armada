@@ -3,8 +3,8 @@
         "name": "resources",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:497 (2017.02.05.)",
-        "creationTime": "Tue Feb 21 2017 23:37:14 GMT+0100 (CET)"
+        "version": "0.4.0-dev:507 (2017.03.03.)",
+        "creationTime": "Sat Mar 04 2017 01:29:59 GMT+0100 (CET)"
     },
     "textures": [{
             "name": "white",
@@ -262,6 +262,20 @@
         }, {
             "name": "wolf",
             "basepath": "spacecraft/wolf",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "normal": ""
+            }
+        }, {
+            "name": "ruby_blade",
+            "basepath": "spacecraft/wolf/ruby_blade",
             "format": "png",
             "useMipmap": true,
             "typeSuffixes": {

@@ -17,6 +17,17 @@
     top: 0;
     right: 0;
     width: 680px;
+    height: 400px;
+    overflow-y: scroll;
+}
+
+.missionInfoContainer::-webkit-scrollbar {
+    width: 2px; 
+    background: transparent;
+}
+
+.missionInfoContainer::-webkit-scrollbar-thumb {
+    background: #00aa00;
 }
 
 .subcaption.completed {
@@ -36,6 +47,7 @@
         position: relative;
         margin-left: auto;
         margin-right: auto;
+        margin-bottom: 1em;
 
         width: 90%;
         height: 300px;

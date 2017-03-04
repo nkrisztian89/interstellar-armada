@@ -181,6 +181,12 @@
         "pirates": {
             "name": "Kalózok"
         },
+        "headhunt": {
+            "name": "Fejvadászat",
+            "messages": {
+                "rubyBladeArrived": "Gamma 1: Itt van! Hagyd az őröket! Gyorsan vedd célba a Ruby Blade-et, lőjük ki, aztán pucoljunk innen!"
+            }
+        },
         "1v1": {
             "name": "Egy egy ellen"
         },

@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:497 (2017.02.05.)",
-        "creationTime": "Wed Mar 01 2017 05:42:26 GMT+0100 (CET)"
+        "version": "0.4.0-dev:507 (2017.03.03.)",
+        "creationTime": "Sat Mar 04 2017 01:30:04 GMT+0100 (CET)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -2065,7 +2065,7 @@
             },
             "cancelSound": {
                 "name": "jump_cancel_ship",
-                "volume": 2.0
+                "volume": 2
             },
             "jumpOutAcceleration": 7000,
             "jumpOutDuration": 500,
@@ -2102,7 +2102,7 @@
             },
             "cancelSound": {
                 "name": "jump_cancel_ship",
-                "volume": 4.0
+                "volume": 4
             },
             "jumpOutAcceleration": 20000,
             "jumpOutDuration": 500,
@@ -6189,5 +6189,13 @@
                     "array": false
                 }],
             "defaultLuminosityFactors": [[18, 1]]
+        }, {
+            "name": "rubyBlade",
+            "basedOn": "wolf",
+            "showInDatabase": false,
+            "hitpoints": 50,
+            "texture": "ruby_blade",
+            "scoreValue": 100,
+            "defaultLuminosityFactors": [[0, 1], [18, 1]]
         }]
 }

@@ -677,7 +677,7 @@ define([
                             if (target) {
                                 this._targetList = [target];
                             } else {
-                                application.showError("'" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target + "'!");
+                                application.log("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target.single + "'. Might be because the ship is already destroyed.");
                             }
                         } else if (data.target.list) {
                             // selecting a target list
@@ -687,7 +687,7 @@ define([
                                 if (target) {
                                     this._targetList.push(target);
                                 } else {
-                                    application.showError("'" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target + "'!");
+                                    application.log("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target.list[i] + "'. Might be because the ship is already destroyed.");
                                 }
                             }
                         } else if (data.target.squads) {
