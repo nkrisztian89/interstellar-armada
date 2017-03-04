@@ -376,6 +376,11 @@ define([
          */
         this._humSoundClip = null;
         /**
+         * The (original) volume of the hum sound effect (to be able to restore it after it is set to zero)
+         * @type Number
+         */
+        this._humSoundVolume = 0;
+        /**
          * The sound source used to position the sound effects beloning to this spacecraft in 3D sound (=camera) space
          * @type SoundSource
          */
@@ -1916,10 +1921,9 @@ define([
      * Starts the playback of the spacecraft hum sound effect (ramping the volume up from zero to avoid popping)
      */
     Spacecraft.prototype._startHumSound = function () {
-        var volume = this._humSoundClip.getVolume();
         this._humSoundClip.setVolume(0);
         this._humSoundClip.play();
-        this._humSoundClip.rampVolume(volume, HUM_SOUND_VOLUME_RAMP_DURATION, true, true);
+        this._humSoundClip.rampVolume(this._humSoundVolume, HUM_SOUND_VOLUME_RAMP_DURATION, true, true);
     };
     /**
      * If the spacecraft object was not destroyed upon its destruction (by setting an onDestructed handler returning false), it retains its
@@ -2034,6 +2038,7 @@ define([
             if (this._class.hasHumSound()) {
                 if (!this._humSoundClip) {
                     this._humSoundClip = this._class.createHumSoundClip(this._soundSource);
+                    this._humSoundVolume = this._humSoundClip.getVolume();
                     if (this._humSoundClip) {
                         this._startHumSound();
                     }
