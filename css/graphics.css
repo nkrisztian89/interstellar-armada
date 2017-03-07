@@ -1,0 +1,14 @@
+.settingsDiv {
+    width: 800px;
+    padding: 1em 0;
+}
+
+.settingsDivLeft {
+    display: inline-block;
+    width: 386px;
+}
+
+.settingsDivRight {
+    display: inline-block;
+    width: 386px;
+}

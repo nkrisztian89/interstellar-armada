@@ -82,6 +82,7 @@ define([
                 GENERAL_SETTINGS_SCREEN_SOURCE: "general-settings.html",
                 GRAPHICS_SCREEN_NAME: "graphics",
                 GRAPHICS_SCREEN_SOURCE: "graphics.html",
+                GRAPHICS_SCREEN_CSS: "graphics.css",
                 AUDIO_SCREEN_NAME: "audio",
                 AUDIO_SCREEN_SOURCE: "audio.html",
                 CONTROLS_SCREEN_NAME: "controls",

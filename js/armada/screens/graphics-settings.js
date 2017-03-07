@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file This module manages and provides the Graphics settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -168,6 +168,8 @@ define([
             PARTICLE_AMOUNT_SELECTOR_ID = "particleAmountSelector",
             DUST_PARTICLE_AMOUNT_SELECTOR_ID = "dustParticleAmountSelector",
             OPTION_PARENT_ID = "settingsDiv",
+            LEFT_OPTION_PARENT_ID = "settingsDivLeft",
+            RIGHT_OPTION_PARENT_ID = "settingsDivRight",
             SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
             SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
     // ##############################################################################
@@ -180,6 +182,7 @@ define([
                 armadaScreens.GRAPHICS_SCREEN_NAME,
                 armadaScreens.GRAPHICS_SCREEN_SOURCE,
                 {
+                    cssFilename: armadaScreens.GRAPHICS_SCREEN_CSS,
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
@@ -251,40 +254,40 @@ define([
         graphics.executeWhenReady(function () {
             this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID,
                     strings.GRAPHICS.ANTIALIASING.name,
-                    _getOnOffSettingValues());
+                    _getOnOffSettingValues(), LEFT_OPTION_PARENT_ID);
             this._filteringSelector = this._registerSelector(FILTERING_SELECTOR_ID,
                     strings.GRAPHICS.FILTERING.name,
-                    _getFilteringSettingValues().map(_mapCaption));
+                    _getFilteringSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
             this._textureQualitySelector = this._registerSelector(TEXTURE_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.TEXTURE_QUALITY.name,
-                    _getTextureQualitySettingValues().map(_mapCaption));
+                    _getTextureQualitySettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
             this._cubemapQualitySelector = this._registerSelector(CUBEMAP_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.BACKGROUND_QUALITY.name,
-                    _getCubemapQualitySettingValues().map(_mapCaption));
+                    _getCubemapQualitySettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
             this._lodSelector = this._registerSelector(LOD_SELECTOR_ID,
                     strings.GRAPHICS.MODEL_DETAILS.name,
-                    _getLODSettingValues().map(_mapCaption));
+                    _getLODSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
             this._shaderComplexitySelector = this._registerSelector(SHADER_COMPLEXITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADERS.name,
-                    _getShaderComplexitySettingValues().map(_mapCaption));
+                    _getShaderComplexitySettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
             this._shadowMappingSelector = this._registerSelector(SHADOW_MAPPING_SELECTOR_ID,
                     strings.GRAPHICS.SHADOWS.name,
-                    _getOnOffSettingValues());
+                    _getOnOffSettingValues(), RIGHT_OPTION_PARENT_ID);
             this._shadowQualitySelector = this._registerSelector(SHADOW_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADOW_QUALITY.name,
-                    _getShadowQualitySettingValues().map(_mapCaption));
+                    _getShadowQualitySettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
             this._shadowDistanceSelector = this._registerSelector(SHADOW_DISTANCE_SELECTOR_ID,
                     strings.GRAPHICS.SHADOW_DISTANCE.name,
-                    _getShadowDistanceSettingValues().map(_mapCaption));
+                    _getShadowDistanceSettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
             this._maxDynamicLightsSelector = this._registerSelector(MAX_DYNAMIC_LIGHTS_SELECTOR_ID,
                     strings.GRAPHICS.MAX_DYNAMIC_LIGHTS.name,
-                    _getMaxDynamicLightsSettingValues().map(_mapCaption));
+                    _getMaxDynamicLightsSettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
             this._particleAmountSelector = this._registerSelector(PARTICLE_AMOUNT_SELECTOR_ID,
                     strings.GRAPHICS.PARTICLE_AMOUNT.name,
-                    _getParticleAmountSettingValues().map(_mapCaption));
+                    _getParticleAmountSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
             this._dustParticleAmountSelector = this._registerSelector(DUST_PARTICLE_AMOUNT_SELECTOR_ID,
                     strings.GRAPHICS.DUST_PARTICLE_AMOUNT.name,
-                    _getDustParticleAmountSettingValues().map(_mapCaption));
+                    _getDustParticleAmountSettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
         }.bind(this));
     }
     GraphicsScreen.prototype = new screens.HTMLScreen();
@@ -293,9 +296,10 @@ define([
      * @param {String} name
      * @param {String} propertyLabelID
      * @param {String[]} valueList
+     * @param {String} [parentID=OPTION_PARENT_ID]
      * @returns {Selector}
      */
-    GraphicsScreen.prototype._registerSelector = function (name, propertyLabelID, valueList) {
+    GraphicsScreen.prototype._registerSelector = function (name, propertyLabelID, valueList, parentID) {
         return this.registerExternalComponent(
                 new components.Selector(
                         name,
@@ -303,7 +307,7 @@ define([
                         {cssFilename: armadaScreens.SELECTOR_CSS},
                         {id: propertyLabelID},
                         valueList),
-                OPTION_PARENT_ID);
+                parentID || OPTION_PARENT_ID);
     };
     /**
      * Applies the currently selected settings and closes the screen.
