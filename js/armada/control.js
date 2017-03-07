@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides functionality to load and access control configuration and settings for Interstellar Armada.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -213,23 +213,26 @@ define([
         }.bind(this));
         // changing flight mode (free / combat / cruise)
         this.setActionFunction("changeFlightMode", true, function () {
-            this._controlledSpacecraft.changeFlightMode();
-            if (_flightModeSwitchSound) {
-                _flightModeSwitchSound.play();
+            if (this._controlledSpacecraft.changeFlightMode()) {
+                if (_flightModeSwitchSound) {
+                    _flightModeSwitchSound.play();
+                }
             }
         }.bind(this));
         // toggling between cruise and combat flight modes
         this.setActionFunction("toggleCruise", true, function () {
-            this._controlledSpacecraft.toggleCruise();
-            if (_flightModeSwitchSound) {
-                _flightModeSwitchSound.play();
+            if (this._controlledSpacecraft.toggleCruise()) {
+                if (_flightModeSwitchSound) {
+                    _flightModeSwitchSound.play();
+                }
             }
         }.bind(this));
         // toggling between free and combat flight modes
         this.setActionFunction("toggleFlightAssist", true, function () {
-            this._controlledSpacecraft.toggleFlightAssist();
-            if (_flightModeSwitchSound) {
-                _flightModeSwitchSound.play();
+            if (this._controlledSpacecraft.toggleFlightAssist()) {
+                if (_flightModeSwitchSound) {
+                    _flightModeSwitchSound.play();
+                }
             }
         }.bind(this));
         // switch to next hostile target

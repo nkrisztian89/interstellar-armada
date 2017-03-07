@@ -1985,10 +1985,11 @@ define([
     /**
      * Switches to the specified (if any) or to the next flight mode. (free / combat / cruise)
      * @param {String} [flightMode]
+     * @returns {Boolean} Whether the flight mode change happened.
      */
     ManeuveringComputer.prototype.changeFlightMode = function (flightMode) {
         if (this._locked) {
-            return;
+            return false;
         }
         if (!flightMode) {
             if (!this._assisted) {
@@ -2022,19 +2023,23 @@ define([
                 break;
             default:
                 application.showError("Cannot switch to unknown flight mode: '" + flightMode + "'!");
+                return false;
         }
+        return true;
     };
     /**
      * Toggles between free and combat flight modes
+     * @returns {Boolean} Whether the flight mode change happened.
      */
     ManeuveringComputer.prototype.toggleFlightAssist = function () {
-        this.changeFlightMode(this._assisted ? FlightMode.FREE : FlightMode.COMBAT);
+        return this.changeFlightMode(this._assisted ? FlightMode.FREE : FlightMode.COMBAT);
     };
     /**
      * Toggles between cruise and combat flight modes
+     * @returns {Boolean} Whether the flight mode change happened.
      */
     ManeuveringComputer.prototype.toggleCruise = function () {
-        this.changeFlightMode(this._restricted ? FlightMode.COMBAT : FlightMode.CRUISE);
+        return this.changeFlightMode(this._restricted ? FlightMode.COMBAT : FlightMode.CRUISE);
     };
     /**
      * Increases the target speed or sets it to maximum in free mode.

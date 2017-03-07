@@ -1069,21 +1069,24 @@ define([
     /**
      * Switches to the given / next available flight mode.
      * @param {String} [flightMode]
+     * @returns {Boolean} Whether the flight mode change happened.
      */
     Spacecraft.prototype.changeFlightMode = function (flightMode) {
-        this._maneuveringComputer.changeFlightMode(flightMode);
+        return this._maneuveringComputer.changeFlightMode(flightMode);
     };
     /**
      * Toggles between free and combat flight modes
+     * @returns {Boolean} Whether the flight mode change happened.
      */
     Spacecraft.prototype.toggleFlightAssist = function () {
-        this._maneuveringComputer.toggleFlightAssist();
+        return this._maneuveringComputer.toggleFlightAssist();
     };
     /**
      * Toggles between cruise and combat flight modes
+     * @returns {Boolean} Whether the flight mode change happened.
      */
     Spacecraft.prototype.toggleCruise = function () {
-        this._maneuveringComputer.toggleCruise();
+        return this._maneuveringComputer.toggleCruise();
     };
     /**
      * Control command for forward thrust for the maneuvering computer.
