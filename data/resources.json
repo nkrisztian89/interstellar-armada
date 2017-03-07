@@ -114,7 +114,7 @@
                 "emissive": ""
             },
             "qualitySuffixes": {
-                "low": "",
+                "low": "_256",
                 "normal": ""
             }
         }, {
