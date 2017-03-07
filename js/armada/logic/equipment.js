@@ -1216,14 +1216,25 @@ define([
      */
     TargetingComputer.prototype._updateHostileOrder = function (mapFunction) {
         var filteredTargets, orderedMappedTargets, i;
-        if ((this._timeUntilHostileOrderReset <= 0) && this._spacecraftArray) {
+        if (this._spacecraftArray) {
             filteredTargets = this._spacecraftArray.filter(this._filterHostileTarget, this);
-            orderedMappedTargets = filteredTargets.map(mapFunction, this).sort(TargetingComputer._compareMappedTargets);
-            this._orderedHostileTargets = [];
-            for (i = 0; i < orderedMappedTargets.length; i++) {
-                this._orderedHostileTargets.push(filteredTargets[orderedMappedTargets[i].index]);
+            // if the order is invalid (expired), generate a new list with a new, up-to-date order
+            if (this._timeUntilHostileOrderReset <= 0) {
+                orderedMappedTargets = filteredTargets.map(mapFunction, this).sort(TargetingComputer._compareMappedTargets);
+                this._orderedHostileTargets = [];
+                for (i = 0; i < orderedMappedTargets.length; i++) {
+                    this._orderedHostileTargets.push(filteredTargets[orderedMappedTargets[i].index]);
+                }
+                return true;
+            } else {
+                // if the order was not updated, still check for new potential targets (e.g. ships that
+                // jumped in) and append them to the list
+                for (i = 0; i < filteredTargets.length; i++) {
+                    if (this._orderedHostileTargets.indexOf(filteredTargets[i]) < 0) {
+                        this._orderedHostileTargets.push(filteredTargets[i]);
+                    }
+                }
             }
-            return true;
         }
         return false;
     };
@@ -1233,14 +1244,25 @@ define([
      */
     TargetingComputer.prototype._updateNonHostileOrder = function () {
         var filteredTargets, orderedMappedTargets, i;
-        if ((this._timeUntilNonHostileOrderReset <= 0) && this._spacecraftArray) {
+        if (this._spacecraftArray) {
             filteredTargets = this._spacecraftArray.filter(this._filterNonHostileTarget, this);
-            orderedMappedTargets = filteredTargets.map(this._mapTargetByBearing, this).sort(TargetingComputer._compareMappedTargets);
-            this._orderedNonHostileTargets = [];
-            for (i = 0; i < orderedMappedTargets.length; i++) {
-                this._orderedNonHostileTargets.push(filteredTargets[orderedMappedTargets[i].index]);
+            // if the order is invalid (expired), generate a new list with a new, up-to-date order
+            if (this._timeUntilNonHostileOrderReset <= 0) {
+                orderedMappedTargets = filteredTargets.map(this._mapTargetByBearing, this).sort(TargetingComputer._compareMappedTargets);
+                this._orderedNonHostileTargets = [];
+                for (i = 0; i < orderedMappedTargets.length; i++) {
+                    this._orderedNonHostileTargets.push(filteredTargets[orderedMappedTargets[i].index]);
+                }
+                return true;
+            } else {
+                // if the order was not updated, still check for new potential targets (e.g. ships that
+                // jumped in) and append them to the list
+                for (i = 0; i < filteredTargets.length; i++) {
+                    if (this._orderedNonHostileTargets.indexOf(filteredTargets[i]) < 0) {
+                        this._orderedNonHostileTargets.push(filteredTargets[i]);
+                    }
+                }
             }
-            return true;
         }
         return false;
     };
