@@ -879,6 +879,7 @@ define([
             ], function (resources) {
                 config.loadConfigurationFromJSON(configJSON.dataFiles.logic);
                 graphics.loadConfigurationFromJSON(configJSON.graphics);
+                missions.loadConfigurationFromJSON(configJSON.logic);
                 resources.requestConfigLoad(configJSON.dataFiles.media.resources, function () {
                     application.log("Configuration loaded.");
                 });
