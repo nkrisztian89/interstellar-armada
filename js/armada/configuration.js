@@ -934,6 +934,10 @@ define([
                 name: "targetSwitchAnimationDuration",
                 type: "number"
             },
+            AIM_ASSIST_APPEAR_ANIMATION_DURATION: {
+                name: "aimAssistAppearAnimationDuration",
+                type: "number"
+            },
             HULL_INTEGRITY_DECREASE_ANIMATION_DURATION: {
                 name: "hullIntegrityDecreaseAnimationDuration",
                 type: "number"
@@ -988,7 +992,11 @@ define([
             },
             AIM_ASSIST_INDICATOR: {
                 name: "aimAssistIndicator",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "appear"]})
+            },
+            AIM_ASSIST_INDICATOR_APPEAR_SCALE: {
+                name: "aimAssistIndicatorAppearScale",
+                type: "number"
             },
             WEAPON_IMPACT_INDICATOR: {
                 name: "weaponImpactIndicator",

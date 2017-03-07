@@ -261,6 +261,11 @@ define([
              */
             _targetSwitchTime,
             /**
+             * The time left from the aim assist appear HUD animation, in milliseconds
+             * @type Number
+             */
+            _aimAssistAppearTime,
+            /**
              * The time left / elapsed from the ship indicator highlight animation, in milliseconds
              * @type Number
              */
@@ -728,6 +733,11 @@ define([
              */
             _hudTargetSwitchAnimationDuration,
             /**
+             * The duration of the aim assist appear animation, in milliseconds
+             * @type Number
+             */
+            _hudAimAssistAppearAnimationDuration,
+            /**
              * The duration of the hull integrity decrease animation (highlighting hull integrity bar), in milliseconds
              * @type Number
              */
@@ -777,6 +787,16 @@ define([
              * @type Number
              */
             _weaponImpactIndicatorSwitchScale,
+            /**
+             * The horizontal and vertical base size of the aim assist indicator
+             * @type Number[2]
+             */
+            _aimAssistIndicatorSize,
+            /**
+             * The scaling to apply to the aim assist indicator at the start of the appear / target switch HUD animation
+             * @type Number
+             */
+            _aimAssistIndicatorAppearScale,
             /**
              * The minimum drift speed at which the drift arrow HUD element is displayed.
              * @type Number
@@ -879,6 +899,12 @@ define([
         _newHostilesMessage = null;
         _newHostiles = null;
         audio.playMusic(null);
+        // HUD
+        _hullIntegrityDecreaseTime = 0;
+        _targetHullIntegrityDecreaseTime = 0;
+        _targetSwitchTime = 0;
+        _aimAssistAppearTime = 0;
+        _shipIndicatorHighlightTime = 0;
     }
     // ------------------------------------------------------------------------------
     // public functions
@@ -2271,7 +2297,7 @@ define([
                 craft = _mission ? _mission.getFollowedSpacecraftForScene(_battleScene) : null,
                 target, wingman,
                 /** @type Number */
-                distance, aspect, i, j, count, scale, futureDistance, animationProgress, targetSwitchAnimationProgress, shipWidth,
+                distance, aspect, i, j, count, scale, futureDistance, animationProgress, aimAssistAppearAnimationProgress, targetSwitchAnimationProgress, shipWidth,
                 hullIntegrity,
                 acceleration, speed, absSpeed, maxSpeed, stepFactor, stepBuffer, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
                 armor, craftCount,
@@ -2280,9 +2306,9 @@ define([
                 /** @type Number[2] */
                 position2D, direction2D, maxSpeedTextPosition, maxReverseSpeedTextPosition, shipIndicatorSize, shipIndicatorMinSize, size2D,
                 /** @type Number[3] */
-                position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, basePointPosition, relativeVelocity, color,
+                position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, basePointPosition, relativeVelocity,
                 /** @type Number[4] */
-                direction, targetInfoTextColor, filledColor, emptyColor, hostileColor, friendlyColor, hostileArrowColor, friendlyArrowColor,
+                direction, color, targetInfoTextColor, filledColor, emptyColor, hostileColor, friendlyColor, hostileArrowColor, friendlyArrowColor,
                 newHostileColor, newHostileArrowColor,
                 /** @type Float32Array */
                 m, scaledOriMatrix,
@@ -2626,6 +2652,13 @@ define([
             } else if (_targetSwitchTime > 0) {
                 _targetSwitchTime -= dt;
                 targetSwitchAnimationProgress = _targetSwitchTime / _hudTargetSwitchAnimationDuration;
+            } else {
+                targetSwitchAnimationProgress = 0;
+            }
+            if (_aimAssistAppearTime > 0) {
+                aimAssistAppearAnimationProgress = _aimAssistAppearTime / _hudAimAssistAppearAnimationDuration;
+            } else {
+                aimAssistAppearAnimationProgress = 0;
             }
             if (target) {
                 targetPosition = target.getPhysicalPositionVector();
@@ -2638,9 +2671,23 @@ define([
                     // aim assist indicator at the expected future position of the target
                     futureTargetPosition = craft.getTargetHitPosition();
                     _aimAssistIndicator.setPosition(futureTargetPosition);
-                    _aimAssistIndicator.setColor(targetIsHostile ?
+                    color = targetIsHostile ?
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.hostile :
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.friendly);
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.friendly;
+                    // scaling / coloring according to the appear / target switch animation
+                    if ((_targetSwitchTime > 0) || (_aimAssistAppearTime > 0)) {
+                        animationProgress = Math.max(targetSwitchAnimationProgress, aimAssistAppearAnimationProgress);
+                        _aimAssistIndicator.setColor(utils.getMixedColor(
+                                color,
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.appear,
+                                animationProgress));
+                        _aimAssistIndicator.setSize(vec.scaled2(
+                                _aimAssistIndicatorSize,
+                                1 + (_aimAssistIndicatorAppearScale - 1) * animationProgress));
+                    } else {
+                        _aimAssistIndicator.setColor(color);
+                        _aimAssistIndicator.setSize(_aimAssistIndicatorSize);
+                    }
                     _aimAssistIndicator.show();
                     // weapon crosshairs in the lines of fire
                     futureDistance = vec.length3(vec.diff3(futureTargetPosition, position));
@@ -2687,6 +2734,9 @@ define([
                     }
                     if (!targetInRange || (craft.isFighter() && (vec.dot3(mat.getRowB43(m), vectorToTarget) < 0))) {
                         _aimAssistIndicator.hide();
+                        _aimAssistAppearTime = _hudAimAssistAppearAnimationDuration;
+                    } else {
+                        _aimAssistAppearTime -= dt;
                     }
                 } else {
                     // if there are no weapons equipped
@@ -3408,12 +3458,15 @@ define([
         _escortsBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).layout);
         _messageBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).layout);
         _hudTargetSwitchAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_ANIMATION_DURATION);
+        _hudAimAssistAppearAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_APPEAR_ANIMATION_DURATION);
         _hudHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
         _hudTargetHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
         _shipIndicatorHighlightAnimationInterval = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR_HIGHLIGHT_ANIMATION_INTERVAL);
         _shipIndicatorSizes = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).sizes;
         _shipIndicatorSizeFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR_SIZE_FACTOR);
         _targetIndicatorSwitchScale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INDICATOR_SWITCH_SCALE);
+        _aimAssistIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).size;
+        _aimAssistIndicatorAppearScale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR_APPEAR_SCALE);
         _shipArrowSizes = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).sizes;
         _targetArrowSwitchScale = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_ARROW_SWITCH_SCALE);
         _weaponImpactIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).size;
