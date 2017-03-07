@@ -2645,8 +2645,12 @@ define([
      */
     Mission.prototype.destroy = function () {
         var i;
-        if (this._environment && this._ownsEnvironment) {
-            this._environment.destroy();
+        if (this._environment) {
+            if (this._ownsEnvironment) {
+                this._environment.destroy();
+            } else {
+                this._environment.removeFromScene();
+            }
         }
         this._environment = null;
         if (this._views) {

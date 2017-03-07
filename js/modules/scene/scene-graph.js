@@ -1630,6 +1630,15 @@ define([
         }
     };
     /**
+     * Clears all nodes and lights from the scene.
+     */
+    Scene.prototype.clear = function () {
+        this.clearNodes();
+        this.clearDirectionalLights();
+        this.clearPointLights();
+        this.clearSpotLights();
+    };
+    /**
      * Clears all added nodes from this scene and resets the root nodes.
      */
     Scene.prototype.clearNodes = function () {

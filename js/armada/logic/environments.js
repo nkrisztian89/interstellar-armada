@@ -496,6 +496,15 @@ define([
             this._dustClouds[i].simulate(this._camera);
         }
     };
+    /**
+     * Removes references that are only neded while the environment is added to a scenes
+     */
+    Environment.prototype.removeFromScene = function () {
+        this._camera = null;
+    };
+    /*
+     * Removes all references held by this environment.
+     */
     Environment.prototype.destroy = function () {
         var i;
         if (this._skyboxes) {

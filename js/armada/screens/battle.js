@@ -868,12 +868,13 @@ define([
         }
         _mission = null;
         if (_battleScene) {
-            _battleScene.clearNodes();
-            _battleScene.clearDirectionalLights();
-            _battleScene.clearPointLights();
-            _battleScene.clearSpotLights();
+            _battleScene.clear();
         }
         _battleScene = null;
+        if (_targetScene) {
+            _targetScene.clear();
+        }
+        _targetScene = null;
         _messageQueues = null;
         _newHostilesMessage = null;
         _newHostiles = null;
@@ -1816,7 +1817,10 @@ define([
         var canvas;
         screens.HTMLScreenWithCanvases.prototype._initializeComponents.call(this);
         canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
-        _handleResize = function () {
+        if (_handleResize) {
+            window.removeEventListener("resize", _handleResize);
+        }
+        _handleResize = _handleResize || function () {
             control.setScreenCenter(canvas.width / 2, canvas.height / 2);
         };
         window.addEventListener("resize", _handleResize);
