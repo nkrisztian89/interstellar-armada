@@ -41,6 +41,9 @@ define([
             DEMO_BUTTON_ID = "demoButton",
             LAUNCH_BUTTON_ID = "launchButton",
             MISSION_TITLE_ID = "missionTitle",
+            MISSION_LOCATION_ID = "missionLocation",
+            DIFFICULTY_CONTAINER_ID = "difficultyContainer",
+            DIFFICULTY_SELECTOR_ID = "difficultySelector",
             MISSION_DESCRIPTION_ID = "missionDescription",
             LIST_COMPONENT_NAME = "list",
             MEDAL_IMAGE_HTML = "<img class='missionMedal' src='images/empire_{performance}_20.png' alt='{performance}'>",
@@ -51,6 +54,12 @@ define([
              * @type Spacecraft
              */
             _spacecraft;
+    function _mapDifficultyName(difficulty) {
+        return strings.get(strings.SETTING.PREFIX, difficulty);
+    }
+    function _getDifficultyValues() {
+        return missions.getDifficultyNames().map(_mapDifficultyName);
+    }
     // #########################################################################
     /**
      * @class Provides the behaviour for the Missions screen
@@ -87,6 +96,14 @@ define([
          * @type SimpleComponent
          */
         this._missionTitle = this.registerSimpleComponent(MISSION_TITLE_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._missionLocation = this.registerSimpleComponent(MISSION_LOCATION_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._difficultySelector = null;
         /**
          * @type SimpleComponent
          */
@@ -147,6 +164,20 @@ define([
                             }.bind(this)
                         }),
                 this._listContainerID);
+        missions.executeWhenReady(function () {
+            this._difficultySelector = this.registerExternalComponent(
+                    new components.Selector(
+                            DIFFICULTY_SELECTOR_ID,
+                            armadaScreens.SELECTOR_SOURCE,
+                            {
+                                cssFilename: armadaScreens.SELECTOR_CSS,
+                                selectorClassName: "smallSelector",
+                                propertyContainerClassName: "smallSelectorPropertyContainer"
+                            },
+                            {id: strings.MISSIONS.DIFFICULTY.name},
+                            _getDifficultyValues()),
+                    DIFFICULTY_CONTAINER_ID);
+        }.bind(this));
     }
     MissionsScreen.prototype = new screens.HTMLScreen();
     MissionsScreen.prototype.constructor = MissionsScreen;
@@ -196,10 +227,8 @@ define([
                     objectives = missionDescriptor.getMissionObjectives().map(function (objective) {
                         return "<li>" + objective + "</li>";
                     });
-                    this._missionDescription.setContent(strings.get(strings.MISSIONS.DESCRIPTION), {
-                        description: missionDescriptor.getDisplayDescription(),
-                        location: missionDescriptor.getEnvironment().getDisplayName()
-                    });
+                    this._missionLocation.setContent(strings.get(strings.MISSIONS.LOCATION) + " " + missionDescriptor.getEnvironment().getDisplayName());
+                    this._missionDescription.setContent(missionDescriptor.getDisplayDescription());
                     this._missionObjectives.setContent(objectives.join(""));
                     if (_spacecraft) {
                         this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
@@ -219,6 +248,7 @@ define([
             this._demoButton.enable();
         } else {
             this._missionTitle.setContent(strings.get(strings.MISSIONS.NO_SELECTED_NAME));
+            this._missionLocation.setContent("");
             this._missionDescription.setContent(strings.get(strings.MISSIONS.NO_SELECTED_DESCRIPTION));
             this._missionObjectivesTitle.hide();
             this._missionObjectives.hide();
@@ -286,6 +316,8 @@ define([
             });
             if (winCount > 0) {
                 subcaption.classList.add(COMPLETED_CLASS);
+            } else {
+                subcaption.classList.remove(COMPLETED_CLASS);
             }
             i++;
         });
@@ -313,8 +345,17 @@ define([
             game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
             game.getScreen().startNewBattle({
                 missionSourceFilename: missions.getMissionNames()[missionIndex],
+                difficulty: missions.getDifficultyNames()[this._difficultySelector.getSelectedIndex()],
                 demoMode: demoMode});
         }
+    };
+    /**
+     * Updates the displayed selector values (i.e. difficulty) based on the game state
+     */
+    MissionsScreen.prototype._updateValues = function () {
+        missions.executeWhenReady(function () {
+            this._difficultySelector.selectValueWithIndex(missions.getDifficultyNames().indexOf(missions.getDifficulty()));
+        }.bind(this));
     };
     /**
      * @override
@@ -324,6 +365,10 @@ define([
         this._backButton.getElement().onclick = function () {
             game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
             return false;
+        }.bind(this);
+        this._difficultySelector.onChange = function () {
+            missions.setDifficulty(missions.getDifficultyNames()[this._difficultySelector.getSelectedIndex()]);
+            this._updateScores();
         }.bind(this);
         this._demoButton.getElement().onclick = function () {
             this._launchMission(true);
@@ -339,7 +384,20 @@ define([
      */
     MissionsScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
+        this._difficultySelector.setValueList(_getDifficultyValues());
+        this._updateValues();
         this._updateScores();
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    MissionsScreen.prototype.show = function () {
+        if (screens.HTMLScreen.prototype.show.call(this)) {
+            this._updateValues();
+            return true;
+        }
+        return false;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

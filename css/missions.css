@@ -18,16 +18,62 @@
     right: 0;
     width: 680px;
     height: 400px;
+    
+    text-align: left;
+}
+
+.missionInfoHeader {
+    width: 440px;
+    height: 50px;
+}
+
+.missionTitle {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.missionLocation {
+    margin-top: 0.25em;
+}
+
+.difficultyContainer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    max-width: 240px;
+    height: 50px;
+    padding-top: 0.25em;
+    padding-right: 1em;
+}
+
+.missionInfoBody {
+    box-sizing: border-box;
+    margin-top: 10px;
+    border-top: 2px solid #333333;
+    padding-top: 0.5em;
+    height: 340px;
     overflow-y: scroll;
 }
 
-.missionInfoContainer::-webkit-scrollbar {
+.missionInfoBody::-webkit-scrollbar {
     width: 2px; 
     background: transparent;
 }
 
-.missionInfoContainer::-webkit-scrollbar-thumb {
+.missionInfoBody::-webkit-scrollbar-thumb {
     background: #00aa00;
+}
+
+.missionInfoBody > p {
+    margin-top: 0;
+}
+
+.missionDescription > p {
+    margin-top: 0;
+}
+
+.missionInfoBody > h3 {
+    margin-bottom: 0.5em;
 }
 
 .subcaption.completed {

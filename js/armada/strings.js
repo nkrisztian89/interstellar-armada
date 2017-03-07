@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -36,6 +36,7 @@ define([
     strings.MISSIONS = {
         BACK: {name: "missions.backButton"},
         TITLE: {name: "missions.title"},
+        DIFFICULTY: {name: "missions.difficulty"},
         LAUNCH_BUTTON: {name: "missions.launchButton"},
         DEMO_BUTTON: {name: "missions.demoButton"},
         NOT_COMPLETED: {name: "missions.notCompleted"},
@@ -43,10 +44,10 @@ define([
         SANDBOX_COMPLETED: {name: "missions.sandboxCompleted"},
         NO_SELECTED_NAME: {name: "missions.noSelectedName"},
         NO_SELECTED_DESCRIPTION: {name: "missions.noSelectedDescription"},
+        LOCATION: {name: "missions.location"},
         LOADING_DESCRIPTION: {name: "missions.loadingDescription"},
         NO_TRANSLATED_DESCRIPTION: {name: "missions.noTranslatedDescription"},
         NO_DESCRIPTION: {name: "missions.noDescription"},
-        DESCRIPTION: {name: "missions.description"},
         OBJECTIVES_TITLE: {name: "missions.missionObjectivesTitle"},
         SPACECRAFT_TITLE: {name: "missions.playerSpacecraftTitle"},
         SPACECRAFT_DATA: {name: "missions.playerSpacecraftData"},
@@ -216,7 +217,9 @@ define([
         MINIMUM: {name: "setting.minimum"},
         MAXIMUM: {name: "setting.maximum"},
         FEW: {name: "setting.few"},
-        MANY: {name: "setting.many"}
+        MANY: {name: "setting.many"},
+        EASY: {name: "setting.easy"},
+        HARD: {name: "setting.hard"}
     };
     strings.GENERAL_SETTINGS = {
         BACK: {name: "generalSettings.backButton"},

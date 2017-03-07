@@ -172,6 +172,11 @@ define([
              */
             _missionSourceFilename,
             /**
+             * The string ID of the difficulty level on which the battle is currently played.
+             * @type String
+             */
+            _difficulty,
+            /**
              * Whether the game is in demo mode, in which all spacecrafts are controlled by AI and automatic camera switching is performed.
              * @type Boolean
              */
@@ -3209,6 +3214,7 @@ define([
     /**
      * @typedef {Object} BattleScreen~BattleParams
      * @property {String} [missionSourceFilename]
+     * @property {String} [difficulty]  The string ID of the difficulty level to use
      * @property {Boolean} [demoMode] If true, AIs are added to all spacecrafts and the piloted spacecraft is not set, when loading the mission.
      * @property {Boolean} [restart]
      */
@@ -3228,6 +3234,9 @@ define([
         if (params.missionSourceFilename !== undefined) {
             _missionSourceFilename = params.missionSourceFilename;
         }
+        if (params.difficulty !== undefined) {
+            _difficulty = params.difficulty;
+        }
         if (params.demoMode !== undefined) {
             _demoMode = params.demoMode;
         }
@@ -3239,7 +3248,7 @@ define([
                 canvas.width / 2,
                 canvas.height / 2);
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_MISSION), 0);
-        missions.requestMission(_missionSourceFilename, _demoMode, function (createdMission) {
+        missions.requestMission(_missionSourceFilename, _difficulty, _demoMode, function (createdMission) {
             var combatMusicNames, combatMusic, combatMusicIndex;
             _mission = createdMission;
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);

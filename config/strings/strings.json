@@ -45,6 +45,7 @@
     "missions": {
         "backButton": "Back to menu",
         "title": "Missions",
+        "difficulty": "Difficulty:",
         "launchButton": "Launch mission",
         "demoButton": "Launch demo",
         "notCompleted": "Not yet completed",
@@ -52,10 +53,10 @@
         "sandboxCompleted": "Test checked",
         "noSelectedName": "Choose mission",
         "noSelectedDescription": "Choose a mission from the list.",
+        "location": "Location: ",
         "loadingDescription": "Loading...",
         "noTranslatedDescription": "{originalDescription}",
         "noDescription": "No mission description available.",
-        "description": "Location: {location}<br/><br/>{description}",
         "missionObjectivesTitle": "Objectives:",
         "playerSpacecraftTitle": "Spacecraft:",
         "playerSpacecraftData": "Class: {class}<br/>Firepower: {firepower}",
@@ -370,7 +371,9 @@
         "minimum": "minimum",
         "maximum": "maximum",
         "few": "few",
-        "many": "many"
+        "many": "many",
+        "easy": "easy",
+        "hard": "hard"
     },
     "generalSettings": {
         "backButton": "Back to menu",

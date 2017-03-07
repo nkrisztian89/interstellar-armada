@@ -254,6 +254,12 @@ define([
          * @type Number
          */
         this._hitpoints = 0;
+        /**
+         * The maximum hitpoints of this spacecraft. Based on the amount of hitpoints its spacecraft class has,
+         * but can be modified by other factors (such as difficulty)
+         * @type Number
+         */
+        this._maxHitpoints = 0;
         // ---------------------------------------
         // visuals
         /**
@@ -450,6 +456,7 @@ define([
         this._alive = true;
         this._away = false;
         this._hitpoints = this._class.getHitpoints();
+        this._maxHitpoints = this._class.getHitpoints();
         this._physicalModel = new physics.PhysicalObject(
                 this._class.getMass(),
                 positionMatrix || mat.identity4(),
@@ -629,7 +636,7 @@ define([
      * @returns {Number}
      */
     Spacecraft.prototype.getFullIntegrityHitpoints = function () {
-        return this._class.getHitpoints();
+        return this._maxHitpoints;
     };
     /**
      * Returns the current hull integrity ratio of the spacecraft - a number between 0.0 (indicating zero
@@ -637,7 +644,15 @@ define([
      * @returns {Number}
      */
     Spacecraft.prototype.getHullIntegrity = function () {
-        return this._hitpoints / this._class.getHitpoints();
+        return this._hitpoints / this._maxHitpoints;
+    };
+    /**
+     * Multiplies the amount of current and maximum hitpoints of the spacecraft has by the passed factor.
+     * @param {Number} factor
+     */
+    Spacecraft.prototype.multiplyMaxHitpoints = function (factor) {
+        this._hitpoints *= factor;
+        this._maxHitpoints *= factor;
     };
     /**
      * Returns the renderable object that represents this spacecraft in a scene.
@@ -1811,7 +1826,7 @@ define([
                 damage += this._hitpoints; // this subtracts the overkill hitpoints
                 hitBy.gainDamageDealt(damage);
                 // gain score for dealing the damage
-                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._class.getHitpoints() * scoreValue);
+                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._maxHitpoints * scoreValue);
                 // gain score and kill for delivering the final hit
                 hitBy.gainScore(_scoreFactorForKill * scoreValue);
                 hitBy.gainKill();
@@ -1821,7 +1836,7 @@ define([
             // visual simulation: add damage indicators if needed
             for (i = 0; i < this._class.getDamageIndicators().length; i++) {
                 damageIndicator = this._class.getDamageIndicators()[i];
-                hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._class.getHitpoints();
+                hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._maxHitpoints;
                 if ((this._hitpoints <= hitpointThreshold) && (this._hitpoints + damage > hitpointThreshold)) {
                     exp = new explosion.Explosion(
                             damageIndicator.explosionClass,
@@ -1836,7 +1851,7 @@ define([
             // granting score to the spacecraft that hit this one for the damage
             if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
                 hitBy.gainDamageDealt(damage);
-                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._class.getHitpoints() * this.getScoreValue());
+                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._maxHitpoints * this.getScoreValue());
             }
         }
         // callbacks
@@ -1934,7 +1949,7 @@ define([
     Spacecraft.prototype.respawn = function (randomAnimationTime) {
         var i;
         this._alive = true;
-        this._hitpoints = this._class.getHitpoints();
+        this._hitpoints = this._maxHitpoints;
         this._timeElapsedSinceDestruction = -1;
         if (this._humSoundClip) {
             this._startHumSound();

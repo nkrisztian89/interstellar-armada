@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0-dev:508 (2017.03.04.)",
+    "version": "0.4.0-dev:509 (2017.03.07.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -378,6 +378,16 @@
         "panningModel": "equalpower"
     },
     "logic": {
+        "difficultyLevels": [{
+                "name": "easy",
+                "playerHitpointsFactor": 2
+            }, {
+                "name": "medium",
+                "playerHitpointsFactor": 1.5
+            }, {
+                "name": "hard",
+                "playerHitpointsFactor": 1
+            }],
         "missionPerformanceLevels": [
             {
                 "name": "bronze"

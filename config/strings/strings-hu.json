@@ -45,6 +45,7 @@
     "missions": {
         "backButton": "Vissza a menübe",
         "title": "Küldetések",
+        "difficulty": "Nehézség:",
         "launchButton": "Indítás",
         "demoButton": "Demo",
         "notCompleted": "Nem teljesített",
@@ -52,10 +53,10 @@
         "sandboxCompleted": "teszt kipróbálva",
         "noSelectedName": "Küldetésválasztás",
         "noSelectedDescription": "Válassz egy küldetést a listából.",
+        "location": "Helyszín: ",
         "loadingDescription": "Betöltés...",
         "noTranslatedDescription": "A küldetéshez nem érhető el leírás magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
         "noDescription": "A küldetéshez nem érhető el leírás.",
-        "description": "Helyszín: {location}<br/><br/>{description}",
         "missionObjectivesTitle": "Feladatok:",
         "playerSpacecraftTitle": "Űrhajó:",
         "playerSpacecraftData": "Osztály: {class}<br/>Tűzerő: {firepower}",
@@ -371,7 +372,9 @@
         "minimum": "minimum",
         "maximum": "maximum",
         "few": "kevés",
-        "many": "sok"
+        "many": "sok",
+        "easy": "könnyű",
+        "hard": "nehéz"
     },
     "generalSettings": {
         "backButton": "Vissza a menübe",

@@ -11,6 +11,7 @@
 
 /**
  * @param utils Used for format strings and useful constants
+ * @param types Used for type checking when loading from local storage
  * @param mat Matrices are widely used for 3D simulation
  * @param application Used for file loading and logging functionality
  * @param game Used to dispatch messages to BattleScreen
@@ -33,6 +34,7 @@
  */
 define([
     "utils/utils",
+    "utils/types",
     "utils/matrices",
     "modules/application",
     "modules/game",
@@ -54,7 +56,7 @@ define([
     "armada/logic/ai",
     "utils/polyfill"
 ], function (
-        utils, mat,
+        utils, types, mat,
         application, game, asyncResource, resourceManager, resources, pools,
         camera, renderableObjects,
         constants, graphics, classes, config, strings, environments, SpacecraftEvents, spacecraft, equipment, ai) {
@@ -160,6 +162,11 @@ define([
              * @type String
              */
             MODULE_LOCAL_STORAGE_PREFIX = constants.LOCAL_STORAGE_PREFIX + "missions_",
+            /**
+             * The key identifying the location where the default difficulty setting is stored in local storage.
+             * @type String
+             */
+            DIFFICULTY_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "difficulty",
             /**
              * Used to choose the array of mission descriptors when loading the configuration of the mission resource manager
              * @type String
@@ -2244,10 +2251,11 @@ define([
      * Loads all the data describing this mission from the passed JSON object. Does not add random ships to the mission, only loads their 
      * configuration - they can be added by calling addRandomShips() later, which will use the loaded configuration.
      * @param {Object} dataJSON
+     * @param {String} difficulty The string ID of the difficulty level to use
      * @param {Boolean} demoMode If true, the data from the JSON object will be loaded in demo mode, so that the piloted craft is not set
      * and a suitable AI is added to all spacecrafts if possible.
      */
-    Mission.prototype.loadFromJSON = function (dataJSON, demoMode) {
+    Mission.prototype.loadFromJSON = function (dataJSON, difficulty, demoMode) {
         var i, j, craft, teamID, team, aiType, actions, count;
         application.log("Loading mission from JSON file...", 2);
         this.loadEnvironment(dataJSON);
@@ -2273,6 +2281,7 @@ define([
             craft.loadFromJSON(dataJSON.spacecrafts[i], this._hitObjects);
             if (!demoMode && dataJSON.spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
+                craft.multiplyMaxHitpoints(_context.getDifficultyLevel(difficulty).getPlayerHitpointsFactor());
             }
             aiType = dataJSON.spacecrafts[i].ai;
             if (!aiType && demoMode) {
@@ -2690,11 +2699,23 @@ define([
          * @type MissionDescriptor~LocalData
          */
         this._localData = JSON.parse(localStorage[this._getLocalStorageID()] || "{}");
-        this._localData.winCount = this._localData.winCount || 0;
-        this._localData.loseCount = this._localData.loseCount || 0;
+        this._initLocalData();
     }
     MissionDescriptor.prototype = new resourceManager.JSONResource();
     MissionDescriptor.prototype.constructor = MissionDescriptor;
+    /**
+     * Initializes missing values within the object storing the local data for the mission descriptor
+     * (those which are not allowed to be undefined)
+     */
+    MissionDescriptor.prototype._initLocalData = function () {
+        var i, data, difficulties = _context.getDifficultyNames();
+        for (i = 0; i < difficulties.length; i++) {
+            this._localData[difficulties[i]] = this._localData[difficulties[i]] || {};
+            data = this._localData[difficulties[i]];
+            data.winCount = data.winCount || 0;
+            data.loseCount = data.loseCount || 0;
+        }
+    };
     /**
      * Returns the location ID to use when saving/loading the best score value to/from local storage
      * @returns {String}
@@ -2781,14 +2802,15 @@ define([
     /**
      * Creates and returns a Mission object based on the data stored in this descriptor. Only works if the data has been loaded - either it
      * was given when constructing this object, or it was requested and has been loaded
+     * @param {String} difficulty The string ID of the difficulty level to use
      * @param {Boolean} demoMode Whether to load the created mission in demo mode
      * @returns {Mission}
      */
-    MissionDescriptor.prototype.createMission = function (demoMode) {
+    MissionDescriptor.prototype.createMission = function (difficulty, demoMode) {
         var result = null;
         if (this.isReadyToUse()) {
             result = new Mission(this.getName());
-            result.loadFromJSON(this._dataJSON, demoMode);
+            result.loadFromJSON(this._dataJSON, difficulty, demoMode);
         } else {
             application.showError("Cannot create mission from descriptor that has not yet been initialized!");
         }
@@ -2796,29 +2818,36 @@ define([
     };
     /**
      * Returns the current best score reached for the mission (also stored in local storage)
+     * @param {String} [difficulty] The string ID of the difficulty level to consider (if not given, the currently set difficulty will be used)
      * @returns {Number}
      */
-    MissionDescriptor.prototype.getBestScore = function () {
-        return this._localData.bestScore;
+    MissionDescriptor.prototype.getBestScore = function (difficulty) {
+        difficulty = difficulty || _context.getDifficulty();
+        return this._localData[difficulty].bestScore;
     };
     /**
      * Returns the ID of the best performance level reached for the mission (also stored in local storage)
+     * @param {String} [difficulty] The string ID of the difficulty level to consider (if not given, the currently set difficulty will be used)
      * @returns {String}
      */
-    MissionDescriptor.prototype.getBestPerformance = function () {
-        return this._localData.bestPerformance;
+    MissionDescriptor.prototype.getBestPerformance = function (difficulty) {
+        difficulty = difficulty || _context.getDifficulty();
+        return this._localData[difficulty].bestPerformance;
     };
     /**
      * Checks whether the passed score exceeds the current best score of the mission, and if so, updates the value both in this object and in
      * local storage
      * @param {Number} score
      * @param {String} performance The ID of the achieved performance level
+     * @param {String} [difficulty] The string ID of the difficulty level to consider (if not given, the currently set difficulty will be used)
      * @returns {Boolean}
      */
-    MissionDescriptor.prototype.updateBestScore = function (score, performance) {
-        if ((this._localData.bestScore === undefined) || (score > this._localData.bestScore)) {
-            this._localData.bestScore = score;
-            this._localData.bestPerformance = performance;
+    MissionDescriptor.prototype.updateBestScore = function (score, performance, difficulty) {
+        difficulty = difficulty || _context.getDifficulty();
+        var data = this._localData[difficulty];
+        if ((data.bestScore === undefined) || (score > data.bestScore)) {
+            data.bestScore = score;
+            data.bestPerformance = performance;
             this._saveLocalData();
             return true;
         }
@@ -2827,21 +2856,60 @@ define([
     /**
      * Increases the win or lose count of the mission depending on the passed parameter, and saves the new data to local storage
      * @param {Boolean} victory
+     * @param {String} [difficulty] The string ID of the difficulty level to consider (if not given, the currently set difficulty will be used)
      */
-    MissionDescriptor.prototype.increasePlaythroughCount = function (victory) {
+    MissionDescriptor.prototype.increasePlaythroughCount = function (victory, difficulty) {
+        difficulty = difficulty || _context.getDifficulty();
         if (victory) {
-            this._localData.winCount++;
+            this._localData[difficulty].winCount++;
         } else {
-            this._localData.loseCount++;
+            this._localData[difficulty].loseCount++;
         }
         this._saveLocalData();
     };
     /**
      * Returns the number of times this mission has been won by the player
+     * @param {String} [difficulty] The string ID of the difficulty level to consider (if not given, the currently set difficulty will be used)
      * @returns {Number}
      */
-    MissionDescriptor.prototype.getWinCount = function () {
-        return this._localData.winCount;
+    MissionDescriptor.prototype.getWinCount = function (difficulty) {
+        difficulty = difficulty || _context.getDifficulty();
+        return this._localData[difficulty].winCount;
+    };
+    // #########################################################################
+    /**
+     * @class Represents a game difficulty level the player can set which is then used to adjust the values of some
+     * in-game variables (e.g. armor of the player) to make the game more or less challenging. Mision performance is
+     * tracked separately for each difficulty level.
+     * The levels can be defined in config.json.
+     * @param {Object} dataJSON Contains the data to initialize the difficulty level from
+     */
+    function DifficultyLevel(dataJSON) {
+        /**
+         * The string ID of this difficulty level
+         * @type String
+         */
+        this._name = dataJSON.name;
+        /*
+         * The number of hitpoints the player's spacecraft has at the start of the mission is multiplied by this factor
+         * (when playing on the corresponding difficulty level)
+         * @type Number
+         */
+        this._playerHitpointsFactor = dataJSON.playerHitpointsFactor;
+    }
+    /**
+     * Returns the string ID for this difficulty level
+     * @returns {String}
+     */
+    DifficultyLevel.prototype.getName = function () {
+        return this._name;
+    };
+    /**
+     * Returns the factor by which to multiply the hitpoints of the player's spacecraft at the start of the mission.
+     * @returns {Number}
+     */
+    DifficultyLevel.prototype.getPlayerHitpointsFactor = function () {
+        return this._playerHitpointsFactor;
     };
     // #########################################################################
     /**
@@ -2906,6 +2974,16 @@ define([
     function MissionContext() {
         asyncResource.AsyncResource.call(this);
         /**
+         * The string ID of the currently set (default) difficulty level
+         * @type String
+         */
+        this._difficulty = null;
+        /**
+         * Stores the available difficulty levels the player can choose from (defined in config.json)
+         * @type DifficultyLevel[]
+         */
+        this._difficultyLevels = null;
+        /**
          * Stores them achievable mission performance levels defined in config.json
          * @type MissionPerformanceLevel[]
          */
@@ -2940,14 +3018,40 @@ define([
     };
     /**
      * Loads the general game logic configuration defined in the passed JSON object (from config.json), such as available mission 
-     * performance levels.
+     * performance or difficulty levels.
      * @param {Object} dataJSON
      */
     MissionContext.prototype.loadConfigurationFromJSON = function (dataJSON) {
         var i;
+        this._difficultyLevels = [];
+        for (i = 0; i < dataJSON.difficultyLevels.length; i++) {
+            this._difficultyLevels.push(new DifficultyLevel(dataJSON.difficultyLevels[i]));
+        }
         this._missionPerformanceLevels = [];
         for (i = 0; i < dataJSON.missionPerformanceLevels.length; i++) {
             this._missionPerformanceLevels.push(new MissionPerformanceLevel(dataJSON.missionPerformanceLevels[i]));
+        }
+    };
+    /**
+     * Loads the values of the settings which are stored in local storage, such as the chosen default difficulty level.
+     */
+    MissionContext.prototype.loadSettingsFromLocalStorage = function () {
+        var value, params;
+        // load default difficulty
+        this._difficulty = _context.getDifficultyNames()[0];
+        if (localStorage[DIFFICULTY_LOCAL_STORAGE_ID] !== undefined) {
+            // settings might be saved in different formats in different game versions, so do not show errors for invalid type if the version
+            // has changed since the last run
+            params = {
+                silentFallback: application.hasVersionChanged(),
+                defaultValue: _context.getDifficultyNames()[0]
+            };
+            value = types.getValueOfTypeFromLocalStorage({baseType: "enum", values: _context.getDifficultyNames()}, DIFFICULTY_LOCAL_STORAGE_ID, params);
+            // apply the setting if it is valid or if the game version has changed, in which case the fallback of the invalid setting 
+            // (namely the first difficulty level) will be applied and also saved to local storage
+            if (!params.error || application.hasVersionChanged()) {
+                this.setDifficulty(value, !!params.error && (params.error !== types.Errors.INVALID_ENUM_OBJECT_ERROR));
+            }
         }
     };
     // methods
@@ -2964,6 +3068,54 @@ define([
                 config.getConfigurationSetting(config.CONFIGURATION.MISSION_FILES).folder,
                 missionAssignment,
                 this.setToReady.bind(this));
+    };
+    /**
+     * Returns the string ID of the currently chosen (default) difficulty level.
+     * @returns {String}
+     */
+    MissionContext.prototype.getDifficulty = function () {
+        return this._difficulty;
+    };
+    /**
+     * Sets a new default difficulty level.
+     * @param {String} value The string ID identifying the desired option.
+     * @param {Boolean} [saveToLocalStorage=true]
+     */
+    MissionContext.prototype.setDifficulty = function (value, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        if (this._difficulty !== value) {
+            this._difficulty = value;
+            if (saveToLocalStorage) {
+                localStorage[DIFFICULTY_LOCAL_STORAGE_ID] = value;
+            }
+        }
+    };
+    /**
+     * Returns the list of the string IDs of all the available game difficulty levels.
+     * @returns {String}
+     */
+    MissionContext.prototype.getDifficultyNames = function () {
+        var i, result = [];
+        for (i = 0; i < this._difficultyLevels.length; i++) {
+            result.push(this._difficultyLevels[i].getName());
+        }
+        return result;
+    };
+    /**
+     * Returns the difficulty level object corresponding to the difficulty level identified by the passed string
+     * @param {String} name
+     * @returns {DifficultyLevel} If no such level exists, null is returned.
+     */
+    MissionContext.prototype.getDifficultyLevel = function (name) {
+        var i;
+        for (i = 0; i < this._difficultyLevels.length; i++) {
+            if (this._difficultyLevels[i].getName() === name) {
+                return this._difficultyLevels[i];
+            }
+        }
+        return null;
     };
     /**
      * Returns the (file)names of the mission( descriptor)s stored in the mission manager
@@ -3020,15 +3172,16 @@ define([
      * Requests the data (descriptor) for the mission with the passed name to be loaded (if it is not loaded already), creates a mission based 
      * on it and calls the passed callback with the created mission as its argument when it is loaded
      * @param {String} name
+     * @param {String} difficulty The string ID of the difficulty level to use
      * @param {Boolean} demoMode Whether to load the created mission in demo mode
      * @param {Function} callback
      */
-    MissionContext.prototype.requestMission = function (name, demoMode, callback) {
+    MissionContext.prototype.requestMission = function (name, difficulty, demoMode, callback) {
         var missionDescriptor = this._missionManager.getResource(MISSION_ARRAY_NAME, name);
         if (missionDescriptor) {
             this._missionManager.requestResourceLoad();
             this._missionManager.executeWhenReady(function () {
-                callback(missionDescriptor.createMission(demoMode));
+                callback(missionDescriptor.createMission(difficulty, demoMode));
             });
         } else {
             callback(null);
@@ -3063,9 +3216,13 @@ define([
         ObjectiveState: ObjectiveState,
         FAILED_MISSION_PERFORMACE: FAILED_MISSION_PERFORMACE,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
+        loadSettingsFromLocalStorage: _context.loadSettingsFromLocalStorage.bind(_context),
         requestLoad: _context.requestLoad.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context),
         getDebugInfo: getDebugInfo,
+        getDifficulty: _context.getDifficulty.bind(_context),
+        setDifficulty: _context.setDifficulty.bind(_context),
+        getDifficultyNames: _context.getDifficultyNames.bind(_context),
         getMissionNames: _context.getMissionNames.bind(_context),
         getMissionDescriptor: _context.getMissionDescriptor.bind(_context),
         getMissionDescriptors: _context.getMissionDescriptors.bind(_context),

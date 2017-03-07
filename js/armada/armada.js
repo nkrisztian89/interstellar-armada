@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Augments the template provided by the game module to define the basic structure and initialization process of the Interstellar
  * Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -58,6 +58,7 @@ define([
         config.loadSettingsFromJSON(settingsJSON.logic);
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
+        missions.loadSettingsFromLocalStorage();
         config.executeWhenReady(function () {
             environments.requestLoad();
             environments.executeWhenReady(function () {
