@@ -420,6 +420,8 @@
     "controls": {
         "back": "Back to menu",
         "title": "Controls",
+        "settingsTitle": "Settings",
+        "mouseTurnSensitivity": "Mouse turn sensitivity:",
         "controllerHeading": "{controllerType} controls",
         "action": "Action"
     },

@@ -421,6 +421,8 @@
     "controls": {
         "back": "Vissza a menübe",
         "title": "Irányítás",
+        "settingsTitle": "Beállítások",
+        "mouseTurnSensitivity": "Egérrel fordulás érzékenysége:",
         "controllerHeading": "{controllerType} irányítás",
         "action": "Művelet"
     },

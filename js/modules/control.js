@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides general functionality to handle various types of user input.
  * Provides input interpreter classes, each capable of intercepting input from a certain device (currently keyboard, mouse and joystick/
  * gamepad are supported) and translating it to actions using a list of bindings added to the interpreter.
@@ -1209,6 +1209,13 @@ define([
     MouseInputInterpreter.prototype.setAndStoreMoveSensitivity = function (moveSensitivity) {
         this._moveSensitivity = moveSensitivity;
         localStorage[_modulePrefix + "mouse_moveSensitivity"] = this._moveSensitivity;
+    };
+    /**
+     * Returns the mouse displacement sensitivity.
+     * @returns {Number}
+     */
+    MouseInputInterpreter.prototype.getDisplacementAreaRelativeSize = function () {
+        return this._displacementAreaRelativeSize;
     };
     /**
      * Sets the mouse displacement sensitivity and stores the setting in HTML5 local storage.

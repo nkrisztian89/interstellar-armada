@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file This module manages and provides the Control settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -12,6 +12,7 @@
 /**
  * @param utils Used for formatting strings and for the keycode table
  * @param screens The controls screen is cubclassed from HTMLScreen
+ * @param components Used for creating sliders
  * @param game Used for navigation
  * @param strings Used for translation support
  * @param armadaScreens Used for common screen constants
@@ -20,11 +21,12 @@
 define([
     "utils/utils",
     "modules/screens",
+    "modules/components",
     "modules/game",
     "armada/strings",
     "armada/screens/shared",
     "armada/control"
-], function (utils, screens, game, strings, armadaScreens, control) {
+], function (utils, screens, components, game, strings, armadaScreens, control) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -32,7 +34,9 @@ define([
             BACK_BUTTON_ID = "backButton",
             TITLE_HEADING_ID = "title",
             DEFAULTS_BUTTON_ID = "defaultsButton",
+            SETTINGS_CONTAINER_ID = "settingsContainer",
             TABLES_CONTAINER_ID = "tablesContainer",
+            MOUSE_TURN_SENSITIVITY_SLIDER_ID = "mouseTurnSensitivitySlider",
             CLICKABLE_CLASS_NAME = "clickable",
             HIGHLIGHTED_CLASS_NAME = "highlightedItem",
             TABLE_CLASS_NAME = "horizontallyCentered outerContainer",
@@ -194,6 +198,25 @@ define([
          */
         this._titleHeading = this.registerSimpleComponent(TITLE_HEADING_ID);
         /**
+         * @type Slider
+         */
+        this._mouseTurnSensitivitySlider = this.registerExternalComponent(
+                new components.Slider(
+                        MOUSE_TURN_SENSITIVITY_SLIDER_ID,
+                        armadaScreens.SLIDER_SOURCE,
+                        {cssFilename: armadaScreens.SLIDER_CSS},
+                        {id: strings.CONTROLS.MOUSE_TURN_SENSITIVITY.name},
+                        {
+                            min: 0,
+                            max: 0.5,
+                            step: 0.01,
+                            "default": 0.25
+                        },
+                        function (value) {
+                            control.getInputInterpreter(control.MOUSE_NAME).setAndStoreDisplacementAreaRelativeSize(1 - value);
+                        }),
+                SETTINGS_CONTAINER_ID);
+        /**
          * @type SimpleComponent
          */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
@@ -212,6 +235,7 @@ define([
         this._defaultsButton.getElement().onclick = function () {
             _stopKeySetting();
             control.restoreDefaults();
+            this._updateValues();
             this._generateTables();
             return false;
         }.bind(this);
@@ -224,6 +248,7 @@ define([
         this._backButton.setContent(strings.get(strings.CONTROLS.BACK));
         this._titleHeading.setContent(strings.get(strings.CONTROLS.TITLE));
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
+        this._updateValues();
         this._generateTables();
     };
     /**
@@ -284,6 +309,23 @@ define([
                 tablesContainer.appendChild(tableElement);
             }
         }.bind(this));
+    };
+    /**
+     * Updates the component states based on the current controls settings
+     */
+    ControlsScreen.prototype._updateValues = function () {
+        this._mouseTurnSensitivitySlider.setNumericValue(1 - control.getInputInterpreter(control.MOUSE_NAME).getDisplacementAreaRelativeSize());
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    ControlsScreen.prototype.show = function () {
+        if (screens.HTMLScreen.prototype.show.call(this)) {
+            this._updateValues();
+            return true;
+        }
+        return false;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
