@@ -201,7 +201,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "normal": "",
+                "high": "_1024"
             }
         }, {
             "name": "viper",
@@ -215,7 +216,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "normal": "",
+                "high": "_1024"
             }
         }, {
             "name": "aries",
@@ -271,7 +273,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "normal": "",
+                "high": "_1024"
             }
         }, {
             "name": "ruby_blade",
@@ -285,7 +288,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "normal": "",
+                "high": "_1024"
             }
         }, {
             "name": "hud-atlas",
