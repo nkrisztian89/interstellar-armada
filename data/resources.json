@@ -231,7 +231,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "normal": "",
+                "high": "_1024"
             }
         }, {
             "name": "taurus",

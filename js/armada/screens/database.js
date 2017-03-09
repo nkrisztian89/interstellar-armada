@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file This module manages and provides the in-game database screen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -212,23 +212,32 @@ define([
         clearInterval(_rotationLoop);
         _rotationLoop = LOOP_CANCELED;
     }
+    /**
+     * Sets the model orientation to be rotated by the passed angle (around the Z axis - around the X axis it will be rotated according to
+     * the corresponding setting)
+     * @param {Number} angle The angle in degrees
+     */
+    function _setRotation(angle) {
+        var orientationMatrix = mat.prod3x3SubOf4(
+                mat.rotation4([0.0, 0.0, 1.0], Math.radians(angle)),
+                mat.rotation4([1.0, 0.0, 0.0], Math.radians(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE))));
+        if (_solidModel) {
+            _solidModel.setOrientationMatrix(mat.matrix4(orientationMatrix));
+        }
+        if (_wireframeModel) {
+            _wireframeModel.setOrientationMatrix(mat.matrix4(orientationMatrix));
+        }
+    }
     /*
      * Start the loop that will keep updating the orientation or the shown items automatically according to the current rotation settings
+     * @param {Number} startAngle The starting angle in degrees
      */
     function _startRotationLoop(startAngle) {
         var
                 prevDate = performance.now(),
-                curDate,
-                startOrientationMatrix = mat.prod3x3SubOf4(
-                        mat.rotation4([0.0, 0.0, 1.0], Math.radians(startAngle)),
-                        mat.rotation4([1.0, 0.0, 0.0], Math.radians(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE))));
+                curDate;
         // setting the starting orientation
-        if (_solidModel) {
-            _solidModel.setOrientationMatrix(mat.matrix4(startOrientationMatrix));
-        }
-        if (_wireframeModel) {
-            _wireframeModel.setOrientationMatrix(mat.matrix4(startOrientationMatrix));
-        }
+        _setRotation(startAngle);
         // setting the loop function
         _rotationLoop = setInterval(function () {
             curDate = performance.now();
@@ -766,6 +775,8 @@ define([
                     // starting rotation and reveal loops, as needed
                     if (_getSetting(SETTINGS.MODEL_AUTO_ROTATION)) {
                         _startRotationLoop(_shouldReveal() ? _getSetting(SETTINGS.ROTATION_REVEAL_START_ANGLE) : _getSetting(SETTINGS.ROTATION_START_ANGLE));
+                    } else {
+                        _setRotation(_getSetting(SETTINGS.ROTATION_START_ANGLE));
                     }
                     if (_shouldReveal()) {
                         _startRevealLoop();
