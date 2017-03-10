@@ -261,7 +261,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "medium": ""
+                "medium": "",
+                "high": "_1024"
             }
         }, {
             "name": "wolf",
