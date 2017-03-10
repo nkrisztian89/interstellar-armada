@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0-dev:521 (2017.03.09.)",
+    "version": "0.4.0-dev:522 (2017.03.10.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -62,7 +62,7 @@
                     "name": "low",
                     "maximumResolution": 512
                 }, {
-                    "name": "normal",
+                    "name": "medium",
                     "maximumResolution": 1024
                 }, {
                     "name": "high",

@@ -19,7 +19,7 @@
             },
             "qualitySuffixes": {
                 "low": "",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "flare",
@@ -33,7 +33,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "brownPlanet",
@@ -47,7 +47,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "bluePlanet",
@@ -61,7 +61,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "grayPlanet",
@@ -75,7 +75,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "blueGasGiant",
@@ -89,7 +89,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "blueGasGiant_backLight",
@@ -103,7 +103,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "explosion",
@@ -115,7 +115,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "trainingProjectile",
@@ -127,7 +127,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "plasma",
@@ -139,7 +139,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "heavyPlasma",
@@ -151,7 +151,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "redPlasma",
@@ -163,7 +163,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "proton",
@@ -175,7 +175,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "ion",
@@ -187,7 +187,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "falcon",
@@ -201,7 +201,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": "",
+                "medium": "",
                 "high": "_1024"
             }
         }, {
@@ -216,7 +216,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": "",
+                "medium": "",
                 "high": "_1024"
             }
         }, {
@@ -231,7 +231,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": "",
+                "medium": "",
                 "high": "_1024"
             }
         }, {
@@ -246,7 +246,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": "",
+                "high": "_1024"
             }
         }, {
             "name": "libra",
@@ -260,7 +261,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": ""
+                "medium": ""
             }
         }, {
             "name": "wolf",
@@ -274,7 +275,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": "",
+                "medium": "",
                 "high": "_1024"
             }
         }, {
@@ -289,7 +290,7 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "normal": "",
+                "medium": "",
                 "high": "_1024"
             }
         }, {
@@ -301,7 +302,7 @@
                 "color": ""
             },
             "qualitySuffixes": {
-                "normal": ""
+                "medium": ""
             }
         }],
     "cubemaps": [{
