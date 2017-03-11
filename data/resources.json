@@ -19,7 +19,8 @@
             },
             "qualitySuffixes": {
                 "low": "",
-                "medium": ""
+                "medium": "",
+                "high": ""
             }
         }, {
             "name": "flare",
@@ -33,7 +34,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "medium": ""
+                "medium": "",
+                "high": "_1024"
             }
         }, {
             "name": "brownPlanet",
@@ -47,7 +49,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "medium": ""
+                "medium": "",
+                "high": "_1024"
             }
         }, {
             "name": "bluePlanet",
@@ -61,7 +64,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "medium": ""
+                "medium": "",
+                "high": "_1024"
             }
         }, {
             "name": "grayPlanet",
@@ -75,7 +79,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "medium": ""
+                "medium": "",
+                "high": "_1024"
             }
         }, {
             "name": "blueGasGiant",
@@ -89,7 +94,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "medium": ""
+                "medium": "",
+                "high": "_1024"
             }
         }, {
             "name": "blueGasGiant_backLight",
@@ -103,7 +109,8 @@
             },
             "qualitySuffixes": {
                 "low": "_256",
-                "medium": ""
+                "medium": "",
+                "high": "_1024"
             }
         }, {
             "name": "explosion",
@@ -114,8 +121,9 @@
                 "emissive": ""
             },
             "qualitySuffixes": {
-                "low": "_256",
-                "medium": ""
+                "low": "_128",
+                "medium": "_256",
+                "high": ""
             }
         }, {
             "name": "trainingProjectile",
@@ -126,8 +134,9 @@
                 "emissive": ""
             },
             "qualitySuffixes": {
-                "low": "_256",
-                "medium": ""
+                "low": "_128",
+                "medium": "_256",
+                "high": ""
             }
         }, {
             "name": "plasma",
@@ -138,8 +147,9 @@
                 "emissive": ""
             },
             "qualitySuffixes": {
-                "low": "_256",
-                "medium": ""
+                "low": "_128",
+                "medium": "_256",
+                "high": ""
             }
         }, {
             "name": "heavyPlasma",
@@ -150,8 +160,9 @@
                 "emissive": ""
             },
             "qualitySuffixes": {
-                "low": "_256",
-                "medium": ""
+                "low": "_128",
+                "medium": "_256",
+                "high": ""
             }
         }, {
             "name": "redPlasma",
@@ -162,8 +173,9 @@
                 "emissive": ""
             },
             "qualitySuffixes": {
-                "low": "_256",
-                "medium": ""
+                "low": "_128",
+                "medium": "_256",
+                "high": ""
             }
         }, {
             "name": "proton",
@@ -174,8 +186,9 @@
                 "emissive": ""
             },
             "qualitySuffixes": {
-                "low": "_256",
-                "medium": ""
+                "low": "_128",
+                "medium": "_256",
+                "high": ""
             }
         }, {
             "name": "ion",
@@ -186,8 +199,9 @@
                 "emissive": ""
             },
             "qualitySuffixes": {
-                "low": "_256",
-                "medium": ""
+                "low": "_128",
+                "medium": "_256",
+                "high": ""
             }
         }, {
             "name": "falcon",

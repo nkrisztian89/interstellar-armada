@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0-dev:524 (2017.03.10.)",
+    "version": "0.4.0-dev:525 (2017.03.11.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -60,13 +60,13 @@
             "textureQualities": [
                 {
                     "name": "low",
-                    "maximumResolution": 512
+                    "maximumResolution": 256
                 }, {
                     "name": "medium",
-                    "maximumResolution": 1024
+                    "maximumResolution": 512
                 }, {
                     "name": "high",
-                    "maximumResolution": 2048
+                    "maximumResolution": 1024
                 }],
             "cubemapQualities": [
                 {
