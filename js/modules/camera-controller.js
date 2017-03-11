@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file This file provides a class that builds on the Control module to provide a Controller for cameras of the SceneGraph module
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -261,9 +261,10 @@ define([
                 this._velocityTargetVector[1] = 0;
             }
         }.bind(this));
-        this.setActionFunctions("cameraMoveForward", function () {
-            if (this._velocityTargetVector[2] > -this._maxSpeed) {
-                this._velocityTargetVector[2] = -this._maxSpeed;
+        this.setActionFunctions("cameraMoveForward", function (i) {
+            var targetSpeed = ((i !== undefined) ? i : 1) * this._maxSpeed;
+            if ((this._velocityTargetVector[2] > -targetSpeed) || (i !== undefined)) {
+                this._velocityTargetVector[2] = -targetSpeed;
             }
         }.bind(this), function () {
             // stopping unnecessary forward movement
@@ -324,6 +325,13 @@ define([
      */
     CameraController.prototype.setControlledCamera = function (controlledCamera) {
         this._controlledCamera = controlledCamera;
+    };
+    /**
+     * Returns the maximum speed the camera is allowed to move with along one axis by the user. (meters / second)
+     * @returns {Number}
+     */
+    CameraController.prototype.getMaxSpeed = function () {
+        return this._maxSpeed;
     };
     /**
      * Sets the controlled camera to follow the passed visual object from now on.
@@ -411,7 +419,7 @@ define([
     /**
      * Checks if there is a controlled camera set, and if there is one, executes the 
      * actions on the camera.
-     * @param {Object[]} triggeredActions See {@link Controller#executeActions}
+     * @param {Object[][]} triggeredActions See {@link Controller#executeActions}
      * @param {Number} dt The time elapsed since the last control step
      */
     CameraController.prototype.executeActions = function (triggeredActions, dt) {

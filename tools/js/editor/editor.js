@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -19,14 +19,16 @@
  * @param classes Used to display the class structure in the Items window and access the selected class for preview and properties
  * @param environments Used to load the environments 
  * @param missions Used to load the missions 
+ * @param control Used to load game controllers so they can be used in previews
  * @param common Used for clearing open popups
+ * @param descriptors Used to determine whether the descriptor for a specific resource / class category is available
+ * @param properties Used to generate the content of the Properties window
  * @param skyboxPreview Used to create previews for skybox classes
  * @param explosionPreview Used to create previews for explosion classes
  * @param projectilePreview Used to create previews for projectile classes
  * @param weaponPreview Used to create previews for weapon classes
  * @param spacecraftPreview Used to create previews for spacecraft classes
- * @param descriptors Used to determine whether the descriptor for a specific resource / class category is available
- * @param properties Used to generate the content of the Properties window
+ * @param environmentPreview Used to create previews for environments
  */
 define([
     "utils/utils",
@@ -38,6 +40,7 @@ define([
     "armada/logic/classes",
     "armada/logic/environments",
     "armada/logic/missions",
+    "armada/control",
     "editor/common",
     "editor/descriptors",
     "editor/properties",
@@ -45,14 +48,16 @@ define([
     "editor/preview/explosion-preview",
     "editor/preview/projectile-preview",
     "editor/preview/weapon-preview",
-    "editor/preview/spacecraft-preview"
+    "editor/preview/spacecraft-preview",
+    "editor/preview/environment-preview"
 ], function (
         utils,
         application, resources,
         constants, config, graphics, classes,
         environments, missions,
+        control,
         common, descriptors, properties,
-        skyboxPreview, explosionPreview, projectilePreview, weaponPreview, spacecraftPreview) {
+        skyboxPreview, explosionPreview, projectilePreview, weaponPreview, spacecraftPreview, environmentPreview) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -109,7 +114,8 @@ define([
                 "explosionClasses": explosionPreview,
                 "projectileClasses": projectilePreview,
                 "weaponClasses": weaponPreview,
-                "spacecraftClasses": spacecraftPreview
+                "spacecraftClasses": spacecraftPreview,
+                "environments": environmentPreview
             },
             /**
              * The HTML element (<span>) that corresponds to the currently selected item
@@ -880,6 +886,7 @@ define([
                 config.loadConfigurationFromJSON(configJSON.dataFiles.logic);
                 graphics.loadConfigurationFromJSON(configJSON.graphics);
                 missions.loadConfigurationFromJSON(configJSON.logic);
+                control.loadConfigurationFromJSON(configJSON.control);
                 resources.requestConfigLoad(configJSON.dataFiles.media.resources, function () {
                     application.log("Configuration loaded.");
                 });

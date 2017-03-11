@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Provides the descriptor objects that outline the structure of properties for the various resource / class categories of 
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -1822,7 +1822,8 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: SCALE
+                        type: SCALE,
+                        newValue: 100
                     },
                     POSITION: {
                         name: "position",

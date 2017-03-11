@@ -492,8 +492,10 @@ define([
      */
     Environment.prototype.simulate = function () {
         var i;
-        for (i = 0; i < this._dustClouds.length; i++) {
-            this._dustClouds[i].simulate(this._camera);
+        if (this._camera) {
+            for (i = 0; i < this._dustClouds.length; i++) {
+                this._dustClouds[i].simulate(this._camera);
+            }
         }
     };
     /**
