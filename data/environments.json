@@ -3,8 +3,8 @@
         "name": "environments",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0:369 (2016.09.27.)",
-        "creationTime": "Wed Sep 28 2016 01:27:18 GMT+0200 (CEST)"
+        "version": "0.4.0-dev:527 (2017.03.11.)",
+        "creationTime": "Sat Mar 11 2017 18:17:26 GMT+0100 (CET)"
     },
     "environments": [{
             "name": "cathagan",
@@ -26,6 +26,22 @@
                         "angleBeta": -40
                     },
                     "size": 150
+                }, {
+                    "class": "paleCyanNebula",
+                    "size": 1200,
+                    "position": {
+                        "angleAlpha": -90,
+                        "angleBeta": -45,
+                        "angleGamma": 90
+                    }
+                }, {
+                    "class": "palerCyanNebula",
+                    "size": 1200,
+                    "position": {
+                        "angleAlpha": -20,
+                        "angleBeta": 30,
+                        "angleGamma": 30
+                    }
                 }],
             "dustClouds": [{
                     "class": "standard"
@@ -50,6 +66,14 @@
                         "angleBeta": -40
                     },
                     "size": 220
+                }, {
+                    "class": "paleRedNebula",
+                    "size": 1150,
+                    "position": {
+                        "angleAlpha": 0,
+                        "angleBeta": 0,
+                        "angleGamma": 0
+                    }
                 }],
             "dustClouds": [{
                     "class": "standard"
@@ -162,6 +186,14 @@
                         "angleGamma": 90
                     },
                     "size": 575
+                }, {
+                    "class": "paleBlueNebula",
+                    "size": 1200,
+                    "position": {
+                        "angleAlpha": 190,
+                        "angleBeta": 20,
+                        "angleGamma": 50
+                    }
                 }],
             "dustClouds": [{
                     "class": "standard"

@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:523 (2017.03.10.)",
-        "creationTime": "Fri Mar 10 2017 20:15:29 GMT+0100 (CET)"
+        "version": "0.4.0-dev:527 (2017.03.11.)",
+        "creationTime": "Sat Mar 11 2017 18:13:11 GMT+0100 (CET)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -180,6 +180,42 @@
                     "shader": "backgroundBillboard",
                     "texture": "flare",
                     "color": [1, 1, 1, 0.1]
+                }]
+        }, {
+            "name": "paleBlueNebula",
+            "lightColor": [0, 0, 0],
+            "layers": [{
+                    "size": 1,
+                    "shader": "backgroundNebula",
+                    "texture": "paleBlueNebula",
+                    "color": [1, 1, 1, 1]
+                }]
+        }, {
+            "name": "paleCyanNebula",
+            "lightColor": [0, 0, 0],
+            "layers": [{
+                    "size": 1,
+                    "shader": "backgroundNebula",
+                    "texture": "paleCyanNebula",
+                    "color": [1, 1, 1, 1]
+                }]
+        }, {
+            "name": "palerCyanNebula",
+            "lightColor": [0, 0, 0],
+            "layers": [{
+                    "size": 1,
+                    "shader": "backgroundNebula",
+                    "texture": "palerCyanNebula",
+                    "color": [1, 1, 1, 1]
+                }]
+        }, {
+            "name": "paleRedNebula",
+            "lightColor": [0, 0, 0],
+            "layers": [{
+                    "size": 1,
+                    "shader": "backgroundNebula",
+                    "texture": "paleRedNebula",
+                    "color": [1, 1, 1, 1]
                 }]
         }],
     "dustCloudClasses": [{

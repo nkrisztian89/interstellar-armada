@@ -113,6 +113,66 @@
                 "high": "_1024"
             }
         }, {
+            "name": "paleBlueNebula",
+            "basepath": "nebulae/paleBlueNebula",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
+            "name": "paleCyanNebula",
+            "basepath": "nebulae/paleCyanNebula",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
+            "name": "palerCyanNebula",
+            "basepath": "nebulae/palerCyanNebula",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
+            "name": "paleRedNebula",
+            "basepath": "nebulae/paleRedNebula",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
             "name": "explosion",
             "basepath": "effect/explosion",
             "format": "png",
@@ -767,6 +827,15 @@
             "vertexShaderSource": "billboard/backgroundFixBillboard.vert",
             "fragmentShaderSource": "billboard/particle.frag",
             "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        }, {
+            "name": "backgroundNebula",
+            "vertexShaderSource": "billboard/backgroundFixBillboard.vert",
+            "fragmentShaderSource": "billboard/particle.frag",
+            "blendMode": "add",
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord"
