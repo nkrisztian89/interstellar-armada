@@ -1,35 +1,88 @@
-Several sound effects in the game are based on the works of 3rd parties.
-The original sources, authors and licencing information about these files can be found at the following pages:
+The credits and licencing information about the sound effects used in the game:
 
-containerExplosion.ogg, fighterExplosion.ogg (unchanged), smallShipExplosion.ogg (mixed, edited), largeShipExplosion.ogg (mixed, edited), weaponshot_proton.ogg (cut), jump_prepare_fighter.ogg (cut):
-http://creativesounddesign.com/the-recordist-free-sound-effects/
-Author/copyright: The Recordist/Creative Sound Design, LLC
+computer/alert.wav
+computer/beep_targeting_denied.wav
+computer/beep_targeting.wav
+computer/blip_message.wav
+computer/flight_mode_switch.ogg
+computer/jump_start.ogg
+computer/jump_stop.ogg
 
-hit.ogg: (edited)
+Copyright 2016-2017 Krisztián Nagy
+Created using bfxr, Audacity
+License: CC-BY
+
+---
+
+explosion/container-explosion.ogg
+explosion/fighter-explosion.ogg
+explosion/fighter-explosion-2.ogg
+explosion/hit.ogg
+explosion/large-ship-explosion.ogg
+explosion/small-ship-explosion.ogg
+
+Edited by Krisztián Nagy with Audacity
+Based on the following samples:
+
+181476__isaac200000__explosion-5_CCBY3
+24754__erdie__explosion_CCBY3
+353318__djfroyd__massive-explosion_CCBY3
+93741__omar-alvarado__explosion_CCBY3
+264031__veiler__low-mid-afar-explosion-1_CC0
+332628__treasuresounds__fx-explosion_CCBY3
+87802__jobro__maximum-warp
+DeathFlash_OGA_Blender_Big_Explosion_CCBY3
+380443__fullmetaljedi__explosion-ambient-2_CC0
+259300__unfa__huge-explosion
 http://freesound.org/people/unfa/sounds/259300/
 Author/copyright: freesound user unfa
+268557__cydon__explosion-001_CC0
+35462__jobro__explosion-5_CCBY3
 
-hum.ogg: (edited)
+---
+
+spacecraft/hum.ogg
+spacecraft/jump_cancel_fighter.ogg
+spacecraft/jump_cancel_ship.ogg
+spacecraft/jump_flash.ogg
+spacecraft/jump-prepare-fighter.ogg
+spacecraft/jump_prepare_ship.ogg
+spacecraft/jump_swoosh.ogg
+spacecraft/thruster.ogg
+
+Edited by Krisztián Nagy with Audacity
+Based on the following samples:
+
 http://freesound.org/people/juskiddink/sounds/117128/
 Author/copyright: freesound user juskinnink
-
-thruster.ogg: (edited)
-http://freesound.org/people/qubodup/sounds/146770/
-Author/copyright: freesound user qubodup
-
-jump_prepare_ship.ogg: (cut)
 http://freesound.org/people/reacthor/sounds/237790
 Author/copyright: freesound user reacthor
-
-jump_out.ogg: (cut)
 http://freesound.org/people/electroviolence/sounds/234555
 Author/copyright: freesound user electroviolence
-
-jump_out_flash.ogg: (edited)
 http://freesound.org/people/rsilveira-88/sounds/216277/
 http://freesound.org/people/unfa/sounds/259300/
 Author/copyright: freesound users rsilveira-88, unfa
+http://freesound.org/people/qubodup/sounds/146770/
+Author/copyright: freesound user qubodup
 
-The copyright belongs to the respective authors.
+---
 
-The sound effects not mentioned above are the original works of the game's author (Krisztián Nagy). The changes to the above files (where indicated) were also made by him.
+ui/button_click.ogg
+ui/button_hover.wav
+
+Copyright 2016 Krisztián Nagy
+Created using bfxr, Audacity
+License: CC-BY
+
+---
+
+weapon/weaponshot_heavyPlasma.ogg
+weapon/weaponshot_ion.ogg
+weapon/weaponshot_pirate.ogg
+weapon/weaponshot_plasma.ogg
+weapon/weaponshot-proton.ogg
+weapon/weaponshot_training.ogg
+
+Copyright 2016-2017 Krisztián Nagy
+Created using bfxr, Audacity
+License: CC-BY

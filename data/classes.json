@@ -593,7 +593,7 @@
                 }],
             "soundEffect": {
                 "name": "containerExplosion",
-                "volume": 2
+                "volume": 3
             }
         }, {
             "name": "fighterExplosion",
@@ -705,7 +705,7 @@
                 }],
             "soundEffect": {
                 "name": "fighterExplosion",
-                "volume": 2.5
+                "volume": 5.5
             }
         }, {
             "name": "largeFighterExplosion",
@@ -817,7 +817,7 @@
                 }],
             "soundEffect": {
                 "name": "fighterExplosion",
-                "volume": 2.5
+                "volume": 6.5
             }
         }, {
             "name": "bomberExplosion",
@@ -947,7 +947,7 @@
                 }],
             "soundEffect": {
                 "name": "fighterExplosion",
-                "volume": 3
+                "volume": 7
             }
         }, {
             "name": "smallShipExplosion",
@@ -1095,7 +1095,7 @@
                 }],
             "soundEffect": {
                 "name": "smallShipExplosion",
-                "volume": 9
+                "volume": 18
             }
         }, {
             "name": "largeShipExplosion",
@@ -1293,7 +1293,7 @@
                 }],
             "soundEffect": {
                 "name": "largeShipExplosion",
-                "volume": 20
+                "volume": 45
             }
         }, {
             "name": "smallFire",
@@ -1894,7 +1894,7 @@
                 }],
             "fireSound": {
                 "name": "protonShot",
-                "volume": 1
+                "volume": 3
             },
             "scoreValue": 60
         }, {
@@ -1929,7 +1929,7 @@
                 }],
             "fireSound": {
                 "name": "ionShot",
-                "volume": 2
+                "volume": 4
             },
             "scoreValue": 100
         }],
@@ -2060,7 +2060,7 @@
             "prepareDuration": 5000,
             "prepareSound": {
                 "name": "jump_prepare_fighter",
-                "volume": 0.38
+                "volume": 1.5
             },
             "cancelSound": {
                 "name": "jump_cancel_fighter",
@@ -2171,7 +2171,7 @@
             "prepareDuration": 5000,
             "prepareSound": {
                 "name": "jump_prepare_fighter",
-                "volume": 0.38
+                "volume": 1.5
             },
             "cancelSound": {
                 "name": "jump_cancel_fighter",

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
  * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -223,7 +223,7 @@ define([
                 VOLUME: {
                     name: "volume",
                     type: "number",
-                    range: [0, 25],
+                    range: [0, 50],
                     defaultValue: 1
                 },
                 RESOURCE: {

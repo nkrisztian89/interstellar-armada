@@ -671,7 +671,7 @@
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 1",
-            "position": [-4000, -4000, 0],
+            "position": [-3000, -3000, 0],
             "rotations": ["z+45"],
             "away": true,
             "equipment": "unarmed"
@@ -696,7 +696,7 @@
             "team": "practiceTargets",
             "class": "drone",
             "ai": "fighter",
-            "position": [-4000, -3000, 0],
+            "position": [-3000, -2000, 0],
             "squad": "drone 4",
             "away": true,
             "equipment": "unarmed"
@@ -722,7 +722,7 @@
             "name": "Flapper",
             "class": "drone",
             "ai": "fighter",
-            "position": [-3000, -3000, -150],
+            "position": [-2000, -2000, -150],
             "rotations": ["z+45"],
             "away": true,
             "equipment": "unarmed"

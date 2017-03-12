@@ -1244,7 +1244,7 @@
             "samples": ["spacecraft/thruster.ogg"]
         }, {
             "name": "jump_prepare_fighter",
-            "samples": ["spacecraft/jump_prepare_fighter.ogg"]
+            "samples": ["spacecraft/jump-prepare-fighter.ogg"]
         }, {
             "name": "jump_prepare_ship",
             "samples": ["spacecraft/jump_prepare_ship.ogg"]
@@ -1274,7 +1274,7 @@
             "samples": ["weapon/weaponshot_pirate.ogg"]
         }, {
             "name": "protonShot",
-            "samples": ["weapon/weaponshot_proton.ogg"]
+            "samples": ["weapon/weaponshot-proton.ogg"]
         }, {
             "name": "ionShot",
             "samples": ["weapon/weaponshot_ion.ogg"]
@@ -1283,16 +1283,16 @@
             "samples": ["explosion/hit.ogg"]
         }, {
             "name": "containerExplosion",
-            "samples": ["explosion/containerExplosion.ogg"]
+            "samples": ["explosion/container-explosion.ogg"]
         }, {
             "name": "fighterExplosion",
-            "samples": ["explosion/fighterExplosion.ogg"]
+            "samples": ["explosion/fighter-explosion.ogg", "explosion/fighter-explosion-2.ogg"]
         }, {
             "name": "smallShipExplosion",
-            "samples": ["explosion/smallShipExplosion.ogg"]
+            "samples": ["explosion/small-ship-explosion.ogg"]
         }, {
             "name": "largeShipExplosion",
-            "samples": ["explosion/largeShipExplosion.ogg"]
+            "samples": ["explosion/large-ship-explosion.ogg"]
         }, {
             "name": "beep_targeting",
             "samples": ["computer/beep_targeting.wav"]
