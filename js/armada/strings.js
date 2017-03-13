@@ -294,6 +294,9 @@ define([
     strings.FLIGHT_MODE = {
         PREFIX: {name: "flightMode.", optional: true}
     };
+    strings.TIP = {
+        PREFIX: {name: "tip.", optional: true}
+    };
     /**
      * Returns whether the passed word start with a vowel (one that is recognized)
      * @param {String} word

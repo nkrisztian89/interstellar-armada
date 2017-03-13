@@ -1,6 +1,17 @@
 {
     "description": "Try piloting a heavily armed bomber in a simple three versus three dogfight against less armed opponents.",
     "environment": "varanock",
+    "tips": [
+        "tryControls",
+        "changeControls",
+        "tryViews",
+        "curve",
+        "strafe",
+        "rollStrafe",
+        "scoreDestroy",
+        "friendlyFire",
+        "bombers"
+    ],
     "teams": [
         "empire",
         {

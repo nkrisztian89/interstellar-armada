@@ -1,6 +1,23 @@
 {
     "description": "A face-to-face team battle with three interceptors and three bombers on each side. You are one of the lead interceptors. Do not get caught in the crossfire and avoid hitting your teammates!",
     "environment": "luxilian",
+    "tips": [
+        "tryControls",
+        "changeControls",
+        "tryViews",
+        "prioritizeTargets",
+        "think",
+        "curve",
+        "strafe",
+        "rollStrafe",
+        "cruiseMode",
+        "combatMode",
+        "scoreDestroy",
+        "friendlyFire",
+        "effectiveness",
+        "interceptors",
+        "bombers"
+    ],
     "teams": [
         "empire",
         {

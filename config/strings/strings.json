@@ -483,5 +483,27 @@
         "free": "free",
         "combat": "combat",
         "cruise": "cruise"
+    },
+    "tip": {
+        "tryControls": "Try the different (mouse, keyboard, joystick) controls to see which one suits you best.",
+        "changeControls": "You can change the controls during the game if they don't suit you.",
+        "tryViews": "Try different flight views to see which works for you best.",
+        "prioritizeTargets": "Always target and eliminate the most important threats first.",
+        "think": "Take the time to evaluate the battle situation between encounters.",
+        "curve": "Keep moving on a curve to make yourself a difficult target.",
+        "strafe": "Use strafing to evade projectiles coming from the front.",
+        "rollStrafe": "Rolling and strafing together is an effective evasive maneuver.",
+        "cruiseMode": "Switch to cruise mode to engage targets that are far away.",
+        "combatMode": "Strafing is only allowed in combat mode, use it in close encounters.",
+        "protect": "Keep an eye on the state of spacecrafts you need to protect.",
+        "protectTaunt": "You can lure enemies away from your teammates by hitting them.",
+        "turretDistance": "Keep your distance from enemy ships with turrets.",
+        "scoreDestroy": "The final hit that destroys an enemy is worth more score points.",
+        "friendlyFire": "Don't rush in front of your teammates as they can hit you from behind.",
+        "effectiveness": "Focus on enemies against which your spacecraft is effective.",
+        "interceptors": "Interceptors are effective against all types of fighters and bombers.",
+        "bombers": "Bombers are effective against small warships.",
+        "corvettes": "Corvettes are effective against interceptors and other fighters.",
+        "frigates": "Frigates are effective against warships."
     }
 }

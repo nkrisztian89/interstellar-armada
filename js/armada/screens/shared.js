@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Contains the common constants and functions accessible to all screens of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -162,6 +162,14 @@ define([
     exports.openDialog = function (dialogData) {
         game.getScreen(exports.DIALOG_SCREEN_NAME).setup(dialogData);
         game.setScreen(exports.DIALOG_SCREEN_NAME, true, exports.SUPERIMPOSE_BACKGROUND_COLOR);
+    };
+    /**
+     * Returns the HTML code for insterting the passed text as a sub paragraph.
+     * @param {String} text
+     * @returns {String}
+     */
+    exports.getSubParagraph = function (text) {
+        return '<p class="sub fadedText">' + text + "</p>";
     };
     // ------------------------------------------------------------------------------
     // Derived constants

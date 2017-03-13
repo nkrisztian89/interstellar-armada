@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides various classes that can be used integrated with the Screen module as components on screens. Also manages a shader cache
  * for storing the downloaded source (HTML and CSS) files of the created components.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -55,7 +55,7 @@ define([
             COMPONENT_FOLDER = "component",
             CSS_FOLDER = "css",
             LOADING_BOX_PROGRESS_ID = "progress",
-            LOADING_BOX_STATUS_PARAGRAPH_ID = "status",
+            LOADING_BOX_STATUS_DIV_ID = "status",
             LOADING_BOX_HEADER_ID = "header",
             INFO_BOX_MESSAGE_PARAGRAPH_ID = "message",
             INFO_BOX_OK_BUTTON_ID = "okButton",
@@ -713,7 +713,7 @@ define([
         /**
          * @type SimpleComponent
          */
-        this._status = this.registerSimpleComponent(LOADING_BOX_STATUS_PARAGRAPH_ID);
+        this._status = this.registerSimpleComponent(LOADING_BOX_STATUS_DIV_ID);
         /**
          * @type SimpleComponent
          */

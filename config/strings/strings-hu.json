@@ -534,5 +534,27 @@
         "free": "szabad",
         "combat": "harc",
         "cruise": "cirkálás"
+    },
+    "tip": {
+        "tryControls": "Próbáld ki a különböző irányítási lehetőségeket (egér, billentyűzet, joystick), hogy kiderüljön, melyik számodra a legjobb.",
+        "changeControls": "Ha az irányítás nem áll kézre, csata közben is megváltoztathatod a billentyűhozzárendeléseket a menüből.",
+        "tryViews": "Próbálj ki több nézetet is, hogy a legmegfelelőbbet választhasd.",
+        "prioritizeTargets": "Mindig a legfenyegetőbb ellenségeket vedd célba és iktasd ki először.",
+        "think": "Két összecsapás között szánj időt a csata állapotának felmérésére.",
+        "curve": "Egyenes helyett repülj íven, hogy nehezebben találjanak el.",
+        "strafe": "Oldalazással kikerülheted a szemből érkező lövedékeket.",
+        "rollStrafe": "Az oldalazás és orsózás együtt alkalmazva hatékony kitérő manőver.",
+        "cruiseMode": "A messzi célpontok letámadásához használd a cirkáló repülési módot.",
+        "combatMode": "Oldalazni csak harci módban lehet, ezért közelharchoz használd azt.",
+        "protect": "Folyamatosan tartsd szemmel a megvédendő űrhajók állapotát.",
+        "protectTaunt": "A társaidat támadó ellenségek figyelmét magadra vonhatod azzal, hogy eltalálod őket.",
+        "turretDistance": "Maradj távol a lövegekkel felszerelt ellenséges hajóktól.",
+        "scoreDestroy": "Az ellenséget megsemmisítő végső találat több pontot ér, mint a többi.",
+        "friendlyFire": "Ne repülj a csapattársaid elé, amikor támadnak, mert véletlenül eltalálhatnak hátulról.",
+        "effectiveness": "Azokra az ellenségekre fókuszálj, amik ellen hatékony űrhajóval repülsz.",
+        "interceptors": "Az elfogó vadászok hatékonyak minden vadász és bombázó ellen.",
+        "bombers": "A bombázók hatékonyak a kisebb hadihajókkal szemben.",
+        "corvettes": "A korvettek az elfogó és más vadászok ellen hatékonyak.",
+        "frigates": "A fregattok más hadihajók ellen hatékonyak."
     }
 }

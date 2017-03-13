@@ -1,6 +1,25 @@
 {
     "description": "Waves of enemy fighters and bombers are coming to destroy the corvette on your side. Intercept them before they can do too much damage so that the corvette can survive! Beware of bombers armed with heavier weapons!",
     "environment": "sheenuba",
+    "tips": [
+        "tryControls",
+        "changeControls",
+        "tryViews",
+        "prioritizeTargets",
+        "think",
+        "curve",
+        "strafe",
+        "rollStrafe",
+        "cruiseMode",
+        "combatMode",
+        "protect",
+        "protectTaunt",
+        "scoreDestroy",
+        "friendlyFire",
+        "interceptors",
+        "bombers",
+        "corvettes"
+    ],
     "teams": [
         "empire",
         {

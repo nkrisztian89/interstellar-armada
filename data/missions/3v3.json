@@ -2,6 +2,17 @@
     "description": "Practice team fighting in a matchup with three against three interceptors. You are better armed than the rest.",
     "environment": "mera",
     "combatTheme": "combat",
+    "tips": [
+        "tryControls",
+        "changeControls",
+        "tryViews",
+        "curve",
+        "strafe",
+        "rollStrafe",
+        "scoreDestroy",
+        "friendlyFire",
+        "interceptors"
+    ],
     "teams": [
         "empire",
         {

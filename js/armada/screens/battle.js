@@ -182,6 +182,11 @@ define([
              */
             _demoMode,
             /**
+             * The translated gameplay tip text displayed in the loading box.
+             * @type String
+             */
+            _tipText,
+            /**
              * The theme identifier of the combat theme of the current mission (might be a combination of the COMBAT_THEME_PREFIX and an
              * index for songs listed as the general combat themes (in settings.json) or the resource name of the track itself if a custom
              * track is chosen for the mission)
@@ -905,6 +910,17 @@ define([
         _targetSwitchTime = 0;
         _aimAssistAppearTime = 0;
         _shipIndicatorHighlightTime = 0;
+        // other
+        _tipText = "";
+    }
+    /**
+     * Sets the tip text by choosing one randomly from the available options.
+     */
+    function _chooseTipText() {
+        var
+                tipIDs = missions.getMissionDescriptor(_missionSourceFilename).getTipIDs() || missions.getTipIDs(),
+                i = Math.min(Math.floor(Math.random() * tipIDs.length), tipIDs.length - 1);
+        _tipText = strings.get(strings.TIP.PREFIX, tipIDs[i]);
     }
     // ------------------------------------------------------------------------------
     // public functions
@@ -1929,7 +1945,7 @@ define([
      */
     BattleScreen.prototype._updateLoadingStatus = function (newStatus, newProgress) {
         if (newStatus !== undefined) {
-            this._loadingBox.updateStatus(newStatus);
+            this._loadingBox.updateStatus(_tipText + armadaScreens.getSubParagraph(newStatus));
         }
         if (newProgress !== undefined) {
             this._loadingBox.updateProgress(newProgress);
@@ -3295,6 +3311,7 @@ define([
             _demoMode = params.demoMode;
         }
         _clearData();
+        _chooseTipText();
         document.body.classList.add("wait");
         this._loadingBox.show();
         this.resizeCanvases();

@@ -584,7 +584,7 @@ define([
      */
     DatabaseScreen.prototype._updateLoadingStatus = function (newStatus, newProgress) {
         if (newStatus !== undefined) {
-            this._loadingBox.updateStatus(newStatus);
+            this._loadingBox.updateStatus(armadaScreens.getSubParagraph(newStatus));
         }
         if (newProgress !== undefined) {
             this._loadingBox.updateProgress(newProgress);

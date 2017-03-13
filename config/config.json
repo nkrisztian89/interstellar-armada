@@ -1,5 +1,5 @@
 {
-    "version": "0.4.0-dev:530 (2017.03.13.)",
+    "version": "0.4.0-dev:531 (2017.03.13.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -409,6 +409,28 @@
                 "referenceHullIntegrity": 0.9,
                 "referenceTeamSurvival": 0.7
             }
+        ],
+        "tips": [
+            "tryControls",
+            "changeControls",
+            "tryViews",
+            "prioritizeTargets",
+            "think",
+            "curve",
+            "strafe",
+            "rollStrafe",
+            "cruiseMode",
+            "combatMode",
+            "protect",
+            "protectTaunt",
+            "turretDistance",
+            "scoreDestroy",
+            "friendlyFire",
+            "effectiveness",
+            "interceptors",
+            "bombers",
+            "corvettes",
+            "frigates"
         ]
     },
     "control": {

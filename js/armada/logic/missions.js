@@ -2804,6 +2804,14 @@ define([
         return null;
     };
     /**
+     * Returns the list of string IDs for gameplay tips that can be displayed for the player at the start of this mission.
+     * (overrides the global list)
+     * @returns {String[]}
+     */
+    MissionDescriptor.prototype.getTipIDs = function () {
+        return this._dataJSON.tips;
+    };
+    /**
      * Creates and returns a Mission object based on the data stored in this descriptor. Only works if the data has been loaded - either it
      * was given when constructing this object, or it was requested and has been loaded
      * @param {String} difficulty The string ID of the difficulty level to use
@@ -2993,6 +3001,12 @@ define([
          */
         this._missionPerformanceLevels = null;
         /**
+         * The string IDs for gameplay tips that can be displayed for the player at the start of missions.
+         * The list is defined in config.json.
+         * @type String[]
+         */
+        this._tipIDs = null;
+        /**
          * Stores (and manages the loading of) the descriptors for the missions.
          * @type ResourceManager
          */
@@ -3035,6 +3049,7 @@ define([
         for (i = 0; i < dataJSON.missionPerformanceLevels.length; i++) {
             this._missionPerformanceLevels.push(new MissionPerformanceLevel(dataJSON.missionPerformanceLevels[i]));
         }
+        this._tipIDs = dataJSON.tips;
     };
     /**
      * Loads the values of the settings which are stored in local storage, such as the chosen default difficulty level.
@@ -3120,6 +3135,15 @@ define([
             }
         }
         return null;
+    };
+    /**
+     * Returns the list of string IDs for gameplay tips that can be displayed for the player at the start of missions.
+     * The list is defined in config.json.
+     * (can be overridden by individual missions)
+     * @returns {String[]}
+     */
+    MissionContext.prototype.getTipIDs = function () {
+        return this._tipIDs;
     };
     /**
      * Returns the (file)names of the mission( descriptor)s stored in the mission manager
@@ -3227,6 +3251,7 @@ define([
         getDifficulty: _context.getDifficulty.bind(_context),
         setDifficulty: _context.setDifficulty.bind(_context),
         getDifficultyNames: _context.getDifficultyNames.bind(_context),
+        getTipIDs: _context.getTipIDs.bind(_context),
         getMissionNames: _context.getMissionNames.bind(_context),
         getMissionDescriptor: _context.getMissionDescriptor.bind(_context),
         getMissionDescriptors: _context.getMissionDescriptors.bind(_context),

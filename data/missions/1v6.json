@@ -2,6 +2,17 @@
     "description": "Similar to the team match with three interceptors and three bombers each side, only this time you are alone. Can you hold your own against six opponents?",
     "environment": "cathagan",
     "combatTheme": "combat2",
+    "tips": [
+        "tryControls",
+        "changeControls",
+        "tryViews",
+        "curve",
+        "strafe",
+        "rollStrafe",
+        "scoreDestroy",
+        "interceptors",
+        "bombers"
+    ],
     "teams": [
         "empire",
         {
