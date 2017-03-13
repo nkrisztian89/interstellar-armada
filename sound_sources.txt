@@ -1,4 +1,18 @@
-The credits and licencing information about the sound effects used in the game:
+This file contains the detailed credits and licensing information about 
+the sound effects used in the Interstellar Armada: Galactic Ace game.
+
+More information about the licenses referred here:
+CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+CC BY 3.0: https://creativecommons.org/licenses/by/3.0/
+CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
+
+More information about the tools mentioned:
+Bfxr: http://www.bfxr.net/
+Audacity: http://www.audacityteam.org/
+
+File paths are given relative to the data/sfx folder of the game.
+
+---
 
 computer/alert.wav
 computer/beep_targeting_denied.wav
@@ -9,8 +23,8 @@ computer/jump_start.ogg
 computer/jump_stop.ogg
 
 Copyright 2016-2017 Krisztián Nagy
-Created using bfxr, Audacity
-License: CC-BY
+Created using Bfxr, Audacity
+License: CC BY 4.0
 
 ---
 
@@ -22,22 +36,44 @@ explosion/large-ship-explosion.ogg
 explosion/small-ship-explosion.ogg
 
 Edited by Krisztián Nagy with Audacity
-Based on the following samples:
+License: CC BY 4.0
+Created (edited and mixed) from the following sound effects:
 
-181476__isaac200000__explosion-5_CCBY3
-24754__erdie__explosion_CCBY3
-353318__djfroyd__massive-explosion_CCBY3
-93741__omar-alvarado__explosion_CCBY3
-264031__veiler__low-mid-afar-explosion-1_CC0
-332628__treasuresounds__fx-explosion_CCBY3
-87802__jobro__maximum-warp
-DeathFlash_OGA_Blender_Big_Explosion_CCBY3
-380443__fullmetaljedi__explosion-ambient-2_CC0
-259300__unfa__huge-explosion
-http://freesound.org/people/unfa/sounds/259300/
-Author/copyright: freesound user unfa
-268557__cydon__explosion-001_CC0
-35462__jobro__explosion-5_CCBY3
+http://freesound.org/people/isaac200000/sounds/181476
+Copyright: freesound user isaac200000, license: CC BY 3.0
+
+http://freesound.org/people/erdie/sounds/24754
+Copyright: freesound user erdie, license: CC BY 3.0
+
+http://freesound.org/people/djfroyd/sounds/353318
+Copyright: freesound user djfroyd, license: CC BY 3.0
+
+http://freesound.org/people/Omar%20Alvarado/sounds/93741
+Copyright: freesound user Omar Alvarado, license: CC BY 3.0
+
+http://freesound.org/people/veiler/sounds/264031
+Copyright: freesound user veiler, license: CC0 1.0
+
+http://freesound.org/people/treasuresounds/sounds/332628
+Copyright: freesound user TreasureSounds, license: CC BY 3.0
+
+http://freesound.org/people/jobro/sounds/87802
+Copyright: freesound user jobro, license: CC BY 3.0
+
+http://opengameart.org/content/big-explosion
+Copyright: Blender Foundation, license: CC BY 3.0
+
+http://freesound.org/people/fullmetaljedi/sounds/380443
+Copyright: freesound user FullMetalJedi, license: CC0 1.0
+
+http://freesound.org/people/unfa/sounds/259300
+Copyright: freesound user unfa, license: CC BY 3.0
+
+http://freesound.org/people/cydon/sounds/268557
+Copyright: freesound user cydon, license: CC0 1.0
+
+http://freesound.org/people/jobro/sounds/35462
+Copyright: freesound user jobro, license: CC BY 3.0
 
 ---
 
@@ -51,19 +87,29 @@ spacecraft/jump_swoosh.ogg
 spacecraft/thruster.ogg
 
 Edited by Krisztián Nagy with Audacity
-Based on the following samples:
+License: CC BY 4.0
+Created (edited and mixed) from the following sound effects:
 
-http://freesound.org/people/juskiddink/sounds/117128/
-Author/copyright: freesound user juskinnink
+http://freesound.org/people/juskiddink/sounds/117128
+Copyright: freesound user juskiddink, license: CC BY 3.0
+
+http://freesound.org/people/themfish/sounds/34203
+Copyright: freesound user themfish, license: CC BY 3.0
+
+http://freesound.org/people/unfa/sounds/259300
+Copyright: freesound user unfa, license: CC BY 3.0
+
+http://freesound.org/people/RSilveira_88/sounds/216277
+Copyright: freesound user RSilveira_88, license: CC BY 3.0
+
 http://freesound.org/people/reacthor/sounds/237790
-Author/copyright: freesound user reacthor
+Copyright: freesound user reacthor, license: CC0 1.0
+
 http://freesound.org/people/electroviolence/sounds/234555
-Author/copyright: freesound user electroviolence
-http://freesound.org/people/rsilveira-88/sounds/216277/
-http://freesound.org/people/unfa/sounds/259300/
-Author/copyright: freesound users rsilveira-88, unfa
+Copyright: freesound user Electroviolence, license: CC0 1.0
+
 http://freesound.org/people/qubodup/sounds/146770/
-Author/copyright: freesound user qubodup
+Copyright: freesound user qubodup, license: CC0 1.0
 
 ---
 
@@ -71,8 +117,8 @@ ui/button_click.ogg
 ui/button_hover.wav
 
 Copyright 2016 Krisztián Nagy
-Created using bfxr, Audacity
-License: CC-BY
+Created using Bfxr, Audacity
+License: CC BY 4.0
 
 ---
 
@@ -84,5 +130,5 @@ weapon/weaponshot-proton.ogg
 weapon/weaponshot_training.ogg
 
 Copyright 2016-2017 Krisztián Nagy
-Created using bfxr, Audacity
-License: CC-BY
+Created using Bfxr, Audacity
+License: CC BY 4.0
