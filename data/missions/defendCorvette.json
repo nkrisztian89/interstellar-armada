@@ -258,7 +258,8 @@
             "squad": "wraith 1",
             "ai": "fighter",
             "away": true,
-            "equipment": "default"
+            "equipment": "default",
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
@@ -266,14 +267,16 @@
             "squad": "wraith 2",
             "ai": "fighter",
             "away": true,
-            "equipment": "default"
+            "equipment": "default",
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
             "class": "falcon",
             "squad": "wraith 3",
             "ai": "fighter",
-            "away": true
+            "away": true,
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
@@ -304,7 +307,8 @@
             "class": "falcon",
             "squad": "serpent 1",
             "ai": "fighter",
-            "away": true
+            "away": true,
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
@@ -312,7 +316,8 @@
             "squad": "serpent 2",
             "ai": "fighter",
             "away": true,
-            "equipment": "default"
+            "equipment": "default",
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
@@ -320,7 +325,8 @@
             "squad": "serpent 3",
             "ai": "fighter",
             "away": true,
-            "equipment": "default"
+            "equipment": "default",
+            "excludeFromReferenceScore": true
         },
         {
             "team": "rebels",
@@ -352,7 +358,8 @@
             "squad": "reaper 4",
             "ai": "fighter",
             "away": true,
-            "equipment": "full"
+            "equipment": "full",
+            "excludeFromReferenceScore": true
         }
     ]
 }

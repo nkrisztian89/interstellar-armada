@@ -1,5 +1,5 @@
 {
-    "description": "Practice your aiming skills by destroying an array of stationary target containers and unarmed drones. To make your job easier, your ship is equipped with training weapons, which automatically track targets within a small area in front of you.",
+    "description": "This tutorial explains the basic flight and combat controls and lets you practice with stationary target containers and unarmed practice drones.",
     "environment": "blovell",
     "combatTheme": "combat",
     "tips": [

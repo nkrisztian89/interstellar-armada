@@ -1,0 +1,28 @@
+p.about {
+    padding-left: 70px;
+    padding-right: 70px;
+    width: 750px;
+}
+
+p.aboutCentered {
+    text-align: center;
+}
+
+h3.credits {
+    font-size: 1.1em;
+    padding: 0;
+    margin-bottom: 0.5em;
+}
+
+ul.credits {
+    font-size: 0.8em;
+    padding: 0;
+    margin: 0 auto 0.2em auto;
+    text-align: center;
+}
+
+li.creditsNote {
+    margin: 0.3em 0 0.2em 0;
+    color: #aaaaaa;
+    font-style: italic;
+}

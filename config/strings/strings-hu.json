@@ -150,7 +150,7 @@
     "mission": {
         "targetPracticeBoxes": {
             "name": "Kezdő lőgyakorlat",
-            "description": "Gyakorold a célzást egy helyben álló konténerek és fegyvertelen drónok felrobbantásával! Hogy megkönnyítsük a dolgod, az űrhajódat gyakorló fegyverekkel szereltük fel, amelyek maguktól pontosan a célra állnak, ha felé nézel.",
+            "description": "Ebben a tréningben megismerkedhetsz az űrhajó irányításával, és szabadon gyakorolhatsz konténerek és fegyvertelen drónok ellen.",
             "messages": {
                 "tutorialWelcome": "Üdvözöllek a kezdő lőgyakorlaton!",
                 "tutorialAimFire1": "Célozz és tüzelj az előtted lévő konténerre!\nEgér: mozgatás és {controlStrings/mouse/fire}\nBillentyűzet: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} és {controlStrings/keyboard/fire}\nJoystick: botkormány mozgatása és {controlStrings/joystick/fire}",
@@ -346,15 +346,29 @@
     "about": {
         "backButton": "Vissza a menübe",
         "title": "Információ",
-        "aboutGameHeader": "Az Interstellar Armada: Galactic Ace játékról",
         "versionParagraph": "Verziószám: {version}",
-        "aboutGameParagraph": "Ez a játék tanulási célú projektként indult, és még a fejlesztés korai szakaszában jár. Ez a verzió csupán a már elkészült, kezdeti funkciók tesztelésére szolgál. Egyelőre még a játék alapvető részét képező funkciók sem készültek el teljesen. Ez a verzió emellett számos hibát is tartalmazhat.",
-        "aboutAuthorLicenseHeader": "A készítőről és a licenszről",
-        "aboutAuthorLicenseParagraph": "Ezt a játékot Nagy Krisztián, a BME-n 2013-ban BSc-t végzett végzett mérnök informatikus fejleszti. A program {license} licensz alatt kerül kiadásra, ami a forráskóddal együtt részleteiben megtekinthető a projekt {github} oldalán.<br/> A játékban a Bernd Montag által készített, freeware {sansation} betűtípus, valamint a Google Fonts gyűjteményből az {aldrich} és az {audiowide} ({openFontLicense} alatt elérhető) betűtípusok is szerepelnek. Ezek közül az előbbit a játék készítője kis mértékben módosította, ennek részletei a {fontlog} fájlban megtekinthetőek.<br/> A forráskód részét képezi a fejlesztéshez használt {requireJS} függvénykönyvtár, mely {requireJSLicense} alatt érhető el és került felhasználásra.<br/>Egyes, a játékban szereplő hangeffektek készítéséhez ingyenesen elérhető hangminták szolgáltak alapul, melyek forrását {soundSources} találod.",
-        "theNewBSDOrMITLicenses": "az új BSD vagy az MIT licenszek",
-        "here": "itt",
-        "aboutUsedSoftwareHeader": "A felhasznált szoftverekről",
-        "aboutUsedSoftwareParagraph": "Ez a játék kizárólag szabadon elérhető és/vagy nyílt forráskódú szoftverek és technológiák használatával készül. A játékban található tartalmakat {inkscape}, {blender}, {gimp}, {audacity}, {bfxr}, {lmms}, {fontforge}, valamint ({netbeans} és {lazarus} fejlesztőkörnyezetben) kifejezetten erre a célra készített eszközök segítségével állítom elő, a játék fejlesztéséhez pedig a {netbeans}, a {chrome} és a {firefox} van segítségemre, melyek mind {ubuntu} operációs rendszeren futnak."
+        "aboutGameParagraph": "Egy nyílt forráskódú játék Nagy Krisztiántól, mely a klasszikus PC-s űrharc szimulátorok összetettségét kombinálja a webes játékokból megszokott egyszerű elérhetőséggel. A hosszú távú cél egy küldetés alapú, de nem lináris játékmenet kifejlesztése, amiben a játékos számára minden küldetés után dinamikusan, procedurális módszerrel új opciókat generál és kínál fel a játék.",
+        "aboutGameDevParagraph": "A játék még fejlesztés alatt áll, ebben a korai verzióban számos funkció még nem készült el, és hibákkal is találkozhatsz. Ha szeretnéd követni a játék fejlesztését, lájkold a {facebook} oldalt, vagy keresd fel a projektet a {github}on. Ha ötleteket vagy visszajelzéseket szeretnél megosztani, bátran fordulj a fejlesztőhöz ezen az {email} címen.",
+        "licenseNote": "Részletes forrásmegjelölést és licenszinformációkat az oldal alján találsz.",
+        "creditsHeader": "Készítők",
+        "creditsGameDesign": "Játékterv",
+        "creditsProgramming": "Programozás",
+        "creditsRequireJSNote": "A felhasznált RequireJS készítője:",
+        "creditsFonts": "Betűtípusok",
+        "credits3DModels": "3D modellek",
+        "creditsTextures": "Textúrák",
+        "creditsMusic": "Zene",
+        "creditsSoundEffects": "Hangeffektek",
+        "creditsFreesoundNote": "Egyes hangeffektek készítéséhez a következő freesound.org felhasználók mintáit használva:",
+        "creditsOtherSoundsNote": "Egyes hangeffektek készítéséhez a következő szerzők mintáit használva:",
+        "creditsSoundLicenseNote": "kattints ide a hangeffektek részletes forrásmegjelölésének és licenszinformációinak megnyitásához",
+        "creditsTesting": "Tesztelés",
+        "usedSoftwareHeader": "Készítéshez használt szoftverek",
+        "usedSoftwareParagraph": "Ez a játék kizárólag szabadon elérhető és/vagy nyílt forráskódú szoftverek és technológiák használatával készül. A játékban található tartalmakat {inkscape}, {blender}, {gimp}, {audacity}, {bfxr}, {lmms}, {fontforge}, valamint ({netbeans} és {lazarus} fejlesztőkörnyezetben) kifejezetten erre a célra készített eszközökkel állítom elő, a játék fejlesztéséhez pedig a {netbeans}, a {chrome} és a {firefox} van segítségemre, melyeket mind {ubuntu} operációs rendszeren futtatok.",
+        "licenseHeader": "Licensz",
+        "licenseParagraph": "A játék forráskódját (ide értve a HTML, Javascript és CSS fájlokat, a játék konfigurációs beállításait tartalmazó JSON fájlokat és bármely más, ezekhez kapcsolódó szöveges fájlt) Nagy Krisztián készítette, és a {license} licensz alatt kerülnek kiadásra. Ez alól kivételt képez a {requireJS} programkönyvtár, amire az {requireJSLicense} vonatkozik.<br>A felhasznált betűtípusok licenszével kapcsolatos információkat itt találod: {sansation} (szerző: Bernd Montag), {aldrich} és {audiowide} (a Google Fonts gyűjteményből). Az Aldrich esetében Nagy Krisztián pár apró módosítást hajtott végre, amiről információt a {fontlog} fájlban találsz.<br>A képek, 3D modellek, textúrák és zenei fájlok mind Nagy Krisztián munkái és a {assetLicense} licensz alatt kerülnek kiadásra.<br>A hangeffektekkel kapcsolatos szerzői és licenszinformációkat {soundLicense} találod.",
+        "requireJSLicense": "MIT licensz",
+        "here": "itt"
     },
     "setting": {
         "on": "be",

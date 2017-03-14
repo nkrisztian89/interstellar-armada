@@ -11,7 +11,7 @@
 
     <body>
         <div class="pageGhost">
-            <div class="anyHeightCentered outerWideFluid outerContainer pageContainer">
+            <div class="anyHeightCentered outerContainer pageContainer">
                 <div class="horizontallyCentered contentWide innerContainer">
                     <div class="fullWide separatorBar">
                         <a id="backButton" class="horizontallyCentered separate button translatable" href="#">
@@ -20,37 +20,100 @@
                     </div>
                     <h1 id="title" class="translatable">About</h1>
                     <img src="images/empire_white_100.png" alt="Logo" class="horizontallyCentered" />
-                    <h2 id="aboutGameHeader" class="translatable">About the Interstellar Armada game</h2>
-                    <p id="versionParagraph" class="translatable">
+                    <h2>Interstellar Armada: Galactic Ace</h2>
+                    <p id="versionParagraph" class="horizontallyCentered translatable">
                         Game version: unknown
                     </p>
-                    <p id="aboutGameParagraph" class="translatable">
-                        This application is a learning project in the early development phase.
-                        The current version is only intended for testing the initial, already
-                        implemented features of what one day might become a functional game.
-                        Even the core features are yet under development. The application
-                        might contain numerous bugs.
+                    <p id="aboutGameParagraph" class="about translatable">
                     </p>
-                    <h2 id="aboutAuthorLicenseHeader" class="translatable">About the author and license</h2>
-                    <p id="aboutAuthorLicenseParagraph" class="translatable">
-                        This project is developed by Krisztián Nagy, a BSc computer engineering
-                        graduate from Budapest University of Technology and Economics.
-                        The project is released under 
-                        <a target="_blank" href="http://www.gnu.org/licenses/gpl-3.0-standalone.html">GPLv3</a>, you can obtain the source code
-                        and the license from the project's 
-                        <a target="_blank" href="https://github.com/nkrisztian89/interstellar-armada" >github page</a>.<br/>
-                        The application features the Sansation font family created by Bernd Montag,
-                        which is freeware, and was obtained from 
-                        <a target="_blank" href="http://www.dafont.com/sansation.font">here</a>.<br/>
-                        The application uses the <a target="_blank" href="http://requirejs.org/">RequireJS</a> library
-                        for module management, which is available under the 
-                        <a target="_blank" href="https://github.com/jrburke/requirejs/blob/master/LICENSE">new BSD or MIT licenses</a>.
+                    <p id="aboutGameDevParagraph" class="about translatable">
                     </p>
-                    <h2 id="aboutUsedSoftwareHeader" class="translatable">About the used software</h2>
-                    <p id="aboutUsedSoftwareParagraph" class="translatable">
+                    <p class="aboutCentered">
+                        <a href="#about_licenseHeader" id="licenseNote" class="translatable"></a>
+                    </p>
+                    <h2 id="creditsHeader" class="translatable">Credits</h2>
+                    <h3 id="creditsGameDesign" class="translatable credits">Game design</h3>
+                    <ul class="credits">
+                        <li class="huName">Krisztián Nagy</li>
+                    </ul>
+                    <h3 id="creditsProgramming" class="translatable credits">Programming</h3>
+                    <ul class="credits">
+                        <li class="huName">Krisztián Nagy</li>
+                        <li id="creditsRequireJSNote" class="creditsNote translatable">Uses RequireJS by</li>
+                        <li>Dojo Foundation</li>
+                    </ul>
+                    <h3 id="creditsFonts" class="translatable credits">Fonts</h3>
+                    <ul class="credits">
+                        <li>Bernd Montag</li>
+                        <li>MADType (Matthew Aaron Desmond)</li>
+                        <li>Brian J. Bonislawsky</li>
+                    </ul>
+                    <h3 id="credits3DModels" class="translatable credits">3D models</h3>
+                    <ul class="credits">
+                        <li class="huName">Krisztián Nagy</li>
+                    </ul>
+                    <h3 id="creditsTextures" class="translatable credits">Textures</h3>
+                    <ul class="credits">
+                        <li class="huName">Krisztián Nagy</li>
+                    </ul>
+                    <h3 id="creditsMusic" class="translatable credits">Music</h3>
+                    <ul class="credits">
+                        <li class="huName">Krisztián Nagy</li>
+                    </ul>
+                    <h3 id="creditsSoundEffects" class="translatable credits">Sound effects</h3>
+                    <ul class="credits">
+                        <li class="huName">Krisztián Nagy</li>
+                        <li id="creditsFreesoundNote" class="creditsNote translatable">Some sound effects based on samples by the following freesound.org users:</li>
+                        <li>isaac200000</li>
+                        <li>erdie</li>
+                        <li>djfroyd</li>
+                        <li>Omar Alvarado</li>
+                        <li>veiler</li>
+                        <li>TreasureSounds</li>
+                        <li>jobro</li>
+                        <li>FullMetalJedi</li>
+                        <li>unfa</li>
+                        <li>cydon</li>
+                        <li>juskiddink</li>
+                        <li>themfish</li>
+                        <li>RSilveira_88</li>
+                        <li>reacthor</li>
+                        <li>Electroviolence</li>
+                        <li>qubodup</li>
+                        <li id="creditsOtherSoundsNote" class="creditsNote translatable">Some sound effects based on a sample by</li>
+                        <li>Blender Foundation</li>
+                    </ul>
+                    <p class="aboutCentered">
+                        <a href="license/sfx-license.txt" target="_blank" id="creditsSoundLicenseNote" class="translatable">click here for sound effect attribution and licensing details</a>
+                    </p>
+                    <h3 id="creditsTesting" class="translatable credits">Testing</h3>
+                    <ul class="credits orderedNameList">
+                        <li class="huName">András Sztojcsev</li>
+                        <li class="huName">Anita Szilágyi</li>
+                        <li class="huName">Áron Oszvald</li>
+                        <li class="huName">Balázs Szendefi</li>
+                        <li class="huName">Enikő Rozsnyói</li>
+                        <li class="huName">Gábor Bene</li>
+                        <li class="huName">Gizella Hájas</li>
+                        <li>Hùng Pham</li>
+                        <li class="huName">László Kollár</li>
+                        <li class="huName">Martin Árvai</li>
+                        <li class="huName">Noémi Donka</li>
+                        <li class="huName">Oszkár Labányi</li>
+                        <li class="huName">Péter Tiqulo Cseke</li>
+                        <li>Regina Okas</li>
+                        <li class="huName">Roland Nagy</li>
+                        <li class="huName">Zita Csaba</li>
+                        <li class="huName">Zsolt Homoki</li>
+                    </ul>
+                    <h3 id="usedSoftwareHeader" class="translatable">Used software</h3>
+                    <p id="usedSoftwareParagraph" class="about translatable">
                         This game is created using freely available and/or open source software and open standards. For creating the in-game 
-                        assets, Inkscape, Blender, Gimp and specialized tools developed (in Netbeans and Lazarus) by the author of the game are 
+                        assets, Inkscape, Blender, Gimp and specialized tools developed (in Netbeans and Lazarus) by Krisztián Nagy are 
                         used, and the game itself is being developed using Netbeans, Google Chrome and Firefox, all of these running on Ubuntu.
+                    </p>
+                    <h2 id="licenseHeader" class="translatable">License</h2>
+                    <p id="licenseParagraph" class="about translatable">
                     </p>
                 </div>
             </div>

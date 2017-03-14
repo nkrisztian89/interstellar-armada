@@ -89,6 +89,7 @@ define([
                 CONTROLS_SCREEN_SOURCE: "controls.html",
                 ABOUT_SCREEN_NAME: "about",
                 ABOUT_SCREEN_SOURCE: "about.html",
+                ABOUT_SCREEN_CSS: "about.css",
                 INGAME_MENU_SCREEN_NAME: "ingameMenu",
                 INGAME_MENU_SCREEN_SOURCE: "ingame-menu.html",
                 INGAME_MENU_SCREEN_CSS: "ingame-menu.css",

@@ -593,7 +593,7 @@
                 }],
             "soundEffect": {
                 "name": "containerExplosion",
-                "volume": 3
+                "volume": 2
             }
         }, {
             "name": "fighterExplosion",
@@ -705,7 +705,7 @@
                 }],
             "soundEffect": {
                 "name": "fighterExplosion",
-                "volume": 5.5
+                "volume": 4.5
             }
         }, {
             "name": "largeFighterExplosion",
@@ -817,7 +817,7 @@
                 }],
             "soundEffect": {
                 "name": "fighterExplosion",
-                "volume": 6.5
+                "volume": 5
             }
         }, {
             "name": "bomberExplosion",
