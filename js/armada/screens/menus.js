@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Provides the menu screens of the Interstellar Armada game which are simply instances of MenuScreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -10,22 +10,30 @@
 /*global define, window */
 
 /**
+ * @param utils Used for format strings
  * @param screens The menu screens are instances of MenuScreen.
  * @param game Used for navigation.
+ * @param constants Used for global localStorage IDs
  * @param armadaScreens Used for common screen constants.
  * @param strings Used for translation support.
  * @param audio Used for volume control
  * @param battle Used for starting / resuming the battle.
  */
 define([
+    "utils/utils",
     "modules/screens",
     "modules/game",
+    "armada/constants",
     "armada/screens/shared",
     "armada/strings",
     "armada/audio",
     "armada/screens/battle"
-], function (screens, game, armadaScreens, strings, audio, battle) {
+], function (utils, screens, game, constants, armadaScreens, strings, audio, battle) {
     "use strict";
+    var
+            // --------------------------------------------------------------------------------------------
+            // Constants
+            FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID = constants.LOCAL_STORAGE_PREFIX + "firstRunNoteShown";
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -70,7 +78,25 @@ define([
                     show: function () {
                         audio.resetMasterVolume();
                         audio.resetMusicVolume();
-                        audio.playMusic(armadaScreens.MENU_THEME);
+                        if (localStorage[FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID] !== "true") {
+                            localStorage[FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID] = "true";
+                            armadaScreens.openDialog({
+                                header: strings.get(strings.FIRST_RUN_NOTE.HEADER),
+                                message: utils.formatString(strings.get(strings.FIRST_RUN_NOTE.MESSAGE), {
+                                    chrome: '<a target="_blank" href="https://www.google.com/chrome/">Google Chrome</a>',
+                                    facebook: '<a target="_blank" href="https://www.facebook.com/interstellar.armada">facebook</a>'
+                                }),
+                                buttons: [{
+                                        caption: strings.get(strings.FIRST_RUN_NOTE.BUTTON),
+                                        action: function () {
+                                            game.closeSuperimposedScreen();
+                                            audio.playMusic(armadaScreens.MENU_THEME);
+                                        }
+                                    }]
+                            });
+                        } else {
+                            audio.playMusic(armadaScreens.MENU_THEME);
+                        }
                     },
                     optionselect: armadaScreens.playButtonSelectSound,
                     optionclick: armadaScreens.playButtonClickSound

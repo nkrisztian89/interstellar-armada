@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides functions to add and access HTML screens of the application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -138,12 +138,16 @@ define([
         if (superimpose === true) {
             this._coveredScreens.push(this._currentScreen);
             this._currentScreen.setActive(false);
+            this._currentScreen = screen;
             screen.superimposeOnPage(backgroundColor);
         } else {
+            this._currentScreen = screen;
             screen.show();
         }
-        this._currentScreen = screen;
-        this._currentScreen.setActive(true);
+        // the show event handler of the screen might set/superimpose a new screen, in which case it should not be set active
+        if (this._currentScreen === screen) {
+            this._currentScreen.setActive(true);
+        }
     };
     /**
      * Closes the topmost superimposed screen, revealing the one below.

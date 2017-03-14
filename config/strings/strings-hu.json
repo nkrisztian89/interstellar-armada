@@ -31,6 +31,11 @@
         "positiveDirection": "hátra/jobbra",
         "negativeDirection": "előre/balra"
     },
+    "firstRunNote": {
+        "header": "Üdvözöllek!",
+        "message": "Ez a Nagy Krisztián által fejlesztett Interstellar Armada: Galactic Ace böngésző alapú 3D űrharc szimulátor előzetes kiadása.<br><br>Kérlek vedd figyelembe, hogy <strong>a játék fejlesztés alatt áll</strong> - semmi sem végleges benne, több funkció még hiányzik, programhibák és teljesítményproblémák előfordulhatnak.<br><br>A legjobb élmény érdekében <strong>kérlek a {chrome} (vagy Chromium) böngészőt használd</strong>, mivel az előzetes tesztek során messze megelőzte a vetélytársait, és jelenleg az egyetlen böngésző, ami a 3D hangzást problémamentesen támogatja. (a játék nem alapszik Chrome technológiákon, ezért ez a helyzet a jövőben változhat)<br><br>Ha tetszik a játék, keresd fel a {facebook} oldalt, ahol követheted a fejlesztés előrehaladását!<br><br>Köszönöm, hogy kipróbálod, és élvezetes játékot kívánok!",
+        "button": "Indítás"
+    },
     "screen": {
         "back": "Vissza",
         "cancel": "Mégse"
@@ -366,7 +371,7 @@
         "usedSoftwareHeader": "Készítéshez használt szoftverek",
         "usedSoftwareParagraph": "Ez a játék kizárólag szabadon elérhető és/vagy nyílt forráskódú szoftverek és technológiák használatával készül. A játékban található tartalmakat {inkscape}, {blender}, {gimp}, {audacity}, {bfxr}, {lmms}, {fontforge}, valamint ({netbeans} és {lazarus} fejlesztőkörnyezetben) kifejezetten erre a célra készített eszközökkel állítom elő, a játék fejlesztéséhez pedig a {netbeans}, a {chrome} és a {firefox} van segítségemre, melyeket mind {ubuntu} operációs rendszeren futtatok.",
         "licenseHeader": "Licensz",
-        "licenseParagraph": "A játék forráskódját (ide értve a HTML, Javascript és CSS fájlokat, a játék konfigurációs beállításait tartalmazó JSON fájlokat és bármely más, ezekhez kapcsolódó szöveges fájlt) Nagy Krisztián készítette, és a {license} licensz alatt kerülnek kiadásra. Ez alól kivételt képez a {requireJS} programkönyvtár, amire az {requireJSLicense} vonatkozik.<br>A felhasznált betűtípusok licenszével kapcsolatos információkat itt találod: {sansation} (szerző: Bernd Montag), {aldrich} és {audiowide} (a Google Fonts gyűjteményből). Az Aldrich esetében Nagy Krisztián pár apró módosítást hajtott végre, amiről információt a {fontlog} fájlban találsz.<br>A képek, 3D modellek, textúrák és zenei fájlok mind Nagy Krisztián munkái és a {assetLicense} licensz alatt kerülnek kiadásra.<br>A hangeffektekkel kapcsolatos szerzői és licenszinformációkat {soundLicense} találod.",
+        "licenseParagraph": "A játék forráskódját (ide értve a HTML, Javascript és CSS fájlokat, a játék konfigurációs beállításait tartalmazó JSON fájlokat és bármely más, ezekhez kapcsolódó szöveges fájlt) Nagy Krisztián készítette, és a {license} licensz alatt kerülnek kiadásra. Ez alól kivételt képez a {requireJS} programkönyvtár, amire az {requireJSLicense} vonatkozik.<br><br>A felhasznált betűtípusok licenszével kapcsolatos információkat itt találod: {sansation} (szerző: Bernd Montag), {aldrich} és {audiowide} (a Google Fonts gyűjteményből). Az Aldrich esetében Nagy Krisztián pár apró módosítást hajtott végre, amiről információt a {fontlog} fájlban találsz.<br><br>A képek, 3D modellek, textúrák és zenei fájlok mind Nagy Krisztián munkái és a {assetLicense} licensz alatt kerülnek kiadásra.<br>A hangeffektekkel kapcsolatos szerzői és licenszinformációkat {soundLicense} találod.",
         "requireJSLicense": "MIT licensz",
         "here": "itt"
     },

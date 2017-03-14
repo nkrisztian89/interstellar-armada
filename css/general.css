@@ -227,6 +227,11 @@ a {
     font-variant: small-caps;
 }
 
+a:not(.button) {
+    font-size: 1.1em;
+    color: #44FF44;
+}
+
 a.separate {
     display: table;
     margin-top: 0.4em;

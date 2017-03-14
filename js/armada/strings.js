@@ -22,6 +22,11 @@ define([
         DEFINITE_ARTICLE_BEFORE_CONSONANT: {name: "grammar.definiteArticle.beforeConsonant"},
         AND: {name: "grammar.and"}
     };
+    strings.FIRST_RUN_NOTE = {
+        HEADER: {name: "firstRunNote.header"},
+        MESSAGE: {name: "firstRunNote.message"},
+        BUTTON: {name: "firstRunNote.button"}
+    };
     strings.SCREEN = {
         BACK: {name: "screen.back"},
         CANCEL: {name: "screen.cancel"}
