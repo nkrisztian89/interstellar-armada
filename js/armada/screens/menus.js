@@ -66,7 +66,7 @@ define([
                         action: function () {
                             game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                         }
-                        // Quit option for Electron                        
+                        // Quit option - uncomment for Electron                        
 //                    }, {
 //                        id: strings.MAIN_MENU.QUIT.name,
 //                        action: function () {

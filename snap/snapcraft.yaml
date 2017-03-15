@@ -11,9 +11,8 @@ description: |
   The game uses Newtonian mechanics with an assisted, six degrees of freedom flight model 
   and supports keyboard, mouse and joystick controls.
 
-  This early development version features 3 training and 10 combat missions with basic
-  destroy/protect scenarios. The missions are more difficult than the early ones will
-  be in the final version, as the AI is under development!
+  This early development version features several training and combat missions with basic
+  destroy/protect scenarios. 
 
   The game is built with open web technologies and is packaged as a standalone app
   using Electron.
