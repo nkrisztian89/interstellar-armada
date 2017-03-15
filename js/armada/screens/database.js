@@ -189,6 +189,9 @@ define([
                 maxRevealState = (_getSetting(SETTINGS.SHOW_SOLID_MODEL) ? REVEAL_SOLID_END_STATE : REVEAL_WIREFRAME_END_STATE),
                 elapsedTime;
         _revealState = startRevealState;
+        if (_revealLoop !== LOOP_CANCELED) {
+            clearInterval(_revealLoop);
+        }
         // creating the reveal function on-the-fly so we can use closures, and as a new loop is not started frequently
         _revealLoop = setInterval(function () {
             elapsedTime = performance.now() - revealStartDate;
@@ -238,14 +241,20 @@ define([
                 curDate;
         // setting the starting orientation
         _setRotation(startAngle);
+        if (_rotationLoop !== LOOP_CANCELED) {
+            clearInterval(_rotationLoop);
+        }
         // setting the loop function
         _rotationLoop = setInterval(function () {
+            var visualModel = _currentItem.getVisualModel();
             curDate = performance.now();
-            if (_solidModel) {
-                _solidModel.rotate(_currentItem.getVisualModel().getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / _getSetting(SETTINGS.ROTATION_DURATION)));
-            }
-            if (_wireframeModel) {
-                _wireframeModel.rotate(_currentItem.getVisualModel().getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / _getSetting(SETTINGS.ROTATION_DURATION)));
+            if (visualModel) {
+                if (_solidModel) {
+                    _solidModel.rotate(visualModel.getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / _getSetting(SETTINGS.ROTATION_DURATION)));
+                }
+                if (_wireframeModel) {
+                    _wireframeModel.rotate(visualModel.getZDirectionVector(), (curDate - prevDate) * Math.radians(360 / _getSetting(SETTINGS.ROTATION_DURATION)));
+                }
             }
             prevDate = curDate;
         }, 1000 / _getSetting(SETTINGS.ROTATION_FPS));
@@ -549,7 +558,7 @@ define([
      */
     DatabaseScreen.prototype._updateItemInfo = function () {
         var shipClass = classes.getSpacecraftClassesInArray(true)[_currentItemIndex];
-        _currentItemLengthInMeters = _currentItem ? _currentItem.getVisualModel().getHeightInMeters() : 0;
+        _currentItemLengthInMeters = (_currentItem && _currentItem.getVisualModel()) ? _currentItem.getVisualModel().getHeightInMeters() : 0;
         // full names can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise the stock value is displayed
         this._itemNameHeader.setContent(shipClass.getDisplayName());
@@ -689,6 +698,14 @@ define([
                 _itemViewScene.clearSpotLights();
                 this.render();
             });
+            if (_revealLoop !== LOOP_CANCELED) {
+                clearInterval(_revealLoop);
+                _revealLoop = LOOP_CANCELED;
+            }
+            if (_rotationLoop !== LOOP_CANCELED) {
+                clearInterval(_rotationLoop);
+                _rotationLoop = LOOP_CANCELED;
+            }
             return true;
         }
         return false;
@@ -743,23 +760,28 @@ define([
             resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
             // set the callback for when the potentially needed additional file resources have been loaded
             resources.executeWhenReady(function () {
+                var visualModel = _currentItem.getVisualModel();
+                if (!visualModel) {
+                    game.log("WARNING! No visual item to load for database, loading aborted!");
+                    return;
+                }
                 this._updateItemInfo();
                 // this will create the GL context if needed or update it with the new data if it already exists
                 this.bindSceneToCanvas(_itemViewScene, this.getScreenCanvas(DATABASE_CANVAS_NAME));
                 // set the camera position so that the whole ship nicely fits into the picture
-                _itemViewScene.getCamera().moveToPosition([0, 0, _currentItem.getVisualModel().getScaledSize()], 0);
+                _itemViewScene.getCamera().moveToPosition([0, 0, visualModel.getScaledSize()], 0);
                 // set the shadow mappin ranges manually, adapting to the size of the shown model
                 if (graphics.shouldUseShadowMapping()) {
                     _itemViewScene.setShadowMapRanges([
-                        0.5 * _currentItem.getVisualModel().getScaledSize(),
-                        _currentItem.getVisualModel().getScaledSize()
+                        0.5 * visualModel.getScaledSize(),
+                        visualModel.getScaledSize()
                     ]);
                     _itemViewScene.enableShadowMapping();
                 } else {
                     _itemViewScene.disableShadowMapping();
                 }
                 // applying original scale
-                _currentItemOriginalScale = _currentItem.getVisualModel().getScalingMatrix()[0];
+                _currentItemOriginalScale = visualModel.getScalingMatrix()[0];
                 _scaleModels(_currentItemOriginalScale * _getSetting(SETTINGS.START_SIZE_FACTOR));
                 this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
                 this._sceneCanvasBindings[0].canvas.getManagedContext().setup();

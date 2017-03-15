@@ -1398,6 +1398,10 @@ define([
         }
         resources.executeWhenReady(function () {
             var j, n, node, exp, lightSources, parameterArrays = {}, originalFactionColor, replacementFactionColor;
+            if (!this._class) {
+                application.log("WARNING! Cannot add spacecraft to scene because it has already been destroyed!");
+                return;
+            }
             application.log_DEBUG("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
             if (addSupplements.self !== false) {
                 // setting up parameter array declarations (name: type)
