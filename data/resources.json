@@ -369,6 +369,21 @@
                 "high": "_1024"
             }
         }, {
+            "name": "falcon48",
+            "basepath": "spacecraft/falcon/falcon48",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
             "name": "hud-atlas",
             "basepath": "hud/hud-atlas",
             "format": "png",
