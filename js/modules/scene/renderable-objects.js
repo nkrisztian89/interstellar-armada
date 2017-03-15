@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides various basic renderable object classes that can be added to scenes inside renderable nodes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1401,6 +1401,11 @@ define([
          * @type Boolean
          */
         this._shouldAnimate = false;
+        /**
+         * Calculated cached value of the total duration this particle takes to animate from its first state to the last (in milliseconds)
+         * @type Number
+         */
+        this._duration = 0;
         if (model) {
             this.init(model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize);
         }
@@ -1435,6 +1440,7 @@ define([
         this._relativeSize = 1;
         this._calculateSize();
         this._states = states || [];
+        this._calculateDuration();
         this._currentStateIndex = 0;
         this._looping = (looping === true);
         this._timeSinceLastTransition = 0;
@@ -1458,6 +1464,20 @@ define([
         this._updateShouldAnimate();
     };
     /**
+     * Updates the cached value of the calculated duration.
+     * @returns {Number}
+     */
+    Particle.prototype._calculateDuration = function () {
+        var i;
+        if (this._states.length <= 1) {
+            return 0;
+        }
+        this._duration = 0;
+        for (i = 0; i < this._states.length; i++) {
+            this._duration += this._states[i].timeToReach;
+        }
+    };
+    /**
      * Updates the cached value of the calculated size (considering both size animation and the deliberately set relative size). Updates
      * visibility based on the size as well.
      */
@@ -1470,15 +1490,7 @@ define([
      * @returns {Number}
      */
     Particle.prototype.getDuration = function () {
-        var i, result;
-        if (this._states.length <= 1) {
-            return 0;
-        }
-        result = 0;
-        for (i = 0; i < this._states.length; i++) {
-            result += this._states[i].timeToReach;
-        }
-        return result;
+        return this._duration;
     };
     /**
      * @override
