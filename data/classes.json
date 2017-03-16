@@ -2340,7 +2340,7 @@
             "armor": 0,
             "model": "falcon",
             "shader": "ship",
-            "texture": "falcon48",
+            "texture": "falcon",
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [16, 1]],
             "mass": 10000,
