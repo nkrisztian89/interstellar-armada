@@ -26,7 +26,12 @@ I use [NetBeans](https://netbeans.org/) (8.2) with its web development (+
 [ESLint](http://plugins.netbeans.org/plugin/63486/eslint),
 [GLSL](http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter) and 
 [Markdown](http://plugins.netbeans.org/plugin/50964/markdown-support)) plugins 
-to develop this game.
+to develop this game. For the (very rudimentary) build process, you will need
+[npm](https://www.npmjs.com/) and [Grunt](https://gruntjs.com/). After
+installing the dev dependencies with `npm install`, running `grunt build`
+creates a concatenated, minified (and somewhat optimized) source and changes 
+the reference to it in `index.html`. Use `grunt clean` to remove the built
+file and change back the reference to the regular source.
 
 Editor
 ------
@@ -48,10 +53,19 @@ Electron
 --------
 
 The game can be run using [Electron](https://electron.atom.io/). To do this, 
-search for "electron" in the source code (js folder) and comment/uncomment the
-indicated parts of the code according to the instructions you find. Then download 
-a [release](https://github.com/electron/electron/releases) of electron suitable for 
-your computer and copy the project files over to its appropriate folder (resources/app).
+search for "electron" in the source code (`js` folder) and comment/uncomment the
+indicated parts of the code according to the instructions you find. For non-development
+versions (which don't have "-dev" in the version number), you will also need to run
+``
+npm install
+grunt clean
+grunt build
+``
+in the project folder after changing the source code.
+Then download a [release](https://github.com/electron/electron/releases) of Electron suitable for 
+your computer and copy the project files over to its appropriate folder (the `app` folder,
+which you will have to create within the `resources` folder). The project contains the necessary
+files for the Electron setup, so after this it can simply be run by starting the Electron executable.
 
 Snap packaging
 --------------
@@ -71,4 +85,4 @@ details and attributions please do check LICENSE.txt.
 
 Krisztián Nagy
 
-15.03.2017.
+19.03.2017.
