@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides an interface to interact with WebGL in a managed way. Offers
  * rather low level functionality, but using it is still much more transparent 
  * than accessing WebGL directly.
@@ -256,11 +256,18 @@ define([
             switch (filtering) {
                 case TextureFiltering.BILINEAR:
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+                    if (anisotropicFilterExt) {
+                        gl.texParameterf(gl.TEXTURE_2D, anisotropicFilterExt.TEXTURE_MAX_ANISOTROPY_EXT, 1);
+                    }
                     break;
                 case TextureFiltering.TRILINEAR:
                     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+                    if (anisotropicFilterExt) {
+                        gl.texParameterf(gl.TEXTURE_2D, anisotropicFilterExt.TEXTURE_MAX_ANISOTROPY_EXT, 1);
+                    }
                     break;
                 case TextureFiltering.ANISOTROPIC:
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
                     gl.texParameterf(gl.TEXTURE_2D, anisotropicFilterExt.TEXTURE_MAX_ANISOTROPY_EXT, 4);
                     break;
             }
@@ -2255,7 +2262,8 @@ define([
             }
             for (i = 0; i < this._textures.length; i++) {
                 if (this._textures[i].setMinFiltering) {
-                    this.bindTexture(this._textures[i]);
+                    // force bind textures, as texture param changes apply to the last bound texture
+                    this.bindTexture(this._textures[i], undefined, undefined, true);
                     this._textures[i].setMinFiltering(this.gl, this._filtering, this.anisotropicFilterExt);
                 }
             }
@@ -2655,9 +2663,11 @@ define([
      * automatically assigned during later binds.
      * @param {Boolean} reservePlace If true, an automatic index will be bound as if 
      * no index was specified, but that index will be reserved for the texture.
+     * @param {Boolean} [force=false] If true, the texture will be rebound even if it is already bound to the same unit (to be used if
+     * texture parameters are to be changed, because then the change applies to the last bound texture)
      * @return {Number} The texture unit index the texture was bound to.
      */
-    ManagedGLContext.prototype.bindTexture = function (texture, place, reservePlace) {
+    ManagedGLContext.prototype.bindTexture = function (texture, place, reservePlace, force) {
         // if a specific place was given for the bind, reserve that 
         // (or the automatically found) place for this texture
         var reserved = (place !== undefined) || reservePlace;
@@ -2683,8 +2693,8 @@ define([
                 }
             }
         }
-        // only bind to it the given texture location if currenty it is unbound or a different texture is bound to it
-        if (!this._boundTextures[place] || (this._boundTextures[place].texture !== texture)) {
+        // only bind to it the given texture location if currenty it is unbound or a different texture is bound to it (or if forced)
+        if (!this._boundTextures[place] || (this._boundTextures[place].texture !== texture) || force) {
             if (texture instanceof ManagedTexture) {
                 application.log_DEBUG("Binding texture: '" + texture.getName() + "' to texture unit " + place + (reserved ? ", reserving place." : "."), 3);
                 texture.bindGLTexture(this._name, this.gl, place);
