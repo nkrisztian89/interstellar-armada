@@ -101,10 +101,16 @@ define([
             lmms: '<a target="_blank" href="https://lmms.io">LMMS</a>',
             fontforge: '<a target="_blank" href="https://fontforge.github.io/en-US/">FontForge</a>',
             netbeans: '<a target="_blank" href="https://netbeans.org/">Netbeans</a>',
+            git: '<a target="_blank" href="https://git-scm.com/">git</a>',
+            npm: '<a target="_blank" href="https://www.npmjs.com/">npm</a>',
+            grunt: '<a target="_blank" href="https://gruntjs.com/">Grunt</a>',
             lazarus: '<a target="_blank" href="http://www.lazarus-ide.org/">Lazarus</a>',
             chrome: '<a target="_blank" href="https://www.google.com/chrome">Google Chrome</a>',
             firefox: '<a target="_blank" href="https://www.mozilla.org/firefox">Firefox</a>',
-            ubuntu: '<a target="_blank" href="http://www.ubuntu.com/desktop">Ubuntu</a>'
+            ubuntu: '<a target="_blank" href="http://www.ubuntu.com/desktop">Ubuntu</a>',
+            eslint: '<a target="_blank" href="http://plugins.netbeans.org/plugin/63486/eslint">ESLint</a>',
+            glsl: '<a target="_blank" href="http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter">GLSL Syntax Highlighter</a>',
+            markdown: '<a target="_blank" href="http://plugins.netbeans.org/plugin/50964/markdown-support">Markdown Support</a>'
         });
         this._aboutLicenseParagraph.customizeContent({
             license: '<a target="_blank" href="http://www.gnu.org/licenses/gpl-3.0-standalone.html">GNU GPLv3</a>',
