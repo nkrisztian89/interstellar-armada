@@ -56,11 +56,11 @@ The game can be run using [Electron](https://electron.atom.io/). To do this,
 search for "electron" in the source code (`js` folder) and comment/uncomment the
 indicated parts of the code according to the instructions you find. For non-development
 versions (which don't have "-dev" in the version number), you will also need to run
-``
+```
 npm install
 grunt clean
 grunt build
-``
+```
 in the project folder after changing the source code.
 Then download a [release](https://github.com/electron/electron/releases) of Electron suitable for 
 your computer and copy the project files over to its appropriate folder (the `app` folder,
