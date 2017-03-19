@@ -12,6 +12,7 @@ div.slider {
 
 div.sliderValueContainer {
     display: table-cell;
+    box-sizing: border-box;
     vertical-align: middle;
     width: 120px;
     margin: 0;
@@ -20,6 +21,7 @@ div.sliderValueContainer {
 }
 
 div.sliderPropertyContainer {
+    box-sizing: border-box;
     font-size: 11pt;
     display: table-cell;
     text-align: left;

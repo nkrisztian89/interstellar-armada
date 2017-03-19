@@ -448,6 +448,8 @@ input[type=range] {
     background: transparent; /* Otherwise white in Chrome */
     height: 30px;
     
+    margin: 4px 0 0 4px;
+    padding: 0;
     cursor: url(../images/cursor.png) 6 6, pointer;
 }
 
@@ -492,8 +494,8 @@ input[type=range]:hover::-webkit-slider-thumb {
 }
 
 input[type=range]::-moz-range-thumb {
-    height: 22px;
-    width: 9px;
+    height: 20px;
+    width: 7px;
 
     border-radius: 0;
 
@@ -537,7 +539,7 @@ input[type=range]::-webkit-slider-runnable-track {
 
 input[type=range]::-moz-range-track {
     width: 100%;
-    height: 10px;
+    height: 6px;
 
     border: 2px solid #333333;
     background-color: #222222;
