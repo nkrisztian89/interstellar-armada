@@ -37,7 +37,7 @@ Editor
 ------
 
 The game includes an editor (also written in JS, in fact it uses modules from the
-game itself to load / display game data). It can be found in the tools folder.
+game itself to load / display game data). It can be found in the `tools` folder.
 Please note that the editor is even less complete than the game, there are
 things that cannot be edited with it (most notably game configuration / settings and
 missions), and it has limitations for even the things it can edit (such as not being
@@ -71,7 +71,7 @@ Snap packaging
 --------------
 
 I have added added the files necessary to create a [snap package](https://snapcraft.io/) out of the game 
-in the snap folder. I used Electron to create a standalone version of the app and then packaged it with snapcraft.
+in the `snap` folder. I used Electron to create a standalone version of the app and then packaged it with snapcraft.
 Everything was working in my tests except the sound. (which might be due to bad configuration or the limitations
 of snap at the time I tried)
 

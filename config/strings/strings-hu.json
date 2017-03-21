@@ -155,7 +155,7 @@
     "mission": {
         "targetPracticeBoxes": {
             "name": "Kezdő lőgyakorlat",
-            "description": "Ebben a tréningben megismerkedhetsz az űrhajó irányításával, és szabadon gyakorolhatsz konténerek és fegyvertelen drónok ellen.",
+            "description": "Ebben a tréning küldetésben megismerkedhetsz az űrhajó irányításával, és szabadon gyakorolhatsz konténerek és fegyvertelen drónok ellen.",
             "messages": {
                 "tutorialWelcome": "Üdvözöllek a kezdő lőgyakorlaton!",
                 "tutorialAimFire1": "Célozz és tüzelj az előtted lévő konténerre!\nEgér: mozgatás és {controlStrings/mouse/fire}\nBillentyűzet: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} és {controlStrings/keyboard/fire}\nJoystick: botkormány mozgatása és {controlStrings/joystick/fire}",
@@ -179,10 +179,12 @@
             }
         },
         "targetPracticeDrones": {
-            "name": "Középhaladó lőgyakorlat"
+            "name": "Középhaladó lőgyakorlat",
+            "description": "Ebben a fegyvertelen és fegyveres drónokat is felvonultató küldetésben a kitérő manővereket és a mozgó célpontra tüzelést gyakorolhatod. A drónok lassabbak, és a páncélzatuk is gyengébb, mint az űrhajódé, ám ha túl óvatlan vagy, föléd kerekedhetnek. A hajódat gyakorló fegyverekkel szereltük fel."
         },
         "targetPracticeFalcon": {
-            "name": "Haladó lőgyakorlat"
+            "name": "Haladó lőgyakorlat",
+            "description": "Használd fel az eddig tanultakat, hogy ezúttal a tiéddel azonos osztályú elfogó vadászokkal szemben is megálld a helyed! Immár szabványos plazmaágyúkkal szereltük fel a hajód, amik nagyobb tűzerőt biztosítanak. Cserébe viszont fix kialakításúak, így nem követik automatikusan a célpontot. Használd ki ezt a célzási technikád továbbfejlesztésére! Az ellenséges gépeket - szintén fix - gyakorló fegyverekkel szereltük fel."
         },
         "pirates": {
             "name": "Kalózok"
@@ -504,10 +506,12 @@
             "name": "drón"
         },
         "interceptor": {
-            "name": "elfogó vadász"
+            "name": "elfogó vadász",
+            "description": "Az elfogó vadászok kis méretű, gyors harci gépek, melyeket az ellenséges vadászok és bombázók hatástalanítására fejlesztettek ki. Jól manőverezhetőek, és könnyű páncélzattal, ám gyakran számottevő tűzerővel rendelkeznek, hogy hatékonyan vehessék fel a harcot az erősebb védelemmel ellátott bombázókkal szemben. Az elfogó vadászok tervezői különböző módszereket vetnek be modelljeiknél, hogy azok a nagyobb ellenséges hajók közelében is használhatóak legyenek. Általánosságban elmondható ugyanakkor, hogy erősen ajánlott ezekkel a gépekkel kívül maradni a vadászok ellen felfegyverzett hajók lőtávolán."
         },
         "bomber": {
-            "name": "bombázó"
+            "name": "bombázó",
+            "description": "A bombázók kis, egy vagy két fős harci gépek, amik a kis és közepes méretű ellenséges hadihajók ellen jelentenek gazdaságos megoldást. Nehéz páncélzatuk és védőpajzsuk lehetővé teszi, hogy elég ideig harcképesek maradjanak a hajókkal szemben nagy tűzerejű rakétáik célba juttatásához. Ezt kihasználhatják akár létfontosságú rendszerek kiiktatására, akár a célpont pajzsának és páncélzatának jelentős megrongálására. A vadászokhoz képest nagyobb tömegük miatt rosszabbul manőverezhetőek, és ezáltal sebezhetőek is velük szemben."
         },
         "multiroleFighter": {
             "name": "többfeladatú vadász"
@@ -534,7 +538,11 @@
             "description": "A legújabb generációs elfogó vadász, melyet nemrég rendszeresítettek a Galaktikus Birodalom flottáiban. Kis keresztmetszete révén nehéz célpontot nyújt, ami sokoldalú felszerelhetőségével együtt ideálissá teszi a közelharchoz."
         },
         "viper": {
-            "name": "Vipera"
+            "name": "Vipera",
+            "description": "A Vipera egy könnyű bombázó osztály, jó önvédelmi és precíziós csapásmérő képességekkel. Sok kisméretű rakétát képes szállítani, valamint kellően erős páncélzattal és védőpajzzsal szerelhető fel."
+        },
+        "aries": {
+            "description": "A Birodalomban jelenleg a legtöbb járőrhajó Aries osztályú. Két nagy tűzsebességű és pontosságú forgatható löveggel van felszerelve, ami rendkívül hatásossá teszi az ellenséges vadászok és könnyű bombázók ellen. Páncélzata ugyanakkor a nagyobb hadihajókéhoz képest csekély, így velük szemben elsősorban jobb manőverezhetősége jelent némi védelmet."
         },
         "wolf": {
             "name": "Farkas"
