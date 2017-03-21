@@ -187,7 +187,8 @@
             "description": "Használd fel az eddig tanultakat, hogy ezúttal a tiéddel azonos osztályú elfogó vadászokkal szemben is megálld a helyed! Immár szabványos plazmaágyúkkal szereltük fel a hajód, amik nagyobb tűzerőt biztosítanak. Cserébe viszont fix kialakításúak, így nem követik automatikusan a célpontot. Használd ki ezt a célzási technikád továbbfejlesztésére! Az ellenséges gépeket - szintén fix - gyakorló fegyverekkel szereltük fel."
         },
         "pirates": {
-            "name": "Kalózok"
+            "name": "Kalózok",
+            "description": "Itt az ideje, hogy valódi ellenségekkel szemben is próbára tedd a harci képességeidet! Egy csapatnyi kalóz szétszóródott egy meghiúsult akciót követően. A célpontjukként választott kereskedő konvoj komolyabb védelemmel rendelkezett, mint ahogy számították. Az ő levadászásukban fogsz segédkezni. A Birodalom komolyan veszi a kalózkodás jelentette veszélyeket, és a megfelelő erővel vág vissza. A vezetés katonai elfogó vadászok - mint például az a Sólyom, amivel gyakoroltál - bevetése mellett döntött. Most rajtad a sor, hogy megmutasd, mit tanultál! Légy óvatos, a kalózok nem gyakorló fegyverekkel vannak felszerelve, de szerencsére egy kis harci gépnél jóval nagyobb méretű célpontokhoz vannak szokva."
         },
         "headhunt": {
             "name": "Fejvadászat",
@@ -503,7 +504,8 @@
     },
     "spacecraftType": {
         "drone": {
-            "name": "drón"
+            "name": "drón",
+            "description": "A pilóta nélküli űrvadászgépeket az elmúlt évszázad során széleskörűen alkalmazták katonai feladatokra. Jobb manőverezőképességük, gazdaságosságuk és a katonai emberveszteség csökkenése jóval nyomósabb érveknek bizonyultak, mint az időnként, rendszerint polgári áldozatokat okozó alkalmazásuk kapcsán fellángoló vitákban felmerülő etikai és erkölcsi aggályok. Mindez megváltozott, amikor a Földet térdre kényszerítette egy csapat tehetséges szeparatista hacker, akik a feltörhetetlennek hitt biztonsági protokollokon átjutva átvették az irányítást az egyesült kormányzat űrhaderejének csaknem kétharmada felett. A drónokat ma is használják katonai feladatokra, ám jóval korlátozottabb körben."
         },
         "interceptor": {
             "name": "elfogó vadász",
@@ -531,7 +533,8 @@
             "name": "SMCU-11 Konténer"
         },
         "drone": {
-            "name": "Kiképző drón"
+            "name": "Kiképző drón",
+            "description": "Ezeket a drónokat a birodalmi vadászpilóták kiképzése során használják lőgyakorlatokhoz. Olcsóak és könnyen előállíthatóak, a konstrukciójuk pedig biztosítja, hogy az alacsony energiájú gyakorló fegyverek találataitól hamar darabokra hulljanak. Ezeket a darabokat aztán begyűjtik, hogy új drónok építéséhez használják fel őket, ezáltal egy egyszerre gazdaságos és a szimulátornál életszerűbb gyakorlási lehetőséget biztosítva a pilótáknak."
         },
         "falcon": {
             "name": "Sólyom",
