@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file 
  * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
  * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
@@ -1492,7 +1492,7 @@ define([
         if (lod !== undefined) {
             return valueFunction(this.getMeshWithLOD(lod));
         }
-        for (lod = this._minLOD; lod < this._maxLOD; lod++) {
+        for (lod = this._minLOD; lod <= this._maxLOD; lod++) {
             current = valueFunction(this.getMeshWithLOD(lod));
             if ((result === undefined) || (current > result)) {
                 result = current;
@@ -1511,7 +1511,7 @@ define([
         if (lod !== undefined) {
             return valueFunction(this.getMeshWithLOD(lod));
         }
-        for (lod = this._minLOD; lod < this._maxLOD; lod++) {
+        for (lod = this._minLOD; lod <= this._maxLOD; lod++) {
             current = valueFunction(this.getMeshWithLOD(lod));
             if ((result === undefined) || (current < result)) {
                 result = current;
