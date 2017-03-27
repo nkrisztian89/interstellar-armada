@@ -18,6 +18,7 @@ define([
     "utils/vectors",
     "utils/matrices"
 ], function (vec, mat) {
+    /* jshint validthis: true */
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -63,22 +64,43 @@ define([
          * Cache variable to store the calculated value of the combined model matrix.
          * @type Float32Array
          */
-        this._modelMatrix = null;
+        this._modelMatrix = mat.identity4();
+        /**
+         * Whether the cached model matrix value is currently valid
+         * @type Boolean
+         */
+        this._modelMatrixValid = false;
         /**
          * The cached calculated value of the cascaded model matrix (with the transformations of the parents applied) for the current frame.
+         * @type Float32Array
          */
-        this._modelMatrixForFrame = null;
+        this._modelMatrixForFrame = mat.identity4();
+        /**
+         * Whether the cached cascaded model matrix value is currently valid
+         * @type Boolean
+         */
+        this._modelMatrixForFrameValid = false;
         /**
          * Cache variable to store the calculated value of the inverse of the combined model matrix.
          * @type Float32Array
          */
-        this._modelMatrixInverse = null;
+        this._modelMatrixInverse = mat.identity4();
+        /**
+         * Whether the cached inverse model matrix value is currently valid
+         * @type Boolean
+         */
+        this._modelMatrixInverseValid = false;
         /**
          * The cached calculated value of the cascaded inverse model matrix (with the transformations of the parents applied) for the 
          * current frame.
          * @type Float32Array
          */
-        this._modelMatrixInverseForFrame = null;
+        this._modelMatrixInverseForFrame = mat.identity4();
+        /**
+         * Whether the cached cascaded inverse model matrix value is currently valid
+         * @type Boolean
+         */
+        this._modelMatrixInverseForFrameValid = false;
         /**
          * @type Number
          */
@@ -102,7 +124,12 @@ define([
          * so a reset needs to be called before the object is used with new or updated camera.
          * @type Float32Array
          */
-        this._positionMatrixInCameraSpace = null;
+        this._positionMatrixInCameraSpace = mat.identity4();
+        /**
+         * Whether the cached camera space position matrix value is currently valid
+         * @type Boolean
+         */
+        this._positionMatrixInCameraSpaceValid = false;
     }
     /**
      * Adds the methods of an Object3D class to the prototype of the class 
@@ -118,9 +145,9 @@ define([
          * Clears cache variables that store calculated values which are only valid for one frame.
          */
         function resetCachedValues() {
-            this._positionMatrixInCameraSpace = null;
-            this._modelMatrixForFrame = null;
-            this._modelMatrixInverseForFrame = null;
+            this._positionMatrixInCameraSpaceValid = false;
+            this._modelMatrixForFrameValid = false;
+            this._modelMatrixInverseForFrameValid = false;
         }
         /**
          * Return the parent (might be null).
@@ -153,10 +180,10 @@ define([
             if (value) {
                 this._positionMatrix = value;
             }
-            this._modelMatrix = null;
-            this._modelMatrixInverse = null;
+            this._modelMatrixValid = false;
+            this._modelMatrixInverseValid = false;
             this._insideParent = null;
-            this._positionMatrixInCameraSpace = null;
+            this._positionMatrixInCameraSpaceValid = false;
         }
         /**
          * Returns a 3D vector describing the position.
@@ -212,8 +239,8 @@ define([
             if (value) {
                 this._orientationMatrix = value;
             }
-            this._modelMatrix = null;
-            this._modelMatrixInverse = null;
+            this._modelMatrixValid = false;
+            this._modelMatrixInverseValid = false;
         }
         /**
          * Returns the 3D vector corresponding to the X axis of the current
@@ -286,8 +313,8 @@ define([
          */
         function setScalingMatrix(value) {
             this._scalingMatrix = value;
-            this._modelMatrix = null;
-            this._modelMatrixInverse = null;
+            this._modelMatrixValid = false;
+            this._modelMatrixInverseValid = false;
             this._cascadeScalingMatrix = null;
         }
         /**
@@ -316,11 +343,17 @@ define([
          * @returns {Float32Array}
          */
         function getModelMatrix() {
-            if (!this._modelMatrixForFrame) {
-                this._modelMatrix = this._modelMatrix || mat.translationRotation(this._positionMatrix, mat.prod3x3SubOf4(this._scalingMatrix, this._orientationMatrix));
-                this._modelMatrixForFrame = this._parent ?
-                        mat.prod4(this._modelMatrix, this._parent.getModelMatrix()) :
-                        this._modelMatrix;
+            if (!this._modelMatrixForFrameValid) {
+                if (!this._modelMatrixValid) {
+                    mat.setTranslationRotation(this._modelMatrix, this._positionMatrix, mat.prod3x3SubOf4Aux(this._scalingMatrix, this._orientationMatrix));
+                    this._modelMatrixValid = true;
+                }
+                if (this._parent) {
+                    mat.setProd4(this._modelMatrixForFrame, this._modelMatrix, this._parent.getModelMatrix());
+                } else {
+                    mat.setMatrix4(this._modelMatrixForFrame, this._modelMatrix);
+                }
+                this._modelMatrixForFrameValid = true;
             }
             return this._modelMatrixForFrame;
         }
@@ -329,11 +362,17 @@ define([
          * @returns {Float32Array}
          */
         function getModelMatrixInverse() {
-            if (!this._modelMatrixInverseForFrame) {
-                this._modelMatrixInverse = this._modelMatrixInverse || mat.inverse4(this.getModelMatrix());
-                this._modelMatrixInverseForFrame = this._parent ?
-                        mat.prod4(this._parent.getModelMatrixInverse(), this._modelMatrixInverse) :
-                        this._modelMatrixInverse;
+            if (!this._modelMatrixInverseForFrameValid) {
+                if (!this._modelMatrixInverseValid) {
+                    mat.setInverse4(this._modelMatrixInverse, this.getModelMatrix());
+                    this._modelMatrixInverseValid = true;
+                }
+                if (this._parent) {
+                    mat.setProd4(this._modelMatrixInverseForFrame, this._parent.getModelMatrixInverse(), this._modelMatrixInverse);
+                } else {
+                    mat.setMatrix4(this._modelMatrixInverseForFrame, this._modelMatrixInverse);
+                }
+                this._modelMatrixInverseForFrameValid = true;
             }
             return this._modelMatrixInverseForFrame;
         }
@@ -382,9 +421,9 @@ define([
          * @returns {Float32Array}
          */
         function getPositionMatrixInCameraSpace(camera) {
-            if (!this._positionMatrixInCameraSpace) {
-                this._positionMatrixInCameraSpace =
-                        mat.translation4v(vec.mulVec4Mat4(mat.translationVector4(this.getModelMatrix()), camera.getViewMatrix()));
+            if (!this._positionMatrixInCameraSpaceValid) {
+                mat.setTranslation4v(this._positionMatrixInCameraSpace, vec.mulVec4Mat4(mat.translationVector4(this.getModelMatrix()), camera.getViewMatrix()));
+                this._positionMatrixInCameraSpaceValid = true;
             }
             return this._positionMatrixInCameraSpace;
         }

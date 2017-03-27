@@ -894,7 +894,7 @@ define([
         if (!this._relativeVelocityMatrix) {
             this._relativeVelocityMatrix = mat.prodTranslationRotation4(
                     this._physicalModel.getVelocityMatrix(),
-                    mat.rotation4m4(this._physicalModel.getRotationMatrixInverse()));
+                    mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
         }
         return this._relativeVelocityMatrix;
     };
@@ -905,10 +905,10 @@ define([
     Spacecraft.prototype.getTurningMatrix = function () {
         if (!this._turningMatrix) {
             this._turningMatrix = mat.prod3x3SubOf4(
-                    mat.prod3x3SubOf4(
+                    mat.prod3x3SubOf4Aux(
                             this._physicalModel.getOrientationMatrix(),
                             this._physicalModel.getAngularVelocityMatrix()),
-                    mat.rotation4m4(this._physicalModel.getRotationMatrixInverse()));
+                    mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
         }
         return this._turningMatrix;
     };

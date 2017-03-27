@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides a set of functions to operate on Float32Arrays as matrices
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -25,6 +25,11 @@ define([
              * @type Number
              */
             CLOSE_TO_ONE_THRESHOLD = 0.99999,
+            /**
+             * The number of auxiliary matrices that should be created.
+             * @type Number
+             */
+            AUX_MATRIX_COUNT = 8,
             // ----------------------------------------------------------------------
             // private variables
             /**
@@ -34,9 +39,25 @@ define([
              */
             /**
              * Stores matrices used for temporary values during matrix calculations so fewer new matrices need to be created.
+             * These matrices are for internal use only, when a temporary matrix is required during one operation but can be disposed of
+             * when the operation is complete.
              * @type TempMatrixObject[]
              */
             _tempMatrices = [],
+            /**
+             * Stores auxiliary matrices used for holding the results of temporary calculations. Operations returning a new matrix can have
+             * an alternate version which uses one of the auxiliary matrices, thus avoiding creating a new matrix. This can
+             * be utilized by the users of this library by using the auxiliary version where the result is not persistently needed.
+             * There is a fixed amount of these matrices available and the operations cycle through them, so they can be used in (not too
+             * deep) combined operations, but not for recursion.
+             * @type Float32Array[]
+             */
+            _auxMatrices = [],
+            /**
+             * The index of the auxiliary matrix to be used for the next auxiliary matrix operation.
+             * @type Number
+             */
+            _auxMatrixIndex = 0,
             /**
              * Stores how many new matrices have been created.
              * @type Number
@@ -199,6 +220,35 @@ define([
     };
     /**
      * Returns a 4x4 transformation matrix describing a translation.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number} x The x coordinate of the translation.
+     * @param {Number} y The y coordinate of the translation.
+     * @param {Number} z The z coordinate of the translation.
+     * @returns {Float32Array}
+     */
+    mat.translation4Aux = function (x, y, z) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = 1.0;
+        aux[1] = 0.0;
+        aux[2] = 0.0;
+        aux[3] = 0.0;
+        aux[4] = 0.0;
+        aux[5] = 1.0;
+        aux[6] = 0.0;
+        aux[7] = 0.0;
+        aux[8] = 0.0;
+        aux[9] = 0.0;
+        aux[10] = 1.0;
+        aux[11] = 0.0;
+        aux[12] = x;
+        aux[13] = y;
+        aux[14] = z;
+        aux[15] = 1.0;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
+     * Returns a 4x4 transformation matrix describing a translation.
      * @param {Number[3]} v The vector of the translation ([x,y,z]).
      * @returns {Float32Array}
      */
@@ -210,6 +260,33 @@ define([
             0.0, 0.0, 1.0, 0.0,
             v[0], v[1], v[2], 1.0
         ]);
+    };
+    /**
+     * Returns a 4x4 transformation matrix describing a translation.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v The vector of the translation ([x,y,z]).
+     * @returns {Float32Array}
+     */
+    mat.translation4vAux = function (v) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = 1.0;
+        aux[1] = 0.0;
+        aux[2] = 0.0;
+        aux[3] = 0.0;
+        aux[4] = 0.0;
+        aux[5] = 1.0;
+        aux[6] = 0.0;
+        aux[7] = 0.0;
+        aux[8] = 0.0;
+        aux[9] = 0.0;
+        aux[10] = 1.0;
+        aux[11] = 0.0;
+        aux[12] = v[0];
+        aux[13] = v[1];
+        aux[14] = v[2];
+        aux[15] = 1.0;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * Returns a 4x4 transformation matrix describing a translation.
@@ -257,6 +334,36 @@ define([
         ]);
     };
     /**
+     * Returns a new 4x4 transformation matrix describing a rotation around an arbitrary axis.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[]} axis A 3D unit vector describing the axis of the rotation
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotation4Aux = function (axis, angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle),
+                aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = cosAngle + (1 - cosAngle) * axis[0] * axis[0];
+        aux[1] = (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2];
+        aux[2] = (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1];
+        aux[3] = 0.0;
+        aux[4] = (1 - cosAngle) * axis[0] * axis[1] + sinAngle * axis[2];
+        aux[5] = cosAngle + (1 - cosAngle) * axis[1] * axis[1];
+        aux[6] = (1 - cosAngle) * axis[1] * axis[2] - sinAngle * axis[0];
+        aux[7] = 0.0;
+        aux[8] = (1 - cosAngle) * axis[0] * axis[2] - sinAngle * axis[1];
+        aux[9] = (1 - cosAngle) * axis[1] * axis[2] + sinAngle * axis[0];
+        aux[10] = cosAngle + (1 - cosAngle) * axis[2] * axis[2];
+        aux[11] = 0.0;
+        aux[12] = 0.0;
+        aux[13] = 0.0;
+        aux[14] = 0.0;
+        aux[15] = 1.0;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Returns a new 4x4 transformation matrix describing a rotation around an arbitrary axis that goes through a given point.
      * @param {Number[3]} p The axis of rotation passes through this point.
      * @param {Number[]} axis A 3D unit vector describing the direction of the axis.
@@ -286,6 +393,34 @@ define([
             m[8], m[9], m[10], 0.0,
             0.0, 0.0, 0.0, 1.0
         ]);
+    };
+    /**
+     * Returns a 4x4 transformation matrix describing a rotation, using only the top left 3x3 submatrix
+     * of a 4x4 matrix.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m A generic 4x4 transformation matrix.
+     * @returns {Float32Array}
+     */
+    mat.rotation4m4Aux = function (m) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = m[0];
+        aux[1] = m[1];
+        aux[2] = m[2];
+        aux[3] = 0.0;
+        aux[4] = m[4];
+        aux[5] = m[5];
+        aux[6] = m[6];
+        aux[7] = 0.0;
+        aux[8] = m[8];
+        aux[9] = m[9];
+        aux[10] = m[10];
+        aux[11] = 0.0;
+        aux[12] = 0.0;
+        aux[13] = 0.0;
+        aux[14] = 0.0;
+        aux[15] = 1.0;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * Returns a 4x4 rotation matrix that has a Z axis pointing towards the given direction and a Y axis based on an optional second vector.
@@ -399,34 +534,6 @@ define([
         return mat.translation4v(vec.fromXMLTag3(tag));
     };
     /**
-     * Constructs and returns a 4x4 rotation matrix described by a series of rotations
-     * stored in the XML tags.
-     * @param {XMLElement[]} tags The tags describing rotations.
-     * @returns {Float32Array} The costructed rotation matrix.
-     */
-    mat.rotation4FromXMLTags = function (tags) {
-        var i, axis, result = mat.identity4();
-        for (i = 0; i < tags.length; i++) {
-            axis = [0, 0, 0];
-            if (tags[i].getAttribute("axis") === "x") {
-                axis = [1, 0, 0];
-            } else
-            if (tags[i].getAttribute("axis") === "y") {
-                axis = [0, 1, 0];
-            } else
-            if (tags[i].getAttribute("axis") === "z") {
-                axis = [0, 0, 1];
-            }
-            result =
-                    mat.prod4(
-                            result,
-                            mat.rotation4(
-                                    axis,
-                                    parseFloat(tags[i].getAttribute("degree")) / 180 * Math.PI));
-        }
-        return result;
-    };
-    /**
      * @param {Object[]} jsonArray
      */
     mat.rotation4FromJSON = function (jsonArray) {
@@ -457,14 +564,13 @@ define([
                 } else if (rotation.axis instanceof Array) {
                     axis = rotation.axis;
                 }
-                result =
-                        mat.prod4(
-                                result,
-                                mat.rotation4(
-                                        axis,
-                                        rotation.degrees / 180 * Math.PI
-                                        )
-                                );
+                mat.mul4(
+                        result,
+                        mat.rotation4Aux(
+                                axis,
+                                rotation.degrees / 180 * Math.PI
+                                )
+                        );
             }
         }
         return result;
@@ -690,7 +796,7 @@ define([
             if (v[0] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchVector = vec.mulVec3Mat4(v, mat.rotation4([0, 0, 1], -result.yaw));
+            pitchVector = vec.mulVec3Mat4(v, mat.rotation4Aux([0, 0, 1], -result.yaw));
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchVector[1], pitchVector[2]]));
             if (pitchVector[2] > 0) {
                 result.pitch = -result.pitch;
@@ -716,7 +822,7 @@ define([
             if (m[4] * m[10] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4(m, mat.rotation4([0, 0, 1], -result.yaw)));
+            pitchMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4Aux(m, mat.rotation4Aux([0, 0, 1], -result.yaw)));
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchMatrix[5], pitchMatrix[6]]));
             if (pitchMatrix[6] > 0) {
                 result.pitch = -result.pitch;
@@ -748,7 +854,7 @@ define([
             result.alpha -= 2 * Math.PI;
         }
         // calculate the matrix we would get if we rotated the Y vector into position
-        halfMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4(m, mat.rotation4(result.alphaAxis, -result.alpha)));
+        halfMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4Aux(m, mat.rotation4Aux(result.alphaAxis, -result.alpha)));
         // X and Z vectors might still be out of place, therefore do the same calculations as before to 
         // get the second rotation needed, which will put all vectors in place
         dot = vec.dot3([1, 0, 0], mat.getRowA43(halfMatrix));
@@ -951,65 +1057,9 @@ define([
      * @returns {Float32Array} The inverse of m.
      */
     mat.inverse4 = function (m) {
-        var i, j, k, t, u, m2, result, swap, index = _getFreeTempMatrixIndex();
-        m2 = _getTempMatrix(index);
-        mat.setMatrix4(m2, m);
-        // we will use Gauss-Jordan elimination, so an identity matrix will be augmented to
-        // the right of the original matrix
+        var result;
         result = mat.identity4();
-        // we assume that the matrix is invertible (for efficiency, and since in all
-        // uses cases it should be)
-        // calculate the inverse by Gaussian-Jordan elimination
-        // first part: forward elimination
-        // for each row...
-        for (i = 0; i < 4; i++) {
-            // first swap the row to have a non-zero element at the diagonal
-            // position, if needed
-            if (Math.abs(m2[i * 5]) <= 0.0001) {
-                // first, find a non-zero element in the same (i) column
-                j = i + 1;
-                while (Math.abs(m2[j * 4 + i]) <= 0.0001) {
-                    j++;
-                }
-                // when found it in row 'j' swap the 'i'th and 'j'th rows
-                for (k = 0; k < 4; k++) {
-                    swap = m2[i * 4 + k];
-                    m2[i * 4 + k] = m2[j * 4 + k];
-                    m2[j * 4 + k] = swap;
-                    swap = result[i * 4 + k];
-                    result[i * 4 + k] = result[j * 4 + k];
-                    result[j * 4 + k] = swap;
-                }
-            }
-            // divide all elements of the row by the value of the element in the
-            // main diagonal (within that row), to make it equal one
-            t = m2[i * 5];
-            for (j = 0; j < 4; j++) {
-                m2[i * 4 + j] = m2[i * 4 + j] / t;
-                result[i * 4 + j] = result[i * 4 + j] / t;
-            }
-            // subtract the row from all rows below it, multiplied accordingly
-            // to null out the elements below the main diagonal element
-            for (j = i + 1; j < 4; j++) {
-                u = m2[j * 4 + i] / m2[i * 5];
-                for (k = 0; k < 4; k++) {
-                    m2[j * 4 + k] = m2[j * 4 + k] - u * m2[i * 4 + k];
-                    result[j * 4 + k] = result[j * 4 + k] - u * result[i * 4 + k];
-                }
-            }
-        }
-        // back-substitution phase: eliminate the upper part of the original
-        // matrix - however, these final values hold no additional information
-        // for the calculations, so the operations are only done on the right
-        // matrix, which will hold the inverse in the end
-        for (i = 3; i >= 1; i--) {
-            for (j = i - 1; j >= 0; j--) {
-                for (k = 0; k < 4; k++) {
-                    result[j * 4 + k] = result[j * 4 + k] - m2[j * 4 + i] * result[i * 4 + k];
-                }
-            }
-        }
-        _releaseTempMatrix(index);
+        mat.setInverse4(result, m);
         return result;
     };
     /**
@@ -1207,6 +1257,19 @@ define([
         ]);
     };
     /**
+     * Multiplies two 4x4 matrices and returns the result.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m1 The left matrix.
+     * @param {Float32Array} m2 The right matrix.
+     * @returns {Float32Array} A 4x4 matrix. (one of the auxiliary matrices!)
+     */
+    mat.prod4Aux = function (m1, m2) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setProd4(aux, m1, m2);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Multiplies the upper left 3x3 submatrices of two 4x4 matrices and returns the result.
      * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
      * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
@@ -1249,6 +1312,34 @@ define([
             0,
             0, 0, 0, 1
         ]);
+    };
+    /**
+     * Multiplies the upper left 3x3 submatrices of two 4x4 matrices and returns the result padded to a 4x4 matrix.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
+     * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
+     * @returns {Float32Array} A 4x4 matrix. (one of the auxiliary matrices!)
+     */
+    mat.prod3x3SubOf4Aux = function (m1, m2) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8];
+        aux[1] = m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9];
+        aux[2] = m1[0] * m2[2] + m1[1] * m2[6] + m1[2] * m2[10];
+        aux[3] = 0;
+        aux[4] = m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8];
+        aux[5] = m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9];
+        aux[6] = m1[4] * m2[2] + m1[5] * m2[6] + m1[6] * m2[10];
+        aux[7] = 0;
+        aux[8] = m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8];
+        aux[9] = m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9];
+        aux[10] = m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10];
+        aux[11] = 0;
+        aux[12] = 0;
+        aux[13] = 0;
+        aux[14] = 0;
+        aux[15] = 1;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * Performs an optimized multiplication of two matrices using the assumption that the left matrix is a translation matrix and the right
@@ -1377,6 +1468,30 @@ define([
         }
     };
     /**
+     * Sets the components of a 4x4 matrix to correspond to a translation defined by the passed vector.
+     * @param {Float32Array} m
+     * @param {Number[3]} v The vector of the translation ([x,y,z]).
+     * @returns {Float32Array}
+     */
+    mat.setTranslation4v = function (m, v) {
+        m[0] = 1.0;
+        m[1] = 0.0;
+        m[2] = 0.0;
+        m[3] = 0.0;
+        m[4] = 0.0;
+        m[5] = 1.0;
+        m[6] = 0.0;
+        m[7] = 0.0;
+        m[8] = 0.0;
+        m[9] = 0.0;
+        m[10] = 1.0;
+        m[11] = 0.0;
+        m[12] = v[0];
+        m[13] = v[1];
+        m[14] = v[2];
+        m[15] = 1.0;
+    };
+    /**
      * Modifies the matrix m in-place, setting it to a 4x4 rotation matrix.
      * @param {Float32Array} m The matrix to modify
      * @param {Number[]} axis An array of 3 numbers describing the axis of the rotation
@@ -1475,6 +1590,72 @@ define([
         _releaseTempMatrix(index);
     };
     /**
+     * Modifies the passed 4x4 transformation matrix m in-place to be the inverse of the passed 4x4 matrix m.
+     * @param {Float32Array} m The 4x4 matrix to modify
+     * @param {Float32Array} im The 4x4 matrix the inverse of which is sought
+     */
+    mat.setInverse4 = function (m, im) {
+        var i, j, k, t, u, m2, swap, index = _getFreeTempMatrixIndex();
+        m2 = _getTempMatrix(index);
+        mat.setMatrix4(m2, im);
+        // we will use Gauss-Jordan elimination, so an identity matrix will be augmented to
+        // the right of the original matrix
+        mat.setIdentity4(m);
+        // we assume that the matrix is invertible (for efficiency, and since in all
+        // uses cases it should be)
+        // calculate the inverse by Gaussian-Jordan elimination
+        // first part: forward elimination
+        // for each row...
+        for (i = 0; i < 4; i++) {
+            // first swap the row to have a non-zero element at the diagonal
+            // position, if needed
+            if (Math.abs(m2[i * 5]) <= 0.0001) {
+                // first, find a non-zero element in the same (i) column
+                j = i + 1;
+                while (Math.abs(m2[j * 4 + i]) <= 0.0001) {
+                    j++;
+                }
+                // when found it in row 'j' swap the 'i'th and 'j'th rows
+                for (k = 0; k < 4; k++) {
+                    swap = m2[i * 4 + k];
+                    m2[i * 4 + k] = m2[j * 4 + k];
+                    m2[j * 4 + k] = swap;
+                    swap = m[i * 4 + k];
+                    m[i * 4 + k] = m[j * 4 + k];
+                    m[j * 4 + k] = swap;
+                }
+            }
+            // divide all elements of the row by the value of the element in the
+            // main diagonal (within that row), to make it equal one
+            t = m2[i * 5];
+            for (j = 0; j < 4; j++) {
+                m2[i * 4 + j] = m2[i * 4 + j] / t;
+                m[i * 4 + j] = m[i * 4 + j] / t;
+            }
+            // subtract the row from all rows below it, multiplied accordingly
+            // to null out the elements below the main diagonal element
+            for (j = i + 1; j < 4; j++) {
+                u = m2[j * 4 + i] / m2[i * 5];
+                for (k = 0; k < 4; k++) {
+                    m2[j * 4 + k] = m2[j * 4 + k] - u * m2[i * 4 + k];
+                    m[j * 4 + k] = m[j * 4 + k] - u * m[i * 4 + k];
+                }
+            }
+        }
+        // back-substitution phase: eliminate the upper part of the original
+        // matrix - however, these final values hold no additional information
+        // for the calculations, so the operations are only done on the right
+        // matrix, which will hold the inverse in the end
+        for (i = 3; i >= 1; i--) {
+            for (j = i - 1; j >= 0; j--) {
+                for (k = 0; k < 4; k++) {
+                    m[j * 4 + k] = m[j * 4 + k] - m2[j * 4 + i] * m[i * 4 + k];
+                }
+            }
+        }
+        _releaseTempMatrix(index);
+    };
+    /**
      * Multiples the given matrix m1 in place by the matrix m2 from the right.
      * @param {Float32Array} m1
      * @param {Float32Array} m2
@@ -1501,6 +1682,57 @@ define([
         m1[14] = m3[12] * m2[2] + m3[13] * m2[6] + m3[14] * m2[10] + m3[15] * m2[14];
         m1[15] = m3[12] * m2[3] + m3[13] * m2[7] + m3[14] * m2[11] + m3[15] * m2[15];
         _releaseTempMatrix(index);
+    };
+    /**
+     * Sets a passed 4x4 matrix to be equal with the product of two other 4x4 matrices
+     * @param {Float32Array} m The 4x4 matrix to modify.
+     * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
+     * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
+     */
+    mat.setProd4 = function (m, m1, m2) {
+        m[0] = m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8] + m1[3] * m2[12];
+        m[1] = m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9] + m1[3] * m2[13];
+        m[2] = m1[0] * m2[2] + m1[1] * m2[6] + m1[2] * m2[10] + m1[3] * m2[14];
+        m[3] = m1[0] * m2[3] + m1[1] * m2[7] + m1[2] * m2[11] + m1[3] * m2[15];
+        m[4] = m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8] + m1[7] * m2[12];
+        m[5] = m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9] + m1[7] * m2[13];
+        m[6] = m1[4] * m2[2] + m1[5] * m2[6] + m1[6] * m2[10] + m1[7] * m2[14];
+        m[7] = m1[4] * m2[3] + m1[5] * m2[7] + m1[6] * m2[11] + m1[7] * m2[15];
+        m[8] = m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8] + m1[11] * m2[12];
+        m[9] = m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9] + m1[11] * m2[13];
+        m[10] = m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10] + m1[11] * m2[14];
+        m[11] = m1[8] * m2[3] + m1[9] * m2[7] + m1[10] * m2[11] + m1[11] * m2[15];
+        m[12] = m1[12] * m2[0] + m1[13] * m2[4] + m1[14] * m2[8] + m1[15] * m2[12];
+        m[13] = m1[12] * m2[1] + m1[13] * m2[5] + m1[14] * m2[9] + m1[15] * m2[13];
+        m[14] = m1[12] * m2[2] + m1[13] * m2[6] + m1[14] * m2[10] + m1[15] * m2[14];
+        m[15] = m1[12] * m2[3] + m1[13] * m2[7] + m1[14] * m2[11] + m1[15] * m2[15];
+    };
+    /**
+     * Sets a passed 4x4 matrix to be a matrix describing a translation and a rotation based on
+     * two separate matrices, only the translation / rotation part of which are taken into
+     * account and combined.
+     * @param {Float32Array} m The 4x4 matrix to set
+     * @param {Float32Array} t A 4x4 matrix. Taken as a translation matrix, irrelevant parts are not considered.
+     * @param {Float32Array} r A 4x4 matrix. Taken as a roation matrix, irrelevant parts are not considered.
+     * @returns {Float32Array}
+     */
+    mat.setTranslationRotation = function (m, t, r) {
+        m[0] = r[0];
+        m[1] = r[1];
+        m[2] = r[2];
+        m[3] = 0;
+        m[4] = r[4];
+        m[5] = r[5];
+        m[6] = r[6];
+        m[7] = 0;
+        m[8] = r[8];
+        m[9] = r[9];
+        m[10] = r[10];
+        m[11] = 0;
+        m[12] = t[12];
+        m[13] = t[13];
+        m[14] = t[14];
+        m[15] = 1;
     };
     /**
      * Modifies the passed matrix m in-place to ensure its orthogonality.
@@ -1548,6 +1780,14 @@ define([
                                     -1.0 : m[i]));
         }
     };
+    // ----------------------------------------------------------------------
+    // Initialization
+    (function () {
+        var i;
+        for (i = 0; i < AUX_MATRIX_COUNT; i++) {
+            _auxMatrices.push(mat.identity4());
+        }
+    }());
     // ----------------------------------------------------------------------
     // Returning the public interface
     return mat;

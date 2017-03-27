@@ -336,7 +336,7 @@ define([
         if (this._emittingObjects.length === 1) {
             if (this._emittingObjects[0].isVisible()) {
                 this._totalIntensity = this._objectIntensity;
-                this._positionVector = vec.sum3(this._emittingObjects[0].getPositionVector(), vec.mulVec3Mat4(this._relativePositionVector, mat.prod3x3SubOf4(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
+                this._positionVector = vec.sum3(this._emittingObjects[0].getPositionVector(), vec.mulVec3Mat4(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
             } else {
                 this._totalIntensity = 0;
             }

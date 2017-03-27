@@ -221,7 +221,7 @@ define([
      * @param {Number} angle The angle in degrees
      */
     function _setRotation(angle) {
-        var orientationMatrix = mat.prod3x3SubOf4(
+        var orientationMatrix = mat.prod3x3SubOf4Aux(
                 mat.rotation4([0.0, 0.0, 1.0], Math.radians(angle)),
                 mat.rotation4([1.0, 0.0, 0.0], Math.radians(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE))));
         if (_solidModel) {
@@ -287,10 +287,8 @@ define([
         });
         model.setUniformValueFunction(UNIFORM_REVEAL_START_NAME, function () {
             return front - (
-                    (_revealState > REVEAL_WIREFRAME_END_STATE ?
-                            (_revealState - REVEAL_WIREFRAME_END_STATE) :
-                            _revealState)
-                    * length * (1 + _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR)));
+                    (_revealState > REVEAL_WIREFRAME_END_STATE ? (_revealState - REVEAL_WIREFRAME_END_STATE) : _revealState) *
+                    length * (1 + _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR)));
         });
         model.setUniformValueFunction(UNIFORM_REVEAL_TRANSITION_LENGTH_NAME, function () {
             return (_revealState <= REVEAL_WIREFRAME_END_STATE) ? length * _getSetting(SETTINGS.REVEAL_TRANSITION_LENGTH_FACTOR) : 0;

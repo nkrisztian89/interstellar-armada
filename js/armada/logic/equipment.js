@@ -592,7 +592,7 @@ define([
                 this._slot ? this._slot.positionMatrix : mat.IDENTITY4,
                 vec.mulVec3Mat4(
                         vec.scaled3(this._class.getAttachmentPoint(), -1),
-                        mat.prod3x3SubOf4(
+                        mat.prod3x3SubOf4Aux(
                                 mat.scaling4(this._class.getModel().getScale() / (this._spacecraft ? this._spacecraft.getPhysicalScalingMatrix()[0] : 1)),
                                 this._slot ? this._slot.orientationMatrix : mat.IDENTITY4)));
         return this._origoPositionMatrix;
@@ -624,7 +624,7 @@ define([
                 weaponSlotPosVector = vec.mulVec3Mat4(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
         vec.add3(weaponSlotPosVector, this._spacecraft.getPhysicalPositionVector());
         basePointPosVector = vec.mulVec4Mat4(basePointPosVector, this._transformMatrix);
-        basePointPosVector = vec.mulVec3Mat4(basePointPosVector, mat.prod3x3SubOf4(this.getScaledOriMatrix(), shipScaledOriMatrix));
+        basePointPosVector = vec.mulVec3Mat4(basePointPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
         vec.add3(basePointPosVector, weaponSlotPosVector);
         return basePointPosVector;
     };
@@ -842,7 +842,7 @@ define([
                 }
                 // add the muzzle flash of this barrel
                 muzzleFlash = this._getMuzzleFlashForBarrel(i, barrelPosVector);
-                barrelPosVector = vec.mulVec3Mat4(barrelPosVector, mat.prod3x3SubOf4(this.getScaledOriMatrix(), shipScaledOriMatrix));
+                barrelPosVector = vec.mulVec3Mat4(barrelPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
                 projectilePosMatrix = mat.translatedByVector(weaponSlotPosMatrix, barrelPosVector);
                 this._visualModel.getNode().addSubnode(new sceneGraph.RenderableNode(muzzleFlash), false, _minimumMuzzleFlashParticleCountForInstancing);
                 // add the projectile of this barrel

@@ -769,7 +769,7 @@ define([
         this._camera = camera;
         this.setTexture(samplerName, cubemap);
         this.setUniformValueFunction(UNIFORM_VIEW_PROJECTION_INVERSE_MATRIX_NAME, function () {
-            return mat.inverse4(mat.prod4(this._camera.getInverseOrientationMatrix(), this._camera.getProjectionMatrix()));
+            return mat.inverse4(mat.prod4Aux(this._camera.getInverseOrientationMatrix(), this._camera.getProjectionMatrix()));
         });
     }
     CubemapSampledFVQ.prototype = new RenderableObject();
@@ -1583,6 +1583,28 @@ define([
      */
     Particle.prototype.setVelocityVector = function (value) {
         this._velocityVector = value;
+        this._updateShouldAnimate();
+    };
+    /**
+     * Set the velocity of the particle (m/s)
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} z
+     */
+    Particle.prototype.setVelocity = function (x, y, z) {
+        this._velocityVector[0] = x;
+        this._velocityVector[1] = y;
+        this._velocityVector[2] = z;
+        this._updateShouldAnimate();
+    };
+    /**
+     * Set the velocity of the particle (m/s) to the translation component in the passed matrix
+     * @param {Float32Array} m A 4x4 translation matrix
+     */
+    Particle.prototype.setVelocityM = function (m) {
+        this._velocityVector[0] = m[12];
+        this._velocityVector[1] = m[13];
+        this._velocityVector[2] = m[14];
         this._updateShouldAnimate();
     };
     /**

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides a particle system class that can be added to scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -273,10 +273,10 @@ define([
     OmnidirectionalParticleEmitter.prototype._emitParticle = function () {
         var velocity, velocityMatrix, particle = ParticleEmitter.prototype._emitParticle.call(this);
         velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
-        velocityMatrix = mat.translation4(0, velocity, 0);
+        velocityMatrix = mat.translation4Aux(0, velocity, 0);
         mat.rotate4(velocityMatrix, vec.UNIT3_X, Math.random() * 2 * Math.PI);
         mat.rotate4(velocityMatrix, vec.UNIT3_Z, Math.random() * 2 * Math.PI);
-        particle.setVelocityVector(mat.translationVector3(velocityMatrix));
+        particle.setVelocityM(velocityMatrix);
         return particle;
     };
     // #########################################################################
@@ -328,13 +328,13 @@ define([
     UnidirectionalParticleEmitter.prototype._emitParticle = function () {
         var velocity, velocityMatrix, axis, particle = ParticleEmitter.prototype._emitParticle.call(this);
         velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
-        velocityMatrix = mat.translation4v(vec.scaled3(this._direction, velocity));
+        velocityMatrix = mat.translation4vAux(vec.scaled3(this._direction, velocity));
         axis = (Math.abs(this._direction[0]) < 0.75) ? [1, 0, 0] : ((Math.abs(this._direction[1]) < 0.75) ? [0, 1, 0] : [0, 0, 1]);
         vec.mulCross3(axis, this._direction);
         vec.normalize3(axis);
         mat.rotate4(velocityMatrix, axis, Math.random() * this._directionSpread / 180.0 * Math.PI);
         mat.rotate4(velocityMatrix, this._direction, Math.random() * 360 / 180.0 * Math.PI);
-        particle.setVelocityVector(mat.translationVector3(velocityMatrix));
+        particle.setVelocityM(velocityMatrix);
         return particle;
     };
     // #########################################################################
@@ -391,10 +391,10 @@ define([
         directionVector = (Math.abs(this._planeNormal[0]) < 0.75) ? [1, 0, 0] : ((Math.abs(this._planeNormal[1]) < 0.75) ? [0, 1, 0] : [0, 0, 1]);
         vec.mulCross3(directionVector, this._planeNormal);
         vec.normalize3(directionVector);
-        velocityMatrix = mat.translation4v(vec.scaled3(directionVector, velocity));
+        velocityMatrix = mat.translation4vAux(vec.scaled3(directionVector, velocity));
         mat.rotate4(velocityMatrix, vec.cross3(directionVector, this._planeNormal), (Math.random() - 0.5) * this._directionSpread / 180.0 * Math.PI);
         mat.rotate4(velocityMatrix, this._planeNormal, Math.random() * 2 * Math.PI);
-        particle.setVelocityVector(mat.translationVector3(velocityMatrix));
+        particle.setVelocityM(velocityMatrix);
         return particle;
     };
     // #########################################################################
@@ -502,7 +502,7 @@ define([
                 } else {
                     modelMatrix = this.getModelMatrix();
                     positionMatrix = mat.translation4m4(modelMatrix);
-                    orientationMatrix = mat.rotation4m4(modelMatrix);
+                    orientationMatrix = mat.rotation4m4Aux(modelMatrix);
                     for (j = 0; j < particles.length; j++) {
                         particles[j].translateByMatrix(positionMatrix);
                         particles[j].rotateByMatrix(orientationMatrix);

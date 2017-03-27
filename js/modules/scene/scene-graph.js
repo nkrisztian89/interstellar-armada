@@ -1258,7 +1258,7 @@ define([
             return this._camera.getProjectionMatrix();
         });
         this.setUniformValueFunction(UNIFORM_VIEW_PROJECTION_MATRIX_NAME, function () {
-            return mat.prod4(this._camera.getViewMatrix(), this._camera.getProjectionMatrix());
+            return mat.prod4Aux(this._camera.getViewMatrix(), this._camera.getProjectionMatrix());
         });
         this.setUniformValueFunction(UNIFORM_EYE_POSITION_VECTOR_NAME, function () {
             return new Float32Array(this._camera.getCameraPositionVector());

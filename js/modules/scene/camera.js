@@ -417,7 +417,7 @@ define([
                     this._worldPositionMatrix = mat.translatedByM4(
                             mat.translation4m4(mat.prodTranslationRotation4(
                                     this._relativePositionMatrix,
-                                    mat.prod3x3SubOf4(mat.rotation4([1, 0, 0], Math.PI / 2), worldOrientationMatrix))),
+                                    mat.prod3x3SubOf4Aux(mat.rotation4Aux([1, 0, 0], Math.PI / 2), worldOrientationMatrix))),
                             this.getFollowedPositionMatrix());
                 }
             }
@@ -568,7 +568,7 @@ define([
                     } else {
                         mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(
                                 velocityVector,
-                                mat.prod3x3SubOf4(
+                                mat.prod3x3SubOf4Aux(
                                         worldOrientationMatrix,
                                         mat.inverseOfRotation4(this.getFollowedObjectOrientationMatrix()))), dt / 1000));
                     }
@@ -945,8 +945,8 @@ define([
                 calculateRelative = function (followedOrientationMatrix) {
                     // look in direction y instead of z:
                     this._worldOrientationMatrix = mat.prod3x3SubOf4(
-                            mat.prod3x3SubOf4(
-                                    mat.rotation4([1, 0, 0], -Math.PI / 2),
+                            mat.prod3x3SubOf4Aux(
+                                    mat.rotation4Aux([1, 0, 0], -Math.PI / 2),
                                     this._relativeOrientationMatrix),
                             followedOrientationMatrix);
                 }.bind(this),
@@ -1010,10 +1010,10 @@ define([
                             this._beta = -this._beta;
                         }
                         this._worldOrientationMatrix = mat.prod3x3SubOf4(
-                                mat.prod3x3SubOf4(
-                                        mat.rotation4([1, 0, 0], -Math.PI / 2),
-                                        mat.rotation4([1, 0, 0], this._beta)),
-                                mat.rotation4([0, 0, 1], this._alpha));
+                                mat.prod3x3SubOf4Aux(
+                                        mat.rotation4Aux([1, 0, 0], -Math.PI / 2),
+                                        mat.rotation4Aux([1, 0, 0], this._beta)),
+                                mat.rotation4Aux([0, 0, 1], this._alpha));
                         mat.mul4(this._worldOrientationMatrix, baseOrientationMatrix);
                     }
                 }
@@ -1964,7 +1964,7 @@ define([
         positionMatrix = positionMatrix || this.getCameraPositionMatrix();
         orientationMatrix = orientationMatrix || this.getCameraOrientationMatrix();
         if (fps) {
-            orientationMatrix = mat.prod3x3SubOf4(mat.rotation4([1, 0, 0], Math.PI / 2), orientationMatrix);
+            orientationMatrix = mat.prod3x3SubOf4Aux(mat.rotation4Aux([1, 0, 0], Math.PI / 2), orientationMatrix);
         }
         return getFreeCameraConfiguration(
                 fps,
@@ -2354,13 +2354,13 @@ define([
             // calculate orientation
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
             // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
-            relativeTransitionRotationMatrix = mat.prod3x3SubOf4(mat.inverseOfRotation4(this._previousConfiguration.getOrientationMatrix()), this._currentConfiguration.getOrientationMatrix());
+            relativeTransitionRotationMatrix = mat.prod3x3SubOf4Aux(mat.inverseOfRotation4(this._previousConfiguration.getOrientationMatrix()), this._currentConfiguration.getOrientationMatrix());
             rotations = mat.getRotations(relativeTransitionRotationMatrix);
             // now that the two rotations are calculated, we can interpolate the transformation using the angles
             this._setOrientationMatrix(mat.identity4());
             this._rotate(rotations.gammaAxis, rotations.gamma * transitionProgress);
             this._rotate(rotations.alphaAxis, rotations.alpha * transitionProgress);
-            this._setOrientationMatrix(mat.correctedOrthogonal4(mat.prod3x3SubOf4(this._previousConfiguration.getOrientationMatrix(), this.getCameraOrientationMatrix())));
+            this._setOrientationMatrix(mat.correctedOrthogonal4(mat.prod3x3SubOf4Aux(this._previousConfiguration.getOrientationMatrix(), this.getCameraOrientationMatrix())));
             // calculate FOV
             this._updateFOV(transitionProgress);
             this._updateSpan(transitionProgress);

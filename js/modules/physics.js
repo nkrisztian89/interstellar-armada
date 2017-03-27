@@ -214,6 +214,7 @@ define([
      * Returns the rotation matrix corresponding to the angular acceleration 
      * this torque causes on an object that has the passed mass if exerted for
      * the given time.
+     * Uses an auxiliary matrix, only use when the result is needed temporarily!
      * @param {Number} mass The mass of the object to accelerate, in kg.
      * @param {Number} t The time of exertion, in seconds.
      * @returns {Float32Array} A 4x4 rotation matrix.
@@ -221,7 +222,7 @@ define([
     Torque.prototype.getAngularAccelerationMatrixOverTime = function (mass, t) {
         // in reality, the shape of the object should be taken into account,
         // for simplicity, the mass is taken as the only coefficient
-        return mat.rotation4(this._axis, this._strength / mass * t);
+        return mat.rotation4Aux(this._axis, this._strength / mass * t);
     };
     // #########################################################################
     /**
@@ -698,7 +699,7 @@ define([
     PhysicalObject.prototype.getModelMatrixInverse = function () {
         this._modelMatrixInverse = this._modelMatrixInverse || mat.prodTranslationRotation4(
                 mat.inverseOfTranslation4(this._positionMatrix),
-                mat.prod3x3SubOf4(
+                mat.prod3x3SubOf4Aux(
                         this.getRotationMatrixInverse(),
                         mat.inverseOfScaling4(this._scalingMatrix)));
         return this._modelMatrixInverse;
