@@ -525,15 +525,6 @@ define([
         ]);
     };
     /**
-     * Returns a 4x4 translation matrix created based on the vector described by the
-     * attributes of the passed XML element.
-     * @param {Element} tag
-     * @returns {Float32Array} A 4x4 transformation matrix.
-     */
-    mat.translationFromXMLTag = function (tag) {
-        return mat.translation4v(vec.fromXMLTag3(tag));
-    };
-    /**
      * @param {Object[]} jsonArray
      */
     mat.rotation4FromJSON = function (jsonArray) {
@@ -1076,6 +1067,19 @@ define([
             0.0, 0.0, 1.0, 0.0,
             -m[12], -m[13], -m[14], 1.0
         ]);
+    };
+    /**
+     * A computationally efficient function to return the inverse of a 4x4 translation
+     * matrix. (a transformation matrix that only hold translation information)
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m The input 4x4 matrix.
+     * @returns {Float32Array} The calculated inverse 4x4 matrix.
+     */
+    mat.inverseOfTranslation4Aux = function (m) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setInverseOfTranslation4(aux, m);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * Calculates and returns the inverse of a 4x4 rotation matrix, using the fact that
@@ -1656,6 +1660,61 @@ define([
         _releaseTempMatrix(index);
     };
     /**
+     * A computationally efficient function to set a 4x4 matrix to be the inverse of a 4x4 translation
+     * matrix. (a transformation matrix that only holds translation information)
+     * @param {Float32Array} m The 4x4 matrix to set
+     * @param {Float32Array} tm The input 4x4 matrix.
+     */
+    mat.setInverseOfTranslation4 = function (m, tm) {
+        m[0] = 1.0;
+        m[1] = 0.0;
+        m[2] = 0.0;
+        m[3] = 0.0;
+        m[4] = 0.0;
+        m[5] = 1.0;
+        m[6] = 0.0;
+        m[7] = 0.0;
+        m[8] = 0.0;
+        m[9] = 0.0;
+        m[10] = 1.0;
+        m[11] = 0.0;
+        m[12] = -tm[12];
+        m[13] = -tm[13];
+        m[14] = -tm[14];
+        m[15] = 1.0;
+    };
+    /**
+     * Modifies the passed matrix in-place to be the transposed of the other passed 4x4 matrix
+     * @param {Float32Array} m The 4x4 matrix to modify
+     * @param {Float32Array} tm The 4x4 matrix to transpose
+     */
+    mat.setTransposed4 = function (m, tm) {
+        m[0] = tm[0];
+        m[1] = tm[4];
+        m[2] = tm[8];
+        m[3] = tm[12];
+        m[4] = tm[1];
+        m[5] = tm[5];
+        m[6] = tm[9];
+        m[7] = tm[13];
+        m[8] = tm[2];
+        m[9] = tm[6];
+        m[10] = tm[10];
+        m[11] = tm[14];
+        m[12] = tm[3];
+        m[13] = tm[7];
+        m[14] = tm[11];
+        m[15] = tm[15];
+    };
+    /**
+     * Modifies the passed matrix in-place to be the the inverse of a 4x4 rotation matrix, using the fact that
+     * it coincides with its transpose. It is the same as setTransposed4, but the different
+     * name of the function can clarify the role of it when it is used.
+     * @param {Float32Array} m The 4x4 matrix to modify
+     * @param {Float32Array} tm The 4x4 matrix to invert
+     */
+    mat.setInverseOfRotation4 = mat.setTransposed4;
+    /**
      * Multiples the given matrix m1 in place by the matrix m2 from the right.
      * @param {Float32Array} m1
      * @param {Float32Array} m2
@@ -1706,6 +1765,32 @@ define([
         m[13] = m1[12] * m2[1] + m1[13] * m2[5] + m1[14] * m2[9] + m1[15] * m2[13];
         m[14] = m1[12] * m2[2] + m1[13] * m2[6] + m1[14] * m2[10] + m1[15] * m2[14];
         m[15] = m1[12] * m2[3] + m1[13] * m2[7] + m1[14] * m2[11] + m1[15] * m2[15];
+    };
+    /**
+     * Performs an optimized multiplication of two matrices using the assumption that the left matrix is a translation matrix and the right
+     * matrix if a rotation (or scaled rotation, but without projection or translation) matrix and sets a passed matrix to be equal to the
+     * result.
+     * @param {Float32Array} m The 4x4 matrix to set
+     * @param {Float32Array} t A 4x4 translation matrix, without rotation, scaling or projection.
+     * @param {Float32Array} r A 4x4 rotation or scaling and rotation matrix, without translation or projection.
+     */
+    mat.setProdTranslationRotation4 = function (m, t, r) {
+        m[0] = r[0];
+        m[1] = r[1];
+        m[2] = r[2];
+        m[3] = 0;
+        m[4] = r[4];
+        m[5] = r[5];
+        m[6] = r[6];
+        m[7] = 0;
+        m[8] = r[8];
+        m[9] = r[9];
+        m[10] = r[10];
+        m[11] = 0;
+        m[12] = r[0] * t[12] + r[4] * t[13] + r[8] * t[14];
+        m[13] = r[1] * t[12] + r[5] * t[13] + r[9] * t[14];
+        m[14] = r[2] * t[12] + r[6] * t[13] + r[10] * t[14];
+        m[15] = 1;
     };
     /**
      * Sets a passed 4x4 matrix to be a matrix describing a translation and a rotation based on

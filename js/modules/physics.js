@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides a basic physics engine with Newtonian mechanics
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -496,12 +496,22 @@ define([
          * The cached inverse of the orientation matrix.
          * @type Float32Array
          */
-        this._rotationMatrixInverse = null;
+        this._rotationMatrixInverse = mat.identity4();
+        /**
+         * Whether the cached value of the inverse orientation matrix is currently valid
+         * @type Boolean
+         */
+        this._rotationMatrixInverseValid = false;
         /**
          * The cached inverse of the model (position + orientation + scaling) matrix.
          * @type Float32Array
          */
-        this._modelMatrixInverse = null;
+        this._modelMatrixInverse = mat.identity4();
+        /**
+         * Whether the cached value of the inverse model matrix is currently valid
+         * @type Boolean
+         */
+        this._modelMatrixInverseValid = false;
         /**
          * The 4x4 translation matrix describing the velocity of the object. (m/s)
          * @type Float32Array
@@ -558,8 +568,8 @@ define([
         mat.setMatrix4(this._positionMatrix, positionMatrix);
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
         mat.setMatrix4(this._scalingMatrix, scalingMatrix);
-        this._rotationMatrixInverse = null;
-        this._modelMatrixInverse = null;
+        this._rotationMatrixInverseValid = false;
+        this._modelMatrixInverseValid = false;
         mat.setMatrix4(this._velocityMatrix, initialVelocityMatrix);
         mat.setIdentity4(this._angularVelocityMatrix);
         this._forces = [];
@@ -661,7 +671,7 @@ define([
         if (value) {
             this._positionMatrix = value;
         }
-        this._modelMatrixInverse = null;
+        this._modelMatrixInverseValid = false;
     };
     /**
      * Sets the orientation for this object to the passed matrix.
@@ -671,8 +681,8 @@ define([
         if (value) {
             this._orientationMatrix = value;
         }
-        this._rotationMatrixInverse = null;
-        this._modelMatrixInverse = null;
+        this._rotationMatrixInverseValid = false;
+        this._modelMatrixInverseValid = false;
     };
     /**
      * Sets the scaling for this object to the passed matrix.
@@ -680,7 +690,7 @@ define([
      */
     PhysicalObject.prototype.setScalingMatrix = function (value) {
         this._scalingMatrix = value;
-        this._modelMatrixInverse = null;
+        this._modelMatrixInverseValid = false;
     };
     /**
      * Returns the inverse of the rotation matrix and stores it in a cache to
@@ -688,7 +698,10 @@ define([
      * @returns {Float32Array}
      */
     PhysicalObject.prototype.getRotationMatrixInverse = function () {
-        this._rotationMatrixInverse = this._rotationMatrixInverse || mat.inverseOfRotation4(this._orientationMatrix);
+        if (!this._rotationMatrixInverseValid) {
+            mat.setInverseOfRotation4(this._rotationMatrixInverse, this._orientationMatrix);
+            this._rotationMatrixInverseValid = true;
+        }
         return this._rotationMatrixInverse;
     };
     /**
@@ -697,11 +710,14 @@ define([
      * @returns {Float32Array}
      */
     PhysicalObject.prototype.getModelMatrixInverse = function () {
-        this._modelMatrixInverse = this._modelMatrixInverse || mat.prodTranslationRotation4(
-                mat.inverseOfTranslation4(this._positionMatrix),
-                mat.prod3x3SubOf4Aux(
-                        this.getRotationMatrixInverse(),
-                        mat.inverseOfScaling4(this._scalingMatrix)));
+        if (!this._modelMatrixInverseValid) {
+            mat.setProdTranslationRotation4(this._modelMatrixInverse,
+                    mat.inverseOfTranslation4Aux(this._positionMatrix),
+                    mat.prod3x3SubOf4Aux(
+                            this.getRotationMatrixInverse(),
+                            mat.inverseOfScaling4(this._scalingMatrix)));
+            this._modelMatrixInverseValid = true;
+        }
         return this._modelMatrixInverse;
     };
     // methods
@@ -711,7 +727,7 @@ define([
      */
     PhysicalObject.prototype.moveByVector = function (v) {
         mat.translateByVector(this._positionMatrix, v);
-        this._modelMatrixInverse = null;
+        this._modelMatrixInverseValid = false;
     };
     /**
      * Checks the forces for one with the given ID, if it exists, renews its
