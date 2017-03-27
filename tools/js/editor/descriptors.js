@@ -680,6 +680,22 @@ define([
                         name: "type",
                         type: PARTICLE_EMITTER_TYPE
                     },
+                    HAS_PROJECTILE_MODEL: {
+                        name: "hasProjectileModel",
+                        type: BaseType.BOOLEAN
+                    },
+                    PROJECTILE_MODEL_WIDTH: {
+                        name: "projectileModelWidth",
+                        type: BaseType.NUMBER,
+                        optional: true,
+                        defaultValue: 1
+                    },
+                    PROJECTILE_MODEL_INTERSECTION: {
+                        name: "projectileModelIntersection",
+                        type: BaseType.NUMBER,
+                        optional: true,
+                        defaultValue: 0
+                    },
                     DIMENSIONS: {
                         name: "dimensions",
                         type: BaseType.VECTOR3

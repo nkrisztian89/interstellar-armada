@@ -1030,6 +1030,22 @@ define([
          */
         this._type = dataJSON ? utils.getSafeEnumValue(ParticleEmitterType, dataJSON.type, ParticleEmitterType.OMNIDIRECTIONAL) : null;
         /**
+         * If true, a projectile model will be created for the particles emitted by this emitter instead of a simple square model
+         * @type Boolean
+         */
+        this._hasProjectileModel = dataJSON ? (dataJSON.hasProjectileModel || false) : false;
+        /**
+         * If the emitter is set to have a projectile model, this property specifies the width to use (to cut off the sides)
+         * @type Number
+         */
+        this._projectileModelWidth = dataJSON ? (dataJSON.projectileModelWidth || 1) : 0;
+        /**
+         * If the emitter is set to have a projectile model, this property specifies where to put the intersection when creating the model
+         * (it only ever has one intersection)
+         * @type Number
+         */
+        this._projectileModelIntersection = dataJSON ? (dataJSON.projectileModelIntersection || 0) : 0;
+        /**
          * The size of the area where the new particles are generated. (meters, [x,y,z])
          * @type Number[3]
          */
@@ -1085,7 +1101,12 @@ define([
      * @override
      */
     ParticleEmitterDescriptor.prototype.acquireResources = function () {
-        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.squareModel(PARTICLE_MODEL_NAME)});
+        TexturedModelClass.prototype.acquireResources.call(this, {model:
+                    this._hasProjectileModel ?
+                    egomModel.turningBillboardModel(
+                            PROJECTILE_MODEL_NAME_PREFIX + this._projectileModelIntersection + PROJECTILE_MODEL_NAME_INFIX + this._projectileModelWidth,
+                            [this._projectileModelIntersection], this._projectileModelWidth) :
+                    egomModel.squareModel(PARTICLE_MODEL_NAME)});
     };
     /**
      * Returns the string description of the type of the described particle emitter. Based on this the proper class

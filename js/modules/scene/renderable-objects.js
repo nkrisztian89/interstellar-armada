@@ -73,7 +73,12 @@ define([
              * Using these as clip coordinates specifies a clip zone that includes the whole element.
              * @type Number[4]
              */
-            CLIP_COORDINATES_NO_CLIP = [0, 1, 0, 1];
+            CLIP_COORDINATES_NO_CLIP = [0, 1, 0, 1],
+            /**
+             * Constant opaque white RGBA color
+             * @type Number[4]
+             */
+            WHITE_COLOR = [1, 1, 1, 1];
     // -------------------------------------------------------------------------
     // Private functions
     /**
@@ -1215,6 +1220,9 @@ define([
         this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
             return instanced ? sizeVector : size;
         });
+        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
+            return WHITE_COLOR;
+        });
     };
     /**
      * Returns the model used to render the billboard.
@@ -1460,6 +1468,15 @@ define([
         });
         this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return this._color;
+        });
+        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
+            return this.getModelMatrix();
+        });
+        this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
+            return vec.mulVec3Mat4(vec.normal3(this._velocityVector), this.getModelMatrix());
+        });
+        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
+            return instanced ? this._calculatedSize : this._calculatedSize[0];
         });
         this._updateShouldAnimate();
     };
