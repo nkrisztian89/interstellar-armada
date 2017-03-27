@@ -796,7 +796,7 @@ define([
             if (v[0] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchVector = vec.mulVec3Mat4(v, mat.rotation4Aux([0, 0, 1], -result.yaw));
+            pitchVector = vec.mulVec3Mat4(v, mat.rotation4Aux(vec.UNIT3_Z, -result.yaw));
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchVector[1], pitchVector[2]]));
             if (pitchVector[2] > 0) {
                 result.pitch = -result.pitch;
@@ -822,7 +822,7 @@ define([
             if (m[4] * m[10] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4Aux(m, mat.rotation4Aux([0, 0, 1], -result.yaw)));
+            pitchMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4Aux(m, mat.rotation4Aux(vec.UNIT3_Z, -result.yaw)));
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchMatrix[5], pitchMatrix[6]]));
             if (pitchMatrix[6] > 0) {
                 result.pitch = -result.pitch;
@@ -840,15 +840,15 @@ define([
     mat.getRotations = function (m) {
         var dot, halfMatrix, result = {};
         // calculate the rotation of axis Y needed
-        dot = vec.dot3([0, 1, 0], mat.getRowB43(m));
+        dot = vec.dot3(vec.UNIT3_Y, mat.getRowB43(m));
         // if the angle of the two Y vectors is (around) 0 or 180 degrees, their cross product will be of zero length
         // and we cannot use it as a rotation axis, therefore fall back to axis Z in this case
         if (Math.abs(dot) > CLOSE_TO_ONE_THRESHOLD) {
             result.alphaAxis = [0, 0, 1];
             result.alpha = dot > 0 ? 0 : Math.PI;
         } else {
-            result.alphaAxis = vec.normal3(vec.cross3(mat.getRowB43(m), [0, 1, 0]));
-            result.alpha = vec.angle3u(mat.getRowB43(m), [0, 1, 0]);
+            result.alphaAxis = vec.normal3(vec.cross3(mat.getRowB43(m), vec.UNIT3_Y));
+            result.alpha = vec.angle3u(mat.getRowB43(m), vec.UNIT3_Y);
         }
         if (result.alpha > Math.PI) {
             result.alpha -= 2 * Math.PI;
@@ -857,13 +857,13 @@ define([
         halfMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4Aux(m, mat.rotation4Aux(result.alphaAxis, -result.alpha)));
         // X and Z vectors might still be out of place, therefore do the same calculations as before to 
         // get the second rotation needed, which will put all vectors in place
-        dot = vec.dot3([1, 0, 0], mat.getRowA43(halfMatrix));
+        dot = vec.dot3(vec.UNIT3_X, mat.getRowA43(halfMatrix));
         if (Math.abs(dot) > CLOSE_TO_ONE_THRESHOLD) {
             result.gammaAxis = [0, 1, 0];
             result.gamma = dot > 0 ? 0 : Math.PI;
         } else {
-            result.gammaAxis = vec.normal3(vec.cross3(mat.getRowA43(halfMatrix), [1, 0, 0]));
-            result.gamma = vec.angle3u(mat.getRowA43(halfMatrix), [1, 0, 0]);
+            result.gammaAxis = vec.normal3(vec.cross3(mat.getRowA43(halfMatrix), vec.UNIT3_X));
+            result.gamma = vec.angle3u(mat.getRowA43(halfMatrix), vec.UNIT3_X);
         }
         if (result.gamma > Math.PI) {
             result.gamma -= 2 * Math.PI;

@@ -417,7 +417,7 @@ define([
                     this._worldPositionMatrix = mat.translatedByM4(
                             mat.translation4m4(mat.prodTranslationRotation4(
                                     this._relativePositionMatrix,
-                                    mat.prod3x3SubOf4Aux(mat.rotation4Aux([1, 0, 0], Math.PI / 2), worldOrientationMatrix))),
+                                    mat.prod3x3SubOf4Aux(mat.rotation4Aux(vec.UNIT3_X, Math.PI / 2), worldOrientationMatrix))),
                             this.getFollowedPositionMatrix());
                 }
             }
@@ -564,7 +564,7 @@ define([
                     }
                 } else {
                     if (this._movesRelativeToObject) {
-                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(velocityVector, mat.rotation4([1, 0, 0], -Math.PI / 2)), dt / 1000));
+                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(velocityVector, mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2)), dt / 1000));
                     } else {
                         mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(
                                 velocityVector,
@@ -946,13 +946,13 @@ define([
                     // look in direction y instead of z:
                     this._worldOrientationMatrix = mat.prod3x3SubOf4(
                             mat.prod3x3SubOf4Aux(
-                                    mat.rotation4Aux([1, 0, 0], -Math.PI / 2),
+                                    mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2),
                                     this._relativeOrientationMatrix),
                             followedOrientationMatrix);
                 }.bind(this),
                 calculateAbsolute = function () {
                     if (this._fps) {
-                        this._worldOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4([1, 0, 0], -Math.PI / 2), this._relativeOrientationMatrix);
+                        this._worldOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2), this._relativeOrientationMatrix);
                     } else {
                         this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
                     }
@@ -972,7 +972,7 @@ define([
                         this._worldOrientationMatrix[8] = dirTowardsObject[0];
                         this._worldOrientationMatrix[9] = dirTowardsObject[1];
                         this._worldOrientationMatrix[10] = dirTowardsObject[2];
-                        axis = vec.cross3([1, 0, 0], dirTowardsObject);
+                        axis = vec.cross3(vec.UNIT3_X, dirTowardsObject);
                         this._worldOrientationMatrix[4] = axis[0];
                         this._worldOrientationMatrix[5] = axis[1];
                         this._worldOrientationMatrix[6] = axis[2];
@@ -1004,16 +1004,16 @@ define([
                         if (dirTowardsObject[0] < 0) {
                             this._alpha = -this._alpha;
                         }
-                        this._worldOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4([1, 0, 0], -Math.PI / 2), mat.rotation4([0, 0, 1], this._alpha));
+                        this._worldOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2), mat.rotation4Aux(vec.UNIT3_Z, this._alpha));
                         this._beta = vec.angle3uCapped(mat.getRowC43Neg(this._worldOrientationMatrix), dirTowardsObject);
                         if (dirTowardsObject[2] > 0) {
                             this._beta = -this._beta;
                         }
                         this._worldOrientationMatrix = mat.prod3x3SubOf4(
                                 mat.prod3x3SubOf4Aux(
-                                        mat.rotation4Aux([1, 0, 0], -Math.PI / 2),
-                                        mat.rotation4Aux([1, 0, 0], this._beta)),
-                                mat.rotation4Aux([0, 0, 1], this._alpha));
+                                        mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2),
+                                        mat.rotation4Aux(vec.UNIT3_X, this._beta)),
+                                mat.rotation4Aux(vec.UNIT3_Z, this._alpha));
                         mat.mul4(this._worldOrientationMatrix, baseOrientationMatrix);
                     }
                 }
@@ -1088,7 +1088,7 @@ define([
                 }
                 this._alpha = Math.min(Math.max(this._minAlpha, this._alpha), this._maxAlpha);
                 this._beta = Math.min(Math.max(this._minBeta, this._beta), this._maxBeta);
-                this._relativeOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4([1, 0, 0], this._beta * Math.PI / 180), mat.rotation4([0, 0, 1], this._alpha * Math.PI / 180));
+                this._relativeOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4Aux(vec.UNIT3_X, this._beta * Math.PI / 180), mat.rotation4Aux(vec.UNIT3_Z, this._alpha * Math.PI / 180));
             } else {
                 if (this._followedObjects.length > 0) {
                     mat.mul4(this._relativeOrientationMatrix, mat.prod34(
@@ -1964,7 +1964,7 @@ define([
         positionMatrix = positionMatrix || this.getCameraPositionMatrix();
         orientationMatrix = orientationMatrix || this.getCameraOrientationMatrix();
         if (fps) {
-            orientationMatrix = mat.prod3x3SubOf4Aux(mat.rotation4Aux([1, 0, 0], Math.PI / 2), orientationMatrix);
+            orientationMatrix = mat.prod3x3SubOf4Aux(mat.rotation4Aux(vec.UNIT3_X, Math.PI / 2), orientationMatrix);
         }
         return getFreeCameraConfiguration(
                 fps,

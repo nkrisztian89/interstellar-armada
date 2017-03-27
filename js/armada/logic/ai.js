@@ -620,8 +620,8 @@ define([
                                 // setting random position with matching orientation at given distance
                                 if (data.jump.distance) {
                                     this._spacecraft.setPhysicalOrientationMatrix(mat.prod3x3SubOf4(
-                                            mat.rotation4([1, 0, 0], (_jumpInPositionSeed() - 0.5) * Math.PI),
-                                            mat.rotation4([0, 0, 1], _jumpInPositionSeed() * 2 * Math.PI)));
+                                            mat.rotation4Aux(vec.UNIT3_X, (_jumpInPositionSeed() - 0.5) * Math.PI),
+                                            mat.rotation4Aux(vec.UNIT3_Z, _jumpInPositionSeed() * 2 * Math.PI)));
                                     this._spacecraft.setPhysicalPosition(vec.scaled3(
                                             mat.getRowB4(this._spacecraft.getPhysicalOrientationMatrix()),
                                             -data.jump.distance));
