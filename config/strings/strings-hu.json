@@ -197,13 +197,16 @@
             }
         },
         "1v1": {
-            "name": "Egy egy ellen"
+            "name": "Egy egy ellen",
+            "description": "Gyakorló küldetés egyetlen, azonos osztályú, de gyengébben felfegyverzett ellenséggel szemben."
         },
         "3v3": {
-            "name": "Három három ellen"
+            "name": "Három három ellen",
+            "description": "Gyakorold a csapatos harcot ebben a három-három elfogó vadászt egymással szembeállító küldetésben. A hajódat jobban felszereltük, mint a többiekét."
         },
         "bombers": {
-            "name": "Bombázók"
+            "name": "Bombázók",
+            "description": "Ebben a küldetésben egy nehezebb páncélzatú és fegyverzetű bombázót próbálhatsz ki egy egyszerű három három ellen felállású manőverező űrharcban. Az ellenséges gépek gyengébben vannak felszerelve."
         },
         "mixed": {
             "name": "Vegyes"
@@ -516,10 +519,12 @@
             "description": "A bombázók kis, egy vagy két fős harci gépek, amik a kis és közepes méretű ellenséges hadihajók ellen jelentenek gazdaságos megoldást. Nehéz páncélzatuk és védőpajzsuk lehetővé teszi, hogy elég ideig harcképesek maradjanak a hajókkal szemben nagy tűzerejű rakétáik célba juttatásához. Ezt kihasználhatják akár létfontosságú rendszerek kiiktatására, akár a célpont pajzsának és páncélzatának jelentős megrongálására. A vadászokhoz képest nagyobb tömegük miatt rosszabbul manőverezhetőek, és ezáltal sebezhetőek is velük szemben."
         },
         "multiroleFighter": {
-            "name": "többfeladatú vadász"
+            "name": "többfeladatú vadász",
+            "description": "A többfeladatú vadászok katonai szerepkörök széles spektrumát figyelembe véve tervezett kis méretű harci gépek. Békeidőben, illetve korlátozott katonai kapacitással bíró államok számára gazdaságos megoldást jelentenek, mivel egy kisebb számú vadászból álló flotta már bevethető erőt nyújt a legtöbb felmerülő harci szituáció esetére. Kiegyensúlyozott vadászgépek sokféle felszerelési lehetőséggel. Ugyanakkor még egy kifejezetten egy adott feladatra felkészített többfeladatú vadász is hátrányból indul az arra az egy feladatra kialakított vadász osztályokkal szemben."
         },
         "corvette": {
-            "name": "korvett"
+            "name": "korvett",
+            "description": "A korvettek a legkisebb, legkevésbé páncélozott valódi hadihajók korunk flottáiban. A kis mérettel járó korlátozott raktér miatt ezeket a hajókat nem lehet hosszabb küldetésekre egyedül bevetni. Gyakran helyi őrjáratokban és flották nagyobb hajóinak kísérőiként alkalmazzák őket, mivel jellemzően vadászok és bombázók ellen hatásos fegyverzettel vannak felszerelve. Ellenséges hadihajók megtámadásához nem elég nagy a tűzerejük, de támogató szerepkörben hatékonyan használhatók."
         },
         "frigate": {
             "name": "fregatt"
@@ -546,6 +551,12 @@
         },
         "aries": {
             "description": "A Birodalomban jelenleg a legtöbb járőrhajó Aries osztályú. Két nagy tűzsebességű és pontosságú forgatható löveggel van felszerelve, ami rendkívül hatásossá teszi az ellenséges vadászok és könnyű bombázók ellen. Páncélzata ugyanakkor a nagyobb hadihajókéhoz képest csekély, így velük szemben elsősorban jobb manőverezhetősége jelent némi védelmet."
+        },
+        "taurus": {
+            "description": "Egy kis méretű hadihajó, aminek kialakításakor az erős páncélzat és nagy tűzerő volt a fő szempont. Elsődleges szerepe az ellenséges flotta nagyobb űrhajóinak folyamatos tűz alatt tartása, ezáltal figyelmük elvonása a sebezhetőbb egységekről."
+        },
+        "libra": {
+            "description": "A birodalmi armada elsődleges vezérhajó osztálya. Széleskörű védelemmel rendelkezik a különböző fenyegetésekkel szemben. Nehéz páncélzata mellé nagy tűzerejű és kisebb, precíziós gyorstüzelő lövegekkel is fel van szerelve. Két hangárában akár 48 vadászgép is harckészen tartható, hogy a kisebb, jól manőverező ellenségekkel is hatékonyan felvehesse a harcot. A hangárak bombázók befogadásához is könnyen átszerelhetőek, ha a hadihajók elleni, egyébként is jelentős tűzerő kiegészítésére lenne szükség."
         },
         "wolf": {
             "name": "Farkas"
