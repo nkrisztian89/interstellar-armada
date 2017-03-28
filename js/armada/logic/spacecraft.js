@@ -1439,7 +1439,7 @@ define([
                     visualModel.setMat4Parameter(
                             _groupTransformsArrayName,
                             i,
-                            mat.identity4());
+                            mat.IDENTITY4);
                 }
                 // setting the default luminosity for all luminosity groups
                 if (graphics.areLuminosityTexturesAvailable()) {
@@ -1492,7 +1492,7 @@ define([
             }
             // add projectile resources
             if (addSupplements.explosion === true) {
-                exp = new explosion.Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0], true);
+                exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, vec.NULL3, true);
                 exp.addResourcesToScene(scene);
             }
             // add comera configurations

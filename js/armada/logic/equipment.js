@@ -296,10 +296,10 @@ define([
         }
         this._physicalModel.init(
                 projectileClass.getMass(),
-                positionMatrix || mat.identity4(),
-                orientationMatrix || mat.identity4(),
-                mat.scaling4(projectileClass.getSize()),
-                spacecraft ? spacecraft.getVelocityMatrix() : mat.null4(),
+                positionMatrix || mat.IDENTITY4,
+                orientationMatrix || mat.IDENTITY4,
+                mat.scaling4Aux(projectileClass.getSize()),
+                spacecraft ? spacecraft.getVelocityMatrix() : mat.NULL4,
                 [],
                 true);
         this._timeLeft = projectileClass.getDuration();
@@ -380,7 +380,7 @@ define([
             if (!scene.hasResourcesOfObject(resourceID)) {
                 this._createVisualModel(wireframe);
                 scene.addResourcesOfObject(this._visualModel, resourceID);
-                exp = new explosion.Explosion(this._class.getExplosionClass(), mat.identity4(), mat.identity4(), [0, 0, 0], true);
+                exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
                 exp.addResourcesToScene(scene);
             }
         }.bind(this));
@@ -427,7 +427,7 @@ define([
                         relativeVelocityVectorInWorldSpace = vec.diff3(velocityVectorInWorldSpace, mat.translationVector3(physicalHitObject.getVelocityMatrix()));
                         relativeVelocityDirectionInWorldSpace = vec.normal3(relativeVelocityVectorInWorldSpace);
                         relativeVelocity = vec.length3(relativeVelocityVectorInWorldSpace);
-                        relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
+                        relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4Aux(hitObjects[i].getVisualModel().getOrientationMatrix()));
                         hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
                         relativeHitPositionVectorInWorldSpace = vec.diff3(hitPositionVectorInWorldSpace, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                         physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
@@ -700,7 +700,7 @@ define([
                 visualModel.setMat4Parameter(
                         _groupTransformsArrayName,
                         i,
-                        mat.identity4());
+                        mat.IDENTITY4);
             }
             // setting the default luminosity for all luminosity groups
             if (graphics.areLuminosityTexturesAvailable()) {

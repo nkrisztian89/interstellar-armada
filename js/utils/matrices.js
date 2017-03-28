@@ -29,7 +29,7 @@ define([
              * The number of auxiliary matrices that should be created.
              * @type Number
              */
-            AUX_MATRIX_COUNT = 8,
+            AUX_MATRIX_COUNT = 20,
             // ----------------------------------------------------------------------
             // private variables
             /**
@@ -199,6 +199,11 @@ define([
         ]);
     };
     /**
+     * A constant 3x3 null matrix.
+     * @type Float32Array
+     */
+    mat.NULL3 = mat.null3();
+    /**
      * Returns a 4x4 null matrix.
      * @returns {Float32Array}
      */
@@ -211,6 +216,11 @@ define([
             0.0, 0.0, 0.0, 0.0
         ]);
     };
+    /**
+     * A constant 4x4 null matrix.
+     * @type Float32Array
+     */
+    mat.NULL4 = mat.null4();
     /**
      * Return a 3x3 matrix comprised of the first 9 elements of the passed array.
      * @param {Float32Array|Number[9]} m
@@ -506,6 +516,37 @@ define([
             0.0, 0.0, z, 0.0,
             0.0, 0.0, 0.0, 1.0]
                 );
+    };
+    /**
+     * Returns a 4x4 transformation matrix describing a scaling along the 3 axes.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number} x Scaling along axis X.
+     * @param {Number} [y] Scaling along axis Y. If omitted, the same scaling will
+     * be used for all 3 axes.
+     * @param {Number} [z] Scaling along axis Z. If omitted, the same scaling will
+     * be used for all 3 axes.
+     * @returns {Float32Array}
+     */
+    mat.scaling4Aux = function (x, y, z) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = x;
+        aux[1] = 0;
+        aux[2] = 0;
+        aux[3] = 0;
+        aux[4] = 0;
+        aux[5] = y;
+        aux[6] = 0;
+        aux[7] = 0;
+        aux[8] = 0;
+        aux[9] = 0;
+        aux[10] = z;
+        aux[11] = 0;
+        aux[12] = 0;
+        aux[13] = 0;
+        aux[14] = 0;
+        aux[15] = 1;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * Creates a 4x4 transformation matrix describing a translation and a rotation based on
@@ -1406,6 +1447,20 @@ define([
             r[2] * t[12] + r[6] * t[13] + r[10] * t[14],
             1
         ]);
+    };
+    /**
+     * Performs an optimized multiplication of two matrices using the assumption that the left matrix is a translation matrix and the right
+     * matrix if a rotation (or scaled rotation, but without projection or translation) matrix.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} t A 4x4 translation matrix, without rotation, scaling or projection.
+     * @param {Float32Array} r A 4x4 rotation or scaling and rotation matrix, without translation or projection.
+     * @returns {Float32Array} The product of the two matrices.
+     */
+    mat.prodTranslationRotation4Aux = function (t, r) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setProdTranslationRotation4(aux, t, r);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * Multiplies three 4x4 matrices and returns the result.

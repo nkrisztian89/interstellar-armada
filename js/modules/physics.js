@@ -340,7 +340,7 @@ define([
      * @returns {Float32Array} A 4x4 transformation matrix.
      */
     Body.prototype.getModelMatrixInverse = function () {
-        this._modelMatrixInverse = this._modelMatrixInverse || mat.prodTranslationRotation4(mat.inverseOfTranslation4(this._positionMatrix), mat.inverseOfRotation4(this._orientationMatrix));
+        this._modelMatrixInverse = this._modelMatrixInverse || mat.prodTranslationRotation4(mat.inverseOfTranslation4Aux(this._positionMatrix), mat.inverseOfRotation4Aux(this._orientationMatrix));
         return this._modelMatrixInverse;
     };
     /**
@@ -367,10 +367,10 @@ define([
         if (this._rotated) {
             // we should not modify relativePositionVector, so creating a new one instead of multiplying in-place
             relativePositionVector = vec.prodVec4Mat4Aux(relativePositionVector, this.getModelMatrixInverse());
-            relativeDirectionVector = vec.prodVec3Mat3(relativeDirectionVector, mat.matrix3from4Aux(mat.inverseOfRotation4Aux(this._orientationMatrix)));
+            relativeDirectionVector = vec.prodVec3Mat3Aux(relativeDirectionVector, mat.matrix3from4Aux(mat.inverseOfRotation4Aux(this._orientationMatrix)));
         } else {
             // we should not modify relativePositionVector, so creating a new one instead of subtracting in-place
-            relativePositionVector = vec.diff3(relativePositionVector, this._positionVector);
+            relativePositionVector = vec.diff3Aux(relativePositionVector, this._positionVector);
         }
         // if the object has a velocity along X, it is possible it has hit at the left or right planes
         if (relativeDirectionVector[0] !== 0) {
@@ -790,7 +790,7 @@ define([
         var
                 leverDir = vec.normal3(position),
                 parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
-                perpendicularForce = vec.diff3(direction, parallelForce);
+                perpendicularForce = vec.diff3Aux(direction, parallelForce);
         this.addForce(new Force(
                 "",
                 strength,
@@ -811,7 +811,7 @@ define([
         this._bodySize = 0;
         for (i = 0; i < this._bodies.length; i++) {
             bodyPos = mat.translationVector3(this._bodies[i].getPositionMatrix());
-            halfDim = vec.prodVec3Mat3(this._bodies[i].getHalfDimensions(), mat.prod3x3SubOf43(
+            halfDim = vec.prodVec3Mat3Aux(this._bodies[i].getHalfDimensions(), mat.prod3x3SubOf43(
                     this._orientationMatrix,
                     this._bodies[i].getOrientationMatrix()));
             this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, halfDim)));

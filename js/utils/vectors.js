@@ -20,7 +20,7 @@ define(function () {
              * The number of auxiliary vectors that should be created.
              * @type Number
              */
-            AUX_VECTOR_COUNT = 8,
+            AUX_VECTOR_COUNT = 20,
             // ----------------------------------------------------------------------
             // private variables
             /**
@@ -379,6 +379,21 @@ define(function () {
         return [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]];
     };
     /**
+     * Returns the difference of two 3D vectors.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v1 The first 3D vector.
+     * @param {Number[3]} v2 The second 3D vector.
+     * @returns {Number[3]} The difference of v1 and v2.
+     */
+    vec.diff3Aux = function (v1, v2) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = v1[0] - v2[0];
+        aux[1] = v1[1] - v2[1];
+        aux[2] = v1[2] - v2[2];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Returns the dot product of the 2 given 3D vectors.
      * @param {Number[3]} v1 A 3D vector.
      * @param {Number[3]} v2 A 3D vector.
@@ -458,6 +473,19 @@ define(function () {
             m[1] * v[0] + m[4] * v[1] + m[7] * v[2],
             m[2] * v[0] + m[5] * v[1] + m[8] * v[2]
         ];
+    };
+    /**
+     * Multiplies the given 3D row vector with the given 3x3 matrix. (from the right)
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v A 3D vector.
+     * @param {Float32Array} m A 3x3 matrix.
+     * @returns {Number[3]} v*m
+     */
+    vec.prodVec3Mat3Aux = function (v, m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        vec.setProdVec3Mat3(aux, v, m);
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
     };
     /**
      * Multiplies the given 3D row vector with the top left 3x3 submatrix of the 
@@ -648,6 +676,17 @@ define(function () {
         v[0] = m[0] * vox + m[3] * voy + m[6] * voz;
         v[1] = m[1] * vox + m[4] * voy + m[7] * voz;
         v[2] = m[2] * vox + m[5] * voy + m[8] * voz;
+    };
+    /**
+     * Sets the given vector to be equal to the product of the given 3D row vector and the given 3x3 matrix.
+     * @param {Number[3]} v The 3D vector to modify
+     * @param {Number[3]} vl A 3D vector on the left of the multiplication
+     * @param {Float32Array} mr A 3x3 matrix on the right of the multiplication
+     */
+    vec.setProdVec3Mat3 = function (v, vl, mr) {
+        v[0] = mr[0] * vl[0] + mr[3] * vl[1] + mr[6] * vl[2];
+        v[1] = mr[1] * vl[0] + mr[4] * vl[1] + mr[7] * vl[2];
+        v[2] = mr[2] * vl[0] + mr[5] * vl[1] + mr[8] * vl[2];
     };
     /**
      * Multiplies the given 3D row vector by the top left 3x3 submatrix of the given 4x4 matrix from the right, modifying it in-place.

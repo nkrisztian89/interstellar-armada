@@ -347,14 +347,14 @@ define([
      * @returns {Float32Array}
      */
     CameraPositionConfiguration.prototype.getFollowedPositionMatrix = function () {
-        var i, positionMatrix = mat.identity4();
+        var i, positionMatrix = mat.identity4Aux();
         if (this._followedObjects.length === 0) {
             application.crash();
         } else {
             for (i = 0; i < this._followedObjects.length; i++) {
                 mat.translateByMatrix(positionMatrix, this._followedObjects[i].getPositionMatrix());
             }
-            positionMatrix = mat.translation4(
+            positionMatrix = mat.translation4Aux(
                     positionMatrix[12] / this._followedObjects.length,
                     positionMatrix[13] / this._followedObjects.length,
                     positionMatrix[14] / this._followedObjects.length);
@@ -406,7 +406,7 @@ define([
             this._isStarting = false;
             if (!this._turnsAroundObjects) {
                 this._worldPositionMatrix = mat.translatedByM4(
-                        mat.translation4m4(mat.prodTranslationRotation4(
+                        mat.translation4m4(mat.prodTranslationRotation4Aux(
                                 this._relativePositionMatrix,
                                 this.getFollowedObjectOrientationMatrix())),
                         this.getFollowedPositionMatrix());
@@ -415,7 +415,7 @@ define([
                     application.crash();
                 } else {
                     this._worldPositionMatrix = mat.translatedByM4(
-                            mat.translation4m4(mat.prodTranslationRotation4(
+                            mat.translation4m4(mat.prodTranslationRotation4Aux(
                                     this._relativePositionMatrix,
                                     mat.prod3x3SubOf4Aux(mat.rotation4Aux(vec.UNIT3_X, Math.PI / 2), worldOrientationMatrix))),
                             this.getFollowedPositionMatrix());
@@ -452,11 +452,11 @@ define([
         // if the position is only taken as relative at the start, then the stored relative position will actually be the world position,
         // so we need to transform it back to the actual relative position, before checking the limits
         if (this._startsWithRelativePosition && (!this._isStarting) && (this._followedObjects.length > 0)) {
-            relativePositionMatrix = mat.translation4m4(mat.prodTranslationRotation4(
+            relativePositionMatrix = mat.translation4m4(mat.prodTranslationRotation4Aux(
                     mat.translatedByM4(
                             this._relativePositionMatrix,
-                            mat.inverseOfTranslation4(this.getFollowedPositionMatrix())),
-                    mat.inverseOfRotation4(this.getFollowedObjectOrientationMatrix())));
+                            mat.inverseOfTranslation4Aux(this.getFollowedPositionMatrix())),
+                    mat.inverseOfRotation4Aux(this.getFollowedObjectOrientationMatrix())));
         } else {
             relativePositionMatrix = this._relativePositionMatrix;
         }
@@ -520,7 +520,7 @@ define([
         // if the position is only taken as relative at the start, then calculate and store the world position
         if (this._startsWithRelativePosition && (!this._isStarting) && (this._followedObjects.length > 0)) {
             this._relativePositionMatrix = mat.translatedByM4(
-                    mat.translation4m4(mat.prodTranslationRotation4(
+                    mat.translation4m4(mat.prodTranslationRotation4Aux(
                             relativePositionMatrix,
                             this.getFollowedObjectOrientationMatrix())),
                     this.getFollowedPositionMatrix());
@@ -980,7 +980,7 @@ define([
                         this._worldOrientationMatrix[0] = axis[0];
                         this._worldOrientationMatrix[1] = axis[1];
                         this._worldOrientationMatrix[2] = axis[2];
-                        this._worldOrientationMatrix = mat.correctedOrthogonal4(this._worldOrientationMatrix);
+                        mat.correctOrthogonal4(this._worldOrientationMatrix);
                     } else {
                         switch (this._baseOrientation) {
                             case this.BaseOrientation.WORLD:
