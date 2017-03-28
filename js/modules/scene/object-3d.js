@@ -142,6 +142,29 @@ define([
      */
     makeObject3DMixinClassFunction = function () {
         /**
+         * Reinitializes the 3D object with new properties
+         * @param {Float32Array} [positionMatrix] Initial position.
+         * @param {Float32Array} [orientationMatrix] Initial orientation.
+         * @param {Float32Array} [scalingMatrix] Initial scaling.
+         * @param {Number} [size=1]
+         * @returns {Object3D}
+         */
+        function init(positionMatrix, orientationMatrix, scalingMatrix, size) {
+            this._parent = null;
+            mat.setMatrix4(this._positionMatrix, positionMatrix || mat.IDENTITY4);
+            mat.setMatrix4(this._orientationMatrix, orientationMatrix || mat.IDENTITY4);
+            mat.setMatrix4(this._scalingMatrix, scalingMatrix || mat.IDENTITY4);
+            this._cascadeScalingMatrix = null;
+            this._modelMatrixValid = false;
+            this._modelMatrixForFrameValid = false;
+            this._modelMatrixInverseValid = false;
+            this._modelMatrixInverseForFrameValid = false;
+            this._size = (size !== undefined) ? size : 1;
+            this._insideParent = null;
+            this._lastSizeInsideViewFrustum = {width: -1, height: -1};
+            this._positionMatrixInCameraSpaceValid = false;
+        }
+        /**
          * Clears cache variables that store calculated values which are only valid for one frame.
          */
         function resetCachedValues() {
@@ -507,6 +530,7 @@ define([
         }
         // interface of an Object3D mixin
         return function () {
+            this.prototype.init = init;
             this.prototype.resetCachedValues = resetCachedValues;
             this.prototype.getParent = getParent;
             this.prototype.setParent = setParent;

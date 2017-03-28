@@ -182,6 +182,30 @@ define([
         this._name = null;
     }
     /**
+     * Reinitializes the renderable object with new properties. Does not clear uniform value functions.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object
+     * @param {Boolean} [renderedWithDepthMask=true] Tells whether this object should be rendered when the depth mask is on (= it contains 
+     * non-transparent triangles)
+     * @param {Boolean} [renderedWithoutDepthMask=true] Tells whether this object should be rendered when the depth mask is off (= it contains 
+     * transparent triangles)
+     * @param {ManagedShader} [instancedShader]
+     * @param {Boolean} [castsShadows=true] If true, this object will be rendered to shadow maps.
+     */
+    RenderableObject.prototype.init = function (shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader, castsShadows) {
+        this._node = null;
+        this._wasRendered = false;
+        this._shader = shader;
+        this._textures = {};
+        this._isRenderedWithDepthMask = renderedWithDepthMask === undefined ? true : renderedWithDepthMask;
+        this._isRenderedWithoutDepthMask = renderedWithoutDepthMask === undefined ? true : renderedWithoutDepthMask;
+        this._instancedShader = instancedShader || null;
+        this._canBeReused = false;
+        this._visible = true;
+        this._castsShadows = (castsShadows !== undefined) ? castsShadows : true;
+        this._wasRenderedToShadowMap = false;
+        this._name = null;
+    };
+    /**
      * Returns the node that contains this object. If there is no such node,
      * creates an isolated one to contain it from now on and returns that.
      * @returns {RenderableNode}
@@ -595,7 +619,6 @@ define([
      * @param {Float32Array} [scalingMatrix] Initial scaling.
      * @param {ManagedShader} [instancedShader]
      * @param {Number} [size=1]
-     * @returns {RenderableObject3D}
      */
     function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader, size) {
         RenderableObject.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader);
@@ -622,6 +645,24 @@ define([
     RenderableObject3D.prototype = new RenderableObject();
     object3D.makeObject3DMixinClass.call(RenderableObject3D);
     RenderableObject3D.prototype.constructor = RenderableObject;
+    /**
+     * Reinitializes the renderable object with new properties.
+     * @param {ManagedShader} shader
+     * @param {Boolean} renderedWithDepthMask
+     * @param {Boolean} renderedWithoutDepthMask
+     * @param {Float32Array} [positionMatrix] Initial position.
+     * @param {Float32Array} [orientationMatrix] Initial orientation.
+     * @param {Float32Array} [scalingMatrix] Initial scaling.
+     * @param {ManagedShader} [instancedShader]
+     * @param {Number} [size=1]
+     */
+    RenderableObject3D.prototype.init = function (shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader, size) {
+        RenderableObject.prototype.init.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader);
+        object3D.Object3D.prototype.init.call(this, positionMatrix, orientationMatrix, scalingMatrix, size);
+        this._visibleSize = {width: -1, height: -1};
+        this._insideShadowCastFrustum = null;
+        this._smallestSizeWhenDrawn = 0;
+    };
     /**
      * Sets a new minimum size limit, below which rendering will be disabled.
      * @param {Number} value
@@ -1182,9 +1223,29 @@ define([
          * @type Boolean
          */
         this._wireframe = false;
+        /**
+         * Stores the size to be passed as a shader uniform (needed both in array and singular format)
+         * @type Number[1]
+         */
+        this._sizeVector = [0];
         if (model) {
             this.init(model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader);
         }
+        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
+            return this.getModelMatrix();
+        });
+        this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
+            return this.getPositionVector();
+        });
+        this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
+            return mat.getRowB43(this.getOrientationMatrix());
+        });
+        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
+            return instanced ? this._sizeVector : this._sizeVector[0];
+        });
+        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
+            return WHITE_COLOR;
+        });
     }
     Billboard.prototype = new RenderableObject3D();
     Billboard.prototype.constructor = Billboard;
@@ -1200,29 +1261,14 @@ define([
      * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
      */
     Billboard.prototype.init = function (model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader) {
-        var sizeVector = [size];
-        RenderableObject3D.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size), instancedShader);
+        RenderableObject3D.prototype.init.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size), instancedShader);
         this.setTextures(textures);
+        this._sizeVector[0] = size;
         this._model = model;
         this._wireframe = (wireframe === true);
         if (this._wireframe) {
             this._isRenderedWithDepthMask = false;
         }
-        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
-            return this.getModelMatrix();
-        });
-        this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
-            return this.getPositionVector();
-        });
-        this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
-            return mat.getRowB43(this.getOrientationMatrix());
-        });
-        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
-            return instanced ? sizeVector : size;
-        });
-        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
-            return WHITE_COLOR;
-        });
     };
     /**
      * Returns the model used to render the billboard.
@@ -1417,46 +1463,8 @@ define([
         if (model) {
             this.init(model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize);
         }
-    }
-    Particle.prototype = new RenderableObject3D();
-    Particle.prototype.constructor = Particle;
-    /**
-     * Initializes the fields of the particle.
-     * @param {Model} model The model to store the simple billboard data.
-     * @param {ManagedShader} shader The shader that should be active while rendering this object.
-     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
-     * array, with the roles as keys.
-     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
-     * @param {ParticleState[]} states The list of states this particle will go through during its lifespan.
-     * If only one state is given, the particle will stay forever in that state
-     * @param {Boolean} [looping=false] Whether to start over from the first state once the last one is reached (or to delete the particle)
-     * @param {ManagedShader} [instancedShader]
-     * @param {Number} [initialSize] If given, the particle's size will initially be set to this value rather than the starting size of the
-     * first particle state.
-     */
-    Particle.prototype.init = function (model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize) {
-        var i, modelMatrix;
-        RenderableObject3D.call(this, shader, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4, instancedShader);
-        this.setTextures(textures);
-        this._model = model;
-        if (states) {
-            for (i = 0; i < states[0].color.length; i++) {
-                this._color[i] = states[0].color[i];
-            }
-        }
-        this._size = (initialSize !== undefined) ? initialSize : (states ? states[0].size : 0);
-        this._relativeSize = 1;
-        this._calculateSize();
-        this._states = states || [];
-        this._calculateDuration();
-        this._currentStateIndex = 0;
-        this._looping = (looping === true);
-        this._timeSinceLastTransition = 0;
-        this._velocityVector[0] = 0;
-        this._velocityVector[1] = 0;
-        this._velocityVector[2] = 0;
-        this._shouldAnimate = false;
         this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
+            var modelMatrix;
             modelMatrix = this.getModelMatrix();
             this._positionVector[0] = modelMatrix[12];
             this._positionVector[1] = modelMatrix[13];
@@ -1478,6 +1486,45 @@ define([
         this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
             return instanced ? this._calculatedSize : this._calculatedSize[0];
         });
+    }
+    Particle.prototype = new RenderableObject3D();
+    Particle.prototype.constructor = Particle;
+    /**
+     * Initializes the fields of the particle.
+     * @param {Model} model The model to store the simple billboard data.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
+     * array, with the roles as keys.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
+     * @param {ParticleState[]} states The list of states this particle will go through during its lifespan.
+     * If only one state is given, the particle will stay forever in that state
+     * @param {Boolean} [looping=false] Whether to start over from the first state once the last one is reached (or to delete the particle)
+     * @param {ManagedShader} [instancedShader]
+     * @param {Number} [initialSize] If given, the particle's size will initially be set to this value rather than the starting size of the
+     * first particle state.
+     */
+    Particle.prototype.init = function (model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize) {
+        var i;
+        RenderableObject3D.prototype.init.call(this, shader, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4, instancedShader);
+        this.setTextures(textures);
+        this._model = model;
+        if (states) {
+            for (i = 0; i < states[0].color.length; i++) {
+                this._color[i] = states[0].color[i];
+            }
+        }
+        this._size = (initialSize !== undefined) ? initialSize : (states ? states[0].size : 0);
+        this._relativeSize = 1;
+        this._calculateSize();
+        this._states = states || [];
+        this._calculateDuration();
+        this._currentStateIndex = 0;
+        this._looping = (looping === true);
+        this._timeSinceLastTransition = 0;
+        this._velocityVector[0] = 0;
+        this._velocityVector[1] = 0;
+        this._velocityVector[2] = 0;
+        this._shouldAnimate = false;
         this._updateShouldAnimate();
     };
     /**
