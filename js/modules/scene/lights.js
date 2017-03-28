@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides different types of light source classes to add to scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -336,7 +336,7 @@ define([
         if (this._emittingObjects.length === 1) {
             if (this._emittingObjects[0].isVisible()) {
                 this._totalIntensity = this._objectIntensity;
-                this._positionVector = vec.sum3(this._emittingObjects[0].getPositionVector(), vec.mulVec3Mat4(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
+                this._positionVector = vec.sum3(this._emittingObjects[0].getPositionVector(), vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
             } else {
                 this._totalIntensity = 0;
             }
@@ -474,7 +474,7 @@ define([
          * The direction of the light cone in world-space.
          * @type Numberf[3]
          */
-        this._spotDirection = null;
+        this._spotDirection = [0, 0, 0];
     }
     SpotLightSource.prototype = new PointLightSource();
     SpotLightSource.prototype.constructor = SpotLightSource;
@@ -500,7 +500,7 @@ define([
         if (!this._emittingObjects || (this._emittingObjects.length !== 1)) {
             this._spotDirection = this._relativeSpotDirection;
         } else {
-            this._spotDirection = vec.mulVec3Mat4(this._relativeSpotDirection, this._emittingObjects[0].getOrientationMatrix());
+            vec.setProdVec3Mat4(this._spotDirection, this._relativeSpotDirection, this._emittingObjects[0].getOrientationMatrix());
         }
     };
     /**

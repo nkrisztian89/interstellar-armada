@@ -603,7 +603,7 @@ define([
                             // setting position and orientation based on a formation
                             this._spacecraft.setPhysicalPosition(vec.sum3(
                                     data.lead.getPhysicalPositionVector(),
-                                    vec.mulVec3Mat4(
+                                    vec.prodVec3Mat4Aux(
                                             this._getPositionInFormation(data.jump.formation, data.index),
                                             data.lead.getPhysicalOrientationMatrix())));
                             this._spacecraft.setPhysicalOrientationMatrix(mat.matrix4(data.lead.getPhysicalOrientationMatrix()));
@@ -993,7 +993,7 @@ define([
             if (this._chargePhase === ChargePhase.EVADE) {
                 this._attackingTarget = !!target;
                 vectorToTarget = vec.diff3(this._chargeDestination, positionVector);
-                relativeTargetDirection = vec.mulVec3Mat4(
+                relativeTargetDirection = vec.prodVec3Mat4Aux(
                         vectorToTarget,
                         inverseOrientationMatrix);
                 this._targetDistance = vec.length3(relativeTargetDirection);
@@ -1026,7 +1026,7 @@ define([
                 }
                 vec.add3(targetPositionVector, this._targetOffset);
                 vectorToTarget = vec.diff3(targetPositionVector, positionVector);
-                relativeTargetDirection = vec.mulVec3Mat4(
+                relativeTargetDirection = vec.prodVec3Mat4Aux(
                         vectorToTarget,
                         inverseOrientationMatrix);
                 this._targetDistance = vec.length3(relativeTargetDirection);
@@ -1045,7 +1045,7 @@ define([
                     if (!this._isBlockedBy.canBeReused() && this._facingTarget) {
                         // checking if the blocking spacecraft is still in the way
                         if (this._isBlockedBy.getPhysicalModel().checkHit(targetPositionVector, vectorToTarget, 1000, ownSize / 2)) {
-                            relativeBlockerPosition = vec.mulVec3Mat4(
+                            relativeBlockerPosition = vec.prodVec3Mat4Aux(
                                     vec.diff3(
                                             mat.translationVector3(this._isBlockedBy.getPhysicalPositionMatrix()),
                                             positionVector),
@@ -1188,7 +1188,7 @@ define([
                                                 vec.diff3(
                                                         vec.sum3(
                                                                 targetPositionVector,
-                                                                vec.scaled3(vec.normal3(vec.mulVec3Mat4(vec.perpendicular3(directionToTarget), mat.rotation4(directionToTarget, Math.random() * Math.PI * 2))), maxDistance)),
+                                                                vec.scaled3(vec.normal3(vec.prodVec3Mat4Aux(vec.perpendicular3(directionToTarget), mat.rotation4(directionToTarget, Math.random() * Math.PI * 2))), maxDistance)),
                                                         positionVector),
                                                 CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
                             }
@@ -1322,7 +1322,7 @@ define([
             if (target) {
                 targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
                 vectorToTarget = vec.diff3(targetPositionVector, positionVector);
-                relativeTargetDirection = vec.mulVec3Mat4(
+                relativeTargetDirection = vec.prodVec3Mat4(
                         vectorToTarget,
                         inverseOrientationMatrix);
                 targetDistance = vec.length3(relativeTargetDirection);

@@ -331,7 +331,7 @@ define([
      */
     Body.prototype._modelTransform = function (vector) {
         return this._rotated ?
-                vec.sum3(vec.mulVec3Mat4(vector, this._orientationMatrix), this._positionVector).concat(1) :
+                vec.sum3(vec.prodVec3Mat4Aux(vector, this._orientationMatrix), this._positionVector).concat(1) :
                 vec.sum3(vector, this._positionVector).concat(1);
     };
     /**
@@ -364,11 +364,13 @@ define([
     Body.prototype.checkHit = function (relativePositionVector, relativeDirectionVector, range, offset) {
         var d, ipx, ipy, halfWidth = this._halfWidth + offset, halfHeight = this._halfHeight + offset, halfDepth = this._halfDepth + offset;
         // first transform the coordinates from model-space (physical object space) to body-space
-        relativePositionVector = this._rotated ?
-                vec.mulVec4Mat4(relativePositionVector, this.getModelMatrixInverse()) :
-                vec.diff3(relativePositionVector, this._positionVector);
         if (this._rotated) {
-            relativeDirectionVector = vec.mulVec3Mat3(relativeDirectionVector, mat.matrix3from4(mat.inverseOfRotation4(this._orientationMatrix)));
+            // we should not modify relativePositionVector, so creating a new one instead of multiplying in-place
+            relativePositionVector = vec.prodVec4Mat4(relativePositionVector, this.getModelMatrixInverse());
+            relativeDirectionVector = vec.prodVec3Mat3(relativeDirectionVector, mat.matrix3from4(mat.inverseOfRotation4(this._orientationMatrix)));
+        } else {
+            // we should not modify relativePositionVector, so creating a new one instead of subtracting in-place
+            relativePositionVector = vec.diff3(relativePositionVector, this._positionVector);
         }
         // if the object has a velocity along X, it is possible it has hit at the left or right planes
         if (relativeDirectionVector[0] !== 0) {
@@ -809,7 +811,7 @@ define([
         this._bodySize = 0;
         for (i = 0; i < this._bodies.length; i++) {
             bodyPos = mat.translationVector3(this._bodies[i].getPositionMatrix());
-            halfDim = vec.mulVec3Mat3(this._bodies[i].getHalfDimensions(), mat.prod3x3SubOf43(
+            halfDim = vec.prodVec3Mat3(this._bodies[i].getHalfDimensions(), mat.prod3x3SubOf43(
                     this._orientationMatrix,
                     this._bodies[i].getOrientationMatrix()));
             this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, halfDim)));
@@ -839,14 +841,14 @@ define([
         // make the vector 4D for the matrix multiplication
         positionVector.push(1);
         // transforms the position to object-space for preliminary check
-        relativePos = vec.mulVec4Mat4(positionVector, this.getModelMatrixInverse());
+        relativePos = vec.prodVec4Mat4Aux(positionVector, this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
         relativeVelocityVector = vec.diff3(velocityVector, mat.translationVector3(this.getVelocityMatrix()));
         range = vec.length3(relativeVelocityVector) * dt / 1000 / this._scalingMatrix[0];
         // first, preliminary check based on position relative to the whole object
         if ((Math.abs(relativePos[0]) - range < this._bodySize) && (Math.abs(relativePos[1]) - range < this._bodySize) && (Math.abs(relativePos[2]) - range < this._bodySize)) {
             // if it is close enough to be hitting one of the bodies, check them
-            relativeVelocityVector = vec.mulVec3Mat3(relativeVelocityVector, mat.matrix3from4(this.getRotationMatrixInverse()));
+            vec.mulVec3Mat3(relativeVelocityVector, mat.matrix3from4(this.getRotationMatrixInverse()));
             vec.normalize3(relativeVelocityVector);
             for (i = 0; (result === null) && (i < this._bodies.length); i++) {
                 result = this._bodies[i].checkHit(relativePos, relativeVelocityVector, range, offset);

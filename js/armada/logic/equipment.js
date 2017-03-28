@@ -427,8 +427,8 @@ define([
                         relativeVelocityVectorInWorldSpace = vec.diff3(velocityVectorInWorldSpace, mat.translationVector3(physicalHitObject.getVelocityMatrix()));
                         relativeVelocityDirectionInWorldSpace = vec.normal3(relativeVelocityVectorInWorldSpace);
                         relativeVelocity = vec.length3(relativeVelocityVectorInWorldSpace);
-                        relativeVelocityDirectionInObjectSpace = vec.mulVec3Mat4(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
-                        hitPositionVectorInWorldSpace = vec.mulVec4Mat4(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
+                        relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4(hitObjects[i].getVisualModel().getOrientationMatrix()));
+                        hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
                         relativeHitPositionVectorInWorldSpace = vec.diff3(hitPositionVectorInWorldSpace, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                         physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
                         exp = new explosion.Explosion(this._class.getExplosionClass(), mat.translation4v(hitPositionVectorInWorldSpace), mat.identity4(), vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true);
@@ -590,7 +590,7 @@ define([
     Weapon.prototype.getOrigoPositionMatrix = function () {
         this._origoPositionMatrix = this._origoPositionMatrix || mat.translatedByVector(
                 this._slot ? this._slot.positionMatrix : mat.IDENTITY4,
-                vec.mulVec3Mat4(
+                vec.prodVec3Mat4Aux(
                         vec.scaled3(this._class.getAttachmentPoint(), -1),
                         mat.prod3x3SubOf4Aux(
                                 mat.scaling4(this._class.getModel().getScale() / (this._spacecraft ? this._spacecraft.getPhysicalScalingMatrix()[0] : 1)),
@@ -620,11 +620,11 @@ define([
      */
     Weapon.prototype.getBasePointPosVector = function (shipScaledOriMatrix) {
         var
-                basePointPosVector = this._class.getBasePoint(),
-                weaponSlotPosVector = vec.mulVec3Mat4(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
+                basePointPosVector,
+                weaponSlotPosVector = vec.prodVec3Mat4Aux(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
         vec.add3(weaponSlotPosVector, this._spacecraft.getPhysicalPositionVector());
-        basePointPosVector = vec.mulVec4Mat4(basePointPosVector, this._transformMatrix);
-        basePointPosVector = vec.mulVec3Mat4(basePointPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
+        basePointPosVector = vec.prodVec4Mat4(this._class.getBasePoint(), this._transformMatrix);
+        vec.mulVec3Mat4(basePointPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
         vec.add3(basePointPosVector, weaponSlotPosVector);
         return basePointPosVector;
     };
@@ -792,8 +792,8 @@ define([
             for (i = 0; i < rotators.length; i++) {
                 mat.rotateAroundPoint4(
                         this._transformMatrix,
-                        vec.mulVec3Mat4(rotators[i].center, this._transformMatrix),
-                        vec.mulVec3Mat4(rotators[i].axis, this._transformMatrix),
+                        vec.prodVec3Mat4Aux(rotators[i].center, this._transformMatrix),
+                        vec.prodVec3Mat4Aux(rotators[i].axis, this._transformMatrix),
                         this._rotationAngles[i]);
                 this._visualModel.setMat4Parameter(
                         _groupTransformsArrayName,
@@ -826,7 +826,7 @@ define([
         if (this._cooldown >= this._class.getCooldown()) {
             this._cooldown = 0;
             // cache the matrices valid for the whole weapon
-            weaponSlotPosVector = vec.mulVec3Mat4(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
+            weaponSlotPosVector = vec.prodVec3Mat4Aux(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
             weaponSlotPosMatrix = mat.translatedByVector(this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
             projectileOriMatrix = this.getProjectileOrientationMatrix();
             barrels = this._class.getBarrels();
@@ -838,11 +838,11 @@ define([
                 projectileClass = barrels[i].getProjectileClass();
                 barrelPosVector = barrels[i].getPositionVector();
                 if (!this._fixed) {
-                    barrelPosVector = vec.mulVec4Mat4(barrelPosVector, this._transformMatrix);
+                    barrelPosVector = vec.prodVec4Mat4(barrelPosVector, this._transformMatrix);
                 }
                 // add the muzzle flash of this barrel
                 muzzleFlash = this._getMuzzleFlashForBarrel(i, barrelPosVector);
-                barrelPosVector = vec.mulVec3Mat4(barrelPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
+                barrelPosVector = vec.prodVec3Mat4(barrelPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
                 projectilePosMatrix = mat.translatedByVector(weaponSlotPosMatrix, barrelPosVector);
                 this._visualModel.getNode().addSubnode(new sceneGraph.RenderableNode(muzzleFlash), false, _minimumMuzzleFlashParticleCountForInstancing);
                 // add the projectile of this barrel
@@ -999,8 +999,8 @@ define([
             // calculate the vector pointing towards the target in world coordinates
             vectorToTarget = vec.diff3(targetPositionVector, basePointPosVector);
             // transform to object space - relative to the weapon
-            vectorToTarget = vec.mulMat4Vec3(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
-            vectorToTarget = vec.mulMat4Vec3(this._slot.orientationMatrix, vectorToTarget);
+            vectorToTarget = vec.prodMat4Vec3(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
+            vectorToTarget = vec.prodMat4Vec3(this._slot.orientationMatrix, vectorToTarget);
             inRange = vec.length3(vectorToTarget) <= this.getRange();
             vec.normalize3(vectorToTarget);
             switch (this._class.getRotationStyle()) {

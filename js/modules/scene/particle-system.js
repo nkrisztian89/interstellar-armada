@@ -182,7 +182,7 @@ define([
             this._positionMatrix[12] + (Math.random() - 0.5) * this._dimensions[0],
             this._positionMatrix[13] + (Math.random() - 0.5) * this._dimensions[1],
             this._positionMatrix[14] + (Math.random() - 0.5) * this._dimensions[2]];
-        particle.setPositionMatrix(mat.translation4v(vec.mulVec3Mat4(positionVector, this._orientationMatrix)));
+        particle.setPositionv(vec.prodVec3Mat4Aux(positionVector, this._orientationMatrix));
         return particle;
     };
     /**

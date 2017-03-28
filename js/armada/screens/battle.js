@@ -63,6 +63,7 @@ define([
         renderableObjects, sceneGraph,
         strings, armadaScreens, graphics, audio, classes, config, control,
         SpacecraftEvents, missions, equipment, ai) {
+    /* jshint validthis: true */
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -3038,7 +3039,7 @@ define([
                     _shipArrows.push(_createShipArrow());
                     _shipArrows[i].addToScene(_battleScene);
                 }
-                direction = mat.getRowD4(mat.prod34(ships[i].getPhysicalPositionMatrix(), _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix()));
+                direction = mat.getRowD4(mat.prod34Aux(ships[i].getPhysicalPositionMatrix(), _battleScene.getCamera().getViewMatrix(), _battleScene.getCamera().getProjectionMatrix()));
                 behind = direction[3] < 0;
                 vec.normalize4D(direction);
                 indicator = _shipArrows[i];

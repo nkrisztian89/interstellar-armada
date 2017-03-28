@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -15,7 +15,28 @@ define(function () {
             // -----------------------------------------------------------------------------
             // Constants
             CLOSE_TO_ONE = 0.99999,
-            CLOSE_TO_ZERO = 0.0000001;
+            CLOSE_TO_ZERO = 0.0000001,
+            /**
+             * The number of auxiliary vectors that should be created.
+             * @type Number
+             */
+            AUX_VECTOR_COUNT = 8,
+            // ----------------------------------------------------------------------
+            // private variables
+            /**
+             * Stores auxiliary vectors used for holding the results of temporary calculations. Operations returning a new vector can have
+             * an alternate version which uses one of the auxiliary vectors, thus avoiding creating a new array. This can
+             * be utilized by the users of this library by using the auxiliary version where the result is not persistently needed.
+             * There is a fixed amount of these vectors available and the operations cycle through them, so they can be used in (not too
+             * deep) combined operations, but not for recursion.
+             * @type Number[4][]
+             */
+            _auxVectors = [],
+            /**
+             * The index of the auxiliary vector to be used for the next auxiliary vector operation.
+             * @type Number
+             */
+            _auxVectorIndex = 0;
     // -----------------------------------------------------------------------------
     // Constant vectors
     /**
@@ -406,7 +427,7 @@ define(function () {
      * @param {Float32Array} m A 3x3 matrix.
      * @returns {Float32Array} v*m
      */
-    vec.mulVec3Mat3 = function (v, m) {
+    vec.prodVec3Mat3 = function (v, m) {
         return new Float32Array([
             m[0] * v[0] + m[3] * v[1] + m[6] * v[2],
             m[1] * v[0] + m[4] * v[1] + m[7] * v[2],
@@ -420,7 +441,7 @@ define(function () {
      * @param {Float32Array} m A 4x4 matrix.
      * @returns {Float32Array} v*m'
      */
-    vec.mulVec3Mat4 = function (v, m) {
+    vec.prodVec3Mat4 = function (v, m) {
         return new Float32Array([
             m[0] * v[0] + m[4] * v[1] + m[8] * v[2],
             m[1] * v[0] + m[5] * v[1] + m[9] * v[2],
@@ -428,12 +449,25 @@ define(function () {
         ]);
     };
     /**
+     * Multiplies the given 3D row vector with the top left 3x3 submatrix of the the given 4x4 matrix. (from the right)
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[4]} v A 4D vector.
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Float32Array} v*m
+     */
+    vec.prodVec3Mat4Aux = function (v, m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        vec.setProdVec3Mat4(aux, v, m);
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Multiplies the given 4D row vector with the given 4x4 matrix. (from the right)
      * @param {Number[4]} v A 4D vector.
      * @param {Float32Array} m A 4x4 matrix.
      * @returns {Float32Array} v*m
      */
-    vec.mulVec4Mat4 = function (v, m) {
+    vec.prodVec4Mat4 = function (v, m) {
         return new Float32Array([
             m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3],
             m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3],
@@ -442,12 +476,25 @@ define(function () {
         ]);
     };
     /**
+     * Multiplies the given 4D row vector with the given 4x4 matrix. (from the right)
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[4]} v A 4D vector.
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Float32Array} v*m
+     */
+    vec.prodVec4Mat4Aux = function (v, m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        vec.setProdVec4Mat4(aux, v, m);
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Multiplies the given 3x3 matrix with the given 3D row vector. (from the right)
      * @param {Float32Array} m A 3x3 matrix.
      * @param {Number[3]} v A 3D vector.
      * @returns {Float32Array} m*v
      */
-    vec.mulMat3Vec3 = function (m, v) {
+    vec.prodMat3Vec3 = function (m, v) {
         return new Float32Array([
             m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
             m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
@@ -461,7 +508,7 @@ define(function () {
      * @param {Number[3]} v A 3D vector.
      * @returns {Float32Array} m'*v
      */
-    vec.mulMat4Vec3 = function (m, v) {
+    vec.prodMat4Vec3 = function (m, v) {
         return new Float32Array([
             m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
             m[4] * v[0] + m[5] * v[1] + m[6] * v[2],
@@ -474,7 +521,7 @@ define(function () {
      * @param {Number[4]} v A 4D vector.
      * @returns {Float32Array} m*v
      */
-    vec.mulMat4Vec4 = function (m, v) {
+    vec.prodMat4Vec4 = function (m, v) {
         return new Float32Array([
             m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3],
             m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3],
@@ -533,6 +580,16 @@ define(function () {
         v1[2] += v2[2];
     };
     /**
+     * Subtracts the 3D vector v2 to the 3D vector v1, modifying v1 in-place.
+     * @param {Number[3]} v1
+     * @param {Number[3]} v2
+     */
+    vec.sub3 = function (v1, v2) {
+        v1[0] -= v2[0];
+        v1[1] -= v2[1];
+        v1[2] -= v2[2];
+    };
+    /**
      * Cross multiplies the passed v1 vector with v2 in-place.
      * @param {Number[3]} v1 A 3D vector.
      * @param {Number[3]} v2 A 3D vector.
@@ -556,5 +613,72 @@ define(function () {
         v[0] = v[0] * cosAngle + v[1] * -sinAngle;
         v[1] = x * sinAngle + v[1] * cosAngle;
     };
+    /**
+     * Multiplies the given 3D row vector with the given 3x3 matrix from the right, modifying it in-place.
+     * @param {Number[3]} v A 3D vector.
+     * @param {Float32Array} m A 3x3 matrix.
+     */
+    vec.mulVec3Mat3 = function (v, m) {
+        var vox = v[0], voy = v[1], voz = v[2];
+        v[0] = m[0] * vox + m[3] * voy + m[6] * voz;
+        v[1] = m[1] * vox + m[4] * voy + m[7] * voz;
+        v[2] = m[2] * vox + m[5] * voy + m[8] * voz;
+    };
+    /**
+     * Multiplies the given 3D row vector by the top left 3x3 submatrix of the given 4x4 matrix from the right, modifying it in-place.
+     * @param {Number[3]} v The vector to modify
+     * @param {Float32Array} m A 4x4 matrix.
+     */
+    vec.mulVec3Mat4 = function (v, m) {
+        var vox = v[0], voy = v[1], voz = v[2];
+        v[0] = m[0] * vox + m[4] * voy + m[8] * voz;
+        v[1] = m[1] * vox + m[5] * voy + m[9] * voz;
+        v[2] = m[2] * vox + m[6] * voy + m[10] * voz;
+    };
+    /**
+     * Sets the given vector to be equal to the product of the given 3D row vector and the top left 3x3 submatrix of the the given 4x4 matrix.
+     * @param {Number[3]} v The vector to modify
+     * @param {Number[3]} vl A 3D vector.
+     * @param {Float32Array} mr A 4x4 matrix.
+     */
+    vec.setProdVec3Mat4 = function (v, vl, mr) {
+        v[0] = mr[0] * vl[0] + mr[4] * vl[1] + mr[8] * vl[2];
+        v[1] = mr[1] * vl[0] + mr[5] * vl[1] + mr[9] * vl[2];
+        v[2] = mr[2] * vl[0] + mr[6] * vl[1] + mr[10] * vl[2];
+    };
+    /**
+     * Multiplies the given 4D row vector by the given 4x4 matrix from the right, modifying it in-place.
+     * @param {Number[4]} v A 4D vector on the left of the multiplication
+     * @param {Float32Array} m A 4x4 matrix on the right of the multiplication
+     */
+    vec.mulVec4Mat4 = function (v, m) {
+        var vox = v[0], voy = v[1], voz = v[2], vow = v[3];
+        v[0] = m[0] * vox + m[4] * voy + m[8] * voz + m[12] * vow;
+        v[1] = m[1] * vox + m[5] * voy + m[9] * voz + m[13] * vow;
+        v[2] = m[2] * vox + m[6] * voy + m[10] * voz + m[14] * vow;
+        v[3] = m[3] * vox + m[7] * voy + m[11] * voz + m[15] * vow;
+    };
+    /**
+     * Sets the given vector to be equal to the product of the given 4D row vector and the given 4x4 matrix.
+     * @param {Number[4]} v The 4D vector to modify
+     * @param {Number[4]} vl A 4D vector on the left of the multiplication
+     * @param {Float32Array} mr A 4x4 matrix on the right of the multiplication
+     */
+    vec.setProdVec4Mat4 = function (v, vl, mr) {
+        v[0] = mr[0] * vl[0] + mr[4] * vl[1] + mr[8] * vl[2] + mr[12] * vl[3];
+        v[1] = mr[1] * vl[0] + mr[5] * vl[1] + mr[9] * vl[2] + mr[13] * vl[3];
+        v[2] = mr[2] * vl[0] + mr[6] * vl[1] + mr[10] * vl[2] + mr[14] * vl[3];
+        v[3] = mr[3] * vl[0] + mr[7] * vl[1] + mr[11] * vl[2] + mr[15] * vl[3];
+    };
+    // ----------------------------------------------------------------------
+    // Initialization
+    (function () {
+        var i;
+        for (i = 0; i < AUX_VECTOR_COUNT; i++) {
+            _auxVectors.push([0, 0, 0, 0]);
+        }
+    }());
+    // ----------------------------------------------------------------------
+    // Returning the public interface
     return vec;
 });

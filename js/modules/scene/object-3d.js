@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides a basic class to use as a mixin or base class for 3 dimensional objects.
  * be rendered on them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -195,6 +195,19 @@ define([
                 this._positionMatrix[13],
                 this._positionMatrix[14]
             ];
+        }
+        /**
+         * Sets the passed vector as the new position.
+         * @param {Number[3]} v
+         */
+        function setPositionv(v) {
+            this._positionMatrix[12] = v[0];
+            this._positionMatrix[13] = v[1];
+            this._positionMatrix[14] = v[2];
+            this._modelMatrixValid = false;
+            this._modelMatrixInverseValid = false;
+            this._insideParent = null;
+            this._positionMatrixInCameraSpaceValid = false;
         }
         /**
          * Translates the current position by (x;y;z).
@@ -422,7 +435,7 @@ define([
          */
         function getPositionMatrixInCameraSpace(camera) {
             if (!this._positionMatrixInCameraSpaceValid) {
-                mat.setTranslation4v(this._positionMatrixInCameraSpace, vec.mulVec4Mat4(mat.translationVector4(this.getModelMatrix()), camera.getViewMatrix()));
+                mat.setTranslation4v(this._positionMatrixInCameraSpace, vec.prodVec4Mat4Aux(mat.translationVector4(this.getModelMatrix()), camera.getViewMatrix()));
                 this._positionMatrixInCameraSpaceValid = true;
             }
             return this._positionMatrixInCameraSpace;
@@ -453,7 +466,7 @@ define([
             // we reintroduce appropriate scaling, but not the orientation, so 
             // we can check border points of the properly scaled model, but translated
             // along the axes of the camera space
-            fullMatrix = mat.prod34(scalingMatrix, baseMatrix, camera.getProjectionMatrix());
+            fullMatrix = mat.prod34Aux(scalingMatrix, baseMatrix, camera.getProjectionMatrix());
             size = this.getSize();
             factor = 1 / fullMatrix[15];
             position = [
@@ -461,8 +474,8 @@ define([
                 (fullMatrix[13] === 0.0) ? 0.0 : fullMatrix[13] * factor,
                 (fullMatrix[14] === 0.0) ? 0.0 : fullMatrix[14] * factor];
             // frustum culling: sides
-            xOffsetPosition = vec.mulVec4Mat4([size, 0.0, 0.0, 1.0], fullMatrix);
-            yOffsetPosition = vec.mulVec4Mat4([0.0, size, 0.0, 1.0], fullMatrix);
+            xOffsetPosition = vec.prodVec4Mat4Aux([size, 0.0, 0.0, 1.0], fullMatrix);
+            yOffsetPosition = vec.prodVec4Mat4Aux([0.0, size, 0.0, 1.0], fullMatrix);
             xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
             yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
             if (!((position[0] + xOffset < -1) || (position[0] - xOffset > 1)) &&
@@ -486,7 +499,7 @@ define([
          */
         function isInsideShadowRegion(lightMatrix, range, depthRatio) {
             var positionInLightSpace, size;
-            positionInLightSpace = vec.mulVec4Mat4(mat.translationVector4(this.getModelMatrix()), lightMatrix);
+            positionInLightSpace = vec.prodVec4Mat4Aux(mat.translationVector4(this.getModelMatrix()), lightMatrix);
             size = this.getScaledSize();
             return (Math.abs(positionInLightSpace[0]) - size < range) &&
                     (Math.abs(positionInLightSpace[1]) - size < range) &&
@@ -499,6 +512,7 @@ define([
             this.prototype.setParent = setParent;
             this.prototype.getPositionMatrix = getPositionMatrix;
             this.prototype.setPositionMatrix = setPositionMatrix;
+            this.prototype.setPositionv = setPositionv;
             this.prototype.getOrientationMatrix = getOrientationMatrix;
             this.prototype.setOrientationMatrix = setOrientationMatrix;
             this.prototype.getScalingMatrix = getScalingMatrix;

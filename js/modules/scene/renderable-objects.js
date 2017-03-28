@@ -1473,7 +1473,7 @@ define([
             return this.getModelMatrix();
         });
         this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
-            return vec.mulVec3Mat4(vec.normal3(this._velocityVector), this.getModelMatrix());
+            return vec.prodVec3Mat4(vec.normal3(this._velocityVector), this.getModelMatrix());
         });
         this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
             return instanced ? this._calculatedSize : this._calculatedSize[0];

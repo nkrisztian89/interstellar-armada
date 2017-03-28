@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides a capable camera class to use with scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -545,7 +545,7 @@ define([
         var translationVector, distance;
         if (!this._fixed) {
             if ((this._followedObjects.length === 0) || this._startsWithRelativePosition) {
-                translationVector = vec.scaled3(vec.mulVec3Mat4(velocityVector, worldOrientationMatrix), dt / 1000);
+                translationVector = vec.scaled3(vec.prodVec3Mat4Aux(velocityVector, worldOrientationMatrix), dt / 1000);
                 mat.translateByVector(this._relativePositionMatrix, translationVector);
             } else {
                 if (this._turnsAroundObjects) {
@@ -564,9 +564,9 @@ define([
                     }
                 } else {
                     if (this._movesRelativeToObject) {
-                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(velocityVector, mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2)), dt / 1000));
+                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.prodVec3Mat4Aux(velocityVector, mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2)), dt / 1000));
                     } else {
-                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.mulVec3Mat4(
+                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.prodVec3Mat4Aux(
                                 velocityVector,
                                 mat.prod3x3SubOf4Aux(
                                         worldOrientationMatrix,
@@ -996,7 +996,7 @@ define([
                                 application.crash();
                         }
                         if (baseOrientationMatrix) {
-                            dirTowardsObject = vec.mulVec3Mat4(dirTowardsObject, mat.inverseOfRotation4(baseOrientationMatrix));
+                            dirTowardsObject = vec.prodVec3Mat4Aux(dirTowardsObject, mat.inverseOfRotation4(baseOrientationMatrix));
                         } else {
                             baseOrientationMatrix = mat.IDENTITY4;
                         }
@@ -1091,15 +1091,15 @@ define([
                 this._relativeOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4Aux(vec.UNIT3_X, this._beta * Math.PI / 180), mat.rotation4Aux(vec.UNIT3_Z, this._alpha * Math.PI / 180));
             } else {
                 if (this._followedObjects.length > 0) {
-                    mat.mul4(this._relativeOrientationMatrix, mat.prod34(
-                            mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
-                            mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
-                            mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
+                    mat.mul4(this._relativeOrientationMatrix, mat.prod34Aux(
+                            mat.rotation4Aux(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
+                            mat.rotation4Aux(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
+                            mat.rotation4Aux(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
                 } else {
-                    mat.mul4(this._relativeOrientationMatrix, mat.prod34(
-                            mat.rotation4(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
-                            mat.rotation4(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
-                            mat.rotation4(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
+                    mat.mul4(this._relativeOrientationMatrix, mat.prod34Aux(
+                            mat.rotation4Aux(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
+                            mat.rotation4Aux(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
+                            mat.rotation4Aux(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
                 }
             }
         }
@@ -2350,7 +2350,7 @@ define([
             previousPositionVector = this.getCameraPositionVector();
             this._setPositionMatrix(mat.translation4v(vec.sum3(vec.scaled3(startPositionVector, 1 - transitionProgress), vec.scaled3(endPositionVector, transitionProgress))));
             // calculate the velocity vector
-            this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getCameraOrientationMatrix(), vec.diff3(this.getCameraPositionVector(), previousPositionVector)), 1000 / dt);
+            this._velocityVector = vec.scaled3(vec.prodMat4Vec3(this.getCameraOrientationMatrix(), vec.diff3(this.getCameraPositionVector(), previousPositionVector)), 1000 / dt);
             // calculate orientation
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
             // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
@@ -2387,7 +2387,7 @@ define([
             if (this._currentConfiguration.positionFollowsObjects()) {
                 if (this._previousFollowedPositionVector) {
                     this._velocityVector = vec.scaled3(
-                            vec.mulMat4Vec3(
+                            vec.prodMat4Vec3(
                                     this.getCameraOrientationMatrix(),
                                     vec.diff3(
                                             this._currentConfiguration.getFollowedPositionVector(),
@@ -2398,7 +2398,7 @@ define([
                 }
                 this._previousFollowedPositionVector = this._currentConfiguration.getFollowedPositionVector();
             } else {
-                this._velocityVector = vec.scaled3(vec.mulMat4Vec3(this.getCameraOrientationMatrix(), vec.diff3(this.getCameraPositionVector(), previousPositionVector)), 1000 / dt);
+                this._velocityVector = vec.scaled3(vec.prodMat4Vec3(this.getCameraOrientationMatrix(), vec.diff3(this.getCameraPositionVector(), previousPositionVector)), 1000 / dt);
             }
         }
     };

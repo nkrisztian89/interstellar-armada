@@ -373,7 +373,7 @@ define([
     mat.rotationAroundPoint4 = function (p, axis, angle) {
         var
                 m = mat.rotation4(axis, angle),
-                p2 = vec.mulVec3Mat4(p, m);
+                p2 = vec.prodVec3Mat4Aux(p, m);
         m[12] = p[0] - p2[0];
         m[13] = p[1] - p2[1];
         m[14] = p[2] - p2[2];
@@ -787,7 +787,7 @@ define([
             if (v[0] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchVector = vec.mulVec3Mat4(v, mat.rotation4Aux(vec.UNIT3_Z, -result.yaw));
+            pitchVector = vec.prodVec3Mat4Aux(v, mat.rotation4Aux(vec.UNIT3_Z, -result.yaw));
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchVector[1], pitchVector[2]]));
             if (pitchVector[2] > 0) {
                 result.pitch = -result.pitch;
@@ -1377,6 +1377,19 @@ define([
         return result;
     };
     /**
+     * Multiplies three 4x4 matrices and returns the result.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m1 The first (leftmost) 4x4 matrix
+     * @param {Float32Array} m2 The second (middle) 4x4 matrix
+     * @param {Float32Array} m3 The third (rightmost) 4x4 matrix
+     * @returns {Float32Array}
+     */
+    mat.prod34Aux = function (m1, m2, m3) {
+        var result = mat.prod4Aux(m1, m2);
+        mat.mul4(result, m3);
+        return result;
+    };
+    /**
      * Returns a 4x4 transformation matrix, which is the result of translating m by the translation vector v.
      * @param {Float32Array} m A 4x4 transformation matrix.
      * @param {Float32Array} v A 3D vector
@@ -1534,7 +1547,7 @@ define([
     mat.setRotationAroundPoint4 = function (m, p, axis, angle) {
         var p2;
         mat.setRotation4(m, axis, angle);
-        p2 = vec.mulVec3Mat4(p, m);
+        p2 = vec.prodVec3Mat4Aux(p, m);
         m[12] = p[0] - p2[0];
         m[13] = p[1] - p2[1];
         m[14] = p[2] - p2[2];
