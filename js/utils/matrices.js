@@ -59,6 +59,16 @@ define([
              */
             _auxMatrixIndex = 0,
             /**
+             * 3x3 auxiliary matrices.
+             * @type Float32Array[]
+             */
+            _auxMatrices3 = [],
+            /**
+             * The index of the 3x3 auxiliary matrix to be used for the next 3x3 auxiliary matrix operation.
+             * @type Number
+             */
+            _auxMatrix3Index = 0,
+            /**
              * Stores how many new matrices have been created.
              * @type Number
              */
@@ -144,6 +154,32 @@ define([
             0.0, 0.0, 1.0, 0.0,
             0.0, 0.0, 0.0, 1.0
         ]);
+    };
+    /**
+     * Returns a 4x4 identity matrix.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @returns {Float32Array}
+     */
+    mat.identity4Aux = function () {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = 1.0;
+        aux[1] = 0.0;
+        aux[2] = 0.0;
+        aux[3] = 0.0;
+        aux[4] = 0.0;
+        aux[5] = 1.0;
+        aux[6] = 0.0;
+        aux[7] = 0.0;
+        aux[8] = 0.0;
+        aux[9] = 0.0;
+        aux[10] = 1.0;
+        aux[11] = 0.0;
+        aux[12] = 0.0;
+        aux[13] = 0.0;
+        aux[14] = 0.0;
+        aux[15] = 1.0;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * A constant 4x4 identity matrix.
@@ -919,6 +955,26 @@ define([
         ]);
     };
     /**
+     * Returns the 3x3 top-left submatrix of the passed 4x4 matrix.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Float32Array}
+     */
+    mat.matrix3from4Aux = function (m) {
+        var aux = _auxMatrices3[_auxMatrix3Index];
+        aux[0] = m[0];
+        aux[1] = m[1];
+        aux[2] = m[2];
+        aux[3] = m[4];
+        aux[4] = m[5];
+        aux[5] = m[6];
+        aux[6] = m[8];
+        aux[7] = m[9];
+        aux[8] = m[10];
+        _auxMatrix3Index = (_auxMatrix3Index + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Returns a 4x4 matrix by taking the 3x3 matrix m, and complementing it with
      * a last column and row of a 4x4 identity matrix.
      * @param {Float32Array} m A 3x3 matrix.
@@ -945,6 +1001,18 @@ define([
             m[1], m[4], m[7],
             m[2], m[5], m[8]
         ]);
+    };
+    /**
+     * Returns the transposed of the passed 3x3 matrix m.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m A 3x3 matrix.
+     * @returns {Float32Array} The transposed of m.
+     */
+    mat.transposed3Aux = function (m) {
+        var aux = _auxMatrices3[_auxMatrix3Index];
+        mat.setTransposed3(aux, m);
+        _auxMatrix3Index = (_auxMatrix3Index + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * Returns the transposed of the top left 3x3 submatrix of the passed 4x4 matrix m.
@@ -974,73 +1042,39 @@ define([
         ]);
     };
     /**
+     * Returns the transposed of the passed 4x4 matrix m.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Float32Array} The transposed of m.
+     */
+    mat.transposed4Aux = function (m) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setTransposed4(aux, m);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Returns the inverse of the passed 3x3 matrix m.
      * @param {Float32Array} m A 3x3 matrix.
      * @returns {Float32Array} The inverse of m.
      */
     mat.inverse3 = function (m) {
-        var i, j, k, t, u, m2, result, swap, index = _getFreeTempMatrixIndex();
-        m2 = _getTempMatrix(index);
-        mat.setMatrix3(m2, m);
-        // we will use Gauss-Jordan elimination, so an identity matrix will be augmented to
-        // the right of the original matrix
+        var result;
         result = mat.identity3();
-        // check by the determinant, if the matrix is invertible
-        if (mat.determinant3(m2) === 0) {
-            return mat.null3();
-        }
-        // calculate the inverse by Gaussian-Jordan elimination
-        // first part: forward elimination
-        // for each row...
-        for (i = 0; i < 3; i++) {
-            // first swap the row to have a non-zero element at the diagonal
-            // position, if needed
-            if (Math.abs(m2[i * 4]) <= 0.0001) {
-                // first, find a non-zero element in the same (i) column
-                j = i + 1;
-                while (Math.abs(m2[j * 3 + i]) <= 0.0001) {
-                    j++;
-                }
-                // when found it in row 'j' swap the 'i'th and 'j'th rows
-                for (k = 0; k < 3; k++) {
-                    swap = m2[i * 3 + k];
-                    m2[i * 3 + k] = m2[j * 3 + k];
-                    m2[j * 3 + k] = swap;
-                    swap = result[i * 3 + k];
-                    result[i * 3 + k] = result[j * 3 + k];
-                    result[j * 3 + k] = swap;
-                }
-            }
-            // divide all elements of the row by the value of the element in the
-            // main diagonal (within that row), to make it equal one
-            t = m2[i * 4];
-            for (j = 0; j < 3; j++) {
-                m2[i * 3 + j] = m2[i * 3 + j] / t;
-                result[i * 3 + j] = result[i * 3 + j] / t;
-            }
-            // subtract the row from all rows below it, multiplied accordingly
-            // to null out the elements below the main diagonal element
-            for (j = i + 1; j < 3; j++) {
-                u = m2[j * 3 + i] / m2[i * 4];
-                for (k = 0; k < 3; k++) {
-                    m2[j * 3 + k] = m2[j * 3 + k] - u * m2[i * 3 + k];
-                    result[j * 3 + k] = result[j * 3 + k] - u * result[i * 3 + k];
-                }
-            }
-        }
-        // back-substitution phase: eliminate the upper part of the original
-        // matrix - however, these final values hold no additional information
-        // for the calculations, so the operations are only done on the right
-        // matrix, which will hold the inverse in the end
-        for (i = 2; i >= 1; i--) {
-            for (j = i - 1; j >= 0; j--) {
-                for (k = 0; k < 3; k++) {
-                    result[j * 3 + k] = result[j * 3 + k] - m2[j * 3 + i] * result[i * 3 + k];
-                }
-            }
-        }
-        _releaseTempMatrix(index);
+        mat.setInverse3(result, m);
         return result;
+    };
+    /**
+     * Returns the inverse of the passed 3x3 matrix m.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m A 3x3 matrix.
+     * @returns {Float32Array} The inverse of m.
+     */
+    mat.inverse3Aux = function (m) {
+        var aux = _auxMatrices3[_auxMatrix3Index];
+        mat.setInverse3(aux, m);
+        _auxMatrix3Index = (_auxMatrix3Index + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * Returns the inverse of the passed 4x4 matrix m.
@@ -1089,6 +1123,15 @@ define([
      * @returns {Float32Array} The calculated inverse (transpose) rotation matrix.
      */
     mat.inverseOfRotation4 = mat.transposed4;
+    /**
+     * Calculates and returns the inverse of a 4x4 rotation matrix, using the fact that
+     * it coincides with its transpose. It is the same as transposed4, but the different
+     * name of the function can clarify the role of it when it is used.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m The input 4x4 rotation matrix.
+     * @returns {Float32Array} The calculated inverse (transpose) rotation matrix.
+     */
+    mat.inverseOfRotation4Aux = mat.transposed4Aux;
     /**
      * A computationally efficient function to return the inverse of a 4x4 scaling
      * matrix. (a transformation matrix that only hold scaling information)
@@ -1439,6 +1482,36 @@ define([
     // -----------------------------------------------------------------------------
     // Functions that modify existing matrices
     /**
+     * Modifies the passed 3x3 matrix, setting it to a null matrix.
+     * @param {Float32Array} m A 3x3 matrix
+     */
+    mat.setNull3 = function (m) {
+        m[0] = 0;
+        m[1] = 0;
+        m[2] = 0;
+        m[3] = 0;
+        m[4] = 0;
+        m[5] = 0;
+        m[6] = 0;
+        m[7] = 0;
+        m[8] = 0;
+    };
+    /**
+     * Modifies the passed 3x3 matrix, setting it to an identity matrix.
+     * @param {Float32Array} m A 3x3 matrix
+     */
+    mat.setIdentity3 = function (m) {
+        m[0] = 1;
+        m[1] = 0;
+        m[2] = 0;
+        m[3] = 0;
+        m[4] = 1;
+        m[5] = 0;
+        m[6] = 0;
+        m[7] = 0;
+        m[8] = 1;
+    };
+    /**
      * Sets the passed 4x4 matrix m to a 4x4 identity matrix.
      * @param {Float32Array} m
      */
@@ -1607,7 +1680,76 @@ define([
         _releaseTempMatrix(index);
     };
     /**
-     * Modifies the passed 4x4 transformation matrix m in-place to be the inverse of the passed 4x4 matrix m.
+     * Modifies the passed 3x3 transformation matrix m in-place to be the inverse of the passed 3x3 matrix im.
+     * @param {Float32Array} m The 3x3 matrix to modify
+     * @param {Float32Array} im The 3x3 matrix the inverse of which is sought
+     */
+    mat.setInverse3 = function (m, im) {
+        var i, j, k, t, u, m2, swap, index = _getFreeTempMatrixIndex();
+        m2 = _getTempMatrix(index);
+        mat.setMatrix3(m2, im);
+        // check by the determinant, if the matrix is invertible
+        if (mat.determinant3(m2) === 0) {
+            mat.setNull3(m);
+            return;
+        }
+        // we will use Gauss-Jordan elimination, so an identity matrix will be augmented to
+        // the right of the original matrix
+        mat.setIdentity3(m);
+        // calculate the inverse by Gaussian-Jordan elimination
+        // first part: forward elimination
+        // for each row...
+        for (i = 0; i < 3; i++) {
+            // first swap the row to have a non-zero element at the diagonal
+            // position, if needed
+            if (Math.abs(m2[i * 4]) <= 0.0001) {
+                // first, find a non-zero element in the same (i) column
+                j = i + 1;
+                while (Math.abs(m2[j * 3 + i]) <= 0.0001) {
+                    j++;
+                }
+                // when found it in row 'j' swap the 'i'th and 'j'th rows
+                for (k = 0; k < 3; k++) {
+                    swap = m2[i * 3 + k];
+                    m2[i * 3 + k] = m2[j * 3 + k];
+                    m2[j * 3 + k] = swap;
+                    swap = m[i * 3 + k];
+                    m[i * 3 + k] = m[j * 3 + k];
+                    m[j * 3 + k] = swap;
+                }
+            }
+            // divide all elements of the row by the value of the element in the
+            // main diagonal (within that row), to make it equal one
+            t = m2[i * 4];
+            for (j = 0; j < 3; j++) {
+                m2[i * 3 + j] = m2[i * 3 + j] / t;
+                m[i * 3 + j] = m[i * 3 + j] / t;
+            }
+            // subtract the row from all rows below it, multiplied accordingly
+            // to null out the elements below the main diagonal element
+            for (j = i + 1; j < 3; j++) {
+                u = m2[j * 3 + i] / m2[i * 4];
+                for (k = 0; k < 3; k++) {
+                    m2[j * 3 + k] = m2[j * 3 + k] - u * m2[i * 3 + k];
+                    m[j * 3 + k] = m[j * 3 + k] - u * m[i * 3 + k];
+                }
+            }
+        }
+        // back-substitution phase: eliminate the upper part of the original
+        // matrix - however, these final values hold no additional information
+        // for the calculations, so the operations are only done on the right
+        // matrix, which will hold the inverse in the end
+        for (i = 2; i >= 1; i--) {
+            for (j = i - 1; j >= 0; j--) {
+                for (k = 0; k < 3; k++) {
+                    m[j * 3 + k] = m[j * 3 + k] - m2[j * 3 + i] * m[i * 3 + k];
+                }
+            }
+        }
+        _releaseTempMatrix(index);
+    };
+    /**
+     * Modifies the passed 4x4 transformation matrix m in-place to be the inverse of the passed 4x4 matrix im.
      * @param {Float32Array} m The 4x4 matrix to modify
      * @param {Float32Array} im The 4x4 matrix the inverse of which is sought
      */
@@ -1695,6 +1837,22 @@ define([
         m[13] = -tm[13];
         m[14] = -tm[14];
         m[15] = 1.0;
+    };
+    /**
+     * Modifies the passed matrix in-place to be the transposed of the other passed 3x3 matrix
+     * @param {Float32Array} m The 3x3 matrix to modify
+     * @param {Float32Array} tm The 3x3 matrix to transpose
+     */
+    mat.setTransposed3 = function (m, tm) {
+        m[0] = tm[0];
+        m[1] = tm[3];
+        m[2] = tm[6];
+        m[3] = tm[1];
+        m[4] = tm[4];
+        m[5] = tm[7];
+        m[6] = tm[2];
+        m[7] = tm[5];
+        m[8] = tm[8];
     };
     /**
      * Modifies the passed matrix in-place to be the transposed of the other passed 4x4 matrix
@@ -1884,6 +2042,9 @@ define([
         var i;
         for (i = 0; i < AUX_MATRIX_COUNT; i++) {
             _auxMatrices.push(mat.identity4());
+        }
+        for (i = 0; i < AUX_MATRIX_COUNT; i++) {
+            _auxMatrices3.push(mat.identity3());
         }
     }());
     // ----------------------------------------------------------------------

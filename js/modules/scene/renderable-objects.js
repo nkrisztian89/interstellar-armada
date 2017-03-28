@@ -913,7 +913,7 @@ define([
             return this.getModelMatrix();
         });
         this.setUniformValueFunction(UNIFORM_NORMAL_MATRIX_NAME, function () {
-            return mat.transposed3(mat.inverse3(mat.matrix3from4(this.getModelMatrix())));
+            return mat.transposed3Aux(mat.inverse3Aux(mat.matrix3from4Aux(this.getModelMatrix())));
         });
     }
     ShadedLODMesh.prototype = new RenderableObject3D();

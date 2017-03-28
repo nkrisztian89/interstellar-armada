@@ -366,8 +366,8 @@ define([
         // first transform the coordinates from model-space (physical object space) to body-space
         if (this._rotated) {
             // we should not modify relativePositionVector, so creating a new one instead of multiplying in-place
-            relativePositionVector = vec.prodVec4Mat4(relativePositionVector, this.getModelMatrixInverse());
-            relativeDirectionVector = vec.prodVec3Mat3(relativeDirectionVector, mat.matrix3from4(mat.inverseOfRotation4(this._orientationMatrix)));
+            relativePositionVector = vec.prodVec4Mat4Aux(relativePositionVector, this.getModelMatrixInverse());
+            relativeDirectionVector = vec.prodVec3Mat3(relativeDirectionVector, mat.matrix3from4Aux(mat.inverseOfRotation4Aux(this._orientationMatrix)));
         } else {
             // we should not modify relativePositionVector, so creating a new one instead of subtracting in-place
             relativePositionVector = vec.diff3(relativePositionVector, this._positionVector);
@@ -848,7 +848,7 @@ define([
         // first, preliminary check based on position relative to the whole object
         if ((Math.abs(relativePos[0]) - range < this._bodySize) && (Math.abs(relativePos[1]) - range < this._bodySize) && (Math.abs(relativePos[2]) - range < this._bodySize)) {
             // if it is close enough to be hitting one of the bodies, check them
-            vec.mulVec3Mat3(relativeVelocityVector, mat.matrix3from4(this.getRotationMatrixInverse()));
+            vec.mulVec3Mat3(relativeVelocityVector, mat.matrix3from4Aux(this.getRotationMatrixInverse()));
             vec.normalize3(relativeVelocityVector);
             for (i = 0; (result === null) && (i < this._bodies.length); i++) {
                 result = this._bodies[i].checkHit(relativePos, relativeVelocityVector, range, offset);
@@ -883,7 +883,7 @@ define([
             // the affecting forces caused since the previous step
             // (s=1/2*a*t^2)
             if (this._forces.length > 0) {
-                accelerationMatrix = mat.identity4();
+                accelerationMatrix = mat.identity4Aux();
                 for (i = 0; i < this._forces.length; i++) {
                     t = this._forces[i].exert(dt) / 1000; // t is in seconds
                     if (t > 0) {
@@ -915,7 +915,7 @@ define([
                 // calculate the rotation that happened as a result of the angular
                 // acceleration the affecting torques caused since the previous step
                 if (this._torques.length > 0) {
-                    angularAccMatrix = mat.identity4();
+                    angularAccMatrix = mat.identity4Aux();
                     for (i = 0; i < this._torques.length; i++) {
                         t = this._torques[i].exert(dt) / 1000; // t is in seconds
                         if (t > 0) {
