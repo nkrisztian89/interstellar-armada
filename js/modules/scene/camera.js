@@ -150,7 +150,12 @@ define([
          * properties and cannot be set directly.
          * @type Float32Array
          */
-        this._worldPositionMatrix = null;
+        this._worldPositionMatrix = mat.identity4();
+        /**
+         * Whether the currently stored world position matrix is up-to-date for the current frame.
+         * @type Boolean
+         */
+        this._worldPositionMatrixValid = false;
         /**
          * Whether the distance from the followed objects is confined to certain limits
          * @type Boolean
@@ -284,7 +289,7 @@ define([
             this._camera.positionConfigurationWillChange();
         }
         mat.setMatrix4(this._relativePositionMatrix, this._defaultRelativePositionMatrix);
-        this._worldPositionMatrix = null;
+        this._worldPositionMatrixValid = false;
         this._isStarting = true;
     };
     /**
@@ -367,13 +372,11 @@ define([
      * @returns {Float32Array}
      */
     CameraPositionConfiguration.prototype.getFollowedObjectOrientationMatrix = function () {
-        var orientation;
         if (this._followedObjects.length === 0) {
             application.crash();
-        } else {
-            orientation = mat.matrix4(this._followedObjects[0].getOrientationMatrix());
+            return null;
         }
-        return orientation;
+        return this._followedObjects[0].getOrientationMatrix();
     };
     /**
      * Removes the destroyed objects from the list of followed objects.
@@ -390,7 +393,7 @@ define([
             if (k > 0) {
                 this._followedObjects.splice(i, k);
                 if (this._followedObjects.length === 0) {
-                    mat.setMatrix4(this._relativePositionMatrix, this._worldPositionMatrix || this._relativePositionMatrix || this._defaultRelativePositionMatrix);
+                    mat.setMatrix4(this._relativePositionMatrix, (this._worldPositionMatrixValid && this._worldPositionMatrix) || this._relativePositionMatrix || this._defaultRelativePositionMatrix);
                 }
             }
         }
@@ -405,8 +408,8 @@ define([
         if ((this._followedObjects.length > 0) && (!this._startsWithRelativePosition || this._isStarting)) {
             this._isStarting = false;
             if (!this._turnsAroundObjects) {
-                this._worldPositionMatrix = mat.translatedByM4(
-                        mat.translation4m4(mat.prodTranslationRotation4Aux(
+                mat.setTranslatedByM4(this._worldPositionMatrix,
+                        mat.translation4m4Aux(mat.prodTranslationRotation4Aux(
                                 this._relativePositionMatrix,
                                 this.getFollowedObjectOrientationMatrix())),
                         this.getFollowedPositionMatrix());
@@ -414,19 +417,20 @@ define([
                 if (!worldOrientationMatrix) {
                     application.crash();
                 } else {
-                    this._worldPositionMatrix = mat.translatedByM4(
-                            mat.translation4m4(mat.prodTranslationRotation4Aux(
+                    mat.setTranslatedByM4(this._worldPositionMatrix,
+                            mat.translation4m4Aux(mat.prodTranslationRotation4Aux(
                                     this._relativePositionMatrix,
                                     mat.prod3x3SubOf4Aux(mat.rotation4Aux(vec.UNIT3_X, Math.PI / 2), worldOrientationMatrix))),
                             this.getFollowedPositionMatrix());
                 }
             }
             if (this._startsWithRelativePosition) {
-                this._relativePositionMatrix = mat.matrix4(this._worldPositionMatrix);
+                mat.setMatrix4(this._relativePositionMatrix, this._worldPositionMatrix);
             }
         } else {
-            this._worldPositionMatrix = mat.matrix4(this._relativePositionMatrix);
+            mat.setMatrix4(this._worldPositionMatrix, this._relativePositionMatrix);
         }
+        this._worldPositionMatrixValid = true;
     };
     /**
      * If not cached, calculates, and returns the translation matrix describing the current location of the camera in world coordinates.
@@ -435,7 +439,7 @@ define([
      * @returns {Float32Array}
      */
     CameraPositionConfiguration.prototype.getWorldPositionMatrix = function (worldOrientationMatrix) {
-        if (!this._worldPositionMatrix) {
+        if (!this._worldPositionMatrixValid) {
             this._calculateWorldPositionMatrix(worldOrientationMatrix);
         }
         return this._worldPositionMatrix;
@@ -452,8 +456,8 @@ define([
         // if the position is only taken as relative at the start, then the stored relative position will actually be the world position,
         // so we need to transform it back to the actual relative position, before checking the limits
         if (this._startsWithRelativePosition && (!this._isStarting) && (this._followedObjects.length > 0)) {
-            relativePositionMatrix = mat.translation4m4(mat.prodTranslationRotation4Aux(
-                    mat.translatedByM4(
+            relativePositionMatrix = mat.translation4m4Aux(mat.prodTranslationRotation4Aux(
+                    mat.translatedByM4Aux(
                             this._relativePositionMatrix,
                             mat.inverseOfTranslation4Aux(this.getFollowedPositionMatrix())),
                     mat.inverseOfRotation4Aux(this.getFollowedObjectOrientationMatrix())));
@@ -471,11 +475,11 @@ define([
                         return false;
                     }
                     distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
-                    relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
+                    relativePositionMatrix = mat.translation4vAux(vec.scaled3(vec.normal3(translationVector), distance));
                 }
                 // if the position is absolute, we will do the distance range check from the orientation followed object (if any)
             } else if (orientationFollowedObjectsPositionVector) {
-                translationVector = vec.diff3(mat.translationVector3(relativePositionMatrix), orientationFollowedObjectsPositionVector);
+                translationVector = vec.diff3Aux(mat.translationVector3(relativePositionMatrix), orientationFollowedObjectsPositionVector);
                 distance = vec.length3(translationVector);
                 if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
                     if ((distance > this._maximumDistance) && (this._resetsWhenLeavingConfines)) {
@@ -486,7 +490,7 @@ define([
                         return false;
                     }
                     distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
-                    relativePositionMatrix = mat.translation4v(vec.sum3(orientationFollowedObjectsPositionVector, vec.scaled3(vec.normal3(translationVector), distance)));
+                    relativePositionMatrix = mat.translation4vAux(vec.sum3(orientationFollowedObjectsPositionVector, vec.scaled3(vec.normal3(translationVector), distance)));
                 }
             }
         }
@@ -519,13 +523,13 @@ define([
         }
         // if the position is only taken as relative at the start, then calculate and store the world position
         if (this._startsWithRelativePosition && (!this._isStarting) && (this._followedObjects.length > 0)) {
-            this._relativePositionMatrix = mat.translatedByM4(
-                    mat.translation4m4(mat.prodTranslationRotation4Aux(
+            mat.setTranslatedByM4(this._relativePositionMatrix,
+                    mat.translation4m4Aux(mat.prodTranslationRotation4Aux(
                             relativePositionMatrix,
                             this.getFollowedObjectOrientationMatrix())),
                     this.getFollowedPositionMatrix());
         } else {
-            this._relativePositionMatrix = relativePositionMatrix;
+            mat.setMatrix4(this._relativePositionMatrix, relativePositionMatrix);
         }
         return true;
     };
@@ -560,7 +564,7 @@ define([
                             velocityVector[2] = 0;
                             distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
                         }
-                        this._relativePositionMatrix = mat.translation4v(vec.scaled3(vec.normal3(translationVector), distance));
+                        mat.setTranslation4v(this._relativePositionMatrix, vec.scaled3(vec.normal3(translationVector), distance));
                     }
                 } else {
                     if (this._movesRelativeToObject) {
@@ -570,7 +574,7 @@ define([
                                 velocityVector,
                                 mat.prod3x3SubOf4Aux(
                                         worldOrientationMatrix,
-                                        mat.inverseOfRotation4(this.getFollowedObjectOrientationMatrix()))), dt / 1000));
+                                        mat.inverseOfRotation4Aux(this.getFollowedObjectOrientationMatrix()))), dt / 1000));
                     }
                 }
             }
@@ -581,7 +585,7 @@ define([
             }
             this._cleanupFollowedObjects();
         }
-        this._worldPositionMatrix = null;
+        this._worldPositionMatrixValid = false;
         return true;
     };
     // #########################################################################
@@ -890,13 +894,12 @@ define([
      * @returns {Float32Array}
      */
     CameraOrientationConfiguration.prototype.getFollowedOrientationMatrix = function () {
-        var orientation;
         if (this._followedObjects.length === 0) {
             application.crash();
+            return null;
         } else {
-            orientation = mat.matrix4(this._followedObjects[0].getOrientationMatrix());
+            return this._followedObjects[0].getOrientationMatrix();
         }
-        return orientation;
     };
     /**
      * Removes the destroyed objects from the list of followed objects.
@@ -996,7 +999,7 @@ define([
                                 application.crash();
                         }
                         if (baseOrientationMatrix) {
-                            dirTowardsObject = vec.prodVec3Mat4Aux(dirTowardsObject, mat.inverseOfRotation4(baseOrientationMatrix));
+                            dirTowardsObject = vec.prodVec3Mat4Aux(dirTowardsObject, mat.inverseOfRotation4Aux(baseOrientationMatrix));
                         } else {
                             baseOrientationMatrix = mat.IDENTITY4;
                         }
@@ -1088,7 +1091,7 @@ define([
                 }
                 this._alpha = Math.min(Math.max(this._minAlpha, this._alpha), this._maxAlpha);
                 this._beta = Math.min(Math.max(this._minBeta, this._beta), this._maxBeta);
-                this._relativeOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4Aux(vec.UNIT3_X, this._beta * Math.PI / 180), mat.rotation4Aux(vec.UNIT3_Z, this._alpha * Math.PI / 180));
+                mat.setProd3x3SubOf4(this._relativeOrientationMatrix, mat.rotation4Aux(vec.UNIT3_X, this._beta * Math.PI / 180), mat.rotation4Aux(vec.UNIT3_Z, this._alpha * Math.PI / 180));
             } else {
                 if (this._followedObjects.length > 0) {
                     mat.mul4(this._relativeOrientationMatrix, mat.prod34Aux(
@@ -2354,7 +2357,7 @@ define([
             // calculate orientation
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
             // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
-            relativeTransitionRotationMatrix = mat.prod3x3SubOf4Aux(mat.inverseOfRotation4(this._previousConfiguration.getOrientationMatrix()), this._currentConfiguration.getOrientationMatrix());
+            relativeTransitionRotationMatrix = mat.prod3x3SubOf4Aux(mat.inverseOfRotation4Aux(this._previousConfiguration.getOrientationMatrix()), this._currentConfiguration.getOrientationMatrix());
             rotations = mat.getRotations(relativeTransitionRotationMatrix);
             // now that the two rotations are calculated, we can interpolate the transformation using the angles
             this._setOrientationMatrix(mat.identity4());

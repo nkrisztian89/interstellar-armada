@@ -1648,26 +1648,26 @@ define([
         }
         // we are adding RenderableObject3D so if nodes with object 3D-s are added, they will have a parent with position and orientation
         // a size of 0 is specified so that no child 3D objects will ever think they are inside their parent
-        this._rootBackgroundNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, undefined, undefined, undefined, undefined, 0));
+        this._rootBackgroundNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
         this._rootBackgroundNode.setScene(this);
         // clearing main scene objects
         if (this._rootNode) {
             this._rootNode.destroy();
         }
-        this._rootNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, undefined, undefined, undefined, undefined, 0));
+        this._rootNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
         this._rootNode.setScene(this);
         // clearing resource objects
         if (this._rootResourceNode) {
             this._rootResourceNode.destroy();
         }
-        this._rootResourceNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false));
+        this._rootResourceNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4));
         this._rootResourceNode.setScene(this);
         this._resourceObjectIDs = {};
         // clearing UI objects
         if (this._rootUINode) {
             this._rootUINode.destroy();
         }
-        this._rootUINode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, undefined, undefined, undefined, undefined, 0));
+        this._rootUINode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
         this._rootUINode.setScene(this);
     };
     /**

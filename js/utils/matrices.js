@@ -349,6 +349,33 @@ define([
         ]);
     };
     /**
+     * Returns a 4x4 transformation matrix describing a translation.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m A generic 4x4 transformation matrix the translation of which will be extracted.
+     * @returns {Float32Array}
+     */
+    mat.translation4m4Aux = function (m) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = 1.0;
+        aux[1] = 0.0;
+        aux[2] = 0.0;
+        aux[3] = 0.0;
+        aux[4] = 0.0;
+        aux[5] = 1.0;
+        aux[6] = 0.0;
+        aux[7] = 0.0;
+        aux[8] = 0.0;
+        aux[9] = 0.0;
+        aux[10] = 1.0;
+        aux[11] = 0.0;
+        aux[12] = m[12];
+        aux[13] = m[13];
+        aux[14] = m[14];
+        aux[15] = 1.0;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Returns a new 2x2 transformation matrix describing a rotation.
      * @param {Number} angle The angle of rotation in radians
      */
@@ -1520,6 +1547,19 @@ define([
         ]);
     };
     /**
+     * Returns a 4x4 transformation matrix, which is the result of translating m1 by the translation described by m2.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m1 A 4x4 transformation matrix.
+     * @param {Float32Array} m2 A 4x4 transformation matrix. Only the translation described in this matrix will be taken into account.
+     * @returns {Float32Array}
+     */
+    mat.translatedByM4Aux = function (m1, m2) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setTranslatedByM4(aux, m1, m2);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Returns the square of the distance between the translations described by the
      * two given 4x4 transformation matrices. Transformations other than translations
      * are ignored.
@@ -1993,6 +2033,30 @@ define([
         m[15] = m1[12] * m2[3] + m1[13] * m2[7] + m1[14] * m2[11] + m1[15] * m2[15];
     };
     /**
+     * Modifies a 4x4 matrix in-place to be equal to the product of the upper left 3x3 submatrices of two 4x4 matrices padded to a 4x4 matrix.
+     * @param {Float32Array} m The 4x4 matrix to modify
+     * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
+     * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
+     */
+    mat.setProd3x3SubOf4 = function (m, m1, m2) {
+        m[0] = m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8];
+        m[1] = m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9];
+        m[2] = m1[0] * m2[2] + m1[1] * m2[6] + m1[2] * m2[10];
+        m[3] = 0;
+        m[4] = m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8];
+        m[5] = m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9];
+        m[6] = m1[4] * m2[2] + m1[5] * m2[6] + m1[6] * m2[10];
+        m[7] = 0;
+        m[8] = m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8];
+        m[9] = m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9];
+        m[10] = m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10];
+        m[11] = 0;
+        m[12] = 0;
+        m[13] = 0;
+        m[14] = 0;
+        m[15] = 1;
+    };
+    /**
      * Performs an optimized multiplication of two matrices using the assumption that the left matrix is a translation matrix and the right
      * matrix if a rotation (or scaled rotation, but without projection or translation) matrix and sets a passed matrix to be equal to the
      * result.
@@ -2044,6 +2108,30 @@ define([
         m[13] = t[13];
         m[14] = t[14];
         m[15] = 1;
+    };
+    /**
+     * Modifies a 4x4 transformation matrix, setting it to be equal to the result of translating m1 by the translation described by m2.
+     * @param {Float32Array} m The 4x4 transformation matrix to modify
+     * @param {Float32Array} m1 A 4x4 transformation matrix.
+     * @param {Float32Array} m2 A 4x4 transformation matrix. Only the translation described in this matrix will be taken into account.
+     */
+    mat.setTranslatedByM4 = function (m, m1, m2) {
+        m[0] = m1[0];
+        m[1] = m1[1];
+        m[2] = m1[2];
+        m[3] = m1[3];
+        m[4] = m1[4];
+        m[5] = m1[5];
+        m[6] = m1[6];
+        m[7] = m1[7];
+        m[8] = m1[8];
+        m[9] = m1[9];
+        m[10] = m1[10];
+        m[11] = m1[11];
+        m[12] = m1[12] + m2[12];
+        m[13] = m1[13] + m2[13];
+        m[14] = m1[14] + m2[14];
+        m[15] = m1[15];
     };
     /**
      * Modifies the passed matrix m in-place to ensure its orthogonality.
