@@ -1481,7 +1481,7 @@ define([
             return this.getModelMatrix();
         });
         this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
-            return vec.floatVector3Aux(vec.prodVec3Mat4Aux(vec.normal3(this._velocityVector), this.getModelMatrix()));
+            return vec.floatVector3Aux(vec.normal3(vec.prodVec3Mat4Aux(vec.normal3(this._velocityVector), this.getModelMatrix())));
         });
         this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
             return instanced ? this._calculatedSize : this._calculatedSize[0];

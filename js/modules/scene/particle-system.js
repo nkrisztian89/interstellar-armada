@@ -403,6 +403,7 @@ define([
      * @extends RenderableObject3D
      * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position of the center of the particle system (meters)
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix describing the orientation of the particle system
+     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix describing the scaling for the positions of the particles in this particle system
      * @param {Float32Array} velocityMatrix The 4x4 translation matrix describing the velocity of the particle system (m/s)
      * @param {ParticleEmitter[]} emitters The list of emitters that will be used to generate particles
      * @param {Number} duration For how long should the particle system be active (milliseconds)
@@ -414,8 +415,8 @@ define([
      * by this particle system will turn on instancing for their render queue.
      * @param {Number} [particleCountFactor=1] The number of particles created by this particle system will be multiplied by this factor
      */
-    function ParticleSystem(positionMatrix, orientationMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing, particleCountFactor) {
-        renderableObjects.RenderableObject3D.call(this, null, false, true, positionMatrix, orientationMatrix, mat.IDENTITY4);
+    function ParticleSystem(positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing, particleCountFactor) {
+        renderableObjects.RenderableObject3D.call(this, null, false, true, positionMatrix, orientationMatrix, scalingMatrix);
         /**
          * The 4x4 translation matrix describing the velocity of the particle system (m/s)
          * @type Float32Array

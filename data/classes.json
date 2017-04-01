@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:527 (2017.03.11.)",
-        "creationTime": "Sat Mar 11 2017 18:13:11 GMT+0100 (CET)"
+        "version": "0.4.1-dev:560 (2017.03.28.)",
+        "creationTime": "Fri Mar 31 2017 15:30:02 GMT+0200 (CEST)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -229,26 +229,29 @@
             "name": "smallHitExplosion",
             "particleEmitters": [{
                     "type": "unidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
                     "dimensions": [1, 1, 1],
                     "directionSpread": 25,
-                    "velocity": 30,
+                    "velocity": 25,
                     "velocitySpread": 8,
                     "initialNumber": 5,
                     "spawnNumber": 0,
                     "spawnTime": 1,
                     "duration": 1,
-                    "shader": "particle",
-                    "texture": "explosion",
+                    "shader": "billboard",
+                    "texture": "spark",
                     "particleStates": [{
                             "color": [1, 0.5, 0, 1],
-                            "size": 0.35,
+                            "size": 1,
                             "timeToReach": 0
                         }, {
                             "color": [1, 1, 0.3, 1],
-                            "size": 0.7,
+                            "size": 2,
                             "timeToReach": 300
                         }, {
-                            "color": [1, 0, 0, 1],
+                            "color": [1, 0.6, 0, 1],
                             "size": 0,
                             "timeToReach": 500
                         }]
@@ -294,12 +297,40 @@
                     "directionSpread": 45,
                     "velocity": 50,
                     "velocitySpread": 18,
-                    "initialNumber": 10,
-                    "spawnNumber": 3,
+                    "initialNumber": 4,
+                    "spawnNumber": 1,
                     "spawnTime": 100,
                     "duration": 200,
                     "shader": "particle",
                     "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 0.5, 0, 1],
+                            "size": 0.65,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 1.1,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1, 0, 0, 1],
+                            "size": 0,
+                            "timeToReach": 500
+                        }]
+                }, {
+                    "type": "unidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 45,
+                    "velocity": 50,
+                    "velocitySpread": 18,
+                    "initialNumber": 6,
+                    "spawnNumber": 2,
+                    "spawnTime": 100,
+                    "duration": 200,
+                    "shader": "billboard",
+                    "texture": "spark",
                     "particleStates": [{
                             "color": [1, 0.5, 0, 1],
                             "size": 0.65,
@@ -340,8 +371,8 @@
                     "velocity": 20,
                     "velocitySpread": 6,
                     "initialNumber": 0,
-                    "spawnNumber": 4,
-                    "spawnTime": 100,
+                    "spawnNumber": 2,
+                    "spawnTime": 50,
                     "duration": 200,
                     "shader": "particle",
                     "texture": "explosion",
@@ -380,8 +411,8 @@
                     "directionSpread": 20,
                     "velocity": 70,
                     "velocitySpread": 40,
-                    "initialNumber": 20,
-                    "spawnNumber": 12,
+                    "initialNumber": 10,
+                    "spawnNumber": 6,
                     "spawnTime": 100,
                     "duration": 400,
                     "shader": "particle",
@@ -393,6 +424,34 @@
                         }, {
                             "color": [1, 1, 0.3, 1],
                             "size": 3.1,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1, 0, 0, 1],
+                            "size": 0,
+                            "timeToReach": 500
+                        }]
+                }, {
+                    "type": "unidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [1, 1, 1],
+                    "directionSpread": 20,
+                    "velocity": 70,
+                    "velocitySpread": 40,
+                    "initialNumber": 10,
+                    "spawnNumber": 6,
+                    "spawnTime": 100,
+                    "duration": 400,
+                    "shader": "billboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 0.5, 0, 1],
+                            "size": 1.4,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 6,
                             "timeToReach": 300
                         }, {
                             "color": [1, 0, 0, 1],
@@ -517,17 +576,45 @@
                         }]
                 }, {
                     "type": "omnidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [0, 0, 0],
+                    "velocity": 30,
+                    "velocitySpread": 20,
+                    "initialNumber": 2,
+                    "spawnNumber": 2,
+                    "spawnTime": 25,
+                    "duration": 125,
+                    "delay": 20,
+                    "shader": "billboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 1, 0, 1],
+                            "size": 0.6,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 0.2, 1],
+                            "size": 1.7,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1, 0.5, 0, 0],
+                            "size": 0,
+                            "timeToReach": 400
+                        }]
+                }, {
+                    "type": "omnidirectional",
                     "dimensions": [4, 4, 4],
                     "velocity": 30,
                     "velocitySpread": 20,
-                    "initialNumber": 10,
-                    "spawnNumber": 10,
-                    "spawnTime": 25,
-                    "duration": 125,
+                    "initialNumber": 8,
+                    "spawnNumber": 8,
+                    "spawnTime": 15,
+                    "duration": 60,
                     "shader": "particle",
                     "texture": "explosion",
                     "particleStates": [{
-                            "color": [1, 1, 0, 1],
+                            "color": [1, 0.8, 0, 1],
                             "size": 0.2,
                             "timeToReach": 0
                         }, {
@@ -535,7 +622,7 @@
                             "size": 0.4,
                             "timeToReach": 400
                         }, {
-                            "color": [1, 0.8, 0, 1],
+                            "color": [1, 0.7, 0, 1],
                             "size": 0,
                             "timeToReach": 400
                         }]
@@ -629,21 +716,50 @@
                         }]
                 }, {
                     "type": "omnidirectional",
-                    "dimensions": [4, 4, 4],
+                    "dimensions": [0, 0, 0],
                     "velocity": 50,
                     "velocitySpread": 30,
-                    "initialNumber": 10,
-                    "spawnNumber": 7,
+                    "initialNumber": 5,
+                    "spawnNumber": 3,
                     "spawnTime": 70,
                     "duration": 280,
-                    "shader": "particle",
-                    "texture": "explosion",
+                    "shader": "billboard",
+                    "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0, 1],
-                            "size": 0.5,
+                            "size": 1.2,
                             "timeToReach": 0
                         }, {
                             "color": [1, 1, 1, 1],
+                            "size": 3,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1, 0.8, 0, 1],
+                            "size": 0,
+                            "timeToReach": 400
+                        }],
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875
+                }, {
+                    "type": "omnidirectional",
+                    "hasProjectileModel": false,
+                    "dimensions": [4, 4, 4],
+                    "directionSpread": 0,
+                    "velocity": 60,
+                    "velocitySpread": 40,
+                    "initialNumber": 5,
+                    "spawnNumber": 3,
+                    "spawnTime": 50,
+                    "duration": 200,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 0.5, 0, 1],
+                            "size": 0.5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 0.3, 1],
                             "size": 0.8,
                             "timeToReach": 300
                         }, {
@@ -744,10 +860,10 @@
                     "dimensions": [4, 4, 4],
                     "velocity": 65,
                     "velocitySpread": 40,
-                    "initialNumber": 10,
-                    "spawnNumber": 8,
-                    "spawnTime": 70,
-                    "duration": 280,
+                    "initialNumber": 5,
+                    "spawnNumber": 4,
+                    "spawnTime": 50,
+                    "duration": 200,
                     "shader": "particle",
                     "texture": "explosion",
                     "particleStates": [{
@@ -757,6 +873,33 @@
                         }, {
                             "color": [1, 1, 1, 1],
                             "size": 0.8,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1, 0.8, 0, 1],
+                            "size": 0,
+                            "timeToReach": 400
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [0, 0, 0],
+                    "velocity": 65,
+                    "velocitySpread": 40,
+                    "initialNumber": 5,
+                    "spawnNumber": 4,
+                    "spawnTime": 70,
+                    "duration": 280,
+                    "shader": "billboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 1, 0, 1],
+                            "size": 1.2,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 1, 1],
+                            "size": 3,
                             "timeToReach": 300
                         }, {
                             "color": [1, 0.8, 0, 1],
@@ -874,19 +1017,46 @@
                     "dimensions": [10, 10, 10],
                     "velocity": 60,
                     "velocitySpread": 30,
-                    "initialNumber": 15,
-                    "spawnNumber": 12,
-                    "spawnTime": 50,
-                    "duration": 300,
+                    "initialNumber": 8,
+                    "spawnNumber": 6,
+                    "spawnTime": 40,
+                    "duration": 240,
                     "shader": "particle",
                     "texture": "explosion",
                     "particleStates": [{
-                            "color": [1, 1, 0, 1],
+                            "color": [1, 0.8, 0, 1],
                             "size": 0.8,
                             "timeToReach": 0
                         }, {
-                            "color": [1, 1, 1, 1],
+                            "color": [1, 1, 0.5, 1],
                             "size": 1.1,
+                            "timeToReach": 300
+                        }, {
+                            "color": [1, 0.3, 0, 1],
+                            "size": 0,
+                            "timeToReach": 400
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [0, 0, 0],
+                    "velocity": 60,
+                    "velocitySpread": 30,
+                    "initialNumber": 8,
+                    "spawnNumber": 6,
+                    "spawnTime": 50,
+                    "duration": 300,
+                    "shader": "billboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 1, 0, 1],
+                            "size": 1.2,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 1, 1],
+                            "size": 3,
                             "timeToReach": 300
                         }, {
                             "color": [1, 0.8, 0, 1],
@@ -990,8 +1160,8 @@
                     "dimensions": [30, 90, 30],
                     "velocity": 280,
                     "velocitySpread": 60,
-                    "initialNumber": 25,
-                    "spawnNumber": 25,
+                    "initialNumber": 10,
+                    "spawnNumber": 10,
                     "spawnTime": 250,
                     "duration": 500,
                     "shader": "particle",
@@ -1003,6 +1173,34 @@
                         }, {
                             "color": [1, 1, 0, 1],
                             "size": 2.5,
+                            "timeToReach": 500
+                        }, {
+                            "color": [1, 0, 0, 1],
+                            "size": 0,
+                            "timeToReach": 300
+                        }],
+                    "delay": 300
+                }, {
+                    "type": "omnidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [30, 90, 30],
+                    "velocity": 280,
+                    "velocitySpread": 60,
+                    "initialNumber": 15,
+                    "spawnNumber": 15,
+                    "spawnTime": 250,
+                    "duration": 500,
+                    "shader": "billboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 1, 1, 1],
+                            "size": 3,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 0, 1],
+                            "size": 5,
                             "timeToReach": 500
                         }, {
                             "color": [1, 0, 0, 1],
@@ -1060,15 +1258,18 @@
                         }]
                 }, {
                     "type": "omnidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
                     "dimensions": [10, 30, 10],
                     "velocity": 150,
                     "velocitySpread": 50,
                     "initialNumber": 20,
-                    "shader": "particle",
-                    "texture": "explosion",
+                    "shader": "billboard",
+                    "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 1, 1],
-                            "size": 1,
+                            "size": 2.5,
                             "timeToReach": 0
                         }, {
                             "color": [1, 1, 0, 1],
@@ -1183,7 +1384,7 @@
                     "velocity": 800,
                     "velocitySpread": 300,
                     "initialNumber": 0,
-                    "spawnNumber": 90,
+                    "spawnNumber": 45,
                     "spawnTime": 500,
                     "duration": 1000,
                     "shader": "particle",
@@ -1194,6 +1395,29 @@
                             "timeToReach": 0
                         }, {
                             "color": [1, 0.7, 0, 0],
+                            "size": 0,
+                            "timeToReach": 1000
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [150, 600, 150],
+                    "velocity": 800,
+                    "velocitySpread": 300,
+                    "initialNumber": 0,
+                    "spawnNumber": 45,
+                    "spawnTime": 500,
+                    "duration": 1000,
+                    "shader": "billboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 1, 0.7, 1],
+                            "size": 50,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 0.7, 0, 0.5],
                             "size": 0,
                             "timeToReach": 1000
                         }]
@@ -1299,16 +1523,19 @@
             "name": "smallFire",
             "particleEmitters": [{
                     "type": "omnidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
                     "dimensions": [0, 0, 0],
                     "velocity": 30,
                     "velocitySpread": 10,
                     "initialNumber": 14,
                     "spawnNumber": 0,
-                    "shader": "particle",
-                    "texture": "flare",
+                    "shader": "billboard",
+                    "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0.6, 1],
-                            "size": 0.8,
+                            "size": 1.4,
                             "timeToReach": 0
                         }, {
                             "color": [1, 0.8, 0.2, 1],
@@ -1319,8 +1546,8 @@
                     "type": "unidirectional",
                     "dimensions": [0, 0, 0],
                     "directionSpread": 35,
-                    "velocity": 5,
-                    "velocitySpread": 3,
+                    "velocity": 3,
+                    "velocitySpread": 2,
                     "initialNumber": 0,
                     "spawnNumber": 2,
                     "spawnTime": 100,
@@ -1342,12 +1569,12 @@
             "particleEmitters": [{
                     "type": "unidirectional",
                     "dimensions": [0, 0, 0],
-                    "directionSpread": 25,
-                    "velocity": 85,
-                    "velocitySpread": 15,
-                    "initialNumber": 14,
-                    "spawnNumber": 4,
-                    "spawnTime": 250,
+                    "directionSpread": 30,
+                    "velocity": 20,
+                    "velocitySpread": 6,
+                    "initialNumber": 4,
+                    "spawnNumber": 2,
+                    "spawnTime": 125,
                     "duration": 0,
                     "shader": "particle",
                     "texture": "explosion",
@@ -1362,10 +1589,34 @@
                         }]
                 }, {
                     "type": "unidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 45,
+                    "velocity": 16,
+                    "velocitySpread": 4,
+                    "initialNumber": 10,
+                    "spawnNumber": 1,
+                    "spawnTime": 125,
+                    "duration": 0,
+                    "shader": "billboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 1, 0.6, 1],
+                            "size": 1.8,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 0.8, 0.2, 1],
+                            "size": 0,
+                            "timeToReach": 1100
+                        }]
+                }, {
+                    "type": "unidirectional",
                     "dimensions": [0, 0, 0],
                     "directionSpread": 35,
-                    "velocity": 30,
-                    "velocitySpread": 6,
+                    "velocity": 6,
+                    "velocitySpread": 2,
                     "initialNumber": 0,
                     "spawnNumber": 2,
                     "spawnTime": 100,
@@ -1422,9 +1673,30 @@
                         }]
                 }, {
                     "type": "unidirectional",
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [0, 0, 0],
+                    "directionSpread": 40,
+                    "velocity": 65,
+                    "velocitySpread": 15,
+                    "initialNumber": 10,
+                    "shader": "billboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "color": [1, 1, 0.8, 1],
+                            "size": 5,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 0.9, 0.2, 1],
+                            "size": 0,
+                            "timeToReach": 1400
+                        }]
+                }, {
+                    "type": "unidirectional",
                     "dimensions": [0, 0, 0],
                     "directionSpread": 25,
-                    "velocity": 45,
+                    "velocity": 25,
                     "velocitySpread": 8,
                     "initialNumber": 0,
                     "spawnNumber": 3,

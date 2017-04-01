@@ -59,7 +59,12 @@ define([
          * The cached calculated value of the cascaded scaling matrix (with the scaling of the parent nodes applied).
          * @type Float32Array
          */
-        this._cascadeScalingMatrix = null;
+        this._cascadeScalingMatrix = mat.identity4();
+        /**
+         * Whether the cached cascaded scaling matrix value is up-to-date for the current frame
+         * @type Boolean
+         */
+        this._cascadeScalingMatrixValid = false;
         /**
          * Cache variable to store the calculated value of the combined model matrix.
          * @type Float32Array
@@ -154,7 +159,7 @@ define([
             mat.setMatrix4(this._positionMatrix, positionMatrix || mat.IDENTITY4);
             mat.setMatrix4(this._orientationMatrix, orientationMatrix || mat.IDENTITY4);
             mat.setMatrix4(this._scalingMatrix, scalingMatrix || mat.IDENTITY4);
-            this._cascadeScalingMatrix = null;
+            this._cascadeScalingMatrixValid = false;
             this._modelMatrixValid = false;
             this._modelMatrixForFrameValid = false;
             this._modelMatrixInverseValid = false;
@@ -348,17 +353,22 @@ define([
          * @param {Float32Array} value
          */
         function setScalingMatrix(value) {
-            this._scalingMatrix = value;
+            if (value) {
+                this._scalingMatrix = value;
+            }
             this._modelMatrixValid = false;
             this._modelMatrixInverseValid = false;
-            this._cascadeScalingMatrix = null;
+            this._cascadeScalingMatrixValid = false;
         }
         /**
          * A convenience method to set uniform scaling
          * @param {Number} scale The scaling to apply to all 3 axes
          */
         function setScale(scale) {
-            this.setScalingMatrix(mat.scaling4(scale));
+            this._scalingMatrix[0] = scale;
+            this._scalingMatrix[5] = scale;
+            this._scalingMatrix[10] = scale;
+            this.setScalingMatrix();
         }
         /**
          * Returns a scaling matrix corresponding to the stacked scaling applied
@@ -366,10 +376,13 @@ define([
          * @returns {Float32Array}
          */
         function getCascadeScalingMatrix() {
-            if (!this._cascadeScalingMatrix) {
-                this._cascadeScalingMatrix = this._parent ?
-                        mat.prod3x3SubOf4(this._parent.getCascadeScalingMatrix(), this._scalingMatrix) :
-                        this._scalingMatrix;
+            if (!this._cascadeScalingMatrixValid) {
+                if (this._parent) {
+                    mat.setProd3x3SubOf4(this._cascadeScalingMatrix, this._parent.getCascadeScalingMatrix(), this._scalingMatrix);
+                } else {
+                    mat.setMatrix4(this._cascadeScalingMatrix, this._scalingMatrix);
+                }
+                this._cascadeScalingMatrixValid = true;
             }
             return this._cascadeScalingMatrix;
         }

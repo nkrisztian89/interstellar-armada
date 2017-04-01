@@ -164,8 +164,9 @@ define([
     /**
      * Creates the renderable object that can be used to represent this explosion
      * in a visual scene, if it has not been created yet.
+     * @param {Number} [scale] The scaling to use for the positions of the particles
      */
-    Explosion.prototype._createVisualModel = function () {
+    Explosion.prototype._createVisualModel = function (scale) {
         var i, particleEmitters, emitter, particleEmitterDescriptors;
         particleEmitters = [];
         particleEmitterDescriptors = this._class.getParticleEmitterDescriptors();
@@ -222,6 +223,7 @@ define([
         this._visualModel = new particleSystem.ParticleSystem(
                 this._positionMatrix,
                 this._orientationMatrix,
+                scale ? mat.scaling4(scale) : mat.IDENTITY4,
                 this._velocityMatrix,
                 particleEmitters,
                 this._class.getTotalDuration(),
@@ -239,7 +241,7 @@ define([
      */
     Explosion.prototype._addToSceneCallback = function (parentNode, soundSource, isHit, callback) {
         var lightStates, scene = parentNode.getScene();
-        this._createVisualModel();
+        this._createVisualModel(1 / parentNode.getRenderableObject().getCascadeScalingMatrix()[0]);
         parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel));
         lightStates = this._class.getLightStates();
         if (lightStates) {

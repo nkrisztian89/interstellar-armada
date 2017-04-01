@@ -3,8 +3,8 @@
         "name": "resources",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:507 (2017.03.03.)",
-        "creationTime": "Sat Mar 04 2017 01:29:59 GMT+0100 (CET)"
+        "version": "0.4.1-dev:560 (2017.03.28.)",
+        "creationTime": "Fri Mar 31 2017 15:20:15 GMT+0200 (CEST)"
     },
     "textures": [{
             "name": "white",
@@ -184,6 +184,19 @@
                 "low": "_128",
                 "medium": "_256",
                 "high": ""
+            }
+        }, {
+            "name": "spark",
+            "basepath": "effect/spark",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "_64",
+                "medium": "_128",
+                "high": "_256"
             }
         }, {
             "name": "trainingProjectile",
