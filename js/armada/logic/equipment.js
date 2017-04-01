@@ -113,6 +113,11 @@ define([
             // ------------------------------------------------------------------------------
             // constants
             /**
+             * The list of valid thruster use identifiers
+             * @type String[]
+             */
+            THRUSTER_USES = ["forward", "reverse", "strafeLeft", "strafeRight", "raise", "lower", "yawLeft", "yawRight", "pitchUp", "pitchDown", "rollLeft", "rollRight"],
+            /**
              * When adding the resources of a projectile (class) to a scene, this prefix is used in the ID to avoid adding the same one multiple
              * times
              * @type String
@@ -1563,6 +1568,7 @@ define([
      * driven by this propulsion (the physical model of the spacecraft)
      */
     function Propulsion(propulsionClass, drivenPhysicalObject) {
+        var i;
         /**
          * The class describing the general properties of this propulsion.
          * @type PropulsionClass
@@ -1579,20 +1585,10 @@ define([
          * with each thruster use command.
          * @type Object
          */
-        this._thrusterUses = {
-            "forward": {burn: 0, thrusters: []},
-            "reverse": {burn: 0, thrusters: []},
-            "strafeLeft": {burn: 0, thrusters: []},
-            "strafeRight": {burn: 0, thrusters: []},
-            "raise": {burn: 0, thrusters: []},
-            "lower": {burn: 0, thrusters: []},
-            "yawLeft": {burn: 0, thrusters: []},
-            "yawRight": {burn: 0, thrusters: []},
-            "pitchUp": {burn: 0, thrusters: []},
-            "pitchDown": {burn: 0, thrusters: []},
-            "rollLeft": {burn: 0, thrusters: []},
-            "rollRight": {burn: 0, thrusters: []}
-        };
+        this._thrusterUses = {};
+        for (i = 0; i < THRUSTER_USES.length; i++) {
+            this._thrusterUses[THRUSTER_USES[i]] = {burn: 0, thrusters: []};
+        }
         /**
          * Sound clip used for playing the thruster sound effect for this propulsion.
          * @type SoundClip
@@ -1690,13 +1686,12 @@ define([
      * Resets the all the thruster burn levels to zero.
      */
     Propulsion.prototype.resetThrusterBurn = function () {
-        var use, i;
-        for (use in this._thrusterUses) {
-            if (this._thrusterUses.hasOwnProperty(use)) {
-                this._thrusterUses[use].burn = 0;
-                for (i = 0; i < this._thrusterUses[use].thrusters.length; i++) {
-                    this._thrusterUses[use].thrusters[i].resetBurn();
-                }
+        var use, i, j;
+        for (i = THRUSTER_USES.length - 1; i >= 0; i--) {
+            use = THRUSTER_USES[i];
+            this._thrusterUses[use].burn = 0;
+            for (j = this._thrusterUses[use].thrusters.length - 1; j >= 0; j--) {
+                this._thrusterUses[use].thrusters[j].resetBurn();
             }
         }
     };

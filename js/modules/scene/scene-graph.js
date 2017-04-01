@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file A general purpose WebGL scene engine building on the functionality of ManagedGL.
  * Create a Scene, add background and main scene objects and light sources, then add it to a ManagedGLContext (or several ones), and it can
  * be rendered on them.
@@ -725,7 +725,7 @@ define([
     RenderableNode.prototype.resetForNewFrame = function () {
         var i;
         this._renderableObject.resetForNewFrame();
-        for (i = 0; i < this._subnodes.length; i++) {
+        for (i = this._subnodes.length - 1; i >= 0; i--) {
             this._subnodes[i].resetForNewFrame();
         }
     };

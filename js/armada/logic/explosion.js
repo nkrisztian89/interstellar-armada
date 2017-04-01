@@ -231,6 +231,28 @@ define([
                 graphics.getParticleCountFactor());
     };
     /**
+     * The callback that adds the explosion to a scene (called by addToScene())
+     * @param {RenderableNode} parentNode See addToScene()
+     * @param {SoundSource} [soundSource] See addToScene()
+     * @param {Boolean} [isHit=false] See addToScene()
+     * @param {Function} [callback] See addToScene()
+     */
+    Explosion.prototype._addToSceneCallback = function (parentNode, soundSource, isHit, callback) {
+        var lightStates, scene = parentNode.getScene();
+        this._createVisualModel();
+        parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel));
+        lightStates = this._class.getLightStates();
+        if (lightStates) {
+            scene.addPointLightSource(
+                    new lights.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates),
+                    constants.EXPLOSION_LIGHT_PRIORITY);
+        }
+        this._class.playSound(soundSource, isHit, _hitSoundStackingTimeThreshold, _hitSoundStackingVolumeFactor);
+        if (callback) {
+            callback(this._visualModel);
+        }
+    };
+    /**
      * Adds a renderable node and light source representing this explosion and plays the sound of the explosion.
      * @param {RenderableNode} parentNode The explosion will be added to the scene graph as the subnode of this node
      * @param {SoundSource} [soundSource] If the sound of the explosion should be played by a 3D sound source, pass it here
@@ -239,21 +261,7 @@ define([
      * single argument
      */
     Explosion.prototype.addToScene = function (parentNode, soundSource, isHit, callback) {
-        var lightStates, scene = parentNode.getScene();
-        resources.executeWhenReady(function () {
-            this._createVisualModel();
-            parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel));
-            lightStates = this._class.getLightStates();
-            if (lightStates) {
-                scene.addPointLightSource(
-                        new lights.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates),
-                        constants.EXPLOSION_LIGHT_PRIORITY);
-            }
-            this._class.playSound(soundSource, isHit, _hitSoundStackingTimeThreshold, _hitSoundStackingVolumeFactor);
-            if (callback) {
-                callback(this._visualModel);
-            }
-        }.bind(this));
+        resources.executeWhenReady(this._addToSceneCallback.bind(this, parentNode, soundSource, isHit, callback));
     };
     /**
      * Adds the resources required to render this explosion to the passed scene,

@@ -984,7 +984,7 @@ define([
             ownSize = this._spacecraft.getVisualModel().getScaledSize();
             // caching / referencing needed variables
             positionVector = mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix());
-            inverseOrientationMatrix = mat.inverseOfRotation4(this._spacecraft.getPhysicalOrientationMatrix());
+            inverseOrientationMatrix = mat.inverseOfRotation4Aux(this._spacecraft.getPhysicalOrientationMatrix());
             speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             target = this._spacecraft.getTarget();
             this._attackingTarget = false;
@@ -1046,7 +1046,7 @@ define([
                         // checking if the blocking spacecraft is still in the way
                         if (this._isBlockedBy.getPhysicalModel().checkHit(targetPositionVector, vectorToTarget, 1000, ownSize / 2)) {
                             relativeBlockerPosition = vec.prodVec3Mat4Aux(
-                                    vec.diff3(
+                                    vec.diff3Aux(
                                             mat.translationVector3(this._isBlockedBy.getPhysicalPositionMatrix()),
                                             positionVector),
                                     inverseOrientationMatrix);
@@ -1095,7 +1095,7 @@ define([
                         this._timeSinceLastTargetHit = 0;
                         this._hitCountByNonTarget = 0;
                     }
-                    if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) <= weapons[0].getRange(speed)) {
+                    if (vec.length3(vec.diff3Aux(this._spacecraft.getTargetHitPosition(), positionVector)) <= weapons[0].getRange(speed)) {
                         // within range...
                         this._attackingTarget = true;
                         if ((Math.abs(targetYawAndPitch.yaw) < fireThresholdAngle) &&
@@ -1188,7 +1188,7 @@ define([
                                                 vec.diff3(
                                                         vec.sum3(
                                                                 targetPositionVector,
-                                                                vec.scaled3(vec.normal3(vec.prodVec3Mat4Aux(vec.perpendicular3(directionToTarget), mat.rotation4(directionToTarget, Math.random() * Math.PI * 2))), maxDistance)),
+                                                                vec.scaled3(vec.normal3(vec.prodVec3Mat4Aux(vec.perpendicular3(directionToTarget), mat.rotation4Aux(directionToTarget, Math.random() * Math.PI * 2))), maxDistance)),
                                                         positionVector),
                                                 CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
                             }
@@ -1316,7 +1316,7 @@ define([
             ownSize = this._spacecraft.getVisualModel().getScaledSize();
             // caching / referencing needed variables
             positionVector = mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix());
-            inverseOrientationMatrix = mat.inverseOfRotation4(this._spacecraft.getPhysicalOrientationMatrix());
+            inverseOrientationMatrix = mat.inverseOfRotation4Aux(this._spacecraft.getPhysicalOrientationMatrix());
             target = this._spacecraft.getTarget();
             this._attackingTarget = false;
             if (target) {
