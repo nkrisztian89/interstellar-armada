@@ -1294,6 +1294,11 @@ define([
          */
         this._uniformNamesForInstanceAttributeNames = instanceAttributeRoles;
         /**
+         * The list of names of the instance attributes for easily cycling through them.
+         * @type String[]
+         */
+        this._instanceAttributeNames = Object.keys(instanceAttributeRoles);
+        /**
          * The numver of 4 component vectors used up by the uniforms in the vertex shader.
          * @type Number
          */
@@ -1786,28 +1791,27 @@ define([
      * @param {Number} instanceCount
      */
     ManagedShader.prototype.createInstanceBuffers = function (index, instanceCount) {
-        var attributeName;
+        var i, attributeName;
         // if we don't have a storage for this instane queue yet, grow the array
         if (this._instanceAttributeBuffers.length < index + 1) {
             this._instanceAttributeBuffers = this._instanceAttributeBuffers.concat(new Array(index - this._instanceAttributeBuffers.length + 1));
         }
         // for each instance attribute, a new buffer is created or the existing one is set up (so that when rendering a new frame, existing
         // buffers can be reused even if the indices for the instance queues change)
-        for (attributeName in this._uniformNamesForInstanceAttributeNames) {
-            if (this._uniformNamesForInstanceAttributeNames.hasOwnProperty(attributeName)) {
-                if (!this._instanceAttributeBuffers[index]) {
-                    this._instanceAttributeBuffers[index] = {};
-                }
-                if (!this._instanceAttributeBuffers[index][attributeName]) {
-                    this._instanceAttributeBuffers[index][attributeName] = new VertexBuffer(
-                            attributeName,
-                            this._uniformNamesForInstanceAttributeNames[attributeName],
-                            this.getInstanceAttribute(attributeName).size,
-                            instanceCount);
-                } else {
-                    this._instanceAttributeBuffers[index][attributeName].resize(instanceCount);
-                    this._instanceAttributeBuffers[index][attributeName].resetFilledVectors();
-                }
+        for (i = 0; i < this._instanceAttributeNames.length; i++) {
+            attributeName = this._instanceAttributeNames[i];
+            if (!this._instanceAttributeBuffers[index]) {
+                this._instanceAttributeBuffers[index] = {};
+            }
+            if (!this._instanceAttributeBuffers[index][attributeName]) {
+                this._instanceAttributeBuffers[index][attributeName] = new VertexBuffer(
+                        attributeName,
+                        this._uniformNamesForInstanceAttributeNames[attributeName],
+                        this.getInstanceAttribute(attributeName).size,
+                        instanceCount);
+            } else {
+                this._instanceAttributeBuffers[index][attributeName].resize(instanceCount);
+                this._instanceAttributeBuffers[index][attributeName].resetFilledVectors();
             }
         }
     };
@@ -1818,13 +1822,12 @@ define([
      * @param {Object.<String, Function>} uniformValueFunctions
      */
     ManagedShader.prototype.addDataToInstanceBuffers = function (index, uniformValueFunctions) {
-        var attributeName, uniformName;
-        for (attributeName in this._instanceAttributeBuffers[index]) {
-            if (this._instanceAttributeBuffers[index].hasOwnProperty(attributeName)) {
-                uniformName = this._instanceAttributeBuffers[index][attributeName].getRole();
-                if (uniformValueFunctions.hasOwnProperty(uniformName)) {
-                    this._instanceAttributeBuffers[index][attributeName].addVector(uniformValueFunctions[uniformName](true));
-                }
+        var i, attributeName, uniformName;
+        for (i = 0; i < this._instanceAttributeNames.length; i++) {
+            attributeName = this._instanceAttributeNames[i];
+            uniformName = this._instanceAttributeBuffers[index][attributeName].getRole();
+            if (uniformValueFunctions.hasOwnProperty(uniformName)) {
+                this._instanceAttributeBuffers[index][attributeName].addVector(uniformValueFunctions[uniformName](true));
             }
         }
     };
@@ -1835,11 +1838,9 @@ define([
      * @param {Number} index
      */
     ManagedShader.prototype.bindAndFillInstanceBuffers = function (context, index) {
-        var attributeName;
-        for (attributeName in this._instanceAttributeBuffers[index]) {
-            if (this._instanceAttributeBuffers[index].hasOwnProperty(attributeName)) {
-                this._instanceAttributeBuffers[index][attributeName].bind(context, this, true);
-            }
+        var i;
+        for (i = 0; i < this._instanceAttributeNames.length; i++) {
+            this._instanceAttributeBuffers[index][this._instanceAttributeNames[i]].bind(context, this, true);
         }
     };
     /**
@@ -1847,12 +1848,10 @@ define([
      * @param {Number} context
      */
     ManagedShader.prototype.deleteInstanceBuffers = function (context) {
-        var i, attributeName;
+        var i, j;
         for (i = 0; i < this._instanceAttributeBuffers.length; i++) {
-            for (attributeName in this._instanceAttributeBuffers[i]) {
-                if (this._instanceAttributeBuffers[i].hasOwnProperty(attributeName)) {
-                    this._instanceAttributeBuffers[i][attributeName].delete(context);
-                }
+            for (j = 0; j < this._instanceAttributeNames.length; j++) {
+                this._instanceAttributeBuffers[i][this._instanceAttributeNames[j]].delete(context);
             }
         }
         this._instanceAttributeBuffers = [];

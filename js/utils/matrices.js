@@ -1530,6 +1530,19 @@ define([
         ]);
     };
     /**
+     * Returns a 4x4 transformation matrix, which is the result of translating m by the translation vector v.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m A 4x4 transformation matrix.
+     * @param {Float32Array} v A 3D vector
+     * @returns {Float32Array}
+     */
+    mat.translatedByVectorAux = function (m, v) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setTranslatedByVector(aux, m, v);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Returns a 4x4 transformation matrix, which is the result of translating m1
      * by the translation described by m2.
      * @param {Float32Array} m1 A 4x4 transformation matrix.
@@ -2108,6 +2121,30 @@ define([
         m[13] = t[13];
         m[14] = t[14];
         m[15] = 1;
+    };
+    /**
+     * Modifies a 4x4 transformation matrix, setting it to be equal to the result of translating m1 by the translation vector v
+     * @param {Float32Array} m The 4x4 transformation matrix to modify
+     * @param {Float32Array} m1 A 4x4 transformation matrix.
+     * @param {Float32Array} v A 3D vector.
+     */
+    mat.setTranslatedByVector = function (m, m1, v) {
+        m[0] = m1[0];
+        m[1] = m1[1];
+        m[2] = m1[2];
+        m[3] = m1[3];
+        m[4] = m1[4];
+        m[5] = m1[5];
+        m[6] = m1[6];
+        m[7] = m1[7];
+        m[8] = m1[8];
+        m[9] = m1[9];
+        m[10] = m1[10];
+        m[11] = m1[11];
+        m[12] = m1[12] + v[0];
+        m[13] = m1[13] + v[1];
+        m[14] = m1[14] + v[2];
+        m[15] = m1[15];
     };
     /**
      * Modifies a 4x4 transformation matrix, setting it to be equal to the result of translating m1 by the translation described by m2.

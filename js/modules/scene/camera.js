@@ -661,7 +661,12 @@ define([
          * properties and cannot be set directly.
          * @type Float32Array
          */
-        this._worldOrientationMatrix = null;
+        this._worldOrientationMatrix = mat.identity4();
+        /**
+         * Whether the currently stored world orientation matrix value is up-to-date.
+         * @type Boolean
+         */
+        this._worldOrientationMatrixValid = false;
         /**
          * Stores a copy of the starting alpha angle so it can be reset to it later.
          * @type Number
@@ -812,7 +817,7 @@ define([
         mat.setMatrix4(this._relativeOrientationMatrix, this._defaultRelativeOrientationMatrix);
         this._alpha = this._defaultAlpha;
         this._beta = this._defaultBeta;
-        this._worldOrientationMatrix = null;
+        this._worldOrientationMatrixValid = false;
     };
     /**
      * Directly sets a new relative orientation matrix for this configuration.
@@ -923,7 +928,7 @@ define([
                     }
                     // point-to modes have an explicitly set fallback option, but for other modes switch to absolute orientation
                     if (!this._pointsTowardsObjects) {
-                        mat.setMatrix4(this._relativeOrientationMatrix, this._worldOrientationMatrix || this._relativeOrientationMatrix || this._defaultRelativeOrientationMatrix);
+                        mat.setMatrix4(this._relativeOrientationMatrix, (this._worldOrientationMatrixValid && this._worldOrientationMatrix) || this._relativeOrientationMatrix || this._defaultRelativeOrientationMatrix);
                         this._fps = false;
                     }
                     this._followedObjects.splice(i, k);
@@ -947,7 +952,7 @@ define([
         var baseOrientationMatrix, dirTowardsObject, axis,
                 calculateRelative = function (followedOrientationMatrix) {
                     // look in direction y instead of z:
-                    this._worldOrientationMatrix = mat.prod3x3SubOf4(
+                    mat.setProd3x3SubOf4(this._worldOrientationMatrix,
                             mat.prod3x3SubOf4Aux(
                                     mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2),
                                     this._relativeOrientationMatrix),
@@ -955,9 +960,9 @@ define([
                 }.bind(this),
                 calculateAbsolute = function () {
                     if (this._fps) {
-                        this._worldOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2), this._relativeOrientationMatrix);
+                        mat.setProd3x3SubOf4(this._worldOrientationMatrix, mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2), this._relativeOrientationMatrix);
                     } else {
-                        this._worldOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
+                        mat.setMatrix4(this._worldOrientationMatrix, this._relativeOrientationMatrix);
                     }
                 }.bind(this);
         if (this._followedObjects.length > 0) {
@@ -969,20 +974,24 @@ define([
                 } else {
                     dirTowardsObject = vec.normal3(vec.diff3(this.getFollowedObjectsPositionVector(), mat.translationVector3(worldPositionMatrix)));
                     if (!this._fps) {
-                        if (!this._worldOrientationMatrix) {
-                            this._worldOrientationMatrix = mat.identity4();
-                        }
                         this._worldOrientationMatrix[8] = dirTowardsObject[0];
                         this._worldOrientationMatrix[9] = dirTowardsObject[1];
                         this._worldOrientationMatrix[10] = dirTowardsObject[2];
+                        this._worldOrientationMatrix[11] = 0;
                         axis = vec.cross3(vec.UNIT3_X, dirTowardsObject);
                         this._worldOrientationMatrix[4] = axis[0];
                         this._worldOrientationMatrix[5] = axis[1];
                         this._worldOrientationMatrix[6] = axis[2];
+                        this._worldOrientationMatrix[7] = 0;
                         axis = vec.cross3(dirTowardsObject, axis);
                         this._worldOrientationMatrix[0] = axis[0];
                         this._worldOrientationMatrix[1] = axis[1];
                         this._worldOrientationMatrix[2] = axis[2];
+                        this._worldOrientationMatrix[3] = 0;
+                        this._worldOrientationMatrix[12] = 0;
+                        this._worldOrientationMatrix[13] = 0;
+                        this._worldOrientationMatrix[14] = 0;
+                        this._worldOrientationMatrix[15] = 1;
                         mat.correctOrthogonal4(this._worldOrientationMatrix);
                     } else {
                         switch (this._baseOrientation) {
@@ -1007,12 +1016,12 @@ define([
                         if (dirTowardsObject[0] < 0) {
                             this._alpha = -this._alpha;
                         }
-                        this._worldOrientationMatrix = mat.prod3x3SubOf4(mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2), mat.rotation4Aux(vec.UNIT3_Z, this._alpha));
+                        mat.setProd3x3SubOf4(this._worldOrientationMatrix, mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2), mat.rotation4Aux(vec.UNIT3_Z, this._alpha));
                         this._beta = vec.angle3uCapped(mat.getRowC43Neg(this._worldOrientationMatrix), dirTowardsObject);
                         if (dirTowardsObject[2] > 0) {
                             this._beta = -this._beta;
                         }
-                        this._worldOrientationMatrix = mat.prod3x3SubOf4(
+                        mat.setProd3x3SubOf4(this._worldOrientationMatrix,
                                 mat.prod3x3SubOf4Aux(
                                         mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2),
                                         mat.rotation4Aux(vec.UNIT3_X, this._beta)),
@@ -1028,9 +1037,7 @@ define([
                         calculateAbsolute();
                         break;
                     case this.PointToFallback.STATIONARY:
-                        if (!this._worldOrientationMatrix) {
-                            this._worldOrientationMatrix = mat.identity4();
-                        }
+                        mat.setIdentity4(this._worldOrientationMatrix);
                         break;
                     case this.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD:
                         if (positionFollowedObjectOrientationMatrix) {
@@ -1046,6 +1053,7 @@ define([
                 calculateAbsolute();
             }
         }
+        this._worldOrientationMatrixValid = true;
     };
     /**
      * If not cached, calculates, and returns the rotation matrix describing the current orientation of the camera in world coordinates.
@@ -1057,7 +1065,7 @@ define([
      * @returns {Float32Array}
      */
     CameraOrientationConfiguration.prototype.getWorldOrientationMatrix = function (worldPositionMatrix, positionFollowedObjectOrientationMatrix) {
-        if (!this._worldOrientationMatrix) {
+        if (!this._worldOrientationMatrixValid) {
             this._calculateWorldOrientationMatrix(worldPositionMatrix, positionFollowedObjectOrientationMatrix);
         }
         return this._worldOrientationMatrix;
@@ -1111,7 +1119,7 @@ define([
                 return false;
             }
         }
-        this._worldOrientationMatrix = null;
+        this._worldOrientationMatrixValid = false;
         return true;
     };
     // #########################################################################
@@ -1616,17 +1624,32 @@ define([
          * thus is reset to null when those are changed.
          * @type Float32Array
          */
-        this._viewMatrix = null;
+        this._viewMatrix = mat.identity4();
+        /**
+         * Whether the currently stored view matrix value is up-to-date.
+         * @type Boolean
+         */
+        this._viewMatrixValid = false;
         /**
          * A cache variable storing the calculated inverse of the position matrix. It is reset to null whenever the position changes.
          * @type Float32Array
          */
-        this._inversePositionMatrix = null;
+        this._inversePositionMatrix = mat.identity4();
+        /**
+         * Whether the currently stored inverse position matrix value is up-to-date.
+         * @type Boolean
+         */
+        this._inversePositionMatrixValid = false;
         /**
          * A cache variable storing the calculated inverse of the orientation matrix. It is reset to null whenever the orientation changes.
          * @type Float32Array
          */
-        this._inverseOrientationMatrix = null;
+        this._inverseOrientationMatrix = mat.identity4();
+        /**
+         * Whether the currently stored inverse orientation matrix value is up-to-date.
+         * @type Boolean
+         */
+        this._inverseOrientationMatrixValid = false;
         /**
          * The cached value of the current field of view. (in degrees)
          * @type Number
@@ -1722,8 +1745,8 @@ define([
      */
     Camera.prototype._setPositionMatrix = function (value) {
         this._object3D.setPositionMatrix(value);
-        this._viewMatrix = null;
-        this._inversePositionMatrix = null;
+        this._viewMatrixValid = false;
+        this._inversePositionMatrixValid = false;
     };
     /**
      * Sets a new orientation matrix for the camera. The update method calculates the orientation and this should not be called from outside.
@@ -1731,8 +1754,8 @@ define([
      */
     Camera.prototype._setOrientationMatrix = function (value) {
         this._object3D.setOrientationMatrix(value);
-        this._viewMatrix = null;
-        this._inverseOrientationMatrix = null;
+        this._viewMatrixValid = false;
+        this._inverseOrientationMatrixValid = false;
     };
     /**
      * Rotates the current orientation around the given axis by the given angle. This directly manipulates the orientation of the camera
@@ -1765,8 +1788,9 @@ define([
      * @returns {Float32Array}
      */
     Camera.prototype.getViewMatrix = function () {
-        if (!this._viewMatrix) {
-            this._viewMatrix = mat.prodTranslationRotation4(this.getInversePositionMatrix(), this.getInverseOrientationMatrix());
+        if (!this._viewMatrixValid) {
+            mat.setProdTranslationRotation4(this._viewMatrix, this.getInversePositionMatrix(), this.getInverseOrientationMatrix());
+            this._viewMatrixValid = true;
         }
         return this._viewMatrix;
     };
@@ -1775,9 +1799,9 @@ define([
      * @returns {Float32Array}
      */
     Camera.prototype.getInversePositionMatrix = function () {
-        if (!this._inversePositionMatrix) {
-            this._inversePositionMatrix =
-                    mat.inverseOfTranslation4(this._object3D.getPositionMatrix());
+        if (!this._inversePositionMatrixValid) {
+            mat.setInverseOfTranslation4(this._inversePositionMatrix, this._object3D.getPositionMatrix());
+            this._inversePositionMatrixValid = true;
         }
         return this._inversePositionMatrix;
     };
@@ -1786,9 +1810,9 @@ define([
      * @returns {Float32Array}
      */
     Camera.prototype.getInverseOrientationMatrix = function () {
-        if (!this._inverseOrientationMatrix) {
-            this._inverseOrientationMatrix =
-                    mat.inverseOfRotation4(this._object3D.getOrientationMatrix());
+        if (!this._inverseOrientationMatrixValid) {
+            mat.setInverseOfRotation4(this._inverseOrientationMatrix, this._object3D.getOrientationMatrix());
+            this._inverseOrientationMatrixValid = true;
         }
         return this._inverseOrientationMatrix;
     };

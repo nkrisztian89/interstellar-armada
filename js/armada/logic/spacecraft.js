@@ -292,13 +292,28 @@ define([
          * of the spacecraft.
          * @type Float32Array
          */
-        this._relativeVelocityMatrix = null;
+        this._relativeVelocityMatrix = mat.identity4();
+        /**
+         * Whether the currently stored relative velocity matrix value is up-to-date.
+         * @type Boolean
+         */
+        this._relativeVelocityMatrixValid = false;
         /**
          * Cached value of the matrix representing the turning the current angular velocity of the object causes over 
          * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds in model space.
          * @type Float32Array
          */
-        this._turningMatrix = null;
+        this._turningMatrix = mat.identity4();
+        /**
+         * Whether the currently stored turning matrix value is up-to-date.
+         * @type Boolean
+         */
+        this._turningMatrixValid = false;
+        /**
+         * The cached calculated values of the scaling * orientation matrix.
+         * @type Float32Array
+         */
+        this._scaledOriMatrix = mat.identity4();
         // ---------------------------------------
         // equipment
         /**
@@ -866,11 +881,17 @@ define([
         return this._physicalModel.getScalingMatrix();
     };
     /**
+     * Updates (recalculates) the cached value of the scaling * orientation matrix.
+     */
+    Spacecraft.prototype.updateScaledOriMatrix = function () {
+        mat.setProd3x3SubOf4(this._scaledOriMatrix, this.getPhysicalScalingMatrix(), this.getPhysicalOrientationMatrix());
+    };
+    /**
      * Returns a 4x4 matrix describing the current scaling and rotation of this spacecraft.
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getScaledOriMatrix = function () {
-        return mat.prod3x3SubOf4(this.getPhysicalScalingMatrix(), this.getPhysicalOrientationMatrix());
+        return this._scaledOriMatrix;
     };
     /**
      * A shortcut method
@@ -891,10 +912,11 @@ define([
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getRelativeVelocityMatrix = function () {
-        if (!this._relativeVelocityMatrix) {
-            this._relativeVelocityMatrix = mat.prodTranslationRotation4(
+        if (!this._relativeVelocityMatrixValid) {
+            mat.setProdTranslationRotation4(this._relativeVelocityMatrix,
                     this._physicalModel.getVelocityMatrix(),
                     mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
+            this._relativeVelocityMatrixValid = true;
         }
         return this._relativeVelocityMatrix;
     };
@@ -903,12 +925,13 @@ define([
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getTurningMatrix = function () {
-        if (!this._turningMatrix) {
-            this._turningMatrix = mat.prod3x3SubOf4(
+        if (!this._turningMatrixValid) {
+            mat.setProd3x3SubOf4(this._turningMatrix,
                     mat.prod3x3SubOf4Aux(
                             this._physicalModel.getOrientationMatrix(),
                             this._physicalModel.getAngularVelocityMatrix()),
                     mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
+            this._turningMatrixValid = true;
         }
         return this._turningMatrix;
     };
@@ -2068,8 +2091,9 @@ define([
             }
         }
         this._physicalModel.simulate(dt);
-        this._relativeVelocityMatrix = null;
-        this._turningMatrix = null;
+        this._relativeVelocityMatrixValid = false;
+        this._turningMatrixValid = false;
+        this.updateScaledOriMatrix();
         this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
         this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
         if (this._propulsion) {

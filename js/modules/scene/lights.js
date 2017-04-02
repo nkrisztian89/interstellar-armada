@@ -78,7 +78,12 @@ define([
          * ranges.
          * @type Float32Array
          */
-        this._baseMatrix = null;
+        this._baseMatrix = mat.identity4();
+        /**
+         * Whether the currently stored base matrix value is up-to-date.
+         * @type Boolean
+         */
+        this._baseMatrixValid = false;
         /**
          * A unit vector that points from the camera center towards the centers of the shadow maps (which reside in from of the camera), 
          * for the current camera that is used to render a scene with this light source. Using this vector, shaders can calculate the
@@ -91,7 +96,7 @@ define([
          * orientation.
          * @type Float32Array
          */
-        this._translatedMatrix = null;
+        this._translatedMatrix = mat.identity4();
         /**
          * The prefix to use for creating frambuffer names for the shadow maps of different ranges for this light source.
          * @type String
@@ -131,9 +136,9 @@ define([
      * @returns {undefined}
      */
     DirectionalLightSource.prototype.reset = function () {
-        this._baseMatrix = null;
+        this._baseMatrixValid = false;
         this._translationVector = null;
-        this._translatedMatrix = null;
+        mat.setIdentity4(this._translatedMatrix);
     };
     /**
      * Returns the 4x4 transformation matrix that can transform world-space coordinates into the current light space of this light source.
@@ -159,15 +164,18 @@ define([
         context.setCurrentFrameBuffer(this.getShadowMapBufferName(rangeIndex));
         // this will be the matrix that transforms a world-space coordinate into shadow-space coordinate for this particular shadow map, 
         // considering also that the center of the shadow map is ahead of the camera
-        this._translatedMatrix = mat.prodTranslationRotation4(
-                mat.translatedByVector(
+        mat.setProdTranslationRotation4(this._translatedMatrix,
+                mat.translatedByVectorAux(
                         camera.getInversePositionMatrix(),
                         vec.scaled3(mat.getRowC43(camera.getCameraOrientationMatrix()), translationLength)),
                 this._orientationMatrix);
         // a matrix referring to shadow map that would have its center at the camera and the unit vector that points from this center towards
         // the actual centers of shadow maps (which are in the same direction) are calculated (once and saved) for each light based on which
         // the shaders can calculate all the shadow map positions, without passing all the above calculated matrices for all lights
-        this._baseMatrix = this._baseMatrix || mat.prodTranslationRotation4(camera.getInversePositionMatrix(), this._orientationMatrix);
+        if (!this._baseMatrixValid) {
+            mat.setProdTranslationRotation4(this._baseMatrix, camera.getInversePositionMatrix(), this._orientationMatrix);
+            this._baseMatrixValid = true;
+        }
         this._translationVector = this._translationVector || vec.normal3(vec.diff3(mat.translationVector3(this._translatedMatrix), mat.translationVector3(this._baseMatrix)));
         uniformValueFunctions[managedGL.getUniformName(UNIFORM_LIGHT_MATRIX_NAME)] = function () {
             return this._translatedMatrix;
@@ -189,7 +197,7 @@ define([
         return {
             color: this._color,
             direction: this._direction,
-            matrix: this._baseMatrix || mat.IDENTITY4,
+            matrix: this._baseMatrix,
             translationVector: this._translationVector || vec.NULL3
         };
     };
