@@ -522,7 +522,8 @@ define([
         result[4] = up[0];
         result[5] = up[1];
         result[6] = up[2];
-        return mat.correctedOrthogonal4(result);
+        mat.correctOrthogonal4(result);
+        return result;
     };
     /**
      * Returns a 4x4 transformation matrix describing a scaling along the 3 axes.
@@ -1154,6 +1155,18 @@ define([
         result = mat.identity4();
         mat.setInverse4(result, m);
         return result;
+    };
+    /**
+     * Returns the inverse of the passed 4x4 matrix m.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Float32Array} The inverse of m.
+     */
+    mat.inverse4Aux = function (m) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setInverse4(aux, m);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * A computationally efficient function to return the inverse of a 4x4 translation

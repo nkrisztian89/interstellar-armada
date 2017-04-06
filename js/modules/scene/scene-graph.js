@@ -13,6 +13,7 @@
 
 /**
  * @param types Used for type checking.
+ * @param vec Used for 3D vector operations.
  * @param mat Used for 3D (and 4D) matrix operations.
  * @param application Used for displaying errors and logging (and intentional crashing)
  * @param managedGL Used for handling managed framebuffers, creating uniform names, feature checking
@@ -22,13 +23,14 @@
  */
 define([
     "utils/types",
+    "utils/vectors",
     "utils/matrices",
     "modules/application",
     "modules/managed-gl",
     "modules/scene/camera",
     "modules/scene/renderable-objects",
     "modules/scene/lights"
-], function (types, mat, application, managedGL, camera, renderableObjects, lights) {
+], function (types, vec, mat, application, managedGL, camera, renderableObjects, lights) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -742,19 +744,20 @@ define([
      * @param {Number} [depthRatio]
      */
     RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex, lightMatrix, range, depthRatio) {
-        this._renderParameters.context = context;
-        this._renderParameters.depthMask = depthMask;
-        this._renderParameters.scene = this._scene;
-        this._renderParameters.parent = this._parent ? this._parent.getRenderableObject() : null;
-        this._renderParameters.camera = this._scene.getCamera();
-        this._renderParameters.viewportWidth = screenWidth;
-        this._renderParameters.viewportHeight = screenHeight;
-        this._renderParameters.lodContext = this._scene.getLODContext();
-        this._renderParameters.useInstancing = useInstancing;
-        this._renderParameters.instanceQueueIndex = instanceQueueIndex;
-        this._renderParameters.lightMatrix = lightMatrix;
-        this._renderParameters.shadowMapRange = range;
-        this._renderParameters.shadowMapDepthRatio = depthRatio;
+        var rp = this._renderParameters;
+        rp.context = context;
+        rp.depthMask = depthMask;
+        rp.scene = this._scene;
+        rp.parent = this._parent ? this._parent.getRenderableObject() : null;
+        rp.camera = this._scene.getCamera();
+        rp.viewportWidth = screenWidth;
+        rp.viewportHeight = screenHeight;
+        rp.lodContext = this._scene.getLODContext();
+        rp.useInstancing = useInstancing;
+        rp.instanceQueueIndex = instanceQueueIndex;
+        rp.lightMatrix = lightMatrix;
+        rp.shadowMapRange = range;
+        rp.shadowMapDepthRatio = depthRatio;
     };
     /**
      * Renders the object at this node and all subnodes, if visible.
@@ -1261,7 +1264,7 @@ define([
             return mat.prod4Aux(this._camera.getViewMatrix(), this._camera.getProjectionMatrix());
         });
         this.setUniformValueFunction(UNIFORM_EYE_POSITION_VECTOR_NAME, function () {
-            return new Float32Array(this._camera.getCameraPositionVector());
+            return vec.floatVector3Aux(this._camera.getCameraPositionVector());
         });
     };
     /**

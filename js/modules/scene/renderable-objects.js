@@ -810,7 +810,7 @@ define([
         this._camera = camera;
         this.setTexture(samplerName, cubemap);
         this.setUniformValueFunction(UNIFORM_VIEW_PROJECTION_INVERSE_MATRIX_NAME, function () {
-            return mat.inverse4(mat.prod4Aux(this._camera.getInverseOrientationMatrix(), this._camera.getProjectionMatrix()));
+            return mat.inverse4Aux(mat.prod4Aux(this._camera.getInverseOrientationMatrix(), this._camera.getProjectionMatrix()));
         });
     }
     CubemapSampledFVQ.prototype = new RenderableObject();
