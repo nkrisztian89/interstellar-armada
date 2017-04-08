@@ -372,15 +372,16 @@ define([
     /**
      * Sets up the node (and its subnodes) as part of the passed scene.
      * @param {Scene} scene
+     * @param {Boolean} [addToContexts=false]
      */
-    RenderableNode.prototype.setScene = function (scene) {
+    RenderableNode.prototype.setScene = function (scene, addToContexts) {
         var i;
         this._scene = scene;
-        if (scene) {
+        if (scene && addToContexts) {
             scene.addObjectToContexts(this._renderableObject);
         }
         for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].setScene(scene);
+            this._subnodes[i].setScene(scene, addToContexts);
         }
     };
     /**
@@ -564,13 +565,14 @@ define([
      * Adds a subnode to this node.
      * @param {RenderableNode} subnode The subnode to be added to the rendering tree. 
      * It will be rendered relative to this object (transformation matrices stack)
+     * @param {Boolean} addToContexts 
      * @returns {RenderableNode} The added subnode, for convenience
      */
-    RenderableNode.prototype.addSubnode = function (subnode) {
+    RenderableNode.prototype.addSubnode = function (subnode, addToContexts) {
         this._subnodes.push(subnode);
         subnode.setParent(this);
         if (this._scene) {
-            subnode.setScene(this._scene);
+            subnode.setScene(this._scene, addToContexts);
         }
         return subnode;
     };
@@ -1819,7 +1821,7 @@ define([
         if (!id || !this._resourceObjectIDs[id]) {
             if (object) {
                 node = new RenderableNode(object);
-                this._rootResourceNode.addSubnode(node);
+                this._rootResourceNode.addSubnode(node, true);
                 // mark it as reusable so in case this is a pooled object, the pooled instance can be marked free
                 node.markAsReusable();
             }

@@ -3205,13 +3205,13 @@ define([
                             missions.getDebugInfo() + "<br/>" +
                             sceneGraph.getDebugInfo() + "<br/>" +
                             mat.getMatrixCount() + " <br/>" +
-                            this.getFPS() + "<br/>" +
+                            this.getFPSStats() + "<br/>" +
                             _battleScene.getNumberOfDrawnTriangles());
                 }
                 mat.clearMatrixCount();
             } else {
                 if (this._stats.isVisible()) {
-                    this._stats.setContent(this.getFPS());
+                    this._stats.setContent(this.getFPSStats());
                 }
             }
         }

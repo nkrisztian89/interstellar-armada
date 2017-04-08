@@ -54,6 +54,7 @@ define(function () {
             },
             // ------------------------------------------------------------------------------
             // constants
+            EMPTY_STRING = "",
             EMPTY_ARRAY = [],
             NUMBER_THOUSANDS_DELIMITER = " ",
             // ------------------------------------------------------------------------------
@@ -97,6 +98,7 @@ define(function () {
     // ------------------------------------------------------------------------------
     // public constants
     exports.EMPTY_ARRAY = EMPTY_ARRAY;
+    exports.EMPTY_STRING = EMPTY_STRING;
     // ------------------------------------------------------------------------------
     // public enums
     exports.ScaleMode = ScaleMode;

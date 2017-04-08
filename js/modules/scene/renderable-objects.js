@@ -135,6 +135,11 @@ define([
          */
         this._textures = {};
         /**
+         * Cached list of the roles of the currently set textures.
+         * @type String[]
+         */
+        this._textureRoles = [];
+        /**
          * The functions to call when calculating the values of uniform variables before assigning them, ordered by the names of the variables.
          * @type Object.<String, Function>
          */
@@ -196,6 +201,7 @@ define([
         this._wasRendered = false;
         this._shader = shader;
         this._textures = {};
+        this._textureRoles = [];
         this._isRenderedWithDepthMask = renderedWithDepthMask === undefined ? true : renderedWithDepthMask;
         this._isRenderedWithoutDepthMask = renderedWithoutDepthMask === undefined ? true : renderedWithoutDepthMask;
         this._instancedShader = instancedShader || null;
@@ -211,9 +217,6 @@ define([
      * @returns {RenderableNode}
      */
     RenderableObject.prototype.getNode = function () {
-        /*if (this._node === null) {
-         this._node = new RenderableNode(this);
-         }*/
         return this._node;
     };
     /**
@@ -245,6 +248,26 @@ define([
         this._instancedShader = shader;
     };
     /**
+     * Updates the internal state and uniform values functions in case the textures change.
+     */
+    RenderableObject.prototype._updateTextures = function () {
+        var i, role, uniformName;
+        this._textureRoles = Object.keys(this._textures);
+        for (i = 0; i < this._textureRoles.length; i++) {
+            role = this._textureRoles[i];
+            if (this._textures[role] instanceof managedGL.ManagedTexture) {
+                uniformName = managedGL.getUniformName(managedGL.getTextureUniformRawName(role));
+            } else if (this._textures[role] instanceof managedGL.ManagedCubemap) {
+                uniformName = managedGL.getUniformName(managedGL.getCubemapUniformRawName(role));
+            } else {
+                application.showError("Attemtping to add a texture of unknown type (" + this._textures[role].constructor.name + ") to the GL context.");
+                continue;
+            }
+            // reusing functions created before
+            this._uniformValueFunctions[uniformName] = this._uniformValueFunctions[uniformName] || this._getTextureLocation.bind(this, role);
+        }
+    };
+    /**
      * Sets the texture specified for the given role. If there was already a
      * texture set, overwrites the reference.
      * @param {String} role
@@ -252,6 +275,7 @@ define([
      */
     RenderableObject.prototype.setTexture = function (role, texture) {
         this._textures[role] = texture;
+        this._updateTextures();
     };
     /**
      * Sets all the textures of the object based on the passed value.
@@ -259,6 +283,9 @@ define([
      */
     RenderableObject.prototype.setTextures = function (textures) {
         this._textures = textures;
+        if (textures) {
+            this._updateTextures();
+        }
     };
     /**
      * Whether this object should be rendered in passes when the depth mask is turned off
@@ -299,17 +326,12 @@ define([
         return this._name;
     };
     /**
-     * Returns a function that obtains the texture location of the texture with
-     * the given role within the given context.
      * @param {String} role
-     * @param {ManagedGLContext} context
-     * @returns {Function}
+     * @param {String} contextName
+     * @returns {Number} 
      */
-    RenderableObject.prototype.createTextureLocationGetter = function (role, context) {
-        var contextName = context.getName();
-        return function () {
-            return this._textures[role].getLastTextureBindLocation(contextName);
-        }.bind(this);
+    RenderableObject.prototype._getTextureLocation = function (role, contextName) {
+        return this._textures[role].getLastTextureBindLocation(contextName);
     };
     /**
      * Adds and sets up the resources used for rendering of this object to the
@@ -318,24 +340,16 @@ define([
      * @param {ManagedGLContext} context
      */
     RenderableObject.prototype.addToContext = function (context) {
-        var role;
+        var role, i;
         if (this._shader) {
             context.addShader(this._shader);
         }
         if (this._instancedShader) {
             context.addShader(this._instancedShader);
         }
-        for (role in this._textures) {
-            if (this._textures.hasOwnProperty(role)) {
-                context.addTexture(this._textures[role]);
-                if (this._textures[role] instanceof managedGL.ManagedTexture) {
-                    this.setUniformValueFunction(managedGL.getTextureUniformRawName(role), this.createTextureLocationGetter(role, context));
-                } else if (this._textures[role] instanceof managedGL.ManagedCubemap) {
-                    this.setUniformValueFunction(managedGL.getCubemapUniformRawName(role), this.createTextureLocationGetter(role, context));
-                } else {
-                    application.showError("Attemtping to add a texture of unknown type (" + this._textures[role].constructor.name + ") to the GL context.");
-                }
-            }
+        for (i = 0; i < this._textureRoles.length; i++) {
+            role = this._textureRoles[i];
+            context.addTexture(this._textures[role]);
         }
     };
     /**
@@ -343,11 +357,10 @@ define([
      * @param {ManagedGLContext} context
      */
     RenderableObject.prototype.bindTextures = function (context) {
-        var role;
-        for (role in this._textures) {
-            if (this._textures.hasOwnProperty(role)) {
-                context.bindTexture(this._textures[role]);
-            }
+        var role, i;
+        for (i = 0; i < this._textureRoles.length; i++) {
+            role = this._textureRoles[i];
+            context.bindTexture(this._textures[role]);
         }
     };
     /**
@@ -1240,8 +1253,8 @@ define([
         this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
             return mat.getRowB43(this.getOrientationMatrix());
         });
-        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
-            return instanced ? this._sizeVector : this._sizeVector[0];
+        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (contextName) {
+            return (contextName === utils.EMPTY_STRING) ? this._sizeVector : this._sizeVector[0];
         });
         this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return WHITE_COLOR;
@@ -1446,9 +1459,17 @@ define([
         this._timeSinceLastTransition = 0;
         /**
          * The velocity of the particle in m/s
-         * @type Float32Array
+         * @type Number[3]
          */
         this._velocityVector = [0, 0, 0];
+        /**
+         * @type Number[3]
+         */
+        this._worldVelocityVector = [0, 0, 0];
+        /**
+         * @type Boolean
+         */
+        this._worldVelocityVectorValid = false;
         /**
          * Whether the particle needs to be animated (there are more states or it has a non-zero velocity).
          * This is a cache variable.
@@ -1471,8 +1492,8 @@ define([
             this._positionVector[2] = modelMatrix[14];
             return this._positionVector;
         });
-        this.setUniformValueFunction(UNIFORM_BILLBOARD_SIZE_NAME, function (instanced) {
-            return instanced ? this._calculatedSize : this._calculatedSize[0];
+        this.setUniformValueFunction(UNIFORM_BILLBOARD_SIZE_NAME, function (contextName) {
+            return (contextName === utils.EMPTY_STRING) ? this._calculatedSize : this._calculatedSize[0];
         });
         this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return this._color;
@@ -1481,10 +1502,10 @@ define([
             return this.getModelMatrix();
         });
         this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
-            return vec.floatVector3Aux(vec.normal3(vec.prodVec3Mat4Aux(vec.normal3(this._velocityVector), this.getModelMatrix())));
+            return vec.floatVector3Aux(this.getWorldVelocityVector());
         });
-        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (instanced) {
-            return instanced ? this._calculatedSize : this._calculatedSize[0];
+        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (contextName) {
+            return (contextName === utils.EMPTY_STRING) ? this._calculatedSize : this._calculatedSize[0];
         });
     }
     Particle.prototype = new RenderableObject3D();
@@ -1524,6 +1545,10 @@ define([
         this._velocityVector[0] = 0;
         this._velocityVector[1] = 0;
         this._velocityVector[2] = 0;
+        this._worldVelocityVector[0] = 0;
+        this._worldVelocityVector[1] = 0;
+        this._worldVelocityVector[2] = 0;
+        this._worldVelocityVectorValid = false;
         this._shouldAnimate = false;
         this._updateShouldAnimate();
     };
@@ -1604,6 +1629,13 @@ define([
         this._shouldAnimate = (this._states.length > 1) || this._hasVelocity();
     };
     /**
+     * Called internally when the velocity vector changes.
+     */
+    Particle.prototype._updateVelocity = function () {
+        this._worldVelocityVectorValid = false;
+        this._updateShouldAnimate();
+    };
+    /**
      * @returns {number} The value of the currently set relative size.
      */
     Particle.prototype.getRelativeSize = function () {
@@ -1622,7 +1654,7 @@ define([
      * @returns {number[3]} 
      */
     Particle.prototype.getVelocityVector = function () {
-        return this._velocityMatrix;
+        return this._velocityVector;
     };
     /**
      * Set the velocity of the particle (m/s)
@@ -1630,7 +1662,7 @@ define([
      */
     Particle.prototype.setVelocityVector = function (value) {
         this._velocityVector = value;
-        this._updateShouldAnimate();
+        this._updateVelocity();
     };
     /**
      * Set the velocity of the particle (m/s)
@@ -1642,7 +1674,7 @@ define([
         this._velocityVector[0] = x;
         this._velocityVector[1] = y;
         this._velocityVector[2] = z;
-        this._updateShouldAnimate();
+        this._updateVelocity();
     };
     /**
      * Set the velocity of the particle (m/s) to the translation component in the passed matrix
@@ -1652,7 +1684,18 @@ define([
         this._velocityVector[0] = m[12];
         this._velocityVector[1] = m[13];
         this._velocityVector[2] = m[14];
-        this._updateShouldAnimate();
+        this._updateVelocity();
+    };
+    /**
+     * 
+     * @returns {Number[3]}
+     */
+    Particle.prototype.getWorldVelocityVector = function () {
+        if (!this._worldVelocityVectorValid) {
+            this._worldVelocityVector = vec.normal3(vec.prodVec3Mat4Aux(vec.normal3(this._velocityVector), this.getModelMatrix()));
+            this._worldVelocityVectorValid = true;
+        }
+        return this._worldVelocityVector;
     };
     /**
      * Returns the list of particle states this particle goes through during its lifespan.

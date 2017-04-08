@@ -832,7 +832,7 @@ define([
      * "lights[3]."
      */
     ShaderUniform.prototype.setValue = function (contextName, gl, shader, valueFunction, locationPrefix) {
-        this.setConstantValue(contextName, gl, shader, valueFunction(), locationPrefix);
+        this.setConstantValue(contextName, gl, shader, valueFunction(contextName), locationPrefix);
     };
     /**
      * Returns how many 4 component vectors does this uniform variable take (for counting shader requirements).
@@ -1827,7 +1827,7 @@ define([
             attributeName = this._instanceAttributeNames[i];
             uniformName = this._instanceAttributeBuffers[index][attributeName].getRole();
             if (uniformValueFunctions.hasOwnProperty(uniformName)) {
-                this._instanceAttributeBuffers[index][attributeName].addVector(uniformValueFunctions[uniformName](true));
+                this._instanceAttributeBuffers[index][attributeName].addVector(uniformValueFunctions[uniformName](utils.EMPTY_STRING));
             }
         }
     };

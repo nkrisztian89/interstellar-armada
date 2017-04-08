@@ -890,7 +890,7 @@ define([
                         Weapon._projectilePosMatrix,
                         projectileOriMatrix,
                         this._spacecraft,
-                        new physics.Force("", barrels[i].getForceForDuration(_momentDuration), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _momentDuration));
+                        new physics.Force(utils.EMPTY_STRING, barrels[i].getForceForDuration(_momentDuration), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _momentDuration));
                 p.addToScene(scene);
                 // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
                 // been created, so that projectiles from the same weapon and of the same class only use one light source object

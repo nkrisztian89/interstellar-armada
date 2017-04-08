@@ -1904,6 +1904,14 @@ define([
          */
         this._renderTimes = [];
         /**
+         * @type Number
+         */
+        this._minFPS = 0;
+        /**
+         * @type Number
+         */
+        this._maxFPS = 0;
+        /**
          * A reference to the function that is set to handle the resize event for this screen so
          * that it can be removed if the screen is no longer active.
          * @type Function
@@ -2088,14 +2096,25 @@ define([
      * standalone method that can be used with setInterval or on its own for a single render.
      */
     HTMLScreenWithCanvases.prototype.render = function () {
-        var d, dt;
+        var d, dt, shifted, fps;
         d = performance.now();
         dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (d - this._renderTimes[this._renderTimes.length - 1]) : 0;
         this._render(dt);
         if (this._renderLoop !== LOOP_CANCELED) {
             this._renderTimes.push(d);
+            shifted = false;
             while ((this._renderTimes.length > 1) && ((d - this._renderTimes[0]) > 1000)) {
                 this._renderTimes.shift();
+                shifted = true;
+            }
+            if (shifted) {
+                fps = this._renderTimes.length;
+                if ((this._minFPS === 0) || (this._minFPS > fps)) {
+                    this._minFPS = fps;
+                }
+                if ((this._maxFPS === 0) || (this._maxFPS < fps)) {
+                    this._maxFPS = fps;
+                }
             }
         }
     };
@@ -2105,13 +2124,24 @@ define([
      * @param {DOMHighResTimeStamp} timestamp
      */
     HTMLScreenWithCanvases.prototype._renderRequestAnimFrame = function (timestamp) {
-        var dt;
+        var dt, shifted, fps;
         if (this._renderLoop !== LOOP_CANCELED) {
             dt = (this._renderTimes && (this._renderTimes.length > 0)) ? (timestamp - this._renderTimes[this._renderTimes.length - 1]) : 0;
             this._render(dt);
             this._renderTimes.push(timestamp);
+            shifted = false;
             while ((this._renderTimes.length > 1) && ((timestamp - this._renderTimes[0]) > 1000)) {
                 this._renderTimes.shift();
+                shifted = true;
+            }
+            if (shifted) {
+                fps = this._renderTimes.length;
+                if ((this._minFPS === 0) || (this._minFPS > fps)) {
+                    this._minFPS = fps;
+                }
+                if ((this._maxFPS === 0) || (this._maxFPS < fps)) {
+                    this._maxFPS = fps;
+                }
             }
             window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
         }
@@ -2157,6 +2187,13 @@ define([
      */
     HTMLScreenWithCanvases.prototype.getFPS = function () {
         return this._renderTimes.length;
+    };
+    /**
+     * Returns the the current, minimum and maximum FPS values (as a string) for this screen's render loop.
+     * @returns {String}
+     */
+    HTMLScreenWithCanvases.prototype.getFPSStats = function () {
+        return this._renderTimes.length + " (" + this._minFPS + "-" + this._maxFPS + ")";
     };
     /**
      * Updates all needed variables when the screen is resized.

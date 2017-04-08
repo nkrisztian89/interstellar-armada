@@ -816,12 +816,12 @@ define([
                 parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
                 perpendicularForce = vec.diff3Aux(direction, parallelForce);
         this.addForce(new Force(
-                "",
+                utils.EMPTY_STRING,
                 strength,
                 direction,
                 duration));
         this.addTorque(new Torque(
-                "",
+                utils.EMPTY_STRING,
                 strength * vec.length3(perpendicularForce) * vec.length3(position),
                 vec.normal3(vec.cross3(perpendicularForce, leverDir)),
                 duration));

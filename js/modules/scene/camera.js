@@ -1232,7 +1232,7 @@ define([
      */
     CameraConfiguration.prototype.copy = function (name, transitionCopy) {
         var result = new CameraConfiguration(
-                name || "",
+                name || utils.EMPTY_STRING,
                 this._positionConfiguration.copy(transitionCopy),
                 this._orientationConfiguration.copy(transitionCopy),
                 this._fov,
@@ -1494,7 +1494,7 @@ define([
     function getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV, span, minSpan, maxSpan) {
         var angles = mat.getYawAndPitch(orientationMatrix);
         return new CameraConfiguration(
-                "",
+                utils.EMPTY_STRING,
                 new CameraPositionConfiguration(false, false, false, [], false, mat.matrix4(positionMatrix), null, null, false),
                 new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined,
                         CameraOrientationConfiguration.prototype.BaseOrientation.WORLD,
@@ -2125,7 +2125,7 @@ define([
      */
     Camera.prototype.transitionToSameConfiguration = function (duration, style) {
         var configuration = this._currentConfiguration;
-        this.setConfiguration(this._previousConfiguration ? this._getFreeCameraConfiguration(false) : this._currentConfiguration.copy("", true), true);
+        this.setConfiguration(this._previousConfiguration ? this._getFreeCameraConfiguration(false) : this._currentConfiguration.copy(utils.EMPTY_STRING, true), true);
         this.startTransitionToConfiguration(configuration, duration, style);
     };
     /**
