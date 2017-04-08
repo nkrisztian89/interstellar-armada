@@ -630,6 +630,21 @@ define([
         ]);
     };
     /**
+     * Returns a 4x4 transformation matrix describing an orthographic projection.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number} right
+     * @param {Number} top
+     * @param {Number} near
+     * @param {Number} far
+     * @returns {Float32Array} One of the auxiliary matrices.
+     */
+    mat.orthographic4Aux = function (right, top, near, far) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setOrthographic4(aux, right, top, near, far);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * @param {Object[]} jsonArray
      */
     mat.rotation4FromJSON = function (jsonArray) {
@@ -918,7 +933,8 @@ define([
             if (m[4] * m[10] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4Aux(m, mat.rotation4Aux(vec.UNIT3_Z, -result.yaw)));
+            pitchMatrix = mat.prod3x3SubOf4Aux(m, mat.rotation4Aux(vec.UNIT3_Z, -result.yaw));
+            mat.correctOrthogonal4(pitchMatrix);
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchMatrix[5], pitchMatrix[6]]));
             if (pitchMatrix[6] > 0) {
                 result.pitch = -result.pitch;
@@ -950,7 +966,8 @@ define([
             result.alpha -= 2 * Math.PI;
         }
         // calculate the matrix we would get if we rotated the Y vector into position
-        halfMatrix = mat.correctedOrthogonal4(mat.prod3x3SubOf4Aux(m, mat.rotation4Aux(result.alphaAxis, -result.alpha)));
+        halfMatrix = mat.prod3x3SubOf4Aux(m, mat.rotation4Aux(result.alphaAxis, -result.alpha));
+        mat.correctOrthogonal4(halfMatrix);
         // X and Z vectors might still be out of place, therefore do the same calculations as before to 
         // get the second rotation needed, which will put all vectors in place
         dot = vec.dot3(vec.UNIT3_X, mat.getRowA43(halfMatrix));
@@ -2007,6 +2024,29 @@ define([
      */
     mat.setInverseOfRotation4 = mat.setTransposed4;
     /**
+     * Modifies the passed matrix in-place to be the inverse of the other passed 4x4 scaling matrix
+     * @param {Float32Array} m The 4x4 matrix to modify
+     * @param {Float32Array} im The 4x4 matrix to invert, must be a scaling matrix
+     */
+    mat.setInverseOfScaling4 = function (m, im) {
+        m[0] = 1 / im[0];
+        m[1] = 0;
+        m[2] = 0;
+        m[3] = 0;
+        m[4] = 0;
+        m[5] = 1 / im[5];
+        m[6] = 0;
+        m[7] = 0;
+        m[8] = 0;
+        m[9] = 0;
+        m[10] = 1 / im[10];
+        m[11] = 0;
+        m[12] = 0;
+        m[13] = 0;
+        m[14] = 0;
+        m[15] = 1;
+    };
+    /**
      * Multiples the given matrix m1 in place by the matrix m2 from the right.
      * @param {Float32Array} m1
      * @param {Float32Array} m2
@@ -2182,6 +2222,58 @@ define([
         m[13] = m1[13] + m2[13];
         m[14] = m1[14] + m2[14];
         m[15] = m1[15];
+    };
+    /**
+     * Modifies a 4x4 transformation matrix, setting it to describe perspective projection.
+     * @param {Float32Array} m The matrix to modify
+     * @param {Number} right
+     * @param {Number} top
+     * @param {Number} near
+     * @param {Number} far
+     */
+    mat.setPerspective4 = function (m, right, top, near, far) {
+        m[0] = near / right;
+        m[1] = 0.0;
+        m[2] = 0.0;
+        m[3] = 0.0;
+        m[4] = 0.0;
+        m[5] = near / top;
+        m[6] = 0.0;
+        m[7] = 0.0;
+        m[8] = 0.0;
+        m[9] = 0.0;
+        m[10] = (near + far) / (near - far);
+        m[11] = -1.0;
+        m[12] = 0.0;
+        m[13] = 0.0;
+        m[14] = 2 * near * far / (near - far);
+        m[15] = 0.0;
+    };
+    /**
+     * Modifies a 4x4 transformation matrix, setting it to describe an orthographic projection.
+     * @param {Float32Array} m The matrix to modify
+     * @param {Number} right
+     * @param {Number} top
+     * @param {Number} near
+     * @param {Number} far
+     */
+    mat.setOrthographic4 = function (m, right, top, near, far) {
+        m[0] = 1 / right;
+        m[1] = 0.0;
+        m[2] = 0.0;
+        m[3] = 0.0;
+        m[4] = 0.0;
+        m[5] = 1 / top;
+        m[6] = 0.0;
+        m[7] = 0.0;
+        m[8] = 0.0;
+        m[9] = 0.0;
+        m[10] = -2.0 / (far - near);
+        m[11] = 0.0;
+        m[12] = 0.0;
+        m[13] = 0.0;
+        m[14] = -(near + far) / 2.0;
+        m[15] = 1.0;
     };
     /**
      * Modifies the passed matrix m in-place to ensure its orthogonality.

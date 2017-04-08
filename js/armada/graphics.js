@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides functionality to parse and load the graphics settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -931,6 +931,11 @@ define([
          * @type Array
          */
         this._preferenceList = null;
+        /**
+         * The cached list of quality level names in the order of preference.
+         * @type String[]
+         */
+        this._preferenceNameList = null;
         this._updatePreferenceList();
     }
     TextureQuality.prototype = new OrderedNamedNumericOptions();
@@ -947,6 +952,7 @@ define([
         for (i = this._currentIndex + 1; i < this._list.length; i++) {
             this._preferenceList.push(this._list[i]);
         }
+        this._preferenceNameList = this._preferenceList.map(this._getNameFunction.bind(this));
     };
     /**
      * @override
@@ -966,7 +972,7 @@ define([
      * @returns {Array}
      */
     TextureQuality.prototype.getPreferenceNameList = function () {
-        return this._preferenceList.map(this._getNameFunction.bind(this));
+        return this._preferenceNameList;
     };
     /**
      * @override

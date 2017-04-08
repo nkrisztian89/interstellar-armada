@@ -3200,15 +3200,19 @@ define([
         screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
         if (_battleScene) {
             if (application.isDebugVersion()) {
-                this._stats.setContent(
-                        missions.getDebugInfo() + "<br/>" +
-                        sceneGraph.getDebugInfo() + "<br/>" +
-                        mat.getMatrixCount() + " <br/>" +
-                        this.getFPS() + "<br/>" +
-                        _battleScene.getNumberOfDrawnTriangles());
+                if (this._stats.isVisible()) {
+                    this._stats.setContent(
+                            missions.getDebugInfo() + "<br/>" +
+                            sceneGraph.getDebugInfo() + "<br/>" +
+                            mat.getMatrixCount() + " <br/>" +
+                            this.getFPS() + "<br/>" +
+                            _battleScene.getNumberOfDrawnTriangles());
+                }
                 mat.clearMatrixCount();
             } else {
-                this._stats.setContent(this.getFPS());
+                if (this._stats.isVisible()) {
+                    this._stats.setContent(this.getFPS());
+                }
             }
         }
         // displaying the victory or defeat message
@@ -3373,7 +3377,8 @@ define([
                         span: config.getSetting(config.CAMERA_SETTINGS.DEFAULT_SPAN),
                         transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
                         transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
-                    });
+                    },
+                    false);
             _mission.addToScene(_battleScene, _targetScene);
             _addHUDToScene();
             _shipIndicatorHighlightTime = 0;

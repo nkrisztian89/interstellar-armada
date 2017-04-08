@@ -505,6 +505,16 @@ define([
          */
         this._rotationMatrixInverseValid = false;
         /**
+         * The cached inverse of the scaling matrix.
+         * @type Float32Array
+         */
+        this._scalingMatrixInverse = mat.identity4();
+        /**
+         * Whether the cached value of the inverse scaling matrix is currently valid
+         * @type Boolean
+         */
+        this._scalingMatrixInverseValid = false;
+        /**
          * The cached inverse of the model (position + orientation + scaling) matrix.
          * @type Float32Array
          */
@@ -571,6 +581,7 @@ define([
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
         mat.setMatrix4(this._scalingMatrix, scalingMatrix);
         this._rotationMatrixInverseValid = false;
+        this._scalingMatrixInverseValid = false;
         this._modelMatrixInverseValid = false;
         mat.setMatrix4(this._velocityMatrix, initialVelocityMatrix);
         mat.setIdentity4(this._angularVelocityMatrix);
@@ -692,6 +703,7 @@ define([
      */
     PhysicalObject.prototype.setScalingMatrix = function (value) {
         this._scalingMatrix = value;
+        this._scalingMatrixInverseValid = false;
         this._modelMatrixInverseValid = false;
     };
     /**
@@ -707,6 +719,18 @@ define([
         return this._rotationMatrixInverse;
     };
     /**
+     * Returns the inverse of the scaling matrix and stores it in a cache to
+     * make sure it is only calculated again if the scaling matrix changes.
+     * @returns {Float32Array}
+     */
+    PhysicalObject.prototype.getScalingMatrixInverse = function () {
+        if (!this._scalingMatrixInverseValid) {
+            mat.setInverseOfScaling4(this._scalingMatrixInverse, this._scalingMatrix);
+            this._scalingMatrixInverseValid = true;
+        }
+        return this._scalingMatrixInverse;
+    };
+    /**
      * Returns the inverse of the model matrix and stores it in a cache to
      * make sure it is only calculated again if the model matrix changes.
      * @returns {Float32Array}
@@ -717,7 +741,7 @@ define([
                     mat.inverseOfTranslation4Aux(this._positionMatrix),
                     mat.prod3x3SubOf4Aux(
                             this.getRotationMatrixInverse(),
-                            mat.inverseOfScaling4(this._scalingMatrix)));
+                            this.getScalingMatrixInverse()));
             this._modelMatrixInverseValid = true;
         }
         return this._modelMatrixInverse;

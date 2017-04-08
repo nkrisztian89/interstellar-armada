@@ -238,6 +238,19 @@ define([
             this._positionMatrixInCameraSpaceValid = false;
         }
         /**
+         * Modifies the position, setting it to the translation described by the passed matrix.
+         * @param {Float32Array} m
+         */
+        function setPositionM4(m) {
+            this._positionMatrix[12] = m[12];
+            this._positionMatrix[13] = m[13];
+            this._positionMatrix[14] = m[14];
+            this._modelMatrixValid = false;
+            this._modelMatrixInverseValid = false;
+            this._insideParent = null;
+            this._positionMatrixInCameraSpaceValid = false;
+        }
+        /**
          * Translates the current position by (x;y;z).
          * @param {Number} x
          * @param {Number} y
@@ -280,6 +293,15 @@ define([
             if (value) {
                 this._orientationMatrix = value;
             }
+            this._modelMatrixValid = false;
+            this._modelMatrixInverseValid = false;
+        }
+        /**
+         * Sets the orientation to be the one described by the passed 4x4 matrix.
+         * @param {Float32Array} m
+         */
+        function setOrientationM4(m) {
+            mat.setMatrix4(this._orientationMatrix, m);
             this._modelMatrixValid = false;
             this._modelMatrixInverseValid = false;
         }
@@ -550,8 +572,10 @@ define([
             this.prototype.getPositionMatrix = getPositionMatrix;
             this.prototype.setPositionMatrix = setPositionMatrix;
             this.prototype.setPositionv = setPositionv;
+            this.prototype.setPositionM4 = setPositionM4;
             this.prototype.getOrientationMatrix = getOrientationMatrix;
             this.prototype.setOrientationMatrix = setOrientationMatrix;
+            this.prototype.setOrientationM4 = setOrientationM4;
             this.prototype.getScalingMatrix = getScalingMatrix;
             this.prototype.setScalingMatrix = setScalingMatrix;
             this.prototype.setScale = setScale;

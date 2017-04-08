@@ -422,10 +422,12 @@ define([
      * -1st: front / distance, transparent / opaque render queues
      * -2nd: queues storing nodes that should be rendered together
      * -3rd: the nodes to render
+     * @param {Boolean} distanceRendering Whether distance rendering is enabled (if not, the node will be added to the front queues without
+     * distance checks)
      * @param {Camera} camera The camera from the view point of which renderable nodes need to be organized to front and distant nodes
      * @param {Number} dt The elapsed time since the last render, for animation, in milliseconds
      */
-    RenderableNode.prototype.animateAndAddToRenderQueues = function (renderQueues, camera, dt) {
+    RenderableNode.prototype.animateAndAddToRenderQueues = function (renderQueues, distanceRendering, camera, dt) {
         var queueType, i, renderQueueIndex, transparent, opaque;
         if (!this._visible) {
             return;
@@ -436,8 +438,26 @@ define([
         transparent = this._renderableObject.isRenderedWithoutDepthMask();
         opaque = this._renderableObject.isRenderedWithDepthMask();
         if (transparent || opaque) {
-            queueType = this._renderableObject.getRenderQueueBits(camera);
-            if (queueType & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
+            if (distanceRendering) {
+                queueType = this._renderableObject.getRenderQueueBits(camera);
+                if (queueType & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
+                    if (transparent) {
+                        this.addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                    }
+                    if (opaque) {
+                        this.addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
+                    }
+                }
+                if (queueType & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
+                    if (transparent) {
+                        this.addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                    }
+                    if (opaque) {
+                        this.addToRenderQueue(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX]);
+                    }
+                }
+            } else {
+                // if distance rendering is disabled, skip the check and add to the front queues
                 if (transparent) {
                     this.addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
                 }
@@ -445,19 +465,11 @@ define([
                     this.addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
                 }
             }
-            if (queueType & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
-                if (transparent) {
-                    this.addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
-                }
-                if (opaque) {
-                    this.addToRenderQueue(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX]);
-                }
-            }
         }
         if (this._subnodes.length > 0) {
             if (!this._hasInstancedSubnodes || (this._subnodes.length < this._subnodes[0].getMinimumCountForInstancing())) {
                 for (i = 0; i < this._subnodes.length; i++) {
-                    this._subnodes[i].animateAndAddToRenderQueues(renderQueues, camera, dt);
+                    this._subnodes[i].animateAndAddToRenderQueues(renderQueues, distanceRendering, camera, dt);
                 }
             } else {
                 // if subnodes can be added to the same instanced queue, do the addition and animation directly and do not go into recursion further
@@ -925,7 +937,13 @@ define([
         return result;
     };
     /**
-     * Removes all references stored by this object
+     * Removes all subnodes from this node.
+     */
+    RenderableNode.prototype.removeSubnodes = function () {
+        this._subnodes = [];
+    };
+    /**
+     * Removes all references stored by this object. Recursively destroys all subnodes.
      */
     RenderableNode.prototype.destroy = function () {
         var i;
@@ -975,8 +993,10 @@ define([
      * @param {Number} maxRenderedPointLights The maximum number of point lights that should be considered when rendering this scene.
      * @param {Number} maxRenderedSpotLights The maximum number of spot lights that should be considered when rendering this scene.
      * @param {Scene~CameraSettings} cameraSettings The properties based on which the camera for this scene will be set up.
+     * @param {Boolean} [distanceRendering=true] Whether distance rendering should be turned on for this scene. Distance rendering renders far away 
+     * objects with a second camera, thus increasing view range, but causes computational overhead even if all objects are near.
      */
-    function Scene(left, bottom, width, height, clearColorOnRender, clearColorMask, clearColor, clearDepthOnRender, lodContext, maxRenderedDirectionalLights, maxRenderedPointLights, maxRenderedSpotLights, cameraSettings) {
+    function Scene(left, bottom, width, height, clearColorOnRender, clearColorMask, clearColor, clearDepthOnRender, lodContext, maxRenderedDirectionalLights, maxRenderedPointLights, maxRenderedSpotLights, cameraSettings, distanceRendering) {
         /**
          * The relative X coordinate of the bottom left corner of the viewport on the canvas in 0-1 range.
          * @type Number
@@ -1135,9 +1155,9 @@ define([
         /**
          * The array of sizes (width and height) of the shadow maps in world-coordinates. For each light source, one shadow map is rendered
          * for each range in this array.
-         * @type Number[]
+         * @type Float32Array
          */
-        this._shadowMapRanges = [];
+        this._shadowMapRanges = new Float32Array([]);
         /**
          * The factor that determines the depth of the shadow maps in world coordinates. The depth is calculated by multiplying the shadow
          * map size (width and height) by this factor. For depth, a smaller accuracy is enough (to avoid shadow lines on surfaces which the
@@ -1194,6 +1214,12 @@ define([
          */
         this._contexts = [];
         /**
+         * Whether distance is turned on for this scene. Distance rendering renders far away objects with a second camera, thus increasing 
+         * view range, but causes computational overhead even if all objects are near.
+         * @type Boolean
+         */
+        this._distanceRendering = (distanceRendering !== undefined) ? distanceRendering : true;
+        /**
          * The array of arrays of render queues, with each queue being an array of nodes in the scene that need to be rendered and use the same 
          * shader. This way, rendering all the queues after each other requires the minimum amount of shader switches and thus scene
          * uniform (such as light source) assignments.
@@ -1201,7 +1227,7 @@ define([
          * front or distance queues and transparent or opaque queues.
          * @type RenderableNode[][][]
          */
-        this._renderQueues = [];
+        this._renderQueues = this._distanceRendering ? [[], [], [], []] : [[], []];
         /**
          * The array of renderable nodes to be rendered to the next shadow map.
          * @type RenderableNode[]
@@ -1221,7 +1247,7 @@ define([
          * @type Object.<String, Boolean>
          */
         this._uniformsUpdated = null;
-        this.clearNodes();
+        this._initNodes();
         this.clearPointLights();
         this._setGeneralUniformValueFunctions();
     }
@@ -1297,7 +1323,7 @@ define([
                 return this._shadowMapRanges.length;
             });
             this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME, function () {
-                return new Float32Array(this._shadowMapRanges);
+                return this._shadowMapRanges;
             });
             this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME, function () {
                 return this._shadowMapDepthRatio;
@@ -1531,7 +1557,7 @@ define([
             this._shadowMappingEnabled = false;
             this._shadowMappingShader = null;
             this._shadowMapTextureSize = 0;
-            this._shadowMapRanges = [];
+            this._shadowMapRanges = new Float32Array([]);
             this._shadowMapDepthRatio = 0;
             this._numShadowMapSamples = 0;
             this._shadowMapSampleOffsets = [];
@@ -1642,36 +1668,38 @@ define([
         this.clearSpotLights();
     };
     /**
-     * Clears all added nodes from this scene and resets the root nodes.
+     * Initializes the root nodes for this scene.
      */
-    Scene.prototype.clearNodes = function () {
-        // clearing background objects
-        if (this._rootBackgroundNode) {
-            this._rootBackgroundNode.destroy();
-        }
+    Scene.prototype._initNodes = function () {
         // we are adding RenderableObject3D so if nodes with object 3D-s are added, they will have a parent with position and orientation
         // a size of 0 is specified so that no child 3D objects will ever think they are inside their parent
         this._rootBackgroundNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
         this._rootBackgroundNode.setScene(this);
-        // clearing main scene objects
-        if (this._rootNode) {
-            this._rootNode.destroy();
-        }
         this._rootNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
         this._rootNode.setScene(this);
-        // clearing resource objects
-        if (this._rootResourceNode) {
-            this._rootResourceNode.destroy();
-        }
         this._rootResourceNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4));
         this._rootResourceNode.setScene(this);
         this._resourceObjectIDs = {};
-        // clearing UI objects
-        if (this._rootUINode) {
-            this._rootUINode.destroy();
-        }
         this._rootUINode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
         this._rootUINode.setScene(this);
+    };
+    /**
+     * Clears all added nodes from this scene.
+     */
+    Scene.prototype.clearNodes = function () {
+        if (this._rootBackgroundNode) {
+            this._rootBackgroundNode.removeSubnodes();
+        }
+        if (this._rootNode) {
+            this._rootNode.removeSubnodes();
+        }
+        if (this._rootResourceNode) {
+            this._rootResourceNode.removeSubnodes();
+        }
+        this._resourceObjectIDs = {};
+        if (this._rootUINode) {
+            this._rootUINode.removeSubnodes();
+        }
     };
     /**
      * Removes all the previously added directional light sources from the scene.
@@ -2137,8 +2165,13 @@ define([
      * @param {Number} heightInPixels The height of the viewport in pixels.
      */
     Scene.prototype._renderUIObjects = function (context, widthInPixels, heightInPixels) {
-        var gl = context.gl; // caching the variable for easier access
-        if (this._rootUINode.getSubnodes().length > 0) {
+        var originalCamera, gl = context.gl; // caching the variable for easier access
+        if (this._rootUINode.isVisible() && this._rootUINode.getSubnodes().length > 0) {
+            // rendering UI elements based on 3D positions should work both for positions inside the front and the distance range
+            originalCamera = this._camera;
+            if (this._distanceRendering) {
+                this._camera = this._camera.getExtendedCamera(true);
+            }
             // preparing to render UI objects
             context.enableBlending();
             gl.disable(gl.DEPTH_TEST);
@@ -2150,6 +2183,7 @@ define([
                 this._numDrawnTriangles += this._rootUINode.getNumberOfDrawnTriangles();
             }
             gl.enable(gl.DEPTH_TEST);
+            this._camera = originalCamera;
         }
     };
     /**
@@ -2178,10 +2212,15 @@ define([
         // resetting cached values that were only valid for one render
         this._rootNode.resetForNewFrame();
         // animating all the needed nodes and preparing them for rendering by organizing them to render queues
-        this._renderQueues = [[], [], [], []];
-        this._rootNode.animateAndAddToRenderQueues(this._renderQueues, this._camera, dt);
+        this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX] = [];
+        this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX] = [];
+        if (this._distanceRendering) {
+            this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX] = [];
+            this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX] = [];
+        }
+        this._rootNode.animateAndAddToRenderQueues(this._renderQueues, this._distanceRendering, this._camera, dt);
         frontQueuesNotEmpty = (this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0);
-        distanceQueuesNotEmpty = (this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0);
+        distanceQueuesNotEmpty = this._distanceRendering && ((this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0));
         // rendering shadow maps
         if (frontQueuesNotEmpty) {
             this._renderShadowMaps(context, widthInPixels, heightInPixels);
@@ -2240,11 +2279,7 @@ define([
         }
         // -----------------------------------------------------------------------
         // rendering the UI objects
-        // rendering UI elements based on 3D positions should work both for positions inside the front and the distance range
-        originalCamera = this._camera;
-        this._camera = this._camera.getExtendedCamera(true);
         this._renderUIObjects(context, widthInPixels, heightInPixels);
-        this._camera = originalCamera;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

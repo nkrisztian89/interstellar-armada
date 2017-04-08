@@ -184,7 +184,7 @@ define([
             return depth;
         };
         uniformValueFunctions[managedGL.getUniformName(UNIFORM_PROJECTION_MATRIX_NAME)] = function () {
-            return mat.orthographic4(range, range, -depth, depth);
+            return mat.orthographic4Aux(range, range, -depth, depth);
         };
         context.getCurrentShader().assignUniforms(context, uniformValueFunctions);
     };

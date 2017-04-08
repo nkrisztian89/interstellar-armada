@@ -110,13 +110,34 @@ define([
                  */
                 AIMED_IN_RANGE: 5
             },
+            /**
+             * @enum {String}
+             * The valid thruster use identifiers.
+             * @type Object
+             */
+            ThrusterUse = {
+                FORWARD: "forward",
+                REVERSE: "reverse",
+                STRAFE_LEFT: "strafeLeft",
+                STRAFE_RIGHT: "strafeRight",
+                RAISE: "raise",
+                LOWER: "lower",
+                YAW_LEFT: "yawLeft",
+                YAW_RIGHT: "yawRight",
+                PITCH_UP: "pitchUp",
+                PITCH_DOWN: "pitchDown",
+                ROLL_LEFT: "rollLeft",
+                ROLL_RIGHT: "rollRight"
+            },
             // ------------------------------------------------------------------------------
             // constants
             /**
              * The list of valid thruster use identifiers
              * @type String[]
              */
-            THRUSTER_USES = ["forward", "reverse", "strafeLeft", "strafeRight", "raise", "lower", "yawLeft", "yawRight", "pitchUp", "pitchDown", "rollLeft", "rollRight"],
+            THRUSTER_USES = [
+                ThrusterUse.FORWARD, ThrusterUse.REVERSE, ThrusterUse.STRAFE_LEFT, ThrusterUse.STRAFE_RIGHT, ThrusterUse.RAISE, ThrusterUse.LOWER,
+                ThrusterUse.YAW_LEFT, ThrusterUse.YAW_RIGHT, ThrusterUse.PITCH_UP, ThrusterUse.PITCH_DOWN, ThrusterUse.ROLL_LEFT, ThrusterUse.ROLL_RIGHT],
             /**
              * When adding the resources of a projectile (class) to a scene, this prefix is used in the ID to avoid adding the same one multiple
              * times
@@ -245,6 +266,7 @@ define([
             _projectilePool;
     Object.freeze(FlightMode);
     Object.freeze(WeaponAimStatus);
+    Object.freeze(ThrusterUse);
 // ##############################################################################
     /**
      * @class Represents a projectile fired from a weapon.
@@ -356,6 +378,20 @@ define([
         this._physicalModel.moveByVector(v);
     };
     /**
+     * Private function used as a callback after resource load to add the projectile to a scene.
+     * @param {Scene} scene The scene to which to add the renderable object presenting the projectile.
+     * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
+     * @param {Function} [callback] If given, this function will be executed right after the projectile is addded to the scene, with the 
+     * visual model of the projectile passed to it as its only argument
+     */
+    Projectile.prototype._addToSceneCallback = function (scene, wireframe, callback) {
+        this._createVisualModel(wireframe);
+        scene.addObject(this._visualModel, _minimumProjectileCountForInstancing);
+        if (callback) {
+            callback(this._visualModel);
+        }
+    };
+    /**
      * Adds a renderable node representing this projectile to the passed scene.
      * @param {Scene} scene The scene to which to add the renderable object presenting the projectile.
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
@@ -363,13 +399,7 @@ define([
      * visual model of the projectile passed to it as its only argument
      */
     Projectile.prototype.addToScene = function (scene, wireframe, callback) {
-        resources.executeWhenReady(function () {
-            this._createVisualModel(wireframe);
-            scene.addObject(this._visualModel, _minimumProjectileCountForInstancing);
-            if (callback) {
-                callback(this._visualModel);
-            }
-        }.bind(this));
+        resources.executeWhenReady(this._addToSceneCallback.bind(this, scene, wireframe, callback));
     };
     /**
      * Adds the resources required to render this projectile to the passed scene,
@@ -436,7 +466,7 @@ define([
                         hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
                         relativeHitPositionVectorInWorldSpace = vec.diff3Aux(hitPositionVectorInWorldSpace, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                         physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
-                        exp = new explosion.Explosion(this._class.getExplosionClass(), mat.translation4v(hitPositionVectorInWorldSpace), mat.identity4(), vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, mat.matrix4(physicalHitObject.getVelocityMatrix()));
+                        exp = new explosion.Explosion(this._class.getExplosionClass(), mat.translation4v(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, mat.matrix4(physicalHitObject.getVelocityMatrix()));
                         exp.addToScene(this._visualModel.getNode().getScene().getRootNode(), hitObjects[i].getSoundSource(), true);
                         hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
                         this._timeLeft = 0;
@@ -735,7 +765,7 @@ define([
     Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex, relativeBarrelPosVector) {
         var
                 projectileClass = this._class.getBarrel(barrelIndex).getProjectileClass(),
-                muzzleFlashPosMatrix = mat.translation4v(relativeBarrelPosVector),
+                muzzleFlashPosMatrix = mat.translation4vAux(relativeBarrelPosVector),
                 particle = _particlePool.getObject();
         renderableObjects.initDynamicParticle(
                 particle,
@@ -808,6 +838,9 @@ define([
             this._rotationChanged = false;
         }
     };
+    // static auxiliary matrices to be used in the fire() method (to avoid created new matrices during each execution of the method)
+    Weapon._weaponSlotPosMatrix = mat.identity4();
+    Weapon._projectilePosMatrix = mat.identity4();
     /**
      * Fires the weapon and adds the projectiles it fires (if any) to the passed pool.
      * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this weapon - it
@@ -819,8 +852,8 @@ define([
      */
     Weapon.prototype.fire = function (shipScaledOriMatrix, onlyIfAimedOrFixed, shipSoundSource) {
         var i, p, result,
-                weaponSlotPosVector, weaponSlotPosMatrix,
-                projectilePosMatrix, projectileOriMatrix,
+                weaponSlotPosVector,
+                projectileOriMatrix,
                 projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
                 soundPosition,
                 scene = this._visualModel.getNode().getScene();
@@ -832,7 +865,7 @@ define([
             this._cooldown = 0;
             // cache the matrices valid for the whole weapon
             weaponSlotPosVector = vec.prodVec3Mat4Aux(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
-            weaponSlotPosMatrix = mat.translatedByVector(this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
+            mat.setTranslatedByVector(Weapon._weaponSlotPosMatrix, this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
             projectileOriMatrix = this.getProjectileOrientationMatrix();
             barrels = this._class.getBarrels();
             projectileLights = {};
@@ -848,13 +881,13 @@ define([
                 // add the muzzle flash of this barrel
                 muzzleFlash = this._getMuzzleFlashForBarrel(i, barrelPosVector);
                 barrelPosVector = vec.prodVec3Mat4(barrelPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
-                projectilePosMatrix = mat.translatedByVector(weaponSlotPosMatrix, barrelPosVector);
+                mat.setTranslatedByVector(Weapon._projectilePosMatrix, Weapon._weaponSlotPosMatrix, barrelPosVector);
                 this._visualModel.getNode().addSubnode(new sceneGraph.RenderableNode(muzzleFlash), false, _minimumMuzzleFlashParticleCountForInstancing);
                 // add the projectile of this barrel
                 p = _projectilePool.getObject();
                 p.init(
                         projectileClass,
-                        projectilePosMatrix,
+                        Weapon._projectilePosMatrix,
                         projectileOriMatrix,
                         this._spacecraft,
                         new physics.Force("", barrels[i].getForceForDuration(_momentDuration), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _momentDuration));
@@ -869,7 +902,7 @@ define([
                 // create the counter-force affecting the firing ship
                 this._spacecraft.getPhysicalModel().addForceAndTorque(
                         vec.diff3(
-                                mat.translationVector3(projectilePosMatrix),
+                                mat.translationVector3(Weapon._projectilePosMatrix),
                                 mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix())),
                         mat.getRowB43Neg(projectileOriMatrix),
                         barrels[i].getForceForDuration(_momentDuration),
@@ -2382,46 +2415,46 @@ define([
         // controlling yaw
         yawAngle = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]]));
         if ((yawTarget - yawAngle) > turnThreshold) {
-            this._spacecraft.addThrusterBurn("yawRight",
+            this._spacecraft.addThrusterBurn(ThrusterUse.YAW_RIGHT,
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle, dt)));
         } else if ((yawTarget - yawAngle) < -turnThreshold) {
-            this._spacecraft.addThrusterBurn("yawLeft",
+            this._spacecraft.addThrusterBurn(ThrusterUse.YAW_LEFT,
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget, dt)));
         }
         // controlling pitch
         pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]]));
         if ((pitchTarget - pitchAngle) > turnThreshold) {
-            this._spacecraft.addThrusterBurn("pitchUp",
+            this._spacecraft.addThrusterBurn(ThrusterUse.PITCH_UP,
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle, dt)));
         } else if ((pitchTarget - pitchAngle) < -turnThreshold) {
-            this._spacecraft.addThrusterBurn("pitchDown",
+            this._spacecraft.addThrusterBurn(ThrusterUse.PITCH_DOWN,
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget, dt)));
         }
         // controlling roll
         rollAngle = Math.sign(-turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]]));
         if ((this._rollTarget - rollAngle) > turnThreshold) {
-            this._spacecraft.addThrusterBurn("rollRight",
+            this._spacecraft.addThrusterBurn(ThrusterUse.ROLL_RIGHT,
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle, dt)));
         } else if ((this._rollTarget - rollAngle) < -turnThreshold) {
-            this._spacecraft.addThrusterBurn("rollLeft",
+            this._spacecraft.addThrusterBurn(ThrusterUse.ROLL_LEFT,
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget, dt)));
         }
         // controlling forward/reverse
         if ((this._speedTarget - speed) > speedThreshold) {
-            this._spacecraft.addThrusterBurn("forward",
+            this._spacecraft.addThrusterBurn(ThrusterUse.FORWARD,
                     Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed, dt)));
         } else if ((this._speedTarget - speed) < -speedThreshold) {
-            this._spacecraft.addThrusterBurn("reverse",
+            this._spacecraft.addThrusterBurn(ThrusterUse.REVERSE,
                     Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget, dt)));
         }
         // controlling horizontal drift
         if (this._assisted || (this._strafeTarget !== 0)) {
             speed = relativeVelocityMatrix[12];
             if ((this._strafeTarget - speed) > speedThreshold) {
-                this._spacecraft.addThrusterBurn("strafeRight",
+                this._spacecraft.addThrusterBurn(ThrusterUse.STRAFE_RIGHT,
                         Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed, dt)));
             } else if ((this._strafeTarget - speed) < -speedThreshold) {
-                this._spacecraft.addThrusterBurn("strafeLeft",
+                this._spacecraft.addThrusterBurn(ThrusterUse.STRAFE_LEFT,
                         Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget, dt)));
             }
         }
@@ -2429,10 +2462,10 @@ define([
         if (this._assisted || (this._liftTarget !== 0)) {
             speed = relativeVelocityMatrix[14];
             if ((this._liftTarget - speed) > speedThreshold) {
-                this._spacecraft.addThrusterBurn("raise",
+                this._spacecraft.addThrusterBurn(ThrusterUse.RAISE,
                         Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed, dt)));
             } else if ((this._liftTarget - speed) < -speedThreshold) {
-                this._spacecraft.addThrusterBurn("lower",
+                this._spacecraft.addThrusterBurn(ThrusterUse.LOWER,
                         Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget, dt)));
             }
         }
@@ -2598,7 +2631,7 @@ define([
                     mat.matrix4(this._spacecraft.getPhysicalOrientationMatrix()),
                     mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
                     true,
-                    mat.identity4());
+                    mat.IDENTITY4);
             exp.addToScene(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
             this._originalScalingMatrix = mat.matrix4(this._spacecraft.getVisualModel().getScalingMatrix());
             physicalModel = this._spacecraft.getPhysicalModel();
@@ -2675,7 +2708,7 @@ define([
                             mat.matrix4(this._spacecraft.getPhysicalOrientationMatrix()),
                             mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
                             true,
-                            mat.identity4());
+                            mat.IDENTITY4);
                     exp.addToScene(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
                     this._spacecraft.setAway(true);
                     this._spacecraft.handleEvent(SpacecraftEvents.JUMPED_OUT);
@@ -2738,6 +2771,7 @@ define([
     // The public interface of the module
     return {
         FlightMode: FlightMode,
+        ThrusterUse: ThrusterUse,
         Projectile: Projectile,
         Weapon: Weapon,
         TargetingComputer: TargetingComputer,

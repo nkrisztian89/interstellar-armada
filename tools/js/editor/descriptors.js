@@ -19,6 +19,7 @@
  * @param config Used for configuration (setting) key strings
  * @param graphics Used to access contants
  * @param classes Used to access enums and retrieve class name lists
+ * @param equipment Used to access enums 
  */
 define([
     "utils/utils",
@@ -28,8 +29,9 @@ define([
     "modules/media-resources",
     "armada/configuration",
     "armada/graphics",
-    "armada/logic/classes"
-], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes) {
+    "armada/logic/classes",
+    "armada/logic/equipment"
+], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes, equipment) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -74,20 +76,7 @@ define([
                 Y: "Y",
                 Z: "Z"
             },
-            ThrusterUse = {
-                FORWARD: "forward",
-                REVERSE: "reverse",
-                STRAFE_LEFT: "strafeLeft",
-                STRAFE_RIGHT: "strafeRight",
-                RAISE: "raise",
-                LOWER: "lower",
-                YAW_LEFT: "yawLeft",
-                YAW_RIGHT: "yawRight",
-                PITCH_UP: "pitchUp",
-                PITCH_DOWN: "pitchDown",
-                ROLL_LEFT: "rollLeft",
-                ROLL_RIGHT: "rollRight"
-            },
+            ThrusterUse = equipment.ThrusterUse,
             /**
              * @typedef {Object} Editor~TypeDescriptor
              * @property {String} baseType (enum BaseType)
