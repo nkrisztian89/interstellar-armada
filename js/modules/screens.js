@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Provides wrapper classes that can be used to manage (loading, assemblin, displaying, hiding, translating...) HTML based screens for
  * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -2159,6 +2159,8 @@ define([
                 this._sceneCanvasBindings[i].canvas.getManagedContext().setup();
             }
             this._renderTimes = [performance.now()];
+            this._minFPS = 0;
+            this._maxFPS = 0;
             if (this._useRequestAnimFrame) {
                 this._renderLoop = LOOP_REQUESTANIMFRAME;
                 window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
