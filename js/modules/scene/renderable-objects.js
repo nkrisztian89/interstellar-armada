@@ -399,7 +399,7 @@ define([
     /**
      * Returns a combination of bits corresponding to which rendered queues (based on distance) should this object be added to for rendering
      * for the current frame. Will get the camera to the view point of which the distance should be calculated as parameter when called.
-     * @returns {Number} (enum RenderQueueType)
+     * @returns {Number} (enum RenderQueueBits)
      */
     RenderableObject.prototype.getRenderQueueBits = function () {
         return this._visible ? RenderQueueBits.FRONT_QUEUE_BIT : RenderQueueBits.NONE;
@@ -632,10 +632,11 @@ define([
      * @param {Float32Array} [scalingMatrix] Initial scaling.
      * @param {ManagedShader} [instancedShader]
      * @param {Number} [size=1]
+     * @param {Boolean} [childrenAlwaysInside=false]
      */
-    function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader, size) {
+    function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader, size, childrenAlwaysInside) {
         RenderableObject.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader);
-        object3D.Object3D.call(this, positionMatrix, orientationMatrix, scalingMatrix, size);
+        object3D.Object3D.call(this, positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside);
         /**
          * The cached value of the size of this object on the screen from the 
          * last frustum calculation.
@@ -731,10 +732,14 @@ define([
     /**
      * @override
      * @param {Camera} camera 
+     * @param {Number} parentQueueBits (option ParentQueueBits) The render queue bits of the parent
      * @returns {Number}
      */
-    RenderableObject3D.prototype.getRenderQueueBits = function (camera) {
+    RenderableObject3D.prototype.getRenderQueueBits = function (camera, parentQueueBits) {
         var result = RenderQueueBits.NONE, baseMatrix, scalingMatrix, size;
+        if (this.isInsideParent()) {
+            return parentQueueBits;
+        }
         baseMatrix = this.getPositionMatrixInCameraSpace(camera);
         scalingMatrix = this.getCascadeScalingMatrix();
         size = this.getSize() * scalingMatrix[0];
@@ -1733,13 +1738,14 @@ define([
      * @override
      * Adds a quick check for visibility to the superclass method.
      * @param {Camera} camera
+     * @param {Number} parentQueueBits
      * @returns {Number}
      */
-    Particle.prototype.getRenderQueueBits = function (camera) {
+    Particle.prototype.getRenderQueueBits = function (camera, parentQueueBits) {
         if (!this._visible) {
             return RenderQueueBits.NONE;
         }
-        return RenderableObject3D.prototype.getRenderQueueBits.call(this, camera);
+        return RenderableObject3D.prototype.getRenderQueueBits.call(this, camera, parentQueueBits);
     };
     /**
      * @override

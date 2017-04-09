@@ -427,9 +427,10 @@ define([
      * distance checks)
      * @param {Camera} camera The camera from the view point of which renderable nodes need to be organized to front and distant nodes
      * @param {Number} dt The elapsed time since the last render, for animation, in milliseconds
+     * @param {queueBits} [parentQueueBits] The render queue bits of the parent node
      */
-    RenderableNode.prototype.animateAndAddToRenderQueues = function (renderQueues, distanceRendering, camera, dt) {
-        var queueType, i, renderQueueIndex, transparent, opaque;
+    RenderableNode.prototype.animateAndAddToRenderQueues = function (renderQueues, distanceRendering, camera, dt, parentQueueBits) {
+        var queueBits, i, renderQueueIndex, transparent, opaque;
         if (!this._visible) {
             return;
         }
@@ -440,8 +441,8 @@ define([
         opaque = this._renderableObject.isRenderedWithDepthMask();
         if (transparent || opaque) {
             if (distanceRendering) {
-                queueType = this._renderableObject.getRenderQueueBits(camera);
-                if (queueType & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
+                queueBits = this._renderableObject.getRenderQueueBits(camera, parentQueueBits);
+                if (queueBits & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
                     if (transparent) {
                         this.addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
                     }
@@ -449,7 +450,7 @@ define([
                         this.addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
                     }
                 }
-                if (queueType & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
+                if (queueBits & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
                     if (transparent) {
                         this.addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
                     }
@@ -468,9 +469,13 @@ define([
             }
         }
         if (this._subnodes.length > 0) {
+            // if children are inside the parent, they will take its render queue bits, so make sure they are calculated
+            if (queueBits === undefined) {
+                queueBits = distanceRendering ? this._renderableObject.getRenderQueueBits(camera, parentQueueBits) : renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT;
+            }
             if (!this._hasInstancedSubnodes || (this._subnodes.length < this._subnodes[0].getMinimumCountForInstancing())) {
                 for (i = 0; i < this._subnodes.length; i++) {
-                    this._subnodes[i].animateAndAddToRenderQueues(renderQueues, distanceRendering, camera, dt);
+                    this._subnodes[i].animateAndAddToRenderQueues(renderQueues, distanceRendering, camera, dt, queueBits);
                 }
             } else {
                 // if subnodes can be added to the same instanced queue, do the addition and animation directly and do not go into recursion further
@@ -482,8 +487,8 @@ define([
                 transparent = this._subnodes[0].getRenderableObject().isRenderedWithoutDepthMask();
                 opaque = this._subnodes[0].getRenderableObject().isRenderedWithDepthMask();
                 if (transparent || opaque) {
-                    queueType = this._subnodes[0].getRenderableObject().getRenderQueueBits(camera);
-                    if (queueType & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
+                    queueBits = this._subnodes[0].getRenderableObject().getRenderQueueBits(camera, queueBits);
+                    if (queueBits & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
                         if (transparent) {
                             renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
                             renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
@@ -495,7 +500,7 @@ define([
                             renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex] = renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].concat(this._subnodes);
                         }
                     }
-                    if (queueType & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
+                    if (queueBits & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
                         if (transparent) {
                             renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
                             renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();

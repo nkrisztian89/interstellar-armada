@@ -416,7 +416,7 @@ define([
      * @param {Number} [particleCountFactor=1] The number of particles created by this particle system will be multiplied by this factor
      */
     function ParticleSystem(positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing, particleCountFactor) {
-        renderableObjects.RenderableObject3D.call(this, null, false, true, positionMatrix, orientationMatrix, scalingMatrix);
+        renderableObjects.RenderableObject3D.call(this, null, false, true, positionMatrix, orientationMatrix, scalingMatrix, undefined, 1, true);
         /**
          * The 4x4 translation matrix describing the velocity of the particle system (m/s)
          * @type Float32Array

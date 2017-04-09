@@ -34,9 +34,11 @@ define([
      * @param {Float32Array} [orientationMatrix] Initial orientation.
      * @param {Float32Array} [scalingMatrix] Initial scaling.
      * @param {Number} [size=1]
+     * @param {Boolean} [childrenAlwaysInside=false] When true, children of this object are always considered to be inside it, without 
+     * performing an actual position check. Useful for container objects.
      * @returns {Object3D}
      */
-    function Object3D(positionMatrix, orientationMatrix, scalingMatrix, size) {
+    function Object3D(positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside) {
         /**
          * Optional parent, relative to which the position, orientation and
          * scaling of this object is interpreted.
@@ -118,6 +120,12 @@ define([
          */
         this._insideParent = null;
         /**
+         * When true, children of this object are always considered to be inside it, without 
+         * performing an actual position check. Useful for container objects.
+         * @type Boolean
+         */
+        this._childrenAlwaysInside = childrenAlwaysInside || false;
+        /**
          * Stored value of the last frustum calculation result. Not used for
          * caching but to avoid creating a new object to store this every time.
          * @type Object
@@ -152,9 +160,10 @@ define([
          * @param {Float32Array} [orientationMatrix] Initial orientation.
          * @param {Float32Array} [scalingMatrix] Initial scaling.
          * @param {Number} [size=1]
+         * @param {Boolean} [childrenAlwaysInside=false]
          * @returns {Object3D}
          */
-        function init(positionMatrix, orientationMatrix, scalingMatrix, size) {
+        function init(positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside) {
             this._parent = null;
             mat.setMatrix4(this._positionMatrix, positionMatrix || mat.IDENTITY4);
             mat.setMatrix4(this._orientationMatrix, orientationMatrix || mat.IDENTITY4);
@@ -166,6 +175,7 @@ define([
             this._modelMatrixInverseForFrameValid = false;
             this._size = (size !== undefined) ? size : 1;
             this._insideParent = null;
+            this._childrenAlwaysInside = childrenAlwaysInside || false;
             this._lastSizeInsideViewFrustum = {width: -1, height: -1};
             this._positionMatrixInCameraSpaceValid = false;
         }
@@ -210,7 +220,9 @@ define([
             }
             this._modelMatrixValid = false;
             this._modelMatrixInverseValid = false;
-            this._insideParent = null;
+            if (!this._parent || !this._parent.childrenAlwaysInside()) {
+                this._insideParent = null;
+            }
             this._positionMatrixInCameraSpaceValid = false;
         }
         /**
@@ -234,7 +246,9 @@ define([
             this._positionMatrix[14] = v[2];
             this._modelMatrixValid = false;
             this._modelMatrixInverseValid = false;
-            this._insideParent = null;
+            if (!this._parent || !this._parent.childrenAlwaysInside()) {
+                this._insideParent = null;
+            }
             this._positionMatrixInCameraSpaceValid = false;
         }
         /**
@@ -247,7 +261,9 @@ define([
             this._positionMatrix[14] = m[14];
             this._modelMatrixValid = false;
             this._modelMatrixInverseValid = false;
-            this._insideParent = null;
+            if (!this._parent || !this._parent.childrenAlwaysInside()) {
+                this._insideParent = null;
+            }
             this._positionMatrixInCameraSpaceValid = false;
         }
         /**
@@ -477,12 +493,20 @@ define([
         function isInsideParent() {
             if (this._insideParent === null) {
                 this._insideParent = this._parent ?
-                        (Math.abs(this.getPositionMatrix()[12]) < this._parent.getSize()) &&
-                        (Math.abs(this.getPositionMatrix()[13]) < this._parent.getSize()) &&
-                        (Math.abs(this.getPositionMatrix()[14]) < this._parent.getSize())
+                        (this._parent.childrenAlwaysInside() || (
+                                (Math.abs(this.getPositionMatrix()[12]) < this._parent.getSize()) &&
+                                (Math.abs(this.getPositionMatrix()[13]) < this._parent.getSize()) &&
+                                (Math.abs(this.getPositionMatrix()[14]) < this._parent.getSize())))
                         : false;
             }
             return this._insideParent;
+        }
+        /**
+         * Returns whether children of this object should always be considered as being inside of it (within its bounds)
+         * @returns {Boolean}
+         */
+        function childrenAlwaysInside() {
+            return this._childrenAlwaysInside;
         }
         /**
          * Returns position matrix transformed into camera space using the passed camera.
@@ -595,6 +619,7 @@ define([
             this.prototype.setSize = setSize;
             this.prototype.getScaledSize = getScaledSize;
             this.prototype.isInsideParent = isInsideParent;
+            this.prototype.childrenAlwaysInside = childrenAlwaysInside;
             this.prototype.getPositionMatrixInCameraSpace = getPositionMatrixInCameraSpace;
             this.prototype.getSizeInsideViewFrustum = getSizeInsideViewFrustum;
             this.prototype.isInsideShadowRegion = isInsideShadowRegion;
