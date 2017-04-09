@@ -164,10 +164,11 @@ define([
      * Sets the appropriate hitbox visibility and colors for the current settingsF
      */
     function _updateForHitboxState() {
-        var i, n = _spacecraft.getHitbox().getSubnodes().length;
+        var i, node, nodes = _spacecraft.getHitbox().getSubnodes();
         if (_showHitbox) {
-            for (i = 0; i < n; i++) {
-                _spacecraft.getHitbox(i).getRenderableObject().setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, (i === _highlightedHitboxIndex) ?
+            i = 0;
+            for (node = nodes.getFirst(); node; node = node.next, i++) {
+                node.getRenderableObject().setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, (i === _highlightedHitboxIndex) ?
                         _highlighterHitboxColorFunction :
                         _hitboxColorFunction);
             }

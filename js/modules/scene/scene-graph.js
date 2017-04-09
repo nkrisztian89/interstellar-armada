@@ -17,6 +17,7 @@
  * @param mat Used for 3D (and 4D) matrix operations.
  * @param application Used for displaying errors and logging (and intentional crashing)
  * @param managedGL Used for handling managed framebuffers, creating uniform names, feature checking
+ * @param containers Used for linked lists
  * @param camera Used for creating default cameras for scenes
  * @param renderableObjects Used to create container nodes and for accessing render queue bits
  * @param lights Used to access the projection matrix uniform name
@@ -27,10 +28,11 @@ define([
     "utils/matrices",
     "modules/application",
     "modules/managed-gl",
+    "modules/containers",
     "modules/scene/camera",
     "modules/scene/renderable-objects",
     "modules/scene/lights"
-], function (types, vec, mat, application, managedGL, camera, renderableObjects, lights) {
+], function (types, vec, mat, application, managedGL, containers, camera, renderableObjects, lights) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -304,9 +306,9 @@ define([
         this._parent = null;
         /**
          * The list of subnodes (children) this node is connected to.
-         * @type RenderableNode[]
+         * @type DirectDoubleLinkedList
          */
-        this._subnodes = [];
+        this._subnodes = new containers.DirectDoubleLinkedList();
         /**
          * A flag to mark whether this node and its subnodes should be rendered.
          * @type Boolean
@@ -341,19 +343,23 @@ define([
          * @type Boolean
          */
         this._canBeReused = false;
+        // direct linked list element properties
+        this.next = null;
+        this.previous = null;
+        this.list = null;
     }
     /**
      * Returns whether this node can be reused to hold a different object.
      * @returns {Boolean}
      */
     RenderableNode.prototype.canBeReused = function () {
-        var i;
+        var subnode;
         if (this._canBeReused) {
             return true;
         }
         if (this._renderableObject.canBeReused()) {
-            for (i = 0; i < this._subnodes.length; i++) {
-                if (this._subnodes[i].canBeReused() === false) {
+            for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+                if (subnode.canBeReused() === false) {
                     return false;
                 }
             }
@@ -375,13 +381,13 @@ define([
      * @param {Boolean} [addToContexts=false]
      */
     RenderableNode.prototype.setScene = function (scene, addToContexts) {
-        var i;
+        var subnode;
         this._scene = scene;
         if (scene && addToContexts) {
             scene.addObjectToContexts(this._renderableObject);
         }
-        for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].setScene(scene, addToContexts);
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+            subnode.setScene(scene, addToContexts);
         }
     };
     /**
@@ -430,7 +436,7 @@ define([
      * @param {queueBits} [parentQueueBits] The render queue bits of the parent node
      */
     RenderableNode.prototype.animateAndAddToRenderQueues = function (renderQueues, distanceRendering, camera, dt, parentQueueBits) {
-        var queueBits, i, renderQueueIndex, transparent, opaque;
+        var queueBits, subnode, renderQueueIndex, transparent, opaque;
         if (!this._visible) {
             return;
         }
@@ -468,48 +474,49 @@ define([
                 }
             }
         }
-        if (this._subnodes.length > 0) {
+        if (this._subnodes.getLength() > 0) {
             // if children are inside the parent, they will take its render queue bits, so make sure they are calculated
             if (queueBits === undefined) {
                 queueBits = distanceRendering ? this._renderableObject.getRenderQueueBits(camera, parentQueueBits) : renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT;
             }
-            if (!this._hasInstancedSubnodes || (this._subnodes.length < this._subnodes[0].getMinimumCountForInstancing())) {
-                for (i = 0; i < this._subnodes.length; i++) {
-                    this._subnodes[i].animateAndAddToRenderQueues(renderQueues, distanceRendering, camera, dt, queueBits);
+            if (!this._hasInstancedSubnodes || (this._subnodes.getLength() < this._subnodes.getFirst().getMinimumCountForInstancing())) {
+                for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+                    subnode.animateAndAddToRenderQueues(renderQueues, distanceRendering, camera, dt, queueBits);
                 }
             } else {
                 // if subnodes can be added to the same instanced queue, do the addition and animation directly and do not go into recursion further
                 if (this._scene.shouldAnimate()) {
-                    for (i = 0; i < this._subnodes.length; i++) {
-                        this._subnodes[i].getRenderableObject().animate(dt);
+                    for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+                        subnode.getRenderableObject().animate(dt);
                     }
                 }
-                transparent = this._subnodes[0].getRenderableObject().isRenderedWithoutDepthMask();
-                opaque = this._subnodes[0].getRenderableObject().isRenderedWithDepthMask();
+                subnode = this._subnodes.getFirst();
+                transparent = subnode.getRenderableObject().isRenderedWithoutDepthMask();
+                opaque = subnode.getRenderableObject().isRenderedWithDepthMask();
                 if (transparent || opaque) {
-                    queueBits = this._subnodes[0].getRenderableObject().getRenderQueueBits(camera, queueBits);
+                    queueBits = subnode.getRenderableObject().getRenderQueueBits(camera, queueBits);
                     if (queueBits & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
                         if (transparent) {
-                            renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                            renderQueueIndex = subnode.addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
                             renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
-                            renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex] = renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].concat(this._subnodes);
+                            this._subnodes.appendToArray(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex]);
                         }
                         if (opaque) {
-                            renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
+                            renderQueueIndex = subnode.addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
                             renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
-                            renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex] = renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].concat(this._subnodes);
+                            this._subnodes.appendToArray(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex]);
                         }
                     }
                     if (queueBits & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
                         if (transparent) {
-                            renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                            renderQueueIndex = subnode.addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
                             renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
-                            renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex] = renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].concat(this._subnodes);
+                            this._subnodes.appendToArray(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex]);
                         }
                         if (opaque) {
-                            renderQueueIndex = this._subnodes[0].addToRenderQueue(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX]);
+                            renderQueueIndex = subnode.addToRenderQueue(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX]);
                             renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
-                            renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex] = renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].concat(this._subnodes);
+                            this._subnodes.appendToArray(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex]);
                         }
                     }
                 }
@@ -574,7 +581,7 @@ define([
      * @returns {RenderableNode} The added subnode, for convenience
      */
     RenderableNode.prototype.addSubnode = function (subnode, addToContexts) {
-        this._subnodes.push(subnode);
+        this._subnodes.add(subnode);
         subnode.setParent(this);
         if (this._scene) {
             subnode.setScene(this._scene, addToContexts);
@@ -593,7 +600,7 @@ define([
      * @returns {RenderableNode}
      */
     RenderableNode.prototype.getFirstSubnode = function () {
-        return this._subnodes[0];
+        return this._subnodes.getFirst();
     };
     /**
      * Returns the node coming after the specified node among the subnodes of this node. If the given node is not among the subnodes,
@@ -602,15 +609,7 @@ define([
      * @returns {RenderableNode}
      */
     RenderableNode.prototype.getNextSubnode = function (currentNode) {
-        var i, _length_;
-        for (i = 0, _length_ = this._subnodes.length; i < _length_; i++) {
-            if (this._subnodes[i] === currentNode) {
-                return ((i === (this._subnodes.length - 1)) ?
-                        this._subnodes[0] :
-                        this._subnodes[i + 1]);
-            }
-        }
-        return this._subnodes[0];
+        return this._subnodes.getNext(currentNode);
     };
     /**
      * Returns the node coming before the specified node among the subnodes of this node. If the given node is not among the subnodes,
@@ -619,15 +618,7 @@ define([
      * @returns {RenderableNode}
      */
     RenderableNode.prototype.getPreviousSubnode = function (currentNode) {
-        var i, _length_;
-        for (i = 0, _length_ = this._subnodes.length; i < _length_; i++) {
-            if (this._subnodes[i] === currentNode) {
-                return ((i === 0) ?
-                        this._subnodes[this._subnodes.length - 1] :
-                        this._subnodes[i - 1]);
-            }
-        }
-        return this._subnodes[this._subnodes.length - 1];
+        return this._subnodes.getPrevious(currentNode);
     };
     /**
      * Adds a new associated camera configuration to this node.
@@ -744,10 +735,10 @@ define([
      * frame.
      */
     RenderableNode.prototype.resetForNewFrame = function () {
-        var i;
+        var subnode;
         this._renderableObject.resetForNewFrame();
-        for (i = this._subnodes.length - 1; i >= 0; i--) {
-            this._subnodes[i].resetForNewFrame();
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+            subnode.resetForNewFrame();
         }
     };
     /**
@@ -792,14 +783,14 @@ define([
      * @returns {Boolean} Whether the node was rendered.
      */
     RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, withoutSubnodes, useInstancing, instanceQueueIndex) {
-        var i, result;
+        var subnode, result;
         // the visible property determines visibility of all subnodes as well
         if (this._visible) {
             this.setRenderParameters(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
             result = this._renderableObject.render(this._renderParameters);
             if (!withoutSubnodes) {
-                for (i = 0; i < this._subnodes.length; i++) {
-                    this._subnodes[i].render(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
+                for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+                    subnode.render(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
                 }
             }
             return result;
@@ -837,14 +828,14 @@ define([
      * @returns {Boolean}
      */
     RenderableNode.prototype.renderToShadowMap = function (context, screenWidth, screenHeight, lightMatrix, range, depthRatio) {
-        var i, result;
+        var subnode, result;
         // the visible property determines visibility of all subnodes as well
         if (this._visible) {
             this.setRenderParameters(context, screenWidth, screenHeight, true, undefined, undefined, lightMatrix, range, depthRatio);
             result = this._renderableObject.renderToShadowMap(this._renderParameters);
             // recursive rendering of all subnodes
-            for (i = 0; i < this._subnodes.length; i++) {
-                this._subnodes[i].renderToShadowMap(context, screenWidth, screenHeight, lightMatrix, range, depthRatio);
+            for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+                subnode.renderToShadowMap(context, screenWidth, screenHeight, lightMatrix, range, depthRatio);
             }
             return result;
         }
@@ -856,10 +847,10 @@ define([
      * @param {Function} callback
      */
     RenderableNode.prototype.execute = function (callback) {
-        var i;
+        var subnode;
         callback(this._renderableObject);
-        for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].execute(callback);
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+            subnode.execute(callback);
         }
     };
     /**
@@ -868,10 +859,10 @@ define([
      * @param {ManagedGLContext} context
      */
     RenderableNode.prototype.addToContext = function (context) {
-        var i;
+        var subnode;
         this._renderableObject.addToContext(context);
-        for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].addToContext(context);
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+            subnode.addToContext(context);
         }
     };
     /**
@@ -886,19 +877,19 @@ define([
      * @param {ManagedShader} shader
      */
     RenderableNode.prototype.setShader = function (shader) {
-        var i;
+        var subnode;
         this._renderableObject.setShader(shader);
-        for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].setShader(shader);
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+            subnode.setShader(shader);
         }
     };
     /**
      */
     RenderableNode.prototype.markAsReusable = function () {
-        var i;
+        var subnode;
         this._renderableObject.markAsReusable();
-        for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].markAsReusable();
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+            subnode.markAsReusable();
         }
         this._canBeReused = true;
     };
@@ -907,18 +898,17 @@ define([
      * are marked for deletion.
      */
     RenderableNode.prototype.cleanUp = function () {
-        var i, j, k;
-        for (i = 0; i < this._subnodes.length; i++) {
-            j = i;
-            k = 0;
-            while ((j < this._subnodes.length) && ((!this._subnodes[j]) || (this._subnodes[j].canBeReused() === true))) {
-                j++;
-                k++;
+        var subnode, next;
+        subnode = this._subnodes.getFirst();
+        while (subnode) {
+            next = subnode.next;
+            if (subnode.canBeReused()) {
+                this._subnodes.remove(subnode);
             }
-            this._subnodes.splice(i, k);
+            subnode = next;
         }
-        for (i = 0; i < this._subnodes.length; i++) {
-            this._subnodes[i].cleanUp();
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+            subnode.cleanUp();
         }
     };
     /**
@@ -934,12 +924,12 @@ define([
      * @returns {Number}
      */
     RenderableNode.prototype.getNumberOfDrawnTriangles = function (transparent) {
-        var i, result = 0;
+        var subnode, result = 0;
         if (this._renderableObject.wasRendered()) {
             result += this._renderableObject.getNumberOfDrawnTriangles(transparent);
         }
-        for (i = 0; i < this._subnodes.length; i++) {
-            result += this._subnodes[i].getNumberOfDrawnTriangles(transparent);
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+            result += subnode.getNumberOfDrawnTriangles(transparent);
         }
         return result;
     };
@@ -947,26 +937,30 @@ define([
      * Removes all subnodes from this node.
      */
     RenderableNode.prototype.removeSubnodes = function () {
-        this._subnodes = [];
+        this._subnodes.clear();
     };
     /**
      * Removes all references stored by this object. Recursively destroys all subnodes.
      */
     RenderableNode.prototype.destroy = function () {
-        var i;
+        var subnode, next;
         this._renderableObject.setNode(null);
         this._renderableObject = null;
         this._scene = null;
         this._parent = null;
         if (this._subnodes) {
-            for (i = 0; i < this._subnodes.length; i++) {
-                this._subnodes[i].destroy();
-                this._subnodes[i] = null;
+            for (subnode = this._subnodes.getFirst(); subnode; subnode = next) {
+                next = subnode.next;
+                subnode.destroy();
+                subnode = null;
             }
             this._subnodes = null;
         }
         this._renderParameters = null;
         this._cameraConfigurations = null;
+        this.next = null;
+        this.previous = null;
+        this.list = null;
     };
     // #########################################################################
     /**
@@ -1735,9 +1729,9 @@ define([
      * @returns {RenderableObject[]}
      */
     Scene.prototype.getAllObjects = function () {
-        var i, result = [], subnodes = this._rootNode.getSubnodes();
-        for (i = 0; i < subnodes.length; i++) {
-            result.push(subnodes[i].getRenderableObject());
+        var result = [], subnode, subnodes = this._rootNode.getSubnodes();
+        for (subnode = subnodes.getFirst(); subnode; subnode = subnode.next) {
+            result.push(subnode.getRenderableObject());
         }
         return result;
     };
@@ -1747,9 +1741,9 @@ define([
      * @returns {RenderableObject3D[]}
      */
     Scene.prototype.getAll3DObjects = function () {
-        var i, o, result = [], subnodes = this._rootNode.getSubnodes();
-        for (i = 0; i < subnodes.length; i++) {
-            o = subnodes[i].getRenderableObject();
+        var o, result = [], subnode, subnodes = this._rootNode.getSubnodes();
+        for (subnode = subnodes.getFirst(); subnode; subnode = subnode.next) {
+            o = subnode.getRenderableObject();
             if (o.getPositionMatrix && o.getOrientationMatrix) {
                 result.push(o);
             }
@@ -1761,9 +1755,9 @@ define([
      * @param {Number[3]} v A 3D vector.
      */
     Scene.prototype.moveAllObjectsByVector = function (v) {
-        var i, o, subnodes = this._rootNode.getSubnodes();
-        for (i = 0; i < subnodes.length; i++) {
-            o = subnodes[i].getRenderableObject();
+        var o, subnode, subnodes = this._rootNode.getSubnodes();
+        for (subnode = subnodes.getFirst(); subnode; subnode = subnode.next) {
+            o = subnode.getRenderableObject();
             if (o.translatev) {
                 o.translatev(v);
             }
@@ -2034,7 +2028,7 @@ define([
      * @param {Number} heightInPixels The height of the viewport in pixels.
      */
     Scene.prototype._renderShadowMaps = function (context, widthInPixels, heightInPixels) {
-        var i, j, gl = context.gl;
+        var i, j, gl = context.gl, subnode;
         // rendering the shadow maps, if needed
         if (this._shadowMappingEnabled) {
             application.log_DEBUG("Rendering shadow maps for scene...", 4);
@@ -2050,8 +2044,10 @@ define([
             // rendering for each light source and shadow map range
             for (i = 0; (i < this._directionalLights.length) && (i < this._maxRenderedDirectionalLights); i++) {
                 this._directionalLights[i].reset();
-                this._shadowQueue = [];
-                this._shadowQueue = this._shadowQueue.concat(this._rootNode.getSubnodes());
+                this._shadowQueue = new Array(this._rootNode.getSubnodes().getLength());
+                for (j = 0, subnode = this._rootNode.getSubnodes().getFirst(); subnode; subnode = subnode.next, j++) {
+                    this._shadowQueue[j] = subnode;
+                }
                 application.log_DEBUG("Rendering shadow maps for light " + i + "...", 4);
                 for (j = this._shadowMapRanges.length - 1; j >= 0; j--) {
                     this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio, this._shadowMapRanges[j]);
@@ -2173,7 +2169,7 @@ define([
      */
     Scene.prototype._renderUIObjects = function (context, widthInPixels, heightInPixels) {
         var originalCamera, gl = context.gl; // caching the variable for easier access
-        if (this._rootUINode.isVisible() && this._rootUINode.getSubnodes().length > 0) {
+        if (this._rootUINode.isVisible() && this._rootUINode.getSubnodes().getLength() > 0) {
             // rendering UI elements based on 3D positions should work both for positions inside the front and the distance range
             originalCamera = this._camera;
             if (this._distanceRendering) {

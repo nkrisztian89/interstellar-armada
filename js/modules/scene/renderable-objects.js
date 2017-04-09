@@ -933,6 +933,14 @@ define([
         this.setUniformValueFunction(UNIFORM_NORMAL_MATRIX_NAME, function () {
             return mat.transposed3Aux(mat.inverse3Aux(mat.matrix3from4Aux(this.getModelMatrix())));
         });
+        // initializing modelSize
+        if (this._model) {
+            for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
+                if (this._model.getSize(i) > this._modelSize) {
+                    this._modelSize = this._model.getSize(i);
+                }
+            }
+        }
     }
     ShadedLODMesh.prototype = new RenderableObject3D();
     ShadedLODMesh.prototype.constructor = ShadedLODMesh;
@@ -947,14 +955,8 @@ define([
      * @param {ManagedGLContext} context
      */
     ShadedLODMesh.prototype.addToContext = function (context) {
-        var i;
         RenderableObject3D.prototype.addToContext.call(this, context);
         this._model.addToContext(context, this._wireframe);
-        for (i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
-            if (this._model.getSize(i) > this._modelSize) {
-                this._modelSize = this._model.getSize(i);
-            }
-        }
     };
     /**
      * Returns the 3D model object of this shaded mesh.
@@ -1180,7 +1182,7 @@ define([
             }
         }
     }
-    ParameterizedMesh.prototype = new ShadedLODMesh([]);
+    ParameterizedMesh.prototype = new ShadedLODMesh();
     ParameterizedMesh.prototype.constructor = ParameterizedMesh;
     /**
      * Returns a function to that returns the parameter array identified by the 

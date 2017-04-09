@@ -157,7 +157,7 @@ define([
      */
     function _getInfo() {
         var explosionNode = _explosion && _explosion.getVisualModel() && _explosion.getVisualModel().getNode();
-        return (explosionNode ? ("Particles: " + (!explosionNode.canBeReused() ? explosionNode.getSubnodes().length : "0") + ", ") : "") +
+        return (explosionNode ? ("Particles: " + (!explosionNode.canBeReused() ? explosionNode.getSubnodes().getLength() : "0") + ", ") : "") +
                 "Pool: " + _particlePool.getLockedObjectCount() + "/" + _particlePool.getObjects().length;
     }
     // ----------------------------------------------------------------------

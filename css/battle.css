@@ -11,7 +11,7 @@ canvas.battleCanvas {
 }
 
 p.battleScreenStats {
-    font-family: hudFont;
+    font-family: monospace;
     font-size: 9pt;
     width: 90%;
     position: absolute;

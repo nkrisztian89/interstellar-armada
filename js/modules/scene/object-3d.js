@@ -532,7 +532,7 @@ define([
          * @returns {Object} 
          */
         function getSizeInsideViewFrustum(camera, checkNearAndFarPlanes) {
-            var size, scalingMatrix, baseMatrix, fullMatrix, position, xOffsetPosition, yOffsetPosition, xOffset, yOffset, factor;
+            var size, scalingMatrix, baseMatrix, fullMatrix, positionX, positionY, xOffsetPosition, yOffsetPosition, xOffset, yOffset, factor;
             // scaling and orientation is lost here, since we create a new translation matrix based on the original transformation
             baseMatrix = this.getPositionMatrixInCameraSpace(camera);
             scalingMatrix = this.getCascadeScalingMatrix();
@@ -551,17 +551,16 @@ define([
             fullMatrix = mat.prod34Aux(scalingMatrix, baseMatrix, camera.getProjectionMatrix());
             size = this.getSize();
             factor = 1 / fullMatrix[15];
-            position = [
-                (fullMatrix[12] === 0.0) ? 0.0 : fullMatrix[12] * factor,
-                (fullMatrix[13] === 0.0) ? 0.0 : fullMatrix[13] * factor,
-                (fullMatrix[14] === 0.0) ? 0.0 : fullMatrix[14] * factor];
+            positionX = (fullMatrix[12] === 0.0) ? 0.0 : fullMatrix[12] * factor;
+            positionY = (fullMatrix[13] === 0.0) ? 0.0 : fullMatrix[13] * factor;
+            // Z coordinate is not needed
             // frustum culling: sides
             xOffsetPosition = vec.prodVec4Mat4Aux([size, 0.0, 0.0, 1.0], fullMatrix);
             yOffsetPosition = vec.prodVec4Mat4Aux([0.0, size, 0.0, 1.0], fullMatrix);
-            xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - position[0]);
-            yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - position[1]);
-            if (!((position[0] + xOffset < -1) || (position[0] - xOffset > 1)) &&
-                    !((position[1] + yOffset < -1) || (position[1] - yOffset > 1))) {
+            xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - positionX);
+            yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - positionY);
+            if (!((positionX + xOffset < -1) || (positionX - xOffset > 1)) &&
+                    !((positionY + yOffset < -1) || (positionY - yOffset > 1))) {
                 this._lastSizeInsideViewFrustum.width = xOffset;
                 this._lastSizeInsideViewFrustum.height = yOffset;
                 return this._lastSizeInsideViewFrustum;

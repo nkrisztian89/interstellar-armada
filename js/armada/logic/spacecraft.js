@@ -1314,14 +1314,10 @@ define([
     };
     /**
      * Returns the renderable node storing the hitbox models for this spacecraft.
-     * @param {Number} [index] If given, the subnode with this index is returned instead
      * @returns {RenerableNode}
      */
-    Spacecraft.prototype.getHitbox = function (index) {
-        if (index === undefined) {
-            return this._hitbox;
-        }
-        return this._hitbox.getSubnodes()[index];
+    Spacecraft.prototype.getHitbox = function () {
+        return this._hitbox;
     };
     /**
      * 
