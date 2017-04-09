@@ -1469,22 +1469,19 @@ define([
      * @param {ManagedGLContext} context
      */
     Scene.prototype.addToContext = function (context) {
-        // perform a check to avoid adding the nodes to the same context multiple times
-        var newContext = false, contextIndex = this._contexts.findIndex(function (element) {
+        var contextIndex = this._contexts.findIndex(function (element) {
             return element.getName() === context.getName();
         });
         if (contextIndex < 0) {
             this._contexts.push(context);
             contextIndex = this._contexts.length - 1;
-            newContext = true;
         }
         this._setupContext(contextIndex);
-        if (newContext) {
-            this._rootBackgroundNode.addToContext(context);
-            this._rootNode.addToContext(context);
-            this._rootUINode.addToContext(context);
-            this._rootResourceNode.addToContext(context);
-        }
+        // adding all the nodes
+        this._rootBackgroundNode.addToContext(context);
+        this._rootNode.addToContext(context);
+        this._rootUINode.addToContext(context);
+        this._rootResourceNode.addToContext(context);
     };
     /**
      * If the shadow mapping properties were appropriately set up, after this call the scene will be rendered using shadow mapping.
