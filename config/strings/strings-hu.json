@@ -527,10 +527,12 @@
             "description": "A korvettek a legkisebb, legkevésbé páncélozott valódi hadihajók korunk flottáiban. A kis mérettel járó korlátozott raktér miatt ezeket a hajókat nem lehet hosszabb küldetésekre egyedül bevetni. Gyakran helyi őrjáratokban és flották nagyobb hajóinak kísérőiként alkalmazzák őket, mivel jellemzően vadászok és bombázók ellen hatásos fegyverzettel vannak felszerelve. Ellenséges hadihajók megtámadásához nem elég nagy a tűzerejük, de támogató szerepkörben hatékonyan használhatók."
         },
         "frigate": {
-            "name": "fregatt"
+            "name": "fregatt",
+            "description": "A fregattok a legkisebb olyan hadihajók, amelyek már jelentős mennyiségű ellátmányt képesek szállítani, és számottevő tűzerővel rendelkezhetnek. Emiatt aztán leggyakrabban ehhez igazodó fegyverzettel szerelik fel őket. Így sikerrel vehetik fel a harcot a nagyobb ellenséges hajókkal, cserébe feláldozva a bombázókkal és vadászokkal szembeni védelmet, amihez kíséretre kell támaszkodniuk. Hajórajok élén hosszabb távú küldetésekre alkalmazzák őket, például kritikus célpontok kiiktatására nagyobb ütközetek előtt, az ellenséges utánpótlási vonalak megzavarására vagy rosszul védett körzetek biztosítására."
         },
         "cruiser": {
-            "name": "cirkáló"
+            "name": "cirkáló",
+            "description": "A cirkálók jelenleg a legnagyobb szolgálatban lévő hadihajók, az űrhajótervezés és -építés csúcsát testesítik meg. Teljes flották zászlóshajóiként, előretolt mobil parancsnoki központként, körzetek műveleti bázisaként és bolygók ostromának, illetve védelmének vezetésére használják őket. Nagy méretüknek és fejlett fegyverzetüknek köszönhetően biztonságosan szállíthatnak nagy mennyiségű ellátmányt, számos harci és szállító gépet, földfelszíni katonai egységeket, vagy akár új helyőrségek kiépítéséhez szükséges berendezéseket és erőforrásokat. A legerősebb páncélzattal és védőpajzzsal, továbbá mind vadászgépek, mind hadihajók ellen hatásos fegyverzettel szerelhetők fel. Fontos szerepük miatt az ellenség rendszerint kiemelt célpontként kezeli őket, ezért nagyobb ütközetekben létfontosságú, hogy megfelelő védelmi támogatást kapjanak torpedókkal és hajók ellen irányuló tűzerővel szemben."
         }
     },
     "spacecraftClass": {
@@ -556,10 +558,11 @@
             "description": "Egy kis méretű hadihajó, aminek kialakításakor az erős páncélzat és nagy tűzerő volt a fő szempont. Elsődleges szerepe az ellenséges flotta nagyobb űrhajóinak folyamatos tűz alatt tartása, ezáltal figyelmük elvonása a sebezhetőbb egységekről."
         },
         "libra": {
-            "description": "A birodalmi armada elsődleges vezérhajó osztálya. Széleskörű védelemmel rendelkezik a különböző fenyegetésekkel szemben. Nehéz páncélzata mellé nagy tűzerejű és kisebb, precíziós gyorstüzelő lövegekkel is fel van szerelve. Két hangárában akár 48 vadászgép is harckészen tartható, hogy a kisebb, jól manőverező ellenségekkel is hatékonyan felvehesse a harcot. A hangárak bombázók befogadásához is könnyen átszerelhetőek, ha a hadihajók elleni, egyébként is jelentős tűzerő kiegészítésére lenne szükség."
+            "description": "A Birodalmi Armada elsődleges vezérhajó osztálya. Széleskörű védelemmel rendelkezik a különböző fenyegetésekkel szemben. Nehéz páncélzata mellé nagy tűzerejű és kisebb, precíziós gyorstüzelő lövegekkel is fel van szerelve. Két hangárában akár 48 vadászgép is harckészen tartható, hogy a kisebb, jól manőverező ellenségekkel is hatékonyan felvehesse a harcot. A hangárak bombázók befogadásához is könnyen átszerelhetőek, ha a hadihajók elleni, egyébként is jelentős tűzerő kiegészítésére lenne szükség."
         },
         "wolf": {
-            "name": "Farkas"
+            "name": "Farkas",
+            "description": "Módosított változata az eredeti Főnix osztályú vadászgépeknek, melyek a Birodalom kezdeti időszakától egészen a közelmúltig a legelterjedtebb harci gépek közé tartoztak. A Főnixek légkörben és mélyűrben is használható, sokoldalú vadászok voltak. A méretükhöz képest nagy raktérnek és térugró kapacitásnak köszönhetően hosszabb időtartamú küldetésekre is bevethetőek. Ahogy a Birodalom egyre több külső és belső fenyegetéssel kezdett szembenézni, a Főnix többfeladatú vadászokat leváltották az egy-egy szerepkörre specializálódott Szitakötő, Sólyom, Rinocérosz és Vipera osztályok, melyek a saját feladatukat hatékonyabban tudják ellátni. A legtöbb Főnixet átalakították polgári használatra, ám egyre több jelentés érkezik kalózokról, akik a vadász módosított változatát használják rajtaütéseik során. Ez a változat a Farkas megjelölést kapta."
         }
     },
     "objectView": {
