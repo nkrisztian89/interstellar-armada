@@ -433,6 +433,11 @@ define([
          */
         this._onFinish = null;
         /**
+         * Function to execute on the ended event of the BufferSourceNode playing this clip (instance level)
+         * @type Function
+         */
+        this._onEnded = null;
+        /**
          * The associated sound source to position this clip in 3D
          * @type SoundSource
          */
@@ -515,6 +520,12 @@ define([
         return this._playing;
     };
     /**
+     * Function to execute on the ended event of the BufferSourceNode playing this clip (class level)
+     */
+    SoundClip.prototype._handleEnded = function () {
+        this._playing = false;
+    };
+    /**
      * Recreates the audio nodes, starting the playback of the clip over
      * @param {Number} offset From where to begin playback within the clip, in seconds
      * @param {Function} onFinish The function to call when the playback finishes / stops
@@ -523,12 +534,17 @@ define([
         var currentNode;
         this._sourceNode = _context.createBufferSource();
         this._sourceNode.buffer = _buffers[this._sampleName];
-        this._sourceNode.onended = function () {
-            this._playing = false;
-            if (onFinish) {
+        if (onFinish) {
+            // effectively saving the onFinish() function within a closure
+            this._sourceNode.onended = function () {
+                this._playing = false;
                 onFinish();
-            }
-        }.bind(this);
+            }.bind(this);
+        } else {
+            // do not create new functions if not necessary
+            this._onEnded = this._onEnded || this._handleEnded.bind(this);
+            this._sourceNode.onended = this._onEnded;
+        }
         this._onFinish = onFinish;
         currentNode = this._sourceNode;
         if (this._volume !== undefined) {
