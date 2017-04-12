@@ -424,6 +424,11 @@ define([
              */
             _targetViewItem,
             /**
+             * A reference to the visual model that was added to the target view scen to display the current target
+             * @type ParameterizedMesh
+             */
+            _targetViewModel,
+            /**
              * The RGBA color of the currently displayed spacecraft in the target view screen. (based on its hull integrity)
              * @type Number[4]
              */
@@ -2773,6 +2778,7 @@ define([
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR));
                 if (_targetViewItem !== target) {
                     _targetScene.clearNodes();
+                    _targetViewModel = null;
                     _targetViewItem = target;
                     _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, {
                         shaderName: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_SHADER),
@@ -2782,8 +2788,18 @@ define([
                         model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
                             return _targetViewItemColor;
                         });
-                        _targetScene.getCamera().moveToPosition([0, 0, 2 * model.getScaledSize()], 0);
+                        model.setScale(1 / model.getSize());
+                        _targetScene.getCamera().moveToPosition([0, 0, 1.75], 0);
+                        _targetViewModel = model;
                     });
+                }
+                // setting orientation of the target view model
+                if (_targetViewModel) {
+                    _targetViewModel.setOrientationM4(mat.prod4Aux(
+                            target.getPhysicalOrientationMatrix(),
+                            mat.inverseOfRotation4Aux(mat.lookTowards4Aux(
+                                    vec.normal3(vec.diff3Aux(craft.getPhysicalPositionVector(), target.getPhysicalPositionVector())),
+                                    mat.getRowC43(craft.getPhysicalOrientationMatrix())))));
                 }
                 _targetScene.setRelativeViewport(
                         _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),
@@ -2859,6 +2875,7 @@ define([
                 if (_targetViewItem) {
                     _targetScene.clearNodes();
                     _targetViewItem = null;
+                    _targetViewModel = null;
                 }
                 _targetHullIntegrityBar.hide();
                 _targetInfoTextLayer.hide();
@@ -3126,6 +3143,7 @@ define([
             _battleScene.hideUI();
             _targetScene.clearNodes();
             _targetViewItem = null;
+            _targetViewModel = null;
             _targetInfoTextLayer.hide();
             _speedTextLayer.hide();
             _flightModeIndicatorTextLayer.hide();

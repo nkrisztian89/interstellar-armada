@@ -502,28 +502,23 @@ define([
      * @returns {Float32Array}
      */
     mat.lookTowards4 = function (direction, up) {
-        var result, right;
-        up = up || [0, 1, 0];
-        _matrixCount++;
-        result = new Float32Array([
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            direction[0], direction[1], direction[2], 0,
-            0, 0, 0, 1
-        ]);
-        if (Math.abs(vec.dot3(up, direction)) > CLOSE_TO_ONE_THRESHOLD) {
-            up = vec.perpendicular3(direction);
-        }
-        right = vec.cross3(up, direction);
-        result[0] = right[0];
-        result[1] = right[1];
-        result[2] = right[2];
-        up = vec.cross3(direction, right);
-        result[4] = up[0];
-        result[5] = up[1];
-        result[6] = up[2];
-        mat.correctOrthogonal4(result);
+        var result;
+        result = mat.identity4();
+        mat.setLookTowards4(result, direction, up);
         return result;
+    };
+    /**
+     * Returns a 4x4 rotation matrix that has a Z axis pointing towards the given direction and a Y axis based on an optional second vector.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} direction A 3D unit vector.
+     * @param {Number[3]} [up] A 3D unit vector.
+     * @returns {Float32Array}
+     */
+    mat.lookTowards4Aux = function (direction, up) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setLookTowards4(aux, direction, up);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
     };
     /**
      * Returns a 4x4 transformation matrix describing a scaling along the 3 axes.
@@ -1762,6 +1757,28 @@ define([
         m[12] = p[0] - p2[0];
         m[13] = p[1] - p2[1];
         m[14] = p[2] - p2[2];
+    };
+    /**
+     * Modifies a 4x4 matrix, setting it so that its Z axis points towards the given direction and the Y axis is based on an optional second vector.
+     * @param {Float32Array} m The 4x4 matrix to modify
+     * @param {Number[3]} direction A 3D unit vector.
+     * @param {Number[3]} [up] A 3D unit vector.
+     */
+    mat.setLookTowards4 = function (m, direction, up) {
+        var right;
+        up = up || [0, 1, 0];
+        if (Math.abs(vec.dot3(up, direction)) > CLOSE_TO_ONE_THRESHOLD) {
+            up = vec.perpendicular3(direction);
+        }
+        right = vec.cross3(up, direction);
+        m[0] = right[0];
+        m[1] = right[1];
+        m[2] = right[2];
+        up = vec.cross3(direction, right);
+        m[4] = up[0];
+        m[5] = up[1];
+        m[6] = up[2];
+        mat.correctOrthogonal4(m);
     };
     /**
      * Applies a translation to the passed 4x4 transformation matrix described by the passed

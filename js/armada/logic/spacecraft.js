@@ -1353,6 +1353,7 @@ define([
      * @property {String} [shaderName]
      * @property {Float32Array} [positionMatrix]
      * @property {Float32Array} [orientationMatrix]
+     * @property {Float32Array} [scalingMatrix]
      * @property {Boolean} [replaceVisualModel=false] If true, the visual model of the spacecraft will be replaced by the newly created one, 
      * if it exists.
      * @property {Number[4]} [factionColor] If given, the faction color of the spacecraft will be replaced by this color (otherwise it is
@@ -1434,7 +1435,7 @@ define([
                         this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                         params.positionMatrix || this._physicalModel.getPositionMatrix(),
                         params.orientationMatrix || this._physicalModel.getOrientationMatrix(),
-                        mat.scaling4(this._class.getModel().getScale()),
+                        params.scalingMatrix || mat.scaling4(this._class.getModel().getScale()),
                         (wireframe === true),
                         lod,
                         parameterArrays);
