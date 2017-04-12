@@ -273,6 +273,21 @@ define(function () {
         return [v[0], v[1], v[2], w];
     };
     /**
+     * Returns a 4D vector created from a 3D one by appending 1.0 to it.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v The original 3D vector.
+     * @returns {Number[4]} A 4D vector with the components of v, with 1.0 appended.
+     */
+    vec.vector4From3Aux = function (v) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = v[0];
+        aux[1] = v[1];
+        aux[2] = v[2];
+        aux[3] = 1;
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Returns the passed 2D vector scaled to unit length.
      * @param {Number[2]} v A 2D vector
      * @returns {Number[2]} The normalized 3D vector.

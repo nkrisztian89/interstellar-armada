@@ -36,9 +36,11 @@ define([
      * @param {Number} [size=1]
      * @param {Boolean} [childrenAlwaysInside=false] When true, children of this object are always considered to be inside it, without 
      * performing an actual position check. Useful for container objects.
+     * @param {Boolean} [ignoreTransform=false] If true, the transforms of this object are ignored when calculating its children's model
+     * matrix - useful for objects with permanent identity transforms (such as root nodes)
      * @returns {Object3D}
      */
-    function Object3D(positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside) {
+    function Object3D(positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside, ignoreTransform) {
         /**
          * Optional parent, relative to which the position, orientation and
          * scaling of this object is interpreted.
@@ -143,6 +145,12 @@ define([
          * @type Boolean
          */
         this._positionMatrixInCameraSpaceValid = false;
+        /**
+         * If true, the transforms of this object are ignored when calculating its children's model matrix.
+         * Useful for objects with permanent identity transforms (such as root nodes).
+         * @type Boolean
+         */
+        this._ignoreTransform = ignoreTransform || false;
     }
     /**
      * Adds the methods of an Object3D class to the prototype of the class 
@@ -415,7 +423,7 @@ define([
          */
         function getCascadeScalingMatrix() {
             if (!this._cascadeScalingMatrixValid) {
-                if (this._parent) {
+                if (this._parent && !this._parent.shouldIgnoreTransform()) {
                     mat.setProd3x3SubOf4(this._cascadeScalingMatrix, this._parent.getCascadeScalingMatrix(), this._scalingMatrix);
                 } else {
                     mat.setMatrix4(this._cascadeScalingMatrix, this._scalingMatrix);
@@ -435,7 +443,7 @@ define([
                     mat.setTranslationRotation(this._modelMatrix, this._positionMatrix, mat.prod3x3SubOf4Aux(this._scalingMatrix, this._orientationMatrix));
                     this._modelMatrixValid = true;
                 }
-                if (this._parent) {
+                if (this._parent && !this._parent.shouldIgnoreTransform()) {
                     mat.setProd4(this._modelMatrixForFrame, this._modelMatrix, this._parent.getModelMatrix());
                 } else {
                     mat.setMatrix4(this._modelMatrixForFrame, this._modelMatrix);
@@ -454,7 +462,7 @@ define([
                     mat.setInverse4(this._modelMatrixInverse, this.getModelMatrix());
                     this._modelMatrixInverseValid = true;
                 }
-                if (this._parent) {
+                if (this._parent && !this._parent.shouldIgnoreTransform()) {
                     mat.setProd4(this._modelMatrixInverseForFrame, this._parent.getModelMatrixInverse(), this._modelMatrixInverse);
                 } else {
                     mat.setMatrix4(this._modelMatrixInverseForFrame, this._modelMatrixInverse);
@@ -586,6 +594,13 @@ define([
                     (Math.abs(positionInLightSpace[1]) - size < range) &&
                     (Math.abs(positionInLightSpace[2]) - size < range * depthRatio);
         }
+        /**
+         * If returns true, the transforms of this object should be ignored when calculating its children's model matrix.
+         * @returns {Boolean}
+         */
+        function shouldIgnoreTransform() {
+            return this._ignoreTransform;
+        }
         // interface of an Object3D mixin
         return function () {
             this.prototype.init = init;
@@ -622,6 +637,7 @@ define([
             this.prototype.getPositionMatrixInCameraSpace = getPositionMatrixInCameraSpace;
             this.prototype.getSizeInsideViewFrustum = getSizeInsideViewFrustum;
             this.prototype.isInsideShadowRegion = isInsideShadowRegion;
+            this.prototype.shouldIgnoreTransform = shouldIgnoreTransform;
         };
     };
     makeObject3DMixinClass = makeObject3DMixinClassFunction();

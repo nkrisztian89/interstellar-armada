@@ -862,10 +862,8 @@ define([
         var relativePos, relativeVelocityVector, i, range, result = null;
         offset = offset || 0;
         offset /= this._scalingMatrix[0];
-        // make the vector 4D for the matrix multiplication
-        positionVector.push(1);
         // transforms the position to object-space for preliminary check
-        relativePos = vec.prodVec4Mat4Aux(positionVector, this.getModelMatrixInverse());
+        relativePos = vec.prodVec4Mat4Aux(vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
         relativeVelocityVector = vec.diff3(velocityVector, mat.translationVector3(this.getVelocityMatrix()));
         range = vec.length3(relativeVelocityVector) * dt / 1000 / this._scalingMatrix[0];

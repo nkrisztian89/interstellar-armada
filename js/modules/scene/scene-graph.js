@@ -1686,14 +1686,14 @@ define([
     Scene.prototype._initNodes = function () {
         // we are adding RenderableObject3D so if nodes with object 3D-s are added, they will have a parent with position and orientation
         // a size of 0 is specified so that no child 3D objects will ever think they are inside their parent
-        this._rootBackgroundNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0), false);
+        this._rootBackgroundNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0, false, true), false);
         this._rootBackgroundNode.setScene(this);
-        this._rootNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
+        this._rootNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0, false, true));
         this._rootNode.setScene(this);
-        this._rootResourceNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4), false);
+        this._rootResourceNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 1, false, true), false);
         this._rootResourceNode.setScene(this);
         this._resourceObjectIDs = {};
-        this._rootUINode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0), false);
+        this._rootUINode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0, false, true), false);
         this._rootUINode.setScene(this);
     };
     /**

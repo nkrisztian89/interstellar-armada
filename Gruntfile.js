@@ -87,6 +87,12 @@ module.exports = function (grunt) {
                         from: '.getPhysicalModel()',
                         to: '._physicalModel'
                     }, {
+                        from: '.childrenAlwaysInside()',
+                        to: '._childrenAlwaysInside'
+                    }, {
+                        from: '.shouldIgnoreTransform()',
+                        to: '._ignoreTransform'
+                    }, {
                         from: 'setFileCacheBypassEnabled(!0)',
                         to: 'setFileCacheBypassEnabled(0)'
                     }]

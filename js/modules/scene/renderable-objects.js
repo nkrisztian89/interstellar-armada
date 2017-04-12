@@ -645,10 +645,11 @@ define([
      * @param {ManagedShader} [instancedShader]
      * @param {Number} [size=1]
      * @param {Boolean} [childrenAlwaysInside=false]
+     * @param {Boolean} [ignoreTransform=false]
      */
-    function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader, size, childrenAlwaysInside) {
+    function RenderableObject3D(shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader, size, childrenAlwaysInside, ignoreTransform) {
         RenderableObject.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader);
-        object3D.Object3D.call(this, positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside);
+        object3D.Object3D.call(this, positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside, ignoreTransform);
         /**
          * The cached value of the size of this object on the screen from the 
          * last frustum calculation.
