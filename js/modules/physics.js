@@ -13,12 +13,14 @@
  * @param utils Used for point in rectangle checks
  * @param vec Used for vector operations
  * @param mat Used for matrix operations
+ * @param containers Used for linked lists
  */
 define([
     "utils/utils",
     "utils/vectors",
-    "utils/matrices"
-], function (utils, vec, mat) {
+    "utils/matrices",
+    "modules/containers"
+], function (utils, vec, mat, containers) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -38,7 +40,12 @@ define([
              * Values closer to zero or plus/minus one than this will be reset to zero or plus/minus one in the angular velocity matrix.
              * @type Number
              */
-            ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD = 0.00001;
+            ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD = 0.00001,
+            /**
+             * The minimum amount of time required for the effect of a force or torque to be taken into account, in milliseconds.
+             * @type Number
+             */
+            MINIMUM_EFFECT_DURATION = 0.1;
     // #########################################################################
     /**
      * @class Represents a force affecting a physical object, causing it to 
@@ -78,6 +85,10 @@ define([
          * @type Boolean
          */
         this._continuous = (duration === undefined);
+        // direct linked list element properties
+        this.next = null;
+        this.previous = null;
+        this.list = null;
     }
     // direct getters and setters
     /**
@@ -113,7 +124,7 @@ define([
             this._duration = 0;
             return dt;
         }
-        if (this._duration > 0.1) {
+        if (this._duration >= MINIMUM_EFFECT_DURATION) {
             var t = Math.min(this._duration, dt);
             this._duration -= dt;
             return t;
@@ -128,6 +139,13 @@ define([
      */
     Force.prototype.getAccelerationVector = function (mass) {
         return vec.scaled3(this._direction, this._strength / mass);
+    };
+    /**
+     * Returns whether this force object can be reused as the force represented is no longer in effect.
+     * @returns {Boolean}
+     */
+    Force.prototype.canBeReused = function () {
+        return (this._duration < MINIMUM_EFFECT_DURATION) && !this._continuous;
     };
     // #########################################################################
     /**
@@ -167,6 +185,10 @@ define([
          * @type Boolean
          */
         this._continuous = (duration === undefined);
+        // direct linked list element properties
+        this.next = null;
+        this.previous = null;
+        this.list = null;
     }
     // direct getters and setters
     /**
@@ -203,7 +225,7 @@ define([
             this._duration = 0;
             return dt;
         }
-        if (this._duration > 0.1) {
+        if (this._duration >= MINIMUM_EFFECT_DURATION) {
             var t = Math.min(this._duration, dt);
             this._duration -= dt;
             return t;
@@ -223,6 +245,13 @@ define([
         // in reality, the shape of the object should be taken into account,
         // for simplicity, the mass is taken as the only coefficient
         return mat.rotation4Aux(this._axis, this._strength / mass * t);
+    };
+    /**
+     * Returns whether this torque object can be reused as the torque represented is no longer in effect.
+     * @returns {Boolean}
+     */
+    Torque.prototype.canBeReused = function () {
+        return (this._duration < MINIMUM_EFFECT_DURATION) && !this._continuous;
     };
     // #########################################################################
     /**
@@ -537,14 +566,14 @@ define([
         this._angularVelocityMatrix = mat.identity4();
         /**
          * The list of forces affecting this object.
-         * @type Force[]
+         * @type DirectDoubleLinkedList
          */
-        this._forces = null;
+        this._forces = new containers.DirectDoubleLinkedList();
         /**
          * The list of torques affecting this object.
-         * @type Torque[]
+         * @type DirectDoubleLinkedList
          */
-        this._torques = null;
+        this._torques = new containers.DirectDoubleLinkedList();
         /**
          * The list of bodies the structure of this object is comprised of. (for hit/collision check)
          * @type Body[]
@@ -585,8 +614,8 @@ define([
         this._modelMatrixInverseValid = false;
         mat.setMatrix4(this._velocityMatrix, initialVelocityMatrix);
         mat.setIdentity4(this._angularVelocityMatrix);
-        this._forces = [];
-        this._torques = [];
+        this._forces.clear();
+        this._torques.clear();
         this._bodies = bodies || [];
         this._bodySize = -1;
         this._calculateBodySize();
@@ -666,14 +695,14 @@ define([
      * @param {Force} force
      */
     PhysicalObject.prototype.addForce = function (force) {
-        this._forces.push(force);
+        this._forces.add(force);
     };
     /**
      * Adds a torque that will affect this object from now on.
      * @param {Torque} torque
      */
     PhysicalObject.prototype.addTorque = function (torque) {
-        this._torques.push(torque);
+        this._torques.add(torque);
     };
     // indirect getters and setters
     /**
@@ -766,10 +795,10 @@ define([
      * last for this duration. If omitted, the force will be created or renewed as continuous.
      */
     PhysicalObject.prototype.addOrRenewForce = function (forceID, strength, direction, duration) {
-        var i, found = false;
-        for (i = 0; i < this._forces.length; i++) {
-            if (this._forces[i].getID() === forceID) {
-                this._forces[i].renew(strength, direction, duration);
+        var force, found = false;
+        for (force = this._forces.getFirst(); force; force = force.next) {
+            if (force.getID() === forceID) {
+                force.renew(strength, direction, duration);
                 found = true;
                 break;
             }
@@ -789,10 +818,10 @@ define([
      * last for this duration. If omitted, the torque will be created or renewed as continuous.
      */
     PhysicalObject.prototype.addOrRenewTorque = function (torqueID, strength, axis, duration) {
-        var i, found = false;
-        for (i = 0; i < this._torques.length; i++) {
-            if (this._torques[i].getID() === torqueID) {
-                this._torques[i].renew(strength, axis, duration);
+        var torque, found = false;
+        for (torque = this._torques.getFirst(); torque; torque = torque.next) {
+            if (torque.getID() === torqueID) {
+                torque.renew(strength, axis, duration);
                 found = true;
                 break;
             }
@@ -866,7 +895,7 @@ define([
         relativePos = vec.prodVec4Mat4Aux(vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
         relativeVelocityVector = vec.diff3(velocityVector, mat.translationVector3(this.getVelocityMatrix()));
-        range = vec.length3(relativeVelocityVector) * dt / 1000 / this._scalingMatrix[0];
+        range = vec.length3(relativeVelocityVector) * dt * 0.001 / this._scalingMatrix[0];
         // first, preliminary check based on position relative to the whole object
         if ((Math.abs(relativePos[0]) - range < this._bodySize) && (Math.abs(relativePos[1]) - range < this._bodySize) && (Math.abs(relativePos[2]) - range < this._bodySize)) {
             // if it is close enough to be hitting one of the bodies, check them
@@ -894,29 +923,34 @@ define([
      * milliseconds.
      */
     PhysicalObject.prototype.simulate = function (dt) {
-        var i, a, t, accelerationMatrix, angularAccMatrix;
+        var i, a, t, accelerationMatrix, angularAccMatrix, force, nextForce, torque, nextTorque;
         if (dt > 0) {
             // first calculate the movement that happened in the past dt
             // milliseconds as a result of the velocity sampled in the previous step
             // the velocity matrix is in m/s
-            mat.translateByVector(this._positionMatrix, vec.scaled3(mat.translationVector3(this._velocityMatrix), dt / 1000));
+            mat.translateByVector(this._positionMatrix, vec.scaled3(mat.translationVector3(this._velocityMatrix), dt * 0.001));
             this.setPositionMatrix();
             // calculate the movement that happened as a result of the acceleration
             // the affecting forces caused since the previous step
             // (s=1/2*a*t^2)
-            if (this._forces.length > 0) {
+            if (this._forces.getLength() > 0) {
                 accelerationMatrix = mat.identity4Aux();
-                for (i = 0; i < this._forces.length; i++) {
-                    t = this._forces[i].exert(dt) / 1000; // t is in seconds
-                    if (t > 0) {
-                        a = this._forces[i].getAccelerationVector(this._mass);
-                        mat.translateByVector(
-                                this._positionMatrix,
-                                vec.scaled3(a, 1 / 2 * t * t));
-                        // calculate the caused acceleration to update the velocity matrix
-                        mat.translateByVector(
-                                accelerationMatrix,
-                                vec.scaled3(a, t));
+                for (force = this._forces.getFirst(); force; force = nextForce) {
+                    nextForce = force.next;
+                    if (force.canBeReused()) {
+                        this._forces.remove(force);
+                    } else {
+                        t = force.exert(dt) * 0.001; // t is in seconds
+                        if (t > 0) {
+                            a = force.getAccelerationVector(this._mass);
+                            mat.translateByVector(
+                                    this._positionMatrix,
+                                    vec.scaled3(a, 0.5 * t * t));
+                            // calculate the caused acceleration to update the velocity matrix
+                            mat.translateByVector(
+                                    accelerationMatrix,
+                                    vec.scaled3(a, t));
+                        }
                     }
                 }
                 // update velocity matrix
@@ -930,24 +964,29 @@ define([
                 // the angular velocity matrix represents the rotation that happens
                 // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
                 // interpolated easily, for that quaternions should be used)
-                for (i = 0; (i + ANGULAR_VELOCITY_MATRIX_DURATION / 2) < dt; i += ANGULAR_VELOCITY_MATRIX_DURATION) {
+                for (i = 0; (i + ANGULAR_VELOCITY_MATRIX_DURATION * 0.5) < dt; i += ANGULAR_VELOCITY_MATRIX_DURATION) {
                     mat.mul4(this._orientationMatrix, this._angularVelocityMatrix);
                 }
                 this.setOrientationMatrix();
                 // calculate the rotation that happened as a result of the angular
                 // acceleration the affecting torques caused since the previous step
-                if (this._torques.length > 0) {
+                if (this._torques.getLength() > 0) {
                     angularAccMatrix = mat.identity4Aux();
-                    for (i = 0; i < this._torques.length; i++) {
-                        t = this._torques[i].exert(dt) / 1000; // t is in seconds
-                        if (t > 0) {
-                            mat.mul4(
-                                    this._orientationMatrix,
-                                    this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, 1 / 2 * t * t));
-                            // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
-                            mat.mul4(
-                                    angularAccMatrix,
-                                    this._torques[i].getAngularAccelerationMatrixOverTime(this._mass, ANGULAR_VELOCITY_MATRIX_DURATION * t / 1000));
+                    for (torque = this._torques.getFirst(); torque; torque = nextTorque) {
+                        nextTorque = torque.next;
+                        if (torque.canBeReused()) {
+                            this._torques.remove(torque);
+                        } else {
+                            t = torque.exert(dt) * 0.001; // t is in seconds
+                            if (t > 0) {
+                                mat.mul4(
+                                        this._orientationMatrix,
+                                        torque.getAngularAccelerationMatrixOverTime(this._mass, 0.5 * t * t));
+                                // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
+                                mat.mul4(
+                                        angularAccMatrix,
+                                        torque.getAngularAccelerationMatrixOverTime(this._mass, ANGULAR_VELOCITY_MATRIX_DURATION * t * 0.001));
+                            }
                         }
                     }
                     // update angular velocity matrix

@@ -444,12 +444,12 @@ define([
             positionVectorInWorldSpace = mat.translationVector3(this._physicalModel.getPositionMatrix());
             velocityVectorInWorldSpace = mat.translationVector3(this._physicalModel.getVelocityMatrix());
             hitObjects = hitObjectOctree.getObjects(
-                    Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT / 1000),
-                    Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT / 1000),
-                    Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT / 1000),
-                    Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT / 1000),
-                    Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT / 1000),
-                    Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT / 1000));
+                    Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
+                    Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
+                    Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT * 0.001),
+                    Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT * 0.001),
+                    Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT * 0.001),
+                    Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT * 0.001));
             // checking for hits
             for (i = 0; i < hitObjects.length; i++) {
                 if (_showHitboxesForHitchecks) {
