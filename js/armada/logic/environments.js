@@ -227,7 +227,7 @@ define([
                 this._positionVector,
                 addOwnProperties ? this._cloud.getClass().getColor() : null,
                 addOwnProperties ? this._range : null);
-        cloudNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING)));
+        cloudNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING)));
     };
     /**
      * @returns {PointParticle}
@@ -322,7 +322,7 @@ define([
         resources.executeWhenReady(function () {
             var j, node;
             this._visualModel = new renderableObjects.RenderableObject(null, false, false, undefined, false);
-            node = scene.addNode(new sceneGraph.RenderableNode(this._visualModel, true));
+            node = scene.addNode(new sceneGraph.RenderableNode(this._visualModel, false, true));
             for (j = 0; j < n; j++) {
                 this._particles[j].addToScene(node, j === 0);
             }

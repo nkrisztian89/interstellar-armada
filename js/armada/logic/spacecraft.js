@@ -159,7 +159,7 @@ define([
                 true,
                 this._descriptor.getParticle().getInstancedShader(),
                 0);
-        parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
+        parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
         if ((addLightSource === true) && (this._descriptor.getIntensity() > 0)) {
             this._lightSource = new lights.PointLightSource(
                     this._descriptor.getLightColor(),
@@ -1310,7 +1310,7 @@ define([
         hitZoneMesh.setUniformValueFunction(_groupTransformsArrayName, function () {
             return _groupTransformIdentityArray;
         });
-        this._hitbox.addSubnode(new sceneGraph.RenderableNode(hitZoneMesh));
+        this._hitbox.addSubnode(new sceneGraph.RenderableNode(hitZoneMesh, false));
     };
     /**
      * Returns the renderable node storing the hitbox models for this spacecraft.
@@ -1483,7 +1483,7 @@ define([
                 this._hitbox = new sceneGraph.RenderableNode(new renderableObjects.RenderableObject3D(
                         this._class.getShader(),
                         false,
-                        false));
+                        false), false);
                 // add the models for the hitboxes themselves
                 for (i = 0; i < this._class.getBodies().length; i++) {
                     this._addHitboxModel(i);

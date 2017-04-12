@@ -280,6 +280,7 @@ define([
      * well as references to children nodes.
      * @constructor
      * @param {RenderableObject} renderableObject
+     * @param {Boolean} [renderToShadowMap=true] If false, this node and its subnodes will never be rendered to shadow maps
      * @param {Boolean} [instancedSubnodes=false] If true, then when this node is added to render queues and it has enough subnodes for
      * instanced rendering, only its first subnode will be checked about which queues it should be added to, and all the subnodes will be 
      * added to the same queues together, without checking them for further subnodes. Use this on container nodes storing large amounts
@@ -287,7 +288,7 @@ define([
      * @param {Number} [minimumCountForInstancing=0] If greater than zero, then when at least this amount of nodes of the same type are
      * added to the same render queue and instancing is available, they will be rendered using instancing.
      */
-    function RenderableNode(renderableObject, instancedSubnodes, minimumCountForInstancing) {
+    function RenderableNode(renderableObject, renderToShadowMap, instancedSubnodes, minimumCountForInstancing) {
         /**
          * The object this node holds that can be rendered.
          * @type RenderableObject
@@ -326,6 +327,11 @@ define([
          * @type CameraConfiguration[]
          */
         this._cameraConfigurations = [];
+        /**
+         * If false, this node and its subnodes are never rendered to shadow maps
+         * @type Boolean
+         */
+        this._isRenderedToShadowMap = renderToShadowMap !== false;
         /**
          * Whether this node has subnodes of the same type, which are leaf nodes and are suitable for instancing, so can be added to the
          * same instanced queue.
@@ -786,8 +792,12 @@ define([
         var subnode, result;
         // the visible property determines visibility of all subnodes as well
         if (this._visible) {
-            this.setRenderParameters(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
-            result = this._renderableObject.render(this._renderParameters);
+            if (this._renderableObject.mightBeRendered()) {
+                this.setRenderParameters(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
+                result = this._renderableObject.render(this._renderParameters);
+            } else {
+                result = false;
+            }
             if (!withoutSubnodes) {
                 for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
                     subnode.render(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
@@ -830,9 +840,13 @@ define([
     RenderableNode.prototype.renderToShadowMap = function (context, screenWidth, screenHeight, lightMatrix, range, depthRatio) {
         var subnode, result;
         // the visible property determines visibility of all subnodes as well
-        if (this._visible) {
-            this.setRenderParameters(context, screenWidth, screenHeight, true, undefined, undefined, lightMatrix, range, depthRatio);
-            result = this._renderableObject.renderToShadowMap(this._renderParameters);
+        if (this._visible && this._isRenderedToShadowMap) {
+            if (this._renderableObject.mightBeRenderedToShadowMap()) {
+                this.setRenderParameters(context, screenWidth, screenHeight, true, undefined, undefined, lightMatrix, range, depthRatio);
+                result = this._renderableObject.renderToShadowMap(this._renderParameters);
+            } else {
+                result = false;
+            }
             // recursive rendering of all subnodes
             for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
                 subnode.renderToShadowMap(context, screenWidth, screenHeight, lightMatrix, range, depthRatio);
@@ -1610,19 +1624,20 @@ define([
      * @returns {RenderableNode} The node that was created to contain the passed object.
      */
     Scene.prototype.addBackgroundObject = function (backgroundObject) {
-        var node = new RenderableNode(backgroundObject);
+        var node = new RenderableNode(backgroundObject, false);
         this._rootBackgroundNode.addSubnode(node);
         return node;
     };
     /**
      * Adds a new node containing the passed renderable object to be rendered among the main scene objects of this scene. 
      * @param {RenderableObject} newObject The object to add.
+     * @param {Boolean} [renderedToShadowMap=true] If false, the node for this object and its subnodes will never be rendered to shadow maps
      * @param {Number} [minimumCountForInstancing=0] When given, the object will be rendered using instancing if this many or more
      * instances of it are added to the scene.
      * @returns {RenderableNode} The node that was created to contain the passed object.
      */
-    Scene.prototype.addObject = function (newObject, minimumCountForInstancing) {
-        var node = new RenderableNode(newObject, false, minimumCountForInstancing);
+    Scene.prototype.addObject = function (newObject, renderedToShadowMap, minimumCountForInstancing) {
+        var node = new RenderableNode(newObject, renderedToShadowMap, false, minimumCountForInstancing);
         this._rootNode.addSubnode(node);
         return node;
     };
@@ -1641,7 +1656,7 @@ define([
      * @returns {RenderableNode} The node that was created to contain the passed object.
      */
     Scene.prototype.addUIObject = function (uiObject) {
-        var node = new RenderableNode(uiObject);
+        var node = new RenderableNode(uiObject, false);
         this._rootUINode.addSubnode(node);
         return node;
     };
@@ -1671,14 +1686,14 @@ define([
     Scene.prototype._initNodes = function () {
         // we are adding RenderableObject3D so if nodes with object 3D-s are added, they will have a parent with position and orientation
         // a size of 0 is specified so that no child 3D objects will ever think they are inside their parent
-        this._rootBackgroundNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
+        this._rootBackgroundNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0), false);
         this._rootBackgroundNode.setScene(this);
         this._rootNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
         this._rootNode.setScene(this);
-        this._rootResourceNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4));
+        this._rootResourceNode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4), false);
         this._rootResourceNode.setScene(this);
         this._resourceObjectIDs = {};
-        this._rootUINode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0));
+        this._rootUINode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0), false);
         this._rootUINode.setScene(this);
     };
     /**
@@ -1816,7 +1831,7 @@ define([
         var node;
         if (!id || !this._resourceObjectIDs[id]) {
             if (object) {
-                node = new RenderableNode(object);
+                node = new RenderableNode(object, false);
                 this._rootResourceNode.addSubnode(node, true);
                 // mark it as reusable so in case this is a pooled object, the pooled instance can be marked free
                 node.markAsReusable();

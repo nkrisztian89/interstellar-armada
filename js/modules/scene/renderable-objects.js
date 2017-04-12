@@ -423,16 +423,20 @@ define([
         }
     };
     /**
-     * Called before every render to check whether to proceed with the rendering
-     * or not, according to the current parameters. Subclasses must add their 
-     * own subsequent checks to this function.
+     * Early check called before every render to determine whether based on its current state, the object might need to be rendered.
+     * Subclasses must add their own subsequent checks to this function.
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.mightBeRendered = function () {
+        return (this._canBeReused !== true) && this._visible;
+    };
+    /**
+     * Called before every render to check whether to proceed with the rendering or not, according to the current parameters. 
+     * Subclasses must add their own subsequent checks to this function.
      * @param {RenderParameters} renderParameters
      * @returns {Boolean}
      */
     RenderableObject.prototype.shouldBeRendered = function (renderParameters) {
-        if ((this._canBeReused === true) || !this._visible) {
-            return false;
-        }
         return (renderParameters.depthMask && this._isRenderedWithDepthMask) || (!renderParameters.depthMask && this._isRenderedWithoutDepthMask);
     };
     /**
@@ -507,14 +511,22 @@ define([
         this._peformRenderInstances(context, instanceCount);
     };
     /**
-     * Called every time before rendering to a shadow map would occur to check 
-     * whether to proceed with the rendering or not, according to the current 
-     * parameters. Subclasses must add their own subsequent checks to this 
-     * function.
+     * An early check to determine if the object might need to be rendered to the shadow maps, based on
+     * just its own state and no render parameters.
+     * Subclasses must add their own subsequent checks to this function.
+     * @returns {Boolean}
+     */
+    RenderableObject.prototype.mightBeRenderedToShadowMap = function () {
+        return !this._canBeReused && this._visible && this._castsShadows;
+    };
+    /**
+     * Called every time before rendering to a shadow map would occur (if the early check has passed) to check 
+     * whether to proceed with the rendering or not, according to the current parameters. 
+     * Subclasses must implement their own checks in this function.
      * @returns {Boolean}
      */
     RenderableObject.prototype.shouldBeRenderedToShadowMap = function () {
-        return !this._canBeReused && this._visible && this._castsShadows;
+        return true;
     };
     /**
      * Returns whether this object has been rendered to the last shadow map.
@@ -790,13 +802,10 @@ define([
      * @returns {Boolean}
      */
     RenderableObject3D.prototype.shouldBeRenderedToShadowMap = function (renderParameters) {
-        if (RenderableObject.prototype.shouldBeRenderedToShadowMap.call(this, renderParameters)) {
-            if (this.isInsideParent() === true) {
-                return renderParameters.parent.wasRenderedToShadowMap();
-            }
-            return this.isInsideShadowRegion(renderParameters.lightMatrix, renderParameters.shadowMapRange, renderParameters.shadowMapDepthRatio);
+        if (this.isInsideParent() === true) {
+            return renderParameters.parent.wasRenderedToShadowMap();
         }
-        return false;
+        return this.isInsideShadowRegion(renderParameters.lightMatrix, renderParameters.shadowMapRange, renderParameters.shadowMapDepthRatio);
     };
     // #########################################################################
     /**
@@ -1340,7 +1349,7 @@ define([
      * @override
      * @returns {Boolean}
      */
-    Billboard.prototype.shouldBeRenderedToShadowMap = function () {
+    Billboard.prototype.mightBeRenderedToShadowMap = function () {
         return false;
     };
     /**
@@ -1751,18 +1760,6 @@ define([
     };
     /**
      * @override
-     * Considers the current visible size of the particle.
-     * @param {RenderParameters} renderParameters
-     * @returns {Boolean}
-     */
-    Particle.prototype.shouldBeRendered = function (renderParameters) {
-        if (this._visible) {
-            return RenderableObject3D.prototype.shouldBeRendered.call(this, renderParameters);
-        }
-        return false;
-    };
-    /**
-     * @override
      * Renders the particle, binding the needed texture.
      * @param {RenderParameters} renderParameters
      */
@@ -1781,7 +1778,7 @@ define([
      * @override
      * @returns {Boolean}
      */
-    Particle.prototype.shouldBeRenderedToShadowMap = function () {
+    Particle.prototype.mightBeRenderedToShadowMap = function () {
         return false;
     };
     /**
@@ -2081,7 +2078,7 @@ define([
      * @override
      * @returns {Boolean}
      */
-    PointParticle.prototype.shouldBeRenderedToShadowMap = function () {
+    PointParticle.prototype.mightBeRenderedToShadowMap = function () {
         return false;
     };
     /**

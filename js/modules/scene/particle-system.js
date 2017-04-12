@@ -498,7 +498,7 @@ define([
                 particles = this._emitters[i].emitParticles(dt, this._particleCountFactor);
                 if (this._carriesParticles) {
                     for (j = 0; j < particles.length; j++) {
-                        this.getNode().addSubnode(new sceneGraph.RenderableNode(particles[j], false, this._minimumCountForInstancing));
+                        this.getNode().addSubnode(new sceneGraph.RenderableNode(particles[j], false, false, this._minimumCountForInstancing));
                     }
                 } else {
                     modelMatrix = this.getModelMatrix();
@@ -507,7 +507,7 @@ define([
                     for (j = 0; j < particles.length; j++) {
                         particles[j].translateByMatrix(positionMatrix);
                         particles[j].rotateByMatrix(orientationMatrix);
-                        this.getNode().getScene().addNode(new sceneGraph.RenderableNode(particles[j], false, this._minimumCountForInstancing));
+                        this.getNode().getScene().addNode(new sceneGraph.RenderableNode(particles[j], false, false, this._minimumCountForInstancing));
                     }
                 }
             }

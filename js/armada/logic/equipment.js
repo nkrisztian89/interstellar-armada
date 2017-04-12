@@ -386,7 +386,7 @@ define([
      */
     Projectile.prototype._addToSceneCallback = function (scene, wireframe, callback) {
         this._createVisualModel(wireframe);
-        scene.addObject(this._visualModel, _minimumProjectileCountForInstancing);
+        scene.addObject(this._visualModel, false, _minimumProjectileCountForInstancing);
         if (callback) {
             callback(this._visualModel);
         }
@@ -882,7 +882,7 @@ define([
                 muzzleFlash = this._getMuzzleFlashForBarrel(i, barrelPosVector);
                 barrelPosVector = vec.prodVec3Mat4(barrelPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
                 mat.setTranslatedByVector(Weapon._projectilePosMatrix, Weapon._weaponSlotPosMatrix, barrelPosVector);
-                this._visualModel.getNode().addSubnode(new sceneGraph.RenderableNode(muzzleFlash), false, _minimumMuzzleFlashParticleCountForInstancing);
+                this._visualModel.getNode().addSubnode(new sceneGraph.RenderableNode(muzzleFlash, false), false, _minimumMuzzleFlashParticleCountForInstancing);
                 // add the projectile of this barrel
                 p = _projectilePool.getObject();
                 p.init(
@@ -1546,7 +1546,7 @@ define([
                     mat.translation4v(this._slot.positionVector),
                     this._propulsionClass.getThrusterBurnParticle().getInstancedShader());
             visualModel.setRelativeSize(0);
-            parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
+            parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel, false, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
             if (!this._visualModel) {
                 this._visualModel = visualModel;
                 this._shipModel = parentNode.getRenderableObject();

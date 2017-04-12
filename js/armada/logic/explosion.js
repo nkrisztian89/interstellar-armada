@@ -242,7 +242,7 @@ define([
     Explosion.prototype._addToSceneCallback = function (parentNode, soundSource, isHit, callback) {
         var lightStates, scene = parentNode.getScene();
         this._createVisualModel(1 / parentNode.getRenderableObject().getCascadeScalingMatrix()[0]);
-        parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel));
+        parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false));
         lightStates = this._class.getLightStates();
         if (lightStates) {
             scene.addPointLightSource(
