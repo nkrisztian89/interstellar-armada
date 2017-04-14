@@ -572,6 +572,15 @@
                 "a_groupIndices": "groupIndices"
             }
         }, {
+            "name": "oneColorFaded",
+            "vertexShaderSource": "mesh/oneColorFaded.vert",
+            "fragmentShaderSource": "mesh/oneColorFaded.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_groupIndices": "groupIndices"
+            }
+        }, {
             "name": "colored",
             "vertexShaderSource": "mesh/colored.vert",
             "fragmentShaderSource": "mesh/colored.frag",

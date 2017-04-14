@@ -1,6 +1,6 @@
 #version 100
 
-#define SHADOW_MAPPING_SHADER
+#define NO_NORMALS
 
 #define DEPTH_TEXTURES 0
 

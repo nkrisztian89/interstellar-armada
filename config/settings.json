@@ -299,7 +299,7 @@
                 "targetViewCameraDistance": 1.1,
                 "targetViewViewDistance": 5,
                 "targetViewFOV": 55,
-                "targetViewTargetItemShader": "oneColor",
+                "targetViewTargetItemShader": "oneColorFaded",
                 "targetViewTargetItemFullIntegrityColor": [0, 1, 0, 1],
                 "targetViewTargetItemHalfIntegrityColor": [1, 1, 0, 1],
                 "targetViewTargetItemZeroIntegrityColor": [1, 0, 0, 1],
