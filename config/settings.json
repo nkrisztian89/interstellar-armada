@@ -296,8 +296,9 @@
                     "xScaleMode": "minimum",
                     "yScaleMode": "minimum"
                 },
-                "targetViewViewDistance": 1500,
-                "targetViewFOV": 40,
+                "targetViewCameraDistance": 1.1,
+                "targetViewViewDistance": 5,
+                "targetViewFOV": 55,
                 "targetViewTargetItemShader": "oneColor",
                 "targetViewTargetItemFullIntegrityColor": [0, 1, 0, 1],
                 "targetViewTargetItemHalfIntegrityColor": [1, 1, 0, 1],

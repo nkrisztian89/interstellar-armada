@@ -389,7 +389,7 @@ define([
      * @param {Vertex} vertex
      */
     Mesh.prototype.setVertex = function (index, vertex) {
-        var i;
+        var i, distance;
         // if we are setting a vertex with a higher index than the currently stored
         // ones, create new vertices in between
         if (this._vertices.length < index) {
@@ -400,14 +400,9 @@ define([
         // set the vertex
         this._vertices[index] = vertex;
         // update the size related data
-        if (Math.abs(this._vertices[index].x * 2) > this._size) {
-            this._size = Math.abs(this._vertices[index].x * 2);
-        }
-        if (Math.abs(this._vertices[index].y * 2) > this._size) {
-            this._size = Math.abs(this._vertices[index].y * 2);
-        }
-        if (Math.abs(this._vertices[index].z * 2) > this._size) {
-            this._size = Math.abs(this._vertices[index].z * 2);
+        distance = vec.length3([this._vertices[index].x, this._vertices[index].y, this._vertices[index].z]);
+        if (2 * distance > this._size) {
+            this._size = 2 * distance;
         }
         if (this._vertices[index].x > this._maxX) {
             this._maxX = this._vertices[index].x;

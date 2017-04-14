@@ -2789,7 +2789,6 @@ define([
                             return _targetViewItemColor;
                         });
                         model.setScale(1 / model.getSize());
-                        _targetScene.getCamera().moveToPosition([0, 0, 1.75], 0);
                         _targetViewModel = model;
                     });
                 }
@@ -3397,6 +3396,7 @@ define([
                         transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
                     },
                     false);
+            _targetScene.getCamera().moveToPosition([0, 0, config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_CAMERA_DISTANCE)], 0);
             _mission.addToScene(_battleScene, _targetScene);
             _addHUDToScene();
             _shipIndicatorHighlightTime = 0;

@@ -1010,6 +1010,10 @@ define([
                 name: "targetViewLayout",
                 type: _customTypes.LAYOUT_DESCRIPTOR
             },
+            TARGET_VIEW_CAMERA_DISTANCE: {
+                name: "targetViewCameraDistance",
+                type: "number"
+            },
             TARGET_VIEW_VIEW_DISTANCE: {
                 name: "targetViewViewDistance",
                 type: "number"

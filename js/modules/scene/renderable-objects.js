@@ -1291,7 +1291,7 @@ define([
      * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
      */
     Billboard.prototype.init = function (model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader) {
-        RenderableObject3D.prototype.init.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4(size), instancedShader);
+        RenderableObject3D.prototype.init.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4Aux(size), instancedShader);
         this.setTextures(textures);
         this._sizeVector[0] = size;
         this._model = model;

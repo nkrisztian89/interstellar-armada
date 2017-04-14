@@ -530,8 +530,12 @@ define([
      * @returns {Float32Array}
      */
     mat.scaling4 = function (x, y, z) {
-        y = y || x;
-        z = z || x;
+        if (y === undefined) {
+            y = x;
+        }
+        if (z === undefined) {
+            z = x;
+        }
         _matrixCount++;
         return new Float32Array([
             x, 0.0, 0.0, 0.0,
@@ -552,6 +556,12 @@ define([
      */
     mat.scaling4Aux = function (x, y, z) {
         var aux = _auxMatrices[_auxMatrixIndex];
+        if (y === undefined) {
+            y = x;
+        }
+        if (z === undefined) {
+            z = x;
+        }
         aux[0] = x;
         aux[1] = 0;
         aux[2] = 0;
