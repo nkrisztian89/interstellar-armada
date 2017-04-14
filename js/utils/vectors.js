@@ -310,6 +310,23 @@ define(function () {
         return [v[0] * factor, v[1] * factor, v[2] * factor];
     };
     /**
+     * Returns the passed 3D vector scaled to unit length.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v A 3D vector
+     * @returns {Number[3]} The normalized 3D vector.
+     */
+    vec.normal3Aux = function (v) {
+        var
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor,
+                aux = _auxVectors[_auxVectorIndex];
+        aux[0] = v[0] * factor;
+        aux[1] = v[1] * factor;
+        aux[2] = v[2] * factor;
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Returns a 2D vector multiplied by a scalar.
      * @param {Number[2]} v A 2D vector.
      * @param {Number} s A scalar.

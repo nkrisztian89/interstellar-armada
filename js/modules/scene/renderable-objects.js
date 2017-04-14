@@ -1480,13 +1480,19 @@ define([
          */
         this._velocityVector = [0, 0, 0];
         /**
+         * The cached value of the direction (unit vector) of the velocity vector of this particle in world coordinates.
+         * ParticleSystems automatically invalidate this for all contained particles when their orientation changes, but if the 
+         * ParticleSystem is the subnode of another node in the scene graph, and that parent node changes orientation, the invalidation 
+         * needs to be issued manually (by calling invalidateWorldVelocityDirectionVector()). This is because continuous checks would be 
+         * expensive and would bring minimal benefits.
          * @type Number[3]
          */
-        this._worldVelocityVector = [0, 0, 0];
+        this._worldVelocityDirectionVector = [0, 0, 0];
         /**
+         * Whether the currently stored world velocity direction vector value is valid.
          * @type Boolean
          */
-        this._worldVelocityVectorValid = false;
+        this._worldVelocityDirectionVectorValid = false;
         /**
          * Whether the particle needs to be animated (there are more states or it has a non-zero velocity).
          * This is a cache variable.
@@ -1519,7 +1525,7 @@ define([
             return this.getModelMatrix();
         });
         this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
-            return vec.floatVector3Aux(this.getWorldVelocityVector());
+            return vec.floatVector3Aux(this.getWorldVelocityDirectionVector());
         });
         this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (contextName) {
             return (contextName === utils.EMPTY_STRING) ? this._calculatedSize : this._calculatedSize[0];
@@ -1562,10 +1568,10 @@ define([
         this._velocityVector[0] = 0;
         this._velocityVector[1] = 0;
         this._velocityVector[2] = 0;
-        this._worldVelocityVector[0] = 0;
-        this._worldVelocityVector[1] = 0;
-        this._worldVelocityVector[2] = 0;
-        this._worldVelocityVectorValid = false;
+        this._worldVelocityDirectionVector[0] = 0;
+        this._worldVelocityDirectionVector[1] = 0;
+        this._worldVelocityDirectionVector[2] = 0;
+        this._worldVelocityDirectionVectorValid = false;
         this._shouldAnimate = false;
         this._updateShouldAnimate();
     };
@@ -1649,7 +1655,7 @@ define([
      * Called internally when the velocity vector changes.
      */
     Particle.prototype._updateVelocity = function () {
-        this._worldVelocityVectorValid = false;
+        this._worldVelocityDirectionVectorValid = false;
         this._updateShouldAnimate();
     };
     /**
@@ -1707,12 +1713,18 @@ define([
      * 
      * @returns {Number[3]}
      */
-    Particle.prototype.getWorldVelocityVector = function () {
-        if (!this._worldVelocityVectorValid) {
-            this._worldVelocityVector = vec.normal3(vec.prodVec3Mat4Aux(vec.normal3(this._velocityVector), this.getModelMatrix()));
-            this._worldVelocityVectorValid = true;
+    Particle.prototype.getWorldVelocityDirectionVector = function () {
+        if (!this._worldVelocityDirectionVectorValid) {
+            this._worldVelocityDirectionVector = vec.normal3(vec.prodVec3Mat4Aux(this._velocityVector, this.getModelMatrix()));
+            this._worldVelocityDirectionVectorValid = true;
         }
-        return this._worldVelocityVector;
+        return this._worldVelocityDirectionVector;
+    };
+    /**
+     * Invalidates the current cached world velocity vector value, causing it to be recalculated next time it is required.
+     */
+    Particle.prototype.invalidateWorldVelocityDirectionVector = function () {
+        this._worldVelocityDirectionVectorValid = false;
     };
     /**
      * Returns the list of particle states this particle goes through during its lifespan.

@@ -440,7 +440,6 @@ define([
         if (this._timeLeft > 0) {
             this._physicalModel.simulate(dt);
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
-            this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
             positionVectorInWorldSpace = mat.translationVector3(this._physicalModel.getPositionMatrix());
             velocityVectorInWorldSpace = mat.translationVector3(this._physicalModel.getVelocityMatrix());
             hitObjects = hitObjectOctree.getObjects(

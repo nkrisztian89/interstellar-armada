@@ -319,6 +319,9 @@ define([
             }
             this._modelMatrixValid = false;
             this._modelMatrixInverseValid = false;
+            if (this._handleOrientationChanged) {
+                this._handleOrientationChanged();
+            }
         }
         /**
          * Sets the orientation to be the one described by the passed 4x4 matrix.
@@ -328,6 +331,9 @@ define([
             mat.setMatrix4(this._orientationMatrix, m);
             this._modelMatrixValid = false;
             this._modelMatrixInverseValid = false;
+            if (this._handleOrientationChanged) {
+                this._handleOrientationChanged();
+            }
         }
         /**
          * Returns the 3D vector corresponding to the X axis of the current

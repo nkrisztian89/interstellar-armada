@@ -474,6 +474,17 @@ define([
         this.setSize(result);
     };
     /**
+     * In case the orientation changes, needs to invalidate the world velocity direction vectors of carried particles.
+     */
+    ParticleSystem.prototype._handleOrientationChanged = function () {
+        var node;
+        if (this._carriesParticles && this.getNode()) {
+            for (node = this.getNode().getSubnodes().getFirst(); node; node = node.next) {
+                node.getRenderableObject().invalidateWorldVelocityDirectionVector();
+            }
+        }
+    };
+    /**
      * @override
      * Always false, as particle system object itself is never rendered, only the particles it has emitted.
      * @returns {Boolean}
