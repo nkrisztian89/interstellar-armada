@@ -6000,6 +6000,51 @@
                     "jumpEngine": {
                         "class": "imperialLargeShipMk1"
                     }
+                }, {
+                    "name": "full",
+                    "weapons": [{
+                            "class": "largeIonCannon"
+                        }, {
+                            "class": "largeIonCannon"
+                        }, {
+                            "class": "largeIonCannon"
+                        }, {
+                            "class": "largeIonCannon"
+                        }, {
+                            "class": "largeIonCannon"
+                        }, {
+                            "class": "largeIonCannon"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }, {
+                            "class": "smallPlasmaTurret"
+                        }],
+                    "propulsion": {
+                        "class": "imperialCruiserMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialLargeShipMk1"
+                    }
                 }],
             "humSound": {
                 "name": "spacecraftHum",

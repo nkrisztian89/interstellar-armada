@@ -1,0 +1,169 @@
+{
+    "description": "Sandbox for performance testing, 30 ships.",
+    "environment": "cathagan",
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, -850, 300],
+            "rotations": ["x-60"]
+        }, {
+            "name": "fps",
+            "fps": true,
+            "movable": true,
+            "turnable": true,
+            "position": [-400, 200, -350],
+            "rotations": ["z+90"]
+        }, {
+            "name": "overview",
+            "turnAroundAll": true,
+            "movable": true,
+            "turnable": true,
+            "position": [0, -2000, 0],
+            "distanceRange": [1000, 3000],
+            "rotations": ["x-90"]
+        }, {
+            "name": "lookAtAll",
+            "lookAt": "all",
+            "movable": false,
+            "turnable": false,
+            "position": [1000, -2000, 300]
+        }, {
+            "name": "lookAtAll-free-resetting",
+            "lookAt": "all",
+            "movable": true,
+            "turnable": false,
+            "startsWithRelativePosition": true,
+            "position": [1000, -2000, 300],
+            "distanceRange": [500, 5000],
+            "resetsWhenLeavingConfines": true
+        }
+    ],
+    "events": [{
+            "name": "message",
+            "trigger": {
+                "conditions": [{
+                        "type": "timeElapsed",
+                        "params": {
+                            "time": 10000,
+                            "satisfiedWhen": "repeat",
+                            "maxCount": 5,
+                            "startOffset": 8000
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": false
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "test",
+                        "duration": 4000,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "timeElapsed",
+                        "params": {
+                            "time": 5000,
+                            "satisfiedWhen": "once",
+                            "start": "message"
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "test2",
+                        "duration": 4000,
+                        "urgent": true
+                    }
+                }]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "class": "falcon",
+            "piloted": true,
+            "position": [0, 0, -60],
+            "equipment": "full"
+        },
+        {
+            "class": "falcon",
+            "position": [-7.5, 20, -60]
+        },
+        {
+            "class": "falcon",
+            "position": [-1050, -150, -300]
+        },
+        {
+            "class": "viper",
+            "position": [50, -30, -170],
+            "equipment": "full"
+        },
+        {
+            "class": "viper",
+            "position": [50, 50, -160],
+            "equipment": {
+                "weapons": [{
+                        "class": "plasmaGun"
+                    }]
+            }
+        },
+        {
+            "class": "viper",
+            "position": [50, 50, -1160]
+        },
+        {
+            "class": "aries",
+            "position": [-60, -50, -280]
+        },
+        {
+            "class": "aries",
+            "name": "Guinevere",
+            "position": [160, 750, -295],
+            "rotations": ["z+90"]
+        },
+        {
+            "class": "falcon",
+            "position": [180, 650, -285],
+            "rotations": ["z+90"]
+        },
+        {
+            "class": "falcon",
+            "position": [220, 690, -285],
+            "rotations": ["z+90"]
+        },
+        {
+            "class": "taurus",
+            "position": [200, -80, -350],
+            "rotations": ["z+90"],
+            "equipment": "full"
+        },
+        {
+            "class": "libra",
+            "name": "Tiberis",
+            "position": [-100, 500, -400],
+            "rotations": ["z+90"]
+        }
+    ],
+    "randomShips": {
+        "falcon": 6,
+        "viper": 5,
+        "aries": 4,
+        "taurus": 3
+    },
+    "randomShipsMapSize": 3000,
+    "randomShipsEquipmentProfileName": "full",
+    "randomShipsHeadingAngle": 90,
+    "randomShipsRandomHeading": true
+}

@@ -242,6 +242,12 @@
                 "test2": "Szabadon kilőheted a többi űrhajót."
             }
         },
+        "sandbox-30": {
+            "name": "Sandbox 30"
+        },
+        "sandbox-50": {
+            "name": "Sandbox 50"
+        },
         "libraTest": {
             "name": "Libra teszt"
         },

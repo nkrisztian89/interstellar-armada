@@ -207,6 +207,12 @@
                 "test2": "You can freely destroy other spacecrafts."
             }
         },
+        "sandbox-30": {
+            "name": "Sandbox 30"
+        },
+        "sandbox-50": {
+            "name": "Sandbox 50"
+        },
         "libraTest": {
             "name": "Libra test"
         },

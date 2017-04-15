@@ -1912,6 +1912,16 @@ define([
          */
         this._maxFPS = 0;
         /**
+         * Sum of measured FPS values for averaging
+         * @type Number
+         */
+        this._fpsSum = 0;
+        /**
+         * Count of frame for which FPS was measured, for averaging
+         * @type Number
+         */
+        this._fpsFrameCount = 0;
+        /**
          * A reference to the function that is set to handle the resize event for this screen so
          * that it can be removed if the screen is no longer active.
          * @type Function
@@ -2115,6 +2125,8 @@ define([
                 if ((this._maxFPS === 0) || (this._maxFPS < fps)) {
                     this._maxFPS = fps;
                 }
+                this._fpsSum += fps;
+                this._fpsFrameCount++;
             }
         }
     };
@@ -2142,6 +2154,8 @@ define([
                 if ((this._maxFPS === 0) || (this._maxFPS < fps)) {
                     this._maxFPS = fps;
                 }
+                this._fpsSum += fps;
+                this._fpsFrameCount++;
             }
             window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
         }
@@ -2161,6 +2175,8 @@ define([
             this._renderTimes = [performance.now()];
             this._minFPS = 0;
             this._maxFPS = 0;
+            this._fpsSum = 0;
+            this._fpsFrameCount = 0;
             if (this._useRequestAnimFrame) {
                 this._renderLoop = LOOP_REQUESTANIMFRAME;
                 window.requestAnimationFrame(this._renderRequestAnimFrame.bind(this));
@@ -2195,7 +2211,7 @@ define([
      * @returns {String}
      */
     HTMLScreenWithCanvases.prototype.getFPSStats = function () {
-        return this._renderTimes.length + " (" + this._minFPS + "-" + this._maxFPS + ")";
+        return this._renderTimes.length + " (" + ((this._fpsFrameCount > 0) ? Math.round(this._fpsSum / this._fpsFrameCount) : "0") + ", " + this._minFPS + "-" + this._maxFPS + ")";
     };
     /**
      * Updates all needed variables when the screen is resized.

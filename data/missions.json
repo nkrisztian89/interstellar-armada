@@ -38,6 +38,12 @@
         }, {
             "source": "tests/test.json"
         }, {
+            "source": "tests/sandbox-30.json",
+            "test": true
+        }, {
+            "source": "tests/sandbox-50.json",
+            "test": true
+        }, {
             "source": "tests/libraTest.json",
             "test": true
         }, {
