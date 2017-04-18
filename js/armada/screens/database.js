@@ -222,8 +222,8 @@ define([
      */
     function _setRotation(angle) {
         var orientationMatrix = mat.prod3x3SubOf4Aux(
-                mat.rotation4([0.0, 0.0, 1.0], Math.radians(angle)),
-                mat.rotation4([1.0, 0.0, 0.0], Math.radians(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE))));
+                mat.rotationZ4Aux(Math.radians(angle)),
+                mat.rotationX4Aux(Math.radians(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE))));
         if (_solidModel) {
             _solidModel.setOrientationMatrix(mat.matrix4(orientationMatrix));
         }

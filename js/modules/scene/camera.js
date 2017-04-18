@@ -420,7 +420,7 @@ define([
                     mat.setTranslatedByM4(this._worldPositionMatrix,
                             mat.translation4m4Aux(mat.prodTranslationRotation4Aux(
                                     this._relativePositionMatrix,
-                                    mat.prod3x3SubOf4Aux(mat.rotation4Aux(vec.UNIT3_X, Math.PI / 2), worldOrientationMatrix))),
+                                    mat.prod3x3SubOf4Aux(mat.ROTATION_X_90, worldOrientationMatrix))),
                             this.getFollowedPositionMatrix());
                 }
             }
@@ -568,13 +568,13 @@ define([
                     }
                 } else {
                     if (this._movesRelativeToObject) {
-                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.prodVec3Mat4Aux(velocityVector, mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2)), dt / 1000));
+                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.prodVec3Mat4Aux(velocityVector, mat.ROTATION_X_270), dt * 0.001));
                     } else {
                         mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.prodVec3Mat4Aux(
                                 velocityVector,
                                 mat.prod3x3SubOf4Aux(
                                         worldOrientationMatrix,
-                                        mat.inverseOfRotation4Aux(this.getFollowedObjectOrientationMatrix()))), dt / 1000));
+                                        mat.inverseOfRotation4Aux(this.getFollowedObjectOrientationMatrix()))), dt * 0.001));
                     }
                 }
             }
@@ -954,13 +954,13 @@ define([
                     // look in direction y instead of z:
                     mat.setProd3x3SubOf4(this._worldOrientationMatrix,
                             mat.prod3x3SubOf4Aux(
-                                    mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2),
+                                    mat.ROTATION_X_270,
                                     this._relativeOrientationMatrix),
                             followedOrientationMatrix);
                 }.bind(this),
                 calculateAbsolute = function () {
                     if (this._fps) {
-                        mat.setProd3x3SubOf4(this._worldOrientationMatrix, mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2), this._relativeOrientationMatrix);
+                        mat.setProd3x3SubOf4(this._worldOrientationMatrix, mat.ROTATION_X_270, this._relativeOrientationMatrix);
                     } else {
                         mat.setMatrix4(this._worldOrientationMatrix, this._relativeOrientationMatrix);
                     }
@@ -1016,16 +1016,16 @@ define([
                         if (dirTowardsObject[0] < 0) {
                             this._alpha = -this._alpha;
                         }
-                        mat.setProd3x3SubOf4(this._worldOrientationMatrix, mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2), mat.rotation4Aux(vec.UNIT3_Z, this._alpha));
+                        mat.setProd3x3SubOf4(this._worldOrientationMatrix, mat.ROTATION_X_270, mat.rotationZ4Aux(this._alpha));
                         this._beta = vec.angle3uCapped(mat.getRowC43Neg(this._worldOrientationMatrix), dirTowardsObject);
                         if (dirTowardsObject[2] > 0) {
                             this._beta = -this._beta;
                         }
                         mat.setProd3x3SubOf4(this._worldOrientationMatrix,
                                 mat.prod3x3SubOf4Aux(
-                                        mat.rotation4Aux(vec.UNIT3_X, -Math.PI / 2),
-                                        mat.rotation4Aux(vec.UNIT3_X, this._beta)),
-                                mat.rotation4Aux(vec.UNIT3_Z, this._alpha));
+                                        mat.ROTATION_X_270,
+                                        mat.rotationX4Aux(this._beta)),
+                                mat.rotationZ4Aux(this._alpha));
                         mat.mul4(this._worldOrientationMatrix, baseOrientationMatrix);
                     }
                 }
@@ -1099,7 +1099,7 @@ define([
                 }
                 this._alpha = Math.min(Math.max(this._minAlpha, this._alpha), this._maxAlpha);
                 this._beta = Math.min(Math.max(this._minBeta, this._beta), this._maxBeta);
-                mat.setProd3x3SubOf4(this._relativeOrientationMatrix, mat.rotation4Aux(vec.UNIT3_X, this._beta * Math.PI / 180), mat.rotation4Aux(vec.UNIT3_Z, this._alpha * Math.PI / 180));
+                mat.setProd3x3SubOf4(this._relativeOrientationMatrix, mat.rotationX4Aux(this._beta * Math.PI / 180), mat.rotationZ4Aux(this._alpha * Math.PI / 180));
             } else {
                 if (this._followedObjects.length > 0) {
                     mat.mul4(this._relativeOrientationMatrix, mat.prod34Aux(
@@ -2025,7 +2025,7 @@ define([
         positionMatrix = positionMatrix || this.getCameraPositionMatrix();
         orientationMatrix = orientationMatrix || this.getCameraOrientationMatrix();
         if (fps) {
-            orientationMatrix = mat.prod3x3SubOf4Aux(mat.rotation4Aux(vec.UNIT3_X, Math.PI / 2), orientationMatrix);
+            orientationMatrix = mat.prod3x3SubOf4Aux(mat.ROTATION_X_90, orientationMatrix);
         }
         return getFreeCameraConfiguration(
                 fps,

@@ -407,6 +407,99 @@ define([
         ]);
     };
     /**
+     * Returns a new 4x4 transformation matrix describing a rotation around the X axis.
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotationX4 = function (angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle);
+        _matrixCount++;
+        return new Float32Array([
+            1, 0, 0, 0,
+            0, cosAngle, -sinAngle, 0,
+            0, sinAngle, cosAngle, 0,
+            0, 0, 0, 1
+        ]);
+    };
+    /**
+     * A constant 4x4 rotation matrix, rotating +90 degrees around axis X.
+     * @type Float32Array
+     */
+    mat.ROTATION_X_90 = mat.rotationX4(Math.PI * 0.5);
+    /**
+     * A constant 4x4 rotation matrix, rotating +180 degrees around axis X.
+     * @type Float32Array
+     */
+    mat.ROTATION_X_180 = mat.rotationX4(Math.PI * 1.0);
+    /**
+     * A constant 4x4 rotation matrix, rotating +270 degrees around axis X.
+     * @type Float32Array
+     */
+    mat.ROTATION_X_270 = mat.rotationX4(Math.PI * 1.5);
+    /**
+     * Returns a new 4x4 transformation matrix describing a rotation around the Y axis.
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotationY4 = function (angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle);
+        _matrixCount++;
+        return new Float32Array([
+            cosAngle, 0, sinAngle, 0,
+            0, 1, 0, 0,
+            -sinAngle, 0, cosAngle, 0,
+            0, 0, 0, 1
+        ]);
+    };
+    /**
+     * A constant 4x4 rotation matrix, rotating +90 degrees around axis Y.
+     * @type Float32Array
+     */
+    mat.ROTATION_Y_90 = mat.rotationY4(Math.PI * 0.5);
+    /**
+     * A constant 4x4 rotation matrix, rotating +180 degrees around axis Y.
+     * @type Float32Array
+     */
+    mat.ROTATION_Y_180 = mat.rotationY4(Math.PI * 1.0);
+    /**
+     * A constant 4x4 rotation matrix, rotating +270 degrees around axis Y.
+     * @type Float32Array
+     */
+    mat.ROTATION_Y_270 = mat.rotationY4(Math.PI * 1.5);
+    /**
+     * Returns a new 4x4 transformation matrix describing a rotation around the Z axis.
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotationZ4 = function (angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle);
+        _matrixCount++;
+        return new Float32Array([
+            cosAngle, -sinAngle, 0, 0,
+            sinAngle, cosAngle, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        ]);
+    };
+    /**
+     * A constant 4x4 rotation matrix, rotating +90 degrees around axis Z.
+     * @type Float32Array
+     */
+    mat.ROTATION_Z_90 = mat.rotationZ4(Math.PI * 0.5);
+    /**
+     * A constant 4x4 rotation matrix, rotating +180 degrees around axis Z.
+     * @type Float32Array
+     */
+    mat.ROTATION_Z_180 = mat.rotationZ4(Math.PI * 1.0);
+    /**
+     * A constant 4x4 rotation matrix, rotating +270 degrees around axis Z.
+     * @type Float32Array
+     */
+    mat.ROTATION_Z_270 = mat.rotationZ4(Math.PI * 1.5);
+    /**
      * Returns a new 4x4 transformation matrix describing a rotation around an arbitrary axis.
      * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
      * @param {Number[]} axis A 3D unit vector describing the axis of the rotation
@@ -433,6 +526,93 @@ define([
         aux[13] = 0.0;
         aux[14] = 0.0;
         aux[15] = 1.0;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
+     * Returns a new 4x4 transformation matrix describing a rotation around the X axis.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotationX4Aux = function (angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle),
+                aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = 1;
+        aux[1] = 0;
+        aux[2] = 0;
+        aux[3] = 0;
+        aux[4] = 0;
+        aux[5] = cosAngle;
+        aux[6] = -sinAngle;
+        aux[7] = 0;
+        aux[8] = 0;
+        aux[9] = sinAngle;
+        aux[10] = cosAngle;
+        aux[11] = 0;
+        aux[12] = 0;
+        aux[13] = 0;
+        aux[14] = 0;
+        aux[15] = 1;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
+     * Returns a new 4x4 transformation matrix describing a rotation around the Y axis.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotationY4Aux = function (angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle),
+                aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = cosAngle;
+        aux[1] = 0;
+        aux[2] = sinAngle;
+        aux[3] = 0;
+        aux[4] = 0;
+        aux[5] = 1;
+        aux[6] = 0;
+        aux[7] = 0;
+        aux[8] = -sinAngle;
+        aux[9] = 0;
+        aux[10] = cosAngle;
+        aux[11] = 0;
+        aux[12] = 0;
+        aux[13] = 0;
+        aux[14] = 0;
+        aux[15] = 1;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
+     * Returns a new 4x4 transformation matrix describing a rotation around the Z axis.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotationZ4Aux = function (angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle),
+                aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = cosAngle;
+        aux[1] = -sinAngle;
+        aux[2] = 0;
+        aux[3] = 0;
+        aux[4] = sinAngle;
+        aux[5] = cosAngle;
+        aux[6] = 0;
+        aux[7] = 0;
+        aux[8] = 0;
+        aux[9] = 0;
+        aux[10] = 1;
+        aux[11] = 0;
+        aux[12] = 0;
+        aux[13] = 0;
+        aux[14] = 0;
+        aux[15] = 1;
         _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
         return aux;
     };
@@ -912,7 +1092,7 @@ define([
             if (v[0] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchVector = vec.prodVec3Mat4Aux(v, mat.rotation4Aux(vec.UNIT3_Z, -result.yaw));
+            pitchVector = vec.prodVec3Mat4Aux(v, mat.rotationZ4Aux(-result.yaw));
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchVector[1], pitchVector[2]]));
             if (pitchVector[2] > 0) {
                 result.pitch = -result.pitch;
@@ -938,7 +1118,7 @@ define([
             if (m[4] * m[10] < 0) {
                 result.yaw = -result.yaw;
             }
-            pitchMatrix = mat.prod3x3SubOf4Aux(m, mat.rotation4Aux(vec.UNIT3_Z, -result.yaw));
+            pitchMatrix = mat.prod3x3SubOf4Aux(m, mat.rotationZ4Aux(-result.yaw));
             mat.correctOrthogonal4(pitchMatrix);
             result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchMatrix[5], pitchMatrix[6]]));
             if (pitchMatrix[6] > 0) {

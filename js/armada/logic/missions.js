@@ -2363,7 +2363,7 @@ define([
      * @param {Boolean} demoMode If true, a suitable AI and a unique team will be set for each added random ship.
      */
     Mission.prototype.addRandomShips = function (randomSeed, demoMode) {
-        var random, shipClass, craft, team, i, orientation, orientationMatrix = mat.rotation4([0, 0, 1], Math.radians(this._randomShipsHeadingAngle));
+        var random, shipClass, craft, team, i, orientation, orientationMatrix = mat.rotationZ4(Math.radians(this._randomShipsHeadingAngle));
         randomSeed = randomSeed || config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
         random = Math.seed(randomSeed);
         for (shipClass in this._randomShips) {
@@ -2372,7 +2372,7 @@ define([
                     orientation = orientationMatrix ?
                             mat.matrix4(orientationMatrix) : mat.identity4();
                     if (this._randomShipsRandomHeading) {
-                        mat.mul4(orientation, mat.rotation4(mat.getRowC4(orientation), random() * Math.PI * 2));
+                        mat.mul4(orientation, mat.rotation4Aux(mat.getRowC4(orientation), random() * Math.PI * 2));
                     }
                     craft = new spacecraft.Spacecraft(
                             classes.getSpacecraftClass(shipClass),
