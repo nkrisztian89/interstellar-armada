@@ -147,7 +147,7 @@ define([
                     model,
                     shader,
                     textures,
-                    mat.identity4(),
+                    mat.IDENTITY4,
                     states,
                     false,
                     instancedShader);
