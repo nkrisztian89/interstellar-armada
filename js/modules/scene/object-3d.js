@@ -223,10 +223,10 @@ define([
          * @param {Float32Array} value
          */
         function setPositionMatrix(value) {
-            if (value) {
-                this._positionMatrix = value;
-            }
-            this._modelMatrixValid = false;
+            this._positionMatrix = value;
+            this._modelMatrix[12] = this._positionMatrix[12];
+            this._modelMatrix[13] = this._positionMatrix[13];
+            this._modelMatrix[14] = this._positionMatrix[14];
             this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
@@ -252,7 +252,9 @@ define([
             this._positionMatrix[12] = v[0];
             this._positionMatrix[13] = v[1];
             this._positionMatrix[14] = v[2];
-            this._modelMatrixValid = false;
+            this._modelMatrix[12] = v[0];
+            this._modelMatrix[13] = v[1];
+            this._modelMatrix[14] = v[2];
             this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
@@ -267,7 +269,9 @@ define([
             this._positionMatrix[12] = m[12];
             this._positionMatrix[13] = m[13];
             this._positionMatrix[14] = m[14];
-            this._modelMatrixValid = false;
+            this._modelMatrix[12] = m[12];
+            this._modelMatrix[13] = m[13];
+            this._modelMatrix[14] = m[14];
             this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
@@ -281,16 +285,34 @@ define([
          * @param {Number} z
          */
         function translate(x, y, z) {
-            mat.translateByVector(this._positionMatrix, [x, y, z]);
-            this.setPositionMatrix();
+            this._positionMatrix[12] += x;
+            this._positionMatrix[13] += y;
+            this._positionMatrix[14] += z;
+            this._modelMatrix[12] += x;
+            this._modelMatrix[13] += y;
+            this._modelMatrix[14] += z;
+            this._modelMatrixInverseValid = false;
+            if (!this._parent || !this._parent.childrenAlwaysInside()) {
+                this._insideParent = null;
+            }
+            this._positionMatrixInCameraSpaceValid = false;
         }
         /**
          * Translates the current position by the given 3D vector.
          * @param {Number[3]} v [x,y,z]
          */
         function translatev(v) {
-            mat.translateByVector(this._positionMatrix, v);
-            this.setPositionMatrix();
+            this._positionMatrix[12] += v[0];
+            this._positionMatrix[13] += v[1];
+            this._positionMatrix[14] += v[2];
+            this._modelMatrix[12] += v[0];
+            this._modelMatrix[13] += v[1];
+            this._modelMatrix[14] += v[2];
+            this._modelMatrixInverseValid = false;
+            if (!this._parent || !this._parent.childrenAlwaysInside()) {
+                this._insideParent = null;
+            }
+            this._positionMatrixInCameraSpaceValid = false;
         }
         /**
          * Translates the current position by mutliplying it by the given 
@@ -298,8 +320,17 @@ define([
          * @param {Float32Array} matrix
          */
         function translateByMatrix(matrix) {
-            mat.translateByMatrix(this._positionMatrix, matrix);
-            this.setPositionMatrix();
+            this._positionMatrix[12] += matrix[12];
+            this._positionMatrix[13] += matrix[13];
+            this._positionMatrix[14] += matrix[14];
+            this._modelMatrix[12] += matrix[12];
+            this._modelMatrix[13] += matrix[13];
+            this._modelMatrix[14] += matrix[14];
+            this._modelMatrixInverseValid = false;
+            if (!this._parent || !this._parent.childrenAlwaysInside()) {
+                this._insideParent = null;
+            }
+            this._positionMatrixInCameraSpaceValid = false;
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**

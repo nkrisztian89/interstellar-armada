@@ -1838,7 +1838,7 @@ define([
         }
         // only move if there is a non-zero velocity set
         if (this._hasVelocity()) {
-            this.translatev(vec.scaled3(this._velocityVector, dt / 1000));
+            this.translatev(vec.scaled3Aux(this._velocityVector, dt * 0.001));
         }
     };
     /**

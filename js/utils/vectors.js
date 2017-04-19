@@ -349,6 +349,21 @@ define(function () {
         ];
     };
     /**
+     * Returns a 3D vector multiplied by a scalar.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v A 3D vector.
+     * @param {Number} s A scalar.
+     * @returns {Number[3]} v multiplied by s.
+     */
+    vec.scaled3Aux = function (v, s) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = v[0] * s;
+        aux[1] = v[1] * s;
+        aux[2] = v[2] * s;
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Returns a 4D vector multiplied by a scalar.
      * @param {Number[4]} v A 3D vector.
      * @param {Number} s A scalar.
