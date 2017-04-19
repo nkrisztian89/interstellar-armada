@@ -1073,15 +1073,20 @@ define([
          */
         this._directionalLights = [];
         /**
-         * This array stores the (calculated) data about the directional lights that is in the right format to be sent to the shaders as uniforms.
-         * @type SceneGraph~DirectionalLightUniformData[]
-         */
-        this._directionalLightUniformData = [];
-        /**
          * The maximum number of directional light sources that should be considered when rendering this scene.
          * @type Number
          */
         this._maxRenderedDirectionalLights = maxRenderedDirectionalLights || 0;
+        /**
+         * The number of directional lights to be rendered for the current frame
+         * @type Number
+         */
+        this._renderedDirectionalLights = 0;
+        /**
+         * This array stores the (calculated) data about the directional lights that is in the right format to be sent to the shaders as uniforms.
+         * @type SceneGraph~DirectionalLightUniformData[]
+         */
+        this._directionalLightUniformData = new Array(this._maxRenderedDirectionalLights);
         /**
          * The lists of point light sources that are available to all objects in the scene, ordered by the priorities of the light sources.
          * The first list contains the light sources with the highest priority. If the amount of light sources that can be rendered is 
@@ -1090,30 +1095,40 @@ define([
          */
         this._pointLightPriorityArrays = null;
         /**
-         * This array stores the (calculated) data about the point lights that is in the right format to be sent to the shaders as uniforms.
-         * @type SceneGraph~PointLightUniformData[]
-         */
-        this._pointLightUniformData = [];
-        /**
          * The maximum number of point light sources that should be considered when rendering this scene.
          * @type Number
          */
         this._maxRenderedPointLights = maxRenderedPointLights || 0;
+        /**
+         * The number of point lights to be rendered for the current frame
+         * @type Number
+         */
+        this._renderedPointLights = 0;
+        /**
+         * This array stores the (calculated) data about the point lights that is in the right format to be sent to the shaders as uniforms.
+         * @type SceneGraph~PointLightUniformData[]
+         */
+        this._pointLightUniformData = new Array(this._maxRenderedPointLights);
         /**
          * The list of spot light sources that are available to all objects in the scene.
          * @type SpotLightSource[]
          */
         this._spotLights = [];
         /**
-         * This array stores the (calculated) data about the spot lights that is in the right format to be sent to the shaders as uniforms.
-         * @type SceneGraph~SpotLightUniformData[]
-         */
-        this._spotLightUniformData = [];
-        /**
          * The maximum number of spot light sources that should be considered when rendering this scene.
          * @type Number
          */
         this._maxRenderedSpotLights = maxRenderedSpotLights || 0;
+        /**
+         * The number of spot lights to be rendered for the current frame
+         * @type Number
+         */
+        this._renderedSpotLights = 0;
+        /**
+         * This array stores the (calculated) data about the spot lights that is in the right format to be sent to the shaders as uniforms.
+         * @type SceneGraph~SpotLightUniformData[]
+         */
+        this._spotLightUniformData = new Array(this._maxRenderedSpotLights);
         /**
          * The root node for the node tree that contains the objects which are not part of the scene right when it is added to a context,
          * but will be added later, so their resources also need to be added to the context.
@@ -1272,19 +1287,19 @@ define([
      */
     Scene.prototype._setGeneralUniformValueFunctions = function () {
         this.setUniformValueFunction(UNIFORM_NUM_DIRECTIONAL_LIGHTS_NAME, function () {
-            return this._directionalLightUniformData.length;
+            return this._renderedDirectionalLights;
         });
         this.setUniformValueFunction(UNIFORM_DIRECTIONAL_LIGHTS_ARRAY_NAME, function () {
             return this._directionalLightUniformData;
         });
         this.setUniformValueFunction(UNIFORM_NUM_POINT_LIGHTS_NAME, function () {
-            return this._pointLightUniformData.length;
+            return this._renderedPointLights;
         });
         this.setUniformValueFunction(UNIFORM_POINT_LIGHTS_ARRAY_NAME, function () {
             return this._pointLightUniformData;
         });
         this.setUniformValueFunction(UNIFORM_NUM_SPOT_LIGHTS_NAME, function () {
-            return this._spotLightUniformData.length;
+            return this._renderedSpotLights;
         });
         this.setUniformValueFunction(UNIFORM_SPOT_LIGHTS_ARRAY_NAME, function () {
             return this._spotLightUniformData;
@@ -1374,10 +1389,14 @@ define([
      */
     Scene.prototype._updateStaticLightUniformData = function () {
         var i;
+        this._renderedDirectionalLights = Math.min(this._directionalLights.length, this._maxRenderedDirectionalLights);
         // for directional lights, simply collect all the up-to-date data from all the lights
-        this._directionalLightUniformData = [];
-        for (i = 0; (i < this._directionalLights.length) && (i < this._maxRenderedDirectionalLights); i++) {
-            this._directionalLightUniformData.push(this._directionalLights[i].getUniformData());
+        for (i = 0; i < this._renderedDirectionalLights; i++) {
+            this._directionalLightUniformData[i] = this._directionalLights[i].getUniformData();
+        }
+        if (i < this._maxRenderedDirectionalLights) {
+            // when setting uniforms, ignore the irrelevant part of the array
+            this._directionalLightUniformData[i] = null; 
         }
     };
     /**
@@ -1385,8 +1404,8 @@ define([
      * data will not be sent to shaders when assigning scene uniforms.
      */
     Scene.prototype._clearDynamicLightUniformData = function () {
-        this._pointLightUniformData = [];
-        this._spotLightUniformData = [];
+        this._renderedPointLights = 0;
+        this._renderedSpotLights = 0;
     };
     /**
      * Updates the calculated data about the stored dynamic light sources to up-to-date state for the current render step and collects them in
@@ -1398,12 +1417,11 @@ define([
         var i, j, count, max;
         // for point lights, collect the lights to be rendered going through the priority lists, starting from the highest priority, and
         // perform a full update (including e.g. world position calculation) only for those light sources that can be rendered
-        this._pointLightUniformData = [];
         for (i = 0, count = 0; (i < this._pointLightPriorityArrays.length); i++) {
             for (j = 0; (j < this._pointLightPriorityArrays[i].length) && (count < this._maxRenderedPointLights); j++) {
                 this._pointLightPriorityArrays[i][j].update(dt);
                 if (this._pointLightPriorityArrays[i][j].shouldBeRendered(this._camera)) {
-                    this._pointLightUniformData.push(this._pointLightPriorityArrays[i][j].getUniformData());
+                    this._pointLightUniformData[count] = this._pointLightPriorityArrays[i][j].getUniformData();
                     count++;
                 }
             }
@@ -1414,19 +1432,26 @@ define([
                 j++;
             }
         }
+        this._renderedPointLights = count;
+        if (count < this._maxRenderedPointLights) {
+            this._pointLightUniformData[count] = null; // when setting the uniforms, ignore the irrelevant part of the array
+        }
         // for spot lights, only calculate the rendered ones fully, like with point lights, but there are no priorities here
-        this._spotLightUniformData = [];
         count = 0;
         for (i = 0, max = Math.min(this._spotLights.length, this._maxRenderedSpotLights); (i < this._spotLights.length) && (count < max); i++) {
             this._spotLights[i].update(dt);
             if (this._spotLights[i].shouldBeRendered(this._camera)) {
-                this._spotLightUniformData.push(this._spotLights[i].getUniformData());
+                this._spotLightUniformData[count] = this._spotLights[i].getUniformData();
                 count++;
             }
         }
         while (i < this._spotLights.length) {
             this._spotLights[i].updateState(dt);
             i++;
+        }
+        this._renderedSpotLights = count;
+        if (count < this._maxRenderedSpotLights) {
+            this._spotLightUniformData[count] = null; // when setting the uniforms, ignore the irrelevant part of the array
         }
     };
     /**

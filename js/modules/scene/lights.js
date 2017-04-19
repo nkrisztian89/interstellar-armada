@@ -102,6 +102,16 @@ define([
          * @type String
          */
         this._shadowMapBufferNamePrefix = null;
+        /**
+         * Holds the data to be passed to the corresponding uniform struct.
+         * @type SceneGraph~DirectionalLightUniformData
+         */
+        this._uniformData = {
+            color: this._color,
+            direction: this._direction,
+            matrix: this._baseMatrix,
+            translationVector: vec.NULL3
+        };
     }
     /**
      * Returns the name of the shadow map framebuffer to use for rendering the shadow map of the range with the given index for this light source.
@@ -194,12 +204,8 @@ define([
      */
     DirectionalLightSource.prototype.getUniformData = function () {
         // null cannot be passed to uniforms of vector / matrix type
-        return {
-            color: this._color,
-            direction: this._direction,
-            matrix: this._baseMatrix,
-            translationVector: this._translationVector || vec.NULL3
-        };
+        this._uniformData.translationVector = this._translationVector || vec.NULL3;
+        return this._uniformData;
     };
     // #########################################################################
     /**
@@ -262,7 +268,7 @@ define([
          * The calculated position vector of this light source in world-space.
          * @type Number[3]
          */
-        this._positionVector = null;
+        this._positionVector = [0, 0, 0];
         /**
          * The list of states (storing the values for attributes like color and intensity) this light source will go through.
          * If it is not given, the light source will have a static state.
@@ -289,7 +295,15 @@ define([
          * A cached value of the color vector to be assigned to uniforms (containing the RGB color and the intensity)
          * @type Number[4]
          */
-        this._uniformColor = null;
+        this._uniformColor = [0, 0, 0, 0];
+        /**
+         * Holds the data to be passed to the corresponding uniform struct.
+         * @type SceneGraph~PointLightUniformData
+         */
+        this._uniformData = {
+            color: this._uniformColor,
+            position: this._positionVector
+        };
         if (color) {
             this._updateUniformColor();
         }
@@ -298,7 +312,10 @@ define([
      * Updates the cached color vector to be used when assigning uniforms.
      */
     PointLightSource.prototype._updateUniformColor = function () {
-        this._uniformColor = this._color.concat(this._totalIntensity);
+        this._uniformColor[0] = this._color[0];
+        this._uniformColor[1] = this._color[1];
+        this._uniformColor[2] = this._color[2];
+        this._uniformColor[3] = this._totalIntensity;
     };
     /**
      * Updates the properties of the light source that are defined in the state list.
@@ -339,17 +356,16 @@ define([
         // calculate attributes that depend on the emitting objects
         if (!this._emittingObjects) {
             this._totalIntensity = this._objectIntensity;
-            this._positionVector = this._relativePositionVector;
-        } else
-        if (this._emittingObjects.length === 1) {
+            vec.setVector3(this._positionVector, this._relativePositionVector);
+        } else if (this._emittingObjects.length === 1) {
             if (this._emittingObjects[0].isVisible()) {
                 this._totalIntensity = this._objectIntensity;
-                this._positionVector = vec.sum3(this._emittingObjects[0].getPositionVector(), vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
+                vec.setSum3(this._positionVector, this._emittingObjects[0].getPositionVector(), vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
             } else {
                 this._totalIntensity = 0;
             }
         } else {
-            this._positionVector = [0, 0, 0];
+            vec.setNull3(this._positionVector);
             count = 0;
             for (i = 0; i < this._emittingObjects.length; i++) {
                 if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused() && this._emittingObjects[i].isVisible()) {
@@ -373,10 +389,7 @@ define([
      * @returns {SceneGraph~PointLightUniformData}
      */
     PointLightSource.prototype.getUniformData = function () {
-        return {
-            color: this._uniformColor,
-            position: this._positionVector
-        };
+        return this._uniformData;
     };
     /**
      * Returns whether this light source object can be reused as the light source it represents is not needed anymore (all its emitting
@@ -483,6 +496,15 @@ define([
          * @type Numberf[3]
          */
         this._spotDirection = [0, 0, 0];
+        /**
+         * Holds the data to be passed to the corresponding uniform struct.
+         * @type SceneGraph~StopLightUniformData
+         */
+        this._uniformData = {
+            color: this._uniformColor,
+            spot: [0, 0, 0, 0],
+            position: [0, 0, 0, 0]
+        };
     }
     SpotLightSource.prototype = new PointLightSource();
     SpotLightSource.prototype.constructor = SpotLightSource;
@@ -506,7 +528,7 @@ define([
         PointLightSource.prototype.update.call(this, dt);
         // calculate attributes that depend on the emitting objects
         if (!this._emittingObjects || (this._emittingObjects.length !== 1)) {
-            this._spotDirection = this._relativeSpotDirection;
+            vec.setVector3(this._spotDirection, this._relativeSpotDirection);
         } else {
             vec.setProdVec3Mat4(this._spotDirection, this._relativeSpotDirection, this._emittingObjects[0].getOrientationMatrix());
         }
@@ -516,11 +538,15 @@ define([
      * @returns {SceneGraph~SpotLightUniformData}
      */
     SpotLightSource.prototype.getUniformData = function () {
-        return {
-            color: this._uniformColor,
-            spot: [this._spotDirection[0], this._spotDirection[1], this._spotDirection[2], this._spotCutoffCosine],
-            position: this._positionVector.concat(this._spotFullIntensityCosine)
-        };
+        this._uniformData.spot[0] = this._spotDirection[0];
+        this._uniformData.spot[1] = this._spotDirection[1];
+        this._uniformData.spot[2] = this._spotDirection[2];
+        this._uniformData.spot[3] = this._spotCutoffCosine;
+        this._uniformData.position[0] = this._positionVector[0];
+        this._uniformData.position[1] = this._positionVector[1];
+        this._uniformData.position[2] = this._positionVector[2];
+        this._uniformData.position[3] = this._spotFullIntensityCosine;
+        return this._uniformData;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

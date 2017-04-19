@@ -716,7 +716,7 @@ define([
      * "lights[3]."
      */
     ShaderUniform.prototype.setConstantValue = function (contextName, gl, shader, value, locationPrefix) {
-        var location, i, j, memberName, numericValue;
+        var location, i, j, memberCount, memberName, numericValue;
         // get the location
         if (!this._unpacked) {
             location = this.getLocation(contextName, gl, shader, locationPrefix);
@@ -782,10 +782,12 @@ define([
                 }
                 break;
             case ShaderVariableType.STRUCT:
+                memberCount = this._members.length;
                 if (this._arraySize > 0) {
                     // for structs, launch recursive assignment of members
-                    for (i = 0; i < value.length; i++) {
-                        for (j = 0; j < this._members.length; j++) {
+                    // we stop at the first null member of the array
+                    for (i = 0; i < value.length && (value[i] !== null); i++) {
+                        for (j = 0; j < memberCount; j++) {
                             if (value[i][this._members[j]._name] !== undefined) {
                                 memberName = this._members[j]._name;
                                 this._members[j].setConstantValue(contextName, gl, shader, value[i][memberName], this._name + "[" + i + "].");
@@ -793,7 +795,7 @@ define([
                         }
                     }
                 } else {
-                    for (i = 0; i < this._members.length; i++) {
+                    for (i = 0; i < memberCount; i++) {
                         if (value[this._members[i]._name] !== undefined) {
                             memberName = this._members[i]._name;
                             this._members[i].setConstantValue(contextName, gl, shader, value[memberName], this._name + ".");

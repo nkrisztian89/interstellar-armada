@@ -616,6 +616,40 @@ define(function () {
     };
     // -----------------------------------------------------------------------------
     // Functions that modify an existing vector
+    /**
+     * Modifies the passed 3D vector, setting it to a null vector.
+     * @param {Number[3]} v
+     */
+    vec.setNull3 = function (v) {
+        v[0] = 0;
+        v[1] = 0;
+        v[2] = 0;
+    };
+    /**
+     * Modifies the passed 3D vector, to be identical to the second passed vector.
+     * @param {Number[3]} left A 3D vector
+     * @param {Number[3]} right A 3D vector
+     */
+    vec.setVector3 = function (left, right) {
+        left[0] = right[0];
+        left[1] = right[1];
+        left[2] = right[2];
+    };
+    /**
+     * Modifies the passed 4D vector, to be identical to the second passed vector.
+     * @param {Number[4]} left A 4D vector
+     * @param {Number[4]} right A 4D vector
+     */
+    vec.setVector4 = function (left, right) {
+        left[0] = right[0];
+        left[1] = right[1];
+        left[2] = right[2];
+        left[3] = right[3];
+    };
+    /**
+     * Negates the passed 2D vector
+     * @param {Number[2]} v
+     */
     vec.negate2 = function (v) {
         v[0] = -v[0];
         v[1] = -v[1];
@@ -644,7 +678,7 @@ define(function () {
         v[2] *= factor;
     };
     /**
-     * Normalizes the pased 4D vector by dividing all its coordinates by the last (4th) coordinate.
+     * Normalizes the passed 4D vector by dividing all its coordinates by the last (4th) coordinate.
      * @param {Number[4]} v
      */
     vec.normalize4D = function (v) {
@@ -653,6 +687,17 @@ define(function () {
         v[1] /= v[3];
         v[2] /= v[3];
         v[3] = 1;
+    };
+    /**
+     * Modifies the pased 3D vector, setting it to be the sum of the other two passed vectors
+     * @param {Number[3]} v The 3D vector to modify
+     * @param {Number[3]} v1
+     * @param {Number[3]} v2
+     */
+    vec.setSum3 = function (v, v1, v2) {
+        v[0] = v1[0] + v2[0];
+        v[1] = v1[1] + v2[1];
+        v[2] = v1[2] + v2[2];
     };
     /**
      * Adds the 3D vector v2 to the 3D vector v1, modifying v1 in-place.
