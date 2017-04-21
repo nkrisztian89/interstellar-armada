@@ -1804,6 +1804,12 @@ define([
         this._propulsion.addThrusterBurn(use, value);
     };
     /**
+     * Updates the visual representation the propulsion of this spacecraft to represent its current state.
+     */
+    Spacecraft.prototype.updatePropulsionVisuals = function () {
+        this._propulsion.updateVisuals();
+    };
+    /**
      * Show the models representing the hitboxes of this spacecraft.
      */
     Spacecraft.prototype.showHitbox = function () {

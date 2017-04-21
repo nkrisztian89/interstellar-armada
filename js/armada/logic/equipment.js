@@ -1553,10 +1553,9 @@ define([
         }.bind(this));
     };
     /**
-     * Updates the visual representation of this thruster to represent the current
-     * burn level.
+     * Updates the visual representation of this thruster to represent the current burn level.
      */
-    Thruster.prototype._updateVisuals = function () {
+    Thruster.prototype.updateVisuals = function () {
         // set the size of the particle that shows the burn
         this._visualModel.setRelativeSize(this._burnLevel);
         // set the strength of which the luminosity texture is lighted
@@ -1572,7 +1571,6 @@ define([
      */
     Thruster.prototype.resetBurn = function () {
         this._burnLevel = 0;
-        this._updateVisuals();
     };
     /**
      * Adds the passed value to the current burn level of this thruster.
@@ -1580,7 +1578,6 @@ define([
      */
     Thruster.prototype.addBurn = function (value) {
         this._burnLevel += value;
-        this._updateVisuals();
     };
     /**
      * Removes all references stored by this object
@@ -1612,6 +1609,11 @@ define([
          * @type PhysicalObject
          */
         this._drivenPhysicalObject = drivenPhysicalObject;
+        /**
+         * An array storing direct references to all the thrusters.
+         * @type Thruster[]
+         */
+        this._thrusters = [];
         /**
          * An associative array containing the burn level and nozzles associated
          * with each thruster use command.
@@ -1671,6 +1673,7 @@ define([
         var i, j, thruster;
         for (i = 0; i < slots.length; i++) {
             thruster = new Thruster(this._class, slots[i]);
+            this._thrusters.push(thruster);
             for (j = 0; j < slots[i].uses.length; j++) {
                 this._thrusterUses[slots[i].uses[j]].thrusters.push(thruster);
             }
@@ -1682,20 +1685,9 @@ define([
      * @param {RenderableNode} parentNode
      */
     Propulsion.prototype.addToScene = function (parentNode) {
-        var use, i, j, thruster, thrusters = [];
-        // collect all thrusters in an array, making sure none of them is included twice
-        for (i = 0; i < THRUSTER_USES.length; i++) {
-            use = THRUSTER_USES[i];
-            for (j = 0; j < this._thrusterUses[use].thrusters.length; j++) {
-                thruster = this._thrusterUses[use].thrusters[j];
-                if (thrusters.indexOf(thruster) < 0) {
-                    thrusters.push(thruster);
-                }
-            }
-        }
-        // add the collected thrusters to the scene
-        for (i = 0; i < thrusters.length; i++) {
-            thrusters[i].addToScene(parentNode);
+        var i;
+        for (i = 0; i < this._thrusters.length; i++) {
+            this._thrusters[i].addToScene(parentNode);
         }
     };
     /**
@@ -1725,13 +1717,22 @@ define([
      * Resets the all the thruster burn levels to zero.
      */
     Propulsion.prototype.resetThrusterBurn = function () {
-        var use, i, j;
+        var use, i;
         for (i = THRUSTER_USES.length - 1; i >= 0; i--) {
             use = THRUSTER_USES[i];
             this._thrusterUses[use].burn = 0;
-            for (j = this._thrusterUses[use].thrusters.length - 1; j >= 0; j--) {
-                this._thrusterUses[use].thrusters[j].resetBurn();
-            }
+        }
+        for (i = 0; i < this._thrusters.length; i++) {
+            this._thrusters[i].resetBurn();
+        }
+    };
+    /**
+     * Updates the visual representations of all thrusters of this propulsion to represent their current burn levels.
+     */
+    Propulsion.prototype.updateVisuals = function () {
+        var i;
+        for (i = 0; i < this._thrusters.length; i++) {
+            this._thrusters[i].updateVisuals();
         }
     };
     /**
@@ -1828,6 +1829,7 @@ define([
     Propulsion.prototype.destroy = function () {
         this._class = null;
         this._drivenPhysicalObject = null;
+        this._thrusters = null;
         this._thrusterUses = null;
         if (this._thrusterSoundClip) {
             this._thrusterSoundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
@@ -2475,6 +2477,7 @@ define([
                         Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget, dt)));
             }
         }
+        this._spacecraft.updatePropulsionVisuals();
         // reset the targets, as new controls are needed from the pilot in the
         // next step to keep these targets up (e.g. continuously pressing the
         // key, moving the mouse or keeping the mouse displaced from center)
