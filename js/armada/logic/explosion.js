@@ -296,7 +296,7 @@ define([
         this._orientationMatrix = null;
         this._direction = null;
         if (this._visualModel) {
-            this._visualModel.getNode().markAsReusable();
+            this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
     };

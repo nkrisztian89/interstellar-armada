@@ -442,12 +442,15 @@ define([
      * @param {queueBits} [parentQueueBits] The render queue bits of the parent node
      */
     RenderableNode.prototype.animateAndAddToRenderQueues = function (renderQueues, distanceRendering, camera, dt, parentQueueBits) {
-        var queueBits, subnode, renderQueueIndex, transparent, opaque;
+        var queueBits, subnode, next, renderQueueIndex, transparent, opaque;
         if (!this._visible) {
             return;
         }
         if (this._scene.shouldAnimate()) {
             this._renderableObject.animate(dt);
+        }
+        if (this._renderableObject.canBeReused()) {
+            return;
         }
         transparent = this._renderableObject.isRenderedWithoutDepthMask();
         opaque = this._renderableObject.isRenderedWithDepthMask();
@@ -486,13 +489,15 @@ define([
                 queueBits = distanceRendering ? this._renderableObject.getRenderQueueBits(camera, parentQueueBits) : renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT;
             }
             if (!this._hasInstancedSubnodes || (this._subnodes.getLength() < this._subnodes.getFirst().getMinimumCountForInstancing())) {
-                for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+                for (subnode = this._subnodes.getFirst(); subnode; subnode = next) {
+                    next = subnode.next;
                     subnode.animateAndAddToRenderQueues(renderQueues, distanceRendering, camera, dt, queueBits);
                 }
             } else {
                 // if subnodes can be added to the same instanced queue, do the addition and animation directly and do not go into recursion further
                 if (this._scene.shouldAnimate()) {
-                    for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+                    for (subnode = this._subnodes.getFirst(); subnode; subnode = next) {
+                        next = subnode.next;
                         subnode.getRenderableObject().animate(dt);
                     }
                 }
@@ -737,6 +742,22 @@ define([
         }
     };
     /**
+     * Logs the information about this node (used for logging scene graph structure)
+     * @param {Number} level How deep is this node located within its scene graph.
+     */
+    RenderableNode.prototype.log = function (level) {
+        var i, subnode, msg = "", typeName = this._renderableObject.constructor.name;
+        for (i = 0; i < level; i++) {
+            msg += ". ";
+        }
+        msg += typeName;
+        application.log(msg);
+        this._scene.increaseCount(typeName);
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+            subnode.log(level + 1);
+        }
+    };
+    /**
      * Resets the held object and all subnodes. Called at the beginning of each
      * frame.
      */
@@ -898,14 +919,29 @@ define([
         }
     };
     /**
+     * Marks the node and all its subnodes (and their renderable objects) as reusable.
+     * @param {Boolean} removeFromParent If true, the node is also removed from its parent (if it has one)
      */
-    RenderableNode.prototype.markAsReusable = function () {
+    RenderableNode.prototype.markAsReusable = function (removeFromParent) {
         var subnode;
-        this._renderableObject.markAsReusable();
+        this._renderableObject.markAsReusable(removeFromParent);
+        // need to mark all subnodes as reusable in case they hold pooled objects
         for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
-            subnode.markAsReusable();
+            subnode.markAsReusable(removeFromParent);
         }
         this._canBeReused = true;
+        if (removeFromParent && this._parent) {
+            this._parent.removeSubnode(this, true);
+        }
+    };
+    /**
+     * Gets called when the contained renderable object is marked reusable.
+     * @param {Boolean} removeFromParent If true, the node is removed from its parent (if it has one)
+     */
+    RenderableNode.prototype.handleObjectBecameReusable = function (removeFromParent) {
+        if (removeFromParent && this._parent && (this._subnodes.getLength() === 0)) {
+            this._parent.removeSubnode(this, true);
+        }
     };
     /**
      * Removes all subnodes from the subtree of this object that are deleted or
@@ -946,6 +982,20 @@ define([
             result += subnode.getNumberOfDrawnTriangles(transparent);
         }
         return result;
+    };
+    /**
+     * Remove the given subnode from this node.
+     * @param {RenderableNode} subnode 
+     * @param {Boolean} removeFromParent If true, the node is removed from its parent in case no subnodes are left under it and it has no
+     * non-reusable renderable object itself.
+     */
+    RenderableNode.prototype.removeSubnode = function (subnode, removeFromParent) {
+        this._subnodes.remove(subnode);
+        if (removeFromParent && (this._subnodes.getLength() === 0) && this._renderableObject.canBeReused()) {
+            if (this._parent) {
+                this._parent.removeSubnode(this, true);
+            }
+        }
     };
     /**
      * Removes all subnodes from this node.
@@ -1277,6 +1327,16 @@ define([
          * @type Object.<String, Boolean>
          */
         this._uniformsUpdated = null;
+        /**
+         * Used for debug stat logging - counting the number of nodes in the scene.
+         * @type Number
+         */
+        this._nodeCount = 0;
+        /**
+         * Used for debug stat logging - counting the number of nodes per object type in the scene.
+         * @type Object.<String, Number>
+         */
+        this._nodeCountByType = null;
         this._initNodes();
         this.clearPointLights();
         this._setGeneralUniformValueFunctions();
@@ -1396,7 +1456,7 @@ define([
         }
         if (i < this._maxRenderedDirectionalLights) {
             // when setting uniforms, ignore the irrelevant part of the array
-            this._directionalLightUniformData[i] = null; 
+            this._directionalLightUniformData[i] = null;
         }
     };
     /**
@@ -1405,7 +1465,9 @@ define([
      */
     Scene.prototype._clearDynamicLightUniformData = function () {
         this._renderedPointLights = 0;
+        this._pointLightUniformData[0] = null;
         this._renderedSpotLights = 0;
+        this._spotLightUniformData[0] = null;
     };
     /**
      * Updates the calculated data about the stored dynamic light sources to up-to-date state for the current render step and collects them in
@@ -1859,7 +1921,7 @@ define([
                 node = new RenderableNode(object, false);
                 this._rootResourceNode.addSubnode(node, true);
                 // mark it as reusable so in case this is a pooled object, the pooled instance can be marked free
-                node.markAsReusable();
+                node.markAsReusable(false);
             }
             if (id) {
                 this._resourceObjectIDs[id] = true;
@@ -2000,12 +2062,10 @@ define([
         }
     };
     /**
-     * Cleans up the whole scene graph, removing all nodes and light sources that are deleted or are marked for deletion.
+     * Cleans up the light sources, removing the ones that no longer have an active source object.
      */
-    Scene.prototype.cleanUp = function () {
+    Scene.prototype.cleanUpLights = function () {
         var i, j, k, prio;
-        // cleaning the scene graph containing the main scene objects
-        this._rootNode.cleanUp();
         // cleaning up dynamic point light sources
         for (prio = 0; prio < this._pointLightPriorityArrays.length; prio++) {
             for (i = 0; i < this._pointLightPriorityArrays[prio].length; i++) {
@@ -2259,6 +2319,7 @@ define([
             this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX] = [];
         }
         this._rootNode.animateAndAddToRenderQueues(this._renderQueues, this._distanceRendering, this._camera, dt);
+        this.cleanUpLights(); // the animation might have removed some light sources
         frontQueuesNotEmpty = (this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0);
         distanceQueuesNotEmpty = this._distanceRendering && ((this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX].length > 0) || (this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX].length > 0));
         // rendering shadow maps
@@ -2320,6 +2381,34 @@ define([
         // -----------------------------------------------------------------------
         // rendering the UI objects
         this._renderUIObjects(context, widthInPixels, heightInPixels);
+    };
+    /**
+     * Used during debug stats logging - increases the counter corresponding to the passed object type.
+     * @param {String} objectType The object type (constructor name)
+     */
+    Scene.prototype.increaseCount = function (objectType) {
+        this._nodeCount++;
+        this._nodeCountByType[objectType] = this._nodeCountByType[objectType] || 0;
+        this._nodeCountByType[objectType]++;
+    };
+    /**
+     * Logs the structure of the scene and some statistics about it.
+     */
+    Scene.prototype.logNodes = function () {
+        var objectTypes, i;
+        application.log("--------------");
+        this._nodeCount = 0;
+        this._nodeCountByType = {};
+        application.log("Scene structure:");
+        this._rootNode.log(0);
+        application.log("Scene statistics:");
+        application.log("Total node count: " + this._nodeCount);
+        application.log("Count by type:");
+        objectTypes = Object.keys(this._nodeCountByType);
+        for (i = 0; i < objectTypes.length; i++) {
+            application.log("[" + objectTypes[i] + "]: " + this._nodeCountByType[objectTypes[i]]);
+        }
+        application.log("--------------");
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

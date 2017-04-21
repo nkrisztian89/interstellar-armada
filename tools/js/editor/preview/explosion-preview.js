@@ -135,7 +135,7 @@ define([
     function _createOptions() {
         // explode button
         _optionElements.restartButton = common.createButton("Restart", function () {
-            _explosion.getVisualModel().getNode().markAsReusable();
+            _explosion.getVisualModel().getNode().markAsReusable(true);
             _explosion.addToScene(preview.getScene().getRootNode(), null, false, function (model) {
                 preview.setModel(model);
             });

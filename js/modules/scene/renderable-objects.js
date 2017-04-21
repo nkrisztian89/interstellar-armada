@@ -364,12 +364,15 @@ define([
         }
     };
     /**
-     * Marks the object as one that is no longer valid and can be reused to
-     * hold a different object.
+     * Marks the object as one that is no longer valid and can be reused to hold a different object.
      * For pooling support.
+     * @param {Boolean} removeFromParent If true, the corresponding node (if any) is removed from its parent if it has one
      */
-    RenderableObject.prototype.markAsReusable = function () {
+    RenderableObject.prototype.markAsReusable = function (removeFromParent) {
         this._canBeReused = true;
+        if (this._node) {
+            this._node.handleObjectBecameReusable(removeFromParent);
+        }
     };
     /**
      * Returns whether this object is invalid and can be reused to hold a new 
@@ -1821,7 +1824,7 @@ define([
             while (this._timeSinceLastTransition > this._states[nextStateIndex].timeToReach) {
                 if ((nextStateIndex === 0) && (!this._looping)) {
                     this._size = 0;
-                    this.markAsReusable();
+                    this.markAsReusable(true);
                     return;
                 }
                 this._timeSinceLastTransition -= this._states[nextStateIndex].timeToReach;

@@ -469,13 +469,13 @@ define([
                         exp.addToScene(this._visualModel.getNode().getScene().getRootNode(), hitObjects[i].getSoundSource(), true);
                         hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
                         this._timeLeft = 0;
-                        this._visualModel.markAsReusable();
+                        this._visualModel.markAsReusable(true);
                         return;
                     }
                 }
             }
         } else {
-            this._visualModel.markAsReusable();
+            this._visualModel.markAsReusable(true);
         }
     };
     /**
@@ -487,7 +487,7 @@ define([
         this._class = null;
         this._origin = null;
         if (this._visualModel && this._visualModel.getNode()) {
-            this._visualModel.getNode().markAsReusable();
+            this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
         this._physicalModel = null;
@@ -1085,7 +1085,7 @@ define([
         this._spacecraft = null;
         this._slot = null;
         if (this._visualModel) {
-            this._visualModel.markAsReusable();
+            this._visualModel.markAsReusable(true);
         }
         this._visualModel = null;
     };
@@ -1682,13 +1682,20 @@ define([
      * @param {RenderableNode} parentNode
      */
     Propulsion.prototype.addToScene = function (parentNode) {
-        var use, i;
-        for (use in this._thrusterUses) {
-            if (this._thrusterUses.hasOwnProperty(use)) {
-                for (i = 0; i < this._thrusterUses[use].thrusters.length; i++) {
-                    this._thrusterUses[use].thrusters[i].addToScene(parentNode);
+        var use, i, j, thruster, thrusters = [];
+        // collect all thrusters in an array, making sure none of them is included twice
+        for (i = 0; i < THRUSTER_USES.length; i++) {
+            use = THRUSTER_USES[i];
+            for (j = 0; j < this._thrusterUses[use].thrusters.length; j++) {
+                thruster = this._thrusterUses[use].thrusters[j];
+                if (thrusters.indexOf(thruster) < 0) {
+                    thrusters.push(thruster);
                 }
             }
+        }
+        // add the collected thrusters to the scene
+        for (i = 0; i < thrusters.length; i++) {
+            thrusters[i].addToScene(parentNode);
         }
     };
     /**

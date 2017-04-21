@@ -2094,7 +2094,6 @@ define([
         var i, canvasNames;
         canvasNames = Object.keys(this._canvases);
         for (i = 0; i < this._sceneCanvasBindings.length; i++) {
-            this._sceneCanvasBindings[i].scene.cleanUp();
             this._sceneCanvasBindings[i].scene.render(this._sceneCanvasBindings[i].canvas.getManagedContext(), dt);
         }
         for (i = 0; i < canvasNames.length; i++) {

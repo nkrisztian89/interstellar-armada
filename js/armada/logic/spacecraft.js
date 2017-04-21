@@ -2163,11 +2163,11 @@ define([
         this._eventHandlers = null;
         this._explosion = null; // do not destroy the explosion - it might still be animating!
         if (this._hitbox) {
-            this._hitbox.markAsReusable();
+            this._hitbox.markAsReusable(true);
         }
         this._hitbox = null;
         if (this._visualModel && this._visualModel.getNode() && !this._visualModel.getNode().canBeReused()) {
-            this._visualModel.getNode().markAsReusable();
+            this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
         this._physicalModel = null;

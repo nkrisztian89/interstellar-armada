@@ -276,7 +276,6 @@ define([
             if (_particlePool.hasLockedObjects()) {
                 _particlePool.executeForLockedObjects(_handleParticle);
             }
-            _scene.cleanUp();
             _scene.render(_context, dt);
             if (_currentContext && _currentContext.functions.animate) {
                 _currentContext.functions.animate(dt);

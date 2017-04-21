@@ -138,7 +138,7 @@ define([
         // conversion as duration is in ms, velocity in m/s
         this._size = mat.translationLength(this._positionMatrix) + vec.length3(this._dimensions) +
                 Math.max((this._velocity + this._velocitySpread * 0.5) * particle.getDuration() * 0.001 + particle.getFinalSize(), particle.getMaxSize());
-        particle.markAsReusable();
+        particle.markAsReusable(true);
     };
     /**
      * Returns the (calculated) size of this emitter, i.e. how far an emitted particle could reach (including with its own size) from the center
@@ -166,7 +166,7 @@ define([
             particle = this._createParticleFunction();
             this._particleDuration = particle.getDuration();
             // make sure the particle pool will be cleaned up
-            particle.markAsReusable();
+            particle.markAsReusable(true);
         }
         return this._particleDuration;
     };
@@ -236,7 +236,7 @@ define([
         var particle = this._createParticleFunction();
         particle.addToContext(context);
         // make sure the particle pool will be cleaned up
-        particle.markAsReusable();
+        particle.markAsReusable(true);
     };
     // #########################################################################
     /**
@@ -500,7 +500,7 @@ define([
     ParticleSystem.prototype.performAnimate = function (dt) {
         var i, j, particles, modelMatrix, positionMatrix, orientationMatrix;
         if ((!this._keepAlive) && (this._age > this._duration)) {
-            this.getNode().markAsReusable();
+            this.getNode().markAsReusable(true);
             return;
         }
         this._age += dt;
@@ -547,7 +547,7 @@ define([
             }
         } else {
             this._duration = 0;
-            this.getNode().markAsReusable();
+            this.getNode().markAsReusable(true);
         }
     };
     /**

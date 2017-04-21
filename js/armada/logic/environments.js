@@ -250,7 +250,7 @@ define([
     DustParticle.prototype.destroy = function () {
         this._positionVector = null;
         if (this._visualModel) {
-            this._visualModel.getNode().markAsReusable();
+            this._visualModel.getNode().markAsReusable(true);
             this._visualModel = null;
         }
         this._cloud = null;
@@ -355,7 +355,7 @@ define([
             this._particles = null;
         }
         if (this._visualModel) {
-            this._visualModel.getNode().markAsReusable();
+            this._visualModel.getNode().markAsReusable(true);
             this._visualModel = null;
         }
     };
