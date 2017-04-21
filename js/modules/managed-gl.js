@@ -1821,16 +1821,15 @@ define([
      * Adds the data of one instance to the instance buffers (of all instance attributes) at the given index, using the values of the 
      * uniforms the instance would have assigned if it was not rendered in instanced mode.
      * @param {Number} index
-     * @param {Object.<String, Function>} uniformValueFunctions
+     * @param {Object.<String, Function>} uniformValueFunctions The functions for getting the uniform values of all instance attributes
+     * (must contain a function for every attribute!)
      */
     ManagedShader.prototype.addDataToInstanceBuffers = function (index, uniformValueFunctions) {
         var i, attributeName, uniformName;
         for (i = 0; i < this._instanceAttributeNames.length; i++) {
             attributeName = this._instanceAttributeNames[i];
             uniformName = this._instanceAttributeBuffers[index][attributeName].getRole();
-            if (uniformValueFunctions.hasOwnProperty(uniformName)) {
-                this._instanceAttributeBuffers[index][attributeName].addVector(uniformValueFunctions[uniformName](utils.EMPTY_STRING));
-            }
+            this._instanceAttributeBuffers[index][attributeName].addVector(uniformValueFunctions[uniformName](utils.EMPTY_STRING));
         }
     };
     /**
