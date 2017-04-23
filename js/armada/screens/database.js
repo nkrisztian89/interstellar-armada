@@ -527,7 +527,7 @@ define([
         screens.HTMLScreenWithCanvases.prototype.removeFromPage.call(this);
         _stopRevealLoop();
         _stopRotationLoop();
-        _itemViewScene.clearNodes();
+        _itemViewScene.clearNodes(true);
         _itemViewScene.clearPointLights();
         _itemViewScene.clearSpotLights();
         _itemViewScene = null;
@@ -691,7 +691,7 @@ define([
     DatabaseScreen.prototype.hide = function () {
         if (screens.HTMLScreenWithCanvases.prototype.hide.call(this)) {
             this.executeWhenReady(function () {
-                _itemViewScene.clearNodes();
+                _itemViewScene.clearNodes(true);
                 _itemViewScene.clearPointLights();
                 _itemViewScene.clearSpotLights();
                 this.render();
@@ -742,7 +742,7 @@ define([
         _stopRotationLoop();
         this.stopRenderLoop();
         // clear the previous scene graph and render the empty scene to clear the canvas 
-        _itemViewScene.clearNodes();
+        _itemViewScene.clearNodes(true);
         _itemViewScene.clearPointLights();
         _itemViewScene.clearSpotLights();
         _itemViewScene.setShouldAnimate(false);

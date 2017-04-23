@@ -923,10 +923,11 @@ define([
      * @param {Boolean} removeFromParent If true, the node is also removed from its parent (if it has one)
      */
     RenderableNode.prototype.markAsReusable = function (removeFromParent) {
-        var subnode;
+        var subnode, next;
         this._renderableObject.markAsReusable(removeFromParent);
         // need to mark all subnodes as reusable in case they hold pooled objects
-        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
+        for (subnode = this._subnodes.getFirst(); subnode; subnode = next) {
+            next = subnode.next;
             subnode.markAsReusable(removeFromParent);
         }
         this._canBeReused = true;
@@ -999,9 +1000,10 @@ define([
     };
     /**
      * Removes all subnodes from this node.
+     * @param {Boolean} [hard=false] If true, also removes the reference to the subnode list stored in the subnodes.
      */
-    RenderableNode.prototype.removeSubnodes = function () {
-        this._subnodes.clear();
+    RenderableNode.prototype.removeSubnodes = function (hard) {
+        this._subnodes.clear(hard);
     };
     /**
      * Removes all references stored by this object. Recursively destroys all subnodes.
@@ -1785,20 +1787,21 @@ define([
     };
     /**
      * Clears all added nodes from this scene.
+     * @param {Boolean} [hard=false] If true, also removes the list references from the nodes.
      */
-    Scene.prototype.clearNodes = function () {
+    Scene.prototype.clearNodes = function (hard) {
         if (this._rootBackgroundNode) {
-            this._rootBackgroundNode.removeSubnodes();
+            this._rootBackgroundNode.removeSubnodes(hard);
         }
         if (this._rootNode) {
-            this._rootNode.removeSubnodes();
+            this._rootNode.removeSubnodes(hard);
         }
         if (this._rootResourceNode) {
-            this._rootResourceNode.removeSubnodes();
+            this._rootResourceNode.removeSubnodes(hard);
         }
         this._resourceObjectIDs = {};
         if (this._rootUINode) {
-            this._rootUINode.removeSubnodes();
+            this._rootUINode.removeSubnodes(hard);
         }
     };
     /**
