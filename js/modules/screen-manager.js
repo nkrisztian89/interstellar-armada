@@ -94,6 +94,7 @@ define([
                 this.setToReady();
             }
         }.bind(this);
+        this.resetReadyState();
         // in replace mode, the current screens are all removed from te page
         if (replace === true) {
             for (screenName in this._screens) {
