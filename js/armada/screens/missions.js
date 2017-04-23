@@ -309,7 +309,7 @@ define([
                                     strings.get(strings.MISSIONS.SANDBOX_COMPLETED) :
                                     strings.get(strings.MISSIONS.BEST_SCORE)) :
                             strings.get(strings.MISSIONS.NOT_COMPLETED)), {
-                score: score,
+                score: score || 0,
                 medal: performance ? utils.formatString(MEDAL_IMAGE_HTML, {
                     performance: performance
                 }) : " - "
