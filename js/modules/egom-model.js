@@ -39,12 +39,61 @@ define([
             // ------------------------------------------------------------------------------
             // private variables
             /**
+             * @typedef {Object} ModelDebugStats
+             * @property {Number} triangleDrawCalls The number of non-instanced draw calls using triangle rendering.
+             * @property {Number} triangles The number of triangles rendered via non-instanced draw calls.
+             * @property {Number} lineDrawCalls The number of non-instanced draw calls using line rendering.
+             * @property {Number} lines The number of lines rendered via non-instanced draw calls.
+             * @property {Number} instancedTriangleDrawCalls The number of instanced draw calls using triangle rendering.
+             * @property {Number} instancedTriangles The number of triangles rendered via instanced draw calls.
+             * @property {Number} instancedLineDrawCalls The number of instanced draw calls using line rendering.
+             * @property {Number} instancedLines The number of lines rendered via instanced draw calls.
+             */
+            // debug
+            /**
+             * An object to collect statistics about rendering for debug mode
+             * @type ModelDebugStats
+             */
+            _DEBUG_STATS = {
+                triangleDrawCalls: 0,
+                triangles: 0,
+                lineDrawCalls: 0,
+                lines: 0,
+                instancedTriangleDrawCalls: 0,
+                instancedTriangles: 0,
+                instancedLineDrawCalls: 0,
+                instancedLines: 0
+            },
+            // general
+            /**
              * The list of EgomModel versions that can be loaded from file.
              * @type String[]
              */
             _supportedVersions = ["3.0"];
     // freezing enum objects
     Object.freeze(VertexAttributeRole);
+    // -------------------------------------------------------------------------
+    // Public functions
+    /**
+     * Resets the counters for rendering statistics.
+     */
+    function resetDebugStats() {
+        _DEBUG_STATS.triangleDrawCalls = 0;
+        _DEBUG_STATS.triangles = 0;
+        _DEBUG_STATS.lineDrawCalls = 0;
+        _DEBUG_STATS.lines = 0;
+        _DEBUG_STATS.instancedTriangleDrawCalls = 0;
+        _DEBUG_STATS.instancedTriangles = 0;
+        _DEBUG_STATS.instancedLineDrawCalls = 0;
+        _DEBUG_STATS.instancedLines = 0;
+    }
+    /**
+     * Returns the rendering statistics collected since the last reset.
+     * @returns {ModelDebugStats}
+     */
+    function getDebugStats() {
+        return _DEBUG_STATS;
+    }
     // ############################################################################################
     /**
      * @class Represents a vertex in 3D space.
@@ -895,22 +944,28 @@ define([
         var props = this._contextProperties[context.getName()];
         if (wireframe === true) {
             context.gl.drawArrays(context.gl.LINES, props.bufferStartWireframe, 2 * this._lines.length);
+            _DEBUG_STATS.lineDrawCalls++;
+            _DEBUG_STATS.lines += this._lines.length;
             //context.gl.drawElements(context.gl.LINES, 2 * this._lines.length, context.gl.UNSIGNED_SHORT, props.bufferStartWireframe * 2);
         } else {
             switch (opaque) {
                 case true:
                     context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._nOpaqueTriangles);
+                    _DEBUG_STATS.triangles += this._nOpaqueTriangles;
                     //context.gl.drawElements(context.gl.TRIANGLES, 3 * this._nOpaqueTriangles, context.gl.UNSIGNED_SHORT, props.bufferStartSolid * 2);
                     break;
                 case false:
                     context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartTransparent, 3 * this._nTransparentTriangles);
+                    _DEBUG_STATS.triangles += this._nTransparentTriangles;
                     //context.gl.drawElements(context.gl.TRIANGLES, 3 * this._nTransparentTriangles, context.gl.UNSIGNED_SHORT, props.bufferStartTransparent * 2);
                     break;
                 case undefined:
                     context.gl.drawArrays(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._triangles.length);
+                    _DEBUG_STATS.triangles += this._triangles.length;
                     //context.gl.drawElements(context.gl.TRIANGLES, 3 * this._triangles.length, context.gl.UNSIGNED_SHORT, props.bufferStartSolid * 2);
                     break;
             }
+            _DEBUG_STATS.triangleDrawCalls++;
         }
     };
     /**
@@ -924,18 +979,24 @@ define([
         var props = this._contextProperties[context.getName()];
         if (wireframe === true) {
             context.instancingExt.drawArraysInstancedANGLE(context.gl.LINES, props.bufferStartWireframe, 2 * this._lines.length, instanceCount);
+            _DEBUG_STATS.instancedLineDrawCalls++;
+            _DEBUG_STATS.instancedLines += this._lines.length * instanceCount;
         } else {
             switch (opaque) {
                 case true:
                     context.instancingExt.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._nOpaqueTriangles, instanceCount);
+                    _DEBUG_STATS.instancedTriangles += this._nOpaqueTriangles * instanceCount;
                     break;
                 case false:
                     context.instancingExt.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartTransparent, 3 * this._nTransparentTriangles, instanceCount);
+                    _DEBUG_STATS.instancedTriangles += this._nTransparentTriangles * instanceCount;
                     break;
                 case undefined:
                     context.instancingExt.drawArraysInstancedANGLE(context.gl.TRIANGLES, props.bufferStartSolid, 3 * this._triangles.length, instanceCount);
+                    _DEBUG_STATS.instancedTriangles += this._triangles.length * instanceCount;
                     break;
             }
+            _DEBUG_STATS.instancedTriangleDrawCalls++;
         }
     };
     /**
@@ -1938,6 +1999,8 @@ define([
     // The public interface of the module
     return {
         VertexAttributeRole: VertexAttributeRole,
+        resetDebugStats: resetDebugStats,
+        getDebugStats: getDebugStats,
         Model: Model,
         /**
          * Sets up and returns a simple model that is suitable to be used for

@@ -12,27 +12,31 @@
 /*global define, Float32Array, Int32Array */
 
 /**
+ * @param utils Used for shallow copying
  * @param types Used for type checking.
  * @param vec Used for 3D vector operations.
  * @param mat Used for 3D (and 4D) matrix operations.
  * @param application Used for displaying errors and logging (and intentional crashing)
  * @param managedGL Used for handling managed framebuffers, creating uniform names, feature checking
+ * @param egomModel Used for debug stats management
  * @param containers Used for linked lists
  * @param camera Used for creating default cameras for scenes
  * @param renderableObjects Used to create container nodes and for accessing render queue bits
  * @param lights Used to access the projection matrix uniform name
  */
 define([
+    "utils/utils",
     "utils/types",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
     "modules/managed-gl",
+    "modules/egom-model",
     "modules/containers",
     "modules/scene/camera",
     "modules/scene/renderable-objects",
     "modules/scene/lights"
-], function (types, vec, mat, application, managedGL, containers, camera, renderableObjects, lights) {
+], function (utils, types, vec, mat, application, managedGL, egomModel, containers, camera, renderableObjects, lights) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -970,21 +974,6 @@ define([
         return this._minimumCountForInstancing;
     };
     /**
-     * Returns the number of triangles drawn on the screen to render this node and all its subnodes.
-     * @param {Boolean} transparent Whether to count the transparent or the opaque triangles
-     * @returns {Number}
-     */
-    RenderableNode.prototype.getNumberOfDrawnTriangles = function (transparent) {
-        var subnode, result = 0;
-        if (this._renderableObject.wasRendered()) {
-            result += this._renderableObject.getNumberOfDrawnTriangles(transparent);
-        }
-        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
-            result += subnode.getNumberOfDrawnTriangles(transparent);
-        }
-        return result;
-    };
-    /**
      * Remove the given subnode from this node.
      * @param {RenderableNode} subnode 
      * @param {Boolean} removeFromParent If true, the node is removed from its parent in case no subnodes are left under it and it has no
@@ -1339,6 +1328,16 @@ define([
          * @type Object.<String, Number>
          */
         this._nodeCountByType = null;
+        /**
+         * Stores the rendering statistics for the current frame about the scene graph in debug mode (shadow map rendering not included)
+         * @type ModelDebugStats
+         */
+        this._mainDebugStats = null;
+        /**
+         * Stores the rendering statistics for the current frame about the shadow maps in debug mode
+         * @type ModelDebugStats
+         */
+        this._shadowMapDebugStats = null;
         this._initNodes();
         this.clearPointLights();
         this._setGeneralUniformValueFunctions();
@@ -1965,13 +1964,6 @@ define([
         return this._lodContext;
     };
     /**
-     * Returns how many triangles were rendered during the last render step when this scene was rendered.
-     * @returns {Number}
-     */
-    Scene.prototype.getNumberOfDrawnTriangles = function () {
-        return this._numDrawnTriangles;
-    };
-    /**
      * Sets the passed function to be called when a shader asks for the value of a uniform with the given name while rendering this scene.
      * The name given here is appropriately prefixed/suffixed by ManagedGL. The value of this will be the scene instance, when calling the
      * function.
@@ -2179,9 +2171,6 @@ define([
         // rendering background objects
         this._rootBackgroundNode.resetForNewFrame();
         this._rootBackgroundNode.render(context, widthInPixels, heightInPixels, false);
-        if (application.isDebugVersion()) {
-            this._numDrawnTriangles += this._rootBackgroundNode.getNumberOfDrawnTriangles();
-        }
     };
     /**
      * Renders the specified render queues of the scene with the given settings.
@@ -2238,9 +2227,6 @@ define([
             for (i = 0; i < opaqueRenderQueues.length; i++) {
                 this._renderQueue(context, widthInPixels, heightInPixels, opaqueRenderQueues[i], i, true);
             }
-            if (application.isDebugVersion()) {
-                this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(false);
-            }
         }
         // rendering the background objects after the opaque pass so background will only be rendered where it is not occluded by opaque
         // triangles. Transparent triangles are not changing the depth buffer so they would be overwritten by the background if it was 
@@ -2256,9 +2242,6 @@ define([
             // rendering using the render queues instead of the scene hierarchy to provide better performance by minimizing shader switches
             for (i = 0; i < transparentRenderQueues.length; i++) {
                 this._renderQueue(context, widthInPixels, heightInPixels, transparentRenderQueues[i], i, false);
-            }
-            if (application.isDebugVersion()) {
-                this._numDrawnTriangles += this._rootNode.getNumberOfDrawnTriangles(true);
             }
         }
     };
@@ -2283,9 +2266,6 @@ define([
             // rendering background objects
             this._rootUINode.resetForNewFrame();
             this._rootUINode.render(context, widthInPixels, heightInPixels, false);
-            if (application.isDebugVersion()) {
-                this._numDrawnTriangles += this._rootUINode.getNumberOfDrawnTriangles();
-            }
             gl.enable(gl.DEPTH_TEST);
             this._camera = originalCamera;
         }
@@ -2304,6 +2284,7 @@ define([
                 widthInPixels = bufferWidth * this._width,
                 heightInPixels = bufferHeight * this._height;
         application.log_DEBUG("Rendering scene...", 3);
+        egomModel.resetDebugStats();
         this._camera.setAspect(widthInPixels / heightInPixels);
         // updating camera
         if (this._shouldUpdateCamera) {
@@ -2329,6 +2310,10 @@ define([
         // rendering shadow maps
         if (frontQueuesNotEmpty) {
             this._renderShadowMaps(context, widthInPixels, heightInPixels);
+        }
+        if (application.isDebugVersion()) {
+            this._shadowMapDebugStats = utils.shallowCopy(egomModel.getDebugStats());
+            egomModel.resetDebugStats();
         }
         // updating the light matrices to be consistent with the shadow maps
         this._updateStaticLightUniformData();
@@ -2385,6 +2370,9 @@ define([
         // -----------------------------------------------------------------------
         // rendering the UI objects
         this._renderUIObjects(context, widthInPixels, heightInPixels);
+        if (application.isDebugVersion()) {
+            this._mainDebugStats = utils.shallowCopy(egomModel.getDebugStats());
+        }
     };
     /**
      * Used during debug stats logging - increases the counter corresponding to the passed object type.
@@ -2413,6 +2401,20 @@ define([
             application.log("[" + objectTypes[i] + "]: " + this._nodeCountByType[objectTypes[i]]);
         }
         application.log("--------------");
+    };
+    /**
+     * Returns the rendering statistics for the current frame about the scene graph in debug mode (shadow map rendering not included)
+     * @returns {ModelDebugStats}
+     */
+    Scene.prototype.getMainDebugStats = function () {
+        return this._mainDebugStats;
+    };
+    /**
+     * Stores the rendering statistics for the current frame about the shadow maps in debug mode
+     * @returns {ModelDebugStats}
+     */
+    Scene.prototype.getShadowMapDebugStats = function () {
+        return this._shadowMapDebugStats;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

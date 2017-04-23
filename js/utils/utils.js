@@ -327,6 +327,26 @@ define(function () {
         return a === b;
     };
     /**
+     * Returns a shallow copy of the passed data
+     * @param {} data Any type of data
+     * @returns {}
+     */
+    exports.shallowCopy = function (data) {
+        var result, i, propertyNames;
+        if (typeof data === "object") {
+            if (data instanceof Array) {
+                return data.slice();
+            }
+            result = {};
+            propertyNames = Object.keys(data);
+            for (i = 0; i < propertyNames.length; i++) {
+                result[propertyNames[i]] = data[propertyNames[i]];
+            }
+            return result;
+        }
+        return data;
+    };
+    /**
      * Returns a deep copy (recursive copy by values) of the passed data
      * @param {} data Any type of data
      * @returns {}

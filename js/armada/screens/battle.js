@@ -3206,7 +3206,8 @@ define([
     BattleScreen.prototype._render = function (dt) {
         var
                 /**@type Boolean*/ victory,
-                /**@type Spacecraft*/ craft;
+                /**@type Spacecraft*/ craft,
+                /**@type ModelDebugStats*/ mainStats, shadowStats;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -3220,13 +3221,16 @@ define([
         screens.HTMLScreenWithCanvases.prototype._render.call(this, dt);
         if (_battleScene) {
             if (application.isDebugVersion()) {
+                mainStats = _battleScene.getMainDebugStats();
+                shadowStats = _battleScene.getShadowMapDebugStats();
                 if (this._stats.isVisible()) {
                     this._stats.setContent(
                             missions.getDebugInfo() + "<br/>" +
                             sceneGraph.getDebugInfo() + "<br/>" +
                             mat.getMatrixCount() + " <br/>" +
                             this.getFPSStats() + "<br/>" +
-                            _battleScene.getNumberOfDrawnTriangles());
+                            mainStats.triangleDrawCalls + ": " + mainStats.triangles + " + i: " + mainStats.instancedTriangleDrawCalls + ": " + mainStats.instancedTriangles + "<br/>" +
+                            shadowStats.triangleDrawCalls + ": " + shadowStats.triangles);
                 }
                 mat.clearMatrixCount();
             } else {

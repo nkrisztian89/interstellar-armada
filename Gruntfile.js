@@ -43,6 +43,12 @@ module.exports = function (grunt) {
                     }, {
                         from: 'application.log_DEBUG',
                         to: '//application.log_DEBUG'
+                    }, {
+                        from: '_DEBUG_STATS.',
+                        to: '//_DEBUG_STATS.'
+                    }, {
+                        from: 'egomModel.resetDebugStats();',
+                        to: '//egomModel.resetDebugStats();'
                     }]
             },
             // replacing some widely and frequently used one-line getter calls with the direct access of their respective properties to
@@ -75,6 +81,18 @@ module.exports = function (grunt) {
                         from: '.wasRendered()',
                         to: '._wasRendered'
                     }, {
+                        from: '.getMinimumCountForInstancing()',
+                        to: '._minimumCountForInstancing'
+                    }, {
+                        from: '.getRootNode()',
+                        to: '._rootNode'
+                    }, {
+                        from: '.getCamera()',
+                        to: '._camera'
+                    }, {
+                        from: '.getLODContext()',
+                        to: '._lodContext'
+                    }, {
                         from: '.getStates()',
                         to: '._states'
                     }, {
@@ -106,6 +124,12 @@ module.exports = function (grunt) {
                     }, {
                         from: '//application.log_DEBUG',
                         to: 'application.log_DEBUG'
+                    }, {
+                        from: '//_DEBUG_STATS.',
+                        to: '_DEBUG_STATS.'
+                    }, {
+                        from: '//egomModel.resetDebugStats();',
+                        to: 'egomModel.resetDebugStats();'
                     }]
             },
             dev: {

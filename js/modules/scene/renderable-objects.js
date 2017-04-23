@@ -606,15 +606,6 @@ define([
         return this._wasRendered;
     };
     /**
-     * Returns the number of triangles drawn on the screen to render this 
-     * object.
-     * Must be ovverriden in subclasses.
-     * @returns {Number}
-     */
-    RenderableObject.prototype.getNumberOfDrawnTriangles = function () {
-        return 0;
-    };
-    /**
      * Returns whether this object can be put in the same rendering queue as the passed other rendering object.
      * @param {RenderableObject} otherRenderableObject
      * @returns {Boolean}
@@ -860,13 +851,6 @@ define([
      */
     CubemapSampledFVQ.prototype.performRender = function (renderParameters) {
         this._model.render(renderParameters.context, false);
-    };
-    /**
-     * @override
-     * @returns {Number}
-     */
-    CubemapSampledFVQ.prototype.getNumberOfDrawnTriangles = function () {
-        return 2;
     };
     // #########################################################################
     /**
@@ -1125,14 +1109,6 @@ define([
         this._model.render(renderParameters.context, this._wireframe, true, this.getCurrentLOD(renderParameters));
         application.log_DEBUG("Rendered model (" + this._model.getName() + ") to shadow map.", 5);
     };
-    /**
-     * @override
-     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
-     * @returns {Number}
-     */
-    ShadedLODMesh.prototype.getNumberOfDrawnTriangles = function (transparent) {
-        return (this._wireframe === false) && (this._currentLOD !== this.LOD_NOT_SET) ? this._model.getNumTriangles(this._currentLOD, transparent) : 0;
-    };
     // #########################################################################
     /**
      * @class A mesh that has associated float parameter arrays, which can be 
@@ -1355,14 +1331,6 @@ define([
      */
     Billboard.prototype.mightBeRenderedToShadowMap = function () {
         return false;
-    };
-    /**
-     * @override
-     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
-     * @returns {Number}
-     */
-    Billboard.prototype.getNumberOfDrawnTriangles = function (transparent) {
-        return (transparent !== false) ? this._model.getNumTriangles() : 0;
     };
     /**
      * @override
@@ -1843,14 +1811,6 @@ define([
         if (this._hasVelocity()) {
             this.translatev(vec.scaled3Aux(this._velocityVector, dt * 0.001));
         }
-    };
-    /**
-     * @override
-     * @param {Boolean} [transparent] Whether to count the transparent or the opaque triangles. If not given, both will be counted.
-     * @returns {Number} Always 2 for transparent / any, 0 for opaque.
-     */
-    Particle.prototype.getNumberOfDrawnTriangles = function (transparent) {
-        return (transparent !== false) ? 2 : 0;
     };
     /**
      * @override
