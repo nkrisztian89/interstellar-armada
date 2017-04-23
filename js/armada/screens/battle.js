@@ -899,11 +899,11 @@ define([
         }
         _mission = null;
         if (_battleScene) {
-            _battleScene.clear();
+            _battleScene.clear(true);
         }
         _battleScene = null;
         if (_targetScene) {
-            _targetScene.clear();
+            _targetScene.clear(true);
         }
         _targetScene = null;
         _messageQueues = null;
@@ -2777,7 +2777,7 @@ define([
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR));
                 if (_targetViewItem !== target) {
-                    _targetScene.clearNodes();
+                    _targetScene.clearNodes(true);
                     _targetViewModel = null;
                     _targetViewItem = target;
                     _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, {
@@ -2872,7 +2872,7 @@ define([
                     _weaponImpactIndicators[i].hide();
                 }
                 if (_targetViewItem) {
-                    _targetScene.clearNodes();
+                    _targetScene.clearNodes(true);
                     _targetViewItem = null;
                     _targetViewModel = null;
                 }
@@ -3140,7 +3140,7 @@ define([
             _subheaderText.hide();
             _scoreText.hide();
             _battleScene.hideUI();
-            _targetScene.clearNodes();
+            _targetScene.clearNodes(true);
             _targetViewItem = null;
             _targetViewModel = null;
             _targetInfoTextLayer.hide();
@@ -3440,7 +3440,7 @@ define([
                     this.clearSceneCanvasBindings();
                     this.bindSceneToCanvas(_battleScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
                     this.bindSceneToCanvas(_targetScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
-                    _targetScene.clearNodes();
+                    _targetScene.clearNodes(true);
                     this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
                     application.log("Game data loaded in " + ((performance.now() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
                     _smallHeaderText.setText(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});

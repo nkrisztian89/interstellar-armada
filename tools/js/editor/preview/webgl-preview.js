@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Provides the general structure to preview windows of the Interstellar Armada editor that use a WebGL scene 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -594,10 +594,7 @@ define([
             });
         } else {
             if (params.clearScene || shouldReload) {
-                _scene.clearNodes();
-                _scene.clearDirectionalLights();
-                _scene.clearPointLights();
-                _scene.clearSpotLights();
+                _scene.clear(true);
             }
         }
         // clear the previous render

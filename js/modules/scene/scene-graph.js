@@ -1762,9 +1762,10 @@ define([
     };
     /**
      * Clears all nodes and lights from the scene.
+     * @param {Boolean} [hard=false] If true, also removes the list references from the nodes.
      */
-    Scene.prototype.clear = function () {
-        this.clearNodes();
+    Scene.prototype.clear = function (hard) {
+        this.clearNodes(hard);
         this.clearDirectionalLights();
         this.clearPointLights();
         this.clearSpotLights();
