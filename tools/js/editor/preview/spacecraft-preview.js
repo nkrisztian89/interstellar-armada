@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for spacecraft classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -195,6 +195,7 @@ define([
                         _spacecraft.getMaxThrusterMoveBurnLevel() :
                         _spacecraft.getMaxThrusterTurnBurnLevel());
             }
+            _spacecraft.updatePropulsionVisuals();
         }
     }
     /**
@@ -361,7 +362,7 @@ define([
                 };
         table = document.createElement("table");
         for (i = 0; i < values.length; i++) {
-            propertyEditor = common.createBooleanInput(_activeEngineUses.indexOf(values[i]) >= 0, elementChangeHandler.bind(this, i));
+            propertyEditor = common.createBooleanInput(_activeEngineUses.indexOf(values[i]) >= 0, elementChangeHandler.bind(_createEngineEditor, i));
             row = document.createElement("tr");
             cell = document.createElement("td");
             cell.appendChild(common.createLabel(values[i].toString()));
