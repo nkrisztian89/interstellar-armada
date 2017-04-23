@@ -3360,6 +3360,7 @@ define([
                 missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(true);
             }
             _displayedMissionState = _mission.getState();
+            _timeSinceGameStateChanged = config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY);
             _timeSincePlayerLeft = 0;
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
             if (graphics.shouldUseShadowMapping()) {
