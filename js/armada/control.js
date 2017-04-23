@@ -10,6 +10,7 @@
 /*global define, Element, localStorage, document, window, navigator */
 
 /**
+ * @param application Used to check if the application is in debug mode.
  * @param control This module builds its game-specific functionality on the general control module
  * @param cameraController This module uses the CameraController class made for SceneGraph
  * @param game To access screen-changing functionality
@@ -19,6 +20,7 @@
  * @param config Used to access settings
  */
 define([
+    "modules/application",
     "modules/control",
     "modules/camera-controller",
     "modules/game",
@@ -26,7 +28,7 @@ define([
     "armada/screens/shared",
     "armada/strings",
     "armada/configuration"
-], function (control, cameraController, game, resources, armadaScreens, strings, config) {
+], function (application, control, cameraController, game, resources, armadaScreens, strings, config) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -116,10 +118,12 @@ define([
         this.setActionFunction("switchToSpectatorMode", true, function () {
             _context.switchToSpectatorMode(true, true);
         });
-        // toggling the visibility of hitboxes
-        this.setActionFunction("toggleHitboxVisibility", true, function () {
-            this._mission.toggleHitboxVisibility();
-        }.bind(this));
+        if (application.isDebugVersion()) {
+            // toggling the visibility of hitboxes
+            this.setActionFunction("toggleHitboxVisibility", true, function () {
+                this._mission.toggleHitboxVisibility();
+            }.bind(this));
+        }
         // toggling the visibility of development-related info (version, FPS count) on screen
         this.setActionFunction("toggleDevInfoVisibility", true, function () {
             game.getScreen().toggleDevInfoVisibility();

@@ -2521,7 +2521,7 @@ define([
         }
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].addToScene(battleScene, undefined, false, {
-                hitboxes: true,
+                hitboxes: application.isDebugVersion(),
                 weapons: true,
                 thrusterParticles: true,
                 projectileResources: true,

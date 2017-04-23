@@ -1,5 +1,5 @@
 {
-    "version": "0.4.2-dev:593 (2017.04.23.)",
+    "version": "0.4.2-dev:594 (2017.04.23.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -449,7 +449,8 @@
                     }, {
                         "name": "switchToSpectatorMode"
                     }, {
-                        "name": "toggleHitboxVisibility"
+                        "name": "toggleHitboxVisibility",
+                        "debug": true
                     }, {
                         "name": "toggleDevInfoVisibility"
                     }, {

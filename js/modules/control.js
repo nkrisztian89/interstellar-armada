@@ -1998,9 +1998,12 @@ define([
      * @param {Object} dataJSON
      */
     Controller.prototype.loadFromJSON = function (dataJSON) {
-        var i;
+        var i, actionData;
         for (i = 0; i < dataJSON.actions.length; i++) {
-            this._actions[dataJSON.actions[i].name] = new Action(dataJSON.actions[i]);
+            actionData = dataJSON.actions[i];
+            if (!actionData.debug || application.isDebugVersion()) {
+                this._actions[actionData.name] = new Action(actionData);
+            }
         }
     };
     /**
