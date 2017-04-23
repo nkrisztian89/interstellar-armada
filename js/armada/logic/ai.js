@@ -597,63 +597,65 @@ define([
                     way = this._spacecraft.isAway() ? JumpCommandWay.IN : JumpCommandWay.OUT;
                 }
                 if (way === JumpCommandWay.IN) {
-                    // processing parameters for inward jumps
-                    if (data.jump) {
-                        if (data.lead && (data.index > 0) && (data.jump.formation)) {
-                            // setting position and orientation based on a formation
-                            this._spacecraft.setPhysicalPosition(vec.sum3(
-                                    data.lead.getPhysicalPositionVector(),
-                                    vec.prodVec3Mat4Aux(
-                                            this._getPositionInFormation(data.jump.formation, data.index),
-                                            data.lead.getPhysicalOrientationMatrix())));
-                            this._spacecraft.setPhysicalOrientationMatrix(mat.matrix4(data.lead.getPhysicalOrientationMatrix()));
-                        } else if (data.jump.anchor) {
-                            // clear cached reference to the anchor spacecraft for every new execution of the command
-                            if (data.clearCache) {
-                                data.jump.anchorSpacecraft = null;
-                                data.clearCache = false;
-                            }
-                            // setting position and orientation based on an anchor ship
-                            anchor = data.jump.anchorSpacecraft || this._mission.getSpacecraft(data.jump.anchor);
-                            if (anchor) {
-                                data.jump.anchorSpacecraft = anchor;
-                                // setting random position with matching orientation at given distance
-                                if (data.jump.distance) {
-                                    this._spacecraft.setPhysicalOrientationMatrix(mat.prod3x3SubOf4(
-                                            mat.rotationX4Aux((_jumpInPositionSeed() - 0.5) * Math.PI),
-                                            mat.rotationZ4Aux(_jumpInPositionSeed() * 2 * Math.PI)));
-                                    this._spacecraft.setPhysicalPosition(vec.scaled3(
-                                            mat.getRowB4(this._spacecraft.getPhysicalOrientationMatrix()),
-                                            -data.jump.distance));
-                                } else {
-                                    // overwriting position
-                                    if (data.jump.position) {
-                                        this._spacecraft.setPhysicalPosition(data.jump.position);
-                                    }
-                                    // overwriting orientation
-                                    if (data.jump.rotations) {
-                                        this._spacecraft.setPhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.rotations));
-                                    }
-                                }
-                                // transforming to anchor-relative position and orientation
-                                if (data.jump.relative) {
-                                    this._spacecraft.setPhysicalPositionMatrix(mat.prodTranslationRotation4(
-                                            this._spacecraft.getPhysicalPositionMatrix(),
-                                            anchor.getPhysicalOrientationMatrix()));
-                                    this._spacecraft.setPhysicalOrientationMatrix(mat.prod4(
-                                            this._spacecraft.getPhysicalOrientationMatrix(),
-                                            anchor.getPhysicalOrientationMatrix()));
-                                }
-                                // adding position of the anchor ship
+                    if (this._spacecraft.isAway()) {
+                        // processing parameters for inward jumps
+                        if (data.jump) {
+                            if (data.lead && (data.index > 0) && (data.jump.formation)) {
+                                // setting position and orientation based on a formation
                                 this._spacecraft.setPhysicalPosition(vec.sum3(
-                                        this._spacecraft.getPhysicalPositionVector(),
-                                        anchor.getPhysicalPositionVector()));
-                            } else {
-                                application.showError("'" + this._spacecraft.getDisplayName() + "' has an invalid anchor for inward jump: '" + data.jump.anchor + "'!");
+                                        data.lead.getPhysicalPositionVector(),
+                                        vec.prodVec3Mat4Aux(
+                                                this._getPositionInFormation(data.jump.formation, data.index),
+                                                data.lead.getPhysicalOrientationMatrix())));
+                                this._spacecraft.setPhysicalOrientationMatrix(mat.matrix4(data.lead.getPhysicalOrientationMatrix()));
+                            } else if (data.jump.anchor) {
+                                // clear cached reference to the anchor spacecraft for every new execution of the command
+                                if (data.clearCache) {
+                                    data.jump.anchorSpacecraft = null;
+                                    data.clearCache = false;
+                                }
+                                // setting position and orientation based on an anchor ship
+                                anchor = data.jump.anchorSpacecraft || this._mission.getSpacecraft(data.jump.anchor);
+                                if (anchor) {
+                                    data.jump.anchorSpacecraft = anchor;
+                                    // setting random position with matching orientation at given distance
+                                    if (data.jump.distance) {
+                                        this._spacecraft.setPhysicalOrientationMatrix(mat.prod3x3SubOf4(
+                                                mat.rotationX4Aux((_jumpInPositionSeed() - 0.5) * Math.PI),
+                                                mat.rotationZ4Aux(_jumpInPositionSeed() * 2 * Math.PI)));
+                                        this._spacecraft.setPhysicalPosition(vec.scaled3(
+                                                mat.getRowB4(this._spacecraft.getPhysicalOrientationMatrix()),
+                                                -data.jump.distance));
+                                    } else {
+                                        // overwriting position
+                                        if (data.jump.position) {
+                                            this._spacecraft.setPhysicalPosition(data.jump.position);
+                                        }
+                                        // overwriting orientation
+                                        if (data.jump.rotations) {
+                                            this._spacecraft.setPhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.rotations));
+                                        }
+                                    }
+                                    // transforming to anchor-relative position and orientation
+                                    if (data.jump.relative) {
+                                        this._spacecraft.setPhysicalPositionMatrix(mat.prodTranslationRotation4(
+                                                this._spacecraft.getPhysicalPositionMatrix(),
+                                                anchor.getPhysicalOrientationMatrix()));
+                                        this._spacecraft.setPhysicalOrientationMatrix(mat.prod4(
+                                                this._spacecraft.getPhysicalOrientationMatrix(),
+                                                anchor.getPhysicalOrientationMatrix()));
+                                    }
+                                    // adding position of the anchor ship
+                                    this._spacecraft.setPhysicalPosition(vec.sum3(
+                                            this._spacecraft.getPhysicalPositionVector(),
+                                            anchor.getPhysicalPositionVector()));
+                                } else {
+                                    application.showError("'" + this._spacecraft.getDisplayName() + "' has an invalid anchor for inward jump: '" + data.jump.anchor + "'!");
+                                }
                             }
                         }
+                        this._spacecraft.jumpIn();
                     }
-                    this._spacecraft.jumpIn();
                 } else {
                     this._spacecraft.jumpOut();
                 }
