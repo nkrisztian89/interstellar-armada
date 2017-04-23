@@ -1287,6 +1287,7 @@ define([
         var i;
         for (i = this._meshes.length; i <= lod; i++) {
             this._meshes.push(new Mesh());
+            this._maxLOD = i;
         }
         return this._meshes[lod];
     };

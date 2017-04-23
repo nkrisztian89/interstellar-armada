@@ -821,7 +821,7 @@ define([
             }
             if (!withoutSubnodes) {
                 for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
-                    subnode.render(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
+                    subnode.render(context, screenWidth, screenHeight, depthMask, withoutSubnodes, useInstancing, instanceQueueIndex);
                 }
             }
             return result;

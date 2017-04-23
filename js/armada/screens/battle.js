@@ -1913,6 +1913,9 @@ define([
             audio.resetSFXVolume();
             audio.setSFXVolume(config.getSetting(config.BATTLE_SETTINGS.SFX_VOLUME_IN_MENUS) * audio.getSFXVolume(), false);
         }
+        if (application.isDebugVersion()) {
+            _battleScene.logNodes();
+        }
     };
     /**
      * Resumes the simulation and control of the battle and the render loop
