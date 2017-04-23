@@ -1905,6 +1905,20 @@ define([
         m[15] = 1.0;
     };
     /**
+     * Modifies a 2x2 transformation matrix to describe a rotation.
+     * @param {Float32Array} m The 2x2 matrix to modify
+     * @param {Number} angle The angle of rotation in radians
+     */
+    mat.setRotation2 = function (m, angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle);
+        m[0] = cosAngle;
+        m[1] = -sinAngle;
+        m[2] = sinAngle;
+        m[3] = cosAngle;
+    };
+    /**
      * Modifies the matrix m in-place, setting it to a 4x4 rotation matrix.
      * @param {Float32Array} m The matrix to modify
      * @param {Number[]} axis An array of 3 numbers describing the axis of the rotation

@@ -2204,7 +2204,7 @@ define([
      * @param {Number} value The angle by which to rotate, in radians.
      */
     UIElement.prototype.setAngle = function (value) {
-        this._rotationMatrix = mat.rotation2(value);
+        mat.setRotation2(this._rotationMatrix, value);
     };
     /**
      * Sets a new set of clip coordinates ([minX, maxX, minY, maxY]) to define the clip zone of the element.
