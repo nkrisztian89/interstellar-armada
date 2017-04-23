@@ -664,14 +664,15 @@ define([
     };
     /**
      * Returns a 4x4 rotation matrix describing the orientation of projectiles fired by this weapon in world space.
+     * Uses an auxiliary matrix common to all Weapons.
      * @returns {Float32Array}
      */
     Weapon.prototype.getProjectileOrientationMatrix = function () {
-        var m = mat.prod3x3SubOf4(this._slot.orientationMatrix, this._spacecraft.getPhysicalOrientationMatrix());
+        mat.setProd3x3SubOf4(Weapon._projectileOriMatrix, this._slot.orientationMatrix, this._spacecraft.getPhysicalOrientationMatrix());
         if (!this._fixed) {
-            m = mat.prod3x3SubOf4(this._transformMatrix, m);
+            mat.setProd3x3SubOf4(Weapon._projectileOriMatrix, this._transformMatrix, mat.matrix4Aux(Weapon._projectileOriMatrix));
         }
-        return m;
+        return Weapon._projectileOriMatrix;
     };
     /**
      * Marks the resources necessary to render this weapon for loading.
@@ -840,6 +841,7 @@ define([
     // static auxiliary matrices to be used in the fire() method (to avoid created new matrices during each execution of the method)
     Weapon._weaponSlotPosMatrix = mat.identity4();
     Weapon._projectilePosMatrix = mat.identity4();
+    Weapon._projectileOriMatrix = mat.identity4();
     /**
      * Fires the weapon and adds the projectiles it fires (if any) to the passed pool.
      * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this weapon - it

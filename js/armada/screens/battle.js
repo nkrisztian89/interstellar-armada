@@ -2781,12 +2781,13 @@ define([
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR));
                 if (_targetViewItem !== target) {
                     _targetScene.clearNodes(true);
+                    m = _targetViewModel ? _targetViewModel.getOrientationMatrix() : mat.identity4();
                     _targetViewModel = null;
                     _targetViewItem = target;
                     _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, {
                         shaderName: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_SHADER),
-                        positionMatrix: mat.translation4(0, 0, 0),
-                        orientationMatrix: mat.identity4()
+                        positionMatrix: mat.IDENTITY4,
+                        orientationMatrix: m
                     }, function (model) {
                         model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
                             return _targetViewItemColor;

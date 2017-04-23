@@ -249,6 +249,33 @@ define([
         ]);
     };
     /**
+     * Return a 4x4 matrix comprised of the first 16 elements of the passed array.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array|Number[16]} m
+     * @returns {Float32Array}
+     */
+    mat.matrix4Aux = function (m) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = m[0];
+        aux[1] = m[1];
+        aux[2] = m[2];
+        aux[3] = m[3];
+        aux[4] = m[4];
+        aux[5] = m[5];
+        aux[6] = m[6];
+        aux[7] = m[7];
+        aux[8] = m[8];
+        aux[9] = m[9];
+        aux[10] = m[10];
+        aux[11] = m[11];
+        aux[12] = m[12];
+        aux[13] = m[13];
+        aux[14] = m[14];
+        aux[15] = m[15];
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Returns a 4x4 transformation matrix describing a translation.
      * @param {Number} x The x coordinate of the translation.
      * @param {Number} y The y coordinate of the translation.
