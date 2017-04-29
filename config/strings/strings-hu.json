@@ -192,6 +192,7 @@
         },
         "headhunt": {
             "name": "Fejvadászat",
+            "description": "<p>Egy helyi kalózvezér, <strong>Hector Yccra</strong>, egyre aktívabbá vált az utóbbi időben, immár több birodalmi csillagrendszerben is problémákat okozva. Ügynökeinknek sikerült bemérniük, és csapdát állítottak neki a Blovell rendszerben. Mivel váltságdíjak jelentik az elsődleges bevételi forrását, ezért azt a hamis információt hitettük el vele, hogy a rendszeren egy fontos személyeket szállító, ám gyengén védett hajó fog áthaladni.</p><p>Egy hamis jeleket kibocsátó szonda segítségével fogjuk a konkrét helyszínre csalni. Nagyobb hadihajók vagy vadászkötelékek jelenléte idő előtt felfedné a csapdát számára, emiatt <strong>mindössze két elfogó vadásznak kell végrehajtania ezt a küldetést.</strong></p><p>Nagy hatótávolságú érzékelőink szerint már úton van a szonda felé jól felfegyverzett őrei társaságában, akik egyben a rajtaütések során fő csapásmérő erejét jelentik. Ezen kívül előreküldött egy kisebb felderítőcsapatot is. Semmisítsd meg a felderítőket, és amikor megérkezik a fő csapat, mérd be Hector vadászgépét, a <strong>Ruby Blade</strong>-et. A jelentések szerint vérfoltokra emlékeztető harci festés látható a gép testén. <strong>NE próbáld meg kilőni az egész csapatot</strong>, a kalózok túlerőben lesznek. Hagyd el a helyszínt, amint a Ruby Blade megsemmisült.</p>",
             "messages": {
                 "rubyBladeArrived": "Gamma 1: Itt van! Hagyd az őröket! Gyorsan vedd célba a Ruby Blade-et, lőjük ki, aztán pucoljunk innen!"
             }
@@ -209,16 +210,20 @@
             "description": "Ebben a küldetésben egy nehezebb páncélzatú és fegyverzetű bombázót próbálhatsz ki egy egyszerű három három ellen felállású manőverező űrharcban. Az ellenséges gépek gyengébben vannak felszerelve."
         },
         "mixed": {
-            "name": "Vegyes"
+            "name": "Vegyes",
+            "description": "Három elfogó vadászból és három bombázóból álló vegyes csapatok néznek farkasszemet ebben a gyakorló küldetésben, ahol az egyik csapat elfogó vadász vezérét kell irányítanod. Vigyázz, hogy ne kerülj kereszttűzbe és ne találd el a csapattársaidat!"
         },
         "defendCorvette": {
-            "name": "Védd meg a korvettet"
+            "name": "Védd meg a korvettet",
+            "description": "Vadászok és bombázók támadnak hullámokban egy baráti korvettre. Fogd el és semmisítsd meg őket, mielőtt túl sok kárt okoznak, és a korvett megsemmisül! Különösen figyelj a nehezebb fegyverekkel felszerelt bombázókra!"
         },
         "1v6": {
-            "name": "Egy hat ellen"
+            "name": "Egy hat ellen",
+            "description": "A vegyes csapatokat szembeállító küldetéshez hasonló ellenfelekkel ezúttal egyedül kell szembenézned. Megállod a helyed hat harci géppel szemben?"
         },
         "corvette": {
-            "name": "Korvett"
+            "name": "Korvett",
+            "description": "Ebben a küldetésben egy teljes (bár viszonylag kis méretű) hadihajót irányíthatsz. Tartsd szem előtt, hogy ez nagyban különbözik a vadászokkal megszokott manőverező űrharctól! A korvetted jóval lassabb, viszont a lövegei automatikusan ráállnak a megadott célra, így nem szükséges pont felé fordulnod a tüzeléshez. Ehelyett a manőverezést az ellenséges tűz elkerülésére használhatod, mivel bár a korvett páncélzata jelentősebb, mint egy vadászé, számos ellenséges vadász és bombázó fog rád támadni. Figyelj rá, milyen sorrendben jelölöd ki a célokat, hogy a legveszélyesebb vagy legkézenfekvőbb fenyegetéseket iktathasd ki először."
         },
         "defendFrigate": {
             "name": "Védd meg a fregattot"
