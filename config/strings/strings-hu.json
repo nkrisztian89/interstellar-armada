@@ -226,22 +226,27 @@
             "description": "Ebben a küldetésben egy teljes (bár viszonylag kis méretű) hadihajót irányíthatsz. Tartsd szem előtt, hogy ez nagyban különbözik a vadászokkal megszokott manőverező űrharctól! A korvetted jóval lassabb, viszont a lövegei automatikusan ráállnak a megadott célra, így nem szükséges pont felé fordulnod a tüzeléshez. Ehelyett a manőverezést az ellenséges tűz elkerülésére használhatod, mivel bár a korvett páncélzata jelentősebb, mint egy vadászé, számos ellenséges vadász és bombázó fog rád támadni. Figyelj rá, milyen sorrendben jelölöd ki a célokat, hogy a legveszélyesebb vagy legkézenfekvőbb fenyegetéseket iktathasd ki először."
         },
         "defendFrigate": {
-            "name": "Védd meg a fregattot"
+            "name": "Védd meg a fregattot",
+            "description": "Egy lázadó korvettet azonosítottunk a körzetben, melynek a megsemmisítésére egy Taurus osztályú fregattot jelöltünk ki. Hogy biztosan eljusson a célig, egy vadász kötelék fogja kísérni, aminek a tagjaként veszel részt ebben a küldetésben. A lázadók hullámokban vadászokat és bombázókat küldtek a fregattunk megállítására, melyeket időben kell elfognod és semlegesítened, mivel a fregatt nincs felszerelve gyorsan manőverező ellenségekkel szemben. Amennyiben a lázadók sikeresen megsemmisítik, egyedül nem lesz esélyed a korvett megállítására."
         },
         "patrolVsPatrol": {
-            "name": "Őrjárat őrjárat ellen"
+            "name": "Őrjárat őrjárat ellen",
+            "description": "Két azonos összetételű - egy korvettből és három elfogó vadászból álló - őrjárat csap össze ebben a gyakorló küldetésben. Az egyik vadászt irányítod. Vond el az ellenséges korvett tüzét a csapattársaidról ügyenesen manőverezve, de biztonságos távolságban maradva, közelről ugyanis könnyű célpontot jelentesz neki."
         },
         "strikeForceVsStrikeForce": {
-            "name": "Hajóraj összecsapás"
+            "name": "Hajóraj összecsapás",
+            "description": "Két azonos erejű, három elfogó vadászból, három bombázóból és három kisebb hadihajóból álló hajóraj ütközethez készülődik. Rajtad áll, hogy a saját csapatod javára billentsd a mérleget!"
         },
         "defendFrigates": {
             "name": "Védd meg a fregattokat",
+            "description": "Egy birodalmi fregattokból álló raj a lázadók zászlóshajója - egy Libra osztályú cirkáló - megsemmísítésére indult. A lázadók utolsó elkeseredésükben több köteléknyi jól felfegyverzett bombázót mozgósítottak, hogy megállítsák a támadást. A küldetés célja elvonni a bombázók figyelmét és tűzerejét a fregattokról, hogy elegen eljuthassanak a cirkálóig a megsemmisítéséhez. Ha a raj kudarcot vall, a zászlóshajó kicsúszik a kezünk közül. A vadászgépeddel ne közelítsd meg a cirkálót, könnyű fegyverek számára nem áthatolható a péncélzata, és számos vadászok elleni löveggel van felszerelve!",
             "messages": {
                 "caution": "Szép munka, az összes bombázó megsemmisült! Most dőlj hátra, és figyeld, ahogy a fregattok elvégzik a többit."
             }
         },
         "test": {
             "name": "Teszt",
+            "description": "Egy homokozó jellegű tesztpálya, ami felvonultatja a játékban szereplő legtöbb hajóosztályt, részben véletlenszerűen elhelyezve. Az űrhajók mozdulatlanul állnak. Demó módban a küldetés egy mindenki mindenki ellen jellegű összecsapássá változik, melynek célja a játék fejlesztés alatti teljesítménytesztelése.",
             "messages": {
                 "test": "Ez egy teszt küldetés. Szabadon repülhetsz, és tehetsz, amit csak szeretnél.\nEz az emlékeztető ötször fog megjelenni.",
                 "test2": "Szabadon kilőheted a többi űrhajót."
