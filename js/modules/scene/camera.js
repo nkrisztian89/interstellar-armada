@@ -241,6 +241,59 @@ define([
         this._camera = null;
     }
     /**
+     * Initializes all properties of this camera position configuration
+     * @param {Boolean} fixed Whether the camera position should be locked and not be movable by the user
+     * @param {Boolean} turnsAroundObjects If true, the camera position can be changed by rotating it, as it will be calculated relative to
+     * the followed object(s) and the orientation of the camera. If not fixed, "zooming" on a straight line towards/away from the object(s)
+     * is possible as well
+     * @param {Boolean} movesRelativeToObject If true, the movement of the camera will happen along the axes of the orientation of the first
+     * followed object (if any)
+     * @param {Object3D[]} followedObjects The list of objects the camera's position should follow. Setting no objects means the set 
+     * position is absolute, setting multiple objects means the average of their positions will be followed.
+     * @param {Boolean} startsWithRelativePosition Whether only at the start and at default resets should the position be calculated as
+     * relative (and not follow the followed objects continuously)
+     * @param {Float32Array} positionMatrix The set position. Might mean the absolute (world) or relative position depending on other settings.
+     * The final world position is always calculated and not set.
+     * @param {Number[2]} distanceRange If the camera turns around the followed objects and it is not fixed, this is the range in which the
+     * distance from the objects is allowed to change
+     * @param {Number[3][2]} [confines] If given, the movement of the camera will be limited to the specified ranges on the 3 axes, 
+     * respectively. It is possible to specify confinement on select axes only, in which case null should be passed as range for the other
+     * axes.
+     * @param {Boolean} resetsWhenLeavingConfines Whether a reset to defaults should automatically be called whenever the camera position 
+     * leaves the area determined by its confines (distance, X, Y or Z)
+     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for 
+     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (confine checks, object 
+     * cleanup). Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly
+     * updated to provide a smooth transition between the non-updated and updated state
+     */
+    CameraPositionConfiguration.prototype.init = function(fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines, isTransitionConfiguration) {
+        this._fixed = fixed;
+        this._turnsAroundObjects = turnsAroundObjects;
+        this._movesRelativeToObject = movesRelativeToObject;
+        this._followedObjects = followedObjects || [];
+        this._startsWithRelativePosition = startsWithRelativePosition;
+        mat.setMatrix4(this._defaultRelativePositionMatrix, positionMatrix);
+        mat.setMatrix4(this._relativePositionMatrix, positionMatrix);
+        mat.setIdentity4(this._worldPositionMatrix);
+        this._worldPositionMatrixValid = false;
+        this._distanceIsConfined = distanceRange ? true : false;
+        this._minimumDistance = distanceRange ? distanceRange[0] : 0;
+        this._maximumDistance = distanceRange ? distanceRange[1] : 0;
+        this._xIsConfined = (confines && confines[0]) ? true : false;
+        this._minimumX = (confines && confines[0]) ? confines[0][0] : 0;
+        this._maximumX = (confines && confines[0]) ? confines[0][1] : 0;
+        this._yIsConfined = (confines && confines[1]) ? true : false;
+        this._minimumY = (confines && confines[1]) ? confines[1][0] : 0;
+        this._maximumY = (confines && confines[1]) ? confines[1][1] : 0;
+        this._zIsConfined = (confines && confines[2]) ? true : false;
+        this._minimumZ = (confines && confines[2]) ? confines[2][0] : 0;
+        this._maximumZ = (confines && confines[2]) ? confines[2][1] : 0;
+        this._resetsWhenLeavingConfines = resetsWhenLeavingConfines;
+        this._isTransitionConfiguration = isTransitionConfiguration;
+        this._isStarting = true;
+        this._camera = null;
+    };
+    /**
      * Returns a camera position configuration with the same settings as this one, cloning referenced values to make sure changes to this
      * configuration do not affect the created copy.
      * @param {Boolean} [transitionCopy=false] Create a copy that serves as a transition configuration (not doing object cleanup, confine
@@ -775,6 +828,51 @@ define([
     };
     Object.freeze(CameraOrientationConfiguration.PointToFallback);
     /**
+     * Initializes all properties of this camera orientation configuration
+     * @param {Boolean} fixed Whether the camera orientation should be locked and not be turnable by the user
+     * @param {Boolean} pointsTowardsObjects Whether the camera orientation should be calculated so that it always faces the followed objects
+     * @param {Boolean} fps Whether the camera should work in "FPS-mode", by being turnable along 2 axes (of a base coordinate system, that
+     * can be specified at the time of calculation)
+     * @param {Object3D[]} followedObjects The list of objects the camera's orientation should follow. Setting no objects means the set 
+     * orientation is absolute, setting multiple objects means the orientation of the first one will be followed. (as of now, can be changed
+     * later to utilize all orientations)
+     * @param {Float32Array} orientationMatrix The starting relative (if objects are followed) or world (if not) orientation of the camera.
+     * @param {Number} [alpha=0] In FPS-mode, the starting alpha angle (around the Z axis)
+     * @param {Number} [beta=0] In FPS-mode, the starting beta angle (around X axis)
+     * @param {Number[2]} [alphaRange=[DEFAULT_MIN_ALPHA, DEFAULT_MAX_ALPHA]] In FPS-mode, the lowest and highest possible values for the alpha angle.
+     * @param {Number[2]} [betaRange=[DEFAULT_MIN_BETA, DEFAULT_MAX_BETA]] In FPS-mode, the lowest and highest possible values for the beta angle.
+     * @param {String} [baseOrientation] (enum CameraOrientationConfiguration.BaseOrientation) What coordinate system should be 
+     * taken as base when calculating the orientation in FPS-mode.
+     * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.PointToFallback) In point-to mode, what orientation 
+     * calculation to use if no objects are specified to point towards to
+     * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for 
+     * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (object cleanup and fallback). 
+     * Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly updated 
+     * to provide a smooth transition between the non-updated and updated state
+     */
+    CameraOrientationConfiguration.prototype.init = function (fixed, pointsTowardsObjects, fps, followedObjects, orientationMatrix, alpha, beta, alphaRange, betaRange, baseOrientation, pointToFallback, isTransitionConfiguration) {
+        this._fixed = fixed;
+        this._pointsTowardsObjects = pointsTowardsObjects;
+        this._fps = fps;
+        this._followedObjects = followedObjects || [];
+        mat.setMatrix4(this._defaultRelativeOrientationMatrix, orientationMatrix);
+        mat.setMatrix4(this._relativeOrientationMatrix, orientationMatrix);
+        mat.setIdentity4(this._worldOrientationMatrix);
+        this._worldOrientationMatrixValid = false;
+        this._defaultAlpha = alpha || 0;
+        this._alpha = alpha || 0;
+        this._defaultBeta = beta || 0;
+        this._beta = beta || 0;
+        this._minAlpha = (alphaRange && (alphaRange[0] !== undefined)) ? alphaRange[0] : DEFAULT_MIN_ALPHA;
+        this._maxAlpha = (alphaRange && (alphaRange[1] !== undefined)) ? alphaRange[1] : DEFAULT_MAX_ALPHA;
+        this._minBeta = (betaRange && (betaRange[0] !== undefined)) ? betaRange[0] : DEFAULT_MIN_BETA;
+        this._maxBeta = (betaRange && (betaRange[1] !== undefined)) ? betaRange[1] : DEFAULT_MAX_BETA;
+        this._baseOrientation = baseOrientation;
+        this._pointToFallback = pointToFallback;
+        this._isTransitionConfiguration = isTransitionConfiguration;
+        this._camera = null;
+    };
+    /**
      * Returns a camera orientation configuration with the same settings as this one, cloning referenced values to make sure changes to this
      * configuration do not affect the created copy.
      * @param {Boolean} [transitionCopy=false] Create a copy that serves as a transition configuration (not doing object cleanup, fallback
@@ -1223,6 +1321,39 @@ define([
     }
     object3D.makeObject3DMixinClass.call(CameraConfiguration);
     /**
+     * Initializes the properties of this camera configuration.
+     * @param {String} [name] An optional, descriptive name of this configuration by which it can be found and referred to later.
+     * @param {CameraPositionConfiguration} positionConfiguration All the settings necessary to calculate the world position.
+     * @param {CameraOrientationConfiguration} orientationConfiguration All the settings necessary to calculate the world orientation.
+     * @param {Number} fov The starting field of view, in degrees.
+     * @param {Number} fovRange The minimum and maximum field of view value that can be set for a camera using this configuration.
+     * @param {Number} span The starting span of the camera. This is the world-space distance that the camera sees
+     * horizontally or vertically at depth 0, depending on camera setting. The other value will be calculated basen on the aspect of the 
+     * camera. In meters.
+     * @param {Number} spanRange The minimum and maximum span that can be set for a camera using this configuration.
+     * @param {Boolean} resetsOnFocusChange An indicator whether this configuration should automatically reset to default state when the camera 
+     * switches to it or when the camera controls go out of focus (after being in focus)
+     * @param {Boolean} shouldExcludeFromCycle When true, this configuration should be skipped when switching using cycling (switching to 
+     * next / previous configuration), and should only be possible to invoke it by switching to it explicitly 
+     */
+    CameraConfiguration.prototype.init = function (name, positionConfiguration, orientationConfiguration, fov, fovRange, span, spanRange, resetsOnFocusChange, shouldExcludeFromCycle) {
+        object3D.Object3D.prototype.init.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
+        this._name = name;
+        this._positionConfiguration = positionConfiguration;
+        this._orientationConfiguration = orientationConfiguration;
+        this._defaultFOV = fov;
+        this._fov = fov;
+        this._minFOV = fovRange ? fovRange[0] : 0;
+        this._maxFOV = fovRange ? fovRange[1] : 0;
+        this._defaultSpan = span;
+        this._span = span;
+        this._minSpan = spanRange ? spanRange[0] : 0;
+        this._maxSpan = spanRange ? spanRange[1] : 0;
+        this._resetsOnFocusChange = resetsOnFocusChange;
+        this._excludeFromCycle = shouldExcludeFromCycle;
+        this._camera = null;
+    };
+    /**
      * Creates and returns copy with the same configuration settings as this one, but with new references to avoid any change made to the
      * original configuration to affect the new one or vice versa.
      * @param {String} [name=""] An optional name for the created copy.
@@ -1467,6 +1598,32 @@ define([
      */
     CameraConfiguration.prototype.setOrientationFollowedObjects = function (targetObjects, doNotNotifyCamera) {
         this._orientationConfiguration.setFollowedObjects(targetObjects, doNotNotifyCamera);
+    };
+    /**
+     * Sets up the properties of this camera configuration to correspond to a free camera with the passed parameters.
+     * @param {Boolean} fps Whether the orientation of the camera should be controlled in FPS mode.
+     * @param {Float32Array} positionMatrix The initial position. (4x4 translation matrix)
+     * @param {Float32Array} orientationMatrix The initial orientation. (4x4 rotation matrix)
+     * @param {Number} fov The initial field of view, in degrees.
+     * @param {Number} minFOV The minimum field of view that can be set for this configuration, in degrees.
+     * @param {Number} maxFOV The maximum field of view that can be set for this configuration, in degrees.
+     * @param {Number} span The initial span, in meters.
+     * @param {Number} minSpan The minimum span that can be set for this configuration, in meters.
+     * @param {Number} maxSpan The maximum span that can be set for this configuration, in meters.
+     * @returns {CameraConfiguration}
+     */
+    CameraConfiguration.prototype.setToFree = function (fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV, span, minSpan, maxSpan) {
+        var angles = mat.getYawAndPitch(orientationMatrix);
+        this._positionConfiguration.init(false, false, false, [], false, positionMatrix, null, null, false);
+        this._orientationConfiguration.init(false, false, fps, [], orientationMatrix, Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined,
+                        CameraOrientationConfiguration.BaseOrientation.WORLD,
+                        CameraOrientationConfiguration.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD);
+        this.init(
+                utils.EMPTY_STRING,
+                this._positionConfiguration,
+                this._orientationConfiguration,
+                fov, [minFOV, maxFOV],
+                span, [minSpan, maxSpan]);
     };
     /**
      * Removes all references stored by this object
@@ -2532,7 +2689,7 @@ define([
      * @returns {Camera}
      */
     Camera.prototype.getExtendedCamera = function (includeOriginalFrustum) {
-        var span, result;
+        var /**@type Number*/ span, /**@type Camera*/ result;
         if (!includeOriginalFrustum && this._extendedCameraValid) {
             return this._extendedCamera;
         }
@@ -2560,18 +2717,19 @@ define([
                             span,
                             span, span));
         } else {
+            result.getConfiguration().setToFree(
+                    false,
+                    this._object3D.getPositionMatrix(),
+                    this._object3D.getOrientationMatrix(),
+                    this._fov,
+                    this._fov, this._fov,
+                    span,
+                    span, span);
             result.init(this._scene,
                     this._aspect,
                     this._usesVerticalValues,
                     this._viewDistance * CAMERA_EXTENSION_FACTOR,
-                    getFreeCameraConfiguration(
-                            false,
-                            this._object3D.getPositionMatrix(),
-                            this._object3D.getOrientationMatrix(),
-                            this._fov,
-                            this._fov, this._fov,
-                            span,
-                            span, span));
+                    result.getConfiguration());
         }
         result.update(0);
         if (!includeOriginalFrustum) {
