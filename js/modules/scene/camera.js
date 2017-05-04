@@ -1676,11 +1676,21 @@ define([
          */
         this._extendedCamera = null;
         /**
+         * Whether the stored extended camera is set up appropriately for the current proprties of the camera.
+         * @type Boolean
+         */
+        this._extendedCameraValid = false;
+        /**
          * A cached reference to a camera with the same overall parameters, but with a view frustum that combines that of this camera and
          * its extended camera.
          * @type Camera
          */
         this._combinedExtendedCamera = null;
+        /**
+         * Whether the stored combined extended camera is set up appropriately for the current proprties of the camera.
+         * @type Boolean
+         */
+        this._combinedExtendedCameraValid = false;
         // update to have appropriate starting values
         this._updateFOV();
         this._updateSpan();
@@ -1708,6 +1718,55 @@ define([
         SMOOTH: "smooth"
     };
     Object.freeze(Camera.TransitionStyle);
+    /**
+     * Initializes the values of all properties of the camera
+     * @param {Scene} scene A reference to the scene this camera is used to render. The camera can follow objects in this scene. (with its
+     * position or orientation)
+     * @param {Number} aspect The ratio of the horizontal and the vertical size of the image that should be rendered with this camera.
+     * @param {Boolean} usesVerticalValues Whether to consider the set FOV and span values as vertical (true) or horizontal (false)
+     * @param {Number} viewDistance Objects are visible up to this distance when rendered using this camera. (in meters)
+     * @param {CameraConfiguration} configuration The starting configuration of the camera. There is no default, should not be null!
+     * @param {Number} [transitionDuration=0] The time the camera should take to transition from one configuration to another by default, in 
+     * milliseconds.
+     * @param {String} [transitionStyle=NONE] (enum Camera.TransitionStyle) The style to use for transitions by default.
+     */
+    Camera.prototype.init = function (scene, aspect, usesVerticalValues, viewDistance, configuration, transitionDuration, transitionStyle) {
+        this._object3D.init(mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4);
+        this._scene = scene;
+        this._aspect = aspect;
+        this._usesVerticalValues = usesVerticalValues;
+        this._viewDistance = viewDistance;
+        this._previousConfiguration = null;
+        this._currentConfiguration = configuration;
+        this._currentConfiguration.setCamera(this);
+        this._transitionStyle = Camera.TransitionStyle.NONE;
+        this._defaultTransitionStyle = transitionStyle || Camera.TransitionStyle.NONE;
+        this._transitionDuration = 0;
+        this._defaultTransitionDuration = transitionDuration || 0;
+        this._transitionElapsedTime = 0;
+        this._velocityVector = [0, 0, 0];
+        this._controlledVelocityVector = [0, 0, 0];
+        this._angularVelocityVector = [0, 0, 0];
+        this._previousFollowedPositionVector = null;
+        mat.setIdentity4(this._projectionMatrix);
+        this._projectionMatrixValid = false;
+        this._followedNode = null;
+        mat.setIdentity4(this._viewMatrix);
+        this._viewMatrixValid = false;
+        mat.setIdentity4(this._inversePositionMatrix);
+        this._inversePositionMatrixValid = false;
+        mat.setIdentity4(this._inverseOrientationMatrix);
+        this._inverseOrientationMatrixValid = false;
+        this._fov = 0;
+        this._span = 0;
+        this._near = 0;
+        this._extendedCamera = null;
+        this._extendedCameraValid = false;
+        this._combinedExtendedCamera = null;
+        this._combinedExtendedCameraValid = false;
+        this._updateFOV();
+        this._updateSpan();
+    };
     /**
      * Returns the view distance of the camera (the distance of the far cutting plane of the camera's view frustum from its focal point)
      * @returns {Number}
@@ -2384,8 +2443,8 @@ define([
         var startPositionVector, endPositionVector, previousPositionVector,
                 relativeTransitionRotationMatrix, rotations,
                 transitionProgress, m;
-        this._extendedCamera = null;
-        this._combinedExtendedCamera = null;
+        this._extendedCameraValid = false;
+        this._combinedExtendedCameraValid = false;
         if (this._previousConfiguration) {
             // if a transition is in progress...
             // during transitions, movement and turning commands are not taken into account, therefore updating the configurations without
@@ -2474,10 +2533,10 @@ define([
      */
     Camera.prototype.getExtendedCamera = function (includeOriginalFrustum) {
         var span, result;
-        if (!includeOriginalFrustum && this._extendedCamera) {
+        if (!includeOriginalFrustum && this._extendedCameraValid) {
             return this._extendedCamera;
         }
-        if (includeOriginalFrustum && this._combinedExtendedCamera) {
+        if (includeOriginalFrustum && this._combinedExtendedCameraValid) {
             return this._combinedExtendedCamera;
         }
         if (this._fov === 0) {
@@ -2485,23 +2544,41 @@ define([
             this._updateSpan();
         }
         span = includeOriginalFrustum ? this._span : this._span / this._near * this._viewDistance;
-        result = new Camera(
-                this._scene,
-                this._aspect,
-                this._usesVerticalValues,
-                this._viewDistance * CAMERA_EXTENSION_FACTOR,
-                getFreeCameraConfiguration(
-                        false,
-                        this._object3D.getPositionMatrix(),
-                        this._object3D.getOrientationMatrix(),
-                        this._fov,
-                        this._fov, this._fov,
-                        span,
-                        span, span));
+        result = includeOriginalFrustum ? this._combinedExtendedCamera : this._extendedCamera;
+        if (!result) {
+            result = new Camera(
+                    this._scene,
+                    this._aspect,
+                    this._usesVerticalValues,
+                    this._viewDistance * CAMERA_EXTENSION_FACTOR,
+                    getFreeCameraConfiguration(
+                            false,
+                            this._object3D.getPositionMatrix(),
+                            this._object3D.getOrientationMatrix(),
+                            this._fov,
+                            this._fov, this._fov,
+                            span,
+                            span, span));
+        } else {
+            result.init(this._scene,
+                    this._aspect,
+                    this._usesVerticalValues,
+                    this._viewDistance * CAMERA_EXTENSION_FACTOR,
+                    getFreeCameraConfiguration(
+                            false,
+                            this._object3D.getPositionMatrix(),
+                            this._object3D.getOrientationMatrix(),
+                            this._fov,
+                            this._fov, this._fov,
+                            span,
+                            span, span));
+        }
         result.update(0);
         if (!includeOriginalFrustum) {
+            this._extendedCameraValid = true;
             this._extendedCamera = result;
         } else {
+            this._combinedExtendedCameraValid = true;
             this._combinedExtendedCamera = result;
         }
         return result;
