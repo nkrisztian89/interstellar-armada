@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -724,8 +724,8 @@ define([
         CAMERA_DEFAULT_TRANSITION_STYLE: {
             name: "cameraDefaultTransitionStyle",
             type: "enum",
-            values: camera.Camera.prototype.TransitionStyle,
-            defaultValue: camera.Camera.prototype.TransitionStyle.SMOOTH
+            values: camera.Camera.TransitionStyle,
+            defaultValue: camera.Camera.TransitionStyle.SMOOTH
         },
         /**
          * The duration of camera transitions happening when the user switches to piloting mode
@@ -741,8 +741,8 @@ define([
         CAMERA_PILOTING_SWITCH_TRANSITION_STYLE: {
             name: "cameraPilotingSwitchTransitionStyle",
             type: "enum",
-            values: camera.Camera.prototype.TransitionStyle,
-            defaultValue: camera.Camera.prototype.TransitionStyle.SMOOTH
+            values: camera.Camera.TransitionStyle,
+            defaultValue: camera.Camera.TransitionStyle.SMOOTH
         },
         /**
          * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
@@ -887,7 +887,7 @@ define([
         TARGET_CHANGE_TRANSITION_STYLE: {
             name: "targetChangeTransitionStyle",
             type: "enum",
-            values: camera.Camera.prototype.TransitionStyle
+            values: camera.Camera.TransitionStyle
         },
         /**
          * The amount of time while the same order in which targets are cycled through is kept valid, in milliseconds.
@@ -1464,12 +1464,12 @@ define([
         DEFAULT_BASE_ORIENTATION: {
             name: "defaultBaseOrientation",
             type: "enum",
-            values: camera.CameraOrientationConfiguration.prototype.BaseOrientation
+            values: camera.CameraOrientationConfiguration.BaseOrientation
         },
         DEFAULT_POINT_TO_FALLBACK: {
             name: "defaultPointToFallback",
             type: "enum",
-            values: camera.CameraOrientationConfiguration.prototype.PointToFallback
+            values: camera.CameraOrientationConfiguration.PointToFallback
         }
     };
     EDITOR_SETTINGS = {
@@ -1557,7 +1557,7 @@ define([
         return this.getSetting(CAMERA_SETTINGS.DEFAULT_SPAN_RANGE);
     };
     /**
-     * (enum CameraOrientationConfiguration.prototype.BaseOrientation) Returns the default base orientation mode to use for camera 
+     * (enum CameraOrientationConfiguration.BaseOrientation) Returns the default base orientation mode to use for camera 
      * configurations
      * @returns {String}
      */
@@ -1565,7 +1565,7 @@ define([
         return this.getSetting(CAMERA_SETTINGS.DEFAULT_BASE_ORIENTATION);
     };
     /**
-     * (enum CameraOrientationConfiguration.prototype.PointToFallback) Returns the default point-to fallback mode to use for camera 
+     * (enum CameraOrientationConfiguration.PointToFallback) Returns the default point-to fallback mode to use for camera 
      * configurations
      * @returns {String}
      */

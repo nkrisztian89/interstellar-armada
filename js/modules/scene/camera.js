@@ -604,9 +604,9 @@ define([
      * @param {Number} [beta=0] In FPS-mode, the starting beta angle (around X axis)
      * @param {Number[2]} [alphaRange=[DEFAULT_MIN_ALPHA, DEFAULT_MAX_ALPHA]] In FPS-mode, the lowest and highest possible values for the alpha angle.
      * @param {Number[2]} [betaRange=[DEFAULT_MIN_BETA, DEFAULT_MAX_BETA]] In FPS-mode, the lowest and highest possible values for the beta angle.
-     * @param {String} [baseOrientation] (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be 
+     * @param {String} [baseOrientation] (enum CameraOrientationConfiguration.BaseOrientation) What coordinate system should be 
      * taken as base when calculating the orientation in FPS-mode.
-     * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.prototype.PointToFallback) In point-to mode, what orientation 
+     * @param {String} [pointToFallback] (enum CameraOrientationConfiguration.PointToFallback) In point-to mode, what orientation 
      * calculation to use if no objects are specified to point towards to
      * @param {Boolean} [isTransitionConfiguration=false] If true, the configuration will serve as a suitable starting point for 
      * transitions, as it will not perform major updates (resets, changes) and the checks necessary for them (object cleanup and fallback). 
@@ -712,13 +712,13 @@ define([
          */
         this._maxBeta = (betaRange && (betaRange[1] !== undefined)) ? betaRange[1] : DEFAULT_MAX_BETA;
         /**
-         * (enum CameraOrientationConfiguration.prototype.BaseOrientation) What coordinate system should be taken as base when calculating 
+         * (enum CameraOrientationConfiguration.BaseOrientation) What coordinate system should be taken as base when calculating 
          * the orientation in FPS-mode.
          * @type String
          */
         this._baseOrientation = baseOrientation;
         /**
-         * (enum CameraOrientationConfiguration.prototype.PointToFallback) In point-to mode, what orientation calculation to use if no 
+         * (enum CameraOrientationConfiguration.PointToFallback) In point-to mode, what orientation calculation to use if no 
          * objects are specified to point towards to
          * @type String
          */
@@ -738,7 +738,7 @@ define([
      * @enum {String}
      * Options about what coordinate sytem should be taken as base when calculating the orientation in FPS-mode.
      */
-    CameraOrientationConfiguration.prototype.BaseOrientation = {
+    CameraOrientationConfiguration.BaseOrientation = {
         /**
          * The FPS-mode angles should be relative to the world coordinate system
          */
@@ -752,13 +752,13 @@ define([
          */
         ORIENTATION_FOLLOWED_OBJECT: "orientationFollowedObject"
     };
-    Object.freeze(CameraOrientationConfiguration.prototype.BaseOrientation);
+    Object.freeze(CameraOrientationConfiguration.BaseOrientation);
     /**
      * @enum {String}
      * Options on what orientation calculation to fall back to in case a "point-to" configuration was set (which always faces the followed
      * objects), but no followed objects are specified.
      */
-    CameraOrientationConfiguration.prototype.PointToFallback = {
+    CameraOrientationConfiguration.PointToFallback = {
         /**
          * Treat the relative orientation matrix as world orientation matrix
          */
@@ -773,7 +773,7 @@ define([
          */
         POSITION_FOLLOWED_OBJECT_OR_WORLD: "positionFollowedObjectOrWorld"
     };
-    Object.freeze(CameraOrientationConfiguration.prototype.PointToFallback);
+    Object.freeze(CameraOrientationConfiguration.PointToFallback);
     /**
      * Returns a camera orientation configuration with the same settings as this one, cloning referenced values to make sure changes to this
      * configuration do not affect the created copy.
@@ -995,13 +995,13 @@ define([
                         mat.correctOrthogonal4(this._worldOrientationMatrix);
                     } else {
                         switch (this._baseOrientation) {
-                            case this.BaseOrientation.WORLD:
+                            case CameraOrientationConfiguration.BaseOrientation.WORLD:
                                 baseOrientationMatrix = null;
                                 break;
-                            case this.BaseOrientation.POSITION_FOLLOWED_OBJECTS:
+                            case CameraOrientationConfiguration.BaseOrientation.POSITION_FOLLOWED_OBJECTS:
                                 baseOrientationMatrix = positionFollowedObjectOrientationMatrix || null;
                                 break;
-                            case this.BaseOrientation.ORIENTATION_FOLLOWED_OBJECT:
+                            case CameraOrientationConfiguration.BaseOrientation.ORIENTATION_FOLLOWED_OBJECT:
                                 baseOrientationMatrix = this.followsObjects() ? this.getFollowedOrientationMatrix() : null;
                                 break;
                             default:
@@ -1033,13 +1033,13 @@ define([
         } else {
             if (this._pointsTowardsObjects) {
                 switch (this._pointToFallback) {
-                    case this.PointToFallback.WORLD:
+                    case CameraOrientationConfiguration.PointToFallback.WORLD:
                         calculateAbsolute();
                         break;
-                    case this.PointToFallback.STATIONARY:
+                    case CameraOrientationConfiguration.PointToFallback.STATIONARY:
                         mat.setIdentity4(this._worldOrientationMatrix);
                         break;
-                    case this.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD:
+                    case CameraOrientationConfiguration.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD:
                         if (positionFollowedObjectOrientationMatrix) {
                             calculateRelative(positionFollowedObjectOrientationMatrix);
                         } else {
@@ -1078,7 +1078,7 @@ define([
      * @returns {Boolean} Whether the update finished successfully (true) or there was a change in the settings (false)
      */
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
-        if (this._pointsTowardsObjects && !this.followsObjects() && (this._pointToFallback === this.PointToFallback.STATIONARY)) {
+        if (this._pointsTowardsObjects && !this.followsObjects() && (this._pointToFallback === CameraOrientationConfiguration.PointToFallback.STATIONARY)) {
             return;
         }
         if (!this._fixed) {
@@ -1497,8 +1497,8 @@ define([
                 utils.EMPTY_STRING,
                 new CameraPositionConfiguration(false, false, false, [], false, mat.matrix4(positionMatrix), null, null, false),
                 new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined,
-                        CameraOrientationConfiguration.prototype.BaseOrientation.WORLD,
-                        CameraOrientationConfiguration.prototype.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD),
+                        CameraOrientationConfiguration.BaseOrientation.WORLD,
+                        CameraOrientationConfiguration.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD),
                 fov, [minFOV, maxFOV],
                 span, [minSpan, maxSpan]);
     }
@@ -1515,7 +1515,7 @@ define([
      * @param {CameraConfiguration} configuration The starting configuration of the camera. There is no default, should not be null!
      * @param {Number} [transitionDuration=0] The time the camera should take to transition from one configuration to another by default, in 
      * milliseconds.
-     * @param {String} [transitionStyle=NONE] (enum Camera.prototype.TransitionStyle) The style to use for transitions by default.
+     * @param {String} [transitionStyle=NONE] (enum Camera.TransitionStyle) The style to use for transitions by default.
      */
     function Camera(scene, aspect, usesVerticalValues, viewDistance, configuration, transitionDuration, transitionStyle) {
         /**
@@ -1556,15 +1556,15 @@ define([
         this._currentConfiguration = configuration;
         this._currentConfiguration.setCamera(this);
         /**
-         * (enum Camera.prototype.TransitionStyle) The style used for the current configuration transition.
+         * (enum Camera.TransitionStyle) The style used for the current configuration transition.
          * @type String
          */
-        this._transitionStyle = this.TransitionStyle.NONE;
+        this._transitionStyle = Camera.TransitionStyle.NONE;
         /**
-         * (enum Camera.prototype.TransitionStyle) The style to use for transitions by default.
+         * (enum Camera.TransitionStyle) The style to use for transitions by default.
          * @type String
          */
-        this._defaultTransitionStyle = transitionStyle || this.TransitionStyle.NONE;
+        this._defaultTransitionStyle = transitionStyle || Camera.TransitionStyle.NONE;
         /**
          * The duration of the transition currently in progress, in milliseconds.
          * @type Number
@@ -1690,7 +1690,7 @@ define([
      * Options about how should the combination of the two configurations be calculated when the camera is transitioning from one
      * to the another.
      */
-    Camera.prototype.TransitionStyle = {
+    Camera.TransitionStyle = {
         /**
          * No valid value given, a transition with this value will result in an error. This way accidentally not setting a value
          * can be noticed. (for instantly jumping to the new configuration, use a duration of 0)
@@ -1707,7 +1707,7 @@ define([
          */
         SMOOTH: "smooth"
     };
-    Object.freeze(Camera.prototype.TransitionStyle);
+    Object.freeze(Camera.TransitionStyle);
     /**
      * Returns the view distance of the camera (the distance of the far cutting plane of the camera's view frustum from its focal point)
      * @returns {Number}
@@ -1803,7 +1803,7 @@ define([
      * @param {Number[3]} positionVector
      * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
      * is given, the new configuration will be applied instantly.
-     * @param {String} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
+     * @param {String} [style] (enum Camera.TransitionStyle) The style of the new transition to use. If not given, the camera 
      * default will be used.
      */
     Camera.prototype.moveToPosition = function (positionVector, duration, style) {
@@ -1926,7 +1926,7 @@ define([
      * @param {Number} fov The new desired field of view in degrees.
      * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
      * is given, the new configuration will be applied instantly.
-     * @param {String} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
+     * @param {String} [style] (enum Camera.TransitionStyle) The style of the new transition to use. If not given, the camera 
      * default will be used.
      */
     Camera.prototype.setFOV = function (fov, duration, style) {
@@ -1968,7 +1968,7 @@ define([
      * @param {Number} span The new desired span in meters.
      * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
      * is given, the new configuration will be applied instantly.
-     * @param {String} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
+     * @param {String} [style] (enum Camera.TransitionStyle) The style of the new transition to use. If not given, the camera 
      * default will be used.
      */
     Camera.prototype.setSpan = function (span, duration, style) {
@@ -2060,7 +2060,7 @@ define([
      * @param {CameraConfiguration} configuration
      * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
      * is given, the new configuration will be applied instantly.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the new transition to use. If not given, the camera 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the new transition to use. If not given, the camera 
      * default will be used.
      */
     Camera.prototype.startTransitionToConfiguration = function (configuration, duration, style) {
@@ -2095,7 +2095,7 @@ define([
      * @param {Float32Array} [orientationMatrix] The orientation matrix of the new configuration. If not given, the current world 
      * orientation will be used.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      */
     Camera.prototype.transitionToFreeCamera = function (fps, positionMatrix, orientationMatrix, duration, style) {
@@ -2120,7 +2120,7 @@ define([
      * This is useful when some property of the current configuration changes, as with this method a smoother transition to the recalculated
      * position / orientation can be displayed.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      */
     Camera.prototype.transitionToSameConfiguration = function (duration, style) {
@@ -2132,7 +2132,7 @@ define([
      * Start a transition to the same configuration, but with its default settings reset. This preserves the reference to the configuration
      * and does not create a copy.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      */
     Camera.prototype.transitionToConfigurationDefaults = function (duration, style) {
@@ -2188,7 +2188,7 @@ define([
      * @param {Boolean} forceFirstView If true, then even if the given node is already the followed one, the method will switch to its first
      * camera configuration. Otherwise it will leave the current camera configuration in this case.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      * @returns {Boolean} Whether as a result of this call, the camera is now following the specified node. If the node has no associated
      * configurations to switch to, this will be false.
@@ -2222,7 +2222,7 @@ define([
      * @param {Boolean} forceFirstView If true, then even if the given object's node is already the followed one, the method will switch to 
      * its first camera configuration. Otherwise it will leave the current camera configuration in this case.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      * @returns {Boolean} Whether as a result of this call, the camera is now following the specified object's node. If the node has no 
      * associated configurations to switch to, this will be false.
@@ -2234,7 +2234,7 @@ define([
      * Start a transition to the next camera configuration associated with the currently followed node, or the scene, in case no node is
      * followed. If the currently followed configuration is the last one, the first one will be chosen.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      */
     Camera.prototype.changeToNextView = function (duration, style) {
@@ -2253,7 +2253,7 @@ define([
      * Start a transition to the previous camera configuration associated with the currently followed node, or the scene, in case no node is
      * followed. If the currently followed configuration is the first one, the last one will be chosen.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      */
     Camera.prototype.changeToPreviousView = function (duration, style) {
@@ -2273,7 +2273,7 @@ define([
      * @param {Boolean} [considerScene=false] Whether to also consider the scene "as a node". If true, than after the last node, this 
      * method will set the fist configuration associated with the scene rather than jumping right to the first node again.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      * @returns {Boolean} Whether a node has been successfully followed (will be false if considerScene is false and there are no nodes in the
      * scene which can be followed)
@@ -2301,7 +2301,7 @@ define([
      * @param {Boolean} [considerScene=false] Whether to also consider the scene "as a node". If true, than after the first node, this 
      * method will set the fist configuration associated with the scene rather than jumping right to the last node again.
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      */
     Camera.prototype.followPreviousNode = function (considerScene, duration, style) {
@@ -2325,7 +2325,7 @@ define([
      * Changes the list of objects that the active configuration's orientation is set to follow.
      * @param {Object3D[]} targetObjects Should not be null, but an empty list, if no objects are to be specified
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
-     * @param {Number} [style] (enum Camera.prototype.TransitionStyle) The style of the transition to use. If not given, the camera default 
+     * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
      */
     Camera.prototype.followOrientationOfObjects = function (targetObjects, duration, style) {
@@ -2346,9 +2346,9 @@ define([
             return 0;
         }
         switch (this._transitionStyle) {
-            case this.TransitionStyle.LINEAR:
+            case Camera.TransitionStyle.LINEAR:
                 return this._transitionElapsedTime / this._transitionDuration;
-            case this.TransitionStyle.SMOOTH:
+            case Camera.TransitionStyle.SMOOTH:
                 result = this._transitionElapsedTime / this._transitionDuration;
                 result = 3 * result * result - 2 * result * result * result;
                 return result;

@@ -107,10 +107,10 @@ define([
          */
         this._viewResetTransitionDuration = dataJSON.viewResetTransitionDuration;
         /**
-         * (enum Camera.prototype.TransitionStyle) The style of transitions applied by commands given to the camera by this controller.
+         * (enum Camera.TransitionStyle) The style of transitions applied by commands given to the camera by this controller.
          * @type String
          */
-        this._transitionStyle = types.getEnumValue(camera.Camera.prototype.TransitionStyle, dataJSON.transitionStyle, {name: "cameraController.transitionStyle"});
+        this._transitionStyle = types.getEnumValue(camera.Camera.TransitionStyle, dataJSON.transitionStyle, {name: "cameraController.transitionStyle"});
         // The superclass constructor above loads the data from the JSON, so all action
         // properties should have been created.
         this.setActionFunctions("controlCamera", function () {
@@ -337,7 +337,7 @@ define([
      * Sets the controlled camera to follow the passed visual object from now on.
      * @param {Object3D} renderableObject
      * @param {Number} [duration]
-     * @param {String} [style] (enum Camera.prototype.TransitionStyle)
+     * @param {String} [style] (enum Camera.TransitionStyle)
      */
     CameraController.prototype.setCameraToFollowObject = function (renderableObject, duration, style) {
         this._controlledCamera.followObject(renderableObject, false, duration, style);

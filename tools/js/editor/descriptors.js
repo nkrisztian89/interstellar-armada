@@ -1336,14 +1336,14 @@ define([
              */
             BASE_ORIENTATION = {
                 baseType: BaseType.ENUM,
-                values: camera.CameraOrientationConfiguration.prototype.BaseOrientation
+                values: camera.CameraOrientationConfiguration.BaseOrientation
             },
             /**
              * @type Editor~TypeDescriptor
              */
             POINT_TO_FALLBACK = {
                 baseType: BaseType.ENUM,
-                values: camera.CameraOrientationConfiguration.prototype.PointToFallback
+                values: camera.CameraOrientationConfiguration.PointToFallback
             },
             /**
              * @type Editor~TypeDescriptor

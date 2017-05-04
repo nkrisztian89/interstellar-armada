@@ -1031,7 +1031,7 @@ define([
      * @property {Number} [span]
      * @property {Number[2]} [spanRange]
      * @property {Number} [transitionDuration]
-     * @property {String} [transitionStyle] (enum Camera.prototype.TransitionStyle)
+     * @property {String} [transitionStyle] (enum Camera.TransitionStyle)
      */
     /**
      * @class An object to hold a hierarchic scene graph and webGL configuration for rendering.

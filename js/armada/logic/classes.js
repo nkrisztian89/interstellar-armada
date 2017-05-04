@@ -2552,30 +2552,30 @@ define([
          */
         this._resetsWhenLeavingConfines = dataJSON ? ((typeof dataJSON.resetsWhenLeavingConfines) === "boolean" ? dataJSON.resetsWhenLeavingConfines : false) : false;
         /**
-         * (enum CameraOrientationConfiguration.prototype.BaseOrientation) The base orientation for FPS-mode views, the axes of which will be used 
+         * (enum CameraOrientationConfiguration.BaseOrientation) The base orientation for FPS-mode views, the axes of which will be used 
          * for turning around. If null, the default setting will be acquired from the logic module upon the creation of a camera configuration
          * based on this view.
          * @type String 
          */
         this._baseOrientation = dataJSON ? (dataJSON.baseOrientation ?
-                (utils.getSafeEnumValue(camera.CameraOrientationConfiguration.prototype.BaseOrientation, dataJSON.baseOrientation) ||
+                (utils.getSafeEnumValue(camera.CameraOrientationConfiguration.BaseOrientation, dataJSON.baseOrientation) ||
                         application.showError(
                                 "Invalid value '" + dataJSON.baseOrientation + "' specified for view baseOrientation!",
                                 application.ErrorSeverity.MINOR,
-                                "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.prototype.BaseOrientation).join(", ") + ".")) :
+                                "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.BaseOrientation).join(", ") + ".")) :
                 null) : null;
         /**
-         * (enum CameraOrientationConfiguration.prototype.PointToFallback) The basis of orientation calculation if the view is set to "look at" mode,
+         * (enum CameraOrientationConfiguration.PointToFallback) The basis of orientation calculation if the view is set to "look at" mode,
          * but the object to look at has been destroyed. If null, the default setting will be acquired from the logic module upon the creation of a 
          * camera configuration based on this view.
          * @type String
          */
         this._pointToFallback = dataJSON ? (dataJSON.pointToFallback ?
-                (utils.getSafeEnumValue(camera.CameraOrientationConfiguration.prototype.PointToFallback, dataJSON.pointToFallback) ||
+                (utils.getSafeEnumValue(camera.CameraOrientationConfiguration.PointToFallback, dataJSON.pointToFallback) ||
                         application.showError(
                                 "Invalid value '" + dataJSON.pointToFallback + "' specified for view pointToFallback!",
                                 application.ErrorSeverity.MINOR,
-                                "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.prototype.PointToFallback).join(", ") + ".")) :
+                                "Valid values are: " + utils.getEnumValues(camera.CameraOrientationConfiguration.PointToFallback).join(", ") + ".")) :
                 null) : null;
         /**
          * When true, this view should be skipped when switching between views using cycling (switching to next / previous views), and should
@@ -2669,14 +2669,14 @@ define([
         return this._resetsWhenLeavingConfines;
     };
     /**
-     * (enum CameraOrientationConfiguration.prototype.BaseOrientation)
+     * (enum CameraOrientationConfiguration.BaseOrientation)
      * @returns {String}
      */
     GenericView.prototype.getBaseOrientation = function () {
         return this._baseOrientation;
     };
     /**
-     * (enum CameraOrientationConfiguration.prototype.PointToFallback)
+     * (enum CameraOrientationConfiguration.PointToFallback)
      * @returns {String}
      */
     GenericView.prototype.getPointToFallback = function () {
@@ -2865,8 +2865,8 @@ define([
      * For specific game objects (e.g. Spacecrafts), use the method of that object that will create the camera 
      * configuration with the proper defaults.
      * @param {RenderableObject3D} model
-     * @param {String} defaultCameraBaseOrientation (enum CameraOrientationConfiguration.prototype.BaseOrientation)
-     * @param {String} defaultCameraPointToFallback (enum CameraOrientationConfiguration.prototype.PointToFallback)
+     * @param {String} defaultCameraBaseOrientation (enum CameraOrientationConfiguration.BaseOrientation)
+     * @param {String} defaultCameraPointToFallback (enum CameraOrientationConfiguration.PointToFallback)
      * @param {Number} defaultFOV
      * @param {Number[2]} defaultFOVRange
      * @param {Number} defaultSpan
