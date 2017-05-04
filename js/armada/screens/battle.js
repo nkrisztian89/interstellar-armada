@@ -2993,7 +2993,7 @@ define([
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendly,
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendlyHighlight,
                     animationProgress);
-            if (_newHostilesMessage && (_newHostilesMessage.timeLeft > 0)) {
+            if (control.isInPilotMode() && _newHostilesMessage && (_newHostilesMessage.timeLeft > 0)) {
                 newHostilesPresent = true;
                 animationProgress = Math.abs(((_newHostilesMessage.duration - _newHostilesMessage.timeLeft) % _newHostilesMessage.blinkInterval) / _newHostilesMessage.blinkInterval - 0.5) * 2;
                 newHostileColor = utils.getMixedColor(
