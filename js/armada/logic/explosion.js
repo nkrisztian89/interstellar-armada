@@ -72,20 +72,34 @@ define([
              * new particle objects can be decreased for optimization.
              * @type Pool
              */
-            _particlePool;
+            _particlePool,
+            /**
+             * A pool containing explosions for reuse, so that creation of new explosion objects can be decreased for optimization.
+             * @type Pool
+             */
+            _explosionPool;
+    // ------------------------------------------------------------------------------
+    // public functions
+    /**
+     * Returns an explosion object instance that can be (re)used - creating a new one only if needed.
+     * @returns {Explosion}
+     */
+    function getExplosion() {
+        return _explosionPool.getObject();
+    }
     // ##############################################################################
     /**
      * @class Logic domain class used for explosions and fires. Uses a particle system for
      * the visual model.
      * @param {ExplosionClass} explosionClass The class that contains the general attributes of the
      * type of explosion the instance represents.
-     * @param {Float32Array} positionMatrix 4x4 translation matrix used to set the position of the visual model (meters)
-     * @param {Float32Array} orientationMatrix 4x4 rotation matrix used to set the orientation of the visual model
+     * @param {Float32Array} [positionMatrix] 4x4 translation matrix used to set the position of the visual model (meters)
+     * @param {Float32Array} [orientationMatrix] 4x4 rotation matrix used to set the orientation of the visual model
      * @param {Number[3]} direction This vector will be used to set the direction of the particle emitters (which can emit
      * particles towards or perpendicular to this vector)
      * @param {Boolean} carriesParticles If true, the particles emitted by the explosion will belong to it as subnodes,
      * and change position and/or orientation with it, even after they have been emitted
-     * @param {Float32Array} velocityMatrix A 4x4 translation matrix describing the velocity of this explosion in world space, m/s.
+     * @param {Float32Array} [velocityMatrix] A 4x4 translation matrix describing the velocity of this explosion in world space, m/s.
      */
     function Explosion(explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles, velocityMatrix) {
         /**
@@ -97,12 +111,12 @@ define([
          * 4x4 translation matrix used to set the position of the visual model (meters)
          * @type Float32Array
          */
-        this._positionMatrix = positionMatrix;
+        this._positionMatrix = positionMatrix || mat.identity4();
         /**
          * 4x4 rotation matrix used to set the orientation of the visual model
          * @type Float32Array
          */
-        this._orientationMatrix = orientationMatrix;
+        this._orientationMatrix = orientationMatrix || mat.identity4();
         /**
          * This vector is used to set the direction of the particle emitters (which can emit
          * particles towards ("unidirectional") or perpendicular ("planar") to this vector)
@@ -125,7 +139,41 @@ define([
          * @type ParticleSystem
          */
         this._visualModel = null;
+        /**
+         * Whether the stored visual model reference belongs to the current use of this explosion (since the same explosion object can be
+         * reused multiple times)
+         * @type Boolean
+         */
+        this._visualModelValid = false;
     }
+    /**
+     * Initializes all properties of this explosion.
+     * @param {ExplosionClass} explosionClass The class that contains the general attributes of the
+     * type of explosion the instance represents.
+     * @param {Float32Array} positionMatrix 4x4 translation matrix used to set the position of the visual model (meters)
+     * @param {Float32Array} orientationMatrix 4x4 rotation matrix used to set the orientation of the visual model
+     * @param {Number[3]} direction This vector will be used to set the direction of the particle emitters (which can emit
+     * particles towards or perpendicular to this vector)
+     * @param {Boolean} carriesParticles If true, the particles emitted by the explosion will belong to it as subnodes,
+     * and change position and/or orientation with it, even after they have been emitted
+     * @param {Float32Array} [velocityMatrix] A 4x4 translation matrix describing the velocity of this explosion in world space, m/s.
+     */
+    Explosion.prototype.init = function (explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles, velocityMatrix) {
+        this._class = explosionClass;
+        mat.setMatrix4(this._positionMatrix, positionMatrix);
+        mat.setMatrix4(this._orientationMatrix, orientationMatrix);
+        this._direction = direction;
+        this._carriesParticles = (carriesParticles === true);
+        mat.setMatrix4(this._velocityMatrix, velocityMatrix || mat.IDENTITY4);
+        this._visualModelValid = false;
+    };
+    /**
+     * Returns whether this explosion object instance is no longer needed for its current use, and can be reused.
+     * @returns {Boolean}
+     */
+    Explosion.prototype.canBeReused = function () {
+        return this._visualModel && this._visualModel.canBeReused();
+    };
     /**
      * Returns a function that constructs and returns a particle object based on the 
      * particle emitter descriptor of the given index.
@@ -173,7 +221,8 @@ define([
         for (i = 0; i < particleEmitterDescriptors.length; i++) {
             switch (particleEmitterDescriptors[i].getType()) {
                 case classes.ParticleEmitterType.OMNIDIRECTIONAL:
-                    emitter = new particleSystem.OmnidirectionalParticleEmitter(mat.identity4(),
+                    emitter = new particleSystem.OmnidirectionalParticleEmitter(
+                            mat.IDENTITY4, // as of now, cannot be modified (no setter), so no problem - later could be initialised from JSON
                             mat.IDENTITY4, // as of now, cannot be modified (no setter), so no problem - later could be initialised from JSON
                             particleEmitterDescriptors[i].getDimensions(),
                             particleEmitterDescriptors[i].getVelocity(),
@@ -186,7 +235,8 @@ define([
                             this.getEmitterParticleConstructor(i));
                     break;
                 case classes.ParticleEmitterType.UNIDIRECTIONAL:
-                    emitter = new particleSystem.UnidirectionalParticleEmitter(mat.identity4(),
+                    emitter = new particleSystem.UnidirectionalParticleEmitter(
+                            mat.IDENTITY4, // see above
                             mat.IDENTITY4, // see above
                             particleEmitterDescriptors[i].getDimensions(),
                             this._direction,
@@ -201,7 +251,8 @@ define([
                             this.getEmitterParticleConstructor(i));
                     break;
                 case classes.ParticleEmitterType.PLANAR:
-                    emitter = new particleSystem.PlanarParticleEmitter(mat.identity4(),
+                    emitter = new particleSystem.PlanarParticleEmitter(
+                            mat.IDENTITY4, // see above
                             mat.IDENTITY4, // see above
                             particleEmitterDescriptors[i].getDimensions(),
                             this._direction,
@@ -220,17 +271,32 @@ define([
             }
             particleEmitters.push(emitter);
         }
-        this._visualModel = new particleSystem.ParticleSystem(
-                this._positionMatrix,
-                this._orientationMatrix,
-                scale ? mat.scaling4(scale) : mat.IDENTITY4,
-                this._velocityMatrix,
-                particleEmitters,
-                this._class.getTotalDuration(),
-                this._class.isContinuous(),
-                this._carriesParticles,
-                config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING),
-                graphics.getParticleCountFactor());
+        if (!this._visualModel) {
+            this._visualModel = new particleSystem.ParticleSystem(
+                    this._positionMatrix,
+                    this._orientationMatrix,
+                    scale ? mat.scaling4(scale) : mat.IDENTITY4,
+                    this._velocityMatrix,
+                    particleEmitters,
+                    this._class.getTotalDuration(),
+                    this._class.isContinuous(),
+                    this._carriesParticles,
+                    config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING),
+                    graphics.getParticleCountFactor());
+        } else if (!this._visualModelValid) {
+            this._visualModel.init(
+                    this._positionMatrix,
+                    this._orientationMatrix,
+                    scale ? mat.scaling4Aux(scale) : mat.IDENTITY4,
+                    this._velocityMatrix,
+                    particleEmitters,
+                    this._class.getTotalDuration(),
+                    this._class.isContinuous(),
+                    this._carriesParticles,
+                    config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING),
+                    graphics.getParticleCountFactor());
+        }
+        this._visualModelValid = true;
     };
     /**
      * The callback that adds the explosion to a scene (called by addToScene())
@@ -299,10 +365,12 @@ define([
             this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
+        this._visualModelValid = false;
     };
-    // initializazion
+    // initialization
     // obtaining pool references
     _particlePool = pools.getPool(renderableObjects.Particle);
+    _explosionPool = pools.getPool(Explosion);
     // caching configuration settings
     config.executeWhenReady(function () {
         _hitSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_TIME_THRESHOLD);
@@ -311,6 +379,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        getExplosion: getExplosion,
         Explosion: Explosion
     };
 });

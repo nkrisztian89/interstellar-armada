@@ -1876,10 +1876,11 @@ define([
                 damageIndicator = this._class.getDamageIndicators()[i];
                 hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._maxHitpoints;
                 if ((this._hitpoints <= hitpointThreshold) && (this._hitpoints + damage > hitpointThreshold)) {
-                    exp = new explosion.Explosion(
+                    exp = explosion.getExplosion();
+                    exp.init(
                             damageIndicator.explosionClass,
-                            mat.translation4v(damagePosition),
-                            mat.identity4(),
+                            mat.translation4vAux(damagePosition),
+                            mat.IDENTITY4,
                             damageDir,
                             true);
                     exp.addToScene(this._visualModel.getNode(), this.getSoundSource());
@@ -2053,13 +2054,14 @@ define([
                     this._propulsion.resetThrusterBurn();
                     this._propulsion.simulate(this.getSoundSource(), false);
                 }
-                this._explosion = new explosion.Explosion(
+                this._explosion = explosion.getExplosion();
+                this._explosion.init(
                         this._class.getExplosionClass(),
-                        mat.matrix4(this._physicalModel.getPositionMatrix()),
-                        mat.matrix4(this._physicalModel.getOrientationMatrix()),
+                        this._physicalModel.getPositionMatrix(),
+                        this._physicalModel.getOrientationMatrix(),
                         mat.getRowC43(this._physicalModel.getPositionMatrix()),
                         true,
-                        mat.matrix4(this._physicalModel.getVelocityMatrix()));
+                        this._physicalModel.getVelocityMatrix());
                 this._explosion.addToScene(this._visualModel.getNode().getScene().getRootNode(), this.getSoundSource());
                 for (i = 0; i < this._activeDamageIndicators; i++) {
                     this._activeDamageIndicators[i].finish();

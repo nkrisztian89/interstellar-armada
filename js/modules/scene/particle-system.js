@@ -465,6 +465,34 @@ define([
     ParticleSystem.prototype = new renderableObjects.RenderableObject3D();
     ParticleSystem.prototype.constructor = ParticleSystem;
     /**
+     * Initializes all properties of the particle system.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the position of the center of the particle system (meters)
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix describing the orientation of the particle system
+     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix describing the scaling for the positions of the particles in this particle system
+     * @param {Float32Array} velocityMatrix The 4x4 translation matrix describing the velocity of the particle system (m/s)
+     * @param {ParticleEmitter[]} emitters The list of emitters that will be used to generate particles
+     * @param {Number} duration For how long should the particle system be active (milliseconds)
+     * @param {Boolean} [keepAlive=false] Whether to keep the particle system alive after the duration has expired.
+     * Emitters that are set to produce particles forever will keep on doing so.
+     * @param {Boolean} [carriesParticles=false] Whether to carry the emitted particles as subnodes in the scene graph or
+     * add them directly to the scene root.
+     * @param {Number} [minimumCountForInstancing=0] If greater than zero, then having at least this many particles of the types emitted
+     * by this particle system will turn on instancing for their render queue.
+     * @param {Number} [particleCountFactor=1] The number of particles created by this particle system will be multiplied by this factor
+     */
+    ParticleSystem.prototype.init = function (positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing, particleCountFactor) {
+        renderableObjects.RenderableObject3D.prototype.init.call(this, null, false, true, positionMatrix, orientationMatrix, scalingMatrix, undefined, 1, true);
+        this._velocityMatrix = velocityMatrix;
+        this._emitters = emitters;
+        this._age = 0;
+        this._duration = duration;
+        this._keepAlive = (keepAlive === true);
+        this._carriesParticles = (carriesParticles === true);
+        this._minimumCountForInstancing = minimumCountForInstancing;
+        this._particleCountFactor = (particleCountFactor !== undefined) ? particleCountFactor : 1;
+        this._calculateSize();
+    };
+    /**
      */
     ParticleSystem.prototype._calculateSize = function () {
         var i, result = 0;

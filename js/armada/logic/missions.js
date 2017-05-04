@@ -30,6 +30,7 @@
  * @param SpacecraftEvents Used to trigger spacecraft events
  * @param spacecraft Used for creating spacecrafts
  * @param equipment Used for accessing the common projectile pool
+ * @param explosion Used for explosion pool management
  * @param ai Used for setting the artificial intelligence pilots when creating a mission.
  */
 define([
@@ -53,13 +54,14 @@ define([
     "armada/logic/SpacecraftEvents",
     "armada/logic/spacecraft",
     "armada/logic/equipment",
+    "armada/logic/explosion",
     "armada/logic/ai",
     "utils/polyfill"
 ], function (
         utils, types, mat,
         application, game, asyncResource, resourceManager, resources, pools,
         camera, renderableObjects,
-        constants, graphics, classes, config, strings, environments, SpacecraftEvents, spacecraft, equipment, ai) {
+        constants, graphics, classes, config, strings, environments, SpacecraftEvents, spacecraft, equipment, explosion, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -196,6 +198,11 @@ define([
              * @type Pool
              */
             _projectilePool,
+            /**
+             * A pool containing explosions for reuse, so that creation of new explosion objects can be decreased for optimization.
+             * @type Pool
+             */
+            _explosionPool,
             /**
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type MissionContext
@@ -2579,6 +2586,16 @@ define([
         }
     };
     /**
+     * Function to execute during every simulation step on explosions taken from the explosion pool
+     * @param {Explosion} explosion The explosion to handle
+     * @param {Number} indexInPool The index of the explosion within the explosion pool
+     */
+    Mission._handleExplosion = function (explosion, indexInPool) {
+        if (explosion.canBeReused()) {
+            _explosionPool.markAsFree(indexInPool);
+        }
+    };
+    /**
      * Function to execute during every simulation step on particles taken from the particle pool
      * @param {Particle} particle The particle to handle
      * @param {Number} indexInPool The index of the particle within the particle pool
@@ -2623,6 +2640,9 @@ define([
             octree = new Octree(this._hitObjects, 2, 1, true);
             _projectilePool.executeForLockedObjects(Mission._handleProjectile.bind(this, dt, octree));
         }
+        if (_explosionPool.hasLockedObjects()) {
+            _explosionPool.executeForLockedObjects(Mission._handleExplosion);
+        }
         if (_particlePool.hasLockedObjects()) {
             _particlePool.executeForLockedObjects(Mission._handleParticle);
         }
@@ -2636,8 +2656,9 @@ define([
         this._updateState();
         if (application.isDebugVersion()) {
             _debugInfo =
-                    "Part: " + _particlePool._objects.length + "<br/>" +
-                    "Proj: " + _projectilePool._objects.length;
+                    "Part: " + _particlePool.getLockedObjectCount() + " / " + _particlePool._objects.length + "<br/>" +
+                    "Proj: " + _projectilePool.getLockedObjectCount() + " / " + _projectilePool._objects.length + "<br/>" +
+                    "Expl: " + _explosionPool.getLockedObjectCount() + " / " + _explosionPool._objects.length;
         }
     };
     /**
@@ -2675,6 +2696,7 @@ define([
         this._hitObjects = null;
         _particlePool.clear();
         _projectilePool.clear();
+        _explosionPool.clear();
     };
     // #########################################################################
     /**
@@ -3219,6 +3241,7 @@ define([
     // obtaining pool references
     _particlePool = pools.getPool(renderableObjects.Particle);
     _projectilePool = pools.getPool(equipment.Projectile);
+    _explosionPool = pools.getPool(explosion.Explosion);
     // creating the default context
     _context = new MissionContext();
     // associating condition constructors

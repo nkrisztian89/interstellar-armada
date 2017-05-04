@@ -3230,8 +3230,8 @@ define([
                             sceneGraph.getDebugInfo() + "<br/>" +
                             mat.getMatrixCount() + " <br/>" +
                             this.getFPSStats() + "<br/>" +
-                            mainStats.triangleDrawCalls + ": " + mainStats.triangles + " + i: " + mainStats.instancedTriangleDrawCalls + ": " + mainStats.instancedTriangles + "<br/>" +
-                            shadowStats.triangleDrawCalls + ": " + shadowStats.triangles);
+                            (mainStats ? (mainStats.triangleDrawCalls + ": " + mainStats.triangles + " + i: " + mainStats.instancedTriangleDrawCalls + ": " + mainStats.instancedTriangles) : "") + "<br/>" +
+                            (shadowStats ? (shadowStats.triangleDrawCalls + ": " + shadowStats.triangles) : ""));
                 }
                 mat.clearMatrixCount();
             } else {

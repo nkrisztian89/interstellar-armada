@@ -465,7 +465,8 @@ define([
                         hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
                         relativeHitPositionVectorInWorldSpace = vec.diff3Aux(hitPositionVectorInWorldSpace, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                         physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
-                        exp = new explosion.Explosion(this._class.getExplosionClass(), mat.translation4v(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, mat.matrix4(physicalHitObject.getVelocityMatrix()));
+                        exp = explosion.getExplosion();
+                        exp.init(this._class.getExplosionClass(), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
                         exp.addToScene(this._visualModel.getNode().getScene().getRootNode(), hitObjects[i].getSoundSource(), true);
                         hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
                         this._timeLeft = 0;
@@ -2636,10 +2637,11 @@ define([
             this._timeLeft = this._class.getJumpInDuration();
             this._spacecraft.lockManeuvering();
             this._spacecraft.disableFiring();
-            exp = new explosion.Explosion(
+            exp = explosion.getExplosion();
+            exp.init(
                     this._class.getJumpInExplosionClass(),
-                    mat.matrix4(this._spacecraft.getPhysicalPositionMatrix()),
-                    mat.matrix4(this._spacecraft.getPhysicalOrientationMatrix()),
+                    this._spacecraft.getPhysicalPositionMatrix(),
+                    this._spacecraft.getPhysicalOrientationMatrix(),
                     mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
                     true,
                     mat.IDENTITY4);
@@ -2713,10 +2715,11 @@ define([
                 // finishing up the particle effect when the time is up
                 if (this._timeLeft <= 0) {
                     this._state = JumpEngine.JumpState.NONE;
-                    exp = new explosion.Explosion(
+                    exp = explosion.getExplosion();
+                    exp.init(
                             this._class.getJumpOutExplosionClass(),
-                            mat.matrix4(this._spacecraft.getPhysicalPositionMatrix()),
-                            mat.matrix4(this._spacecraft.getPhysicalOrientationMatrix()),
+                            this._spacecraft.getPhysicalPositionMatrix(),
+                            this._spacecraft.getPhysicalOrientationMatrix(),
                             mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
                             true,
                             mat.IDENTITY4);
