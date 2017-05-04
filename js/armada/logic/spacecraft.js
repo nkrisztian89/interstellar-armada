@@ -1592,14 +1592,18 @@ define([
         }
     };
     /**
-     * Equips a weapon of the given class to the ship's next free weapon hard
-     * point, if any are available.
-     * @param {WeaponClass} weaponClass
+     * Equips a weapon of the given class on the ship.
+     * @param {WeaponClass} weaponClass the class of the weapon to equip.
+     * @param {Number} [slotIndex] The index of the weapon slot to equip the weapon to. If not given (or negative), the weapon will be 
+     * equipped to the next slot (based on the number of already equipped weapons)
      */
-    Spacecraft.prototype._addWeapon = function (weaponClass) {
+    Spacecraft.prototype._addWeapon = function (weaponClass, slotIndex) {
         var slot, weaponSlots = this._class.getWeaponSlots();
-        if (this._weapons.length < weaponSlots.length) {
-            slot = weaponSlots[this._weapons.length];
+        if ((slotIndex === undefined) || (slotIndex < 0)) {
+            slotIndex = this._weapons.length;
+        }
+        if (slotIndex < weaponSlots.length) {
+            slot = weaponSlots[slotIndex];
             this._weapons.push(new equipment.Weapon(weaponClass, this, slot));
         }
     };
@@ -1641,10 +1645,11 @@ define([
      * @param {EquipmentProfile} [equipmentProfile]
      */
     Spacecraft.prototype.equipProfile = function (equipmentProfile) {
-        var i;
+        var i, weaponDescriptors;
         if (equipmentProfile) {
-            for (i = 0; i < equipmentProfile.getWeaponDescriptors().length; i++) {
-                this._addWeapon(classes.getWeaponClass(equipmentProfile.getWeaponDescriptors()[i].className));
+            weaponDescriptors = equipmentProfile.getWeaponDescriptors();
+            for (i = 0; i < weaponDescriptors.length; i++) {
+                this._addWeapon(classes.getWeaponClass(weaponDescriptors[i].className), weaponDescriptors[i].slotIndex);
             }
             if (equipmentProfile.getPropulsionDescriptor() !== null) {
                 this._addPropulsion(classes.getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));

@@ -1493,6 +1493,12 @@ define([
                     CLASS: {
                         name: "class",
                         type: WEAPON_CLASS_REFERENCE
+                    },
+                    SLOT_INDEX: {
+                        name: "slotIndex",
+                        type: BaseType.NUMBER,
+                        optional: true,
+                        defaultDerived: true
                     }
                 }
             },

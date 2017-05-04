@@ -6384,6 +6384,21 @@
                         "class": "pirateFighterMk1"
                     }
                 }, {
+                    "name": "medium",
+                    "weapons": [{
+                            "class": "pirateGun",
+                            "slotIndex": 1
+                        }, {
+                            "class": "pirateGun",
+                            "slotIndex": 2
+                        }],
+                    "propulsion": {
+                        "class": "pirateFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "pirateFighterMk1"
+                    }
+                }, {
                     "name": "weak",
                     "weapons": [{
                             "class": "pirateGun"

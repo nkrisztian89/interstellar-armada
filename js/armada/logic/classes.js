@@ -2372,6 +2372,11 @@ define([
          * @type String
          */
         this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
+        /**
+         * The index of the weapon slot the weapon should be equipped to. (not given or -1 means to equip to the next free slot)
+         * @type Number
+         */
+        this.slotIndex = dataJSON ? dataJSON.slotIndex : -1;
     }
     // ##############################################################################
     /**

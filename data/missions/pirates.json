@@ -172,6 +172,7 @@
             "ai": "fighter",
             "squad": "raider 1",
             "position": [0, 3200, -100],
+            "equipment": "medium",
             "rotations": ["z+180"]
         }, {
             "team": "pirates",
