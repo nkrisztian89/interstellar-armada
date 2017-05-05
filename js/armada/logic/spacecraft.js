@@ -2137,6 +2137,46 @@ define([
         return result;
     };
     /**
+     * Returns the highest number of projectiles that might be used for the weapons of this spacecraft simultaneously in one battle.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMaxProjectileCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._weapons.length; i++) {
+            result += this._weapons[i].getMaxProjectileCount();
+        }
+        return result;
+    };
+    /**
+     * Returns the highest number of explosions that might be used for this spacecraft simultaneously in one battle.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMaxExplosionCount = function () {
+        var result = 0, i;
+        result += 1; // main explosion when ship is destroyed
+        result += this._class.getDamageIndicators().length;
+        for (i = 0; i < this._weapons.length; i++) {
+            result += this._weapons[i].getMaxExplosionCount();
+        }
+        return result;
+    };
+    /**
+     * Returns the highest number of particles that might be used for this spacecraft simultaneously in one battle.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMaxParticleCount = function () {
+        var result = 0, i, damageIndicators;
+        result += this._class.getExplosionClass().getMaxParticleCount();
+        damageIndicators = this._class.getDamageIndicators();
+        for (i = 0; i < damageIndicators.length; i++) {
+            result += damageIndicators[i].explosionClass.getMaxParticleCount();
+        }
+        for (i = 0; i < this._weapons.length; i++) {
+            result += this._weapons[i].getMaxParticleCount();
+        }
+        return result;
+    };
+    /**
      * Cancels the held references and marks the renderable object, its node and its subtree as reusable.
      * @param {Boolean} [preserveClass=false] If true, the reference to the spacecraft's class is preserved (spacecraft classes objects are 
      * not destroyed during the game anyway, and this way it can be known, what type of spacecraft this was (for example for showing 

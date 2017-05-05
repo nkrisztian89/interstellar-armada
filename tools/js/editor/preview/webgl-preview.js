@@ -22,6 +22,7 @@
  * @param graphics Used to access the graphics settings of the game (same are used for the preview)
  * @param config Used to access default camera configuration settings.
  * @param classes Used to create an object view for the preview model.
+ * @param explosion Used to manage the explosion pool.
  * @param common Used to create selectors.
  */
 define([
@@ -37,12 +38,13 @@ define([
     "armada/graphics",
     "armada/configuration",
     "armada/logic/classes",
+    "armada/logic/explosion",
     "editor/common"
 ], function (
         utils, vec, mat,
         pools, managedGL, resources, audio,
         renderableObjects, sceneGraph,
-        graphics, config, classes,
+        graphics, config, classes, explosion,
         common) {
     "use strict";
     var
@@ -84,6 +86,10 @@ define([
              * @type Pool
              */
             _particlePool,
+            /**
+             * @type Pool
+             */
+            _explosionPool,
             /**
              * @type ManagedGLContext
              */
@@ -266,6 +272,16 @@ define([
         }
     }
     /**
+     * Function to execute on (active, used) explosions in the explosion pool every animation step
+     * @param {Explosion} exp
+     * @param {Number} indexInPool
+     */
+    function _handleExplosion(exp, indexInPool) {
+        if (exp.canBeReused()) {
+            _explosionPool.markAsFree(indexInPool);
+        }
+    }
+    /**
      * Called when a change happens as the result of which the preview scene should rendered again (if it is not rendered continuously)
      * @param {Boolean} [force=false] If false, the render is only executed if there is no requestAnimFrame render loop active
      * @param {Number} [dt=0] The time elapsed since the last render (to advance animation, in milliseconds)
@@ -275,6 +291,9 @@ define([
             dt = dt || 0;
             if (_particlePool.hasLockedObjects()) {
                 _particlePool.executeForLockedObjects(_handleParticle);
+            }
+            if (_explosionPool.hasLockedObjects()) {
+                _explosionPool.executeForLockedObjects(_handleExplosion);
             }
             _scene.render(_context, dt);
             if (_currentContext && _currentContext.functions.animate) {
@@ -567,6 +586,7 @@ define([
             _model = null;
             _wireframeModel = null;
             _particlePool.clear();
+            _explosionPool.clear();
         }
         if (!_scene) {
             _scene = new sceneGraph.Scene(
@@ -758,6 +778,7 @@ define([
     // initializazion
     // obtaining pool references
     _particlePool = pools.getPool(renderableObjects.Particle);
+    _explosionPool = pools.getPool(explosion.Explosion);
     // ----------------------------------------------------------------------
     // The public interface of the module
     return {

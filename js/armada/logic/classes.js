@@ -1071,7 +1071,7 @@ define([
          */
         this._initialNumber = dataJSON ? (dataJSON.initialNumber || 0) : 0;
         /**
-         * The number of particles emitted at the end of  each spawning round
+         * The number of particles emitted at the end of each spawning round
          * @type Number
          */
         this._spawnNumber = dataJSON ? (dataJSON.spawnNumber || 0) : 0;
@@ -1188,19 +1188,50 @@ define([
         return this._particleStates;
     };
     /**
-     * Returns the duration it takes from the start of emitting until the last particle emitted by this emitter (except for looping) 
-     * diminishes
+     * Returns the duration of the life of particles emitted by this emitter, in milliseconds.
+     * @returns {Number}
+     */
+    ParticleEmitterDescriptor.prototype.getParticleDuration = function () {
+        var result = 0, i;
+        for (i = 0; i < this._particleStates.length; i++) {
+            result += this._particleStates[i].timeToReach;
+        }
+        return result;
+    };
+    /**
+     * Returns the duration it takes from the creation of this emitter until the last particle emitted by this emitter (except for looping) 
+     * diminishes, in milliseconds.
      * @returns {Number}
      */
     ParticleEmitterDescriptor.prototype.getTotalDuration = function () {
-        var result = 0, i;
+        var result = this._delay;
         // calculating last spawning time
         if (this._spawnNumber && this._spawnTime) {
             result += Math.floor(this._duration / this._spawnTime) * this._spawnTime;
         }
-        // calculating the duration of a particle
-        for (i = 0; i < this._particleStates.length; i++) {
-            result += this._particleStates[i].timeToReach;
+        result += this.getParticleDuration();
+        return result;
+    };
+    /**
+     * Returns the maximum number of particles that might be simultaneously used (be alive) by this emitter during its lifetime.
+     * @returns {Number}
+     */
+    ParticleEmitterDescriptor.prototype.getMaxParticleCount = function () {
+        var result, maxSpawnsPresent, spawnCount,
+                particleDuration = this.getParticleDuration();
+        spawnCount = Math.floor(this._duration / this._spawnTime) + 1; // how many spawnings happen at all in case the emitter is not 
+        // looping - including the initial spawning
+        maxSpawnsPresent = Math.ceil(particleDuration / this._spawnTime); // from maximum how many spawnings are particles present together
+        // calculate the maximum number of spawned particles that exist together (for non-looping and looping) based on (general) spawning number and count
+        result = this._spawnNumber * (this._duration ? Math.min(spawnCount, maxSpawnsPresent) : maxSpawnsPresent);
+        // consider that the initial spawning number might be different
+        if (this._initialNumber > this._spawnNumber) {
+            // if it is greater, add the difference
+            result += (this._initialNumber - this._spawnNumber);
+        } else if ((this._initialNumber < this._spawnNumber) && this._duration && (spawnCount <= maxSpawnsPresent)) {
+            // if it is less, the difference only counts for non-looping emitters where all spawnings live long enough to exist together
+            // (otherwise the peak happens after the initially spawned particles disappear)
+            result -= (this._spawnNumber - this._initialNumber);
         }
         return result;
     };
@@ -1292,6 +1323,17 @@ define([
             if (emitterDuration > result) {
                 result = emitterDuration;
             }
+        }
+        return result;
+    };
+    /**
+     * Returns the maximum number of particles used simultaneously by this explosion.
+     * @returns {Number}
+     */
+    ExplosionClass.prototype.getMaxParticleCount = function () {
+        var i, result = 0;
+        for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
+            result += this._particleEmitterDescriptors[i].getMaxParticleCount();
         }
         return result;
     };
@@ -1552,6 +1594,31 @@ define([
      */
     Barrel.prototype.acquireResources = function () {
         this._projectileClass.acquireResources();
+    };
+    /**
+     * Returns the highest number of projectiles that might be used for this barrel simultaneously in one battle, given the passed cooldown.
+     * @param {Number} cooldown The cooldown determining the firing rate, in milliseconds.
+     * @returns {Number}
+     */
+    Barrel.prototype.getMaxProjectileCount = function (cooldown) {
+        return Math.ceil(this._projectileClass.getDuration() / cooldown);
+    };
+    /**
+     * Returns the highest number of explosions that might be used for this barrel simultaneously in one battle, given the passed cooldown.
+     * @param {Number} cooldown The cooldown determining the firing rate, in milliseconds.
+     * @returns {Number}
+     */
+    Barrel.prototype.getMaxExplosionCount = function (cooldown) {
+        return Math.ceil(this._projectileClass.getExplosionClass().getTotalDuration() / cooldown);
+    };
+    /**
+     * Returns the highest number of particles that might be used for this barrel simultaneously in one battle, given the passed cooldown.
+     * @param {Number} cooldown The cooldown determining the firing rate, in milliseconds.
+     * @returns {Number}
+     */
+    Barrel.prototype.getMaxParticleCount = function (cooldown) {
+        // one for the muzzle flash
+        return 1 + this.getMaxExplosionCount(cooldown) * this._projectileClass.getExplosionClass().getMaxParticleCount();
     };
     // ##############################################################################
     /**
@@ -1815,6 +1882,39 @@ define([
      */
     WeaponClass.prototype.getScoreValue = function () {
         return this._scoreValue;
+    };
+    /**
+     * Returns the highest number of projectiles that might be used for weapons of this class simultaneously in one battle.
+     * @returns {Number}
+     */
+    WeaponClass.prototype.getMaxProjectileCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._barrels.length; i++) {
+            result += this._barrels[i].getMaxProjectileCount(this._cooldown);
+        }
+        return result;
+    };
+    /**
+     * Returns the highest number of explosions that might be used for weapons of this class simultaneously in one battle.
+     * @returns {Number}
+     */
+    WeaponClass.prototype.getMaxExplosionCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._barrels.length; i++) {
+            result += this._barrels[i].getMaxExplosionCount(this._cooldown);
+        }
+        return result;
+    };
+    /**
+     * Returns the highest number of particles that might be used for weapons of this class simultaneously in one battle.
+     * @returns {Number}
+     */
+    WeaponClass.prototype.getMaxParticleCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._barrels.length; i++) {
+            result += this._barrels[i].getMaxParticleCount(this._cooldown);
+        }
+        return result;
     };
     // ##############################################################################
     /**

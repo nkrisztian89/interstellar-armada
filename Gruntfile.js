@@ -11,6 +11,11 @@ module.exports = function (grunt) {
                     baseUrl: "js",
                     name: "main",
                     optimize: "uglify2",
+                    uglify2: {
+                        mangle: {
+                            keep_fnames: true // we rely on Function.prototype.name at some points (e.g. common Pools)
+                        }
+                    },
                     out: "js/main-optimized.js",
                     preserveLicenseComments: false
                 }

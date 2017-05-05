@@ -292,7 +292,7 @@ define([
          * this projectile.
          * @type PhysicalObject
          */
-        this._physicalModel = null;
+        this._physicalModel = new physics.PhysicalObject();
         /**
          * The amount of time this projectile has left to "live", in milliseconds.
          * @type Number
@@ -318,9 +318,6 @@ define([
      */
     Projectile.prototype.init = function (projectileClass, positionMatrix, orientationMatrix, spacecraft, startingForce) {
         this._class = projectileClass;
-        if (!this._physicalModel) {
-            this._physicalModel = new physics.PhysicalObject();
-        }
         this._physicalModel.init(
                 projectileClass.getMass(),
                 positionMatrix || mat.IDENTITY4,
@@ -345,13 +342,19 @@ define([
         return (this._timeLeft <= 0);
     };
     /**
-     * Creates the renderable object that can be used to represent this projectile
-     * in a visual scene, if it has not been created yet.
-     * @param {Boolean} [wireframe=false] Whether to create the model in wireframe mode
+     * Creates a new billboard to be used as the visual model for this projectile. Safe to be called on Projectile objects that have not
+     * been set up yet, so that the visual model objects can be created in advance.
      */
-    Projectile.prototype._createVisualModel = function (wireframe) {
+    Projectile.prototype.createVisualModel = function () {
+        this._visualModel = new renderableObjects.Billboard();
+    };
+    /**
+     * Sets up the renderable object that can be used to represent this projectile in a visual scene.
+     * @param {Boolean} [wireframe=false] Whether to set up the model in wireframe mode
+     */
+    Projectile.prototype._initVisualModel = function (wireframe) {
         if (!this._visualModel) {
-            this._visualModel = new renderableObjects.Billboard();
+            this.createVisualModel();
         }
         this._visualModel.init(
                 this._class.getModel(),
@@ -385,7 +388,7 @@ define([
      * visual model of the projectile passed to it as its only argument
      */
     Projectile.prototype._addToSceneCallback = function (scene, wireframe, callback) {
-        this._createVisualModel(wireframe);
+        this._initVisualModel(wireframe);
         scene.addObject(this._visualModel, false, _minimumProjectileCountForInstancing);
         if (callback) {
             callback(this._visualModel);
@@ -413,7 +416,7 @@ define([
         this._class.acquireResources();
         resources.executeWhenReady(function () {
             if (!scene.hasResourcesOfObject(resourceID)) {
-                this._createVisualModel(wireframe);
+                this._initVisualModel(wireframe);
                 scene.addResourcesOfObject(this._visualModel, resourceID);
                 exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
                 exp.addResourcesToScene(scene);
@@ -1079,6 +1082,27 @@ define([
      */
     Weapon.prototype.getScoreValue = function () {
         return this._class.getScoreValue();
+    };
+    /**
+     * Returns the highest number of projectiles that might be used for this weapon simultaneously in one battle.
+     * @returns {Number}
+     */
+    Weapon.prototype.getMaxProjectileCount = function () {
+        return this._class.getMaxProjectileCount();
+    };
+    /**
+     * Returns the highest number of explosions that might be used for this weapon simultaneously in one battle.
+     * @returns {Number}
+     */
+    Weapon.prototype.getMaxExplosionCount = function () {
+        return this._class.getMaxExplosionCount();
+    };
+    /**
+     * Returns the highest number of particles that might be used for this weapon simultaneously in one battle.
+     * @returns {Number}
+     */
+    Weapon.prototype.getMaxParticleCount = function () {
+        return this._class.getMaxParticleCount();
     };
     /**
      * Removes all references stored by this object

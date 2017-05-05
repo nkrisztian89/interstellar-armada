@@ -142,6 +142,9 @@
         "battle": {
             "battleRenderFPS": 60,
             "simulationStepsPerSecond": 60,
+            "particlePoolPrefillFactor": 0.2,
+            "projectilePoolPrefillFactor": 0.75,
+            "explosionPoolPrefillFactor": 0.5,
             "minimumDustParticleCountForInstancing": 1,
             "minimumExplosionParticleCountForInstancing": 1,
             "minimumMuzzleFlashParticleCountForInstancing": 1,

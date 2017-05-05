@@ -2516,6 +2516,39 @@ define([
         }
     };
     /**
+     * Returns the highest number of projectiles that might be used by the spacecrafts of this mission simultaneously.
+     * @returns {Number}
+     */
+    Mission.prototype.getMaxProjectileCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            result += this._spacecrafts[i].getMaxProjectileCount();
+        }
+        return result;
+    };
+    /**
+     * Returns the highest number of explosions that might be used by the spacecrafts of this mission simultaneously.
+     * @returns {Number}
+     */
+    Mission.prototype.getMaxExplosionCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            result += this._spacecrafts[i].getMaxExplosionCount();
+        }
+        return result;
+    };
+    /**
+     * Returns the highest number of particles that might be used by the spacecrafts of this mission simultaneously.
+     * @returns {Number}
+     */
+    Mission.prototype.getMaxParticleCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            result += this._spacecrafts[i].getMaxParticleCount();
+        }
+        return result;
+    };
+    /**
      * Adds renderable objects representing all visual elements of the mission to
      * the passed scene.
      * @param {Scene} battleScene
@@ -2561,6 +2594,14 @@ define([
                     battleScene.getCamera().update(0);
                 }
             }
+            // prefilling the pools with objects to avoid creating lots of new objects at the start of the mission as the pools grow
+            _particlePool.prefill(Math.ceil(this.getMaxParticleCount() * config.getSetting(config.BATTLE_SETTINGS.PARTICLE_POOL_PREFILL_FACTOR)));
+            _projectilePool.prefill(Math.ceil(this.getMaxProjectileCount() * config.getSetting(config.BATTLE_SETTINGS.PROJECTILE_POOL_PREFILL_FACTOR)), function (proj) {
+                proj.createVisualModel();
+            });
+            _explosionPool.prefill(Math.ceil(this.getMaxExplosionCount() * config.getSetting(config.BATTLE_SETTINGS.EXPLOSION_POOL_PREFILL_FACTOR)), function (exp) {
+                exp.createVisualModel();
+            });
         }.bind(this));
     };
     /**

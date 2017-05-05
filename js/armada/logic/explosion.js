@@ -139,12 +139,6 @@ define([
          * @type ParticleSystem
          */
         this._visualModel = null;
-        /**
-         * Whether the stored visual model reference belongs to the current use of this explosion (since the same explosion object can be
-         * reused multiple times)
-         * @type Boolean
-         */
-        this._visualModelValid = false;
     }
     /**
      * Initializes all properties of this explosion.
@@ -165,7 +159,25 @@ define([
         this._direction = direction;
         this._carriesParticles = (carriesParticles === true);
         mat.setMatrix4(this._velocityMatrix, velocityMatrix || mat.IDENTITY4);
-        this._visualModelValid = false;
+    };
+    /**
+     * Creates a new particle system to be used as the visual model for this explosion. Safe to be called on Explosion objects that have not
+     * been set up yet, so that the visual model objects can be created in advance.
+     * @param {Number} [scale] For the scaling of the visual model
+     * @param {ParticleEmitter[]} [particleEmitters] 
+     */
+    Explosion.prototype.createVisualModel = function (scale, particleEmitters) {
+        this._visualModel = new particleSystem.ParticleSystem(
+                this._positionMatrix,
+                this._orientationMatrix,
+                scale ? mat.scaling4(scale) : mat.identity4(),
+                this._velocityMatrix,
+                particleEmitters || [],
+                this._class ? this._class.getTotalDuration() : 0,
+                this._class ? this._class.isContinuous() : false,
+                this._carriesParticles,
+                config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING),
+                graphics.getParticleCountFactor());
     };
     /**
      * Returns whether this explosion object instance is no longer needed for its current use, and can be reused.
@@ -210,11 +222,10 @@ define([
         return this._visualModel;
     };
     /**
-     * Creates the renderable object that can be used to represent this explosion
-     * in a visual scene, if it has not been created yet.
+     * Sets up the renderable object that can be used to represent this explosion in a visual scene.
      * @param {Number} [scale] The scaling to use for the positions of the particles
      */
-    Explosion.prototype._createVisualModel = function (scale) {
+    Explosion.prototype._initVisualModel = function (scale) {
         var i, particleEmitters, emitter, particleEmitterDescriptors;
         particleEmitters = [];
         particleEmitterDescriptors = this._class.getParticleEmitterDescriptors();
@@ -272,18 +283,8 @@ define([
             particleEmitters.push(emitter);
         }
         if (!this._visualModel) {
-            this._visualModel = new particleSystem.ParticleSystem(
-                    this._positionMatrix,
-                    this._orientationMatrix,
-                    scale ? mat.scaling4(scale) : mat.IDENTITY4,
-                    this._velocityMatrix,
-                    particleEmitters,
-                    this._class.getTotalDuration(),
-                    this._class.isContinuous(),
-                    this._carriesParticles,
-                    config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING),
-                    graphics.getParticleCountFactor());
-        } else if (!this._visualModelValid) {
+            this.createVisualModel(scale, particleEmitters);
+        } else {
             this._visualModel.init(
                     this._positionMatrix,
                     this._orientationMatrix,
@@ -296,7 +297,6 @@ define([
                     config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING),
                     graphics.getParticleCountFactor());
         }
-        this._visualModelValid = true;
     };
     /**
      * The callback that adds the explosion to a scene (called by addToScene())
@@ -307,7 +307,7 @@ define([
      */
     Explosion.prototype._addToSceneCallback = function (parentNode, soundSource, isHit, callback) {
         var lightStates, scene = parentNode.getScene();
-        this._createVisualModel(1 / parentNode.getRenderableObject().getCascadeScalingMatrix()[0]);
+        this._initVisualModel(1 / parentNode.getRenderableObject().getCascadeScalingMatrix()[0]);
         parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false));
         lightStates = this._class.getLightStates();
         if (lightStates) {
@@ -342,7 +342,7 @@ define([
         this._class.acquireResources();
         resources.executeWhenReady(function () {
             if (!scene.hasResourcesOfObject(resourceID)) {
-                this._createVisualModel();
+                this._initVisualModel();
                 scene.addResourcesOfObject(this._visualModel, resourceID);
             }
         }.bind(this));
@@ -365,7 +365,6 @@ define([
             this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
-        this._visualModelValid = false;
     };
     // initialization
     // obtaining pool references

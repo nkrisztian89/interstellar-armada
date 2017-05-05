@@ -175,6 +175,34 @@ define(function () {
         this._firstFreeIndex = 0;
         this._firstLockedIndex = 0;
     };
+    /**
+     * Prefills the pool with newly created objects that are all considered free. Call this before using the pool to avoid creating new
+     * objects during the usage. If the pool is not empty when called, it is first cleared.
+     * @param {Number} count The size of the pool to prefill
+     * @param {Function} [callback] If given, this callback will be executed for each newly created object in the pool, passing the object
+     * and its index in the pool as the two arguments.
+     */
+    Pool.prototype.prefill = function (count, callback) {
+        var i;
+        if (this._objects.length > 0) {
+            this.clear();
+        }
+        this._objects = new Array(count);
+        this._objectsFree = new Array(count);
+        this._freeIndices = new Array(count);
+        for (i = 0; i < count; i++) {
+            this._objects[i] = new this._objectConstructor();
+            this._objectsFree[i] = true;
+            this._freeIndices[i] = i;
+        }
+        if (callback) {
+            for (i = 0; i < count; i++) {
+                callback(this._objects[i], i);
+            }
+        }
+        this._firstFreeIndex = 0;
+        this._firstLockedIndex = 0;
+    };
     // -------------------------------------------------------------------------
     // Public functions
     /**

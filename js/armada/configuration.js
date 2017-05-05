@@ -665,6 +665,30 @@ define([
             type: "number",
             defaultValue: 60
         },
+        /**
+         * When prefilling the particle pool at the start of a battle, the size of the pool will be set to the maximum possible amount of 
+         * particles multiplied by this factor.
+         */
+        PARTICLE_POOL_PREFILL_FACTOR: {
+            name: "particlePoolPrefillFactor",
+            type: "number"
+        },
+        /**
+         * When prefilling the projectile pool at the start of a battle, the size of the pool will be set to the maximum possible amount of 
+         * projectiles multiplied by this factor.
+         */
+        PROJECTILE_POOL_PREFILL_FACTOR: {
+            name: "projectilePoolPrefillFactor",
+            type: "number"
+        },
+        /**
+         * When prefilling the explosion pool at the start of a battle, the size of the pool will be set to the maximum possible amount of 
+         * explosions multiplied by this factor.
+         */
+        EXPLOSION_POOL_PREFILL_FACTOR: {
+            name: "explosionPoolPrefillFactor",
+            type: "number"
+        },
         MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING: {
             name: "minimumDustParticleCountForInstancing",
             type: "number",
