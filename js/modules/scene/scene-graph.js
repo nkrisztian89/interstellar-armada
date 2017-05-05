@@ -592,7 +592,7 @@ define([
      * Adds a subnode to this node.
      * @param {RenderableNode} subnode The subnode to be added to the rendering tree. 
      * It will be rendered relative to this object (transformation matrices stack)
-     * @param {Boolean} addToContexts 
+     * @param {Boolean} [addToContexts=false]
      * @returns {RenderableNode} The added subnode, for convenience
      */
     RenderableNode.prototype.addSubnode = function (subnode, addToContexts) {
