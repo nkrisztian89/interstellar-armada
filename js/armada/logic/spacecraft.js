@@ -2185,10 +2185,8 @@ define([
         this._visualModel = null;
         this._physicalModel = null;
         if (this._activeDamageIndicators) {
-            for (i = 0; i < this._activeDamageIndicators.length; i++) {
-                this._activeDamageIndicators[i].destroy();
-                this._activeDamageIndicators[i] = null;
-            }
+            // damage indicators are pooled objects (Explosions), so we do not destroy them (properties and reusability state need to be 
+            // preserved for reuse)
             this._activeDamageIndicators = null;
         }
         this._alive = false;
