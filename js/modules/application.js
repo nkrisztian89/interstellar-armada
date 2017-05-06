@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file A low level module with no dependencies that offers general functionality useful for managing basic application functions such
  * as accessing files from a directory structure using AJAX.
  * Usage:
@@ -86,6 +86,11 @@ define(function () {
              * @type Boolean
              */
             _isDebugVersion = true,
+            /**
+             * Whether the application is packaged using Electron (https://electron.atom.io/).
+             * @type Boolean
+             */
+            _usesElectron = false,
             /**
              * The string identifying the version of the program that was run the last time.
              * @type String
@@ -261,6 +266,20 @@ define(function () {
             _isDebugVersion = value;
         },
         /**
+         * Returns whether the application is packaged using Electron (https://electron.atom.io/).
+         * @returns {Boolean}
+         */
+        usesElectron: function () {
+            return _usesElectron;
+        },
+        /**
+         * Sets whether the application is packaged using Electron (https://electron.atom.io/).
+         * @param {Boolean} value
+         */
+        useElectron: function (value) {
+            _usesElectron = value;
+        },
+        /**
          * Returns the relative URL of a resource file of the given type and name.
          * If caching bypass is turned on, modified the URL appropriately.
          * @param {String} filetype The type of the file (e.g. model, texture,
@@ -320,11 +339,10 @@ define(function () {
          * @param {XMLHTTPRequestResponseType} [responseType] If given, the responseType property of the request will be set to this value
          */
         requestFile: function (filetype, filename, onfinish, customMimeType, responseType) {
-            this.log("Requesting file: '" + filename + "' from " + (this.getFolder(filetype) !== ""
-                    ?
+            this.log("Requesting file: '" + filename + "' from " + (this.getFolder(filetype) !== "" ?
                     "folder: '" + this.getFolder(filetype) :
-                    "root folder")
-                    + "'...", 2);
+                    "root folder") +
+                    "'...", 2);
             var request = new XMLHttpRequest();
             request.onload = function () {
                 this.log("File: '" + filename + "' successfully loaded.", 2);

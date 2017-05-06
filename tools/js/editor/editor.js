@@ -633,6 +633,7 @@ define([
      * @returns {Element}
      */
     function _createCategoryList(itemType) {
+        /* jshint validthis: true */
         var result = document.createElement("div"),
                 itemTypeLabel,
                 categories, categoryList, categoryElement, categorySpan,
@@ -904,7 +905,9 @@ define([
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
-        initialize: function () {
+        initialize: function (data) {
+            application.log("Initializing the Interstellar Armada Editor...");
+            application.useElectron(data.electron);
             application.setPreviouslyRunVersion(localStorage[constants.VERSION_LOCAL_STORAGE_ID]);
             _requestConfigLoad();
             window.addEventListener("resize", _handleResize);

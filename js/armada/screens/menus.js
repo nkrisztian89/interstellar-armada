@@ -11,6 +11,7 @@
 
 /**
  * @param utils Used for format strings
+ * @param application Used to check whether packaged with Electron
  * @param screens The menu screens are instances of MenuScreen.
  * @param game Used for navigation.
  * @param constants Used for global localStorage IDs
@@ -21,6 +22,7 @@
  */
 define([
     "utils/utils",
+    "modules/application",
     "modules/screens",
     "modules/game",
     "armada/constants",
@@ -28,12 +30,45 @@ define([
     "armada/strings",
     "armada/audio",
     "armada/screens/battle"
-], function (utils, screens, game, constants, armadaScreens, strings, audio, battle) {
+], function (utils, application, screens, game, constants, armadaScreens, strings, audio, battle) {
     "use strict";
     var
             // --------------------------------------------------------------------------------------------
             // Constants
-            FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID = constants.LOCAL_STORAGE_PREFIX + "firstRunNoteShown";
+            FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID = constants.LOCAL_STORAGE_PREFIX + "firstRunNoteShown",
+            // --------------------------------------------------------------------------------------------
+            // Private variables
+            _mainMenuOptions = [{
+                    id: strings.MAIN_MENU.NEW_GAME.name,
+                    action: function () {
+                        game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
+                    }
+                }, {
+                    id: strings.MAIN_MENU.DATABASE.name,
+                    action: function () {
+                        game.setScreen(armadaScreens.DATABASE_SCREEN_NAME);
+                    }
+                }, {
+                    id: strings.MAIN_MENU.SETTINGS.name,
+                    action: function () {
+                        game.setScreen(armadaScreens.SETTINGS_SCREEN_NAME);
+                    }
+                }, {
+                    id: strings.MAIN_MENU.ABOUT.name,
+                    action: function () {
+                        game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
+                    }
+                }];
+    // -------------------------------------------------------------------------
+    // Initialization
+    if (application.usesElectron()) {
+        _mainMenuOptions.push({
+            id: strings.MAIN_MENU.QUIT.name,
+            action: function () {
+                window.close();
+            }
+        });
+    }
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -46,33 +81,7 @@ define([
                 },
                 armadaScreens.MENU_COMPONENT_SOURCE,
                 armadaScreens.MENU_STYLE,
-                [{
-                        id: strings.MAIN_MENU.NEW_GAME.name,
-                        action: function () {
-                            game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
-                        }
-                    }, {
-                        id: strings.MAIN_MENU.DATABASE.name,
-                        action: function () {
-                            game.setScreen(armadaScreens.DATABASE_SCREEN_NAME);
-                        }
-                    }, {
-                        id: strings.MAIN_MENU.SETTINGS.name,
-                        action: function () {
-                            game.setScreen(armadaScreens.SETTINGS_SCREEN_NAME);
-                        }
-                    }, {
-                        id: strings.MAIN_MENU.ABOUT.name,
-                        action: function () {
-                            game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
-                        }
-                        // Quit option - uncomment for Electron                        
-//                    }, {
-//                        id: strings.MAIN_MENU.QUIT.name,
-//                        action: function () {
-//                            window.close();
-//                        }
-                    }],
+                _mainMenuOptions,
                 armadaScreens.MAIN_MENU_CONTAINER_ID,
                 {
                     show: function () {

@@ -272,11 +272,12 @@ define([
     };
     /** 
      * Initializes the game: builds up the screens, loads settings and displays the start screen.
+     * @param {Object} data
      */
-    application.initialize = function () {
+    application.initialize = function (data) {
         application.log("Initializing " + _gameName + "...");
-        // needs to be commented out for Electron:
-        if (location.protocol === "file:") {
+        application.useElectron(data.electron);
+        if (!application.usesElectron() && (location.protocol === "file:")) {
             this.showError("Trying to run the game from the local filesystem!",
                     application.ErrorSeverity.CRITICAL,
                     "This application can only be run through a web server. " +
@@ -286,7 +287,6 @@ define([
                     "you can start the game by entering 'localhost/game' in your browser's address bar.");
             return;
         }
-        // ...until this point
         _defaultCursor = document.body.style.cursor;
         _requestConfigLoad();
     };
