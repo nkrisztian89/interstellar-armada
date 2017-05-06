@@ -1634,6 +1634,9 @@ define([
             this._weapons[i].destroy();
         }
         this._weapons = [];
+        if (this._propulsion) {
+            this._propulsion.destroy();
+        }
         this._propulsion = null;
         this._maneuveringComputer.updateForNewPropulsion();
         this._maneuveringComputer.updateTurningLimit();
