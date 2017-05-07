@@ -2163,6 +2163,35 @@ define([
     UIElement.prototype = new RenderableObject();
     UIElement.prototype.constructor = UIElement;
     /**
+     * Initializes the properties of this UI element.
+     * @param {Model} model The model storing the vertices of the UI element, typically a simple square.
+     * @param {ManagedShader} shader The shader to be used to render this element.
+     * @param {Object.<String, ManagedTexture>} textures The textures organized by roles to be used.
+     * @param {Number[2]|Number[3]} position The position of the element either on the screen (2D) or in world space (3D), depending on the
+     * shader to be used.
+     * @param {Number[2]} size The size of the element by which the model can be scaled.
+     * @param {String} scaleMode (enum ScaleMode) The scale mode to be used for sizing this element.
+     * @param {Number[4]} color A color to modulate the element with. (inside its clip zone)
+     * @param {Number} [angle] An angle based on which a 2D rotation matrix will be created and stored that can be used to rotate the 
+     * element in 2D.
+     * @param {Numbe[4]} [clipCoordinates] The coordinates specifying the clip zone for this element, in the form of [minX, maxX, minY, 
+     * maxY], where the area outside the min-max range on either the X or Y is considered to be outside the clip zone, and all coordinates 
+     * go from -1 (left / bottom) to 1 (right / top), corresponding to a relative position within the element.
+     * @param {Number[4]} [clipColor] A color to modulate the element with outside its clip zone.
+     */
+    UIElement.prototype.init = function (model, shader, textures, position, size, scaleMode, color, angle, clipCoordinates, clipColor) {
+        RenderableObject.prototype.init.call(this, shader, false, true);
+        this.setTextures(textures);
+        this._model = model;
+        this._position = position;
+        this._color = color;
+        this._size = size;
+        this._scaleMode = _getScaleModeInt(scaleMode);
+        mat.setRotation2(this._rotationMatrix, Math.radians(angle || 0));
+        this._clipCoordinates = clipCoordinates || CLIP_COORDINATES_NO_CLIP.slice();
+        this._clipColor = clipColor || [0, 0, 0, 0];
+    };
+    /**
      * @override
      * @param {ManagedGLContext} context
      */

@@ -250,6 +250,12 @@ define([
              * @type Number
              */
             _targetHullIntegrity,
+            /**
+             * An array storing the reference to all persistent HUD elements (so that when the graphics settings are changed, they can be
+             * notified to update the shaders etc)
+             * @type HUDElement[]
+             */
+            _hudElements = [],
             // HUD animation timing
             /**
              * The time left from the hull integrity decrease HUD animation, in milliseconds
@@ -976,6 +982,16 @@ define([
     function toggleHUDVisibility() {
         _isHUDVisible = !_isHUDVisible;
     }
+    /**
+     * Updates all HUD elements for the case when the graphics settings have been changed (i.e. clears cached values depending on graphics 
+     * settings)
+     */
+    function handleGraphicsSettingsChanged() {
+        var i;
+        for (i = 0; i < _hudElements.length; i++) {
+            _hudElements[i].handleGraphicsSettingsChanged();
+        }
+    }
     // ------------------------------------------------------------------------------
     // Spacecraft event handlers
     /**
@@ -1195,20 +1211,35 @@ define([
         this._class.acquireResources({model: model || egomModel.squareModel(modelName, this._textureCoordinates)});
     };
     /**
-     * Creates and stores a new visual model to represent this HUD element. Automatically called when the element is added to a scene.
+     * Sets up the visual model to represent this HUD element, creating it if necessary. Automatically called when the element is added to a 
+     * scene.
      */
-    HUDElement.prototype._createVisualModel = function () {
-        this._visualModel = new renderableObjects.UIElement(
-                this._class.getModel(),
-                this._class.getShader(),
-                this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                this._position,
-                this._scale,
-                this._scaleMode,
-                this._color,
-                Math.degrees(this._angle),
-                this._clipCoordinates,
-                this._clipColor);
+    HUDElement.prototype._initVisualModel = function () {
+        if (!this._visualModel) {
+            this._visualModel = new renderableObjects.UIElement(
+                    this._class.getModel(),
+                    this._class.getShader(),
+                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                    this._position,
+                    this._scale,
+                    this._scaleMode,
+                    this._color,
+                    Math.degrees(this._angle),
+                    this._clipCoordinates,
+                    this._clipColor);
+        } else {
+            this._visualModel.init(
+                    this._class.getModel(),
+                    this._class.getShader(),
+                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                    this._position,
+                    this._scale,
+                    this._scaleMode,
+                    this._color,
+                    Math.degrees(this._angle),
+                    this._clipCoordinates,
+                    this._clipColor);
+        }
     };
     /**
      * Returns the current 2D/3D position set for this element.
@@ -1246,9 +1277,7 @@ define([
     HUDElement.prototype.addToScene = function (scene) {
         this._acquireResources();
         resources.executeWhenReady(function () {
-            if (!this._visualModel) {
-                this._createVisualModel();
-            }
+            this._initVisualModel();
             this._node = scene.addUIObject(this._visualModel);
         }.bind(this));
     };
@@ -1260,9 +1289,7 @@ define([
     HUDElement.prototype.addResourcesToScene = function (scene) {
         this._acquireResources();
         resources.executeWhenReady(function () {
-            if (!this._visualModel) {
-                this._createVisualModel();
-            }
+            this._initVisualModel();
             scene.addResourcesOfObject(this._visualModel);
         }.bind(this));
     };
@@ -1384,14 +1411,30 @@ define([
         this.setPosition(layout.getPosition(viewportWidth, viewportHeight));
         this.setSize(layout.getSize(viewportWidth, viewportHeight));
     };
+    /**
+     * Updates the properties of the class of this element for the case when the graphics settings have been changed. (e.g. clearing the
+     * cached shader value, since a new shader might have become active)
+     */
+    HUDElement.prototype.handleGraphicsSettingsChanged = function () {
+        this._class.handleGraphicsSettingsChanged();
+    };
     // ------------------------------------------------------------------------------
     // private functions
+    /**
+     * Adds the passed HUD element to the stores persistent HUD element list and also returns it for convenience.
+     * @param {HUDElement} hudElement
+     * @returns {HUDElement}
+     */
+    function _addHUDElement(hudElement) {
+        _hudElements.push(hudElement);
+        return hudElement;
+    }
     /**
      * Creates and returns a new HUD element that can be used as a ship indicator.
      * @returns {HUDElement}
      */
     function _createShipIndicator() {
-        return new HUDElement(
+        return _addHUDElement(new HUDElement(
                 UI_3D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).texture,
                 [0, 0, 0],
@@ -1399,14 +1442,14 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).scaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostile,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).mapping));
     }
     /**
      * Creates and returns a new HUD element that can be used as a ship arrow.
      * @returns {HUDElement}
      */
     function _createShipArrow() {
-        return new HUDElement(
+        return _addHUDElement(new HUDElement(
                 UI_2D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).texture,
                 [0, 0],
@@ -1414,14 +1457,14 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).scaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostile,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).mapping));
     }
     /**
      * Creates and returns a new HUD element that can be used as a weapon impact indicator.
      * @returns {HUDElement}
      */
     function _createWeaponImpactIndicator() {
-        return new HUDElement(
+        return _addHUDElement(new HUDElement(
                 UI_3D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).texture,
                 [0, 0, 0],
@@ -1429,7 +1472,7 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).scaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).colors.normal,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).mapping));
     }
     /**
      * Creates and returns a layout suitable for an individual spacecraft within the wingmen status indicator,
@@ -1459,12 +1502,13 @@ define([
      * @param {ClipSpaceLayout} layout The layout to be used (create it beforehand using _createWingmanCraftIndicatorLayout())
      * @param {String} [craftType=general] The string ID of the craft / indicator type (which determines the icon to be used)
      * Special values are: player, general.
+     * @param {Boolean} [forResourcesOnly=false] If true, the created indicator is not added to the list of persistently stored HUD elements
      * @returns {HUDElement}
      */
-    function _createWingmanCraftIndicator(layout, craftType) {
-        var mappings;
+    function _createWingmanCraftIndicator(layout, craftType, forResourcesOnly) {
+        var mappings, result;
         mappings = _wingmenStatusCraftIndicatorSettings.mappings;
-        return new HUDElement(
+        result = new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 _wingmenStatusCraftIndicatorSettings.texture,
                 layout.getClipSpacePosition(),
@@ -1473,6 +1517,10 @@ define([
                 _wingmenStatusCraftIndicatorSettings.colors.fullIntegrity,
                 undefined,
                 (craftType && mappings[craftType]) || mappings.general);
+        if (!forResourcesOnly) {
+            _addHUDElement(result);
+        }
+        return result;
     }
     /**
      * 
@@ -1503,7 +1551,7 @@ define([
         // keep the ons with the same shader together for faster rendering
         // ---------------------------------------------------------
         // UI 2D SHADER
-        _centerCrosshair = _centerCrosshair || new HUDElement(
+        _centerCrosshair = _centerCrosshair || _addHUDElement(new HUDElement(
                 UI_2D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).texture,
                 [0, 0],
@@ -1511,9 +1559,9 @@ define([
                 _centerCrosshairScaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).mapping));
         _centerCrosshair.addToScene(_battleScene);
-        _driftArrow = _driftArrow || new HUDElement(
+        _driftArrow = _driftArrow || _addHUDElement(new HUDElement(
                 UI_2D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).texture,
                 [0, 0],
@@ -1521,7 +1569,7 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).scaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).colors.maxSpeed,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW).mapping));
         _driftArrow.addToScene(_battleScene);
         if (!_shipArrows) {
             _shipArrows = [_createShipArrow()];
@@ -1537,7 +1585,7 @@ define([
         for (i = 0; i < _shipIndicators.length; i++) {
             _shipIndicators[i].addToScene(_battleScene);
         }
-        _aimAssistIndicator = _aimAssistIndicator || new HUDElement(
+        _aimAssistIndicator = _aimAssistIndicator || _addHUDElement(new HUDElement(
                 UI_3D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).texture,
                 [0, 0, 0],
@@ -1545,7 +1593,7 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).scaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.hostile,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).mapping));
         _aimAssistIndicator.addToScene(_battleScene);
         if (!_weaponImpactIndicators) {
             _weaponImpactIndicators = [_createWeaponImpactIndicator()];
@@ -1555,7 +1603,7 @@ define([
         }
         // ---------------------------------------------------------
         // UI 2D MIX VIEWPORT SHADER
-        _targetInfoBackground = _targetInfoBackground || new HUDElement(
+        _targetInfoBackground = _targetInfoBackground || _addHUDElement(new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).texture,
                 _targetInfoBackgroundLayout.getClipSpacePosition(),
@@ -1563,9 +1611,9 @@ define([
                 _targetInfoBackgroundLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).mapping));
         _targetInfoBackground.addToScene(_battleScene);
-        _wingmenStatusBackground = _wingmenStatusBackground || new HUDElement(
+        _wingmenStatusBackground = _wingmenStatusBackground || _addHUDElement(new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).texture,
                 _wingmenStatusBackgroundLayout.getClipSpacePosition(),
@@ -1573,9 +1621,9 @@ define([
                 _wingmenStatusBackgroundLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).mapping));
         _wingmenStatusBackground.addToScene(_battleScene);
-        _flightModeIndicatorBackground = _flightModeIndicatorBackground || new HUDElement(
+        _flightModeIndicatorBackground = _flightModeIndicatorBackground || _addHUDElement(new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).texture,
                 _flightModeIndicatorBackgroundLayout.getClipSpacePosition(),
@@ -1583,9 +1631,9 @@ define([
                 _flightModeIndicatorBackgroundLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).mapping));
         _flightModeIndicatorBackground.addToScene(_battleScene);
-        _objectivesBackground = _objectivesBackground || new HUDElement(
+        _objectivesBackground = _objectivesBackground || _addHUDElement(new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).texture,
                 _objectivesBackgroundLayout.getClipSpacePosition(),
@@ -1593,9 +1641,9 @@ define([
                 _objectivesBackgroundLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).mapping));
         _objectivesBackground.addToScene(_battleScene);
-        _escortsBackground = _escortsBackground || new HUDElement(
+        _escortsBackground = _escortsBackground || _addHUDElement(new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).texture,
                 _escortsBackgroundLayout.getClipSpacePosition(),
@@ -1603,9 +1651,9 @@ define([
                 _escortsBackgroundLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).mapping));
         _escortsBackground.addToScene(_battleScene);
-        _messageBackground = _messageBackground || new HUDElement(
+        _messageBackground = _messageBackground || _addHUDElement(new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).texture,
                 _messageBackgroundLayout.getClipSpacePosition(),
@@ -1613,7 +1661,7 @@ define([
                 _messageBackgroundLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).mapping));
         _messageBackground.addToScene(_battleScene);
         // these are created dynamically so initialize the arrays 
         if (!_wingmenStatusCraftIndicators) {
@@ -1629,7 +1677,7 @@ define([
         }
         // ---------------------------------------------------------
         // UI 2D CLIP VIEWPORT SHADER
-        _targetHullIntegrityBar = _targetHullIntegrityBar || new HUDElement(
+        _targetHullIntegrityBar = _targetHullIntegrityBar || _addHUDElement(new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).texture,
                 _targetHullIntegrityBarLayout.getClipSpacePosition(),
@@ -1637,9 +1685,9 @@ define([
                 _targetHullIntegrityBarLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).colors.filled,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).colors.empty,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).mapping));
         _targetHullIntegrityBar.addToScene(_battleScene);
-        _speedBar = _speedBar || new HUDElement(
+        _speedBar = _speedBar || _addHUDElement(new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).texture,
                 _speedBarLayout.getClipSpacePosition(),
@@ -1647,9 +1695,9 @@ define([
                 _speedBarLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.filled,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.empty,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).mapping));
         _speedBar.addToScene(_battleScene);
-        _speedTargetIndicator = _speedTargetIndicator || new HUDElement(
+        _speedTargetIndicator = _speedTargetIndicator || _addHUDElement(new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).texture,
                 _speedBarLayout.getClipSpacePosition(),
@@ -1657,9 +1705,9 @@ define([
                 _speedBarLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).mapping));
         _speedTargetIndicator.addToScene(_battleScene);
-        _hullIntegrityBar = _hullIntegrityBar || new HUDElement(
+        _hullIntegrityBar = _hullIntegrityBar || _addHUDElement(new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).texture,
                 _hullIntegrityBarLayout.getClipSpacePosition(),
@@ -1667,9 +1715,9 @@ define([
                 _hullIntegrityBarLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.filled,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.empty,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).mapping));
         _hullIntegrityBar.addToScene(_battleScene);
-        _targetHullIntegrityQuickViewBar = _targetHullIntegrityQuickViewBar || new HUDElement(
+        _targetHullIntegrityQuickViewBar = _targetHullIntegrityQuickViewBar || _addHUDElement(new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).texture,
                 _targetHullIntegrityQuickViewBarLayout.getClipSpacePosition(),
@@ -1677,7 +1725,7 @@ define([
                 _targetHullIntegrityQuickViewBarLayout.getScaleMode(),
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.hostileFilled,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).mapping);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).mapping));
         _targetHullIntegrityQuickViewBar.addToScene(_battleScene);
         n = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MAX_ESCORTS_DISPLAYED);
         if (!_escortHullIntegrityBars) {
@@ -1687,7 +1735,7 @@ define([
                 layoutDescriptor = utils.deepCopy(_escortsHullIntegrityBarSettings.layout);
                 layoutDescriptor.top += i * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT_OFFSET) * _escortsBackgroundLayout.getClipSpaceHeight() * 0.5;
                 _escortHullIntegrityBarLayouts.push(new screens.ClipSpaceLayout(layoutDescriptor));
-                _escortHullIntegrityBars.push(new HUDElement(
+                _escortHullIntegrityBars.push(_addHUDElement(new HUDElement(
                         UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                         _escortsHullIntegrityBarSettings.texture,
                         _escortHullIntegrityBarLayouts[i].getClipSpacePosition(),
@@ -1695,7 +1743,7 @@ define([
                         _escortHullIntegrityBarLayouts[i].getScaleMode(),
                         _escortsHullIntegrityBarSettings.colors.fullIntegrity,
                         _escortsHullIntegrityBarSettings.colors.destroyed,
-                        _escortsHullIntegrityBarSettings.mapping));
+                        _escortsHullIntegrityBarSettings.mapping)));
             }
         }
         for (i = 0; i < n; i++) {
@@ -1704,7 +1752,7 @@ define([
         // ---------------------------------------------------------
         // UI 2D SHADER
         // these need to render on top of the backgrounds
-        _hudStillCursor = _hudStillCursor || new HUDElement(
+        _hudStillCursor = _hudStillCursor || _addHUDElement(new HUDElement(
                 UI_2D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).texture,
                 [0, 0],
@@ -1712,9 +1760,9 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).scaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).mappings.still);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).mappings.still));
         _hudStillCursor.addToScene(_battleScene);
-        _hudTurnCursor = _hudTurnCursor || new HUDElement(
+        _hudTurnCursor = _hudTurnCursor || _addHUDElement(new HUDElement(
                 UI_2D_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).texture,
                 [0, 0],
@@ -1722,13 +1770,13 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).scaleMode,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).color,
                 undefined,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).mappings.turn);
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CURSOR).mappings.turn));
         _hudTurnCursor.addToScene(_battleScene);
         // mark wingman craft indicator resources for loading
         layout = _createWingmanCraftIndicatorLayout(0, 1, 0);
         craftTypes = Object.keys(_wingmenStatusCraftIndicatorSettings.mappings);
         for (i = 0; i < craftTypes.length; i++) {
-            indicator = _createWingmanCraftIndicator(layout, craftTypes[i]);
+            indicator = _createWingmanCraftIndicator(layout, craftTypes[i], true);
             indicator.addResourcesToScene(_battleScene);
         }
         // mark HUD sound effects for loading
@@ -3542,5 +3590,6 @@ define([
     _battle.showHUD = showHUD;
     _battle.hideHUD = hideHUD;
     _battle.toggleHUDVisibility = toggleHUDVisibility;
+    _battle.handleGraphicsSettingsChanged = handleGraphicsSettingsChanged;
     return _battle;
 });

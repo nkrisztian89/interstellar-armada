@@ -20,6 +20,7 @@
  * @param armadaScreens Used for common screen constants.
  * @param graphics Used for accessing the graphics settings and setting options.
  * @param classes Used to notify classes about graphics settings change
+ * @param battle Used to notify HUD element classes about graphics settings change
  */
 define([
     "utils/utils",
@@ -32,8 +33,9 @@ define([
     "armada/screens/shared",
     "armada/graphics",
     "armada/logic/classes",
+    "armada/screens/battle",
     "utils/polyfill"
-], function (utils, application, components, screens, managedGL, game, strings, armadaScreens, graphics, classes) {
+], function (utils, application, components, screens, managedGL, game, strings, armadaScreens, graphics, classes, battle) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -321,6 +323,7 @@ define([
         graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
         graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
         classes.handleGraphicsSettingsChanged();
+        battle.handleGraphicsSettingsChanged();
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };
     /**

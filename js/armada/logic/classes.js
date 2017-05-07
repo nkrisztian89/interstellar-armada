@@ -3904,7 +3904,6 @@ define([
     /**
      * Updates all classes for the case when the graphics settings have been changed (i.e. clears cached values depending on graphics 
      * settings)
-     * @returns {undefined}
      */
     function handleGraphicsSettingsChanged() {
         _classManager.executeForAllResources(function (resource) {
