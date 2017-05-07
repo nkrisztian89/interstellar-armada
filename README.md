@@ -53,9 +53,10 @@ Electron
 --------
 
 The game can be run using [Electron](https://electron.atom.io/). To do this, 
-search for "electron" in the source code (`js` folder) and comment/uncomment the
-indicated parts of the code according to the instructions you find. For non-development
-versions (which don't have "-dev" in the version number), you will also need to run
+pass `electron: true` to the `initialize` method in `js/main.js` (and if you
+want to set up the editor for Electron, in `tools/js/editor-main.js`) in the
+version you package. For non-development versions (which don't have "-dev" in 
+the version number), you will also need to run
 ```
 npm install
 grunt clean
@@ -85,4 +86,4 @@ details and attributions please do check LICENSE.txt.
 
 Krisztián Nagy
 
-19.03.2017.
+07.05.2017.
