@@ -1849,7 +1849,7 @@ define([
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
                 graphics.getAntialiasing(),
-                false,
+                true,
                 graphics.getFiltering(),
                 config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME));
         /**

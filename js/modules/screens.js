@@ -1557,7 +1557,7 @@ define([
          * The 2D context used to render the texts on this layer.
          * @type CanvasRenderingContext2D
          */
-        this._context = this._canvas.getContext("2d");
+        this._context = this._canvas.getContext("2d", {alpha: true});
         this._context.textBaseline = "top";
         /**
          * The list of stored texts that are rendered when this layer is rendered.
