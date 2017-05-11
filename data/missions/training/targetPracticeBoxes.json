@@ -549,7 +549,7 @@
             "actions": [{
                     "type": "message",
                     "params": {
-                        "textID": "tutorialControls",
+                        "textID": "tutorialSpeedHolding",
                         "permanent": true,
                         "urgent": true
                     }
@@ -575,7 +575,7 @@
             "actions": [{
                     "type": "message",
                     "params": {
-                        "textID": "tutorialFinish",
+                        "textID": "tutorialControls",
                         "permanent": true,
                         "urgent": true
                     }
@@ -590,6 +590,32 @@
                         "params": {
                             "relation": "below",
                             "count": 2
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorialFinish",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["practiceTargets"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 1
                         }
                     }
                 ],

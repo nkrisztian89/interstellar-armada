@@ -1914,9 +1914,16 @@ define([
          */
         this._rollTarget = 0;
         /**
+         * When true, a speed target will be persistently remembered (with forward/reverse
+         * commands increasing/decreasing it) and thrusters will automatically fire to
+         * reach / hold it.
+         * @type Boolean
+         */
+        this._holdSpeed = false;
+        /**
          * The target speed along the Y axis (in model space). The computer will
          * use forward and reverse thrusters to reach this speed if interia
-         * compensation is turned on. (in m/s)
+         * compensation and speed holding are turned on. (in m/s)
          * @type Number
          */
         this._speedTarget = 0;
@@ -2127,20 +2134,25 @@ define([
         return this.changeFlightMode(this._restricted ? FlightMode.COMBAT : FlightMode.CRUISE);
     };
     /**
-     * Increases the target speed or sets it to maximum in free mode.
-     * @param {Number} [intensity] If given, the speed will be increased by this
-     * value instead of the regular continuous increment.
+     * Increases the target speed if speed holding is turned on or sets it to maximum otherwise.
+     * @param {Number} [intensity] If given, it will be factored into the amount of increase / set target
      */
     ManeuveringComputer.prototype.forward = function (intensity) {
+        var maxSpeed;
         if (!this._locked) {
-            this._speedTarget = this._assisted ?
-                    Math.min(
-                            Math.max(
-                                    this._spacecraft.getRelativeVelocityMatrix()[13],
-                                    this._speedTarget
-                                    ) + (intensity || this._speedIncrement),
-                            (this._restricted ? this._maxCruiseForwardSpeed : this._maxCombatForwardSpeed)) :
-                    Number.MAX_VALUE;
+            if (this._assisted) {
+                maxSpeed = this._restricted ? this._maxCruiseForwardSpeed : this._maxCombatForwardSpeed;
+                this._speedTarget = this._holdSpeed ?
+                        Math.min(
+                                Math.max(
+                                        this._spacecraft.getRelativeVelocityMatrix()[13],
+                                        this._speedTarget
+                                        ) + (intensity || this._speedIncrement),
+                                maxSpeed) :
+                        (intensity || 1) * maxSpeed;
+            } else {
+                this._speedTarget = Number.MAX_VALUE;
+            }
         }
     };
     /**
@@ -2148,28 +2160,40 @@ define([
      * in free flight mode.
      */
     ManeuveringComputer.prototype.stopForward = function () {
-        if (!this._assisted) {
-            var speed = this._spacecraft.getRelativeVelocityMatrix()[13];
-            if (this._speedTarget > speed) {
-                this._speedTarget = speed;
+        var speed;
+        if (!this._locked) {
+            if (!this._assisted) {
+                speed = this._spacecraft.getRelativeVelocityMatrix()[13];
+                if (this._speedTarget > speed) {
+                    this._speedTarget = speed;
+                }
+            } else if (!this._holdSpeed) {
+                if (this._speedTarget > 0) {
+                    this._speedTarget = 0;
+                }
             }
         }
     };
     /**
-     * Decreases the target speed or sets it to negative maximum in free mode.
-     * @param {Number} [intensity] If given, the speed will be decreased by this
-     * value instead of the regular continuous increment.
+     * Decreases the target speed if speed holding is turned on or sets it to negative maximum otherwise.
+     * @param {Number} [intensity] If given, it will be factored into the amount of decrease / set target
      */
     ManeuveringComputer.prototype.reverse = function (intensity) {
+        var maxSpeed;
         if (!this._locked) {
-            this._speedTarget = this._assisted ?
-                    Math.max(
-                            Math.min(
-                                    this._spacecraft.getRelativeVelocityMatrix()[13],
-                                    this._speedTarget
-                                    ) - (intensity || this._speedIncrement),
-                            (this._restricted ? this._maxCruiseReverseSpeed : this._maxCombatReverseSpeed)) :
-                    -Number.MAX_VALUE;
+            if (this._assisted) {
+                maxSpeed = this._restricted ? this._maxCruiseReverseSpeed : this._maxCombatReverseSpeed;
+                this._speedTarget = this._holdSpeed ?
+                        Math.max(
+                                Math.min(
+                                        this._spacecraft.getRelativeVelocityMatrix()[13],
+                                        this._speedTarget
+                                        ) - (intensity || this._speedIncrement),
+                                maxSpeed) :
+                        (intensity || 1) * maxSpeed;
+            } else {
+                this._speedTarget = -Number.MAX_VALUE;
+            }
         }
     };
     /**
@@ -2178,10 +2202,16 @@ define([
      */
     ManeuveringComputer.prototype.stopReverse = function () {
         var speed;
-        if (!this._assisted) {
-            speed = this._spacecraft.getRelativeVelocityMatrix()[13];
-            if (this._speedTarget < speed) {
-                this._speedTarget = speed;
+        if (!this._locked) {
+            if (!this._assisted) {
+                speed = this._spacecraft.getRelativeVelocityMatrix()[13];
+                if (this._speedTarget < speed) {
+                    this._speedTarget = speed;
+                }
+            } else if (!this._holdSpeed) {
+                if (this._speedTarget < 0) {
+                    this._speedTarget = 0;
+                }
             }
         }
     };
@@ -2266,12 +2296,46 @@ define([
         }
     };
     /**
-     * Resets the target (forward/reverse) speed to zero. (except in free flight 
-     * mode)
+     * Toggles speed holding (in assisted flight modes)
+     * @returns {Boolean} Whether the speed holding mode has changed
+     */
+    ManeuveringComputer.prototype.toggleSpeedHolding = function () {
+        if (!this._locked) {
+            if (this._assisted) {
+                this._holdSpeed = !this._holdSpeed;
+                if (this._holdSpeed) {
+                    this._speedTarget = this._spacecraft.getRelativeVelocityMatrix()[13];
+                    if (this._restricted) {
+                        this._speedTarget = Math.min(Math.max(
+                                this._maxCruiseReverseSpeed,
+                                this._speedTarget),
+                                this._maxCruiseForwardSpeed);
+                    } else {
+                        this._speedTarget = Math.min(Math.max(
+                                this._maxCombatReverseSpeed,
+                                this._speedTarget),
+                                this._maxCombatForwardSpeed);
+                    }
+
+                }
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+     * Sets speed holding to the passed value
+     * @param {Boolean} value
+     */
+    ManeuveringComputer.prototype.setSpeedHolding = function (value) {
+        this._holdSpeed = value;
+    };
+    /**
+     * Resets the target (forward/reverse) speed to zero. (when speed holding is on)
      */
     ManeuveringComputer.prototype.resetSpeed = function () {
         if (!this._locked) {
-            if (this._assisted) {
+            if (this._assisted && this._holdSpeed) {
                 this._speedTarget = 0;
             }
         }
@@ -2299,7 +2363,7 @@ define([
      * @returns {Boolean}
      */
     ManeuveringComputer.prototype.hasSpeedTarget = function () {
-        return this._assisted;
+        return this._assisted && this._holdSpeed;
     };
     /**
      * If the current flight mode imposes a speed limit, returns it. (in m/s) Otherwise returns undefined.

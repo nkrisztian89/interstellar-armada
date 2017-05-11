@@ -1196,8 +1196,21 @@ define([
         this._maneuveringComputer.stopLower();
     };
     /**
-     * Control command for the maneuvering computer to reset the target speed to
-     * zero.
+     * Control command for the maneuvering computer to toggle speed holding mode.
+     * @returns {Boolean} Whether the speed holding mode has changed
+     */
+    Spacecraft.prototype.toggleSpeedHolding = function () {
+        return this._maneuveringComputer.toggleSpeedHolding();
+    };
+    /**
+     * Sets the speed holding mode of the maneuvering computer to the passed value.
+     * @param {Boolean} value
+     */
+    Spacecraft.prototype.setSpeedHolding = function (value) {
+        this._maneuveringComputer.setSpeedHolding(value);
+    };
+    /**
+     * Control command for the maneuvering computer to reset the target speed to zero.
      */
     Spacecraft.prototype.resetSpeed = function () {
         this._maneuveringComputer.resetSpeed();

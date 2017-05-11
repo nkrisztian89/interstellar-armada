@@ -816,6 +816,9 @@
                         "action": "lower",
                         "key": "F"
                     }, {
+                        "action": "toggleSpeedHolding",
+                        "key": "Y"
+                    }, {
                         "action": "resetSpeed",
                         "key": "X"
                     }, {

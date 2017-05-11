@@ -1,5 +1,5 @@
 {
-    "version": "0.4.2-dev:620 (2017.05.09.)",
+    "version": "0.4.2-dev:621 (2017.05.11.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -487,6 +487,8 @@
                     }, {
                         "name": "lower",
                         "continuous": true
+                    }, {
+                        "name": "toggleSpeedHolding"
                     }, {
                         "name": "resetSpeed"
                     }, {

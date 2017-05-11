@@ -334,6 +334,7 @@ define([
         this._attackingTarget = false;
         // attaching handlers to the spacecraft events
         if (this._spacecraft) {
+            this._spacecraft.setSpeedHolding(true);
             this._spacecraft.addEventHandler(SpacecraftEvents.BEING_HIT, this._handleBeingHit.bind(this));
             this._spacecraft.addEventHandler(SpacecraftEvents.COMMAND_RECEIVED, this._handleCommand.bind(this));
         }

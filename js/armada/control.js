@@ -301,6 +301,13 @@ define([
         }.bind(this), function () {
             this._controlledSpacecraft.stopLower();
         }.bind(this));
+        this.setActionFunction("toggleSpeedHolding", true, function () {
+            if (this._controlledSpacecraft.toggleSpeedHolding()) {
+                if (_flightModeSwitchSound) {
+                    _flightModeSwitchSound.play();
+                }
+            }
+        }.bind(this));
         // resetting speed to 0
         this.setActionFunction("resetSpeed", true, function () {
             this._controlledSpacecraft.resetSpeed();
