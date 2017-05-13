@@ -954,6 +954,14 @@ define([
         },
         HUD: {
             name: "hud",
+            /**
+             * If true, the target hull integrity quick view bar is shown above the center of the HUD regardless of whether the target is
+             * visible on screen, otherwise it is shown above the target when the target is visible on screen (and above the center when not)
+             */
+            ALWAYS_SHOW_TARGET_HULL_BAR_AT_CENTER: {
+                name: "alwaysShowTargetHullBarAtCenter",
+                type: "boolean"
+            },
             TARGET_SWITCH_ANIMATION_DURATION: {
                 name: "targetSwitchAnimationDuration",
                 type: "number"

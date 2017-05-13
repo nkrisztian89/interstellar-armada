@@ -181,6 +181,7 @@
             "gameStateDisplayDelay": 2000,
             "quitDelayAfterJumpOut": 1500,
             "hud": {
+                "alwaysShowTargetHullBarAtCenter": false,
                 "targetSwitchAnimationDuration": 100,
                 "aimAssistAppearAnimationDuration": 100,
                 "hullIntegrityDecreaseAnimationDuration": 300,

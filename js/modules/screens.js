@@ -852,7 +852,7 @@ define([
      * Returns the width and height of the rectangle specified by this layout in pixels when scaled to a viewport of the given size.
      * @param {Number} viewportWidth
      * @param {Number} viewportHeight
-     * @returns {Number}
+     * @returns {Number[2]}
      */
     ClipSpaceLayout.prototype.getSize = function (viewportWidth, viewportHeight) {
         return [

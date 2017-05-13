@@ -2373,7 +2373,7 @@ define([
                 distance, aspect, i, j, count, scale, futureDistance, animationProgress, aimAssistAppearAnimationProgress, targetSwitchAnimationProgress, shipWidth,
                 hullIntegrity,
                 acceleration, speed, absSpeed, maxSpeed, stepFactor, stepBuffer, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
-                armor, craftCount,
+                armor, craftCount, height,
                 /** @type Weapon[] */
                 weapons,
                 /** @type Number[2] */
@@ -3161,7 +3161,8 @@ define([
                                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).colors.hostile :
                                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).colors.friendly);
                         // calculate and set the current position for the text box and the text itself
-                        position2D = [direction[0], direction[1] - 0.5 * shipIndicatorSize[1] * (utils.scalesWithWidth(_shipIndicators[i].getScaleMode(), aspect, 1) ? aspect : 1)];
+                        height = 0.5 * shipIndicatorSize[1] * (utils.scalesWithWidth(_shipIndicators[i].getScaleMode(), aspect, 1) ? aspect : 1);
+                        position2D = [direction[0], direction[1] - height];
                         scalesWithWidth = utils.scalesWithWidth(_distanceText.getBoxLayout().getScaleMode(), aspect, 1);
                         size2D = [_distanceTextBoxLayoutDescriptor.width / (scalesWithWidth ? 1 : aspect), _distanceTextBoxLayoutDescriptor.height * (scalesWithWidth ? aspect : 1)];
                         _distanceText.getBoxLayout().setPosition(
@@ -3173,6 +3174,14 @@ define([
                             position2D[1] - size2D[1] * 0.95
                         ]);
                         _distanceTextLayer.show();
+                        // calculate and set the current position for target hull integrity quick view bar
+                        if (!config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ALWAYS_SHOW_TARGET_HULL_BAR_AT_CENTER)) {
+                            position2D[1] = direction[1] + height;
+                            _targetHullIntegrityQuickViewBar.setPosition([
+                                (0.5 + 0.5 * position2D[0]) * canvas.width,
+                                (0.5 - 0.5 * (position2D[1] + _targetHullIntegrityQuickViewBarLayout.getClipSpaceHeight() * 1.5)) * canvas.height
+                            ]);
+                        }
                     }
                 }
             }
