@@ -182,6 +182,7 @@
             "quitDelayAfterJumpOut": 1500,
             "hud": {
                 "alwaysShowTargetHullBarAtCenter": false,
+                "aimAssistCrosshairs": false,
                 "targetSwitchAnimationDuration": 100,
                 "aimAssistAppearAnimationDuration": 100,
                 "hullIntegrityDecreaseAnimationDuration": 300,

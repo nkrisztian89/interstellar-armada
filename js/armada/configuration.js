@@ -962,6 +962,14 @@ define([
                 name: "alwaysShowTargetHullBarAtCenter",
                 type: "boolean"
             },
+            /**
+             * If true, instead of showing a separate aim assist indicator next to the crosshairs, the crosshairs (weapon impact indicators)
+             * themselves are offset to compensate for the relative movement of the target and assist the aiming.
+             */
+            AIM_ASSIST_CROSSHAIRS: {
+                name: "aimAssistCrosshairs",
+                type: "boolean"
+            },
             TARGET_SWITCH_ANIMATION_DURATION: {
                 name: "targetSwitchAnimationDuration",
                 type: "number"

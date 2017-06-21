@@ -672,6 +672,11 @@ define([
             // ................................................................................................
             // cached references of setting values used for the layout of the HUD
             /**
+             * Whether the crosshairs should be offset for aim assist instead of showing a separate indicator.
+             * @type Boolean
+             */
+            _aimAssistCrosshairs,
+            /**
              * (enum ScaleMode) Stores the scaling mode to use for the center crosshair for quicker access.
              * @type String
              */
@@ -2379,7 +2384,7 @@ define([
                 /** @type Number[2] */
                 position2D, direction2D, maxSpeedTextPosition, maxReverseSpeedTextPosition, shipIndicatorSize, shipIndicatorMinSize, size2D,
                 /** @type Number[3] */
-                position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, basePointPosition, relativeVelocity,
+                position, targetPosition, vectorToTarget, futureTargetPosition, slotPosition, basePointPosition, relativeVelocity, indicatorPosition,
                 /** @type Number[4] */
                 direction, color, targetInfoTextColor, filledColor, emptyColor, hostileColor, friendlyColor, hostileArrowColor, friendlyArrowColor,
                 newHostileColor, newHostileArrowColor,
@@ -2741,27 +2746,31 @@ define([
                 weapons = craft.getWeapons();
                 targetIsHostile = target.isHostile(craft);
                 if (weapons.length > 0) {
-                    // aim assist indicator at the expected future position of the target
                     futureTargetPosition = craft.getTargetHitPosition();
-                    _aimAssistIndicator.setPosition(futureTargetPosition);
-                    color = targetIsHostile ?
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.hostile :
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.friendly;
-                    // scaling / coloring according to the appear / target switch animation
-                    if ((_targetSwitchTime > 0) || (_aimAssistAppearTime > 0)) {
-                        animationProgress = Math.max(targetSwitchAnimationProgress, aimAssistAppearAnimationProgress);
-                        _aimAssistIndicator.setColor(utils.getMixedColor(
-                                color,
-                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.appear,
-                                animationProgress));
-                        _aimAssistIndicator.setSize(vec.scaled2(
-                                _aimAssistIndicatorSize,
-                                1 + (_aimAssistIndicatorAppearScale - 1) * animationProgress));
+                    // aim assist indicator at the expected future position of the target (if turned on)
+                    if (!_aimAssistCrosshairs) {
+                        _aimAssistIndicator.setPosition(futureTargetPosition);
+                        color = targetIsHostile ?
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.hostile :
+                                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.friendly;
+                        // scaling / coloring according to the appear / target switch animation
+                        if ((_targetSwitchTime > 0) || (_aimAssistAppearTime > 0)) {
+                            animationProgress = Math.max(targetSwitchAnimationProgress, aimAssistAppearAnimationProgress);
+                            _aimAssistIndicator.setColor(utils.getMixedColor(
+                                    color,
+                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.appear,
+                                    animationProgress));
+                            _aimAssistIndicator.setSize(vec.scaled2(
+                                    _aimAssistIndicatorSize,
+                                    1 + (_aimAssistIndicatorAppearScale - 1) * animationProgress));
+                        } else {
+                            _aimAssistIndicator.setColor(color);
+                            _aimAssistIndicator.setSize(_aimAssistIndicatorSize);
+                        }
+                        _aimAssistIndicator.show();
                     } else {
-                        _aimAssistIndicator.setColor(color);
-                        _aimAssistIndicator.setSize(_aimAssistIndicatorSize);
+                        _aimAssistIndicator.hide();
                     }
-                    _aimAssistIndicator.show();
                     // weapon crosshairs in the lines of fire
                     futureDistance = vec.length3(vec.diff3(futureTargetPosition, position));
                     m = craft.getPhysicalModel().getOrientationMatrix();
@@ -2775,18 +2784,22 @@ define([
                         }
                         if (weapons[i].isFixed()) {
                             slotPosition = weapons[i].getOrigoPositionMatrix();
-                            _weaponImpactIndicators[i].setPosition(vec.sumArray3([
+                            indicatorPosition = vec.sumArray3([
                                 position,
                                 vec.scaled3(mat.getRowB43(m), futureDistance),
                                 vec.scaled3(mat.getRowA43(m), slotPosition[12] * scale),
-                                vec.scaled3(mat.getRowC43(m), slotPosition[14] * scale)]));
+                                vec.scaled3(mat.getRowC43(m), slotPosition[14] * scale)]);
                         } else {
                             basePointPosition = weapons[i].getBasePointPosVector(scaledOriMatrix);
-                            _weaponImpactIndicators[i].setPosition(vec.sum3(
+                            indicatorPosition = vec.sum3(
                                     basePointPosition,
                                     vec.scaled3(mat.getRowB43(weapons[i].getProjectileOrientationMatrix()), vec.length3(
-                                            vec.diff3(futureTargetPosition, basePointPosition)))));
+                                            vec.diff3(futureTargetPosition, basePointPosition))));
                         }
+                        if (_aimAssistCrosshairs) {
+                            vec.sub3(indicatorPosition, vec.diff3Aux(futureTargetPosition, targetPosition));
+                        }
+                        _weaponImpactIndicators[i].setPosition(indicatorPosition);
                         if (futureDistance <= weapons[i].getRange(speed)) {
                             _weaponImpactIndicators[i].setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WEAPON_IMPACT_INDICATOR).colors.normal);
                             targetInRange = true;
@@ -3551,6 +3564,7 @@ define([
     // Caching frequently needed setting values
     config.executeWhenReady(function () {
         // hud
+        _aimAssistCrosshairs = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_CROSSHAIRS);
         _centerCrosshairScaleMode = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).scaleMode;
         _speedTargetIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).size;
         _distanceTextBoxLayoutDescriptor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).layout;
