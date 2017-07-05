@@ -87,6 +87,8 @@ define([
                 AUDIO_SCREEN_SOURCE: "audio.html",
                 CONTROLS_SCREEN_NAME: "controls",
                 CONTROLS_SCREEN_SOURCE: "controls.html",
+                HUD_SETTINGS_SCREEN_NAME: "hudSettings",
+                HUD_SETTINGS_SCREEN_SOURCE: "hud-settings.html",
                 ABOUT_SCREEN_NAME: "about",
                 ABOUT_SCREEN_SOURCE: "about.html",
                 ABOUT_SCREEN_CSS: "about.css",

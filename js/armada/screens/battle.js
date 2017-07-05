@@ -1856,7 +1856,12 @@ define([
                 graphics.getAntialiasing(),
                 true,
                 graphics.getFiltering(),
-                config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME));
+                config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME),
+                {
+                    activate: function () {
+                        _aimAssistCrosshairs = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_CROSSHAIRS);
+                    }
+                });
         /**
          * @type SimpleComponent
          */
@@ -3564,7 +3569,7 @@ define([
     // Caching frequently needed setting values
     config.executeWhenReady(function () {
         // hud
-        _aimAssistCrosshairs = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_CROSSHAIRS);
+        // see also the activate event handler at the BattleScreen constructor
         _centerCrosshairScaleMode = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CENTER_CROSSHAIR).scaleMode;
         _speedTargetIndicatorSize = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).size;
         _distanceTextBoxLayoutDescriptor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).layout;

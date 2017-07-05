@@ -89,6 +89,7 @@
         "general": "Általános beállítások",
         "graphics": "Grafikai beállítások",
         "audio": "Hang beállítások",
+        "hud": "HUD beállítások",
         "controls": "Irányítás beállításai",
         "defaults": "Alapértelmezések visszaállítása"
     },
@@ -449,6 +450,12 @@
         "musicVolume": "Zene hangereje:",
         "sfxVolume": "Effektek hangereje:",
         "uiVolume": "Vezérlőelemek hangereje:"
+    },
+    "hudSettings": {
+        "backButton": "Vissza a menübe",
+        "title": "HUD beállítások",
+        "targetHealthAtCenter": "Célpont állapota mindig középen:",
+        "offsetImpactIndicators": "Célzás eltolt becsapódásjelzőkkel:"
     },
     "controller": {
         "general": "Általános",

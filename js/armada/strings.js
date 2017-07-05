@@ -76,6 +76,7 @@ define([
         GENERAL: {name: "settings.general"},
         GRAPHICS: {name: "settings.graphics"},
         AUDIO: {name: "settings.audio"},
+        HUD: {name: "settings.hud"},
         CONTROLS: {name: "settings.controls"},
         DEFAULTS: {name: "settings.defaults"}
     };
@@ -264,6 +265,13 @@ define([
         MAX_DYNAMIC_LIGHTS: {name: "graphics.maxDynamicLights"},
         PARTICLE_AMOUNT: {name: "graphics.particleAmount"},
         DUST_PARTICLE_AMOUNT: {name: "graphics.dustParticleAmount"}
+    };
+    strings.HUD_SETTINGS = {
+        PREFIX: {name: "hudSettings.", optional: true},
+        BACK: {name: "hudSettings.backButton"},
+        TITLE: {name: "hudSettings.title"},
+        TARGET_HEALTH_AT_CENTER: {name: "hudSettings.targetHealthAtCenter"},
+        OFFSET_IMPACT_INDICATORS: {name: "hudSettings.offsetImpactIndicators"}
     };
     strings.AUDIO = {
         PREFIX: {name: "audio.", optional: true},

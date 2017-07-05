@@ -15,16 +15,30 @@
  * @param asyncResource ConfigurationContext is a subclass of AsyncResource
  * @param camera Used for accessing the enum types in this module
  * @param classes Loading the game configuration initiates loading the classes.
+ * @param constants Used to access common game constants
  */
 define([
     "utils/utils",
     "utils/types",
     "modules/async-resource",
     "modules/scene/camera",
-    "armada/logic/classes"
-], function (utils, types, asyncResource, camera, classes) {
+    "armada/logic/classes",
+    "armada/constants"
+], function (utils, types, asyncResource, camera, classes, constants) {
     "use strict";
     var
+            // --------------------------------------------------------------------------------------------
+            /**
+             * All location IDs where setting values are stored in local storage are prefixed by this value.
+             * @type String
+             */
+            MODULE_LOCAL_STORAGE_PREFIX = constants.LOCAL_STORAGE_PREFIX + "settings_",
+            /**
+             * The separator character used in local storage IDs which are joined together from multiple parts
+             * @type String
+             */
+            LOCAL_STORAGE_SEPARATOR = "_",
+            // --------------------------------------------------------------------------------------------
             /**
              * This object holds the definition objects for custom types that are used for object property verification
              * @type Object
@@ -65,6 +79,11 @@ define([
              * @type Object
              */
             EDITOR_SETTINGS,
+            /**
+             * The full prefix to use for local storage IDs of HUD settings
+             * @type String
+             */
+            LOCAL_STORAGE_HUD_PREFIX,
             /**
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type ConfigurationContext
@@ -1518,6 +1537,7 @@ define([
             type: "string"
         }
     };
+    LOCAL_STORAGE_HUD_PREFIX = MODULE_LOCAL_STORAGE_PREFIX + BATTLE_SETTINGS.HUD.name + LOCAL_STORAGE_SEPARATOR;
     Object.freeze(_customTypes);
     // #########################################################################
     /**
@@ -1562,11 +1582,35 @@ define([
         return this._settings[settingDefinitionObject.name];
     };
     /**
-     * Returns the setting value within the HUD setting object for the passed setting definition object.
+     * Returns the value for the HUD setting identified by the passed setting definition object.
+     * Checks locally stored settings as well as defaults.
      * @param {Object} settingDefinitionObject
      */
     ConfigurationContext.prototype.getHUDSetting = function (settingDefinitionObject) {
-        return this._settings[BATTLE_SETTINGS.HUD.name][settingDefinitionObject.name];
+        var local;
+        if (localStorage[LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name] !== undefined) {
+            local = types.getValueOfTypeFromLocalStorage(settingDefinitionObject.type, LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name);
+        }
+        return (local !== undefined) ? local : this._settings[BATTLE_SETTINGS.HUD.name][settingDefinitionObject.name];
+    };
+    /**
+     * Overrides the local value for the HUD setting identified by the passed setting definition object (storing it in local storage)
+     * @param {Object} settingDefinitionObject
+     * @param {} value
+     */
+    ConfigurationContext.prototype.setHUDSetting = function (settingDefinitionObject, value) {
+        localStorage[LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name] = value;
+    };
+    /**
+     * Removes all local overrides for HUD settings, resetting them to their default values (coming from the settings JSON)
+     */
+    ConfigurationContext.prototype.resetHUDSettings = function () {
+        var i, keys = Object.keys(BATTLE_SETTINGS.HUD);
+        for (i = 0; i < keys.length; i++) {
+            if (typeof BATTLE_SETTINGS.HUD[keys[i]] === "object") {
+                localStorage.removeItem(LOCAL_STORAGE_HUD_PREFIX + BATTLE_SETTINGS.HUD[keys[i]].name);
+            }
+        }
     };
     /**
      * Returns the default starting field of view value for camera configurations, in degrees
@@ -1644,6 +1688,8 @@ define([
         getConfigurationSetting: _context.getConfigurationSetting.bind(_context),
         getSetting: _context.getSetting.bind(_context),
         getHUDSetting: _context.getHUDSetting.bind(_context),
+        setHUDSetting: _context.setHUDSetting.bind(_context),
+        resetHUDSettings: _context.resetHUDSettings.bind(_context),
         getDefaultCameraFOV: _context.getDefaultCameraFOV.bind(_context),
         getDefaultCameraFOVRange: _context.getDefaultCameraFOVRange.bind(_context),
         getDefaultCameraSpan: _context.getDefaultCameraSpan.bind(_context),

@@ -39,6 +39,7 @@ define([
             // keys for the eventHandlers parameters passed to screen constructors
             SHOW_EVENT_NAME = components.SHOW_EVENT_NAME,
             HIDE_EVENT_NAME = components.HIDE_EVENT_NAME,
+            ACTIVATE_EVENT_NANE = "activate",
             /*
              * The content of HTML elements with this class on the page will be automatically translated on every update, using
              * the key <name of the page> " <TRANSLATION_KEY_SEPARATOR> + <id of the element>
@@ -166,6 +167,11 @@ define([
          */
         this._onHide = eventHandlers ? eventHandlers[HIDE_EVENT_NAME] : null;
         /**
+         * Optional callback to be executed whenever this screen is set to active state. (setActive(true) is called)
+         * @type Function
+         */
+        this._onActivate = eventHandlers ? eventHandlers[ACTIVATE_EVENT_NANE] : null;
+        /**
          * A reference to the event listener function listening to the keydown event to handle the key commands
          * valid on this screen.
          * @type Function
@@ -266,6 +272,9 @@ define([
     HTMLScreen.prototype.setActive = function (active) {
         if (active) {
             this._addEventListeners();
+            if (this._onActivate) {
+                this._onActivate();
+            }
         } else {
             this._removeEventListeners();
         }

@@ -135,6 +135,11 @@ define([
                             game.setScreen(armadaScreens.AUDIO_SCREEN_NAME);
                         }
                     }, {
+                        id: strings.SETTINGS.HUD.name,
+                        action: function () {
+                            game.setScreen(armadaScreens.HUD_SETTINGS_SCREEN_NAME);
+                        }
+                    }, {
                         id: strings.SETTINGS.CONTROLS.name,
                         action: function () {
                             game.setScreen(armadaScreens.CONTROLS_SCREEN_NAME);
@@ -177,6 +182,11 @@ define([
                         id: strings.SETTINGS.AUDIO.name,
                         action: function () {
                             game.setScreen(armadaScreens.AUDIO_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
+                        }
+                    }, {
+                        id: strings.SETTINGS.HUD.name,
+                        action: function () {
+                            game.setScreen(armadaScreens.HUD_SETTINGS_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
                         }
                     }, {
                         id: strings.INGAME_MENU.RESTART.name,

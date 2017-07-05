@@ -89,6 +89,7 @@
         "general": "General settings",
         "graphics": "Graphics settings",
         "audio": "Audio settings",
+        "hud": "HUD settings",
         "controls": "Control settings",
         "defaults": "Reset to defaults"
     },
@@ -432,6 +433,12 @@
         "musicVolume": "Music volume:",
         "sfxVolume": "Sound effect volume:",
         "uiVolume": "User interface volume:"
+    },
+    "hudSettings": {
+        "backButton": "Back to menu",
+        "title": "HUD settings",
+        "targetHealthAtCenter": "Target integrity bar always at center:",
+        "offsetImpactIndicators": "Offset impact indicators:"
     },
     "controller": {
         "general": "General",
