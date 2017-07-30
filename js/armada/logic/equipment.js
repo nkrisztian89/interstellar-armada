@@ -267,7 +267,7 @@ define([
     Object.freeze(FlightMode);
     Object.freeze(WeaponAimStatus);
     Object.freeze(ThrusterUse);
-// ##############################################################################
+    // ##############################################################################
     /**
      * @class Represents a projectile fired from a weapon.
      * @param {ProjectileClass} projectileClass The class of the projectile defining its general properties.
@@ -2849,7 +2849,81 @@ define([
         }
         this._originalScalingMatrix = null;
     };
-    // initializazion
+    // #########################################################################
+    /**
+     * @class This piece of equipment absorbs incoming damage, preserving the hull integrity of the spacecraft it is
+     * equipped on, and regenerates its capacity over time.
+     * @param {ShieldClass} shieldClass
+     * @param {Spacecraft} spacecraft The spacecraft to equip this shield on
+     */
+    function Shield(shieldClass, spacecraft) {
+        /**
+         * The class specifying the characteristics of the shield
+         * @type ShieldClass
+         */
+        this._class = shieldClass;
+        /**
+         * The spacecraft this shield is equipped on
+         * @type Spacecraft
+         */
+        this._spacecraft = spacecraft;
+        /**
+         * The current capacity (the amount of damage the shield can yet absorb before being depleted)
+         * @type Number
+         */
+        this._capacity = shieldClass.getCapacity();
+        /**
+         * The amount of time elapsed since the shield was last hit, in milliseconds
+         * @type Number
+         */
+        this._timeSinceHit = 0;
+    }
+    /**
+     * Call to make sure all needed resources are going to be loaded
+     */
+    Shield.prototype.acquireResources = function () {
+        this._class.acquireResources();
+    };
+    /**
+     * Returns the shield's integrity ratio (current / maximum capacity)
+     * @returns {Number}
+     */
+    Shield.prototype.getIntegrity = function () {
+        return this._capacity / this._class.getCapacity();
+    };
+    /**
+     * Call when the shield (the spacecraft that has the shield) is damaged
+     * @param {Number} damage The amount of damage (to be) dealt to the spacecraft
+     * @returns {Number} The amount of damage that should be dealt to the armor of the spacecraft (original minus the amount absorbed by the shield)
+     */
+    Shield.prototype.damage = function (damage) {
+        var absorbed = Math.min(this._capacity, damage);
+        this._timeSinceHit = 0;
+        this._capacity -= absorbed;
+        return damage - absorbed;
+    };
+    /**
+     * Call in every simulation step to update the internal state and initiate the appropriate events / effects
+     * @param {Number} dt The amount of time passed since the last simulation step, in milliseonds
+     */
+    Shield.prototype.simulate = function (dt) {
+        if (this._capacity < this._class.getCapacity()) {
+            if (this._timeSinceHit < this._class.getRechargeDelay()) {
+                this._timeSinceHit += dt;
+            } else {
+                this._capacity = Math.min(this._class.getCapacity(), this._capacity + this._class.getRechargeRate() * dt * 0.001); // sec -> ms
+            }
+        }
+    };
+    /**
+     * Deletes stored references. Call when the spacecraft is destroyed.
+     */
+    Shield.prototype.destroy = function () {
+        this._class = null;
+        this._spacecraft = null;
+    };
+    // ##############################################################################
+    // initialization
     // obtaining pool references
     _particlePool = pools.getPool(renderableObjects.Particle);
     _projectilePool = pools.getPool(Projectile);
@@ -2879,6 +2953,7 @@ define([
         TargetingComputer: TargetingComputer,
         Propulsion: Propulsion,
         JumpEngine: JumpEngine,
+        Shield: Shield,
         ManeuveringComputer: ManeuveringComputer
     };
 });

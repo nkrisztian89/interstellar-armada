@@ -2569,7 +2569,8 @@ define([
                 cameraConfigurations: true,
                 lightSources: true,
                 blinkers: true,
-                jumpEngine: true
+                jumpEngine: true,
+                shield: true
             }, {
                 randomAnimationTime: true
             });

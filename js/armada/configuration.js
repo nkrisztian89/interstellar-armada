@@ -1001,8 +1001,16 @@ define([
                 name: "hullIntegrityDecreaseAnimationDuration",
                 type: "number"
             },
+            SHIELD_DECREASE_ANIMATION_DURATION: {
+                name: "shieldDecreaseAnimationDuration",
+                type: "number"
+            },
             TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION: {
                 name: "targetHullIntegrityDecreaseAnimationDuration",
+                type: "number"
+            },
+            TARGET_SHIELD_DECREASE_ANIMATION_DURATION: {
+                name: "targetShieldDecreaseAnimationDuration",
                 type: "number"
             },
             SHIP_INDICATOR_HIGHLIGHT_ANIMATION_INTERVAL: {
@@ -1105,6 +1113,10 @@ define([
                 name: "targetHullIntegrityBar",
                 type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty"]})
             },
+            TARGET_SHIELD_BAR: {
+                name: "targetShieldBar",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty"]})
+            },
             TARGET_INFO_TEXT_LAYER_LAYOUT: {
                 name: "targetInfoTextLayerLayout",
                 type: _customTypes.LAYOUT_DESCRIPTOR
@@ -1185,6 +1197,10 @@ define([
                 name: "hullIntegrityBar",
                 type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty", "filledWhenDecreasing", "emptyWhenDecreasing"]})
             },
+            SHIELD_BAR: {
+                name: "shieldBar",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty", "filledWhenDecreasing", "emptyWhenDecreasing"]})
+            },
             FLIGHT_MODE_INDICATOR_BACKGROUND: {
                 name: "flightModeIndicatorBackground",
                 type: _customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR
@@ -1216,6 +1232,10 @@ define([
             TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR: {
                 name: "targetHullIntegrityQuickViewBar",
                 type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["hostileFilled", "hostileEmpty", "friendlyFilled", "friendlyEmpty", "filledWhenDecreasing"]})
+            },
+            TARGET_SHIELD_QUICK_VIEW_BAR: {
+                name: "targetShieldQuickViewBar",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty", "filledWhenDecreasing"]})
             },
             HEADER_TEXT_LAYER_LAYOUT: {
                 name: "headerTextLayerLayout",

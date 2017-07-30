@@ -2467,6 +2467,32 @@
             },
             "jumpInExplosion": "fighterJumpFlash"
         }],
+    "shieldClasses": [{
+            "name": "imperialFighterMk1",
+            "capacity": 5,
+            "rechargeDelay": 1000,
+            "rechargeRate": 1
+        }, {
+            "name": "imperialBomberMk1",
+            "capacity": 10,
+            "rechargeDelay": 1500,
+            "rechargeRate": 1
+        }, {
+            "name": "imperialCorvetteMk1",
+            "capacity": 125,
+            "rechargeDelay": 5000,
+            "rechargeRate": 5
+        }, {
+            "name": "imperialFrigateMk1",
+            "capacity": 500,
+            "rechargeDelay": 10000,
+            "rechargeRate": 20
+        }, {
+            "name": "imperialCruiserMk1",
+            "capacity": 2000,
+            "rechargeDelay": 20000,
+            "rechargeRate": 100
+        }],
     "spacecraftTypes": [{
             "name": "container",
             "isFighterType": false,
@@ -2980,6 +3006,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "full",
@@ -2996,6 +3025,9 @@
                         "class": "imperialFighterMk1"
                     },
                     "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
                         "class": "imperialFighterMk1"
                     }
                 }, {
@@ -3980,6 +4012,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialBomberMk1"
                     }
                 }, {
                     "name": "full",
@@ -3993,6 +4028,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialBomberMk1"
                     }
                 }, {
                     "name": "heavy",
@@ -4006,6 +4044,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialBomberMk1"
                     }
                 }, {
                     "name": "half",
@@ -4757,6 +4798,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialSmallShipMk1"
+                    },
+                    "shield": {
+                        "class": "imperialCorvetteMk1"
                     }
                 }, {
                     "name": "full",
@@ -4770,6 +4814,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialSmallShipMk1"
+                    },
+                    "shield": {
+                        "class": "imperialCorvetteMk1"
                     }
                 }],
             "humSound": {
@@ -5304,6 +5351,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialSmallShipMk1"
+                    },
+                    "shield": {
+                        "class": "imperialFrigateMk1"
                     }
                 }, {
                     "name": "full",
@@ -5321,6 +5371,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialSmallShipMk1"
+                    },
+                    "shield": {
+                        "class": "imperialFrigateMk1"
                     }
                 }],
             "humSound": {
@@ -5999,6 +6052,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialLargeShipMk1"
+                    },
+                    "shield": {
+                        "class": "imperialCruiserMk1"
                     }
                 }, {
                     "name": "full",
@@ -6044,6 +6100,9 @@
                     },
                     "jumpEngine": {
                         "class": "imperialLargeShipMk1"
+                    },
+                    "shield": {
+                        "class": "imperialCruiserMk1"
                     }
                 }],
             "humSound": {

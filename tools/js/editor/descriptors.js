@@ -60,6 +60,7 @@ define([
                 METERS_PER_SECOND_SQUARED: "m/s^2",
                 SECONDS: "s",
                 MILLISECONDS: "ms",
+                PER_SECOND: "/s",
                 DEGREES: "degrees",
                 DEGREES_PER_SECOND: "deg/s",
                 DEGREES_PER_SECOND_SQUARED: "deg/s^2",
@@ -177,6 +178,10 @@ define([
             MILLISECONDS = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.MILLISECONDS
+            },
+            PER_SECOND = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.PER_SECOND
             },
             DEGREES = {
                 baseType: BaseType.NUMBER,
@@ -302,6 +307,13 @@ define([
             JUMP_ENGINE_CLASS_REFERENCE = {
                 baseType: BaseType.ENUM,
                 classReference: "jumpEngineClasses"
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SHIELD_CLASS_REFERENCE = {
+                baseType: BaseType.ENUM,
+                classReference: "shieldClasses"
             },
             /**
              * @type Editor~TypeDescriptor
@@ -1147,6 +1159,28 @@ define([
                 }
             },
             /**
+             * The descriptor object for shield classes, describing their properties
+             * @type Editor~ItemDescriptor
+             */
+            SHIELD_CLASS = {
+                NAME: {
+                    name: "name",
+                    type: BaseType.STRING
+                },
+                CAPACITY: {
+                    name: "capacity",
+                    type: BaseType.NUMBER
+                },
+                RECHARGE_DELAY: {
+                    name: "rechargeDelay",
+                    type: MILLISECONDS
+                },
+                RECHARGE_RATE: {
+                    name: "rechargeRate",
+                    type: PER_SECOND
+                }
+            },
+            /**
              * @type Editor~TypeDescriptor
              */
             SPACECRAFT_TYPES = {
@@ -1531,6 +1565,19 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            SHIELD = {
+                baseType: BaseType.OBJECT,
+                name: "Shield",
+                properties: {
+                    CLASS: {
+                        name: "class",
+                        type: SHIELD_CLASS_REFERENCE
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             EQUIPMENT_PROFILE = {
                 baseType: BaseType.OBJECT,
                 name: "EquipmentProfile",
@@ -1553,6 +1600,11 @@ define([
                     JUMP_ENGINE: {
                         name: "jumpEngine",
                         type: JUMP_ENGINE,
+                        optional: true
+                    },
+                    SHIELD: {
+                        name: "shield",
+                        type: SHIELD,
                         optional: true
                     }
                 }
@@ -2074,6 +2126,7 @@ define([
             "weaponClasses": WEAPON_CLASS,
             "propulsionClasses": PROPULSION_CLASS,
             "jumpEngineClasses": JUMP_ENGINE_CLASS,
+            "shieldClasses": SHIELD_CLASS,
             "spacecraftTypes": SPACECRAFT_TYPE,
             "spacecraftClasses": SPACECRAFT_CLASS,
             "environments": ENVIRONMENT

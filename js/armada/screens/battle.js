@@ -241,6 +241,11 @@ define([
              */
             _spacecraftHullIntegrity,
             /**
+             * The shield integrity of the followed spacecraft (if any, as last displayed on the HUD)
+             * @type Number
+             */
+            _spacecraftShieldIntegrity,
+            /**
              * A reference to the target of the followed spacecraft (if any, as last displayed on the HUD)
              * @type Spacecraft
              */
@@ -250,6 +255,11 @@ define([
              * @type Number
              */
             _targetHullIntegrity,
+            /**
+             * The shield integrity of the target of the followed spacecraft (if any, as last displayed on the HUD)
+             * @type Number
+             */
+            _targetShieldIntegrity,
             /**
              * An array storing the reference to all persistent HUD elements (so that when the graphics settings are changed, they can be
              * notified to update the shaders etc)
@@ -263,10 +273,20 @@ define([
              */
             _hullIntegrityDecreaseTime,
             /**
+             * The time left from the shield integrity decrease HUD animation, in milliseconds
+             * @type Number
+             */
+            _shieldDecreaseTime,
+            /**
              * The time left from the target hull integrity decrease HUD animation, in milliseconds
              * @type Number
              */
             _targetHullIntegrityDecreaseTime,
+            /**
+             * The time left from the target shield integrity decrease HUD animation, in milliseconds
+             * @type Number
+             */
+            _targetShieldDecreaseTime,
             /**
              * The time left from the target switch HUD animation, in milliseconds
              * @type Number
@@ -371,10 +391,15 @@ define([
              */
             _weaponImpactIndicators,
             /**
-             * A bar showing the hull integrity of the current target near the center of the HUD.
+             * A bar showing the hull integrity of the current target near the center of the HUD / over the target (depending on settings)
              * @type HUDElement
              */
             _targetHullIntegrityQuickViewBar,
+            /**
+             * A bar showing the shield integrity of the current target near the center of the HUD / over the target (depending on settings)
+             * @type HUDElement
+             */
+            _targetShieldQuickViewBar,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // cursor
             /**
@@ -450,6 +475,11 @@ define([
              * @type HUDElement
              */
             _targetHullIntegrityBar,
+            /**
+             * A bar showing the current shield integrity of the selected target within the target info panel.
+             * @type HUDElement
+             */
+            _targetShieldBar,
             /**
              * Houses all the texts that display information about the current target within the target info panel.
              * @type TextLayer
@@ -541,6 +571,13 @@ define([
              * @type HUDElement
              */
             _hullIntegrityBar,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // shield integrity bar
+            /**
+             * Displays the shield integrity of the followed spacecraft.
+             * @type HUDElement
+             */
+            _shieldBar,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // flight mode indicator
             /**
@@ -707,6 +744,11 @@ define([
              */
             _targetHullIntegrityBarLayout,
             /**
+             * Stores a reference to the layout used for the target shield integrity bar HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _targetShieldBarLayout,
+            /**
              * Stores a reference to the layout used for the speed bar HUD element for quicker access.
              * @type ClipSpaceLayout
              */
@@ -722,6 +764,11 @@ define([
              */
             _hullIntegrityBarLayout,
             /**
+             * Stores a reference to the layout used for the shield integrity bar HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _shieldBarLayout,
+            /**
              * Stores a reference to the layout used for the flight mode indicator background HUD element for quicker access.
              * @type ClipSpaceLayout
              */
@@ -731,6 +778,11 @@ define([
              * @type ClipSpaceLayout
              */
             _targetHullIntegrityQuickViewBarLayout,
+            /**
+             * Stores a reference to the layout used for the target shield integrity quick view bar HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _targetShieldQuickViewBarLayout,
             /**
              * Stores a reference to the layout used for the mission objective indicator background HUD element for quicker access.
              * @type ClipSpaceLayout
@@ -765,10 +817,20 @@ define([
              */
             _hudHullIntegrityDecreaseAnimationDuration,
             /**
+             * The duration of the shield integrity decrease animation (highlighting shield integrity bar), in milliseconds
+             * @type Number
+             */
+            _hudShieldDecreaseAnimationDuration,
+            /**
              * The duration of the target hull integrity decrease animation (highlighting target hull integrity quick view bar), in milliseconds
              * @type Number
              */
             _hudTargetHullIntegrityDecreaseAnimationDuration,
+            /**
+             * The duration of the target shield integrity decrease animation (highlighting target shield integrity quick view bar), in milliseconds
+             * @type Number
+             */
+            _hudTargetShieldDecreaseAnimationDuration,
             /**
              * The interval of the ship indicator (reticle/arrow) highlight animation, in milliseconds
              * @type Number
@@ -923,7 +985,9 @@ define([
         audio.playMusic(null);
         // HUD
         _hullIntegrityDecreaseTime = 0;
+        _shieldDecreaseTime = 0;
         _targetHullIntegrityDecreaseTime = 0;
+        _targetShieldDecreaseTime = 0;
         _targetSwitchTime = 0;
         _aimAssistAppearTime = 0;
         _shipIndicatorHighlightTime = 0;
@@ -1692,6 +1756,16 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).colors.empty,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).mapping));
         _targetHullIntegrityBar.addToScene(_battleScene);
+        _targetShieldBar = _targetShieldBar || _addHUDElement(new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_BAR).texture,
+                _targetShieldBarLayout.getClipSpacePosition(),
+                _targetShieldBarLayout.getClipSpaceSize(),
+                _targetShieldBarLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_BAR).colors.filled,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_BAR).colors.empty,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_BAR).mapping));
+        _targetShieldBar.addToScene(_battleScene);
         _speedBar = _speedBar || _addHUDElement(new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).texture,
@@ -1722,6 +1796,16 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors.empty,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).mapping));
         _hullIntegrityBar.addToScene(_battleScene);
+        _shieldBar = _shieldBar || _addHUDElement(new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).texture,
+                _shieldBarLayout.getClipSpacePosition(),
+                _shieldBarLayout.getClipSpaceSize(),
+                _shieldBarLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).colors.filled,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).colors.empty,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).mapping));
+        _shieldBar.addToScene(_battleScene);
         _targetHullIntegrityQuickViewBar = _targetHullIntegrityQuickViewBar || _addHUDElement(new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).texture,
@@ -1732,6 +1816,16 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).mapping));
         _targetHullIntegrityQuickViewBar.addToScene(_battleScene);
+        _targetShieldQuickViewBar = _targetShieldQuickViewBar || _addHUDElement(new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).texture,
+                _targetShieldQuickViewBarLayout.getClipSpacePosition(),
+                _targetShieldQuickViewBarLayout.getClipSpaceSize(),
+                _targetShieldQuickViewBarLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).colors.filled,
+                undefined,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).mapping));
+        _targetShieldQuickViewBar.addToScene(_battleScene);
         n = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MAX_ESCORTS_DISPLAYED);
         if (!_escortHullIntegrityBars) {
             _escortHullIntegrityBars = [];
@@ -2380,8 +2474,8 @@ define([
                 craft = _mission ? _mission.getFollowedSpacecraftForScene(_battleScene) : null,
                 target, wingman,
                 /** @type Number */
-                distance, aspect, i, j, count, scale, futureDistance, animationProgress, aimAssistAppearAnimationProgress, targetSwitchAnimationProgress, shipWidth,
-                hullIntegrity,
+                distance, aspect, i, j, count, scale, futureDistance, animationProgress, animation2Progress, aimAssistAppearAnimationProgress, targetSwitchAnimationProgress, shipWidth,
+                hullIntegrity, shieldIntegrity,
                 acceleration, speed, absSpeed, maxSpeed, stepFactor, stepBuffer, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
                 armor, craftCount, height,
                 /** @type Weapon[] */
@@ -2554,23 +2648,37 @@ define([
                 _driftArrow.hide();
             }
             // .....................................................................................................
-            // hull integrity bar
+            // hull and shield integrity bar
             hullIntegrity = craft.getHullIntegrity();
+            shieldIntegrity = craft.getShieldIntegrity();
             // color change animation when the integrity decreases
             if (craft !== _spacecraft) {
                 _spacecraft = craft;
                 _squads = craft.getTeam() ? craft.getTeam().getSquads() : [];
                 _wingmenStatusCraftLayouts = []; // drop the previous array so new layouts are generated for potentially new squads
                 _spacecraftHullIntegrity = hullIntegrity;
+                _spacecraftShieldIntegrity = shieldIntegrity;
                 animationProgress = 0;
+                animation2Progress = 0;
                 _hullIntegrityDecreaseTime = 0;
-            } else if (hullIntegrity < _spacecraftHullIntegrity) {
-                _spacecraftHullIntegrity = hullIntegrity;
-                _hullIntegrityDecreaseTime = _hudHullIntegrityDecreaseAnimationDuration;
-                animationProgress = 1;
-            } else if (_hullIntegrityDecreaseTime > 0) {
-                _hullIntegrityDecreaseTime -= dt;
-                animationProgress = _hullIntegrityDecreaseTime / _hudHullIntegrityDecreaseAnimationDuration;
+                _shieldDecreaseTime = 0;
+            } else  {
+                if (hullIntegrity < _spacecraftHullIntegrity) {
+                    _spacecraftHullIntegrity = hullIntegrity;
+                    _hullIntegrityDecreaseTime = _hudHullIntegrityDecreaseAnimationDuration;
+                    animationProgress = 1;
+                } else if (_hullIntegrityDecreaseTime > 0) {
+                    _hullIntegrityDecreaseTime -= dt;
+                   animationProgress = _hullIntegrityDecreaseTime / _hudHullIntegrityDecreaseAnimationDuration;
+                }
+                if (shieldIntegrity < _spacecraftShieldIntegrity) {
+                    _spacecraftShieldIntegrity = shieldIntegrity;
+                    _shieldDecreaseTime = _hudShieldDecreaseAnimationDuration;
+                    animation2Progress = 1;
+                } else if (_shieldDecreaseTime > 0) {
+                    _shieldDecreaseTime -= dt;
+                   animation2Progress = _shieldDecreaseTime / _hudShieldDecreaseAnimationDuration;
+                }
             }
             if (_hullIntegrityDecreaseTime > 0) {
                 _hullIntegrityBar.setColor(utils.getMixedColor(
@@ -2587,6 +2695,26 @@ define([
             }
             _hullIntegrityBar.clipY(0, hullIntegrity);
             _hullIntegrityBar.applyLayout(_hullIntegrityBarLayout, canvas.width, canvas.height);
+            if (craft.hasShield()) {
+                if (_shieldDecreaseTime > 0) {
+                    _shieldBar.setColor(utils.getMixedColor(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).colors.filled,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).colors.filledWhenDecreasing,
+                            animation2Progress));
+                    _shieldBar.setClipColor(utils.getMixedColor(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).colors.empty,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).colors.emptyWhenDecreasing,
+                            animation2Progress));
+                } else {
+                    _shieldBar.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).colors.filled);
+                    _shieldBar.setClipColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).colors.empty);
+                }
+                _shieldBar.clipY(0, shieldIntegrity);
+                _shieldBar.applyLayout(_shieldBarLayout, canvas.width, canvas.height);
+                _shieldBar.show();
+            } else {
+                _shieldBar.hide();
+            }
             // .....................................................................................................
             // flight mode indicator
             _flightModeIndicatorBackground.applyLayout(_flightModeIndicatorBackgroundLayout, canvas.width, canvas.height);
@@ -2841,6 +2969,7 @@ define([
                 _targetInfoBackground.show();
                 // target view
                 hullIntegrity = target.getHullIntegrity();
+                shieldIntegrity = target.getShieldIntegrity();
                 _targetViewItemColor = _getHullIntegrityColor(hullIntegrity,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR),
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
@@ -2875,10 +3004,17 @@ define([
                         _targetViewLayout.getPositiveBottom(canvas.width, canvas.height),
                         _targetViewLayout.getPositiveWidth(canvas.width, canvas.height),
                         _targetViewLayout.getPositiveHeight(canvas.width, canvas.height));
-                // target hull integrity bar
+                // target hull and shield integrity bars
                 _targetHullIntegrityBar.clipX(0, hullIntegrity);
                 _targetHullIntegrityBar.applyLayout(_targetHullIntegrityBarLayout, canvas.width, canvas.height);
                 _targetHullIntegrityBar.show();
+                if (target.hasShield()) {
+                    _targetShieldBar.clipX(0, shieldIntegrity);
+                    _targetShieldBar.applyLayout(_targetShieldBarLayout, canvas.width, canvas.height);
+                    _targetShieldBar.show();
+                } else {
+                    _targetShieldBar.hide();
+                }
                 // target info texts
                 targetInfoTextColor = targetIsHostile ?
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.hostile :
@@ -2902,18 +3038,38 @@ define([
                 if (isInAimingView) {
                     _targetHullIntegrityQuickViewBar.clipX(0.5 - hullIntegrity / 2, 0.5 + hullIntegrity / 2);
                     _targetHullIntegrityQuickViewBar.applyLayout(_targetHullIntegrityQuickViewBarLayout, canvas.width, canvas.height);
+                    if (target.hasShield()) {
+                        _targetShieldQuickViewBar.clipX(0.5 - shieldIntegrity / 2, 0.5 + shieldIntegrity / 2);
+                        _targetShieldQuickViewBar.applyLayout(_targetShieldQuickViewBarLayout, canvas.width, canvas.height);
+                        _targetShieldQuickViewBar.show();
+                    } else {
+                        _targetShieldQuickViewBar.hide();
+                    }
                     // target hull integrity decrease animation (color change of the filled portion)
                     if (targetSwitched) {
                         _targetHullIntegrity = hullIntegrity;
+                        _targetShieldIntegrity = shieldIntegrity;
                         _targetHullIntegrityDecreaseTime = 0;
+                        _targetShieldDecreaseTime = 0;
                         animationProgress = 0;
-                    } else if (hullIntegrity < _targetHullIntegrity) {
-                        _targetHullIntegrity = hullIntegrity;
-                        _targetHullIntegrityDecreaseTime = _hudTargetHullIntegrityDecreaseAnimationDuration;
-                        animationProgress = 1;
-                    } else if (_targetHullIntegrityDecreaseTime > 0) {
-                        _targetHullIntegrityDecreaseTime -= dt;
-                        animationProgress = _targetHullIntegrityDecreaseTime / _hudTargetHullIntegrityDecreaseAnimationDuration;
+                        animation2Progress = 0;
+                    } else  {
+                        if (hullIntegrity < _targetHullIntegrity) {
+                            _targetHullIntegrity = hullIntegrity;
+                            _targetHullIntegrityDecreaseTime = _hudTargetHullIntegrityDecreaseAnimationDuration;
+                            animationProgress = 1;
+                        } else if (_targetHullIntegrityDecreaseTime > 0) {
+                            _targetHullIntegrityDecreaseTime -= dt;
+                            animationProgress = _targetHullIntegrityDecreaseTime / _hudTargetHullIntegrityDecreaseAnimationDuration;
+                        }
+                        if (shieldIntegrity < _targetShieldIntegrity) {
+                            _targetShieldIntegrity = shieldIntegrity;
+                            _targetShieldDecreaseTime = _hudTargetShieldDecreaseAnimationDuration;
+                            animation2Progress = 1;
+                        } else if (_targetShieldDecreaseTime > 0) {
+                            _targetShieldDecreaseTime -= dt;
+                            animation2Progress = _targetShieldDecreaseTime / _hudTargetShieldDecreaseAnimationDuration;
+                        }
                     }
                     filledColor = targetIsHostile ?
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.hostileFilled :
@@ -2931,8 +3087,23 @@ define([
                     }
                     _targetHullIntegrityQuickViewBar.setClipColor(emptyColor);
                     _targetHullIntegrityQuickViewBar.show();
+                    if (target.hasShield()) {
+                        if (_targetShieldDecreaseTime > 0) {
+                            _targetShieldQuickViewBar.setColor(utils.getMixedColor(
+                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).colors.filled,
+                                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).colors.filledWhenDecreasing,
+                                    animation2Progress));
+                        } else {
+                            _targetShieldQuickViewBar.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).colors.filled);
+                        }
+                        _targetShieldQuickViewBar.setClipColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).colors.empty);
+                        _targetShieldQuickViewBar.show();
+                    } else {
+                        _targetShieldQuickViewBar.hide();
+                    }
                 } else {
                     _targetHullIntegrityQuickViewBar.hide();
+                    _targetShieldQuickViewBar.hide();
                 }
             } else {
                 // if there is no target
@@ -2947,8 +3118,10 @@ define([
                     _targetViewModel = null;
                 }
                 _targetHullIntegrityBar.hide();
+                _targetShieldBar.hide();
                 _targetInfoTextLayer.hide();
                 _targetHullIntegrityQuickViewBar.hide();
+                _targetShieldQuickViewBar.hide();
                 _distanceTextLayer.hide();
             }
             // .....................................................................................................
@@ -3199,6 +3372,10 @@ define([
                                 (0.5 + 0.5 * position2D[0]) * canvas.width,
                                 (0.5 - 0.5 * (position2D[1] + _targetHullIntegrityQuickViewBarLayout.getClipSpaceHeight() * 1.5)) * canvas.height
                             ]);
+                            _targetShieldQuickViewBar.setPosition([
+                                (0.5 + 0.5 * position2D[0]) * canvas.width,
+                                (0.5 - 0.5 * (position2D[1] + _targetHullIntegrityQuickViewBarLayout.getClipSpaceHeight() * 1.5 + _targetShieldQuickViewBarLayout.getClipSpaceHeight())) * canvas.height
+                            ]);
                         }
                     }
                 }
@@ -3264,7 +3441,7 @@ define([
             isRecord: isRecord,
             elapsedTime: _elapsedTime,
             kills: craft ? craft.getKills() : 0,
-            damageDealt: craft ? craft.getDamageDealt() : 0,
+            damageDealt: craft ? Math.round(craft.getDamageDealt()) : 0,
             baseScore: perfStats.baseScore || 0,
             hitRatio: hitRatio,
             hitRatioBonus: perfStats.hitRatioBonus,
@@ -3577,8 +3754,10 @@ define([
         _targetInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_BACKGROUND).layout);
         _wingmenStatusBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_BACKGROUND).layout);
         _targetHullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).layout);
+        _targetShieldBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_BAR).layout);
         _speedBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).layout);
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).layout);
+        _shieldBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).layout);
         _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).layout);
         _objectivesBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).layout);
         _escortsBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).layout);
@@ -3586,7 +3765,9 @@ define([
         _hudTargetSwitchAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_ANIMATION_DURATION);
         _hudAimAssistAppearAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_APPEAR_ANIMATION_DURATION);
         _hudHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
+        _hudShieldDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_DECREASE_ANIMATION_DURATION);
         _hudTargetHullIntegrityDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_DECREASE_ANIMATION_DURATION);
+        _hudTargetShieldDecreaseAnimationDuration = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_DECREASE_ANIMATION_DURATION);
         _shipIndicatorHighlightAnimationInterval = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR_HIGHLIGHT_ANIMATION_INTERVAL);
         _shipIndicatorSizes = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).sizes;
         _shipIndicatorSizeFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR_SIZE_FACTOR);
@@ -3600,6 +3781,7 @@ define([
         _driftArrowMinSpeed = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_MIN_SPEED);
         _driftArrowMaxSpeedFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_MAX_SPEED_FACTOR);
         _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).layout);
+        _targetShieldQuickViewBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).layout);
         _escortsHullIntegrityBarSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_HULL_INTEGRITY_BAR);
         _wingmenStatusCraftIndicatorSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_INDICATOR);
         _wingmenStatusMaxSquadMemberCount = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS).length;

@@ -342,6 +342,11 @@ define([
          */
         this._jumpEngine = null;
         /**
+         * The shield this spacecraft is equipped with.
+         * @type Shield
+         */
+        this._shield = null;
+        /**
          * The maneuvering computer of this spacecraft that translates high
          * level maneuvering commands issued to this craft into thruster control.
          * @type ManeuveringComputer
@@ -660,6 +665,20 @@ define([
      */
     Spacecraft.prototype.getHullIntegrity = function () {
         return this._hitpoints / this._maxHitpoints;
+    };
+    /**
+     * Returns whether the spacecraft has a shield equipped.
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.hasShield = function () {
+        return !!this._shield;
+    };
+    /**
+     * Returns the current shield integrity ratio of the spacecraft - a number between 0.0 (indicating a depleted shield) and 1.0 (indicating a fully charged shield).
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getShieldIntegrity = function () {
+        return this._shield ? this._shield.getIntegrity() : 0;
     };
     /**
      * Multiplies the amount of current and maximum hitpoints of the spacecraft has by the passed factor.
@@ -1359,6 +1378,7 @@ define([
      * @property {Boolean} lightSources
      * @property {Boolean} blinkers
      * @property {Boolean} jumpEngine
+     * @property {Boolean} shield
      * @property {Boolean} [self=true]
      */
     /**
@@ -1418,6 +1438,11 @@ define([
         if (addSupplements.jumpEngine === true) {
             if (this._jumpEngine) {
                 this._jumpEngine.acquireResources();
+            }
+        }
+        if (addSupplements.shield === true) {
+            if (this._shield) {
+                this._shield.acquireResources();
             }
         }
         if (addSupplements.explosion === true) {
@@ -1639,6 +1664,14 @@ define([
         this._jumpEngine = new equipment.JumpEngine(jumpEngineClass, this);
     };
     /**
+     * Equips a shield of the given class to the ship, replacing the
+     * previous shield, if one was equipped.
+     * @param {ShieldClass} shieldClass
+     */
+    Spacecraft.prototype._addShield = function (shieldClass) {
+        this._shield = new equipment.Shield(shieldClass, this);
+    };
+    /**
      * Removes all equipment from the spacecraft.
      */
     Spacecraft.prototype.unequip = function () {
@@ -1672,6 +1705,9 @@ define([
             }
             if (equipmentProfile.getJumpEngineDescriptor() !== null) {
                 this._addJumpEngine(classes.getJumpEngineClass(equipmentProfile.getJumpEngineDescriptor().className));
+            }
+            if (equipmentProfile.getShieldDescriptor() !== null) {
+                this._addShield(classes.getShieldClass(equipmentProfile.getShieldDescriptor().className));
             }
         } else {
             application.log("WARNING: equipping empty profile on " + this._class.getName() + "!");
@@ -1868,6 +1904,10 @@ define([
      */
     Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy) {
         var i, damageIndicator, hitpointThreshold, exp, liveHit, scoreValue;
+        // shield absorbs damage
+        if (this._shield) {
+            damage = this._shield.damage(damage);
+        }
         // armor rating decreases damage
         damage = Math.max(0, damage - this._class.getArmor());
         liveHit = this._hitpoints > 0;
@@ -2106,6 +2146,9 @@ define([
             if (this._jumpEngine) {
                 this._jumpEngine.simulate(dt);
             }
+            if (this._shield) {
+                this._shield.simulate(dt);
+            }
             if (this._class.hasHumSound()) {
                 if (!this._humSoundClip) {
                     this._humSoundClip = this._class.createHumSoundClip(this._soundSource);
@@ -2219,6 +2262,10 @@ define([
         if (this._jumpEngine) {
             this._jumpEngine.destroy();
             this._jumpEngine = null;
+        }
+        if (this._shield) {
+            this._shield.destroy();
+            this._shield = null;
         }
         if (this._maneuveringComputer) {
             this._maneuveringComputer.destroy();

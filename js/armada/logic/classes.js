@@ -145,6 +145,11 @@ define([
              */
             JUMP_ENGINE_CLASS_ARRAY_NAME = "jumpEngineClasses",
             /**
+             * In the class description file, shield classes will be initialized from the array with this name
+             * @type String
+             */
+            SHIELD_CLASS_ARRAY_NAME = "shieldClasses",
+            /**
              * In the class description file, spacecraft types will be initialized from the array with this name
              * @type String
              */
@@ -313,6 +318,14 @@ define([
      */
     function getJumpEngineClass(name) {
         return _classManager.getResource(JUMP_ENGINE_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the shield class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {ShieldClass}
+     */
+    function getShieldClass(name) {
+        return _classManager.getResource(SHIELD_CLASS_ARRAY_NAME, name);
     }
     /**
      * Return the spacecraft type with the given name if it exists, otherwise null.
@@ -2295,6 +2308,67 @@ define([
     };
     // ##############################################################################
     /**
+     * @class Each spacecraft can be equipped with a shield. This class
+     * represents one of the classes to which such a shield can belong, describing
+     * the properties of such a shield.
+     * @augments GenericClass
+     * @param {Object} [dataJSON]
+     */
+    function ShieldClass(dataJSON) {
+        GenericClass.call(this, dataJSON);
+    }
+    ShieldClass.prototype = new GenericClass();
+    ShieldClass.prototype.constructor = ShieldClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     * @returns {Boolean}
+     */
+    ShieldClass.prototype._loadData = function (dataJSON) {
+        GenericClass.prototype._loadData.call(this, dataJSON);
+        /**
+         * The overall maximum capacity (amount of damage absorbed when fully charged)
+         * @type Number
+         */
+        this._capacity = dataJSON ? (dataJSON.capacity || _showMissingPropertyError(this, "capacity")) : 0;
+        /**
+         * The shield starts recharging this much time after it gets hit, in milliseconds.
+         * @type Number
+         */
+        this._rechargeDelay = dataJSON ? (dataJSON.rechargeDelay || _showMissingPropertyError(this, "rechargeDelay")) : 0;
+        /**
+         * While recharging, the shield regains this much capacity over one second.
+         * @type Number
+         */
+        this._rechargeRate = dataJSON ? (dataJSON.rechargeRate || _showMissingPropertyError(this, "rechargeRate")) : 0;
+        return true;
+    };
+    /**
+     * Call before resource loading to ensure all resources required for shields of this class will be loaded
+     */
+    ShieldClass.prototype.acquireResources = function () {
+        return true; // nothing to load at this points
+    };
+    /**
+     * @returns {Number}
+     */
+    ShieldClass.prototype.getCapacity = function () {
+        return this._capacity;
+    };
+    /**
+     * @returns {Number}
+     */
+    ShieldClass.prototype.getRechargeDelay = function () {
+        return this._rechargeDelay;
+    };
+    /**
+     * @returns {Number}
+     */
+    ShieldClass.prototype.getRechargeRate = function () {
+        return this._rechargeRate;
+    };
+    // ##############################################################################
+    /**
      * @class A type of spacecraft. This a more general classification of 
      * spacecraft than a class. An example would be shuttle, interceptor, cruiser, 
      * space station or freighter.
@@ -2507,6 +2581,19 @@ define([
     }
     // ##############################################################################
     /**
+     * @struct A shield descriptor can be used to equip a shield on a 
+     * spacecraft, by describing the parameters of the equipment. 
+     * @param {Object} [dataJSON]
+     */
+    function ShieldDescriptor(dataJSON) {
+        /**
+         * The name of the class of the shield to be equipped.
+         * @type String
+         */
+        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
+    }
+    // ##############################################################################
+    /**
      * @class Every ship (class) can have several equipment profiles, each defining a 
      * specific set of equipment. These can then be used to more easily equip the
      * ships, by only referencing the profile to equip all the different pieces of
@@ -2539,6 +2626,11 @@ define([
          * @type JumpEngineDescriptor
          */
         this._jumpEngineDescriptor = dataJSON.jumpEngine ? new JumpEngineDescriptor(dataJSON.jumpEngine) : null;
+        /**
+         * The descriptor of the shield for this profile to be equipped.
+         * @type ShieldDescriptor
+         */
+        this._shieldDescriptor = dataJSON.shield ? new ShieldDescriptor(dataJSON.shield) : null;
     }
     /**
      * Returns the name of this equipment profile.
@@ -2568,6 +2660,13 @@ define([
      */
     EquipmentProfile.prototype.getJumpEngineDescriptor = function () {
         return this._jumpEngineDescriptor;
+    };
+    /**
+     * Returns the shield descriptor of this profile.
+     * @returns {ShieldDescriptor}
+     */
+    EquipmentProfile.prototype.getShieldDescriptor = function () {
+        return this._shieldDescriptor;
     };
     // ##############################################################################
     /**
@@ -3887,6 +3986,7 @@ define([
         classAssignment[WEAPON_CLASS_ARRAY_NAME] = WeaponClass;
         classAssignment[PROPULSION_CLASS_ARRAY_NAME] = PropulsionClass;
         classAssignment[JUMP_ENGINE_CLASS_ARRAY_NAME] = JumpEngineClass;
+        classAssignment[SHIELD_CLASS_ARRAY_NAME] = ShieldClass;
         classAssignment[SPACECRAFT_TYPE_ARRAY_NAME] = SpacecraftType;
         classAssignment[SPACECRAFT_CLASS_ARRAY_NAME] = SpacecraftClass;
         _classManager.requestConfigLoad(
@@ -3929,6 +4029,7 @@ define([
         getWeaponClass: getWeaponClass,
         getPropulsionClass: getPropulsionClass,
         getJumpEngineClass: getJumpEngineClass,
+        getShieldClass: getShieldClass,
         getSpacecraftType: getSpacecraftType,
         getSpacecraftClass: getSpacecraftClass,
         getSpacecraftClassesInArray: getSpacecraftClassesInArray,
