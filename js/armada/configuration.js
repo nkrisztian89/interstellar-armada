@@ -1138,7 +1138,7 @@ define([
              */
             WINGMEN_STATUS_CRAFT_INDICATOR: {
                 name: "wingmenStatusCraftIndicator",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["player", "general", "interceptor", "bomber"], COLOR: ["fullIntegrity", "halfIntegrity", "zeroIntegrity", "destroyed", "away"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["player", "shield", "general", "interceptor", "bomber"], COLOR: ["fullIntegrity", "halfIntegrity", "zeroIntegrity", "destroyed", "away", "fullShieldIntegrity", "halfShieldIntegrity", "zeroShieldIntegrity"]})
             },
             /**
              * Stores the relative positions (within the area described by the squad layouts) of the individual spacecraft indicators for

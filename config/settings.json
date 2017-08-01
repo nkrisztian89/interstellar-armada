@@ -410,6 +410,7 @@
                     "texture": "hud-atlas",
                     "mappings": {
                         "player": [[0.3125, 0.5625], [0.375, 0.625]],
+                        "shield": [[0.4375, 0.5625], [0.5, 0.625]],
                         "general": [[0.3125, 0.6875], [0.375, 0.75]],
                         "interceptor": [[0.3125, 0.8125], [0.375, 0.875]],
                         "bomber": [[0.3125, 0.9375], [0.375, 1.0]]
@@ -421,7 +422,10 @@
                         "halfIntegrity": [1, 1, 0, 1],
                         "zeroIntegrity": [1, 0, 0, 1],
                         "destroyed": [1, 0, 0, 0.3],
-                        "away": [0, 1, 0, 0.3]
+                        "away": [0, 1, 0, 0.3],
+                        "fullShieldIntegrity": [0.35, 0.7, 1, 1],
+                        "halfShieldIntegrity": [0.35, 0.7, 1, 0.6],
+                        "zeroShieldIntegrity": [0.1, 0.2, 0.7, 0.2]
                     }
                 },
                 "wigmenStatusCraftPositions": [

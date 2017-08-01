@@ -516,7 +516,7 @@ define([
             _wingmenStatusPlayerIndicator,
             /**
              * The indicators for the individual spacecrafts within the squads for the wingmen status panel
-             * @type HUDElement[]
+             * @type {body: HUDElement, shield: HUDElement}[]
              */
             _wingmenStatusCraftIndicators,
             /**
@@ -1739,7 +1739,8 @@ define([
         }
         // but if they were already created for a previous battle, we need to add them to the current, new scene
         for (i = 0; i < _wingmenStatusCraftIndicators.length; i++) {
-            _wingmenStatusCraftIndicators[i].addToScene(_battleScene);
+            _wingmenStatusCraftIndicators[i].body.addToScene(_battleScene);
+            _wingmenStatusCraftIndicators[i].shield.addToScene(_battleScene);
         }
         if (_wingmenStatusPlayerIndicator) {
             _wingmenStatusPlayerIndicator.addToScene(_battleScene);
@@ -2662,14 +2663,14 @@ define([
                 animation2Progress = 0;
                 _hullIntegrityDecreaseTime = 0;
                 _shieldDecreaseTime = 0;
-            } else  {
+            } else {
                 if (hullIntegrity < _spacecraftHullIntegrity) {
                     _spacecraftHullIntegrity = hullIntegrity;
                     _hullIntegrityDecreaseTime = _hudHullIntegrityDecreaseAnimationDuration;
                     animationProgress = 1;
                 } else if (_hullIntegrityDecreaseTime > 0) {
                     _hullIntegrityDecreaseTime -= dt;
-                   animationProgress = _hullIntegrityDecreaseTime / _hudHullIntegrityDecreaseAnimationDuration;
+                    animationProgress = _hullIntegrityDecreaseTime / _hudHullIntegrityDecreaseAnimationDuration;
                 }
                 if (shieldIntegrity < _spacecraftShieldIntegrity) {
                     _spacecraftShieldIntegrity = shieldIntegrity;
@@ -2677,7 +2678,7 @@ define([
                     animation2Progress = 1;
                 } else if (_shieldDecreaseTime > 0) {
                     _shieldDecreaseTime -= dt;
-                   animation2Progress = _shieldDecreaseTime / _hudShieldDecreaseAnimationDuration;
+                    animation2Progress = _shieldDecreaseTime / _hudShieldDecreaseAnimationDuration;
                 }
             }
             if (_hullIntegrityDecreaseTime > 0) {
@@ -3053,7 +3054,7 @@ define([
                         _targetShieldDecreaseTime = 0;
                         animationProgress = 0;
                         animation2Progress = 0;
-                    } else  {
+                    } else {
                         if (hullIntegrity < _targetHullIntegrity) {
                             _targetHullIntegrity = hullIntegrity;
                             _targetHullIntegrityDecreaseTime = _hudTargetHullIntegrityDecreaseAnimationDuration;
@@ -3151,20 +3152,25 @@ define([
                             _wingmenStatusCraftLayouts.push(_createWingmanCraftIndicatorLayout(i, craftCount, j));
                             // if the layout changed, it is possible, that the spacecraft type changed too, so update texture coordinates
                             if (_wingmenStatusCraftIndicators.length > count) {
-                                _wingmenStatusCraftIndicators[count].setTextureCoordinates(
+                                _wingmenStatusCraftIndicators[count].body.setTextureCoordinates(
                                         _wingmenStatusCraftIndicatorSettings.mappings[wingman.getTypeName()] ||
                                         _wingmenStatusCraftIndicatorSettings.mappings.general);
                             }
                         }
                         // create a new HUD element if necessary
                         if (_wingmenStatusCraftIndicators.length <= count) {
-                            _wingmenStatusCraftIndicators.push(_createWingmanCraftIndicator(_wingmenStatusCraftLayouts[count], wingman.getTypeName()));
-                            _wingmenStatusCraftIndicators[count].addToScene(_battleScene);
+                            _wingmenStatusCraftIndicators.push({
+                                body: _createWingmanCraftIndicator(_wingmenStatusCraftLayouts[count], wingman.getTypeName()),
+                                shield: _createWingmanCraftIndicator(_wingmenStatusCraftLayouts[count], "shield")
+                            });
+                            _wingmenStatusCraftIndicators[count].body.addToScene(_battleScene);
+                            _wingmenStatusCraftIndicators[count].shield.addToScene(_battleScene);
                         }
                         // apply the created / stored layout
-                        _wingmenStatusCraftIndicators[count].applyLayout(_wingmenStatusCraftLayouts[count], canvas.width, canvas.height);
+                        _wingmenStatusCraftIndicators[count].body.applyLayout(_wingmenStatusCraftLayouts[count], canvas.width, canvas.height);
+                        _wingmenStatusCraftIndicators[count].shield.applyLayout(_wingmenStatusCraftLayouts[count], canvas.width, canvas.height);
                         // color based on hull integrity
-                        _wingmenStatusCraftIndicators[count].setColor(wingman.isAlive() ?
+                        _wingmenStatusCraftIndicators[count].body.setColor(wingman.isAlive() ?
                                 (wingman.isAway() ?
                                         _wingmenStatusCraftIndicatorSettings.colors.away :
                                         _getHullIntegrityColor(wingman.getHullIntegrity(),
@@ -3172,7 +3178,17 @@ define([
                                                 _wingmenStatusCraftIndicatorSettings.colors.halfIntegrity,
                                                 _wingmenStatusCraftIndicatorSettings.colors.zeroIntegrity)) :
                                 _wingmenStatusCraftIndicatorSettings.colors.destroyed);
-                        _wingmenStatusCraftIndicators[count].show();
+                        _wingmenStatusCraftIndicators[count].body.show();
+                        if (wingman.isAlive() && !wingman.isAway() && wingman.hasShield()) {
+                            _wingmenStatusCraftIndicators[count].shield.setColor(
+                                    _getHullIntegrityColor(wingman.getShieldIntegrity(),
+                                            _wingmenStatusCraftIndicatorSettings.colors.fullShieldIntegrity,
+                                            _wingmenStatusCraftIndicatorSettings.colors.halfShieldIntegrity,
+                                            _wingmenStatusCraftIndicatorSettings.colors.zeroShieldIntegrity));
+                            _wingmenStatusCraftIndicators[count].shield.show();
+                        } else {
+                            _wingmenStatusCraftIndicators[count].shield.hide();
+                        }
                         // add player indicator for the followed spacecraft
                         if (wingman === craft) {
                             if (!_wingmenStatusPlayerIndicator) {
@@ -3180,7 +3196,7 @@ define([
                                 _wingmenStatusPlayerIndicator.addToScene(_battleScene);
                             }
                             _wingmenStatusPlayerIndicator.applyLayout(_wingmenStatusCraftLayouts[count], canvas.width, canvas.height);
-                            _wingmenStatusPlayerIndicator.setColor(_wingmenStatusCraftIndicators[count].getColor());
+                            _wingmenStatusPlayerIndicator.setColor(_wingmenStatusCraftIndicators[count].body.getColor());
                             _wingmenStatusPlayerIndicator.show();
                             playerFound = true;
                         }
@@ -3193,7 +3209,8 @@ define([
                     i++;
                 }
                 for (i = count; i < _wingmenStatusCraftIndicators.length; i++) {
-                    _wingmenStatusCraftIndicators[i].hide();
+                    _wingmenStatusCraftIndicators[i].body.hide();
+                    _wingmenStatusCraftIndicators[i].shield.hide();
                 }
                 if (!playerFound && _wingmenStatusPlayerIndicator) {
                     _wingmenStatusPlayerIndicator.hide();
@@ -3203,7 +3220,8 @@ define([
                 _wingmenStatusBackground.hide();
                 _wingmenStatusTextLayer.hide();
                 for (i = 0; i < _wingmenStatusCraftIndicators.length; i++) {
-                    _wingmenStatusCraftIndicators[i].hide();
+                    _wingmenStatusCraftIndicators[i].body.hide();
+                    _wingmenStatusCraftIndicators[i].shield.hide();
                 }
                 if (_wingmenStatusPlayerIndicator) {
                     _wingmenStatusPlayerIndicator.hide();
