@@ -1298,6 +1298,9 @@
             "name": "jump_flash",
             "samples": ["spacecraft/jump_flash.ogg"]
         }, {
+            "name": "shieldUp",
+            "samples": ["shield/shield-up.ogg"]
+        }, {
             "name": "trainingShot",
             "samples": ["weapon/weaponshot_training.ogg"]
         }, {

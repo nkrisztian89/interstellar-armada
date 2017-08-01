@@ -2353,13 +2353,18 @@ define([
          * @type Number
          */
         this._rechargeRate = dataJSON ? (dataJSON.rechargeRate || _showMissingPropertyError(this, "rechargeRate")) : 0;
+        /**
+         * The descriptor of the sound effect to be played when a shield of this class starts to recharge.
+         * @type Object
+         */
+        this._rechargeStartSound = dataJSON ? types.getVerifiedObject("ShieldClasses['" + this._name + "'].rechargeStartSound", dataJSON.rechargeStartSound, SOUND_EFFECT_3D) : null;
         return true;
     };
     /**
      * Call before resource loading to ensure all resources required for shields of this class will be loaded
      */
     ShieldClass.prototype.acquireResources = function () {
-        return true; // nothing to load at this points
+        _loadSoundEffect(this._rechargeStartSound);
     };
     /**
      * @returns {Number}
@@ -2378,6 +2383,14 @@ define([
      */
     ShieldClass.prototype.getRechargeRate = function () {
         return this._rechargeRate;
+    };
+    /**
+     * Creates a sound clip for the recharge start sound effect and returns a reference to it.
+     * @param {SoundSource} soundSource The sound source to be used for 3D spatial positioning of the clip
+     * @returns {SoundClip}
+     */
+    ShieldClass.prototype.createRechargeStartSoundClip = function (soundSource) {
+        return _createSoundClip(this._rechargeStartSound, false, soundSource);
     };
     // ##############################################################################
     /**

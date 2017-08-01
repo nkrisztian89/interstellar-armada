@@ -2681,27 +2681,47 @@
             "name": "imperialFighterMk1",
             "capacity": 5,
             "rechargeDelay": 1000,
-            "rechargeRate": 1
+            "rechargeRate": 1,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1
+            }
         }, {
             "name": "imperialBomberMk1",
             "capacity": 10,
             "rechargeDelay": 1500,
-            "rechargeRate": 1
+            "rechargeRate": 1,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1.2
+            }
         }, {
             "name": "imperialCorvetteMk1",
             "capacity": 125,
             "rechargeDelay": 5000,
-            "rechargeRate": 5
+            "rechargeRate": 5,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 3
+            }
         }, {
             "name": "imperialFrigateMk1",
             "capacity": 500,
             "rechargeDelay": 10000,
-            "rechargeRate": 20
+            "rechargeRate": 20,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 4
+            }
         }, {
             "name": "imperialCruiserMk1",
             "capacity": 2000,
             "rechargeDelay": 20000,
-            "rechargeRate": 100
+            "rechargeRate": 100,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 6
+            }
         }],
     "spacecraftTypes": [{
             "name": "container",

@@ -2879,6 +2879,11 @@ define([
          * @type Number
          */
         this._timeSinceHit = 0;
+        /**
+         * A reference to the currently played sound clip, if any
+         * @type SoundClip
+         */
+        this._soundClip = null;
     }
     /**
      * Call to make sure all needed resources are going to be loaded
@@ -2912,6 +2917,12 @@ define([
         if (this._capacity < this._class.getCapacity()) {
             if (this._timeSinceHit < this._class.getRechargeDelay()) {
                 this._timeSinceHit += dt;
+                if (this._timeSinceHit >= this._class.getRechargeDelay()) {
+                    this._soundClip = this._class.createRechargeStartSoundClip(this._spacecraft.getSoundSource());
+                    if (this._soundClip) {
+                        this._soundClip.play();
+                    }
+                }
             } else {
                 this._capacity = Math.min(this._class.getCapacity(), this._capacity + this._class.getRechargeRate() * dt * 0.001); // sec -> ms
             }
@@ -2923,6 +2934,10 @@ define([
     Shield.prototype.destroy = function () {
         this._class = null;
         this._spacecraft = null;
+        if (this._soundClip) {
+            this._soundClip.destroy();
+            this._soundClip = null;
+        }
     };
     // ##############################################################################
     // initialization
