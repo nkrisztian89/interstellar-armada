@@ -898,8 +898,12 @@ define([
                     name: "lightIntensity",
                     type: BaseType.NUMBER
                 },
-                EXLOSION: {
+                EXPLOSION: {
                     name: "explosion",
+                    type: EXPLOSION_CLASS_REFERENCE
+                },
+                SHIELD_EXPLOSION: {
+                    name: "shieldExplosion",
                     type: EXPLOSION_CLASS_REFERENCE
                 }
             },

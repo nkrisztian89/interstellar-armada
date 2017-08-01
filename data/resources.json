@@ -1319,6 +1319,9 @@
             "name": "hit",
             "samples": ["explosion/hit.ogg"]
         }, {
+            "name": "shieldHit",
+            "samples": ["explosion/shield-hit.ogg"]
+        }, {
             "name": "containerExplosion",
             "samples": ["explosion/container-explosion.ogg"]
         }, {

@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.1-dev:560 (2017.03.28.)",
-        "creationTime": "Fri Mar 31 2017 15:30:02 GMT+0200 (CEST)"
+        "version": "0.4.3-dev:627 (2017.08.01.)",
+        "creationTime": "Tue Aug 01 2017 02:37:38 GMT+0200 (CEST)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -1852,6 +1852,210 @@
                 "name": "jump_flash",
                 "volume": 10
             }
+        }, {
+            "name": "smallShieldHitExplosion",
+            "particleEmitters": [{
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [0.5, 0.85, 1, 1],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.5, 0.85, 1, 1],
+                            "size": 4.5,
+                            "timeToReach": 50
+                        }, {
+                            "color": [0.25, 0.6, 1, 0],
+                            "size": 9,
+                            "timeToReach": 450
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 1, 1],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 1, 1],
+                            "size": 2,
+                            "timeToReach": 50
+                        }, {
+                            "color": [1, 1, 1, 1],
+                            "size": 0,
+                            "timeToReach": 450
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [0.5, 0.85, 1],
+                    "intensity": 0,
+                    "timeToReach": 0
+                }, {
+                    "color": [0.5, 0.85, 1],
+                    "intensity": 35,
+                    "timeToReach": 50
+                }, {
+                    "color": [0.25, 0.6, 1],
+                    "intensity": 0,
+                    "timeToReach": 450
+                }],
+            "soundEffect": {
+                "name": "shieldHit",
+                "volume": 1.0
+            }
+        }, {
+            "name": "mediumShieldHitExplosion",
+            "particleEmitters": [{
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [0.5, 0.85, 1, 1],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.5, 0.85, 1, 1],
+                            "size": 10.5,
+                            "timeToReach": 50
+                        }, {
+                            "color": [0.25, 0.6, 1, 0],
+                            "size": 21,
+                            "timeToReach": 450
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 1, 1],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 1, 1],
+                            "size": 5,
+                            "timeToReach": 50
+                        }, {
+                            "color": [1, 1, 1, 1],
+                            "size": 0,
+                            "timeToReach": 450
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [0.5, 0.85, 1],
+                    "intensity": 0,
+                    "timeToReach": 0
+                }, {
+                    "color": [0.5, 0.85, 1],
+                    "intensity": 350,
+                    "timeToReach": 50
+                }, {
+                    "color": [0.25, 0.6, 1],
+                    "intensity": 0,
+                    "timeToReach": 450
+                }],
+            "soundEffect": {
+                "name": "shieldHit",
+                "volume": 1.6
+            }
+        }, {
+            "name": "largeShieldHitExplosion",
+            "particleEmitters": [{
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [0.5, 0.85, 1, 1],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [0.5, 0.85, 1, 1],
+                            "size": 30,
+                            "timeToReach": 50
+                        }, {
+                            "color": [0.25, 0.6, 1, 0],
+                            "size": 60,
+                            "timeToReach": 450
+                        }]
+                }, {
+                    "type": "omnidirectional",
+                    "dimensions": [0, 0, 0],
+                    "velocity": 0,
+                    "velocitySpread": 0,
+                    "initialNumber": 1,
+                    "spawnNumber": 0,
+                    "spawnTime": 1,
+                    "duration": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 1, 1],
+                            "size": 0,
+                            "timeToReach": 0
+                        }, {
+                            "color": [1, 1, 1, 1],
+                            "size": 12,
+                            "timeToReach": 50
+                        }, {
+                            "color": [1, 1, 1, 1],
+                            "size": 0,
+                            "timeToReach": 450
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [0.5, 0.85, 1],
+                    "intensity": 0,
+                    "timeToReach": 0
+                }, {
+                    "color": [0.5, 0.85, 1],
+                    "intensity": 2025,
+                    "timeToReach": 50
+                }, {
+                    "color": [0.25, 0.6, 1],
+                    "intensity": 0,
+                    "timeToReach": 450
+                }],
+            "soundEffect": {
+                "name": "shieldHit",
+                "volume": 2
+            }
         }],
     "projectileClasses": [{
             "name": "training",
@@ -1872,7 +2076,8 @@
             },
             "lightColor": [1, 1, 1],
             "lightIntensity": 30,
-            "explosion": "smallHitExplosion"
+            "explosion": "smallHitExplosion",
+            "shieldExplosion": "smallShieldHitExplosion"
         }, {
             "name": "plasma",
             "damage": 2,
@@ -1892,7 +2097,8 @@
             },
             "lightColor": [0, 1, 0],
             "lightIntensity": 36,
-            "explosion": "smallHitExplosion"
+            "explosion": "smallHitExplosion",
+            "shieldExplosion": "smallShieldHitExplosion"
         }, {
             "name": "heavyPlasma",
             "damage": 6,
@@ -1912,7 +2118,8 @@
             },
             "lightColor": [1, 0, 1],
             "lightIntensity": 100,
-            "explosion": "smallHitExplosion"
+            "explosion": "smallHitExplosion",
+            "shieldExplosion": "smallShieldHitExplosion"
         }, {
             "name": "redPlasma",
             "damage": 3,
@@ -1932,7 +2139,8 @@
             },
             "lightColor": [1, 0.3, 0.3],
             "lightIntensity": 36,
-            "explosion": "smallHitExplosion"
+            "explosion": "smallHitExplosion",
+            "shieldExplosion": "smallShieldHitExplosion"
         }, {
             "name": "proton",
             "damage": 35,
@@ -1952,7 +2160,8 @@
             },
             "lightColor": [1, 1, 0],
             "lightIntensity": 400,
-            "explosion": "mediumHitExplosion"
+            "explosion": "mediumHitExplosion",
+            "shieldExplosion": "mediumShieldHitExplosion"
         }, {
             "name": "ion",
             "damage": 100,
@@ -1972,7 +2181,8 @@
             },
             "lightColor": [0, 0.6, 1],
             "lightIntensity": 1296,
-            "explosion": "largeHitExplosion"
+            "explosion": "largeHitExplosion",
+            "shieldExplosion": "largeShieldHitExplosion"
         }],
     "weaponClasses": [{
             "name": "fixedTrainingGun",

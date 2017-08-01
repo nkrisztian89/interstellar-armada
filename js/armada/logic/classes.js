@@ -1476,10 +1476,15 @@ define([
          */
         this._lightIntensity = dataJSON ? (dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity")) : 0;
         /**
-         * The class of the explosion this spacecraft creates when it hits a spacecraft.
+         * The class of the explosion this projectile creates when it hits the armor of a spacecraft.
          * @type ExplosionClass
          */
         this._explosionClass = dataJSON ? (getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion")) || application.crash()) : null;
+        /**
+         * The class of the explosion this projectile creates when it hits the shield of a spacecraft.
+         * @type ExplosionClass
+         */
+        this._shieldExplosionClass = dataJSON ? (getExplosionClass(dataJSON.shieldExplosion || _showMissingPropertyError(this, "shieldExplosion")) || application.crash()) : null;
         return true;
     };
     /**
@@ -1492,6 +1497,7 @@ define([
                     this._intersectionPositions, this._width)});
         this._muzzleFlash.acquireResources();
         this._explosionClass.acquireResources();
+        this._shieldExplosionClass.acquireResources();
     };
     /**
      * @returns {Number}
@@ -1540,6 +1546,12 @@ define([
      */
     ProjectileClass.prototype.getExplosionClass = function () {
         return this._explosionClass;
+    };
+    /**
+     * @returns {ExplosionClass}
+     */
+    ProjectileClass.prototype.getShieldExplosionClass = function () {
+        return this._shieldExplosionClass;
     };
     /**
      * @override
@@ -1622,7 +1634,7 @@ define([
      * @returns {Number}
      */
     Barrel.prototype.getMaxExplosionCount = function (cooldown) {
-        return Math.ceil(this._projectileClass.getExplosionClass().getTotalDuration() / cooldown);
+        return Math.ceil(Math.max(this._projectileClass.getExplosionClass().getTotalDuration(), this._projectileClass.getShieldExplosionClass().getTotalDuration()) / cooldown);
     };
     /**
      * Returns the highest number of particles that might be used for this barrel simultaneously in one battle, given the passed cooldown.
@@ -1631,7 +1643,7 @@ define([
      */
     Barrel.prototype.getMaxParticleCount = function (cooldown) {
         // one for the muzzle flash
-        return 1 + this.getMaxExplosionCount(cooldown) * this._projectileClass.getExplosionClass().getMaxParticleCount();
+        return 1 + this.getMaxExplosionCount(cooldown) * Math.max(this._projectileClass.getExplosionClass().getMaxParticleCount(), this._projectileClass.getShieldExplosionClass().getMaxParticleCount());
     };
     // ##############################################################################
     /**

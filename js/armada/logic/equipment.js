@@ -420,6 +420,8 @@ define([
                 scene.addResourcesOfObject(this._visualModel, resourceID);
                 exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
                 exp.addResourcesToScene(scene);
+                exp = new explosion.Explosion(this._class.getShieldExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
+                exp.addResourcesToScene(scene);
             }
         }.bind(this));
     };
@@ -469,7 +471,7 @@ define([
                         relativeHitPositionVectorInWorldSpace = vec.diff3Aux(hitPositionVectorInWorldSpace, mat.translationVector3(physicalHitObject.getPositionMatrix()));
                         physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
                         exp = explosion.getExplosion();
-                        exp.init(this._class.getExplosionClass(), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
+                        exp.init(((hitObjects[i].getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
                         exp.addToScene(this._visualModel.getNode().getScene().getRootNode(), hitObjects[i].getSoundSource(), true);
                         hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
                         this._timeLeft = 0;

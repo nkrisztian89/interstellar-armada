@@ -32,6 +32,7 @@ explosion/container-explosion.ogg
 explosion/fighter-explosion.ogg
 explosion/fighter-explosion-2.ogg
 explosion/hit.ogg
+explosion/shield-hit.ogg
 explosion/large-ship-explosion.ogg
 explosion/small-ship-explosion.ogg
 
@@ -50,6 +51,12 @@ Copyright: freesound user djfroyd, license: CC BY 3.0
 
 http://freesound.org/people/Omar%20Alvarado/sounds/93741
 Copyright: freesound user Omar Alvarado, license: CC BY 3.0
+
+http://freesound.org/people/andromadax24/sounds/178346/
+Copyright: freesound user Andromadax24, license: CC BY 3.0
+
+http://freesound.org/people/nhumphrey/sounds/204418/
+Copyright: freesound user NHumphrey, license: CC0 1.0
 
 http://freesound.org/people/veiler/sounds/264031
 Copyright: freesound user veiler, license: CC0 1.0
