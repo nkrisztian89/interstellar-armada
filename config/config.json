@@ -1,5 +1,5 @@
 {
-    "version": "0.4.3-dev:631 (2017.08.02.)",
+    "version": "0.4.3-dev:632 (2017.08.02.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -383,13 +383,19 @@
     "logic": {
         "difficultyLevels": [{
                 "name": "easy",
-                "playerHitpointsFactor": 2
+                "playerHitpointsFactor": 2,
+                "friendlyHitpointsFactor": 1.25,
+                "enemyReactionTimeFactor": 2
             }, {
                 "name": "medium",
-                "playerHitpointsFactor": 1.5
+                "playerHitpointsFactor": 1.5,
+                "friendlyHitpointsFactor": 1.1,
+                "enemyReactionTimeFactor": 1.5
             }, {
                 "name": "hard",
-                "playerHitpointsFactor": 1
+                "playerHitpointsFactor": 1,
+                "friendlyHitpointsFactor": 1,
+                "enemyReactionTimeFactor": 1
             }],
         "missionPerformanceLevels": [
             {

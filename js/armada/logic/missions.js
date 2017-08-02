@@ -1882,6 +1882,10 @@ define([
          * @type Spacecrafts
          */
         this._escortedSpacecrafts = null;
+        /**
+         * @type DifficultyLevel
+         */
+        this._difficultyLevel = null;
     }
     /**
      * Return the name identifying this mission (typically same as the filename e.g. someMission.json)
@@ -1972,6 +1976,13 @@ define([
      */
     Mission.prototype.getEscortedSpacecrafts = function () {
         return this._escortedSpacecrafts;
+    };
+    /**
+     * 
+     * @returns {DifficultyLevel}
+     */
+    Mission.prototype.getDifficultyLevel = function () {
+        return this._difficultyLevel;
     };
     /**
      * Marks the mission as completed (by achieving its objectives)
@@ -2263,8 +2274,9 @@ define([
      * and a suitable AI is added to all spacecrafts if possible.
      */
     Mission.prototype.loadFromJSON = function (dataJSON, difficulty, demoMode) {
-        var i, j, craft, teamID, team, aiType, actions, count;
+        var i, j, craft, teamID, team, aiType, actions, count, factor;
         application.log("Loading mission from JSON file...", 2);
+        this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         this.loadEnvironment(dataJSON);
         this._combatTheme = dataJSON.combatTheme;
         this._teams = [];
@@ -2288,18 +2300,7 @@ define([
             craft.loadFromJSON(dataJSON.spacecrafts[i], this._hitObjects);
             if (!demoMode && dataJSON.spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
-                craft.multiplyMaxHitpoints(_context.getDifficultyLevel(difficulty).getPlayerHitpointsFactor());
-            }
-            aiType = dataJSON.spacecrafts[i].ai;
-            if (!aiType && demoMode) {
-                if (craft.isFighter()) {
-                    aiType = config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE);
-                } else {
-                    aiType = config.getSetting(config.BATTLE_SETTINGS.DEMO_SHIP_AI_TYPE);
-                }
-            }
-            if (aiType) {
-                ai.addAI(aiType, craft, this);
+                craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
             }
             teamID = dataJSON.spacecrafts[i].team;
             if (teamID) {
@@ -2319,20 +2320,40 @@ define([
             }
             this._spacecrafts.push(craft);
         }
-        // loading predefined initial targets, calculating reference score (both require that all the spacecrafts already exist)
+        // going through ships a second round
+        // loading predefined initial targets, calculating reference score (both require that all the spacecrafts already exist),
+        // applying difficulty hitpoint factor for friendly spacecrafts
+        // adding AI
         this._referenceScore = 0;
         team = this._pilotedCraft && this._pilotedCraft.getTeam();
         count = 0;
+        factor = this._difficultyLevel.getFriendlyHitpointsFactor();
         for (i = 0; i < dataJSON.spacecrafts.length; i++) {
+            craft = this._spacecrafts[i];
             if (dataJSON.spacecrafts[i].initialTarget) {
-                this._spacecrafts[i].setTarget(this.getSpacecraft(dataJSON.spacecrafts[i].initialTarget));
+                craft.setTarget(this.getSpacecraft(dataJSON.spacecrafts[i].initialTarget));
             }
-            if (this._pilotedCraft && !dataJSON.spacecrafts[i].excludeFromReferenceScore) {
-                if (this._pilotedCraft.isHostile(this._spacecrafts[i])) {
-                    this._referenceScore += this._spacecrafts[i].getScoreValue();
-                } else if (this._spacecrafts[i].getTeam() === team) {
+            if (this._pilotedCraft) { 
+                if (!dataJSON.spacecrafts[i].excludeFromReferenceScore && this._pilotedCraft.isHostile(craft)) {
+                    this._referenceScore += craft.getScoreValue();
+                } 
+                if (this._pilotedCraft.isFriendly(craft)) {
+                    if (craft !== this._pilotedCraft) {
+                        craft.multiplyMaxHitpoints(factor);
+                    }
                     count++;
                 }
+            }
+            aiType = dataJSON.spacecrafts[i].ai;
+            if (!aiType && demoMode) {
+                if (craft.isFighter()) {
+                    aiType = config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE);
+                } else {
+                    aiType = config.getSetting(config.BATTLE_SETTINGS.DEMO_SHIP_AI_TYPE);
+                }
+            }
+            if (aiType) {
+                ai.addAI(aiType, craft, this);
             }
         }
         if (count > 0) {
@@ -2972,6 +2993,18 @@ define([
          * @type Number
          */
         this._playerHitpointsFactor = dataJSON.playerHitpointsFactor;
+        /*
+         * The number of hitpoints the friendly spacecrafts have at the start of the mission is multiplied by this factor
+         * (when playing on the corresponding difficulty level)
+         * @type Number
+         */
+        this._friendlyHitpointsFactor = dataJSON.friendlyHitpointsFactor;
+        /*
+         * The reaction time of hostile AI is multiplied by this factor
+         * (when playing on the corresponding difficulty level)
+         * @type Number
+         */
+        this._enemyReactionTimeFactor = dataJSON.enemyReactionTimeFactor;
     }
     /**
      * Returns the string ID for this difficulty level
@@ -2986,6 +3019,20 @@ define([
      */
     DifficultyLevel.prototype.getPlayerHitpointsFactor = function () {
         return this._playerHitpointsFactor;
+    };
+    /**
+     * Returns the factor by which to multiply the hitpoints of friendly spacecrafts at the start of the mission.
+     * @returns {Number}
+     */
+    DifficultyLevel.prototype.getFriendlyHitpointsFactor = function () {
+        return this._friendlyHitpointsFactor;
+    };
+    /**
+     * Returns the factor by which to multiply the reaction time of enemy AIs.
+     * @returns {Number}
+     */
+    DifficultyLevel.prototype.getEnemyReactionTimeFactor = function () {
+        return this._enemyReactionTimeFactor;
     };
     // #########################################################################
     /**

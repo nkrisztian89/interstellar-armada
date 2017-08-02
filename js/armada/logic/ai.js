@@ -823,10 +823,15 @@ define([
          */
         this._aimError = [0, 0];
         /**
-         * The amount of time to wait before starting to fire after aiming, in milliseconds.
+         * The amount of time left before starting to fire, in milliseconds.
          * @type Number
          */
         this._fireDelayLeft = 0;
+        /**
+         * The amount of time to wait before starting to fire after aiming, in milliseconds.
+         * @type Number
+         */
+        this._fireDelay = FIRE_DELAY * ((mission.getPilotedSpacecraft() && mission.getPilotedSpacecraft().isHostile(fighter)) ? mission.getDifficultyLevel().getEnemyReactionTimeFactor() : 1);
         // attaching handlers to the various spacecraft events
         this._spacecraft.addEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
         this._spacecraft.addEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
@@ -859,7 +864,7 @@ define([
         this._targetOffset = [0, 0, 0];
         this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
         this._maxAimError = MAX_AIM_ERROR;
-        this._fireDelayLeft = FIRE_DELAY;
+        this._fireDelayLeft = this._fireDelay;
         this._updateAimError();
     };
     /**
@@ -1140,11 +1145,11 @@ define([
                             }
                         } else {
                             this._timeSinceLastRoll = 0;
-                            this._fireDelayLeft = FIRE_DELAY;
+                            this._fireDelayLeft = this._fireDelay;
                         }
                     } else {
                         this._timeSinceLastRoll = 0;
-                        this._fireDelayLeft = FIRE_DELAY;
+                        this._fireDelayLeft = this._fireDelay;
                     }
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // initiating charge
