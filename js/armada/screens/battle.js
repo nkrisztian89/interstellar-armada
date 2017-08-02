@@ -3064,12 +3064,14 @@ define([
                             animationProgress = _targetHullIntegrityDecreaseTime / _hudTargetHullIntegrityDecreaseAnimationDuration;
                         }
                         if (shieldIntegrity < _targetShieldIntegrity) {
-                            _targetShieldIntegrity = shieldIntegrity;
                             _targetShieldDecreaseTime = _hudTargetShieldDecreaseAnimationDuration;
                             animation2Progress = 1;
                         } else if (_targetShieldDecreaseTime > 0) {
                             _targetShieldDecreaseTime -= dt;
                             animation2Progress = _targetShieldDecreaseTime / _hudTargetShieldDecreaseAnimationDuration;
+                        }
+                        if (shieldIntegrity !== _targetShieldIntegrity) {
+                            _targetShieldIntegrity = shieldIntegrity;
                         }
                     }
                     filledColor = targetIsHostile ?
