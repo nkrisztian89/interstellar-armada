@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Provides some common functions to be used for the Interstellar Armada editor.
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -155,13 +155,17 @@ define([
      * Creates and returns a button.
      * @param {String} caption The text to show on the button (innerHTML)
      * @param {Function} clickHandler The handler for the click event on the button
+     * @param {String} [tooltip] The tooltip to display when hovering over the button
      * @returns {Element}
      */
-    function createButton(caption, clickHandler) {
+    function createButton(caption, clickHandler, tooltip) {
         var result = document.createElement("button");
         result.innerHTML = caption;
         result.type = "button";
         result.onclick = clickHandler;
+        if (tooltip) {
+            result.title = tooltip;
+        }
         return result;
     }
     /**

@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Provides the content and event handlers for the Properties window of the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -44,8 +44,13 @@ define([
             UNKNOWN_PROPERTY_TEXT = "unknown",
             SET_PROPERTY_BUTTON_CAPTION = "set",
             ADD_BUTTON_CAPTION = "+",
+            ADD_BUTTON_TOOLTIP = "Add a new element with default values",
+            DUPLICATE_BUTTON_CAPTION = "#",
+            DUPLICATE_BUTTON_TOOLTIP = "Duplicate this element",
             REMOVE_BUTTON_CAPTION = "x",
+            REMOVE_BUTTON_TOOLTIP = "Remove this element",
             NEW_OBJECT_NAME_PREFIX = "new",
+            DUPLICATE_ELEMENT_SUFFIX = "_copy",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -464,7 +469,7 @@ define([
                 type = new descriptors.Type(typeDescriptor),
                 hasName = type.hasNameProperty(),
                 indices, indexLabel, indexSelector,
-                addElementButton, removeElementButton,
+                addElementButton, removeElementButton, duplicateElementButton,
                 propertiesTable,
                 nameChangeHandler = function (index, newName) {
                     indexSelector.options[index].text = newName;
@@ -487,10 +492,12 @@ define([
                         indexLabel.hidden = false;
                         indexSelector.hidden = false;
                         removeElementButton.hidden = false;
+                        duplicateElementButton.hidden = false;
                     } else {
                         indexLabel.hidden = true;
                         indexSelector.hidden = true;
                         removeElementButton.hidden = true;
+                        duplicateElementButton.hidden = true;
                     }
                     popup.alignPosition();
                 },
@@ -520,15 +527,30 @@ define([
                 _updateData(topName);
                 indexSelector.selectedIndex = data.length - 1;
                 indexChangeHandler();
-            });
+            }, ADD_BUTTON_TOOLTIP);
             removeElementButton = common.createButton(REMOVE_BUTTON_CAPTION, function () {
                 data.splice(indexSelector.selectedIndex, 1);
                 updateButtonText();
                 _updateData(topName);
                 indexSelector.remove(hasName ? indexSelector.selectedIndex : data.length);
                 indexChangeHandler();
-            });
-            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], [addElementButton, removeElementButton]);
+            }, REMOVE_BUTTON_TOOLTIP);
+            duplicateElementButton = common.createButton(DUPLICATE_BUTTON_CAPTION, function () {
+                var newIndex;
+                data.push(utils.deepCopy(data[indexSelector.selectedIndex]));
+                if (hasName) {
+                    data[data.length - 1][descriptors.NAME_PROPERTY_NAME] += DUPLICATE_ELEMENT_SUFFIX;
+                }
+                updateButtonText();
+                newIndex = document.createElement("option");
+                newIndex.value = hasName ? data[data.length - 1][descriptors.NAME_PROPERTY_NAME] : (data.length - 1).toString();
+                newIndex.text = newIndex.value;
+                indexSelector.add(newIndex);
+                _updateData(topName);
+                indexSelector.selectedIndex = data.length - 1;
+                indexChangeHandler();
+            }, DUPLICATE_BUTTON_TOOLTIP);
+            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], [addElementButton, duplicateElementButton, removeElementButton]);
             if (data.length > 0) {
                 addPropertiesTable(0);
             } else {
