@@ -435,3 +435,7 @@ div.propertyEditorHeader {
 button.propertyEditorHeaderButton {
     margin-left: 0.5em;
 }
+
+button.unsetProperty {
+    margin-left: 0;
+}

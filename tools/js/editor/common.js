@@ -540,13 +540,18 @@ define([
     };
     /**
      * Removes the popup and all its elements from the DOM
+     * @param {Boolean} [leaveReference=false] When true, the reference in the module-global popups array is left
+     * (used when clearing the whole array, so it is more effective)
      */
-    Popup.prototype.remove = function () {
+    Popup.prototype.remove = function (leaveReference) {
         var i;
         for (i = 0; i < this._childPopups.length; i++) {
             this._childPopups[i].remove();
         }
         document.body.removeChild(this._element);
+        if (!leaveReference && !this._parent) {
+            _popups.splice(_popups.indexOf(this), 1);
+        }
     };
     /**
      * Removes all popups that were added to document.body
@@ -554,7 +559,7 @@ define([
     function removePopups() {
         var i;
         for (i = 0; i < _popups.length; i++) {
-            _popups[i].remove();
+            _popups[i].remove(true);
         }
         _popups = [];
         _maxZIndex = POPUP_START_Z_INDEX;

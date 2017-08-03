@@ -43,6 +43,7 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "particleEmitters",
+                "lightStates",
                 "soundEffect"
             ],
             /**

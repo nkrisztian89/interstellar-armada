@@ -34,6 +34,7 @@ define([
             CONTROL_CLASS = "propertyControl",
             PROPERTY_EDITOR_HEADER_CLASS = "propertyEditorHeader",
             PROPERTY_EDITOR_HEADER_BUTTON_CLASS = "propertyEditorHeaderButton",
+            UNSET_PROPERTY_BUTTON_CLASS = "unsetProperty",
             TEXT_AREA_ROWS = 5,
             TEXT_AREA_COLS = 100,
             LONG_TEXT_PREVIEW_LENGTH = 16,
@@ -43,6 +44,8 @@ define([
             UNSET_PROPERTY_TEXT = "unset",
             UNKNOWN_PROPERTY_TEXT = "unknown",
             SET_PROPERTY_BUTTON_CAPTION = "set",
+            UNSET_PROPERTY_BUTTON_CAPTION = "x",
+            UNSET_PROPERTY_BUTTON_TOOLTIP = "Unset property",
             ADD_BUTTON_CAPTION = "+",
             ADD_BUTTON_TOOLTIP = "Add a new element with default values",
             DUPLICATE_BUTTON_CAPTION = "#",
@@ -241,6 +244,7 @@ define([
         textarea.autocapitalize = "off";
         popup.getElement().appendChild(textarea);
         popup.addToPage();
+        button.popup = popup; // custom property referencing the popup
         return button;
     }
     /**
@@ -335,7 +339,9 @@ define([
      */
     function _getDefaultValue(propertyDescriptor, basedOn, parent, undefinedIfOptional, typeName) {
         var result, type, propertyDescriptors, propertyDescriptorNames, i;
-        if ((propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) && typeName) {
+        type = new descriptors.Type(propertyDescriptor.type);
+        // automatic naming - only for string type name properties (can be enum as well)
+        if ((propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) && typeName && (type.getBaseType() === descriptors.BaseType.STRING)) {
             return NEW_OBJECT_NAME_PREFIX + typeName;
         }
         if (undefinedIfOptional && propertyDescriptor.optional && (propertyDescriptor.defaultValue === undefined)) {
@@ -362,7 +368,6 @@ define([
         if (propertyDescriptor.globalDefault && propertyDescriptor.settingName) {
             return utils.deepCopy(config.getSetting(propertyDescriptor.settingName));
         }
-        type = new descriptors.Type(propertyDescriptor.type);
         switch (type.getBaseType()) {
             case descriptors.BaseType.BOOLEAN:
                 return false;
@@ -459,9 +464,10 @@ define([
      * @param {Object|Array} data The data itself to be modified (an instance of the object the type of which is described, or an array of
      * such objects)
      * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
+     * @param {Boolean} [atLeastOneElementNeeded=false] For object arrays: When true, an empty array is not acceptable, at least one element always has to be set
      * @returns {Element}
      */
-    function _createObjectControl(topName, typeDescriptor, data, parentPopup) {
+    function _createObjectControl(topName, typeDescriptor, data, parentPopup, atLeastOneElementNeeded) {
         var
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
@@ -491,7 +497,7 @@ define([
                         addPropertiesTable(index);
                         indexLabel.hidden = false;
                         indexSelector.hidden = false;
-                        removeElementButton.hidden = false;
+                        removeElementButton.hidden = !!atLeastOneElementNeeded && (data.length <= 1);
                         duplicateElementButton.hidden = false;
                     } else {
                         indexLabel.hidden = true;
@@ -572,6 +578,7 @@ define([
             }
             popup.toggle();
         };
+        button.popup = popup; // custom property referencing the popup
         return button;
     }
     /**
@@ -660,6 +667,7 @@ define([
         // create a button using which the popup can be opened
         _setPopupTogglerButton(button, "", popup);
         updateButtonText();
+        button.popup = popup; // custom property referencing the popup
         return button;
     }
     /**
@@ -715,6 +723,7 @@ define([
         // create a button using which the popup can be opened
         _setPopupTogglerButton(button, "", popup);
         updateButtonText();
+        button.popup = popup; // custom property referencing the popup
         return button;
     }
     /**
@@ -790,6 +799,7 @@ define([
         // create a button using which the popup can be opened
         _setPopupTogglerButton(button, "", popup);
         updateButtonText();
+        button.popup = popup; // custom property referencing the popup
         return button;
     }
     /**
@@ -849,6 +859,7 @@ define([
         // create a button using which the popup can be opened
         _setPopupTogglerButton(button, "", popup);
         updateButtonText();
+        button.popup = popup; // custom property referencing the popup
         return button;
     }
     /**
@@ -884,6 +895,7 @@ define([
         popup.addToPage();
         // create a button using which the popup can be opened
         _setPopupTogglerButton(button, "Confines", popup);
+        button.popup = popup; // custom property referencing the popup
         return button;
     }
     /**
@@ -998,6 +1010,7 @@ define([
         // create a button using which the popup can be opened
         _setPopupTogglerButton(button, "", popup);
         updateButtonText();
+        button.popup = popup; // custom property referencing the popup
         return button;
     }
     /**
@@ -1024,10 +1037,10 @@ define([
     function _createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler) {
         var result = document.createElement("div"),
                 label, button;
-        if (!topName && _basedOn) {
+        if ((!parent || (parent === _item.data)) && _basedOn) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
         } else if (!propertyDescriptor.optional && ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault)) {
-            label = _createDefaultControl(DEFAULT_PROPERTY_TEXT);
+            label = _createDefaultControl(DEFAULT_PROPERTY_TEXT + ((typeof propertyDescriptor.defaultValue === "number") ? ": " + propertyDescriptor.defaultValue : ""));
         } else if (propertyDescriptor.defaultDerived) {
             label = _createDefaultControl(DERIVED_PROPERTY_TEXT);
         } else if (propertyDescriptor.optional) {
@@ -1065,15 +1078,15 @@ define([
      */
     _createControl = function (propertyDescriptor, data, topName, parent, parentPopup, nameChangeHandler) {
         var
-                result,
+                result, control, button,
                 /**
                  * @type Type
                  */
                 type = new descriptors.Type(propertyDescriptor.type), elementType;
+        topName = topName || propertyDescriptor.name;
         if (data === undefined) {
             result = _createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler);
         } else {
-            topName = topName || propertyDescriptor.name;
             switch (type.getBaseType()) {
                 case descriptors.BaseType.BOOLEAN:
                     result = _createBooleanControl(topName, data, parent, propertyDescriptor.name);
@@ -1117,7 +1130,7 @@ define([
                 case descriptors.BaseType.ARRAY:
                     elementType = type.getElementType();
                     if (elementType.getBaseType() === descriptors.BaseType.OBJECT) {
-                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parentPopup);
+                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parentPopup, propertyDescriptor.createDefaultElement);
                     } else {
                         result = _createArrayControl(topName, elementType.getDescriptor(), data, parentPopup);
                     }
@@ -1130,6 +1143,25 @@ define([
                     break;
                 default:
                     result = _createDefaultControl(data);
+            }
+            // add unset button for optional values
+            if ((propertyDescriptor.optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultDerived ||
+                    ((!parent || (parent === _item.data)) && _basedOn && (propertyDescriptor.name !== descriptors.NAME_PROPERTY_NAME))) && (propertyDescriptor.name !== descriptors.BASED_ON_PROPERTY_NAME)) {
+                control = result;
+                control.classList.add(CONTROL_CLASS);
+                button = common.createButton(UNSET_PROPERTY_BUTTON_CAPTION, function () {
+                    var parentNode = result.parentNode;
+                    if (control.popup) {
+                        control.popup.remove();
+                    }
+                    parentNode.removeChild(result);
+                    parentNode.appendChild(_createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler));
+                    _changeData(topName, undefined, parent, propertyDescriptor.name);
+                }, UNSET_PROPERTY_BUTTON_TOOLTIP);
+                button.classList.add(UNSET_PROPERTY_BUTTON_CLASS);
+                result = document.createElement("div");
+                result.appendChild(control);
+                result.appendChild(button);
             }
         }
         result.classList.add(CONTROL_CLASS);
@@ -1158,6 +1190,7 @@ define([
             nameCell = document.createElement("td");
             nameCell.classList.add(PROPERTY_CLASS);
             nameCell.innerHTML = itemDescriptor[properties[i]].name;
+            nameCell.title = itemDescriptor[properties[i]].name;
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
             valueCell.appendChild(_createControl(itemDescriptor[properties[i]], data[itemDescriptor[properties[i]].name], topName, data, parentPopup, nameChangeHandler));

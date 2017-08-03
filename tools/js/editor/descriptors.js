@@ -683,7 +683,8 @@ define([
                     },
                     HAS_PROJECTILE_MODEL: {
                         name: "hasProjectileModel",
-                        type: BaseType.BOOLEAN
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
                     },
                     PROJECTILE_MODEL_WIDTH: {
                         name: "projectileModelWidth",
@@ -699,39 +700,48 @@ define([
                     },
                     DIMENSIONS: {
                         name: "dimensions",
-                        type: BaseType.VECTOR3
+                        type: BaseType.VECTOR3,
+                        defaultValue: [0, 0, 0]
                     },
                     DIRECTION_SPREAD: {
                         name: "directionSpread",
-                        type: DEGREES
+                        type: DEGREES,
+                        defaultValue: 0
                     },
                     VELOCITY: {
                         name: "velocity",
-                        type: METERS_PER_SECOND
+                        type: METERS_PER_SECOND,
+                        defaultValue: 0
                     },
                     VELOCITY_SPREAD: {
                         name: "velocitySpread",
-                        type: METERS_PER_SECOND
+                        type: METERS_PER_SECOND,
+                        defaultValue: 0
                     },
                     INITIAL_NUMBER: {
                         name: "initialNumber",
-                        type: BaseType.NUMBER
+                        type: BaseType.NUMBER,
+                        defaultValue: 0
                     },
                     SPAWN_NUMBER: {
                         name: "spawnNumber",
-                        type: BaseType.NUMBER
+                        type: BaseType.NUMBER,
+                        defaultValue: 0
                     },
                     SPAWN_TIME: {
                         name: "spawnTime",
-                        type: MILLISECONDS
+                        type: MILLISECONDS,
+                        defaultValue: 1
                     },
                     DURATION: {
                         name: "duration",
-                        type: MILLISECONDS
+                        type: MILLISECONDS,
+                        defaultValue: 1
                     },
                     DELAY: {
                         name: "delay",
-                        type: MILLISECONDS
+                        type: MILLISECONDS,
+                        defaultValue: 0
                     },
                     SHADER: {
                         name: "shader",
@@ -784,7 +794,8 @@ define([
                     },
                     VOLUME: {
                         name: "volume",
-                        type: BaseType.NUMBER
+                        type: BaseType.NUMBER,
+                        defaultValue: 1
                     }
                 }
             },
@@ -804,7 +815,8 @@ define([
                 LIGHT_STATES: {
                     name: "lightStates",
                     type: _createTypedArrayType(LIGHT_STATE),
-                    optional: true
+                    optional: true,
+                    createDefaultElement: true
                 },
                 SOUND_EFFECT: {
                     name: "soundEffect",
