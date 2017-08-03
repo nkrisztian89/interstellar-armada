@@ -2665,21 +2665,21 @@ define([
                 _shieldDecreaseTime = 0;
             } else {
                 if (hullIntegrity < _spacecraftHullIntegrity) {
-                    _spacecraftHullIntegrity = hullIntegrity;
                     _hullIntegrityDecreaseTime = _hudHullIntegrityDecreaseAnimationDuration;
                     animationProgress = 1;
                 } else if (_hullIntegrityDecreaseTime > 0) {
                     _hullIntegrityDecreaseTime -= dt;
                     animationProgress = _hullIntegrityDecreaseTime / _hudHullIntegrityDecreaseAnimationDuration;
                 }
+                _spacecraftHullIntegrity = hullIntegrity;
                 if (shieldIntegrity < _spacecraftShieldIntegrity) {
-                    _spacecraftShieldIntegrity = shieldIntegrity;
                     _shieldDecreaseTime = _hudShieldDecreaseAnimationDuration;
                     animation2Progress = 1;
                 } else if (_shieldDecreaseTime > 0) {
                     _shieldDecreaseTime -= dt;
                     animation2Progress = _shieldDecreaseTime / _hudShieldDecreaseAnimationDuration;
                 }
+                _spacecraftShieldIntegrity = shieldIntegrity;
             }
             if (_hullIntegrityDecreaseTime > 0) {
                 _hullIntegrityBar.setColor(utils.getMixedColor(
@@ -3056,13 +3056,13 @@ define([
                         animation2Progress = 0;
                     } else {
                         if (hullIntegrity < _targetHullIntegrity) {
-                            _targetHullIntegrity = hullIntegrity;
                             _targetHullIntegrityDecreaseTime = _hudTargetHullIntegrityDecreaseAnimationDuration;
                             animationProgress = 1;
                         } else if (_targetHullIntegrityDecreaseTime > 0) {
                             _targetHullIntegrityDecreaseTime -= dt;
                             animationProgress = _targetHullIntegrityDecreaseTime / _hudTargetHullIntegrityDecreaseAnimationDuration;
                         }
+                        _targetHullIntegrity = hullIntegrity;
                         if (shieldIntegrity < _targetShieldIntegrity) {
                             _targetShieldDecreaseTime = _hudTargetShieldDecreaseAnimationDuration;
                             animation2Progress = 1;
@@ -3070,9 +3070,7 @@ define([
                             _targetShieldDecreaseTime -= dt;
                             animation2Progress = _targetShieldDecreaseTime / _hudTargetShieldDecreaseAnimationDuration;
                         }
-                        if (shieldIntegrity !== _targetShieldIntegrity) {
-                            _targetShieldIntegrity = shieldIntegrity;
-                        }
+                        _targetShieldIntegrity = shieldIntegrity;
                     }
                     filledColor = targetIsHostile ?
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).colors.hostileFilled :
