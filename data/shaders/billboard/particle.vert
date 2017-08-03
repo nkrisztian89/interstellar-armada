@@ -11,7 +11,8 @@ attribute mediump vec2 a_texCoord;
 // instance uniforms
 uniform vec3 u_position;
 uniform float u_billboardSize;
-	
+
+// varyings
 varying mediump vec2 v_texCoord;
 
 void main() {

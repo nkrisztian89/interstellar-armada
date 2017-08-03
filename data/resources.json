@@ -801,12 +801,13 @@
         }, {
             "name": "billboard-instanced",
             "vertexShaderSource": "billboard/billboard-instanced.vert",
-            "fragmentShaderSource": "billboard/billboard.frag",
+            "fragmentShaderSource": "billboard/billboard-instanced.frag",
             "blendMode": "add",
             "instanceAttributeRoles": {
                 "i_position": "u_position",
                 "i_direction": "u_direction",
-                "i_size": "u_size"
+                "i_size": "u_size",
+                "i_color": "u_color"
             },
             "vertexAttributeRoles": {
                 "a_position": "position",

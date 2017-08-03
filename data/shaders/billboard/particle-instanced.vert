@@ -12,7 +12,8 @@ attribute mediump vec2 a_texCoord;
 attribute vec3 i_position;
 attribute float i_billboardSize;
 attribute lowp vec4 i_color;
-	
+
+// varyings
 varying mediump vec2 v_texCoord;
 varying lowp vec4 v_color;
 

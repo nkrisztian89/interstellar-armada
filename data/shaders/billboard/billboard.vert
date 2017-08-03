@@ -1,16 +1,19 @@
 #version 100
 
+// scene uniforms
 uniform mat4 u_viewProjMatrix;
+uniform vec3 u_eyePos;
 
+// vertex attributes
+attribute vec3 a_position;
+attribute mediump vec2 a_texCoord;
+
+// instance uniforms
 uniform vec3 u_position;
 uniform vec3 u_direction;
 uniform float u_size;
 
-uniform vec3 u_eyePos;
-
-attribute vec3 a_position;
-attribute mediump vec2 a_texCoord;
-	
+// varyings
 varying mediump vec2 v_texCoord;
 
 void main() {
