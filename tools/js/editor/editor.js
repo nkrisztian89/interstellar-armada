@@ -118,6 +118,12 @@ define([
                 "environments": environmentPreview
             },
             /**
+             * The HTML elements (<span>) that corresponds to the various items, by type, category and string id
+             * Also stores references to the lists containing the items on the category level: _itemElements[type][category]._list
+             * @type Object.<String, Object.<String, Object.<String,Element>>>
+             */
+            _itemElements,
+            /**
              * The HTML element (<span>) that corresponds to the currently selected item
              * @type Element
              */
@@ -139,6 +145,13 @@ define([
             _missionList;
     // ------------------------------------------------------------------------------
     // Private functions
+    /**
+     * Expands a (sub)list
+     * @param {Element} listElement The HTML element representing the list. (e.g. <ul>)
+     */
+    function _expandList(listElement) {
+        listElement.hidden = false;
+    }
     /**
      * Toggles a (sub)list between expanded / collapsed state.
      * @param {Element} listElement The HTML element representing the list. (e.g. <ul>)
@@ -346,6 +359,8 @@ define([
                 application.showError("Name change not supported for this type of item!");
                 return;
         }
+        _itemElements[_selectedItem.type][_selectedItem.category][newName] = _itemElements[_selectedItem.type][_selectedItem.category][oldName];
+        delete _itemElements[_selectedItem.type][_selectedItem.category][oldName];
         resources.executeForAllResources(nameChangeHandler);
         classes.executeForAllClasses(nameChangeHandler);
         environments.executeForAllEnvironments(nameChangeHandler);
@@ -361,18 +376,21 @@ define([
         } else if (!descriptors.itemDescriptors[_selectedItem.category]) {
             windowContent.appendChild(_createLabel(NO_PROPERTIES_TEXT));
         } else {
-            properties.createProperties(windowContent, _selectedItem, _previews[_selectedItem.category], _handleNameChange);
+            properties.createProperties(windowContent, _selectedItem, _previews[_selectedItem.category], _handleNameChange, _selectItem);
         }
     }
     /**
      * Sets the data for a new selected item and load the appropriate Preview and Properties windows for it, if available
      * @param {String} type (enum ItemType) The type of the selected item
      * @param {String} name The name (id) of the selected item
-     * @param {String} category The category the selected item belongs to (this will determine the format of the Preview and Properties 
-     * windows
+     * @param {String} category The category the selected item belongs to (this will determine the format of the Preview and Properties windows)
+     * @param {Element} [element] The HTML element (<span>) that references the item in the category list (if not given, will be looked up from the _itemElements object)
      */
-    function _selectItem(type, name, category) {
+    function _selectItem(type, name, category, element) {
         if ((_selectedItem.type !== type) || (_selectedItem.name !== name) || (_selectedItem.category !== category)) {
+            if (_selectedItemElement) {
+                _selectedItemElement.classList.remove(SELECTED_CLASS);
+            }
             _clearPreview();
             _selectedItem.type = type;
             _selectedItem.name = name;
@@ -382,6 +400,12 @@ define([
             common.removePopups();
             _loadProperties();
             _loadPreview();
+            _expandList(_itemElements[_selectedItem.type][_selectedItem.category]._list);
+            if (!element) {
+                element = _itemElements[_selectedItem.type][_selectedItem.category][_selectedItem.name];
+            }
+            _selectedItemElement = element;
+            _selectedItemElement.classList.add(SELECTED_CLASS);
         }
     }
     /**
@@ -390,17 +414,11 @@ define([
      * @param {Element} element The element that represents the item (typically <span>, showing the name of the item)
      * @param {String} type (enum ItemType) The type this item belongs to
      * @param {String} category The category the item belongs to (e.g. "spacecraftClasses")
-     * @param {Object} data The data (JSON object) the given item is initialized from
      * @returns {Function}
      */
-    function _createElementClickHandler(element, type, category, data) {
+    function _createElementClickHandler(element, type, category) {
         return function () {
-            if (_selectedItemElement) {
-                _selectedItemElement.classList.remove(SELECTED_CLASS);
-            }
-            _selectItem(type, element.textContent, category, data);
-            _selectedItemElement = element;
-            _selectedItemElement.classList.add(SELECTED_CLASS);
+            _selectItem(type, element.textContent, category, element);
         };
     }
     /**
@@ -659,6 +677,7 @@ define([
             default:
                 application.crash();
         }
+        _itemElements[itemType] = {};
         itemTypeLabel = document.createElement("div");
         itemTypeLabel.classList.add(ITEM_TYPE_LABEL_CLASS);
         itemTypeLabel.textContent = itemType;
@@ -671,6 +690,7 @@ define([
             categorySpan.classList.add(CATEGORY_CLASS);
             categorySpan.innerHTML = categories[i];
             categoryElement.appendChild(categorySpan);
+            _itemElements[itemType][categories[i]] = {};
             itemList = document.createElement("ul");
             itemList.classList.add(ELEMENT_LIST_CLASS);
             items = getItems(categories[i]);
@@ -683,6 +703,7 @@ define([
                 itemSpan.classList.add(ELEMENT_CLASS);
                 itemSpan.innerHTML = items[j];
                 itemElement.appendChild(itemSpan);
+                _itemElements[itemType][categories[i]][items[j]] = itemSpan;
                 itemSpan.onclick = _createElementClickHandler(itemSpan, itemType, categories[i]);
                 if (itemElement.draggable) {
                     itemElement.ondragstart = _createElementDragStartHandler(itemElement, itemType, categories[i], itemElement.id);
@@ -697,6 +718,7 @@ define([
             itemList.hidden = true;
             categoryElement.appendChild(itemList);
             categorySpan.onclick = _toggleList.bind(this, itemList);
+            _itemElements[itemType][categories[i]]._list = itemList;
             categoryList.appendChild(categoryElement);
         }
         result.appendChild(categoryList);
@@ -709,7 +731,7 @@ define([
     function _loadItems() {
         var windowContent = document.getElementById(ITEMS_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS);
         _hideLabel(windowContent);
-
+        _itemElements = {};
         if (_resourceList) {
             windowContent.removeChild(_resourceList);
         }

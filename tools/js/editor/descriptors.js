@@ -20,6 +20,7 @@
  * @param graphics Used to access contants
  * @param classes Used to access enums and retrieve class name lists
  * @param equipment Used to access enums 
+ * @param common Used to access enums (ItemType)
  */
 define([
     "utils/utils",
@@ -30,8 +31,9 @@ define([
     "armada/configuration",
     "armada/graphics",
     "armada/logic/classes",
-    "armada/logic/equipment"
-], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes, equipment) {
+    "armada/logic/equipment",
+    "editor/common"
+], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes, equipment, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -2023,6 +2025,13 @@ define([
         return this._descriptor.unit;
     };
     /**
+     * Returns whether this type is a reference string (e.g. resource or class reference) type
+     * @returns {Boolean}
+     */
+    Type.prototype.isItemReference = function () {
+        return !!this._descriptor.resourceReference || !!this._descriptor.classReference;
+    };
+    /**
      * For resource reference string types, returns the category of resources the type refers to
      * @returns {String}
      */
@@ -2035,6 +2044,26 @@ define([
      */
     Type.prototype.getClassReference = function () {
         return this._descriptor.classReference;
+    };
+    /**
+     * For reference string types, returns the ItemType corresponding to the type of reference
+     * @returns {ItemType}
+     */
+    Type.prototype.getReferenceItemType = function () {
+        if (this.getResourceReference()) {
+            return common.ItemType.RESOURCE;
+        }
+        if (this.getClassReference()) {
+            return common.ItemType.CLASS;
+        }
+        common.ItemType.NONE;
+    };
+    /**
+     * For reference string types, returns the name of the category of items it references
+     * @returns {String}
+     */
+    Type.prototype.getReferenceItemCategory = function () {
+        return this._descriptor.resourceReference || this._descriptor.classReference;
     };
     /**
      * For string types, returns whether the type is flagged as long
@@ -2104,6 +2133,7 @@ define([
      */
     function getPropertyValues(propertyDescriptor, parent) {
         var values = new Type(propertyDescriptor.type).getValues();
+        // an object cannot reference itself (e.g. a fighter class cannot be based on itself)
         if (parent && (propertyDescriptor.name === BASED_ON_PROPERTY_NAME)) {
             utils.removeFromArray(values, parent[NAME_PROPERTY_NAME]);
         }

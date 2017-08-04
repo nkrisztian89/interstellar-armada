@@ -35,6 +35,7 @@ define([
             PROPERTY_EDITOR_HEADER_CLASS = "propertyEditorHeader",
             PROPERTY_EDITOR_HEADER_BUTTON_CLASS = "propertyEditorHeaderButton",
             UNSET_PROPERTY_BUTTON_CLASS = "unsetProperty",
+            JUMP_TO_REFERENCE_BUTTON_CLASS = "jumpReference",
             TEXT_AREA_ROWS = 5,
             TEXT_AREA_COLS = 100,
             LONG_TEXT_PREVIEW_LENGTH = 16,
@@ -46,6 +47,8 @@ define([
             SET_PROPERTY_BUTTON_CAPTION = "set",
             UNSET_PROPERTY_BUTTON_CAPTION = "x",
             UNSET_PROPERTY_BUTTON_TOOLTIP = "Unset property",
+            JUMP_TO_REFERENCE_BUTTON_CAPTION = ">",
+            JUMP_TO_REFERENCE_BUTTON_TOOLTIP = "Jump to referenced item",
             ADD_BUTTON_CAPTION = "+",
             ADD_BUTTON_TOOLTIP = "Add a new element with default values",
             DUPLICATE_BUTTON_CAPTION = "#",
@@ -81,6 +84,11 @@ define([
              * @type Function
              */
             _nameChangeHandler,
+            /**
+             * A reference to the function to execute to select another item (for jumping to referenced items) in the editor
+             * @type Function
+             */
+            _selectItemFunction,
             // ------------------------------------------------------------------------------
             // Private functions
             _createControl, _createProperties, createProperties;
@@ -1103,7 +1111,17 @@ define([
                     }
                     break;
                 case descriptors.BaseType.ENUM:
-                    result = _createEnumControl(topName, descriptors.getPropertyValues(propertyDescriptor, parent), data, parent, propertyDescriptor.name);
+                    control = _createEnumControl(topName, descriptors.getPropertyValues(propertyDescriptor, parent), data, parent, propertyDescriptor.name);
+                    control.classList.add(CONTROL_CLASS);
+                    result = document.createElement("div");
+                    result.appendChild(control);
+                    if (type.isItemReference()) {
+                        button = common.createButton(JUMP_TO_REFERENCE_BUTTON_CAPTION, function () {
+                            _selectItemFunction(type.getReferenceItemType(), control.value, type.getReferenceItemCategory());
+                        }, JUMP_TO_REFERENCE_BUTTON_TOOLTIP);
+                        button.classList.add(JUMP_TO_REFERENCE_BUTTON_CLASS);
+                        result.appendChild(button);
+                    }
                     break;
                 case descriptors.BaseType.COLOR3:
                 case descriptors.BaseType.COLOR4:
@@ -1207,12 +1225,14 @@ define([
      * @param {Editor~Preview} preview The module providing the Preview window for the item
      * @param {Function} nameChangeHandler If special operations need to be executed one of the created controls changes the name property 
      * of the item, the function executing those operations needs to be given here
+     * @param {Function} selectItemFunction The function to execute for selecting a new item  in the editor
      */
-    createProperties = function (element, item, preview, nameChangeHandler) {
+    createProperties = function (element, item, preview, nameChangeHandler, selectItemFunction) {
         _element = element;
         _item = item;
         _preview = preview;
         _nameChangeHandler = nameChangeHandler;
+        _selectItemFunction = selectItemFunction;
         _updateBasedOn();
         _createProperties(element, item.data, descriptors.itemDescriptors[item.category], null, null, nameChangeHandler);
     };

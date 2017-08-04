@@ -19,6 +19,7 @@ body {
 
 button {
     font-size: 0.8vw;
+    height: 1.6em;
 }
 
 input {
@@ -38,7 +39,8 @@ textarea {
 select {
     font-size: 0.8vw;
 
-    max-width: 12em;
+    max-width: 10.6em;
+    height: 1.6em;
 }
 
 /* -------------------------------------------------------------------- */
@@ -438,4 +440,8 @@ button.propertyEditorHeaderButton {
 
 button.unsetProperty {
     margin-left: 0;
+}
+
+button.jumpReference {
+    margin: 0;
 }
