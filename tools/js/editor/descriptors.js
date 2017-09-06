@@ -1196,6 +1196,18 @@ define([
                 RECHARGE_RATE: {
                     name: "rechargeRate",
                     type: PER_SECOND
+                },
+                RECHARGE_COLOR: {
+                    name: "rechargeColor",
+                    type: BaseType.COLOR3
+                },
+                RECHARGE_ANIMATION_DURATION: {
+                    name: "rechargeAnimationDuration",
+                    type: MILLISECONDS
+                },
+                RECHARGE_START_SOUND: {
+                    name: "rechargeStartSound",
+                    type: SOUND_DESCRIPTOR
                 }
             },
             /**

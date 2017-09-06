@@ -1,0 +1,1 @@
+uniform lowp vec4 u_shieldState;

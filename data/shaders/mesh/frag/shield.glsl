@@ -1,0 +1,1 @@
+    gl_FragColor.rgb = mix(gl_FragColor.rgb, u_shieldState.rgb, u_shieldState.a * (1.0 - max(0.0,dot(-viewDir,normal))) * 0.33333 * (texCol.r + texCol.g + texCol.b));

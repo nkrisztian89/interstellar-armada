@@ -2682,6 +2682,8 @@
             "capacity": 5,
             "rechargeDelay": 1000,
             "rechargeRate": 1,
+            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeAnimationDuration": 1000,
             "rechargeStartSound": {
                 "name": "shieldUp",
                 "volume": 1
@@ -2691,6 +2693,8 @@
             "capacity": 10,
             "rechargeDelay": 1500,
             "rechargeRate": 1,
+            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeAnimationDuration": 1000,
             "rechargeStartSound": {
                 "name": "shieldUp",
                 "volume": 1.2
@@ -2700,6 +2704,8 @@
             "capacity": 125,
             "rechargeDelay": 5000,
             "rechargeRate": 5,
+            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeAnimationDuration": 1000,
             "rechargeStartSound": {
                 "name": "shieldUp",
                 "volume": 3
@@ -2709,6 +2715,8 @@
             "capacity": 500,
             "rechargeDelay": 10000,
             "rechargeRate": 20,
+            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeAnimationDuration": 1000,
             "rechargeStartSound": {
                 "name": "shieldUp",
                 "volume": 4
@@ -2718,6 +2726,8 @@
             "capacity": 2000,
             "rechargeDelay": 20000,
             "rechargeRate": 100,
+            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeAnimationDuration": 1000,
             "rechargeStartSound": {
                 "name": "shieldUp",
                 "volume": 6

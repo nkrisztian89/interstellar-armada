@@ -142,7 +142,8 @@ define([
                 factionColorPicker: null,
                 engineStateEditor: null,
                 engineStatePopup: null,
-                explodeButton: null
+                explodeButton: null,
+                shieldRechargeButton: null
             };
     // ----------------------------------------------------------------------
     // Private Functions
@@ -224,6 +225,12 @@ define([
         _optionElements.explodeButton.disabled = !_spacecraft || ((_spacecraft.getHitpoints() === 0) && (_spacecraft.isAlive()));
     }
     /**
+     * Updates the caption and enabled state of the "Shield recharge" button to reflect the current state of the spacecraft
+     */
+    function _updateShieldRechargeButton() {
+        _optionElements.shieldRechargeButton.disabled = !_spacecraft || (_spacecraft.getHitpoints() <= 0) || !_spacecraft.hasShield();
+    }
+    /**
      * @typedef {Editor~RefreshParams} Editor~SpacecraftClassRefreshParams
      * @property {String} environmentName The name of the environment to put the previewed spacecraft in
      * @property {String} equipmentProfileName The name of the equipment profile to be equipped on the previewed spacecraft
@@ -285,7 +292,7 @@ define([
         }
         _spacecraft.addToScene(preview.getScene(), undefined, false,
                 (environmentChanged || shouldReload) ?
-                {weapons: true, lightSources: true, blinkers: true, hitboxes: true, thrusterParticles: true, explosion: true} :
+                {weapons: true, lightSources: true, blinkers: true, hitboxes: true, thrusterParticles: true, explosion: true, shield: true} :
                 {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
@@ -395,6 +402,7 @@ define([
                 environmentName: (_optionElements.environmentSelector.value !== "none") ? _optionElements.environmentSelector.value : null
             });
             _updateExplodeButton();
+            _updateShieldRechargeButton();
         });
         _elements.options.appendChild(preview.createSetting(_optionElements.environmentSelector, "Environment:"));
         // equipment profile selector
@@ -406,6 +414,7 @@ define([
             });
             _updateEngineStateEditor();
             _updateExplodeButton();
+            _updateShieldRechargeButton();
         });
         _elements.options.appendChild(preview.createSetting(_optionElements.equipmentSelector, "Equipment:"));
         // faction color picker
@@ -416,6 +425,7 @@ define([
                 reload: true
             });
             _updateExplodeButton();
+            _updateShieldRechargeButton();
         });
         _elements.options.appendChild(preview.createSetting(_optionElements.factionColorPicker, "Faction color:"));
         // engine state editor
@@ -428,6 +438,7 @@ define([
                 _spacecraft.addEventHandler(SpacecraftEvents.DESTRUCTED, function () {
                     _spacecraft.getVisualModel().getNode().hide();
                     _updateExplodeButton();
+                    _updateShieldRechargeButton();
                     return false;
                 });
                 preview.startAnimating();
@@ -441,8 +452,15 @@ define([
                 preview.requestRender();
             }
             _updateExplodeButton();
+            _updateShieldRechargeButton();
         });
         _elements.options.appendChild(preview.createSetting(_optionElements.explodeButton));
+        // shield recharge button
+        _optionElements.shieldRechargeButton = common.createButton("Recharge shield", function () {
+            _spacecraft.rechargeShield();
+            preview.startAnimating();
+        });
+        _elements.options.appendChild(preview.createSetting(_optionElements.shieldRechargeButton));
     }
     /**
      * The animation step (i.e. spacecraft.simulate())
@@ -464,6 +482,7 @@ define([
         }
         _updateThrusters();
         _updateExplodeButton();
+        _updateShieldRechargeButton();
     }
     /**
      * The handler for when the model is rotated by the user

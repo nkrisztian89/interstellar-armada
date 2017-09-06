@@ -847,7 +847,7 @@ define([
             for (i = 0; i < this._members.length; i++) {
                 result += this._members[i].getVectorCount();
             }
-            return result;
+            return result * (this._arraySize || 1);
         }
         return getVectorCount(this._type) * (this._arraySize || 1);
     };

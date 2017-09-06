@@ -2859,6 +2859,7 @@ define([
      * @param {Spacecraft} spacecraft The spacecraft to equip this shield on
      */
     function Shield(shieldClass, spacecraft) {
+        var color;
         /**
          * The class specifying the characteristics of the shield
          * @type ShieldClass
@@ -2880,6 +2881,22 @@ define([
          */
         this._timeSinceHit = 0;
         /**
+         * The amount of time elapsed since the shield started recharging, in milliseconds
+         * @type Number
+         */
+        this._timeSinceRecharge = shieldClass ? shieldClass.getRechargeAnimationDuration() : 0;
+        /**
+         * Current shield state for visuals (RGB color + strength of shield to display)
+         * @type Number[4]
+         */
+        this._state = [0,0,0,0];
+        if (shieldClass) {
+            color = shieldClass.getRechargeColor();
+            this._state[0] = color[0];
+            this._state[1] = color[1];
+            this._state[2] = color[2];
+        }
+        /**
          * A reference to the currently played sound clip, if any
          * @type SoundClip
          */
@@ -2899,6 +2916,13 @@ define([
         return this._capacity / this._class.getCapacity();
     };
     /**
+     * Returns the state of the shield to be used for visuals (color and strength of shields to display)
+     * @returns {Number[4]}
+     */
+    Shield.prototype.getState = function () {
+        return this._state;
+    }
+    /**
      * Call when the shield (the spacecraft that has the shield) is damaged
      * @param {Number} damage The amount of damage (to be) dealt to the spacecraft
      * @returns {Number} The amount of damage that should be dealt to the armor of the spacecraft (original minus the amount absorbed by the shield)
@@ -2910,23 +2934,34 @@ define([
         return damage - absorbed;
     };
     /**
+     * Startes recharging the shield (skipping any delay that might be left, playing sound/animation even if the shield was already full)
+     */
+    Shield.prototype.startRecharge = function () {
+        this._soundClip = this._class.createRechargeStartSoundClip(this._spacecraft.getSoundSource());
+        if (this._soundClip) {
+            this._soundClip.play();
+        }
+        this._timeSinceRecharge = 0;
+    };
+    /**
      * Call in every simulation step to update the internal state and initiate the appropriate events / effects
      * @param {Number} dt The amount of time passed since the last simulation step, in milliseonds
      */
     Shield.prototype.simulate = function (dt) {
+        var duration = this._class.getRechargeAnimationDuration();
         if (this._capacity < this._class.getCapacity()) {
             if (this._timeSinceHit < this._class.getRechargeDelay()) {
                 this._timeSinceHit += dt;
                 if (this._timeSinceHit >= this._class.getRechargeDelay()) {
-                    this._soundClip = this._class.createRechargeStartSoundClip(this._spacecraft.getSoundSource());
-                    if (this._soundClip) {
-                        this._soundClip.play();
-                    }
+                    this.startRecharge();
                 }
             } else {
+                // recharging
                 this._capacity = Math.min(this._class.getCapacity(), this._capacity + this._class.getRechargeRate() * dt * 0.001); // sec -> ms
             }
         }
+        this._timeSinceRecharge = Math.min(duration, this._timeSinceRecharge + dt);
+        this._state[3] = Math.sin((this._timeSinceRecharge / duration) * Math.PI);
     };
     /**
      * Deletes stored references. Call when the spacecraft is destroyed.

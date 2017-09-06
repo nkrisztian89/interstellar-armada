@@ -1,5 +1,5 @@
 {
-    "version": "0.4.3-dev:637 (2017.09.06.)",
+    "version": "0.4.3-dev:638 (2017.09.06.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -263,7 +263,7 @@
                         "requiredAttributeVectors": 6,
                         "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
-                        "requiredFragmentUniformVectors": 4,
+                        "requiredFragmentUniformVectors": 5,
                         "requiredFragmentUniformVectorsPer": {
                             "dirLight": 2
                         }
@@ -287,7 +287,7 @@
                         "requiredAttributeVectors": 6,
                         "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
-                        "requiredFragmentUniformVectors": 4,
+                        "requiredFragmentUniformVectors": 5,
                         "requiredFragmentUniformVectorsPer": {
                             "dirLight": 2
                         }
@@ -311,7 +311,7 @@
                         "requiredAttributeVectors": 6,
                         "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
-                        "requiredFragmentUniformVectors": 4,
+                        "requiredFragmentUniformVectors": 5,
                         "requiredFragmentUniformVectorsPer": {
                             "dirLight": 2
                         }

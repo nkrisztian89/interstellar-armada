@@ -82,6 +82,11 @@ define([
              */
             UNIFORM_REPLACEMENT_FACTION_COLOR_NAME = "replacementFactionColor",
             /**
+             * The name (without prefixes and suffixes) of the uniform variable that determines the state (color and strength) of shield animation
+             * @type String
+             */
+            UNIFORM_SHIELD_STATE_NAME = "shieldState",
+            /**
              * The duration while the hum sound effects ramp to their normal volume after being started.
              * In seconds.
              * @type Number
@@ -680,6 +685,19 @@ define([
     Spacecraft.prototype.getShieldIntegrity = function () {
         return this._shield ? this._shield.getIntegrity() : 0;
     };
+    /**
+     * Returns the state of the shield to be used for visuals (color and strength of shields to display)
+     * @returns {Number[4]}
+     */
+    Spacecraft.prototype.getShieldState = function () {
+        return this._shield ? this._shield.getState() : vec.NULL4;
+    }
+    /**
+     * Starts recharging the shield of the spacecraft (skipping any recharge delay that might be due)
+     */
+    Spacecraft.prototype.rechargeShield = function () {
+        this._shield.startRecharge();
+    }
     /**
      * Multiplies the amount of current and maximum hitpoints of the spacecraft has by the passed factor.
      * @param {Number} factor
@@ -1491,6 +1509,9 @@ define([
                 visualModel.setUniformValueFunction(UNIFORM_REPLACEMENT_FACTION_COLOR_NAME, function () {
                     return replacementFactionColor;
                 });
+                visualModel.setUniformValueFunction(UNIFORM_SHIELD_STATE_NAME, function () {
+                    return this.getShieldState();
+                }.bind(this));
                 // setting the starting values of the parameter arrays
                 // setting an identity transformation for all transform groups
                 for (i = 0, n = graphics.getMaxGroupTransforms(); i < n; i++) {

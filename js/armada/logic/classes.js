@@ -2354,6 +2354,16 @@ define([
          */
         this._rechargeRate = dataJSON ? (dataJSON.rechargeRate || _showMissingPropertyError(this, "rechargeRate")) : 0;
         /**
+         * Color of the recharge start animation.
+         * @type Number[3]
+         */
+        this._rechargeColor = dataJSON ? (dataJSON.rechargeColor || _showMissingPropertyError(this, "rechargeColor")) : null;
+        /**
+         * The duration of the animation displayed at the start of shield recharge.
+         * @type Number
+         */
+        this._rechargeAnimationDuration = dataJSON ? (dataJSON.rechargeAnimationDuration || _showMissingPropertyError(this, "rechargeAnimationDuration")) : 0;
+        /**
          * The descriptor of the sound effect to be played when a shield of this class starts to recharge.
          * @type Object
          */
@@ -2383,6 +2393,18 @@ define([
      */
     ShieldClass.prototype.getRechargeRate = function () {
         return this._rechargeRate;
+    };
+    /**
+     * @returns {Number[3]}
+     */
+    ShieldClass.prototype.getRechargeColor = function () {
+        return this._rechargeColor;
+    };
+    /**
+     * @returns {Number}
+     */
+    ShieldClass.prototype.getRechargeAnimationDuration = function () {
+        return this._rechargeAnimationDuration;
     };
     /**
      * Creates a sound clip for the recharge start sound effect and returns a reference to it.
