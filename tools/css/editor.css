@@ -354,6 +354,18 @@ li.element.dragover {
     border: 0;
 }
 
+#previewDiv {
+    position: relative;
+    max-height: 100%;
+    width: calc(100% + 17px); /* hiding scrollbar */
+    
+    padding: 0;
+    border: 0;
+
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
 #previewInfo {
     position: relative;
     bottom: 0.3em;
@@ -444,4 +456,44 @@ button.unsetProperty {
 
 button.jumpReference {
     margin: 0;
+}
+
+/* -------------------------------------------------------------------- */
+/* GLSL preview */
+
+h1.glsl-header {
+    margin-top: 0;
+    padding-left: 0.2em;
+    padding-top: 0.5em;
+    font-size: 20px;
+    border-top: 2px solid #444444;
+}
+
+.glsl-code {
+    font-family: monospace;
+    margin-left: 1em;
+}
+
+*:not(.glsl-comment) > .glsl-keyword {
+    font-weight: bold;
+}
+
+*:not(.glsl-comment) > .glsl-type {
+    color: #44aaff;
+}
+
+*:not(.glsl-comment) > .glsl-directive {
+    color: #f0ad4e;
+}
+
+.glsl-comment {
+    color: #888888;
+}
+
+*:not(.glsl-comment) > .glsl-variable {
+    color: #00aa00;
+}
+
+*:not(.glsl-comment) > .glsl-function, *:not(.glsl-comment) > .glsl-operator {
+    color: #ffff00;
 }

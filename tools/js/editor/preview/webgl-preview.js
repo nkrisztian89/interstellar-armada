@@ -544,7 +544,8 @@ define([
      * Updates both the calculated CSS size for the canvas as well as sets the size attributes according to the rendered (client) size.
      */
     function _updateCanvasSize() {
-        _elements.canvas.style.height = (_elements.canvas.parentNode.clientHeight - (_elements.options.clientHeight + _elements.info.clientHeight)) + "px";
+        _elements.div.style.height = (_elements.div.parentNode.clientHeight - (_elements.options.clientHeight + _elements.info.clientHeight)) + "px";
+        _elements.canvas.style.height = _elements.div.style.height;
         _elements.canvas.width = _elements.canvas.clientWidth;
         _elements.canvas.height = _elements.canvas.clientHeight;
     }
@@ -559,8 +560,10 @@ define([
     }
     /**
      * @typedef {Object} Editor~RefreshElements
+     * @property {Element} div The div that houses the canvas
      * @property {HTMLCanvasElement} canvas The canvas that can be used to display a preview image of the selected object
      * @property {Element} options The div that houses the preview options
+     * @property {Element} info The div that houses the bottom info bar
      */
     /**
      * @typedef {Object} Editor~RefreshParams
@@ -625,6 +628,7 @@ define([
         _context = _context || new managedGL.ManagedGLContext(MANAGED_CONTEXT_NAME, _elements.canvas, graphics.getAntialiasing(), true, graphics.getFiltering());
         resources.executeWhenReady(function () {
             var view;
+            _elements.div.hidden = false;
             _elements.canvas.hidden = false;
             _updateForLOD();
             _updateInfo();

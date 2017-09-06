@@ -23,6 +23,7 @@
  * @param common Used for clearing open popups
  * @param descriptors Used to determine whether the descriptor for a specific resource / class category is available
  * @param properties Used to generate the content of the Properties window
+ * @param shaderPreview Used to create previews for shader resources
  * @param skyboxPreview Used to create previews for skybox classes
  * @param explosionPreview Used to create previews for explosion classes
  * @param projectilePreview Used to create previews for projectile classes
@@ -44,6 +45,7 @@ define([
     "editor/common",
     "editor/descriptors",
     "editor/properties",
+    "editor/preview/shader-preview",
     "editor/preview/skybox-preview",
     "editor/preview/explosion-preview",
     "editor/preview/projectile-preview",
@@ -57,6 +59,7 @@ define([
         environments, missions,
         control,
         common, descriptors, properties,
+        shaderPreview,
         skyboxPreview, explosionPreview, projectilePreview, weaponPreview, spacecraftPreview, environmentPreview) {
     "use strict";
     var
@@ -97,6 +100,7 @@ define([
             ID_SEPARATOR = "_",
             ELEMENT_LI_ID_PREFIX = "element_",
             PREVIEW_OPTIONS_ID = "previewOptions",
+            PREVIEW_DIV_ID = "previewDiv",
             PREVIEW_CANVAS_ID = "previewCanvas",
             PREVIEW_INFO_ID = "previewInfo",
             NO_ITEM_SELECTED_TEXT = "select an item from the left",
@@ -110,6 +114,7 @@ define([
              * @type Object
              */
             _previews = {
+                "shaders": shaderPreview,
                 "skyboxClasses": skyboxPreview,
                 "explosionClasses": explosionPreview,
                 "projectileClasses": projectilePreview,
@@ -203,14 +208,17 @@ define([
         var
                 previewWindowContent = document.getElementById(PREVIEW_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS),
                 previewOptions = previewWindowContent.querySelector("div#" + PREVIEW_OPTIONS_ID),
+                previewDiv = document.getElementById(PREVIEW_DIV_ID),
                 previewCanvas = document.getElementById(PREVIEW_CANVAS_ID),
                 previewInfo = document.getElementById(PREVIEW_INFO_ID);
         if (_selectedItem.type === common.ItemType.NONE) {
+            previewDiv.hidden = true;
             previewCanvas.hidden = true;
             previewOptions.hidden = true;
             previewInfo.hidden = true;
             _setLabel(previewWindowContent, NO_ITEM_SELECTED_TEXT);
         } else if (!_previews[_selectedItem.category]) {
+            previewDiv.hidden = true;
             previewCanvas.hidden = true;
             previewOptions.hidden = true;
             previewInfo.hidden = true;
@@ -219,6 +227,7 @@ define([
             _hideLabel(previewWindowContent);
             _previews[_selectedItem.category].refresh({
                 options: previewOptions,
+                div: previewDiv,
                 canvas: previewCanvas,
                 info: previewInfo
             }, _selectedItem.reference);
