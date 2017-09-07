@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for spacecraft classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -137,6 +137,24 @@ define([
     function _updateForRefresh() {
         return true;
     }
+    /**
+     * Returns additional information to be displayed in the info section of the preview
+     * @returns {String}
+     */
+    function _getInfo() {
+        var result, firepower, firepowerDecrease;
+        result = "";
+        if (_weapon) {
+            firepower = _weapon.getFirepower();
+            if (firepower > 0) {
+                firepowerDecrease = firepower - _weapon.getFirepower(1);
+                result = "Weapon: ";
+                result += "firepower: " + (Math.round(firepower * 100) / 100) + " (-" + (Math.round(firepowerDecrease * 100) / 100) + " / arm.), ";
+                result += "range: " + _weapon.getRange() + " m";
+            }
+        }
+        return result;
+    }
     // ----------------------------------------------------------------------
     // Public Functions
     /**
@@ -187,6 +205,7 @@ define([
         clear: _clear,
         load: _load,
         updateForRefresh: _updateForRefresh,
+        getInfo: _getInfo,
         clearSettingsForNewItem: _clearSettingsForNewItem,
         createOptions: _createOptions
     });

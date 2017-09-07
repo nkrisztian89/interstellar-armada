@@ -242,7 +242,7 @@ define([
      * Creates the content for the preview information panel and adds it to the page.
      */
     function _updateInfo() {
-        var infoSections = [];
+        var infoSections = [], info;
         _elements.info.innerHTML = "";
         if (_currentContext && _model) {
             if (_model.getModel) {
@@ -252,12 +252,15 @@ define([
                         ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD()));
             }
             if (_currentContext.functions.getInfo) {
-                infoSections.push(_currentContext.functions.getInfo());
+                info = _currentContext.functions.getInfo();
+                if (info) {
+                    infoSections.push(info);
+                }
             }
             if (_fps) {
                 infoSections.push("FPS: " + _fps);
             }
-            _elements.info.appendChild(common.createLabel(infoSections.join(", ")));
+            _elements.info.appendChild(common.createLabel(infoSections.join("<br/>")));
         }
         _elements.info.hidden = (_elements.info.innerHTML === "");
     }
@@ -301,6 +304,7 @@ define([
             }
             _fps = dt ? Math.round(1000 / dt) : 0;
             _updateInfo();
+            _updateCanvasSize();
         }
     }
     /**
@@ -331,6 +335,7 @@ define([
                 _animating = false;
                 _updateAnimateButton();
                 _updateInfo();
+                _updateCanvasSize();
             }
         }
     }

@@ -686,6 +686,13 @@ define([
         return this._shield ? this._shield.getIntegrity() : 0;
     };
     /**
+     * Returns the current capacity of the equipped shield (if any)
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getShieldCapacity = function () {
+        return this._shield ? this._shield.getCapacity() : 0;
+    };
+    /**
      * Returns the state of the shield to be used for visuals (color and strength of shields to display)
      * @returns {Number[4]}
      */

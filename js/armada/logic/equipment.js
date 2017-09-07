@@ -2916,6 +2916,13 @@ define([
         return this._capacity / this._class.getCapacity();
     };
     /**
+     * Returns the shield's current capacity
+     * @returns {Number}
+     */
+    Shield.prototype.getCapacity = function () {
+        return this._capacity;
+    };
+    /**
      * Returns the state of the shield to be used for visuals (color and strength of shields to display)
      * @returns {Number[4]}
      */
