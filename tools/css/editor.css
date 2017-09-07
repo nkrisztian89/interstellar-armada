@@ -39,8 +39,16 @@ textarea {
 select {
     font-size: 0.8vw;
 
-    max-width: 10.6em;
+    max-width: 12.6em;
     height: 1.6em;
+}
+
+select.withJumpButton, select.withUnsetButton {
+    max-width: 10.6em;
+}
+
+select.withJumpButton.withUnsetButton {
+    max-width: 8.6em;
 }
 
 /* -------------------------------------------------------------------- */

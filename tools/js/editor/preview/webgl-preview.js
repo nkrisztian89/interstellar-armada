@@ -244,14 +244,14 @@ define([
     function _updateInfo() {
         var infoSections = [];
         _elements.info.innerHTML = "";
-        if (_model) {
+        if (_currentContext && _model) {
             if (_model.getModel) {
                 infoSections.push(
                         "Model: " +
                         "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
                         ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD()));
             }
-            if (_currentContext && _currentContext.functions.getInfo) {
+            if (_currentContext.functions.getInfo) {
                 infoSections.push(_currentContext.functions.getInfo());
             }
             if (_fps) {
@@ -762,6 +762,7 @@ define([
      * Clears the preview and its current context so that a new preview (or the same with a different context) can be opened
      */
     function clear() {
+        stopAnimating();
         setContext(null);
     }
     /**

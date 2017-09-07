@@ -47,8 +47,10 @@ define([
             SET_PROPERTY_BUTTON_CAPTION = "set",
             UNSET_PROPERTY_BUTTON_CAPTION = "x",
             UNSET_PROPERTY_BUTTON_TOOLTIP = "Unset property",
+            WITH_UNSET_PROPERTY_BUTTON_CLASS = "withUnsetButton",
             JUMP_TO_REFERENCE_BUTTON_CAPTION = ">",
             JUMP_TO_REFERENCE_BUTTON_TOOLTIP = "Jump to referenced item",
+            WITH_JUMP_TO_REFERENCE_BUTTON_CLASS = "withJumpButton",
             ADD_BUTTON_CAPTION = "+",
             ADD_BUTTON_TOOLTIP = "Add a new element with default values",
             DUPLICATE_BUTTON_CAPTION = "#",
@@ -1116,6 +1118,7 @@ define([
                     result = document.createElement("div");
                     result.appendChild(control);
                     if (type.isItemReference()) {
+                        control.classList.add(WITH_JUMP_TO_REFERENCE_BUTTON_CLASS);
                         button = common.createButton(JUMP_TO_REFERENCE_BUTTON_CAPTION, function () {
                             _selectItemFunction(type.getReferenceItemType(), control.value, type.getReferenceItemCategory());
                         }, JUMP_TO_REFERENCE_BUTTON_TOOLTIP);
@@ -1165,8 +1168,13 @@ define([
             // add unset button for optional values
             if ((propertyDescriptor.optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultDerived ||
                     ((!parent || (parent === _item.data)) && _basedOn && (propertyDescriptor.name !== descriptors.NAME_PROPERTY_NAME))) && (propertyDescriptor.name !== descriptors.BASED_ON_PROPERTY_NAME)) {
-                control = result;
-                control.classList.add(CONTROL_CLASS);
+                if (!control) {
+                    control = result;
+                    control.classList.add(CONTROL_CLASS);
+                    result = document.createElement("div");
+                    result.appendChild(control);
+                }
+                control.classList.add(WITH_UNSET_PROPERTY_BUTTON_CLASS);
                 button = common.createButton(UNSET_PROPERTY_BUTTON_CAPTION, function () {
                     var parentNode = result.parentNode;
                     if (control.popup) {
@@ -1177,8 +1185,6 @@ define([
                     _changeData(topName, undefined, parent, propertyDescriptor.name);
                 }, UNSET_PROPERTY_BUTTON_TOOLTIP);
                 button.classList.add(UNSET_PROPERTY_BUTTON_CLASS);
-                result = document.createElement("div");
-                result.appendChild(control);
                 result.appendChild(button);
             }
         }

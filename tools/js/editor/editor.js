@@ -218,6 +218,7 @@ define([
             previewInfo.hidden = true;
             _setLabel(previewWindowContent, NO_ITEM_SELECTED_TEXT);
         } else if (!_previews[_selectedItem.category]) {
+            console.log("test");
             previewDiv.hidden = true;
             previewCanvas.hidden = true;
             previewOptions.hidden = true;
