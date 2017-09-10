@@ -36,6 +36,7 @@ explosion/shield-hit.ogg
 explosion/large-ship-explosion.ogg
 explosion/small-ship-explosion.ogg
 shield/shield-up.ogg
+shield/shield-up-ship.ogg
 
 Edited by Krisztián Nagy with Audacity
 License: CC BY 4.0

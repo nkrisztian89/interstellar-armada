@@ -2886,7 +2886,7 @@ define([
          */
         this._timeSinceRecharge = shieldClass ? shieldClass.getRechargeAnimationDuration() : 0;
         /**
-         * Current shield state for visuals (RGB color + strength of shield to display)
+         * Current shield state for visuals (RGB color + animation progress)
          * @type Number[4]
          */
         this._state = [0,0,0,0];
@@ -2923,7 +2923,7 @@ define([
         return this._capacity;
     };
     /**
-     * Returns the state of the shield to be used for visuals (color and strength of shields to display)
+     * Returns the state of the shield to be used for visuals (color and animation progress)
      * @returns {Number[4]}
      */
     Shield.prototype.getState = function () {
@@ -2968,7 +2968,7 @@ define([
             }
         }
         this._timeSinceRecharge = Math.min(duration, this._timeSinceRecharge + dt);
-        this._state[3] = Math.sin((this._timeSinceRecharge / duration) * Math.PI);
+        this._state[3] = this._timeSinceRecharge / duration;
     };
     /**
      * Deletes stored references. Call when the spacecraft is destroyed.

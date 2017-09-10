@@ -2705,9 +2705,9 @@
             "rechargeDelay": 5000,
             "rechargeRate": 5,
             "rechargeColor": [0.5, 0.85, 1.0],
-            "rechargeAnimationDuration": 1000,
+            "rechargeAnimationDuration": 2500,
             "rechargeStartSound": {
-                "name": "shieldUp",
+                "name": "shieldUp_ship",
                 "volume": 3
             }
         }, {
@@ -2716,9 +2716,9 @@
             "rechargeDelay": 10000,
             "rechargeRate": 20,
             "rechargeColor": [0.5, 0.85, 1.0],
-            "rechargeAnimationDuration": 1000,
+            "rechargeAnimationDuration": 2500,
             "rechargeStartSound": {
-                "name": "shieldUp",
+                "name": "shieldUp_ship",
                 "volume": 4
             }
         }, {
@@ -2727,9 +2727,9 @@
             "rechargeDelay": 20000,
             "rechargeRate": 100,
             "rechargeColor": [0.5, 0.85, 1.0],
-            "rechargeAnimationDuration": 1000,
+            "rechargeAnimationDuration": 3000,
             "rechargeStartSound": {
-                "name": "shieldUp",
+                "name": "shieldUp_ship",
                 "volume": 6
             }
         }],
@@ -6959,6 +6959,6 @@
             "hitpoints": 50,
             "texture": "ruby_blade",
             "scoreValue": 100,
-            "defaultLuminosityFactors": [[0, 1], [18, 1]]
+            "defaultLuminosityFactors": [[0, 1], [18, 1]] 
         }]
 }

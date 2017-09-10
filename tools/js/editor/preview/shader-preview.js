@@ -72,7 +72,7 @@ define([
         code = _markupCode(code, ["uniform ", "attribute ", "varying ", "precision ", "lowp ", "mediump ", "highp ", "struct", "return", "discard", "\\bif\\b", "\\belse\\b", "\\bswitch\\b", "\\bcase\\b", "\\bfor\\b", "\\bbreak\\b", "\\bcontinue\\b"], "glsl-keyword");
         code = _markupCode(code, ["void", "bool", "\\bint\\b", "float", "vec2", "vec3", "vec4", "mat2", "mat3", "mat4", "sampler2D", "samplerCube"], "glsl-type");
         code = _markupCode(code, ["gl_Position", "gl_FragColor"], "glsl-variable");
-        code = _markupCode(code, ["dot\\(", "cross\\(", "length\\(", "normalize\\(", "reflect\\(", "abs\\(", "sign\\(", "min\\(", "max\\(", "pow\\(", "mix\\(", "step\\(", "clamp\\(", "texture2D\\(", "textureCube\\("], "glsl-function");
+        code = _markupCode(code, ["dot\\(", "cross\\(", "length\\(", "normalize\\(", "reflect\\(", "abs\\(", "sign\\(", "fract\\(", "min\\(", "max\\(", "pow\\(", "sin\\(", "cos\\(", "mix\\(", "step\\(", "clamp\\(", "texture2D\\(", "textureCube\\("], "glsl-function");
         code = _markupCode(code, ["\\(", "\\)", "\\[", "\\]"], "glsl-operator");
         return code;
     }

@@ -1302,6 +1302,9 @@
             "name": "shieldUp",
             "samples": ["shield/shield-up.ogg"]
         }, {
+            "name": "shieldUp_ship",
+            "samples": ["shield/shield-up-ship.ogg"]
+        }, {
             "name": "trainingShot",
             "samples": ["weapon/weaponshot_training.ogg"]
         }, {

@@ -693,7 +693,7 @@ define([
         return this._shield ? this._shield.getCapacity() : 0;
     };
     /**
-     * Returns the state of the shield to be used for visuals (color and strength of shields to display)
+     * Returns the state of the shield to be used for visuals (color and animation progress)
      * @returns {Number[4]}
      */
     Spacecraft.prototype.getShieldState = function () {
