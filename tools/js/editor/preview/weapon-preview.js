@@ -142,14 +142,18 @@ define([
      * @returns {String}
      */
     function _getInfo() {
-        var result, firepower, firepowerDecrease;
+        var result, value, valueDrop;
         result = "";
         if (_weapon) {
-            firepower = _weapon.getFirepower();
-            if (firepower > 0) {
-                firepowerDecrease = firepower - _weapon.getFirepower(1);
+            value = _weapon.getDamage();
+            if (value > 0) {
                 result = "Weapon: ";
-                result += "firepower: " + (Math.round(firepower * 100) / 100) + " (-" + (Math.round(firepowerDecrease * 100) / 100) + " / arm.), ";
+                valueDrop = value - _weapon.getDamage(1);
+                result += "damage: " + (Math.round(value * 100) / 100) + " (-" + (Math.round(valueDrop * 100) / 100) + " / arm.), ";
+                value = _weapon.getFirepower();
+                valueDrop = value - _weapon.getFirepower(1);
+                result += "firepower: " + (Math.round(value * 100) / 100) + " (-" + (Math.round(valueDrop * 100) / 100) + " / arm.), ";
+                result += "fire rate: " + (Math.round(_weapon.getFireRate() * 100) / 100) + " / s, ";
                 result += "range: " + _weapon.getRange() + " m";
             }
         }

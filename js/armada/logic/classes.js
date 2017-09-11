@@ -1872,17 +1872,32 @@ define([
         return this._barrels[0].getProjectileVelocity();
     };
     /**
-     * Returns the damage per second dealt by a weapon of this class to a target with the passed armor rating.
+     * Returns the damage one shot (from all barrels) of a weapon of this class deals to a target with the passed armor rating.
      * @param {Number} [armorRating=0]
      * @returns {Number}
      */
-    WeaponClass.prototype.getFirepower = function (armorRating) {
+    WeaponClass.prototype.getDamage = function (armorRating) {
         var result = 0, i;
         armorRating = armorRating || 0;
         for (i = 0; i < this._barrels.length; i++) {
             result += Math.max(0, this._barrels[i].getProjectileClass().getDamage() - armorRating);
         }
-        return result * 1000 / this._cooldown; // cooldown is in milliseconds
+        return result;
+    };
+    /**
+     * Returns the damage per second dealt by a weapon of this class to a target with the passed armor rating.
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    WeaponClass.prototype.getFirepower = function (armorRating) {
+        return this.getDamage(armorRating) * 1000 / this._cooldown; // cooldown is in milliseconds
+    };
+    /**
+     * Returns the rate of fire of weapons of this class, in shots per second
+     * @returns {Number}
+     */
+    WeaponClass.prototype.getFireRate = function () {
+        return 1000 / this._cooldown; // cooldown is in milliseconds
     };
     /**
      * Plays the sound effect corresponding to a weapon of this class firing, at the given world position

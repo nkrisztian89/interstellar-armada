@@ -599,12 +599,27 @@ define([
         return this._class.getProjectileVelocity();
     };
     /**
+     * Returns the damage one shot (from all barrels) this weapon deals to a target with the passed armor rating.
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    Weapon.prototype.getDamage = function (armorRating) {
+        return this._class.getDamage(armorRating);
+    };
+    /**
      * Returns the damage per second dealt this a weapon to a target with the passed armor rating.
      * @param {Number} [armorRating=0]
      * @returns {Number}
      */
     Weapon.prototype.getFirepower = function (armorRating) {
         return this._class.getFirepower(armorRating);
+    };
+    /**
+     * Returns the rate of fire of this weapon, in shots per second
+     * @returns {Number}
+     */
+    Weapon.prototype.getFireRate = function () {
+        return this._class.getFireRate();
     };
     /**
      * Returns the relative range of the weapon, based on the first barrel, that is the farthest distance the fired projectiles will reach
