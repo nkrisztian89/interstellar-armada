@@ -548,7 +548,9 @@ define([
         for (i = 0; i < this._childPopups.length; i++) {
             this._childPopups[i].remove();
         }
-        document.body.removeChild(this._element);
+        if (this._element.parentNode) {
+            this._element.parentNode.removeChild(this._element);
+        }
         if (!leaveReference && !this._parent) {
             _popups.splice(_popups.indexOf(this), 1);
         }
