@@ -68,6 +68,9 @@ define([
             ITEMS_WINDOW_ID = "items",
             PREVIEW_WINDOW_ID = "preview",
             PROPERTIES_WINDOW_ID = "properties",
+            // history
+            BACK_BUTTON_ID = "backButton",
+            FORWARD_BUTTON_ID = "forwardButton",
             // new item
             NEW_ITEM_BUTTON_ID = "newItemButton",
             NEW_ITEM_DIALOG_ID = "newItemDialog",
@@ -144,6 +147,18 @@ define([
                 reference: null,
                 data: null
             },
+            /**
+             * The history of selected items, in chronological order, so the user can go back (/forward)
+             * @type Editor~Item[]
+             */
+            _itemHistory = [],
+            /**
+             * The index of the currently selected item within the _itemHistory list
+             * @type Number
+             */
+            _historyIndex = -1,
+            _backButton,
+            _forwardButton,
             _resourceList,
             _classList,
             _environmentList,
@@ -389,7 +404,65 @@ define([
         }
     }
     /**
-     * Sets the data for a new selected item and load the appropriate Preview and Properties windows for it, if available
+     * Sets the data the passed item and loads the appropriate Preview and Properties windows for it, if available
+     * Only to be used by _selectItem and history operations - outside of these, use _selectItem
+     * @param {String} type (enum ItemType) The type of the selected item
+     * @param {String} name The name (id) of the selected item
+     * @param {String} category The category the selected item belongs to (this will determine the format of the Preview and Properties windows)
+     * @param {Element} [element] The HTML element (<span>) that references the item in the category list (if not given, will be looked up from the _itemElements object)
+     */
+    function _loadItem(type, name, category, element) {
+        if (_selectedItemElement) {
+            _selectedItemElement.classList.remove(SELECTED_CLASS);
+        }
+        _clearPreview();
+        _selectedItem.type = type;
+        _selectedItem.name = name;
+        _selectedItem.category = category;
+        _selectedItem.reference = common.getItemReference(_selectedItem);
+        _selectedItem.data = _selectedItem.reference.getData();
+        common.removePopups();
+        _loadProperties();
+        _loadPreview();
+        _expandList(_itemElements[_selectedItem.type][_selectedItem.category]._list);
+        if (!element) {
+            element = _itemElements[_selectedItem.type][_selectedItem.category][_selectedItem.name];
+        }
+        _selectedItemElement = element;
+        _selectedItemElement.classList.add(SELECTED_CLASS);
+    }
+    /**
+     * Sets up the variables and handlers for the history back / forward buttons (to be called at startup)
+     */
+    function _loadHistoryButtons() {
+        _backButton = document.getElementById(BACK_BUTTON_ID);
+        _forwardButton = document.getElementById(FORWARD_BUTTON_ID);
+        _backButton.onclick = function () {
+            var item;
+            _historyIndex--;
+            item = _itemHistory[_historyIndex];
+            _loadItem(item.type, item.name, item.category, item.element);
+            _updateHistoryButtons();
+        };
+        _forwardButton.onclick = function () {
+            var item;
+            _historyIndex++;
+            item = _itemHistory[_historyIndex];
+            _loadItem(item.type, item.name, item.category, item.element);
+            _updateHistoryButtons();
+        };
+    }
+    /**
+     * Updates the enabled / disabled states of history back / forward buttons, to be called every time
+     * we move within history
+     */
+    function _updateHistoryButtons() {
+        _backButton.disabled = _historyIndex <= 0;
+        _forwardButton.disabled = _historyIndex >= (_itemHistory.length - 1);
+    }
+    /**
+     * Sets the data for a new selected item and loads the appropriate Preview and Properties windows for it, if available
+     * Also updates selection history
      * @param {String} type (enum ItemType) The type of the selected item
      * @param {String} name The name (id) of the selected item
      * @param {String} category The category the selected item belongs to (this will determine the format of the Preview and Properties windows)
@@ -397,24 +470,13 @@ define([
      */
     function _selectItem(type, name, category, element) {
         if ((_selectedItem.type !== type) || (_selectedItem.name !== name) || (_selectedItem.category !== category)) {
-            if (_selectedItemElement) {
-                _selectedItemElement.classList.remove(SELECTED_CLASS);
+            _loadItem(type, name, category, element);
+            if ((_itemHistory.length > 0) && (_historyIndex < (_itemHistory.length - 1))) {
+                _itemHistory.splice(_historyIndex + 1);
             }
-            _clearPreview();
-            _selectedItem.type = type;
-            _selectedItem.name = name;
-            _selectedItem.category = category;
-            _selectedItem.reference = common.getItemReference(_selectedItem);
-            _selectedItem.data = _selectedItem.reference.getData();
-            common.removePopups();
-            _loadProperties();
-            _loadPreview();
-            _expandList(_itemElements[_selectedItem.type][_selectedItem.category]._list);
-            if (!element) {
-                element = _itemElements[_selectedItem.type][_selectedItem.category][_selectedItem.name];
-            }
-            _selectedItemElement = element;
-            _selectedItemElement.classList.add(SELECTED_CLASS);
+            _itemHistory.push({type: type, name: name, category: category, element: element});
+            _historyIndex = _itemHistory.length - 1;
+            _updateHistoryButtons();
         }
     }
     /**
@@ -893,6 +955,7 @@ define([
                         _setLabel(document.getElementById(PREVIEW_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
                         _setLabel(document.getElementById(PROPERTIES_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
                         _loadItems();
+                        _loadHistoryButtons();
                         _loadDialogs();
                     });
                 });
