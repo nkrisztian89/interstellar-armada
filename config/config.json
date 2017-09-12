@@ -1,5 +1,5 @@
 {
-    "version": "0.4.3-dev:644 (2017.09.11.)",
+    "version": "0.4.3-dev:645 (2017.09.12.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -591,6 +591,8 @@
                     }, {
                         "name": "cameraIncreaseFOV",
                         "continuous": true
+                    }, {
+                        "name": "cameraStop"
                     }, {
                         "name": "followNext"
                     }, {

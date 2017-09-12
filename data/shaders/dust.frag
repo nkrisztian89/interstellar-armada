@@ -14,5 +14,5 @@ varying float v_dist;
 void main() {
     gl_FragColor = vec4(
         u_color.rgb,
-        ((1.0 - v_dist) * (1.0 - v_position.x)) / max(1.0, u_length / DUST_LENGTH_DIVISOR));
+        (min(1.0, - 2.0 * v_dist + 2.0) * (1.0 - v_position.x)) / max(1.0, u_length / DUST_LENGTH_DIVISOR));
 }

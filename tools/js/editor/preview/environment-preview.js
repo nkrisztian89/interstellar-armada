@@ -83,6 +83,9 @@ define([
         if (_environment) {
             _environment.removeFromScene();
         }
+        if (_cameraController) {
+            _cameraController.stop();
+        }
     }
     /**
      * Updates the content of the preview canvas according to the current preview settings
