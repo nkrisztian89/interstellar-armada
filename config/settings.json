@@ -348,7 +348,7 @@
                         "right": 0.98,
                         "top": 0.59,
                         "width": 0.6,
-                        "height": 0.01,
+                        "height": 0.0075,
                         "scaleMode": "minimum",
                         "xScaleMode": "minimum",
                         "yScaleMode": "minimum"
@@ -607,9 +607,9 @@
                     "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
                     "layout": {
                         "centerX": 0,
-                        "centerY": 0.26,
+                        "centerY": 0.261,
                         "width": 0.14,
-                        "height": 0.01,
+                        "height": 0.0075,
                         "scaleMode": "minimum",
                         "xScaleMode": "minimum",
                         "yScaleMode": "minimum"
@@ -750,23 +750,36 @@
                     "fontName": "hudFont",
                     "position": [-0.35, 0.42]
                 },
-                "escortsHullIntegrityBar": {
+                "escortsIntegrityBars": {
                     "texture": "hud-atlas",
                     "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
-                    "layout": {
-                        "left": -0.96,
-                        "top": 0.047,
-                        "width": 0.15,
-                        "height": 0.01,
-                        "scaleMode": "minimum",
-                        "xScaleMode": "minimum",
-                        "yScaleMode": "minimum"
+                    "layouts": {    
+                        "hull": {
+                            "left": -0.96,
+                            "top": 0.044,
+                            "width": 0.15,
+                            "height": 0.01,
+                            "scaleMode": "minimum",
+                            "xScaleMode": "minimum",
+                            "yScaleMode": "minimum"
+                        },
+                        "shield": {
+                            "left": -0.96,
+                            "top": 0.054,
+                            "width": 0.15,
+                            "height": 0.0075,
+                            "scaleMode": "minimum",
+                            "xScaleMode": "minimum",
+                            "yScaleMode": "minimum"
+                        }
                     },
                     "colors": {
-                        "fullIntegrity": [0, 1, 0, 1],
-                        "halfIntegrity": [1, 1, 0, 1],
-                        "zeroIntegrity": [1, 0, 0, 1],
-                        "destroyed": [1, 0, 0, 0.3]
+                        "fullHull": [0, 1, 0, 1],
+                        "halfHull": [1, 1, 0, 1],
+                        "zeroHull": [1, 0, 0, 1],
+                        "destroyed": [1, 0, 0, 0.3],
+                        "shield": [0.35, 0.7, 1, 1],
+                        "lostShield": [0.1, 0.2, 0.7, 0.2]
                     }
                 },
                 "escortsTextOffset": -0.26,

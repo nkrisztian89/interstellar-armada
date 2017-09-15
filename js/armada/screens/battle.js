@@ -697,15 +697,10 @@ define([
              */
             _escortsTexts,
             /**
-             * The HUD elements for displaying the hull integrity bars for each escorted ship
-             * @type HUDElement[]
+             * The HUD elements and layouts for displaying the hull and shield integrity bars for each escorted ship
+             * @type {hull: HUDElement, shield: HUDElement, hullLayout: ClipSpaceLayout, shieldLayout: ClipSpaceLayout}[]
              */
-            _escortHullIntegrityBars,
-            /**
-             * Stored layouts for each hull integrity bar for escorted ships
-             * @type ClipSpaceLayout
-             */
-            _escortHullIntegrityBarLayouts,
+            _escortBars,
             // ................................................................................................
             // cached references of setting values used for the layout of the HUD
             /**
@@ -893,10 +888,10 @@ define([
              */
             _driftArrowMaxSpeedFactor,
             /**
-             * The settings object for escorted ship hull integrity bars is used at various points, so we store a cached reference to it
+             * The settings object for escorted ship hull and shield integrity bars is used at various points, so we store a cached reference to it
              * @type Object
              */
-            _escortsHullIntegrityBarSettings,
+            _escortsIntegrityBarsSettings,
             /**
              * The settings object for wingmen status craft indicators is used at various points, so we store a cached reference to it
              * @type Object
@@ -1828,26 +1823,39 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).mapping));
         _targetShieldQuickViewBar.addToScene(_battleScene);
         n = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MAX_ESCORTS_DISPLAYED);
-        if (!_escortHullIntegrityBars) {
-            _escortHullIntegrityBars = [];
-            _escortHullIntegrityBarLayouts = [];
+        if (!_escortBars) {
+            _escortBars = [];
             for (i = 0; i < n; i++) {
-                layoutDescriptor = utils.deepCopy(_escortsHullIntegrityBarSettings.layout);
+                _escortBars.push({});
+                layoutDescriptor = utils.deepCopy(_escortsIntegrityBarsSettings.layouts.hull);
                 layoutDescriptor.top += i * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT_OFFSET) * _escortsBackgroundLayout.getClipSpaceHeight() * 0.5;
-                _escortHullIntegrityBarLayouts.push(new screens.ClipSpaceLayout(layoutDescriptor));
-                _escortHullIntegrityBars.push(_addHUDElement(new HUDElement(
+                _escortBars[i].hullLayout = new screens.ClipSpaceLayout(layoutDescriptor);
+                _escortBars[i].hull = _addHUDElement(new HUDElement(
                         UI_2D_CLIP_VIEWPORT_SHADER_NAME,
-                        _escortsHullIntegrityBarSettings.texture,
-                        _escortHullIntegrityBarLayouts[i].getClipSpacePosition(),
-                        _escortHullIntegrityBarLayouts[i].getClipSpaceSize(),
-                        _escortHullIntegrityBarLayouts[i].getScaleMode(),
-                        _escortsHullIntegrityBarSettings.colors.fullIntegrity,
-                        _escortsHullIntegrityBarSettings.colors.destroyed,
-                        _escortsHullIntegrityBarSettings.mapping)));
+                        _escortsIntegrityBarsSettings.texture,
+                        _escortBars[i].hullLayout.getClipSpacePosition(),
+                        _escortBars[i].hullLayout.getClipSpaceSize(),
+                        _escortBars[i].hullLayout.getScaleMode(),
+                        _escortsIntegrityBarsSettings.colors.fullHull,
+                        _escortsIntegrityBarsSettings.colors.destroyed,
+                        _escortsIntegrityBarsSettings.mapping));
+                layoutDescriptor = utils.deepCopy(_escortsIntegrityBarsSettings.layouts.shield);
+                layoutDescriptor.top += i * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT_OFFSET) * _escortsBackgroundLayout.getClipSpaceHeight() * 0.5;
+                _escortBars[i].shieldLayout = new screens.ClipSpaceLayout(layoutDescriptor);
+                _escortBars[i].shield = _addHUDElement(new HUDElement(
+                        UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                        _escortsIntegrityBarsSettings.texture,
+                        _escortBars[i].shieldLayout.getClipSpacePosition(),
+                        _escortBars[i].shieldLayout.getClipSpaceSize(),
+                        _escortBars[i].shieldLayout.getScaleMode(),
+                        _escortsIntegrityBarsSettings.colors.shield,
+                        _escortsIntegrityBarsSettings.colors.lostShield,
+                        _escortsIntegrityBarsSettings.mapping));
             }
         }
         for (i = 0; i < n; i++) {
-            _escortHullIntegrityBars[i].addToScene(_battleScene);
+            _escortBars[i].hull.addToScene(_battleScene);
+            _escortBars[i].shield.addToScene(_battleScene);
         }
         // ---------------------------------------------------------
         // UI 2D SHADER
@@ -2774,25 +2782,34 @@ define([
                                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.away :
                                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.alive) :
                                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.destroyed);
-                            _escortHullIntegrityBars[i].setColor(_getHullIntegrityColor(ships[i].getHullIntegrity(),
-                                    _escortsHullIntegrityBarSettings.colors.fullIntegrity,
-                                    _escortsHullIntegrityBarSettings.colors.halfIntegrity,
-                                    _escortsHullIntegrityBarSettings.colors.zeroIntegrity));
-                            _escortHullIntegrityBars[i].clipX(0, ships[i].getHullIntegrity());
-                            _escortHullIntegrityBars[i].applyLayout(_escortHullIntegrityBarLayouts[i], canvas.width, canvas.height);
+                            _escortBars[i].hull.setColor(_getHullIntegrityColor(ships[i].getHullIntegrity(),
+                                    _escortsIntegrityBarsSettings.colors.fullHull,
+                                    _escortsIntegrityBarsSettings.colors.halfHull,
+                                    _escortsIntegrityBarsSettings.colors.zeroHull));
+                            _escortBars[i].hull.clipX(0, ships[i].getHullIntegrity());
+                            _escortBars[i].hull.applyLayout(_escortBars[i].hullLayout, canvas.width, canvas.height);
                             _escortsTexts[i].show();
-                            _escortHullIntegrityBars[i].show();
+                            _escortBars[i].hull.show();
+                            if (ships[i].hasShield()) {
+                                _escortBars[i].shield.clipX(0, ships[i].getShieldIntegrity());
+                                _escortBars[i].shield.applyLayout(_escortBars[i].shieldLayout, canvas.width, canvas.height);
+                                _escortBars[i].shield.show();
+                            } else {
+                                _escortBars[i].shield.hide();
+                            }
                         } else {
                             _escortsTexts[i].hide();
-                            _escortHullIntegrityBars[i].hide();
+                            _escortBars[i].hull.hide();
+                            _escortBars[i].shield.hide();
                         }
                     }
                     _escortsTextLayer.show();
                 } else {
                     _escortsBackground.hide();
                     _escortsTextLayer.hide();
-                    for (i = 0; i < _escortHullIntegrityBars.length; i++) {
-                        _escortHullIntegrityBars[i].hide();
+                    for (i = 0; i < _escortBars.length; i++) {
+                        _escortBars[i].hull.hide();
+                        _escortBars[i].shield.hide();
                     }
                 }
             } else {
@@ -2800,8 +2817,9 @@ define([
                 _objectivesTextLayer.hide();
                 _escortsBackground.hide();
                 _escortsTextLayer.hide();
-                for (i = 0; i < _escortHullIntegrityBars.length; i++) {
-                    _escortHullIntegrityBars[i].hide();
+                for (i = 0; i < _escortBars.length; i++) {
+                    _escortBars[i].hull.hide();
+                    _escortBars[i].shield.hide();
                 }
             }
             // .....................................................................................................
@@ -3392,7 +3410,7 @@ define([
                             ]);
                             _targetShieldQuickViewBar.setPosition([
                                 (0.5 + 0.5 * position2D[0]) * canvas.width,
-                                (0.5 - 0.5 * (position2D[1] + _targetHullIntegrityQuickViewBarLayout.getClipSpaceHeight() * 1.5 + _targetShieldQuickViewBarLayout.getClipSpaceHeight())) * canvas.height
+                                (0.5 - 0.5 * (position2D[1] + _targetHullIntegrityQuickViewBarLayout.getClipSpaceHeight() * 1.75 + _targetShieldQuickViewBarLayout.getClipSpaceHeight())) * canvas.height
                             ]);
                         }
                     }
@@ -3800,7 +3818,7 @@ define([
         _driftArrowMaxSpeedFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_MAX_SPEED_FACTOR);
         _targetHullIntegrityQuickViewBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_QUICK_VIEW_BAR).layout);
         _targetShieldQuickViewBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_QUICK_VIEW_BAR).layout);
-        _escortsHullIntegrityBarSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_HULL_INTEGRITY_BAR);
+        _escortsIntegrityBarsSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_INTEGRITY_BARS);
         _wingmenStatusCraftIndicatorSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_INDICATOR);
         _wingmenStatusMaxSquadMemberCount = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS).length;
         _messageTextSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT);

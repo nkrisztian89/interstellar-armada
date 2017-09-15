@@ -1305,9 +1305,9 @@ define([
                 name: "escortsText",
                 type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["alive", "away", "destroyed"]})
             },
-            ESCORTS_HULL_INTEGRITY_BAR: {
-                name: "escortsHullIntegrityBar",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["fullIntegrity", "halfIntegrity", "zeroIntegrity", "destroyed"]})
+            ESCORTS_INTEGRITY_BARS: {
+                name: "escortsIntegrityBars",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["fullHull", "halfHull", "zeroHull", "destroyed", "shield", "lostShield"], LAYOUT: ["hull", "shield"]})
             },
             ESCORTS_TEXT_OFFSET: {
                 name: "escortsTextOffset",
