@@ -504,7 +504,6 @@ define([
             if (_spacecraft.getPropulsion()) {
                 maxAcc = _spacecraft.getMaxAcceleration();
                 maxAngAcc = _spacecraft.getMaxAngularAcceleration() / Math.PI * 180;
-                result = "Spacecraft: ";
                 result += "accel.: " + Math.round(maxAcc) + " m/s², speed: " + Math.round(maxAcc * config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_FORWARD_SPEED_FACTOR)) + " m/s, ";
                 result += "ang.accel.: " + Math.round(maxAngAcc) + " °/s², turn rate: " + Math.round(maxAngAcc * config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S)) + " °/s";
             }
@@ -525,6 +524,8 @@ define([
             if (_spacecraft.hasShield()) {
                 result += (result ? ", " : "") + " shield: " + _spacecraft.getShieldCapacity();
             }
+            result += (result ? ", " : "") + "score value: " + _spacecraft.getScoreValue();
+            result = "Spacecraft: " + result;
         }
         return result;
     }

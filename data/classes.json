@@ -2687,7 +2687,8 @@
             "rechargeStartSound": {
                 "name": "shieldUp",
                 "volume": 1
-            }
+            },
+            "scoreValue": 10
         }, {
             "name": "imperialBomberMk1",
             "capacity": 10,
@@ -2698,7 +2699,8 @@
             "rechargeStartSound": {
                 "name": "shieldUp",
                 "volume": 1.2
-            }
+            },
+            "scoreValue": 20
         }, {
             "name": "imperialCorvetteMk1",
             "capacity": 125,
@@ -2709,7 +2711,8 @@
             "rechargeStartSound": {
                 "name": "shieldUp_ship",
                 "volume": 3
-            }
+            },
+            "scoreValue": 50
         }, {
             "name": "imperialFrigateMk1",
             "capacity": 500,
@@ -2720,7 +2723,8 @@
             "rechargeStartSound": {
                 "name": "shieldUp_ship",
                 "volume": 4
-            }
+            },
+            "scoreValue": 150
         }, {
             "name": "imperialCruiserMk1",
             "capacity": 2000,
@@ -2731,7 +2735,8 @@
             "rechargeStartSound": {
                 "name": "shieldUp_ship",
                 "volume": 6
-            }
+            },
+            "scoreValue": 500
         }],
     "spacecraftTypes": [{
             "name": "container",

@@ -1656,6 +1656,9 @@ define([
         if (this._propulsion) {
             this._scoreValue += this._propulsion.getScoreValue();
         }
+        if (this._shield) {
+            this._scoreValue += this._shield.getScoreValue();
+        }
     };
     /**
      * Equips a weapon of the given class on the ship.

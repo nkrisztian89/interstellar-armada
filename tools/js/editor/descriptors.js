@@ -1208,6 +1208,10 @@ define([
                 RECHARGE_START_SOUND: {
                     name: "rechargeStartSound",
                     type: SOUND_DESCRIPTOR
+                },
+                SCORE_VALUE: {
+                    name: "scoreValue",
+                    type: BaseType.NUMBER
                 }
             },
             /**

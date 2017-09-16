@@ -2383,6 +2383,11 @@ define([
          * @type Object
          */
         this._rechargeStartSound = dataJSON ? types.getVerifiedObject("ShieldClasses['" + this._name + "'].rechargeStartSound", dataJSON.rechargeStartSound, SOUND_EFFECT_3D) : null;
+        /**
+         * The amount of score points to be added to the total score value of spacecrafts that have a shield of this class equipped
+         * @type Number
+         */
+        this._scoreValue = dataJSON ? (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0) : 0;
         return true;
     };
     /**
@@ -2428,6 +2433,13 @@ define([
      */
     ShieldClass.prototype.createRechargeStartSoundClip = function (soundSource) {
         return _createSoundClip(this._rechargeStartSound, false, soundSource);
+    };
+    /**
+     * Returns the amount of score points to be added to the total score value of spacecrafts that have a shield of this class equipped
+     * @returns {Number}
+     */
+    ShieldClass.prototype.getScoreValue = function () {
+        return this._scoreValue;
     };
     // ##############################################################################
     /**

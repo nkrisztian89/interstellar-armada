@@ -2986,6 +2986,13 @@ define([
         this._state[3] = this._timeSinceRecharge / duration;
     };
     /**
+     * Returns the amount of score points to be added to the total score value of spacecrafts that have this shield equipped
+     * @returns {Number}
+     */
+    Shield.prototype.getScoreValue = function () {
+        return this._class.getScoreValue();
+    };
+    /**
      * Deletes stored references. Call when the spacecraft is destroyed.
      */
     Shield.prototype.destroy = function () {
