@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2017 Krisztián Nagy
  * @file Augments the functionality of ResourceManager to provide a customized resource manager class storing various media resources,
  * for which the respective classes are also provided. These classes are based on the classes of ManagedGL and EgomModel.
  * The provided resource manager is ready to use, can load media resource descriptions from a specified JSON file, then mark the 
@@ -1445,7 +1445,7 @@ define([
             result = this.addResource(MODEL_ARRAY_NAME, new ModelResource({
                 "name": model.getName(),
                 "model": model
-            }));
+            }), true);
         }
         return result;
     };

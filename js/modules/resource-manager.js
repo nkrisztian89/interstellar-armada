@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
+ * Copyright 2014-2015,2017 Krisztián Nagy
  * @file Provides a class that can hold and manage asynchronously loaded resources.
  * Usage:
  * - subclass GenericResource to implement a kind of resource you want to manage e.g. TextFileResource (see the class description for details)
@@ -294,13 +294,15 @@ define([
     };
     /**
      * @param {GenericResource} resource
+     * @param {Boolean} [unlisted=false] If true, the name of the resource will not be returned when asking for the list of
+     * resource names, unless explicitly asked for
      * @returns {GenericResource}
      */
-    ResourceHolder.prototype.addResource = function (resource) {
+    ResourceHolder.prototype.addResource = function (resource, unlisted) {
         var resourceName = resource.getName();
         if (this._resources[resourceName]) {
             application.showError("Attemtping to add a resource named '" + resourceName + "' that already exists! Data will be overwritten.");
-        } else {
+        } else if (!unlisted) {
             this._resourceNames.push(resourceName);
         }
         this._resources[resourceName] = resource;
@@ -349,10 +351,11 @@ define([
         }
     };
     /**
+     * @param {Boolean} [includeUnlisted=false] 
      * @returns {String[]}
      */
-    ResourceHolder.prototype.getResourceNames = function () {
-        return this._resourceNames;
+    ResourceHolder.prototype.getResourceNames = function (includeUnlisted) {
+        return includeUnlisted ? Object.keys(this._resources) : this._resourceNames;
     };
     /**
      * Changes the key at which a resource is stored (does not alter the configuration of the resource), maintaining its position in the
@@ -465,11 +468,13 @@ define([
     /**
      * @param {String} resourceType
      * @param {GenericResource} resource
+     * @param {Boolean} [unlisted=false] If true, the name of the resource will not be returned when asking for the list of
+     * resource names, unless explicitly asked for
      * @returns {GenericResource}
      */
-    ResourceManager.prototype.addResource = function (resourceType, resource) {
+    ResourceManager.prototype.addResource = function (resourceType, resource, unlisted) {
         this._resourceHolders[resourceType] = this._resourceHolders[resourceType] || new ResourceHolder(resourceType);
-        return this._resourceHolders[resourceType].addResource(resource);
+        return this._resourceHolders[resourceType].addResource(resource, unlisted);
     };
     /**
      * Similar to addResource, but creates the resource itself using the passed JSON to initialize it
@@ -538,13 +543,13 @@ define([
         return resource;
     };
     /**
-     * 
+     * @param {Boolean} [includeUnlisted=false] 
      */
-    ResourceManager.prototype.requestAllResources = function () {
+    ResourceManager.prototype.requestAllResources = function (includeUnlisted) {
         var resourceType, resourceNames, i;
         for (resourceType in this._resourceHolders) {
             if (this._resourceHolders.hasOwnProperty(resourceType)) {
-                resourceNames = this._resourceHolders[resourceType].getResourceNames();
+                resourceNames = this._resourceHolders[resourceType].getResourceNames(includeUnlisted);
                 for (i = 0; i < resourceNames.length; i++) {
                     this.getResource(resourceType, resourceNames[i]);
                 }
@@ -664,10 +669,11 @@ define([
      * Executes the given callback function for all the stored resources of the given type.
      * @param {String} resourceType 
      * @param {ResourceManager~executeCallback} callback
+     * @param {Boolean} [includeUnlisted=false] 
      */
-    ResourceManager.prototype.executeForAllResourcesOfType = function (resourceType, callback) {
+    ResourceManager.prototype.executeForAllResourcesOfType = function (resourceType, callback, includeUnlisted) {
         var i, resourceNames;
-        resourceNames = this._resourceHolders[resourceType].getResourceNames();
+        resourceNames = this._resourceHolders[resourceType].getResourceNames(includeUnlisted);
         for (i = 0; i < resourceNames.length; i++) {
             callback(this._resourceHolders[resourceType].getResource(resourceNames[i]), resourceType);
         }
@@ -675,11 +681,12 @@ define([
     /**
      * Executes the given callback function for all the stored resources (of all types).
      * @param {ResourceManager~executeCallback} callback
+     * @param {Boolean} [includeUnlisted=false] 
      */
-    ResourceManager.prototype.executeForAllResources = function (callback) {
+    ResourceManager.prototype.executeForAllResources = function (callback, includeUnlisted) {
         var resourceTypes = Object.keys(this._resourceHolders), i;
         for (i = 0; i < resourceTypes.length; i++) {
-            this.executeForAllResourcesOfType(resourceTypes[i], callback);
+            this.executeForAllResourcesOfType(resourceTypes[i], callback, includeUnlisted);
         }
     };
     return {
