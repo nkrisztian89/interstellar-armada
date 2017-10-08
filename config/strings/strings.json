@@ -50,7 +50,7 @@
     "missions": {
         "backButton": "Back to menu",
         "title": "Missions",
-        "difficulty": "Difficulty:",
+        "difficulty": "Select difficulty:",
         "launchButton": "Launch mission",
         "demoButton": "Launch demo",
         "notCompleted": "Not yet completed",

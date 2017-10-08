@@ -50,7 +50,7 @@
     "missions": {
         "backButton": "Vissza a menübe",
         "title": "Küldetések",
-        "difficulty": "Nehézség:",
+        "difficulty": "Választott nehézség:",
         "launchButton": "Indítás",
         "demoButton": "Demo",
         "notCompleted": "Nem teljesített",
