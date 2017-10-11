@@ -64,7 +64,7 @@
         "noDescription": "No mission description available.",
         "missionObjectivesTitle": "Objectives:",
         "playerSpacecraftTitle": "Spacecraft:",
-        "playerSpacecraftData": "Class: {class}<br/>Firepower: {firepower}",
+        "playerSpacecraftData": "Class: {class}<br/>Firepower: {firepower}<br/>Shield: {shield}",
         "objectiveSubjects": {
             "squad": "{ids} squad",
             "squads": "{ids} squads",

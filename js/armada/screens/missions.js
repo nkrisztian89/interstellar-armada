@@ -233,7 +233,8 @@ define([
                     if (_spacecraft) {
                         this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
                             class: _spacecraft.getClass().getDisplayName(),
-                            firepower: _spacecraft.getFirepower().toFixed(1)
+                            firepower: _spacecraft.getFirepower().toFixed(1),
+                            shield: _spacecraft.hasShield() ? _spacecraft.getShieldCapacity() : "-"
                         });
                     } else {
                         this._playerSpacecraftData.setContent("-");

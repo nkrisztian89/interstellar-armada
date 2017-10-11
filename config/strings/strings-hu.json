@@ -64,7 +64,7 @@
         "noDescription": "A küldetéshez nem érhető el leírás.",
         "missionObjectivesTitle": "Feladatok:",
         "playerSpacecraftTitle": "Űrhajó:",
-        "playerSpacecraftData": "Osztály: {class}<br/>Tűzerő: {firepower}",
+        "playerSpacecraftData": "Osztály: {class}<br/>Tűzerő: {firepower}<br/>Pajzs: {shield}",
         "objectiveSubjects": {
             "squad": "{ids} csapat",
             "squads": "{ids} csapat",
