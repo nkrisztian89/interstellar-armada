@@ -2,8 +2,7 @@
     "config": {
         "sourceFolder": "mission"
     },
-    "missions": [
-        {
+    "missions": [{
             "source": "training/targetPracticeBoxes.json"
         }, {
             "source": "training/targetPracticeDrones.json"
@@ -16,25 +15,21 @@
         }, {
             "source": "1v1.json"
         }, {
-            "source": "3v3.json"
+            "source": "destroyCorvette.json"
         }, {
-            "source": "bombers.json"
-        }, {
-            "source": "mixed.json"
+            "source": "destroyFrigate.json"
         }, {
             "source": "defendCorvette.json"
         }, {
-            "source": "1v6.json"
+            "source": "defendFrigate.json"
         }, {
             "source": "corvette.json"
         }, {
-            "source": "defendFrigate.json"
-        }, {
-            "source": "patrolVsPatrol.json"
-        }, {
-            "source": "strikeForceVsStrikeForce.json"
+            "source": "1v6.json"
         }, {
             "source": "defendFrigates.json"
+        }, {
+            "source": "battle.json"
         }, {
             "source": "tests/test.json"
         }, {
@@ -58,7 +53,20 @@
         }, {
             "source": "tests/lineup.json",
             "test": true
-        }
-
-    ]
+        }, {
+            "source": "test/3v3.json",
+            "test": true
+        }, {
+            "source": "tests/bombers.json",
+            "test": true
+        }, {
+            "source": "tests/mixed.json",
+            "test": true
+        }, {
+            "source": "tests/patrolVsPatrol.json",
+            "test": true
+        }, {
+            "source": "tests/strikeForceVsStrikeForce.json",
+            "test": true
+        }]
 }

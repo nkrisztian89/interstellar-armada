@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.3-dev:627 (2017.08.01.)",
-        "creationTime": "Tue Aug 01 2017 02:37:38 GMT+0200 (CEST)"
+        "version": "0.4.3-dev:651 (2017.10.16.)",
+        "creationTime": "Mon Oct 16 2017 19:28:36 GMT+0200 (CEST)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -1918,7 +1918,7 @@
                 }],
             "soundEffect": {
                 "name": "shieldHit",
-                "volume": 1.0
+                "volume": 1
             }
         }, {
             "name": "mediumShieldHitExplosion",
@@ -2085,7 +2085,7 @@
             "texture": "plasma",
             "size": 2.5,
             "mass": 2,
-            "duration": 4000,
+            "duration": 3000,
             "intersectionPositions": [0],
             "width": 0.3,
             "muzzleFlash": {
@@ -2186,6 +2186,7 @@
         }],
     "weaponClasses": [{
             "name": "fixedTrainingGun",
+            "fullName": "Fixed training gun",
             "shader": "ship",
             "model": "trainingGun",
             "texture": "libra",
@@ -2205,6 +2206,7 @@
             "scoreValue": 5
         }, {
             "name": "trainingGun",
+            "fullName": "Training gun",
             "shader": "ship",
             "model": "trainingGun",
             "texture": "libra",
@@ -2241,6 +2243,7 @@
             "scoreValue": 10
         }, {
             "name": "plasmaGun",
+            "fullName": "Plasma gun",
             "shader": "ship",
             "model": "plasma",
             "texture": "falcon",
@@ -2249,7 +2252,44 @@
             "cooldown": 250,
             "barrels": [{
                     "projectile": "plasma",
-                    "projectileVelocity": 650,
+                    "projectileVelocity": 800,
+                    "position": [0, 10, 0]
+                }],
+            "attachmentPoint": [0, -4, 1.2],
+            "fireSound": {
+                "name": "plasmaShot",
+                "volume": 0.4
+            },
+            "scoreValue": 20,
+            "rotationStyle": "yawPitch",
+            "basePoint": [0, -4, 0],
+            "rotators": [{
+                    "axis": [0, 0, 1],
+                    "center": [0, -4, 0],
+                    "range": [-1, 1],
+                    "defaultAngle": 0,
+                    "rotationRate": 1,
+                    "transformGroupIndex": 0
+                }, {
+                    "axis": [1, 0, 0],
+                    "center": [0, -4, 0],
+                    "range": [0, 0],
+                    "defaultAngle": 0,
+                    "rotationRate": 1,
+                    "transformGroupIndex": 0
+                }]
+        }, {
+            "name": "fixedPlasmaGun",
+            "fullName": "Fixed plasma gun",
+            "shader": "ship",
+            "model": "plasma",
+            "texture": "falcon",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
+            "grade": 1,
+            "cooldown": 250,
+            "barrels": [{
+                    "projectile": "plasma",
+                    "projectileVelocity": 800,
                     "position": [0, 10, 0]
                 }],
             "attachmentPoint": [0, -4, 1.2],
@@ -2260,6 +2300,7 @@
             "scoreValue": 20
         }, {
             "name": "pirateGun",
+            "fullName": "Pirate plasma gun",
             "shader": "ship",
             "model": "pirateGun",
             "texture": "libra",
@@ -2279,6 +2320,7 @@
             "scoreValue": 15
         }, {
             "name": "heavyPlasmaGun",
+            "fullName": "Heavy plasma gun",
             "shader": "ship",
             "model": "heavyPlasmaGun",
             "texture": "libra",
@@ -2298,6 +2340,7 @@
             "scoreValue": 30
         }, {
             "name": "smallPlasmaTurret",
+            "fullName": "Plasma turret",
             "shader": "ship",
             "model": "turret",
             "texture": "falcon",
@@ -2306,19 +2349,59 @@
             "cooldown": 250,
             "barrels": [{
                     "projectile": "plasma",
-                    "projectileVelocity": 750,
+                    "projectileVelocity": 900,
                     "position": [2, 25, 10]
                 }, {
                     "projectile": "plasma",
-                    "projectileVelocity": 750,
+                    "projectileVelocity": 900,
                     "position": [-2, 25, 10]
                 }, {
                     "projectile": "plasma",
-                    "projectileVelocity": 750,
+                    "projectileVelocity": 900,
                     "position": [2, 25, 14]
                 }, {
                     "projectile": "plasma",
-                    "projectileVelocity": 750,
+                    "projectileVelocity": 900,
+                    "position": [-2, 25, 14]
+                }],
+            "attachmentPoint": [0, 0, 0],
+            "rotationStyle": "yawPitch",
+            "basePoint": [0, -5, 12],
+            "rotators": [{
+                    "axis": [0, 0, 1],
+                    "center": [0, 0, 0],
+                    "defaultAngle": 0,
+                    "rotationRate": 90,
+                    "transformGroupIndex": 0
+                }, {
+                    "axis": [1, 0, 0],
+                    "center": [0, -5, 12],
+                    "range": [-90, 3],
+                    "defaultAngle": -10,
+                    "rotationRate": 45,
+                    "transformGroupIndex": 1
+                }],
+            "fireSound": {
+                "name": "plasmaShot",
+                "volume": 1
+            },
+            "scoreValue": 50
+        }, {
+            "name": "damagedSmallPlasmaTurret",
+            "fullName": "Damaged plasma turret",
+            "shader": "ship",
+            "model": "turret",
+            "texture": "falcon",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
+            "grade": 1,
+            "cooldown": 250,
+            "barrels": [{
+                    "projectile": "plasma",
+                    "projectileVelocity": 900,
+                    "position": [2, 25, 10]
+                }, {
+                    "projectile": "plasma",
+                    "projectileVelocity": 900,
                     "position": [-2, 25, 14]
                 }],
             "attachmentPoint": [0, 0, 0],
@@ -2345,6 +2428,7 @@
             "scoreValue": 50
         }, {
             "name": "smallProtonCannon",
+            "fullName": "Proton cannon",
             "shader": "ship",
             "model": "cannon",
             "texture": "falcon",
@@ -2381,6 +2465,7 @@
             "scoreValue": 60
         }, {
             "name": "largeIonCannon",
+            "fullName": "Ion cannon",
             "shader": "ship",
             "model": "ion_cannon",
             "texture": "libra",
@@ -2417,12 +2502,13 @@
         }],
     "propulsionClasses": [{
             "name": "imperialDrone",
+            "fullName": "Drone propulsion",
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
             "referenceMass": 2000,
-            "thrust": 20,
+            "thrust": 30,
             "angularThrust": 150,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
@@ -2433,13 +2519,14 @@
             "scoreValue": 5
         }, {
             "name": "imperialFighterMk1",
+            "fullName": "Standard fighter propulsion",
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
             "referenceMass": 10000,
-            "thrust": 50,
-            "angularThrust": 270,
+            "thrust": 60,
+            "angularThrust": 375,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
@@ -2448,13 +2535,48 @@
             },
             "scoreValue": 10
         }, {
+            "name": "imperialFighterMk2",
+            "fullName": "Enhanced fighter propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "grade": 1,
+            "referenceMass": 10000,
+            "thrust": 70,
+            "angularThrust": 375,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.2
+            },
+            "scoreValue": 15
+        }, {
+            "name": "imperialFighterMk3",
+            "fullName": "Type-III fighter propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "grade": 1,
+            "referenceMass": 10000,
+            "thrust": 75,
+            "angularThrust": 400,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.2
+            },
+            "scoreValue": 20
+        }, {
             "name": "imperialBomberMk1",
+            "fullName": "Standard bomber propulsion",
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
             "referenceMass": 35000,
-            "thrust": 35,
+            "thrust": 45,
             "angularThrust": 225,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
@@ -2464,13 +2586,48 @@
             },
             "scoreValue": 10
         }, {
+            "name": "imperialBomberMk2",
+            "fullName": "Enhanced bomber propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "grade": 1,
+            "referenceMass": 35000,
+            "thrust": 50,
+            "angularThrust": 250,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.4
+            },
+            "scoreValue": 15
+        }, {
+            "name": "imperialBomberMk3",
+            "fullName": "Type-III/B bomber propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "grade": 1,
+            "referenceMass": 35000,
+            "thrust": 55,
+            "angularThrust": 275,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.4
+            },
+            "scoreValue": 20
+        }, {
             "name": "imperialCorvetteMk1",
+            "fullName": "Standard corvette propulsion",
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
             "referenceMass": 9000000,
-            "thrust": 15,
+            "thrust": 25,
             "angularThrust": 120,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
@@ -2481,13 +2638,14 @@
             "scoreValue": 20
         }, {
             "name": "imperialFrigateMk1",
+            "fullName": "Standard frigate propulsion",
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
             "referenceMass": 20000000,
-            "thrust": 10,
-            "angularThrust": 90,
+            "thrust": 15,
+            "angularThrust": 60,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
@@ -2497,12 +2655,13 @@
             "scoreValue": 20
         }, {
             "name": "imperialCruiserMk1",
+            "fullName": "Standard cruiser propulsion",
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
             "referenceMass": 250000000,
-            "thrust": 8,
+            "thrust": 12,
             "angularThrust": 24,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
@@ -2513,18 +2672,70 @@
             "scoreValue": 50
         }, {
             "name": "pirateFighterMk1",
+            "fullName": "Pirate fighter propulsion",
             "shader": "particle",
             "texture": "flare",
             "color": [1, 0.38823529411764707, 0.38823529411764707, 1],
             "grade": 1,
             "referenceMass": 25000,
-            "thrust": 30,
-            "angularThrust": 180,
+            "thrust": 50,
+            "angularThrust": 225,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
                 "name": "thruster",
                 "volume": 1.2
+            },
+            "scoreValue": 10
+        }, {
+            "name": "pirateFighterMk2",
+            "fullName": "Advanced pirate fighter propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [1, 0.38823529411764707, 0.38823529411764707, 1],
+            "grade": 1,
+            "referenceMass": 25000,
+            "thrust": 60,
+            "angularThrust": 325,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.2
+            },
+            "scoreValue": 10
+        }, {
+            "name": "rebelFighterMk1",
+            "fullName": "Rebel fighter propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "grade": 1,
+            "referenceMass": 10000,
+            "thrust": 50,
+            "angularThrust": 300,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.2
+            },
+            "scoreValue": 5
+        }, {
+            "name": "rebelBomberMk1",
+            "fullName": "Rebel bomber propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "grade": 1,
+            "referenceMass": 35000,
+            "thrust": 40,
+            "angularThrust": 200,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.4
             },
             "scoreValue": 10
         }],
@@ -2679,10 +2890,11 @@
         }],
     "shieldClasses": [{
             "name": "imperialFighterMk1",
+            "fullName": "Light fighter shield",
             "capacity": 5,
             "rechargeDelay": 1000,
             "rechargeRate": 1,
-            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeColor": [0.5, 0.85, 1],
             "rechargeAnimationDuration": 1000,
             "rechargeStartSound": {
                 "name": "shieldUp",
@@ -2690,11 +2902,38 @@
             },
             "scoreValue": 10
         }, {
+            "name": "imperialFighterMk2",
+            "fullName": "Medium fighter shield",
+            "capacity": 6,
+            "rechargeDelay": 1000,
+            "rechargeRate": 1.5,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1
+            },
+            "scoreValue": 15
+        }, {
+            "name": "imperialFighterMk3",
+            "fullName": "Heavy fighter shield",
+            "capacity": 8,
+            "rechargeDelay": 750,
+            "rechargeRate": 2,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1
+            },
+            "scoreValue": 25
+        }, {
             "name": "imperialBomberMk1",
+            "fullName": "Light bomber shield",
             "capacity": 10,
             "rechargeDelay": 1500,
             "rechargeRate": 1,
-            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeColor": [0.5, 0.85, 1],
             "rechargeAnimationDuration": 1000,
             "rechargeStartSound": {
                 "name": "shieldUp",
@@ -2702,11 +2941,25 @@
             },
             "scoreValue": 20
         }, {
+            "name": "imperialBomberMk2",
+            "fullName": "Medium bomber shield",
+            "capacity": 15,
+            "rechargeDelay": 1500,
+            "rechargeRate": 2,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1.2
+            },
+            "scoreValue": 30
+        }, {
             "name": "imperialCorvetteMk1",
+            "fullName": "Standard corvette shield",
             "capacity": 125,
             "rechargeDelay": 5000,
             "rechargeRate": 5,
-            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeColor": [0.5, 0.85, 1],
             "rechargeAnimationDuration": 2500,
             "rechargeStartSound": {
                 "name": "shieldUp_ship",
@@ -2715,10 +2968,11 @@
             "scoreValue": 50
         }, {
             "name": "imperialFrigateMk1",
+            "fullName": "Standard frigate shield",
             "capacity": 500,
             "rechargeDelay": 10000,
             "rechargeRate": 20,
-            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeColor": [0.5, 0.85, 1],
             "rechargeAnimationDuration": 2500,
             "rechargeStartSound": {
                 "name": "shieldUp_ship",
@@ -2727,16 +2981,69 @@
             "scoreValue": 150
         }, {
             "name": "imperialCruiserMk1",
+            "fullName": "Standard cruiser shield",
             "capacity": 2000,
             "rechargeDelay": 20000,
             "rechargeRate": 100,
-            "rechargeColor": [0.5, 0.85, 1.0],
+            "rechargeColor": [0.5, 0.85, 1],
             "rechargeAnimationDuration": 3000,
             "rechargeStartSound": {
                 "name": "shieldUp_ship",
                 "volume": 6
             },
             "scoreValue": 500
+        }, {
+            "name": "pirateFighterMk1",
+            "fullName": "Pirate fighter shield",
+            "capacity": 6,
+            "rechargeDelay": 1200,
+            "rechargeRate": 1,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1
+            },
+            "scoreValue": 10
+        }, {
+            "name": "rebelBomberMk1",
+            "fullName": "Rebel bomber shield",
+            "capacity": 6,
+            "rechargeDelay": 2500,
+            "rechargeRate": 1,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1.2
+            },
+            "scoreValue": 15
+        }, {
+            "name": "rebelCorvetteMk1",
+            "fullName": "Rebel corvette shield",
+            "capacity": 75,
+            "rechargeDelay": 5000,
+            "rechargeRate": 3,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 2500,
+            "rechargeStartSound": {
+                "name": "shieldUp_ship",
+                "volume": 3
+            },
+            "scoreValue": 30
+        }, {
+            "name": "rebelFrigateMk1",
+            "fullName": "Rebel frigate shield",
+            "capacity": 300,
+            "rechargeDelay": 10000,
+            "rechargeRate": 12,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 2500,
+            "rechargeStartSound": {
+                "name": "shieldUp_ship",
+                "volume": 4
+            },
+            "scoreValue": 110
         }],
     "spacecraftTypes": [{
             "name": "container",
@@ -2867,6 +3174,7 @@
                     "name": "default",
                     "weapons": []
                 }],
+            "defaultEquipmentProfileName": "default",
             "explosion": "containerExplosion",
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [],
@@ -3240,7 +3548,7 @@
                     "distanceRange": [25, 80]
                 }],
             "equipmentProfiles": [{
-                    "name": "default",
+                    "name": "player-tier1",
                     "weapons": [{
                             "class": "plasmaGun"
                         }, {
@@ -3256,7 +3564,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }, {
-                    "name": "full",
+                    "name": "player-tier2",
                     "weapons": [{
                             "class": "plasmaGun"
                         }, {
@@ -3267,13 +3575,33 @@
                             "class": "plasmaGun"
                         }],
                     "propulsion": {
-                        "class": "imperialFighterMk1"
+                        "class": "imperialFighterMk2"
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
                     },
                     "shield": {
+                        "class": "imperialFighterMk2"
+                    }
+                }, {
+                    "name": "player-tier3",
+                    "weapons": [{
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialFighterMk3"
+                    },
+                    "jumpEngine": {
                         "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialFighterMk3"
                     }
                 }, {
                     "name": "training",
@@ -3289,24 +3617,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }, {
-                    "name": "trainingFull",
-                    "weapons": [{
-                            "class": "trainingGun"
-                        }, {
-                            "class": "trainingGun"
-                        }, {
-                            "class": "trainingGun"
-                        }, {
-                            "class": "trainingGun"
-                        }],
-                    "propulsion": {
-                        "class": "imperialFighterMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    }
-                }, {
-                    "name": "fixedTraining",
+                    "name": "training-fixed",
                     "weapons": [{
                             "class": "fixedTrainingGun"
                         }, {
@@ -3319,7 +3630,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }, {
-                    "name": "fixedTrainingFull",
+                    "name": "training-full-fixed",
                     "weapons": [{
                             "class": "fixedTrainingGun"
                         }, {
@@ -3331,11 +3642,61 @@
                         }],
                     "propulsion": {
                         "class": "imperialFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    }
+                }, {
+                    "name": "imperial-tier1",
+                    "weapons": [{
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialFighterMk1"
+                    }
+                }, {
+                    "name": "imperial-tier2",
+                    "weapons": [{
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialFighterMk2"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialFighterMk2"
+                    }
+                }, {
+                    "name": "rebel",
+                    "weapons": [{
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }],
+                    "propulsion": {
+                        "class": "rebelFighterMk1"
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
                     }
                 }],
+            "defaultEquipmentProfileName": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
@@ -4246,7 +4607,7 @@
                     "distanceRange": [33, 90]
                 }],
             "equipmentProfiles": [{
-                    "name": "default",
+                    "name": "player-tier1",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
                         }, {
@@ -4262,23 +4623,23 @@
                         "class": "imperialBomberMk1"
                     }
                 }, {
-                    "name": "full",
+                    "name": "player-tier2",
                     "weapons": [{
-                            "class": "plasmaGun"
+                            "class": "heavyPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "heavyPlasmaGun"
                         }],
                     "propulsion": {
-                        "class": "imperialBomberMk1"
+                        "class": "imperialBomberMk2"
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
                     },
                     "shield": {
-                        "class": "imperialBomberMk1"
+                        "class": "imperialBomberMk2"
                     }
                 }, {
-                    "name": "heavy",
+                    "name": "imperial-tier1",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
                         }, {
@@ -4294,8 +4655,10 @@
                         "class": "imperialBomberMk1"
                     }
                 }, {
-                    "name": "half",
+                    "name": "imperial-light",
                     "weapons": [{
+                            "class": "plasmaGun"
+                        }, {
                             "class": "plasmaGun"
                         }],
                     "propulsion": {
@@ -4303,21 +4666,41 @@
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialBomberMk1"
                     }
                 }, {
-                    "name": "training",
+                    "name": "rebel-heavy",
                     "weapons": [{
-                            "class": "trainingGun"
+                            "class": "heavyPlasmaGun"
                         }, {
-                            "class": "trainingGun"
+                            "class": "heavyPlasmaGun"
                         }],
                     "propulsion": {
-                        "class": "imperialBomberMk1"
+                        "class": "rebelBomberMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "rebelBomberMk1"
+                    }
+                }, {
+                    "name": "rebel-light",
+                    "weapons": [{
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }],
+                    "propulsion": {
+                        "class": "rebelBomberMk1"
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
                     }
                 }],
+            "defaultEquipmentProfileName": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
@@ -4611,6 +4994,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }],
+            "defaultEquipmentProfileName": "default",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
@@ -5032,7 +5416,7 @@
                     "distanceRange": [90, 240]
                 }],
             "equipmentProfiles": [{
-                    "name": "default",
+                    "name": "imperial-tier1",
                     "weapons": [{
                             "class": "smallPlasmaTurret"
                         }, {
@@ -5048,11 +5432,9 @@
                         "class": "imperialCorvetteMk1"
                     }
                 }, {
-                    "name": "full",
+                    "name": "rebel",
                     "weapons": [{
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
+                            "class": "damagedSmallPlasmaTurret"
                         }],
                     "propulsion": {
                         "class": "imperialCorvetteMk1"
@@ -5061,9 +5443,10 @@
                         "class": "imperialSmallShipMk1"
                     },
                     "shield": {
-                        "class": "imperialCorvetteMk1"
+                        "class": "rebelCorvetteMk1"
                     }
                 }],
+            "defaultEquipmentProfileName": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.75
@@ -5585,7 +5968,7 @@
                     "distanceRange": [150, 320]
                 }],
             "equipmentProfiles": [{
-                    "name": "default",
+                    "name": "imperial-half",
                     "weapons": [{
                             "class": "smallProtonCannon"
                         }, {
@@ -5601,7 +5984,7 @@
                         "class": "imperialFrigateMk1"
                     }
                 }, {
-                    "name": "full",
+                    "name": "imperial-tier1",
                     "weapons": [{
                             "class": "smallProtonCannon"
                         }, {
@@ -5620,7 +6003,24 @@
                     "shield": {
                         "class": "imperialFrigateMk1"
                     }
+                }, {
+                    "name": "rebel",
+                    "weapons": [{
+                            "class": "smallProtonCannon"
+                        }, {
+                            "class": "smallProtonCannon"
+                        }],
+                    "propulsion": {
+                        "class": "imperialFrigateMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialSmallShipMk1"
+                    },
+                    "shield": {
+                        "class": "rebelFrigateMk1"
+                    }
                 }],
+            "defaultEquipmentProfileName": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.75
@@ -6254,55 +6654,7 @@
                     "distanceRange": [700, 1300]
                 }],
             "equipmentProfiles": [{
-                    "name": "default",
-                    "weapons": [{
-                            "class": "largeIonCannon"
-                        }, {
-                            "class": "largeIonCannon"
-                        }, {
-                            "class": "largeIonCannon"
-                        }, {
-                            "class": "largeIonCannon"
-                        }, {
-                            "class": "largeIonCannon"
-                        }, {
-                            "class": "largeIonCannon"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }, {
-                            "class": "smallPlasmaTurret"
-                        }],
-                    "propulsion": {
-                        "class": "imperialCruiserMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialLargeShipMk1"
-                    },
-                    "shield": {
-                        "class": "imperialCruiserMk1"
-                    }
-                }, {
-                    "name": "full",
+                    "name": "imperial-tier1",
                     "weapons": [{
                             "class": "largeIonCannon"
                         }, {
@@ -6350,6 +6702,7 @@
                         "class": "imperialCruiserMk1"
                     }
                 }],
+            "defaultEquipmentProfileName": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 1.5
@@ -6673,7 +7026,7 @@
                     "maxGrade": 1
                 }],
             "equipmentProfiles": [{
-                    "name": "default",
+                    "name": "pirate-full",
                     "weapons": [{
                             "class": "pirateGun"
                         }, {
@@ -6688,7 +7041,7 @@
                         "class": "pirateFighterMk1"
                     }
                 }, {
-                    "name": "medium",
+                    "name": "pirate-medium",
                     "weapons": [{
                             "class": "pirateGun",
                             "slotIndex": 1
@@ -6703,7 +7056,7 @@
                         "class": "pirateFighterMk1"
                     }
                 }, {
-                    "name": "weak",
+                    "name": "pirate-weak",
                     "weapons": [{
                             "class": "pirateGun"
                         }],
@@ -6711,6 +7064,24 @@
                         "class": "pirateFighterMk1"
                     },
                     "jumpEngine": {
+                        "class": "pirateFighterMk1"
+                    }
+                }, {
+                    "name": "pirate-ruby-blade",
+                    "weapons": [{
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }],
+                    "propulsion": {
+                        "class": "pirateFighterMk2"
+                    },
+                    "jumpEngine": {
+                        "class": "pirateFighterMk1"
+                    },
+                    "shield": {
                         "class": "pirateFighterMk1"
                     }
                 }, {
@@ -6729,6 +7100,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }],
+            "defaultEquipmentProfileName": "pirate-full",
             "thrusterSlots": [{
                     "group": 1,
                     "uses": ["yawRight"],
@@ -6964,6 +7336,6 @@
             "hitpoints": 50,
             "texture": "ruby_blade",
             "scoreValue": 100,
-            "defaultLuminosityFactors": [[0, 1], [18, 1]] 
+            "defaultLuminosityFactors": [[0, 1], [18, 1]]
         }]
 }

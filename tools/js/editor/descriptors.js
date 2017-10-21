@@ -991,6 +991,10 @@ define([
                     name: "name",
                     type: BaseType.STRING
                 },
+                FULL_NAME: {
+                    name: "fullName",
+                    type: BaseType.STRING
+                },
                 SHADER: {
                     name: "shader",
                     type: SHADER_REFERENCE
@@ -1025,15 +1029,18 @@ define([
                 },
                 ROTATION_STYLE: {
                     name: "rotationStyle",
-                    type: WEAPON_ROTATION_STYLE
+                    type: WEAPON_ROTATION_STYLE,
+                    defaultValue: classes.WeaponRotationStyle.NONE
                 },
                 BASE_POINT: {
                     name: "basePoint",
-                    type: BaseType.VECTOR3
+                    type: BaseType.VECTOR3,
+                    optional: true
                 },
                 ROTATORS: {
                     name: "rotators",
-                    type: _createTypedArrayType(WEAPON_ROTATOR)
+                    type: _createTypedArrayType(WEAPON_ROTATOR),
+                    optional: true
                 },
                 FIRE_SOUND: {
                     name: "fireSound",
@@ -1051,6 +1058,10 @@ define([
             PROPULSION_CLASS = {
                 NAME: {
                     name: "name",
+                    type: BaseType.STRING
+                },
+                FULL_NAME: {
+                    name: "fullName",
                     type: BaseType.STRING
                 },
                 SHADER: {
@@ -1183,6 +1194,10 @@ define([
             SHIELD_CLASS = {
                 NAME: {
                     name: "name",
+                    type: BaseType.STRING
+                },
+                FULL_NAME: {
+                    name: "fullName",
                     type: BaseType.STRING
                 },
                 CAPACITY: {
@@ -1837,6 +1852,11 @@ define([
                 EQUIPMENT_PROFILES: {
                     name: "equipmentProfiles",
                     type: _createTypedArrayType(EQUIPMENT_PROFILE),
+                    optional: true
+                },
+                DEFAULT_EQUIPMENT_PROFILE_NAME: {
+                    name: "defaultEquipmentProfileName",
+                    type: BaseType.STRING, // should be an enum, taking the values from the existing equipment profile names
                     optional: true
                 },
                 HUM_SOUND: {

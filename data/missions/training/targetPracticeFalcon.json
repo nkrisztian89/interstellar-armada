@@ -1,5 +1,5 @@
 {
-    "description": "Use what you have learned in the target practice missions, this time against interceptors that are of the same class as you. You are now equipped with proper weapons, which are much more powerful, but do not automatically track targets, so you can improve on your aiming. Your enemies are equipped with training weapons.",
+    "description": "Use what you have learned in the target practice missions, this time against interceptors that are of the same class as you. You are now equipped with proper weapons, which are much more powerful, but do not automatically track targets in such a large area, so you can improve on your aiming. Your enemies are equipped with training weapons.",
     "environment": "corice",
     "combatTheme": "combat",
     "tips": [
@@ -21,27 +21,21 @@
             "color": [1, 1, 0, 1]
         }
     ],
-    "views": [
-        {
+    "views": [{
             "name": "free",
             "movable": true,
             "turnable": true,
             "position": [0, 2350, 20],
             "rotations": ["x-75"]
-        }
-    ],
+        }],
     "events": [{
-            "name": "secondWaveStart",
             "trigger": {
                 "conditions": [{
                         "type": "destroyed",
                         "subjects": {
                             "spacecrafts": ["theta 1"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 1500
             },
@@ -60,25 +54,9 @@
                             "rotations": ["z-135"]
                         }
                     }
-                }
-            ]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "timeElapsed",
-                        "params": {
-                            "time": 1000,
-                            "start": "secondWaveStart",
-                            "satisfiedWhen": "once"
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true
-            },
-            "actions": [{
+                }, {
                     "type": "command",
+                    "delay": 1000,
                     "subjects": {
                         "spacecrafts": ["theta 3"]
                     },
@@ -92,8 +70,7 @@
                             "rotations": ["z+135"]
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -105,10 +82,7 @@
                             "count": 2,
                             "relation": "below"
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 1500
             },
@@ -126,50 +100,43 @@
                             "distance": 2000
                         }
                     }
-                }
-            ]
-        }
-    ],
-    "spacecrafts": [
-        {
+                }]
+        }],
+    "spacecrafts": [{
             "team": "empire",
             "class": "falcon",
             "name": "Rookie",
             "piloted": true,
-            "position": [0, 0, 0]
-        },
-        {
+            "position": [0, 0, 0],
+            "equipment": "player-tier1"
+        }, {
             "team": "practiceTargets",
             "class": "falcon",
             "squad": "theta 1",
             "ai": "fighter",
             "position": [0, 2400, 0],
             "rotations": ["z+180"],
-            "equipment": "fixedTraining"
-        },
-        {
+            "equipment": "training-fixed"
+        }, {
             "team": "practiceTargets",
             "class": "falcon",
             "squad": "theta 2",
             "ai": "fighter",
             "away": true,
-            "equipment": "fixedTraining"
-        },
-        {
+            "equipment": "training-fixed"
+        }, {
             "team": "practiceTargets",
             "class": "falcon",
             "squad": "theta 3",
             "ai": "fighter",
             "away": true,
-            "equipment": "fixedTraining"
-        },
-        {
+            "equipment": "training-fixed"
+        }, {
             "team": "practiceTargets",
             "class": "falcon",
             "squad": "omega 1",
             "ai": "fighter",
             "away": true,
-            "equipment": "fixedTrainingFull"
-        }
-    ]
+            "equipment": "training-full-fixed"
+        }]
 }

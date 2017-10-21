@@ -1,8 +1,7 @@
 {
     "description": "A sandbox test mission containing most of the spacecraft classes in the game, some arranged randomly. The ships sit in one place, but in demo mode, the mission is turned into a huge free-for-all battle, that serves as the stress-test for the game during development.",
     "environment": "cathagan",
-    "views": [
-        {
+    "views": [{
             "name": "free",
             "movable": true,
             "turnable": true,
@@ -38,8 +37,7 @@
             "position": [1000, -2000, 300],
             "distanceRange": [500, 5000],
             "resetsWhenLeavingConfines": true
-        }
-    ],
+        }],
     "events": [{
             "name": "message",
             "trigger": {
@@ -48,11 +46,10 @@
                         "params": {
                             "time": 10000,
                             "satisfiedWhen": "repeat",
-                            "maxCount": 5,
+                            "maxCount": 3,
                             "startOffset": 8000
                         }
-                    }
-                ],
+                    }],
                 "conditionsRequired": "all",
                 "fireWhen": "changeToTrue",
                 "oneShot": false
@@ -74,10 +71,7 @@
                             "satisfiedWhen": "once",
                             "start": "message"
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true
             },
             "actions": [{
@@ -88,29 +82,161 @@
                         "urgent": true
                     }
                 }]
-        }
-    ],
-    "spacecrafts": [
-        {
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "timeElapsed",
+                        "params": {
+                            "time": 25000,
+                            "satisfiedWhen": "repeat",
+                            "startOffset": 20000
+                        }
+                    }],
+                "oneShot": false
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["Guinevere"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Tiberis",
+                            "relative": "true",
+                            "position": [-180, -1000, 90],
+                            "rotations": []
+                        }
+                    }
+                }, {
+                    "type": "command",
+                    "delay": 12000,
+                    "subjects": {
+                        "spacecrafts": ["Guinevere"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "timeElapsed",
+                        "params": {
+                            "time": 30000,
+                            "satisfiedWhen": "repeat",
+                            "startOffset": 27000
+                        }
+                    }],
+                "oneShot": false
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["alpha"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Tiberis",
+                            "relative": "true",
+                            "position": [400, 100, 120],
+                            "rotations": ["z-90"],
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [50, -50, 0]
+                            }
+                        }
+                    }
+                }, {
+                    "type": "command",
+                    "delay": 10000,
+                    "subjects": {
+                        "squads": ["alpha"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "timeElapsed",
+                        "params": {
+                            "time": 30000,
+                            "satisfiedWhen": "repeat",
+                            "startOffset": 20000
+                        }
+                    }],
+                "oneShot": false
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["Tiberis"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "single": "Lancelot"
+                        }
+                    }
+                }, {
+                    "type": "command",
+                    "delay": 10000,
+                    "subjects": {
+                        "spacecrafts": ["Tiberis"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "single": "beta 1"
+                        }
+                    }
+                }, {
+                    "type": "command",
+                    "delay": 20000,
+                    "subjects": {
+                        "spacecrafts": ["Tiberis"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "none": true
+                        }
+                    }
+                }]
+        }],
+    "spacecrafts": [{
             "class": "falcon",
             "piloted": true,
             "position": [0, 0, -60],
-            "equipment": "full"
-        },
-        {
+            "equipment": "player-tier2"
+        }, {
             "class": "falcon",
-            "position": [-7.5, 20, -60]
-        },
-        {
+            "squad": "alpha 1",
+            "ai": "fighter",
+            "equipment": "imperial-tier1",
+            "away": true
+        }, {
             "class": "falcon",
-            "position": [-1050, -150, -300]
-        },
-        {
+            "squad": "alpha 2",
+            "ai": "fighter",
+            "equipment": "imperial-tier1",
+            "away": true
+        }, {
             "class": "viper",
             "position": [50, -30, -170],
-            "equipment": "full"
-        },
-        {
+            "equipment": "imperial-tier1"
+        }, {
             "class": "viper",
             "position": [50, 50, -160],
             "equipment": {
@@ -118,44 +244,45 @@
                         "class": "plasmaGun"
                     }]
             }
-        },
-        {
+        }, {
             "class": "viper",
-            "position": [50, 50, -1160]
-        },
-        {
+            "position": [50, 50, -1160],
+            "equipment": "imperial-tier1"
+        }, {
             "class": "aries",
-            "position": [-60, -50, -280]
-        },
-        {
+            "position": [-60, -50, -280],
+            "equipment": "imperial-tier1"
+        }, {
             "class": "aries",
             "name": "Guinevere",
-            "position": [160, 750, -295],
-            "rotations": ["z+90"]
-        },
-        {
+            "ai": "ship",
+            "equipment": "imperial-tier1",
+            "away": true
+        }, {
             "class": "falcon",
+            "squad": "beta 1",
             "position": [180, 650, -285],
-            "rotations": ["z+90"]
-        },
-        {
+            "rotations": ["z+90"],
+            "equipment": "imperial-tier1"
+        }, {
             "class": "falcon",
             "position": [220, 690, -285],
-            "rotations": ["z+90"]
-        },
-        {
+            "rotations": ["z+90"],
+            "equipment": "imperial-tier1"
+        }, {
             "class": "taurus",
+            "name": "Lancelot",
             "position": [200, -80, -350],
             "rotations": ["z+90"],
-            "equipment": "full"
-        },
-        {
+            "equipment": "imperial-tier1"
+        }, {
             "class": "libra",
             "name": "Tiberis",
+            "ai": "ship",
             "position": [-100, 500, -400],
-            "rotations": ["z+90"]
-        }
-    ],
+            "rotations": ["z+90"],
+            "equipment": "imperial-tier1"
+        }],
     "randomShips": {
         "falcon": 3,
         "viper": 2,
@@ -163,7 +290,7 @@
         "taurus": 1
     },
     "randomShipsMapSize": 3000,
-    "randomShipsEquipmentProfileName": "full",
+    "randomShipsEquipmentProfileName": "imperial-tier1",
     "randomShipsHeadingAngle": 90,
     "randomShipsRandomHeading": true
 }

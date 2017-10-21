@@ -18,6 +18,7 @@
  * @param config Used for accessing game configuration/settings.
  * @param SpacecraftEvents Used for setting spacecraft event handlers
  * @param classes used for accessing spacecraft turn style enum type
+ * @param spacecraft Used for formations
  * @param equipment Used to access the FlightMode enum
  */
 define([
@@ -28,9 +29,10 @@ define([
     "armada/configuration",
     "armada/logic/SpacecraftEvents",
     "armada/logic/classes",
+    "armada/logic/spacecraft",
     "armada/logic/equipment",
     "utils/polyfill"
-], function (vec, mat, application, physics, config, SpacecraftEvents, classes, equipment) {
+], function (vec, mat, application, physics, config, SpacecraftEvents, classes, spacecraft, equipment) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -54,14 +56,6 @@ define([
             JumpCommandWay = {
                 IN: "in",
                 OUT: "out"
-            },
-            /**
-             * The ships can jump in in one of these formations
-             * @enum {String}
-             */
-            JumpCommandFormation = {
-                /** X offset is alternating (+/-), all offset factors increase for every second ship */
-                WEDGE: "wedge"
             },
             /**
              * @enum {Number}
@@ -148,19 +142,19 @@ define([
              * multiplied by this factor.
              * @type Number
              */
-            APPROACH_SPEED_FACTOR = 3,
+            APPROACH_SPEED_FACTOR = 2,
             /**
              * During charge attacks, fighters will approach with a maximum speed equal to their acceleration multiplied by this 
              * factor.
              * @type Number
              */
-            CHARGE_SPEED_FACTOR = 5,
+            CHARGE_SPEED_FACTOR = 4,
             /**
              * During charge attacks, fighters will evade with a maximum speed equal to their acceleration multiplied by this 
              * factor.
              * @type Number
              */
-            CHARGE_EVADE_SPEED_FACTOR = 3,
+            CHARGE_EVADE_SPEED_FACTOR = 2,
             /**
              * Fighters will initiate a charge attack if they are unable to hit their target after firing this many shots at it.
              * @type Number
@@ -561,25 +555,6 @@ define([
         }
     };
     /**
-     * Returns the relative position for a spacecraft in a formation
-     * @param {SpacecraftEvents~JumpFormationData} formation The descriptor of the formation
-     * @param {Number} index The index of the spacecraft within the formation (the lead is 0)
-     * @returns {Number[3]}
-     */
-    SpacecraftAI.prototype._getPositionInFormation = function (formation, index) {
-        var factor = Math.ceil(index / 2);
-        switch (formation.type) {
-            case JumpCommandFormation.WEDGE:
-                return [
-                    (((index % 2) === 1) ? 1 : -1) * factor * formation.spacing[0],
-                    factor * formation.spacing[1],
-                    factor * formation.spacing[2]];
-            default:
-                application.showError("Unknown formation type specified: '" + formation.type + "!");
-                return [0, 0, 0];
-        }
-    };
-    /**
      * Executes the command that the spacecraft received
      * @param {SpacecraftEvents~CommandData} data
      */
@@ -603,11 +578,7 @@ define([
                         if (data.jump) {
                             if (data.lead && (data.index > 0) && (data.jump.formation)) {
                                 // setting position and orientation based on a formation
-                                this._spacecraft.setPhysicalPosition(vec.sum3(
-                                        data.lead.getPhysicalPositionVector(),
-                                        vec.prodVec3Mat4Aux(
-                                                this._getPositionInFormation(data.jump.formation, data.index),
-                                                data.lead.getPhysicalOrientationMatrix())));
+                                this._spacecraft.setPhysicalPosition(spacecraft.Spacecraft.getPositionInFormation(data.jump.formation, data.index, data.lead.getPhysicalPositionVector(), data.lead.getPhysicalOrientationMatrix()));
                                 this._spacecraft.setPhysicalOrientationMatrix(mat.matrix4(data.lead.getPhysicalOrientationMatrix()));
                             } else if (data.jump.anchor) {
                                 // clear cached reference to the anchor spacecraft for every new execution of the command
@@ -658,7 +629,7 @@ define([
                         this._spacecraft.jumpIn();
                     }
                 } else {
-                    this._spacecraft.jumpOut();
+                    this._spacecraft.jumpOut(false);
                 }
                 break;
             case SpacecraftCommand.TARGET:
@@ -699,6 +670,8 @@ define([
                             for (i = 0; i < data.target.squads.length; i++) {
                                 this._targetList = this._targetList.concat(this._mission.getSpacecraftsInSquad(data.target.squads[i]));
                             }
+                        } else if (data.target.none) {
+                            this._targetList = null;
                         } else {
                             application.showError("'" + this._spacecraft.getDisplayName() + "' has no target specified for targeting command!");
                         }
@@ -709,6 +682,9 @@ define([
                     }
                     if (this._targetList && (this._targetList.length > 0)) {
                         this._spacecraft.setTarget(this._targetList[0]);
+                        this._standingDown = false;
+                    } else if (data.target.none) {
+                        this._spacecraft.setTarget(null);
                     }
                     this._priorityTargets = (data.target.priority === true);
                 }
@@ -1299,7 +1275,7 @@ define([
                 /** @type Object */
                 targetYawAndPitch, targetAngles,
                 /** @type Boolean */
-                facingTarget,
+                facingTarget, hostileTarget,
                 /** @type Array */
                 weapons,
                 /** @type Float32Array */
@@ -1328,79 +1304,89 @@ define([
             target = this._spacecraft.getTarget();
             this._attackingTarget = false;
             if (target) {
+                hostileTarget = target.isHostile(this._spacecraft);
                 targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
                 vectorToTarget = vec.diff3(targetPositionVector, positionVector);
                 relativeTargetDirection = vec.prodVec3Mat4(
                         vectorToTarget,
                         inverseOrientationMatrix);
                 targetDistance = vec.length3(relativeTargetDirection);
-                vec.normalize3(relativeTargetDirection);
-                targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
-                facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                if (hostileTarget) {
+                    vec.normalize3(relativeTargetDirection);
+                    targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
+                    facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                }
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // actions based on weapons
                 weapons = this._spacecraft.getWeapons();
                 if (weapons && weapons.length > 0) {
                     targetSize = target.getVisualModel().getScaledSize();
-                    baseDistance = 0.25 * ownSize;
-                    maxDistance = baseDistance + SHIP_MAX_DISTANCE_FACTOR * this._weaponRange;
                     fireThresholdAngle = Math.atan(FIRE_THRESHOLD_ANGLE_FACTOR * targetSize / targetDistance);
+                    if (hostileTarget) {
+                        baseDistance = 0.25 * ownSize;
+                        maxDistance = baseDistance + SHIP_MAX_DISTANCE_FACTOR * this._weaponRange;
+                    }
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // aiming turnable weapons towards target
                     this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, fireThresholdAngle, dt);
-                    if (!facingTarget) {
-                        this._spacecraft.resetSpeed();
-                    } else {
-                        this.approach(targetDistance, maxDistance, 0, acceleration * APPROACH_SPEED_FACTOR);
-                    }
-                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    // turning towards target
-                    if (targetDistance > maxDistance) {
-                        this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
-                    } else {
-                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        // orienting into attack position
-                        angles = this._spacecraft.getClass().getAttackVectorAngles();
-                        thresholdAngle = this._spacecraft.getClass().getAttackThresholdAngle();
-                        switch (this._spacecraft.getClass().getTurnStyle()) {
-                            case classes.SpacecraftTurnStyle.YAW_PITCH:
-                                if ((Math.abs(targetYawAndPitch.yaw - angles[0]) > thresholdAngle) || (Math.abs(targetYawAndPitch.pitch - angles[1]) > thresholdAngle)) {
-                                    this.turn(targetYawAndPitch.yaw - angles[0], targetYawAndPitch.pitch - angles[1], dt);
-                                }
-                                break;
-                            case classes.SpacecraftTurnStyle.ROLL_YAW:
-                                targetAngles = vec.getRollAndYaw(relativeTargetDirection, true);
-                                angleDifference = [targetAngles.roll - angles[0], targetAngles.yaw - angles[1]];
-                                if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
-                                    if (Math.abs(angleDifference[1]) > Math.PI / 2) {
-                                        angleDifference[0] = 0;
-                                    } else if (Math.abs(angleDifference[0]) > Math.PI / 2) {
-                                        angleDifference[1] = 0;
-                                    }
-                                    this.rollAndYaw(angleDifference[0], angleDifference[1], dt);
-                                }
-                                break;
-                            case classes.SpacecraftTurnStyle.ROLL_PITCH:
-                                targetAngles = vec.getRollAndPitch(relativeTargetDirection, true);
-                                angleDifference = [targetAngles.roll - angles[0], targetAngles.pitch - angles[1]];
-                                if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
-                                    if (Math.abs(angleDifference[1]) > Math.PI / 2) {
-                                        angleDifference[0] = 0;
-                                    } else if (Math.abs(angleDifference[0] - Math.sign(angleDifference[0]) * Math.PI) < Math.abs(angleDifference[0])) {
-                                        angleDifference[0] -= Math.sign(angleDifference[0]) * Math.PI;
-                                        targetAngles.pitch = -targetAngles.pitch;
-                                    }
-                                    this.rollAndPitch(angleDifference[0], targetAngles.pitch - angles[1], dt);
-                                }
-                                break;
+                    if (hostileTarget) {
+                        if (!facingTarget) {
+                            this._spacecraft.resetSpeed();
+                        } else {
+                            this.approach(targetDistance, maxDistance, 0, acceleration * APPROACH_SPEED_FACTOR);
                         }
-                    }
-                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    // firing
-                    if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) - baseDistance <=
-                            weapons[0].getRange(this._spacecraft.getRelativeVelocityMatrix()[13])) {
-                        this._spacecraft.fire(true);
-                        this._attackingTarget = true;
+                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        // turning towards target
+                        if (targetDistance > maxDistance) {
+                            this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                        } else {
+                            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                            // orienting into attack position
+                            angles = this._spacecraft.getClass().getAttackVectorAngles();
+                            thresholdAngle = this._spacecraft.getClass().getAttackThresholdAngle();
+                            switch (this._spacecraft.getClass().getTurnStyle()) {
+                                case classes.SpacecraftTurnStyle.YAW_PITCH:
+                                    if ((Math.abs(targetYawAndPitch.yaw - angles[0]) > thresholdAngle) || (Math.abs(targetYawAndPitch.pitch - angles[1]) > thresholdAngle)) {
+                                        this.turn(targetYawAndPitch.yaw - angles[0], targetYawAndPitch.pitch - angles[1], dt);
+                                    }
+                                    break;
+                                case classes.SpacecraftTurnStyle.ROLL_YAW:
+                                    targetAngles = vec.getRollAndYaw(relativeTargetDirection, true);
+                                    angleDifference = [targetAngles.roll - angles[0], targetAngles.yaw - angles[1]];
+                                    if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
+                                        if (Math.abs(angleDifference[1]) > Math.PI / 2) {
+                                            angleDifference[0] = 0;
+                                        } else if (Math.abs(angleDifference[0]) > Math.PI / 2) {
+                                            angleDifference[1] = 0;
+                                        }
+                                        this.rollAndYaw(angleDifference[0], angleDifference[1], dt);
+                                    }
+                                    break;
+                                case classes.SpacecraftTurnStyle.ROLL_PITCH:
+                                    targetAngles = vec.getRollAndPitch(relativeTargetDirection, true);
+                                    angleDifference = [targetAngles.roll - angles[0], targetAngles.pitch - angles[1]];
+                                    if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
+                                        if (Math.abs(angleDifference[1]) > Math.PI / 2) {
+                                            angleDifference[0] = 0;
+                                        } else if (Math.abs(angleDifference[0] - Math.sign(angleDifference[0]) * Math.PI) < Math.abs(angleDifference[0])) {
+                                            angleDifference[0] -= Math.sign(angleDifference[0]) * Math.PI;
+                                            targetAngles.pitch = -targetAngles.pitch;
+                                        }
+                                        this.rollAndPitch(angleDifference[0], targetAngles.pitch - angles[1], dt);
+                                    }
+                                    break;
+                            }
+                        }
+                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        // firing
+                        if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) - baseDistance <=
+                                weapons[0].getRange(this._spacecraft.getRelativeVelocityMatrix()[13])) {
+                            this._spacecraft.fire(true);
+                            this._attackingTarget = true;
+                        }
+                    } else {
+                        // friendly target
+                        this._spacecraft.resetSpeed();
                     }
                 }
             } else {

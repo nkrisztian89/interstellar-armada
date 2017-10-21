@@ -621,6 +621,15 @@ define([
         this._calculateBodySize();
         this._fixedOrientation = !!fixedOrientation;
     };
+    /**
+     * Removes all forces, torques, velocity and angular velocity from the object.
+     */
+    PhysicalObject.prototype.reset = function () {
+        mat.setIdentity4(this._velocityMatrix);
+        mat.setIdentity4(this._angularVelocityMatrix);
+        this._forces.clear();
+        this._torques.clear();
+    };
     // direct getters and setters
     /**
      * The mass of the physical object in kilograms.

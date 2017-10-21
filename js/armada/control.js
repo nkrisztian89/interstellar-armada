@@ -107,18 +107,18 @@ define([
             // the BattleScreen class
             game.getScreen().showMessage(strings.get(strings.BATTLE.MESSAGE_PAUSED));
         });
-        this.setActionFunction("stopTime", true, function () {
-            this._battle.toggleTime();
-        }.bind(this));
-        // switching to pilot mode
-        this.setActionFunction("switchToPilotMode", true, function () {
-            _context.switchToPilotMode(this._mission.getPilotedSpacecraft());
-        }.bind(this));
-        // switching to spectator mode
-        this.setActionFunction("switchToSpectatorMode", true, function () {
-            _context.switchToSpectatorMode(true, true);
-        });
         if (application.isDebugVersion()) {
+            this.setActionFunction("stopTime", true, function () {
+                this._battle.toggleTime();
+            }.bind(this));
+            // switching to pilot mode
+            this.setActionFunction("switchToPilotMode", true, function () {
+                _context.switchToPilotMode(this._mission.getPilotedSpacecraft());
+            }.bind(this));
+            // switching to spectator mode
+            this.setActionFunction("switchToSpectatorMode", true, function () {
+                _context.switchToSpectatorMode(true, true);
+            });
             // toggling the visibility of hitboxes
             this.setActionFunction("toggleHitboxVisibility", true, function () {
                 this._mission.toggleHitboxVisibility();
@@ -344,7 +344,7 @@ define([
             this._controlledSpacecraft.rollRight(i);
         }.bind(this));
         this.setActionFunction("jumpOut", true, function () {
-            this._controlledSpacecraft.jumpOut();
+            this._controlledSpacecraft.jumpOut(true);
         }.bind(this));
     }
     FighterController.prototype = new control.Controller();

@@ -1,6 +1,7 @@
 {
-    "description": "Try piloting a heavily armed bomber in a simple three versus three dogfight against less armed opponents.",
-    "environment": "varanock",
+    "description": "Practice team fighting in a matchup with three against three interceptors. You are better armed than the rest.",
+    "environment": "mera",
+    "combatTheme": "combat",
     "tips": [
         "tryControls",
         "changeControls",
@@ -10,7 +11,7 @@
         "rollStrafe",
         "scoreDestroy",
         "friendlyFire",
-        "bombers"
+        "interceptors"
     ],
     "teams": [
         "empire",
@@ -31,54 +32,54 @@
     "spacecrafts": [
         {
             "team": "empire",
-            "class": "viper",
+            "class": "falcon",
             "piloted": true,
             "squad": "alpha 1",
             "position": [0, 0, 0],
-            "equipment": "heavy"
+            "equipment": "player-tier1"
         },
         {
             "team": "empire",
-            "class": "viper",
+            "class": "falcon",
             "squad": "alpha 2",
             "ai": "fighter",
             "position": [35, -35, 0],
-            "equipment": "half"
+            "equipment": "imperial-tier1"
         },
         {
             "team": "empire",
-            "class": "viper",
+            "class": "falcon",
             "squad": "alpha 3",
             "ai": "fighter",
             "position": [-35, -35, 0],
-            "equipment": "half"
+            "equipment": "imperial-tier1"
         },
         {
             "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 1",
+            "class": "falcon",
+            "squad": "wraith 1",
             "ai": "fighter",
             "position": [0, 3200, -100],
             "rotations": ["z+180"],
-            "equipment": "full"
+            "equipment": "rebel"
         },
         {
             "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 2",
+            "class": "falcon",
+            "squad": "wraith 2",
             "ai": "fighter",
             "position": [-35, 3235, -100],
             "rotations": ["z+180"],
-            "equipment": "half"
+            "equipment": "rebel"
         },
         {
             "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 3",
+            "class": "falcon",
+            "squad": "wraith 3",
             "ai": "fighter",
             "position": [35, 3235, -100],
             "rotations": ["z+180"],
-            "equipment": "half"
+            "equipment": "rebel"
         }
     ]
 }

@@ -55,6 +55,10 @@ define([
             ADD_BUTTON_TOOLTIP = "Add a new element with default values",
             DUPLICATE_BUTTON_CAPTION = "#",
             DUPLICATE_BUTTON_TOOLTIP = "Duplicate this element",
+            MOVE_UP_BUTTON_CAPTION = "🡑",
+            MOVE_UP_BUTTON_TOOLTIP = "Move this element up in the list",
+            MOVE_DOWN_BUTTON_CAPTION = "🡓",
+            MOVE_DOWN_BUTTON_TOOLTIP = "Move this element down in the list",
             REMOVE_BUTTON_CAPTION = "x",
             REMOVE_BUTTON_TOOLTIP = "Remove this element",
             NEW_OBJECT_NAME_PREFIX = "new",
@@ -485,7 +489,7 @@ define([
                 type = new descriptors.Type(typeDescriptor),
                 hasName = type.hasNameProperty(),
                 indices, indexLabel, indexSelector,
-                addElementButton, removeElementButton, duplicateElementButton,
+                addElementButton, removeElementButton, moveUpElementButton, moveDownElementButton, duplicateElementButton,
                 propertiesTable,
                 nameChangeHandler = function (index, newName) {
                     indexSelector.options[index].text = newName;
@@ -509,11 +513,15 @@ define([
                         indexSelector.hidden = false;
                         removeElementButton.hidden = !!atLeastOneElementNeeded && (data.length <= 1);
                         duplicateElementButton.hidden = false;
+                        moveUpElementButton.hidden = (data.length < 2) || (index === 0);
+                        moveDownElementButton.hidden = (data.length < 2) || (index === (data.length - 1));
                     } else {
                         indexLabel.hidden = true;
                         indexSelector.hidden = true;
                         removeElementButton.hidden = true;
                         duplicateElementButton.hidden = true;
+                        moveUpElementButton.hidden = true;
+                        moveDownElementButton.hidden = true;
                     }
                     popup.alignPosition();
                 },
@@ -566,12 +574,40 @@ define([
                 indexSelector.selectedIndex = data.length - 1;
                 indexChangeHandler();
             }, DUPLICATE_BUTTON_TOOLTIP);
-            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], [addElementButton, duplicateElementButton, removeElementButton]);
+            moveUpElementButton = common.createButton(MOVE_UP_BUTTON_CAPTION, function () {
+                var text;
+                data.splice(indexSelector.selectedIndex - 1, 2, data[indexSelector.selectedIndex], data[indexSelector.selectedIndex - 1]);
+                updateButtonText();
+                _updateData(topName);
+                if (hasName) {
+                    text = indexSelector.options[indexSelector.selectedIndex].text;
+                    indexSelector.options[indexSelector.selectedIndex].text = indexSelector.options[indexSelector.selectedIndex - 1].text;
+                    indexSelector.options[indexSelector.selectedIndex - 1].text = text;
+                }
+                indexSelector.selectedIndex -= 1;
+                indexChangeHandler();
+            }, MOVE_UP_BUTTON_TOOLTIP);
+            moveDownElementButton = common.createButton(MOVE_DOWN_BUTTON_CAPTION, function () {
+                var text;
+                data.splice(indexSelector.selectedIndex, 2, data[indexSelector.selectedIndex + 1], data[indexSelector.selectedIndex]);
+                updateButtonText();
+                _updateData(topName);
+                if (hasName) {
+                    text = indexSelector.options[indexSelector.selectedIndex].text;
+                    indexSelector.options[indexSelector.selectedIndex].text = indexSelector.options[indexSelector.selectedIndex + 1].text;
+                    indexSelector.options[indexSelector.selectedIndex + 1].text = text;
+                }
+                indexSelector.selectedIndex += 1;
+                indexChangeHandler();
+            }, MOVE_DOWN_BUTTON_TOOLTIP);
+            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], [addElementButton, duplicateElementButton, moveUpElementButton, moveDownElementButton, removeElementButton]);
             if (data.length > 0) {
                 addPropertiesTable(0);
             } else {
                 indexLabel.hidden = true;
                 indexSelector.hidden = true;
+                moveUpElementButton.hidden = true;
+                moveDownElementButton.hidden = true;
                 removeElementButton.hidden = true;
             }
         } else {

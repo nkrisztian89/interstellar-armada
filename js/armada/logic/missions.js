@@ -726,12 +726,13 @@ define([
     };
     /**
      * Returns how many of the subjects are still alive
+     * @param {Boolean} [presentOnly=false] If true, only the spacecrafts that are present (not away) are counted 
      * @returns {Number}
      */
-    SubjectGroup.prototype.getLiveSubjectCount = function () {
+    SubjectGroup.prototype.getLiveSubjectCount = function (presentOnly) {
         var result = 0, i;
         for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i].isAlive()) {
+            if (this._spacecrafts[i].isAlive() && (!presentOnly || !this._spacecrafts[i].isAway())) {
                 result++;
             }
         }
@@ -903,7 +904,7 @@ define([
         if (!this._subjects.getSpacecrafts()) {
             return "";
         }
-        count = this._subjects.getLiveSubjectCount();
+        count = this._subjects.getLiveSubjectCount(true);
         suffix = (count > 1) ? (" (" + count + ")") : "";
         result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
             subjects: this._subjects.getShortString()
@@ -1425,12 +1426,17 @@ define([
          */
         this._type = dataJSON ? utils.getSafeEnumValue(ActionType, dataJSON.type, null) : null;
         /**
+         * The time that needs to be elapsed after the trigger fires before executing the action, in milliseconds
+         * @type Number
+         */
+        this._delay = dataJSON ? dataJSON.delay || 0 : 0;
+        /**
          * A reference to the trigger that needs to fire to execute this action
          * @type Trigger
          */
         this._trigger = trigger;
         if (this._trigger) {
-            this._trigger.addFireHandler(this._execute.bind(this));
+            this._trigger.addFireHandler(this._addToExecutionQueue.bind(this));
         }
         /**
          * The subjects of this action (used in action types that do things with spacecrafts)
@@ -1465,11 +1471,23 @@ define([
         return false;
     };
     /**
+     * If the action has a delay set, it is added to the execution queue of the passed mission with the set delay, otherwise
+     * it is executed right away
+     * @param {Mission} mission
+     */
+    Action.prototype._addToExecutionQueue = function (mission) {
+        if (this._delay > 0) {
+            mission.queueAction(this, this._delay);
+        } else {
+            this.execute(mission);
+        }
+    };
+    /**
      * Executes the action - does whatever its type defines. Called whenever the associated trigger fires.
      * Override this implementing the specific logic for the corresponding Action sublcasses!
      * The mission is passed as the only argument when called.
      */
-    Action.prototype._execute = function () {
+    Action.prototype.execute = function () {
         application.showError("Unrecognized action type: '" + this._type + "'!");
     };
     /**
@@ -1513,7 +1531,7 @@ define([
      * @override
      * @param {Mission} mission 
      */
-    WinAction.prototype._execute = function (mission) {
+    WinAction.prototype.execute = function (mission) {
         mission.completeMission();
     };
     /**
@@ -1554,7 +1572,7 @@ define([
      * @override
      * @param {Mission} mission 
      */
-    LoseAction.prototype._execute = function (mission) {
+    LoseAction.prototype.execute = function (mission) {
         mission.failMission();
     };
     /**
@@ -1627,7 +1645,7 @@ define([
      * @override
      * @param {Mission} mission 
      */
-    MessageAction.prototype._execute = function (mission) {
+    MessageAction.prototype.execute = function (mission) {
         game.getScreen().queueHUDMessage({
             text: strings.get(
                     strings.MISSION.PREFIX,
@@ -1660,7 +1678,7 @@ define([
     /**
      * @override
      */
-    ClearMessagesAction.prototype._execute = function () {
+    ClearMessagesAction.prototype.execute = function () {
         game.getScreen().clearHUDMessages();
     };
     // #########################################################################
@@ -1696,7 +1714,7 @@ define([
      * @override
      * @param {Mission} mission 
      */
-    CommandAction.prototype._execute = function (mission) {
+    CommandAction.prototype.execute = function (mission) {
         var i, spacecrafts = this._subjects.getSpacecrafts(mission);
         if (spacecrafts.length > 0) {
             this._params.lead = spacecrafts[0];
@@ -1813,6 +1831,11 @@ define([
          * @type MissionEvent[]
          */
         this._events = null;
+        /**
+         * An array of all the actions that are scheduled to be executed and the corresponding time left before the execution (in milliseconds)
+         * @type {action: Action, delay: Number}[]
+         */
+        this._actionQueue = null;
         /**
          * References to those actions of the mission that, when executed, cause it to be completed 
          * @type Action[]
@@ -2240,6 +2263,7 @@ define([
                 this._events.push(new MissionEvent(dataJSON.events[i], this));
             }
         }
+        this._actionQueue = [];
         this._state = MissionState.NONE;
         this._winActions = [];
         this._loseActions = [];
@@ -2259,6 +2283,14 @@ define([
         }
     };
     /**
+     * Adds the passed Action to the list of actions scheduled for execution with the passed delay
+     * @param {Action} action
+     * @param {Number} delay In milliseconds
+     */
+    Mission.prototype.queueAction = function (action, delay) {
+        this._actionQueue.push({action: action, delay: delay});
+    }
+    /**
      * Returns the how much base score falls on the player in this mission (out of the total enemy score value, based on the team)
      * @returns {Number}
      */
@@ -2274,7 +2306,7 @@ define([
      * and a suitable AI is added to all spacecrafts if possible.
      */
     Mission.prototype.loadFromJSON = function (dataJSON, difficulty, demoMode) {
-        var i, j, craft, teamID, team, aiType, actions, count, factor;
+        var i, j, craft, teamID, team, aiType, actions, count, factor, squad, names, equipments, pilotedIndex, positions, formation, orientation, spacecrafts, spacecraftDataTemplate, spacecraftData;
         application.log("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         this.loadEnvironment(dataJSON);
@@ -2295,14 +2327,66 @@ define([
         this._spacecrafts = [];
         this._hitObjects = [];
         ai.clearAIs();
+        // expand squad entries in the spacecrafts array
+        spacecrafts = [];
         for (i = 0; i < dataJSON.spacecrafts.length; i++) {
+            if (dataJSON.spacecrafts[i].count) {
+                // extracting data used for generating differing spacecraft data properties
+                // NOTE: MissionDescriptor.getPilotedSpacecraftDescriptor() also does this extraction!
+                squad = dataJSON.spacecrafts[i].squad;
+                names = dataJSON.spacecrafts[i].names;
+                equipments = dataJSON.spacecrafts[i].equipments;
+                pilotedIndex = dataJSON.spacecrafts[i].pilotedIndex;
+                positions = dataJSON.spacecrafts[i].positions;
+                formation = dataJSON.spacecrafts[i].formation;
+                orientation = mat.rotation4FromJSON(dataJSON.spacecrafts[i].rotations);
+                // creating a template to be copied for individual spacecraft data objects, without the proprties that don't refer to individual spacecrafts
+                spacecraftDataTemplate = utils.deepCopy(dataJSON.spacecrafts[i]);
+                delete spacecraftDataTemplate.count;
+                delete spacecraftDataTemplate.names;
+                delete spacecraftDataTemplate.equipments;
+                delete spacecraftDataTemplate.pilotedIndex;
+                delete spacecraftDataTemplate.positions;
+                delete spacecraftDataTemplate.formation;
+                for (j = 0; j < dataJSON.spacecrafts[i].count; j++) {
+                    spacecraftData = utils.deepCopy(spacecraftDataTemplate);
+                    if (squad) {
+                        spacecraftData.squad = squad + " " + (j + 1).toString();
+                    }
+                    if (names) {
+                        spacecraftData.name = names[j];
+                    }
+                    if (equipments) {
+                        spacecraftData.equipment = equipments[j % equipments.length];
+                    }
+                    if (pilotedIndex === (j + 1)) {
+                        spacecraftData.piloted = true;
+                        delete spacecraftData.ai;
+                    }
+                    if (positions) {
+                        spacecraftData.position = positions[j];
+                    }
+                    if (formation) {
+                        if (positions) {
+                            application.showError("Both positions and formation have been defined for spacecraft group - formation will be used!", application.ErrorSeverity.MINOR);
+                        }
+                        spacecraftData.position = spacecraft.Spacecraft.getPositionInFormation(formation, j, spacecraftData.position, orientation);
+                    }
+                    spacecrafts.push(spacecraftData);
+                }
+            } else {
+                spacecrafts.push(dataJSON.spacecrafts[i]);
+            }
+        }
+        // loading spacecrafts from expanded array
+        for (i = 0; i < spacecrafts.length; i++) {
             craft = new spacecraft.Spacecraft();
-            craft.loadFromJSON(dataJSON.spacecrafts[i], this._hitObjects);
-            if (!demoMode && dataJSON.spacecrafts[i].piloted) {
+            craft.loadFromJSON(spacecrafts[i], this._hitObjects);
+            if (!demoMode && spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
                 craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
             }
-            teamID = dataJSON.spacecrafts[i].team;
+            teamID = spacecrafts[i].team;
             if (teamID) {
                 team = this.getTeam(teamID);
                 if (team) {
@@ -2328,15 +2412,15 @@ define([
         team = this._pilotedCraft && this._pilotedCraft.getTeam();
         count = 0;
         factor = this._difficultyLevel.getFriendlyHitpointsFactor();
-        for (i = 0; i < dataJSON.spacecrafts.length; i++) {
+        for (i = 0; i < spacecrafts.length; i++) {
             craft = this._spacecrafts[i];
-            if (dataJSON.spacecrafts[i].initialTarget) {
-                craft.setTarget(this.getSpacecraft(dataJSON.spacecrafts[i].initialTarget));
+            if (spacecrafts[i].initialTarget) {
+                craft.setTarget(this.getSpacecraft(spacecrafts[i].initialTarget));
             }
-            if (this._pilotedCraft) { 
-                if (!dataJSON.spacecrafts[i].excludeFromReferenceScore && this._pilotedCraft.isHostile(craft)) {
+            if (this._pilotedCraft) {
+                if (!spacecrafts[i].excludeFromReferenceScore && this._pilotedCraft.isHostile(craft)) {
                     this._referenceScore += craft.getScoreValue();
-                } 
+                }
                 if (this._pilotedCraft.isFriendly(craft)) {
                     if (craft !== this._pilotedCraft) {
                         craft.multiplyMaxHitpoints(factor);
@@ -2344,7 +2428,7 @@ define([
                     count++;
                 }
             }
-            aiType = dataJSON.spacecrafts[i].ai;
+            aiType = spacecrafts[i].ai;
             if (!aiType && demoMode) {
                 if (craft.isFighter()) {
                     aiType = config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE);
@@ -2364,7 +2448,7 @@ define([
         this._randomShipsMapSize = dataJSON.randomShipsMapSize;
         this._randomShipsHeadingAngle = dataJSON.randomShipsHeadingAngle || 0;
         this._randomShipsRandomHeading = dataJSON.randomShipsRandomHeading || false;
-        this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME;
+        this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || null;
         // cache escorted spacecrafts
         this._escortedSpacecrafts = [];
         for (i = 0; i < this._events.length; i++) {
@@ -2407,7 +2491,7 @@ define([
                             "",
                             mat.translation4(random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2),
                             orientation,
-                            this._randomShipsEquipmentProfileName,
+                            this._randomShipsEquipmentProfileName || classes.getSpacecraftClass(shipClass).getDefaultEquipmentProfileName(),
                             this._hitObjects);
                     if (demoMode) {
                         if (craft.isFighter()) {
@@ -2669,6 +2753,14 @@ define([
         }
     };
     /**
+     * Function to filter out those actions from the scheduled action list that still need to be executed after this simulation step
+     * @param {Object} actionEntry
+     * @returns {Boolean}
+     */
+    Mission._filterActionEntry = function (actionEntry) {
+        return actionEntry.delay > 0;
+    }
+    /**
      * Performs the physics and game logic simulation of all the object in the mission.
      * @param {Number} dt The time passed since the last simulation step, in milliseconds.
      * @param {Scene} mainScene When given, this scene is updated according to the simulation.
@@ -2678,6 +2770,13 @@ define([
         if (this._environment) {
             this._environment.simulate();
         }
+        for (i = 0; i < this._actionQueue.length; i++) {
+            this._actionQueue[i].delay -= dt;
+            if (this._actionQueue[i].delay <= 0) {
+                this._actionQueue[i].action.execute(this);
+            }
+        }
+        this._actionQueue = this._actionQueue.filter(Mission._filterActionEntry);
         for (i = 0; i < this._events.length; i++) {
             this._events[i].simulate(this, dt);
         }
@@ -2784,6 +2883,12 @@ define([
          */
         this._test = (this._dataJSON.test === true);
         /**
+         * The cached value of the spacecraft descriptor object belonging to the piloted spacecraft
+         * (since it might need to be extracted from a bulk spacecraft descriptor, so that the extraction is only done the first time)
+         * @type Object
+         */
+        this._pilotedSpacecraftDescriptor = null;
+        /**
          * The data that is saved to / loaded from local storage about this mission
          * @type MissionDescriptor~LocalData
          */
@@ -2850,13 +2955,33 @@ define([
      * @returns {Object}
      */
     MissionDescriptor.prototype.getPilotedSpacecraftDescriptor = function () {
-        var i;
-        for (i = 0; i < this._dataJSON.spacecrafts.length; i++) {
-            if (this._dataJSON.spacecrafts[i].piloted) {
-                return this._dataJSON.spacecrafts[i];
+        var i, result;
+        if (!this._pilotedSpacecraftDescriptor) {
+            for (i = 0; i < this._dataJSON.spacecrafts.length; i++) {
+                if (this._dataJSON.spacecrafts[i].piloted) {
+                    this._pilotedSpacecraftDescriptor = this._dataJSON.spacecrafts[i];
+                    break;
+                }
+                if (this._dataJSON.spacecrafts[i].pilotedIndex) {
+                    result = utils.deepCopy(this._dataJSON.spacecrafts[i]);
+                    if (result.names) {
+                        result.name = result.names[result.pilotedIndex-1];
+                        delete result.names;
+                    }
+                    if (result.equipments) {
+                        result.equipment = result.equipments[result.pilotedIndex-1];
+                        delete result.equipments;
+                    }
+                    delete result.count;
+                    delete result.pilotedIndex;
+                    delete result.positions;
+                    delete result.formation;
+                    this._pilotedSpacecraftDescriptor = result;
+                    break;
+                }
             }
         }
-        return null;
+        return this._pilotedSpacecraftDescriptor;
     };
     /**
      * Returns the environment of the described mission.

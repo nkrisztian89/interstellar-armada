@@ -2,9 +2,6 @@
     "description": "A rebel corvette has been identified in the sector. A Taurus frigate has been dispatched to deal with this threat, and you are one of its escorts to make sure it reaches and destroys the target. The enemy has sent waves of fighters and bombers you need to neutralize in time, as frigates are not very effective at dealing with fast enemies. Should the frigate fall, you will not stand much of a chance against the corvette on your own.",
     "environment": "varanock",
     "tips": [
-        "tryControls",
-        "changeControls",
-        "tryViews",
         "prioritizeTargets",
         "think",
         "curve",
@@ -28,15 +25,13 @@
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],
-    "views": [
-        {
+    "views": [{
             "name": "free",
             "movable": true,
             "turnable": true,
             "position": [60, 200, 20],
             "rotations": ["x-80", "z+215"]
-        }
-    ],
+        }],
     "events": [{
             "trigger": {
                 "conditions": [{
@@ -44,10 +39,7 @@
                         "subjects": {
                             "spacecrafts": ["Danube"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true
             },
             "actions": [{
@@ -63,8 +55,7 @@
                             "way": "out"
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "fireWhen": "missionStarts",
@@ -113,8 +104,7 @@
                             "priority": true
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -122,10 +112,7 @@
                         "subjects": {
                             "squads": ["wraith"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 1000
             },
@@ -147,8 +134,7 @@
                             }
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -160,10 +146,7 @@
                             "relation": "below",
                             "count": 2
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 1000
             },
@@ -185,8 +168,7 @@
                             }
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -198,10 +180,7 @@
                             "relation": "below",
                             "count": 2
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 1000
             },
@@ -223,8 +202,7 @@
                             }
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -232,10 +210,7 @@
                         "subjects": {
                             "squads": ["wraith", "phantom", "serpent", "reaper"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true
             },
             "actions": [{
@@ -246,8 +221,7 @@
                     "params": {
                         "command": "standDown"
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -255,10 +229,7 @@
                         "subjects": {
                             "teams": ["rebels"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 30000
             },
@@ -273,145 +244,70 @@
                             "way": "out"
                         }
                     }
-                }
-            ]
+                }]
         }],
-    "spacecrafts": [
-        {
+    "spacecrafts": [{
             "team": "empire",
             "class": "taurus",
             "name": "Danube",
             "ai": "ship",
             "initialTarget": "Don",
             "position": [0, 50, 0],
-            "equipment": "full",
+            "equipment": "imperial-tier1",
             "excludeFromReferenceScore": true
-        },
-        {
+        }, {
             "team": "empire",
             "class": "falcon",
-            "piloted": true,
-            "squad": "alpha 1",
+            "squad": "alpha",
+            "count": 3,
+            "pilotedIndex": 1,
+            "ai": "fighter",
             "position": [-100, -30, 10],
-            "equipment": "full"
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "squad": "alpha 2",
-            "ai": "fighter",
-            "position": [-65, -70, 20]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "squad": "alpha 3",
-            "ai": "fighter",
-            "position": [-135, -70, 20]
-        },
-        {
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -40, 10]
+            },
+            "equipments": ["player-tier2", "imperial-tier1", "imperial-tier1"]
+        }, {
             "team": "rebels",
             "class": "falcon",
-            "squad": "wraith 1",
+            "squad": "wraith",
+            "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "full"
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 2",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "default"
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 3",
-            "ai": "fighter",
-            "away": true
-        },
-        {
+            "equipment": "rebel"
+        }, {
             "team": "rebels",
             "class": "viper",
-            "squad": "phantom 1",
+            "squad": "phantom",
+            "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 2",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "half"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 3",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "half"
-        },
-        {
+            "equipments": ["rebel-heavy", "rebel-light", "rebel-light"]
+        }, {
             "team": "rebels",
             "class": "falcon",
-            "squad": "serpent 1",
-            "ai": "fighter",
-            "away": true
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "serpent 2",
+            "squad": "serpent",
+            "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "default"
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "serpent 3",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "default"
-        },
-        {
+            "equipment": "rebel"
+        }, {
             "team": "rebels",
             "class": "viper",
-            "squad": "reaper 1",
+            "squad": "reaper",
+            "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "reaper 2",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "full"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "reaper 3",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "full"
-        },
-        {
+            "equipments": ["rebel-heavy", "rebel-light", "rebel-light"]
+        }, {
             "team": "rebels",
             "class": "aries",
             "name": "Don",
             "ai": "ship",
-            "position": [-14500, 0, -150],
+            "position": [-15000, 0, -150],
             "rotations": ["z+90"],
-            "equipment": "full",
+            "equipment": "imperial-tier1",
             "excludeFromReferenceScore": true
-        }
-    ]
+        }]
 }

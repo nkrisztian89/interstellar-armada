@@ -51,6 +51,10 @@ select.withJumpButton.withUnsetButton {
     max-width: 8.6em;
 }
 
+input.withUnsetButton {
+    max-width: 10.4em;
+}
+
 /* -------------------------------------------------------------------- */
 /* general: common */
 

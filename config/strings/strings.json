@@ -64,7 +64,10 @@
         "noDescription": "No mission description available.",
         "missionObjectivesTitle": "Objectives:",
         "playerSpacecraftTitle": "Spacecraft:",
-        "playerSpacecraftData": "Class: {class}<br/>Firepower: {firepower}<br/>Shield: {shield}",
+        "playerSpacecraftData": "<strong>Class:</strong> {class}",
+        "playerSpacecraftWeapons": "<strong>Weapons:</strong> {weapons}<br/><strong>Firepower:</strong> {firepower}, <strong>range:</strong> {range}",
+        "playerSpacecraftShield": "<strong>Shield:</strong> {shield}<br/><strong>Capacity:</strong> {shieldCapacity}, <strong>recharge rate:</strong> {shieldRechargeRate}",
+        "playerSpacecraftPropulsion": "<strong>Propulsion:</strong> {propulsion}<br/><strong>Combat speed:</strong> {speed}, <strong>turn rate:</strong> {turnRate}",
         "objectiveSubjects": {
             "squad": "{ids} squad",
             "squads": "{ids} squads",
@@ -163,20 +166,17 @@
         "headhunt": {
             "name": "Headhunt",
             "messages": {
-                "rubyBladeArrived": "Gamma 1: He's here! Ignore the guards! Quick, target the Ruby Blade, destroy it and let's get out of here!"
+                "rubyBladeArrived": "[color:0,1,0,1]Gamma 1[]: He's here! Ignore the guards! Quick, target the Ruby Blade, destroy it and let's get out of here!"
             }
         },
         "1v1": {
             "name": "One versus one"
         },
-        "3v3": {
-            "name": "Three versus three"
+        "destroyCorvette": {
+            "name": "The rebel corvette"
         },
-        "bombers": {
-            "name": "Bombers"
-        },
-        "mixed": {
-            "name": "Mixed"
+        "destroyFrigate": {
+            "name": "Bomber run"
         },
         "defendCorvette": {
             "name": "Defend the corvette"
@@ -190,22 +190,19 @@
         "defendFrigate": {
             "name": "Defend the frigate"
         },
-        "patrolVsPatrol": {
-            "name": "Patrol vs patrol"
-        },
-        "strikeForceVsStrikeForce": {
-            "name": "Strike force battle"
+        "battle": {
+            "name": "Battle with the rebels"
         },
         "defendFrigates": {
             "name": "Defend the frigates",
             "messages": {
-                "caution": "Nice work taking out the bombers! Now stay clear of the Mississippi and let the frigates do their job."
+                "caution": "[color:0,1,0,1]Mission control[]: Nice work taking out the bombers! Now stay clear of the Mississippi and let the frigates do their job."
             }
         },
         "test": {
             "name": "Sandbox test",
             "messages": {
-                "test": "This is a test mission. Fly around and do as you please.\nThis reminder will be displayed 5 times.",
+                "test": "This is a test mission. Fly around and do as you please.\nThis reminder will be displayed 3 times.",
                 "test2": "You can freely destroy other spacecrafts."
             }
         },
@@ -217,6 +214,21 @@
         },
         "libraTest": {
             "name": "Libra test"
+        },
+        "3v3": {
+            "name": "Three versus three"
+        },
+        "bombers": {
+            "name": "Bombers"
+        },
+        "mixed": {
+            "name": "Mixed"
+        },
+        "patrolVsPatrol": {
+            "name": "Patrol vs patrol"
+        },
+        "strikeForceVsStrikeForce": {
+            "name": "Strike force battle"
         },
         "staticAvoidance": {
             "name": "Static avoidance test"

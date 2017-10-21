@@ -498,28 +498,18 @@ define([
      * @returns {String}
      */
     function _getInfo() {
-        var result, maxAcc, maxAngAcc, firepower, firepowerDecrease, weapons, i, ranges, range;
+        var result, firepower, firepowerDecrease;
         result = "";
         if (_spacecraft) {
             if (_spacecraft.getPropulsion()) {
-                maxAcc = _spacecraft.getMaxAcceleration();
-                maxAngAcc = _spacecraft.getMaxAngularAcceleration() / Math.PI * 180;
-                result += "accel.: " + Math.round(maxAcc) + " m/s², speed: " + Math.round(maxAcc * config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_FORWARD_SPEED_FACTOR)) + " m/s, ";
-                result += "ang.accel.: " + Math.round(maxAngAcc) + " °/s², turn rate: " + Math.round(maxAngAcc * config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S)) + " °/s";
+                result += "accel.: " + Math.round(_spacecraft.getMaxAcceleration()) + " m/s², speed: " + Math.round(_spacecraft.getMaxCombatSpeed()) + " m/s, ";
+                result += "ang.accel.: " + Math.round(_spacecraft.getMaxAngularAcceleration() / Math.PI * 180) + " °/s², turn rate: " + Math.round(_spacecraft.getMaxCombatTurnRate()) + " °/s";
             }
             firepower = _spacecraft.getFirepower();
             if (firepower > 0) {
                 firepowerDecrease = firepower - _spacecraft.getFirepower(1);
                 result += (result ? ", " : "") + " firepower: " + (Math.round(firepower * 100) / 100) + " (-" + (Math.round(firepowerDecrease * 100) / 100) + " / arm.), ";
-                weapons = _spacecraft.getWeapons();
-                ranges = [];
-                for (i = 0; i < weapons.length; i++) {
-                    range = weapons[i].getRange();
-                    if (ranges.indexOf(range) < 0) {
-                        ranges.push(range);
-                    }
-                }
-                result += "range: " + ranges.join("/") + " m";
+                result += "range: " + _spacecraft.getWeaponRangesDisplayText() + " m";
             }
             if (_spacecraft.hasShield()) {
                 result += (result ? ", " : "") + " shield: " + _spacecraft.getShieldCapacity();

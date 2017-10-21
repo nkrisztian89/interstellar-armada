@@ -515,14 +515,6 @@ define([
             maxLength: 2
         },
         /**
-         * The name of the equipment profile that should be equipped on the spacecrafts shown in the database 
-         */
-        EQUIPMENT_PROFILE_NAME: {
-            name: "equipmentProfileName",
-            type: "string",
-            defaultValue: "default"
-        },
-        /**
          * The size of every model shown will be multiplied by this factor in the database when switching to it
          */
         START_SIZE_FACTOR: {
@@ -866,14 +858,6 @@ define([
             name: "selfFire",
             type: "boolean",
             defaultValue: true
-        },
-        /**
-         * If no profile name is given, new spacecraft are equipped with the profile having this name, if they have such
-         */
-        DEFAULT_EQUIPMENT_PROFILE_NAME: {
-            name: "defaultEquipmentProfileName",
-            type: "string",
-            defaultValue: "default"
         },
         /**
          * When displayed, hitboxes will be modulated with this color.

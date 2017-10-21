@@ -1716,6 +1716,11 @@ define([
         var i;
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
+         * The full name of this class as displayed in the game.
+         * @type String
+         */
+        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
+        /**
          * @type Number
          */
         this._grade = dataJSON ? (dataJSON.grade || _showMissingPropertyError(this, "grade")) : 0;
@@ -1801,6 +1806,14 @@ define([
             this._barrels[i].acquireResources();
         }
         _loadSoundEffect(this._fireSound);
+    };
+    /**
+     * @returns {String}
+     */
+    WeaponClass.prototype.getDisplayName = function () {
+        return strings.get(
+                strings.WEAPON_CLASS.PREFIX, this.getName() + strings.WEAPON_CLASS.NAME_SUFFIX.name,
+                this._fullName);
     };
     /**
      * @returns {Number}
@@ -1979,6 +1992,11 @@ define([
         GenericClass.prototype._loadData.call(this, dataJSON);
         referenceMass = dataJSON ? (dataJSON.referenceMass || 1) : null;
         /**
+         * The full name of this class as displayed in the game.
+         * @type String
+         */
+        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
+        /**
          * A descriptor for rendering the particles shown when thrusters of the ship 
          * fire.
          * @type ParticleDescriptor
@@ -2029,6 +2047,14 @@ define([
     PropulsionClass.prototype.acquireResources = function () {
         this._thrusterBurnParticle.acquireResources();
         _loadSoundEffect(this._thrusterSound);
+    };
+    /**
+     * @returns {String}
+     */
+    PropulsionClass.prototype.getDisplayName = function () {
+        return strings.get(
+                strings.PROPULSION_CLASS.PREFIX, this.getName() + strings.PROPULSION_CLASS.NAME_SUFFIX.name,
+                this._fullName);
     };
     /**
      * @returns {ParticleDescriptor}
@@ -2354,6 +2380,11 @@ define([
     ShieldClass.prototype._loadData = function (dataJSON) {
         GenericClass.prototype._loadData.call(this, dataJSON);
         /**
+         * The full name of this class as displayed in the game.
+         * @type String
+         */
+        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
+        /**
          * The overall maximum capacity (amount of damage absorbed when fully charged)
          * @type Number
          */
@@ -2395,6 +2426,14 @@ define([
      */
     ShieldClass.prototype.acquireResources = function () {
         _loadSoundEffect(this._rechargeStartSound);
+    };
+    /**
+     * @returns {String}
+     */
+    ShieldClass.prototype.getDisplayName = function () {
+        return strings.get(
+                strings.SHIELD_CLASS.PREFIX, this.getName() + strings.SHIELD_CLASS.NAME_SUFFIX.name,
+                this._fullName);
     };
     /**
      * @returns {Number}
@@ -3738,6 +3777,19 @@ define([
             }
         }
         /**
+         * The name of the equipment profile to be used by default (e.g. in the database)
+         * @type String
+         */
+        this._defaultEquipmentProfileName = otherSpacecraftClass ?
+                (dataJSON.defaultEquipmentProfileName || otherSpacecraftClass._defaultEquipmentProfileName) :
+                (dataJSON.defaultEquipmentProfileName || null);
+        if (this._defaultEquipmentProfileName && !this._equipmentProfiles[this._defaultEquipmentProfileName]) {
+            application.showError(
+                    "Non-existing default equipment profile name '" + this._defaultEquipmentProfileName + "' specified for spacecraft class " + this.getName() + "!",
+                    application.ErrorSeverity.MINOR);
+            this._defaultEquipmentProfileName = null;
+        }
+        /**
          * The descriptor of the sound effect to be played continuously at the position of this spacecraft.
          * @type Object
          */
@@ -3936,6 +3988,12 @@ define([
      */
     SpacecraftClass.prototype.getEquipmentProfileNames = function () {
         return Object.keys(this._equipmentProfiles);
+    };
+    /**
+     * @returns {String}
+     */
+    SpacecraftClass.prototype.getDefaultEquipmentProfileName = function () {
+        return this._defaultEquipmentProfileName;
     };
     /**
      * @returns {ObjectView[]}

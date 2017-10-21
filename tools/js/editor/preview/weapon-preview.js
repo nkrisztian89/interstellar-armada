@@ -35,7 +35,8 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "model", "shader", "texture",
-                "defaultLuminosityFactors"
+                "defaultLuminosityFactors",
+                "cooldown", "barrels" // to refresh info
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options

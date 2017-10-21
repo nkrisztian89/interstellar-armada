@@ -1,5 +1,5 @@
 {
-    "description": "Practice mission against a sinlge enemy of the same class, but more lightly armed.",
+    "description": "Practice simulation against a single enemy fighter with typical rebel equipment.",
     "environment": "reddim",
     "combatTheme": "combat",
     "tips": [
@@ -18,29 +18,25 @@
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],
-    "views": [
-        {
+    "views": [{
             "name": "free",
             "movable": true,
             "turnable": true,
             "position": [0, 3150, -80],
             "rotations": ["x-75"]
-        }
-    ],
-    "spacecrafts": [
-        {
+        }],
+    "spacecrafts": [{
             "team": "empire",
             "class": "falcon",
             "piloted": true,
             "position": [0, 0, 0],
-            "equipment": "full"
-        },
-        {
+            "equipment": "player-tier1"
+        }, {
             "team": "rebels",
             "class": "falcon",
             "ai": "fighter",
             "position": [0, 3200, -100],
-            "rotations": ["z+180"]
-        }
-    ]
+            "rotations": ["z+180"],
+            "equipment": "rebel"
+        }]
 }

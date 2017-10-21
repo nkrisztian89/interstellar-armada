@@ -88,49 +88,33 @@ define([
          * @type String
          */
         this._listContainerID = armadaScreens.MISSIONS_LIST_CONTAINER_ID;
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._missionTitle = this.registerSimpleComponent(MISSION_TITLE_ID);
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._missionLocation = this.registerSimpleComponent(MISSION_LOCATION_ID);
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._difficultySelector = null;
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._missionDescription = this.registerSimpleComponent(MISSION_DESCRIPTION_ID);
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._missionObjectivesTitle = this.registerSimpleComponent("missionObjectivesTitle");
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._missionObjectives = this.registerSimpleComponent("missionObjectives");
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._playerSpacecraftTitle = this.registerSimpleComponent("playerSpacecraftTitle");
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._playerSpacecraftData = this.registerSimpleComponent("playerSpacecraftData");
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
+        this._playerSpacecraftWeapons = this.registerSimpleComponent("playerSpacecraftWeapons");
+        /** @type SimpleComponent */
+        this._playerSpacecraftShield = this.registerSimpleComponent("playerSpacecraftShield");
+        /** @type SimpleComponent */
+        this._playerSpacecraftPropulsion = this.registerSimpleComponent("playerSpacecraftPropulsion");
+        /** @type SimpleComponent */
         this._demoButton = this.registerSimpleComponent(DEMO_BUTTON_ID);
-        /**
-         * @type SimpleComponent
-         */
+        /** @type SimpleComponent */
         this._launchButton = this.registerSimpleComponent(LAUNCH_BUTTON_ID);
         /**
          * The component housing the mission list
@@ -210,6 +194,9 @@ define([
             this._missionObjectives.hide();
             this._playerSpacecraftTitle.hide();
             this._playerSpacecraftData.hide();
+            this._playerSpacecraftWeapons.hide();
+            this._playerSpacecraftShield.hide();
+            this._playerSpacecraftPropulsion.hide();
             missions.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
                 var
                         /** @type String[] */
@@ -232,10 +219,41 @@ define([
                     this._missionObjectives.setContent(objectives.join(""));
                     if (_spacecraft) {
                         this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
-                            class: _spacecraft.getClass().getDisplayName(),
-                            firepower: _spacecraft.getFirepower().toFixed(1),
-                            shield: _spacecraft.hasShield() ? _spacecraft.getShieldCapacity() : "-"
+                            class: _spacecraft.getClass().getDisplayName()
                         });
+                        if (_spacecraft.hasWeapons()) {
+                            this._playerSpacecraftWeapons.setContent(strings.get(strings.MISSIONS.SPACECRAFT_WEAPONS), {
+                                weapons: _spacecraft.getWeaponsDisplayText() || "-",
+                                firepower: _spacecraft.getFirepower().toFixed(1),
+                                range: _spacecraft.hasWeapons() ? _spacecraft.getWeaponRangesDisplayText() + " m" : "-"
+                            });
+                            this._playerSpacecraftWeapons.show();
+                        } else {
+                            this._playerSpacecraftWeapons.setContent("");
+                            this._playerSpacecraftWeapons.hide();
+                        }
+                        if (_spacecraft.hasShield()) {
+                            this._playerSpacecraftShield.setContent(strings.get(strings.MISSIONS.SPACECRAFT_SHIELD), {
+                                shield: _spacecraft.hasShield() ? _spacecraft.getShieldDisplayName() : "-",
+                                shieldCapacity: _spacecraft.hasShield() ? _spacecraft.getShieldCapacity() : "-",
+                                shieldRechargeRate: _spacecraft.hasShield() ? _spacecraft.getShieldRechargeRate() + " / s" : "-"
+                            });
+                            this._playerSpacecraftShield.show();
+                        } else {
+                            this._playerSpacecraftShield.setContent("");
+                            this._playerSpacecraftShield.hide();
+                        }
+                        if (!!_spacecraft.getPropulsion()) {
+                            this._playerSpacecraftPropulsion.setContent(strings.get(strings.MISSIONS.SPACECRAFT_PROPULSION), {
+                                propulsion: _spacecraft.getPropulsion() ? _spacecraft.getPropulsionDisplayName() : "-",
+                                speed: _spacecraft.getPropulsion() ? Math.round(_spacecraft.getMaxCombatSpeed()) + " m/s" : "-",
+                                turnRate: _spacecraft.getPropulsion() ? Math.round(_spacecraft.getMaxCombatTurnRate()) + " °/s" : "-"
+                            });
+                            this._playerSpacecraftPropulsion.show();
+                        } else {
+                            this._playerSpacecraftPropulsion.setContent("");
+                            this._playerSpacecraftPropulsion.hide();
+                        }
                     } else {
                         this._playerSpacecraftData.setContent("-");
                     }
@@ -255,6 +273,9 @@ define([
             this._missionObjectives.hide();
             this._playerSpacecraftTitle.hide();
             this._playerSpacecraftData.hide();
+            this._playerSpacecraftWeapons.hide();
+            this._playerSpacecraftShield.hide();
+            this._playerSpacecraftPropulsion.hide();
             this._launchButton.disable();
             this._demoButton.disable();
         }

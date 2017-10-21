@@ -579,6 +579,13 @@ define([
         this._lastAimStatus = this._fixed ? WeaponAimStatus.FIXED : WeaponAimStatus.NO_TARGET;
     }
     /**
+     * Returns the name of the weapon in a way that can be displayed to the user (translated)
+     * @returns {String}
+     */
+    Weapon.prototype.getDisplayName = function () {
+        return this._class.getDisplayName();
+    };
+    /**
      * Returns the weapon slot this weapon is equipped to.
      * @returns {WeaponSlot}
      */
@@ -1680,6 +1687,13 @@ define([
         this._class.acquireResources();
     };
     /**
+     * Returns the name of the propulsion system in a way that can be displayed to the user (translated)
+     * @returns {String}
+     */
+    Propulsion.prototype.getDisplayName = function () {
+        return this._class.getDisplayName();
+    };
+    /**
      * Returns the thrust power of this propulsion system, in newtowns.
      * @returns {Number}
      */
@@ -2677,9 +2691,10 @@ define([
         this._class.acquireResources();
     };
     /**
-     * Initiates / cancels the jump out sequence (depending on whether it is already in progress)
+     * Initiates the jump out sequence
+     * @param {Boolean} toggle If true, calling the method while the jump out sequence is under way will cancel the jump
      */
-    JumpEngine.prototype.jumpOut = function () {
+    JumpEngine.prototype.jumpOut = function (toggle) {
         var wasPreparing;
         switch (this._state) {
             // initiating jump out sequence
@@ -2703,29 +2718,31 @@ define([
                 // cancelling jump out sequence
             case JumpEngine.JumpState.ALIGNING_VELOCITY:
             case JumpEngine.JumpState.PREPARING:
-                wasPreparing = this._state === JumpEngine.JumpState.PREPARING;
-                this._state = JumpEngine.JumpState.NONE;
-                this._spacecraft.unlockManeuvering();
-                this._spacecraft.changeFlightMode(this._originalFlightMode);
-                this._spacecraft.enableFiring();
-                if (this._soundClip) {
-                    this._soundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
-                    this._soundClip = null;
-                }
-                // the disengage sound effect (computer blips) only need to be played for the piloted spacecraft - the event handler should
-                // return true if the event handling included the HUD and other piloted spacecraft related updates
-                if (this._spacecraft.handleEvent(SpacecraftEvents.JUMP_CANCELLED)) {
-                    this._soundClip = this._class.createDisengageSoundClip();
+                if (toggle) {
+                    wasPreparing = this._state === JumpEngine.JumpState.PREPARING;
+                    this._state = JumpEngine.JumpState.NONE;
+                    this._spacecraft.unlockManeuvering();
+                    this._spacecraft.changeFlightMode(this._originalFlightMode);
+                    this._spacecraft.enableFiring();
                     if (this._soundClip) {
-                        this._soundClip.play();
+                        this._soundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
+                        this._soundClip = null;
                     }
-                }
-                // the longer cancellation sound (a "power down" type sound effect) is played (for all spacecrafts) and the reference is set
-                // to this one so that it can be stopped if the spacecraft is destroyed while it is playing
-                if (wasPreparing) {
-                    this._soundClip = this._class.createCancelSoundClip();
-                    if (this._soundClip) {
-                        this._soundClip.play();
+                    // the disengage sound effect (computer blips) only need to be played for the piloted spacecraft - the event handler should
+                    // return true if the event handling included the HUD and other piloted spacecraft related updates
+                    if (this._spacecraft.handleEvent(SpacecraftEvents.JUMP_CANCELLED)) {
+                        this._soundClip = this._class.createDisengageSoundClip();
+                        if (this._soundClip) {
+                            this._soundClip.play();
+                        }
+                    }
+                    // the longer cancellation sound (a "power down" type sound effect) is played (for all spacecrafts) and the reference is set
+                    // to this one so that it can be stopped if the spacecraft is destroyed while it is playing
+                    if (wasPreparing) {
+                        this._soundClip = this._class.createCancelSoundClip();
+                        if (this._soundClip) {
+                            this._soundClip.play();
+                        }
                     }
                 }
                 break;
@@ -2740,6 +2757,8 @@ define([
         if (this._state === JumpEngine.JumpState.NONE) {
             this._state = JumpEngine.JumpState.JUMPING_IN;
             this._timeLeft = this._class.getJumpInDuration();
+            this._spacecraft.unlockManeuvering();
+            this._spacecraft.setSpeedTarget(0);
             this._spacecraft.lockManeuvering();
             this._spacecraft.disableFiring();
             exp = explosion.getExplosion();
@@ -2829,6 +2848,8 @@ define([
                             true,
                             mat.IDENTITY4);
                     exp.addToScene(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
+                    this._spacecraft.getVisualModel().setScalingMatrix(this._originalScalingMatrix);
+                    this._spacecraft.getPhysicalModel().reset();
                     this._spacecraft.setAway(true);
                     this._spacecraft.handleEvent(SpacecraftEvents.JUMPED_OUT);
                 }
@@ -2904,7 +2925,7 @@ define([
          * Current shield state for visuals (RGB color + animation progress)
          * @type Number[4]
          */
-        this._state = [0,0,0,0];
+        this._state = [0, 0, 0, 0];
         if (shieldClass) {
             color = shieldClass.getRechargeColor();
             this._state[0] = color[0];
@@ -2924,6 +2945,13 @@ define([
         this._class.acquireResources();
     };
     /**
+     * Returns the name of the shield in a way that can be displayed to the user (translated)
+     * @returns {String}
+     */
+    Shield.prototype.getDisplayName = function () {
+        return this._class.getDisplayName();
+    };
+    /**
      * Returns the shield's integrity ratio (current / maximum capacity)
      * @returns {Number}
      */
@@ -2936,6 +2964,13 @@ define([
      */
     Shield.prototype.getCapacity = function () {
         return this._capacity;
+    };
+    /**
+     * Returns the shield's recharge rate (in capacity / second)
+     * @returns {Number}
+     */
+    Shield.prototype.getRechargeRate = function () {
+        return this._class.getRechargeRate();
     };
     /**
      * Returns the state of the shield to be used for visuals (color and animation progress)

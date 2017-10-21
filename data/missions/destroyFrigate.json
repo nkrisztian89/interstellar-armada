@@ -1,0 +1,181 @@
+{
+    "description": "One of our frigate captains has deserted to the rebels and is threatening one of our patrols in the Varanock system. We are dispatching a squad of Viper bombers (<strong>Delta</strong>) to engage and destroy the frigate. We need you to lead the squad. Intercept and destroy the frigate before it reaches our patrol, and help in cleaning up any remaining escorts afterwards.",
+    "environment": "varanock",
+    "tips": [
+        "prioritizeTargets",
+        "cruiseMode",
+        "bombers",
+        "frigates"
+    ],
+    "teams": [
+        "empire",
+        {
+            "name": "rebels",
+            "color": [0.2, 0.2, 0.8, 1.0]
+        }
+    ],
+    "views": [{
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, -130, 40],
+            "rotations": ["x-80"]
+        }],
+    "events": [{
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["Amazonas"]
+                        }
+                    }],
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "lose"
+                }, {
+                    "type": "command",
+                    "subjects": {
+                        "teams": ["empire"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }]
+        }, {
+            "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true,
+                "delay": 1500
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["wraith"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Dniester",
+                            "relative": true,
+                            "position": [0, -100, -100],
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [150, -50, 0]
+                            }
+                        }
+                    }
+                }, {
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["Dniester"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "single": "Amazonas",
+                            "priority": true
+                        }
+                    }
+                }, {
+                    "type": "command",
+                    "subjects": {
+                        "squads": ["delta"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "single": "Dniester"
+                        }
+                    }
+                }, {
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["Amazonas"],
+                        "squads": ["alpha"]
+                    },
+                    "params": {
+                        "command": "target",
+                        "target": {
+                            "squads": ["wraith"]
+                        }
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "teams": ["rebels"]
+                        }
+                    }],
+                "oneShot": true,
+                "delay": 10000
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "teams": ["empire"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "out"
+                        }
+                    }
+                }]
+        }],
+    "spacecrafts": [{
+            "team": "empire",
+            "class": "aries",
+            "name": "Amazonas",
+            "ai": "ship",
+            "position": [0, -2500, -200],
+            "equipment": "imperial-tier1"
+        }, {
+            "team": "empire",
+            "class": "falcon",
+            "squad": "alpha",
+            "count": 3,
+            "ai": "fighter",
+            "position": [0, 200, -50],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipment": "imperial-tier1"
+        }, {
+            "team": "empire",
+            "class": "viper",
+            "squad": "delta",
+            "count": 3,
+            "pilotedIndex": 1,
+            "ai": "fighter",
+            "position": [0, 0, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipments": ["player-tier1", "imperial-tier1", "imperial-tier1"]
+        }, {
+            "team": "rebels",
+            "class": "taurus",
+            "name": "Dniester",
+            "ai": "ship",
+            "position": [-135, 5500, -200],
+            "rotations": ["z+90"],
+            "equipment": "rebel"
+        }, {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": "wraith",
+            "count": 7,
+            "ai": "fighter",
+            "equipment": "rebel",
+            "away": true
+        }]
+}

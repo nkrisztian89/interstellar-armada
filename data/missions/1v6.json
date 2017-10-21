@@ -1,5 +1,5 @@
 {
-    "description": "Similar to the team match with three interceptors and three bombers each side, only this time you are alone. Can you hold your own against six opponents?",
+    "description": "Practice simulation for elite pilots against six rebel fighters and bombers.",
     "environment": "cathagan",
     "combatTheme": "combat2",
     "tips": [
@@ -10,8 +10,7 @@
         "strafe",
         "rollStrafe",
         "scoreDestroy",
-        "interceptors",
-        "bombers"
+        "interceptors"
     ],
     "teams": [
         "empire",
@@ -20,68 +19,43 @@
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],
-    "views": [
-        {
+    "views": [{
             "name": "free",
             "movable": true,
             "turnable": true,
             "position": [0, 100, -40],
             "rotations": ["x-65", "z+180"]
-        }
-    ],
-    "spacecrafts": [
-        {
+        }],
+    "spacecrafts": [{
             "team": "empire",
             "class": "falcon",
             "piloted": true,
             "position": [0, 3200, 0],
-            "equipment": "full",
+            "equipment": "player-tier3",
             "rotations": ["z+180"]
-        },
-        {
+        }, {
             "team": "rebels",
             "class": "falcon",
-            "squad": "wraith 1",
+            "squad": "wraith",
+            "count": 3,
             "ai": "fighter",
-            "position": [0, 0, -100]
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 2",
-            "ai": "fighter",
-            "position": [-35, -35, -100]
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 3",
-            "ai": "fighter",
-            "position": [35, -35, -100]
-        },
-        {
+            "equipment": "rebel",
+            "position": [0, 0, -100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [-35, -35, 0]
+            }
+        }, {
             "team": "rebels",
             "class": "viper",
-            "squad": "phantom 1",
+            "squad": "phantom",
+            "count": 3,
             "ai": "fighter",
             "position": [0, -50, -150],
-            "equipment": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 2",
-            "ai": "fighter",
-            "position": [-35, -85, -150],
-            "equipment": "half"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 3",
-            "ai": "fighter",
-            "position": [35, -85, -150],
-            "equipment": "half"
-        }
-    ]
+            "formation": {
+                "type": "wedge",
+                "spacing": [-35, -35, 0]
+            },
+            "equipments": ["rebel-heavy", "rebel-light", "rebel-light"]
+        }]
 }

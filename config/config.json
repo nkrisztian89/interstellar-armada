@@ -1,5 +1,5 @@
 {
-    "version": "0.4.3-dev:650 (2017.10.11.)",
+    "version": "0.4.3-dev:651 (2017.10.21.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -449,11 +449,14 @@
                     }, {
                         "name": "pause"
                     }, {
-                        "name": "stopTime"
+                        "name": "stopTime",
+                        "debug": true
                     }, {
-                        "name": "switchToPilotMode"
+                        "name": "switchToPilotMode",
+                        "debug": true
                     }, {
-                        "name": "switchToSpectatorMode"
+                        "name": "switchToSpectatorMode",
+                        "debug": true
                     }, {
                         "name": "toggleHitboxVisibility",
                         "debug": true

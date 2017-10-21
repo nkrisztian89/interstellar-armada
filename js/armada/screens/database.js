@@ -321,13 +321,14 @@ define([
      * to display the its models for loading as well as sets the callbacks to set up the models after the resources have been loaded.
      */
     function _setupCurrentItemAndModels() {
+        var spacecraftClass = classes.getSpacecraftClassesInArray(true)[_currentItemIndex];
         // create a ship that can be used to add the models to the scene
         _currentItem = new spacecraft.Spacecraft(
-                classes.getSpacecraftClassesInArray(true)[_currentItemIndex],
+                spacecraftClass,
                 null,
                 mat.identity4(),
                 mat.identity4(),
-                _getSetting(SETTINGS.EQUIPMENT_PROFILE_NAME));
+                spacecraftClass.getDefaultEquipmentProfileName());
         // request the required shaders from the resource manager
         graphics.getShader(_getSetting(SETTINGS.WIREFRAME_SHADER_NAME));
         graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME));

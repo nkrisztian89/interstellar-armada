@@ -2,25 +2,14 @@
     "description": "An imperial fleet of frigates is approaching the flagship of the rebels, a Libra cruiser. In a last ditch effort, the rebels sent waves of heavily armed bombers to take out the frigates. You must draw the attention of the enemy bombers to make sure enough of the frigates reach the enemy cruiser to destroy it. If the fleet falls, the rebels can make their escape. Do not approach the enemy cruiser, your weapons cannot penetrate its heavy armor and you will be easy target for its many turrets.",
     "environment": "blovell",
     "tips": [
-        "tryControls",
-        "changeControls",
-        "tryViews",
         "prioritizeTargets",
         "think",
         "curve",
         "strafe",
-        "rollStrafe",
         "cruiseMode",
         "combatMode",
         "protect",
-        "protectTaunt",
-        "turretDistance",
-        "scoreDestroy",
-        "friendlyFire",
-        "effectiveness",
-        "interceptors",
-        "bombers",
-        "frigates"
+        "protectTaunt"
     ],
     "teams": [
         "empire",
@@ -29,15 +18,13 @@
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],
-    "views": [
-        {
+    "views": [{
             "name": "free",
             "movable": true,
             "turnable": true,
             "position": [9600, 750, 0],
             "rotations": ["x-75", "z-90"]
-        }
-    ],
+        }],
     "events": [{
             "trigger": {
                 "conditions": [{
@@ -49,16 +36,12 @@
                             "relation": "below",
                             "count": 2
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true
             },
             "actions": [{
                     "type": "lose"
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "fireWhen": "missionStarts",
@@ -113,10 +96,7 @@
                             "relation": "above",
                             "count": 1
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true
             },
             "actions": [{
@@ -124,8 +104,7 @@
                     "params": {
                         "textID": "caution"
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -133,10 +112,7 @@
                         "subjects": {
                             "squads": ["phantom", "reaper"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true
             },
             "actions": [{
@@ -147,8 +123,7 @@
                     "params": {
                         "command": "standDown"
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -156,10 +131,7 @@
                         "subjects": {
                             "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga", "Vilnius"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true
             },
             "actions": [{
@@ -173,8 +145,7 @@
                             "way": "out"
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -182,10 +153,7 @@
                         "subjects": {
                             "teams": ["rebels"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 45000
             },
@@ -200,192 +168,67 @@
                             "way": "out"
                         }
                     }
-                }
-            ]
+                }]
         }],
-    "spacecrafts": [
-        {
+    "spacecrafts": [{
             "class": "taurus",
-            "name": "St. Petersburg",
+            "count": 6,
+            "names": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga", "Vilnius"],
             "team": "empire",
             "ai": "ship",
             "initialTarget": "Mississippi",
-            "position": [8500, 750, -800],
+            "positions": [[8500, 750, -800], [8500, 1500, -400], [8500, 1000, -400], [8500, 500, -400], [8500, 0, -400], [8500, 750, 0]],
             "rotations": ["z-90"],
-            "equipment": "full",
+            "equipment": "imperial-tier1",
             "excludeFromReferenceScore": true
-        },
-        {
-            "class": "taurus",
-            "name": "Oslo",
-            "team": "empire",
-            "ai": "ship",
-            "initialTarget": "Mississippi",
-            "position": [8500, 1500, -400],
-            "rotations": ["z-90"],
-            "equipment": "full",
-            "excludeFromReferenceScore": true
-        },
-        {
-            "class": "taurus",
-            "name": "Stockholm",
-            "team": "empire",
-            "ai": "ship",
-            "initialTarget": "Mississippi",
-            "position": [8500, 1000, -400],
-            "rotations": ["z-90"],
-            "equipment": "full",
-            "excludeFromReferenceScore": true
-        },
-        {
-            "class": "taurus",
-            "name": "Tallinn",
-            "team": "empire",
-            "ai": "ship",
-            "initialTarget": "Mississippi",
-            "position": [8500, 500, -400],
-            "rotations": ["z-90"],
-            "equipment": "full",
-            "excludeFromReferenceScore": true
-        },
-        {
-            "class": "taurus",
-            "name": "Riga",
-            "team": "empire",
-            "ai": "ship",
-            "initialTarget": "Mississippi",
-            "position": [8500, 0, -400],
-            "rotations": ["z-90"],
-            "equipment": "full",
-            "excludeFromReferenceScore": true
-        },
-        {
-            "class": "taurus",
-            "name": "Vilnius",
-            "team": "empire",
-            "ai": "ship",
-            "initialTarget": "Mississippi",
-            "position": [8500, 750, 0],
-            "rotations": ["z-90"],
-            "equipment": "full",
-            "excludeFromReferenceScore": true
-        },
-        {
+        }, {
             "class": "falcon",
             "team": "empire",
-            "squad": "alpha 1",
-            "piloted": true,
-            "position": [9000, 0, -60],
-            "rotations": ["z-90"],
-            "equipment": "full"
-        },
-        {
-            "class": "falcon",
-            "squad": "alpha 2",
-            "team": "empire",
+            "squad": "alpha",
+            "count": 2,
+            "pilotedIndex": 1,
             "ai": "fighter",
-            "position": [9100, 100, -60],
+            "position": [9000, 0, -60],
+            "formation": {
+                "type": "wedge",
+                "spacing": [100, -100, 0]
+            },
             "rotations": ["z-90"],
-            "equipment": "full"
-        },
-        {
+            "equipments": ["player-tier3", "imperial-tier2"]
+        }, {
             "class": "viper",
             "team": "rebels",
-            "squad": "phantom 1",
+            "squad": "phantom",
+            "count": 5,
             "ai": "fighter",
             "position": [500, 1000, -200],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, 0, 0]
+            },
             "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
+            "equipment": "rebel-heavy"
+        }, {
             "class": "viper",
             "team": "rebels",
-            "squad": "phantom 2",
-            "ai": "fighter",
-            "position": [500, 1050, -200],
-            "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
-            "class": "viper",
-            "team": "rebels",
-            "squad": "phantom 3",
-            "ai": "fighter",
-            "position": [500, 950, -200],
-            "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
-            "class": "viper",
-            "team": "rebels",
-            "squad": "phantom 4",
-            "ai": "fighter",
-            "position": [500, 900, -200],
-            "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
-            "class": "viper",
-            "team": "rebels",
-            "squad": "phantom 5",
-            "ai": "fighter",
-            "position": [500, 1100, -200],
-            "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
-            "class": "viper",
-            "team": "rebels",
-            "squad": "reaper 1",
+            "squad": "reaper",
+            "count": 5,
             "ai": "fighter",
             "position": [-3500, 0, -200],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, 0, 0]
+            },
             "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
-            "class": "viper",
-            "team": "rebels",
-            "squad": "reaper 2",
-            "ai": "fighter",
-            "position": [-3500, 50, -200],
-            "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
-            "class": "viper",
-            "team": "rebels",
-            "squad": "reaper 3",
-            "ai": "fighter",
-            "position": [-3500, -50, -200],
-            "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
-            "class": "viper",
-            "team": "rebels",
-            "squad": "reaper 4",
-            "ai": "fighter",
-            "position": [-3500, -100, -200],
-            "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
-            "class": "viper",
-            "team": "rebels",
-            "squad": "reaper 5",
-            "ai": "fighter",
-            "position": [-3500, 100, -200],
-            "rotations": ["z+90"],
-            "equipment": "heavy"
-        },
-        {
+            "equipment": "rebel-heavy"
+        }, {
             "class": "libra",
             "name": "Mississippi",
             "ai": "ship",
             "team": "rebels",
             "position": [-3000, 500, -400],
             "rotations": ["z+90"],
+            "equipment": "imperial-tier1",
             "excludeFromReferenceScore": true
-        }
-    ]
+        }]
 }

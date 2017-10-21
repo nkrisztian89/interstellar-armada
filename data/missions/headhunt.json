@@ -39,8 +39,6 @@
                             "spacecrafts": ["Ruby Blade"]
                         }
                     }],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
                 "oneShot": true
             },
             "actions": [{
@@ -65,8 +63,6 @@
                             "teams": ["empire"]
                         }
                     }],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
                 "oneShot": true
             },
             "actions": [{
@@ -93,8 +89,6 @@
                             "count": 3
                         }
                     }],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
                 "oneShot": true,
                 "delay": 2500
             },
@@ -125,8 +119,6 @@
                             "squads": ["raider"]
                         }
                     }],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
                 "oneShot": true,
                 "delay": 2500
             },
@@ -148,22 +140,9 @@
                             }
                         }
                     }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "destroyed",
-                        "subjects": {
-                            "squads": ["raider"]
-                        }
-                    }],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 3150
-            },
-            "actions": [{
+                }, {
                     "type": "command",
+                    "delay": 650,
                     "subjects": {
                         "spacecrafts": ["marauder 3", "marauder 4"]
                     },
@@ -180,22 +159,9 @@
                             }
                         }
                     }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "destroyed",
-                        "subjects": {
-                            "squads": ["raider"]
-                        }
-                    }],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 4000
-            },
-            "actions": [{
+                }, {
                     "type": "command",
+                    "delay": 1500,
                     "subjects": {
                         "spacecrafts": ["Ruby Blade", "marauder 5", "marauder 6"]
                     },
@@ -214,6 +180,7 @@
                     }
                 }, {
                     "type": "command",
+                    "delay": 1500,
                     "subjects": {
                         "spacecrafts": ["Ruby Blade"]
                     },
@@ -225,6 +192,7 @@
                     }
                 }, {
                     "type": "command",
+                    "delay": 1500,
                     "subjects": {
                         "spacecrafts": ["gamma 1"]
                     },
@@ -252,8 +220,6 @@
                             "count": 0
                         }
                     }],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
                 "oneShot": true,
                 "delay": 4500
             },
@@ -275,8 +241,6 @@
                             "count": 8
                         }
                     }],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
                 "oneShot": true,
                 "delay": 500
             },
@@ -306,19 +270,21 @@
             "piloted": true,
             "squad": "alpha 1",
             "position": [0, 0, 0],
-            "rotations": ["z-90"]
+            "rotations": ["z-90"],
+            "equipment": "player-tier1"
         }, {
             "team": "empire",
             "class": "falcon",
             "squad": "gamma 1",
             "ai": "fighter",
-            "position": [-2000, -100, -50]
+            "position": [-2000, -100, -50],
+            "equipment": "imperial-tier1"
         }, {
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 1",
-            "equipment": "weak",
+            "equipment": "pirate-weak",
             "position": [-2200, 400, 200],
             "rotations": ["z+180"]
         }, {
@@ -326,7 +292,7 @@
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 2",
-            "equipment": "weak",
+            "equipment": "pirate-weak",
             "position": [-1900, 650, -250],
             "rotations": ["z+180"]
         }, {
@@ -334,85 +300,22 @@
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 3",
-            "equipment": "weak",
+            "equipment": "pirate-weak",
             "away": true
         }, {
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 4",
-            "equipment": "weak",
+            "equipment": "pirate-weak",
             "away": true
         }, {
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
-            "squad": "marauder 1",
-            "equipment": "default",
-            "away": true,
-            "excludeFromReferenceScore": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 2",
-            "equipment": "default",
-            "away": true,
-            "excludeFromReferenceScore": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 3",
-            "equipment": "default",
-            "away": true,
-            "excludeFromReferenceScore": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 4",
-            "equipment": "default",
-            "away": true,
-            "excludeFromReferenceScore": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 5",
-            "equipment": "default",
-            "away": true,
-            "excludeFromReferenceScore": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 6",
-            "equipment": "default",
-            "away": true,
-            "excludeFromReferenceScore": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 7",
-            "equipment": "default",
-            "away": true,
-            "excludeFromReferenceScore": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 8",
-            "equipment": "default",
-            "away": true,
-            "excludeFromReferenceScore": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 9",
-            "equipment": "default",
+            "squad": "marauder",
+            "count": 9,
+            "equipment": "pirate-full",
             "away": true,
             "excludeFromReferenceScore": true
         }, {
@@ -420,7 +323,7 @@
             "class": "rubyBlade",
             "ai": "fighter",
             "name": "Ruby Blade",
-            "equipment": "default",
+            "equipment": "pirate-ruby-blade",
             "away": true
         }]
 }

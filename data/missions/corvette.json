@@ -1,5 +1,5 @@
 {
-    "description": "You can pilot a whole (if small) warship in this mission. Beware, this is different than dogfighting with an interceptor! Your corvette is much slower, but its turrets automatically track the targeted enemies, so you do not need to aim towards them. Instead, use you maneuverability to avoid incoming fire, as though you are armored, there are many fighters and bombers closing in to destroy you! Use smart targeting to take down the most dangerous or easiest threats first.",
+    "description": "This is a simulation designed to test warship operating skills. Beware, this is different than dogfighting with an interceptor! A corvette is much slower, but its turrets automatically track the targeted enemies, so you do not need to aim towards them. Instead, use you maneuverability to avoid incoming fire, as though you are armored, there are many fighters and bombers closing in to destroy you! Use smart targeting to take down the most dangerous or easiest threats first.",
     "environment": "luxilian",
     "tips": [
         "tryControls",
@@ -9,8 +9,6 @@
         "think",
         "scoreDestroy",
         "effectiveness",
-        "interceptors",
-        "bombers",
         "corvettes"
     ],
     "teams": [
@@ -27,10 +25,7 @@
                         "subjects": {
                             "spacecrafts": ["Ohio"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true
             },
             "actions": [{
@@ -44,8 +39,7 @@
                             "way": "out"
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "fireWhen": "missionStarts",
@@ -71,16 +65,9 @@
                             }
                         }
                     }
-                }
-            ]
-        }, {
-            "trigger": {
-                "fireWhen": "missionStarts",
-                "oneShot": true,
-                "delay": 1800
-            },
-            "actions": [{
+                }, {
                     "type": "command",
+                    "delay": 500,
                     "subjects": {
                         "squads": ["phantom"]
                     },
@@ -98,10 +85,8 @@
                             }
                         }
                     }
-                }
-            ]
+                }]
         }, {
-            "name": "secondWaveStart",
             "trigger": {
                 "conditions": [{
                         "type": "count",
@@ -112,10 +97,7 @@
                             "relation": "below",
                             "count": 3
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 2500
             },
@@ -137,25 +119,9 @@
                             }
                         }
                     }
-                }
-            ]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "timeElapsed",
-                        "params": {
-                            "time": 750,
-                            "satisfiedWhen": "once",
-                            "start": "secondWaveStart"
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true
-            },
-            "actions": [{
+                }, {
                     "type": "command",
+                    "delay": 750,
                     "subjects": {
                         "squads": ["reaper"]
                     },
@@ -172,8 +138,7 @@
                             }
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -181,10 +146,7 @@
                         "subjects": {
                             "teams": ["rebels"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 30000
             },
@@ -199,131 +161,65 @@
                             "way": "out"
                         }
                     }
-                }
-            ]
+                }]
         }],
-    "views": [
-        {
+    "views": [{
             "name": "free",
             "movable": true,
             "turnable": true,
             "position": [70, 120, 30],
             "rotations": ["x-75", "z+215"]
-        }
-    ],
-    "spacecrafts": [
-        {
+        }],
+    "spacecrafts": [{
             "team": "empire",
             "class": "aries",
             "piloted": true,
             "name": "Ohio",
             "position": [0, 0, 0],
-            "equipment": "full"
-        },
-        {
+            "equipment": "imperial-tier1"
+        }, {
             "team": "empire",
             "class": "falcon",
-            "squad": "alpha 1",
+            "squad": "alpha",
+            "count": 2,
             "ai": "fighter",
-            "position": [-135, -35, 100]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "squad": "alpha 2",
-            "ai": "fighter",
-            "position": [-100, -70, 100]
-        },
-        {
+            "position": [-135, -35, 100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipment": "imperial-tier1"
+        }, {
             "team": "rebels",
             "class": "falcon",
-            "squad": "wraith 1",
+            "squad": "wraith",
+            "count": 3,
             "ai": "fighter",
-            "away": true
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 2",
-            "ai": "fighter",
-            "away": true
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 3",
-            "ai": "fighter",
-            "away": true
-        },
-        {
+            "away": true,
+            "equipment": "rebel"
+        }, {
             "team": "rebels",
             "class": "viper",
-            "squad": "phantom 1",
+            "squad": "phantom",
+            "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 2",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "full"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 3",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "full"
-        },
-        {
+            "equipments": ["rebel-heavy", "rebel-light", "rebel-heavy"]
+        }, {
             "team": "rebels",
             "class": "falcon",
-            "squad": "serpent 1",
+            "squad": "serpent",
+            "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "full"
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "serpent 2",
-            "ai": "fighter",
-            "away": true
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "serpent 3",
-            "ai": "fighter",
-            "away": true
-        },
-        {
+            "equipment": "rebel"
+        }, {
             "team": "rebels",
             "class": "viper",
-            "squad": "reaper 1",
+            "squad": "reaper",
+            "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "reaper 2",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "full"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "reaper 3",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "full"
-        }
-    ]
+            "equipments": ["rebel-heavy", "rebel-light", "rebel-heavy"]
+        }]
 }

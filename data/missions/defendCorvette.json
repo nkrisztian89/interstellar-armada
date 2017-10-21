@@ -1,10 +1,7 @@
 {
-    "description": "Waves of enemy fighters and bombers are coming to destroy the corvette on your side. Intercept them before they can do too much damage so that the corvette can survive! Beware of bombers armed with heavier weapons!",
+    "description": "Sensors indicate waves of enemy fighters and bombers closing in on our patrol. Intercept them before they can do too much damage so that the corvette can survive! Beware of bombers armed with heavier weapons!",
     "environment": "sheenuba",
     "tips": [
-        "tryControls",
-        "changeControls",
-        "tryViews",
         "prioritizeTargets",
         "think",
         "curve",
@@ -34,10 +31,7 @@
                         "subjects": {
                             "spacecrafts": ["Ohio"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true
             },
             "actions": [{
@@ -53,8 +47,7 @@
                             "way": "out"
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "fireWhen": "missionStarts",
@@ -80,8 +73,7 @@
                             }
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -89,10 +81,7 @@
                         "subjects": {
                             "squads": ["wraith"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 1000
             },
@@ -114,8 +103,7 @@
                             }
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -127,10 +115,7 @@
                             "relation": "below",
                             "count": 2
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 5000
             },
@@ -152,8 +137,7 @@
                             }
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -165,10 +149,7 @@
                             "relation": "below",
                             "count": 3
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 8000
             },
@@ -183,15 +164,14 @@
                             "way": "in",
                             "anchor": "Ohio",
                             "relative": "true",
-                            "distance": 2500,
+                            "distance": 4200,
                             "formation": {
                                 "type": "wedge",
                                 "spacing": [50, -50, 0]
                             }
                         }
                     }
-                }
-            ]
+                }]
         }, {
             "trigger": {
                 "conditions": [{
@@ -199,10 +179,7 @@
                         "subjects": {
                             "teams": ["rebels"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 30000
             },
@@ -217,149 +194,68 @@
                             "way": "out"
                         }
                     }
-                }
-            ]
+                }]
         }],
-    "views": [
-        {
+    "views": [{
             "name": "free",
             "movable": true,
             "turnable": true,
             "position": [60, 200, 45],
             "rotations": ["x-80", "z+215"]
-        }
-    ],
-    "spacecrafts": [
-        {
+        }],
+    "spacecrafts": [{
             "team": "empire",
             "class": "aries",
             "name": "Ohio",
             "ai": "ship",
             "position": [0, 50, 0],
-            "equipment": "full"
-        },
-        {
+            "equipment": "imperial-tier1"
+        }, {
             "team": "empire",
             "class": "falcon",
-            "piloted": true,
-            "squad": "alpha 1",
-            "position": [-100, -10, 10]
-        },
-        {
-            "team": "empire",
-            "class": "falcon",
-            "squad": "alpha 2",
+            "squad": "alpha",
+            "count": 2,
+            "pilotedIndex": 1,
             "ai": "fighter",
-            "position": [-65, -50, 20]
-        },
-        {
+            "position": [-100, -10, 10],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -40, 10]
+            },
+            "equipments": ["player-tier2", "imperial-tier1"]
+        }, {
             "team": "rebels",
             "class": "falcon",
-            "squad": "wraith 1",
+            "squad": "wraith",
+            "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "default",
+            "equipment": "rebel",
             "excludeFromReferenceScore": true
-        },
-        {
+        }, {
+            "team": "rebels",
+            "class": "viper",
+            "squad": "phantom",
+            "count": 3,
+            "ai": "fighter",
+            "away": true,
+            "equipments": ["rebel-heavy", "rebel-heavy", "rebel-light"]
+        }, {
             "team": "rebels",
             "class": "falcon",
-            "squad": "wraith 2",
+            "squad": "serpent",
+            "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "default",
+            "equipment": "rebel",
             "excludeFromReferenceScore": true
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "wraith 3",
-            "ai": "fighter",
-            "away": true,
-            "excludeFromReferenceScore": true
-        },
-        {
+        }, {
             "team": "rebels",
             "class": "viper",
-            "squad": "phantom 1",
+            "squad": "reaper",
+            "count": 4,
             "ai": "fighter",
             "away": true,
-            "equipment": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 2",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "phantom 3",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "full"
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "serpent 1",
-            "ai": "fighter",
-            "away": true,
-            "excludeFromReferenceScore": true
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "serpent 2",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "default",
-            "excludeFromReferenceScore": true
-        },
-        {
-            "team": "rebels",
-            "class": "falcon",
-            "squad": "serpent 3",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "default",
-            "excludeFromReferenceScore": true
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "reaper 1",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "reaper 2",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "heavy"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "reaper 3",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "full"
-        },
-        {
-            "team": "rebels",
-            "class": "viper",
-            "squad": "reaper 4",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "full",
-            "excludeFromReferenceScore": true
-        }
-    ]
+            "equipments": ["rebel-heavy", "rebel-heavy", "rebel-light", "rebel-light"]
+        }]
 }

@@ -29,10 +29,7 @@
                         "subjects": {
                             "spacecrafts": ["raider 1"]
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 1500
             },
@@ -66,10 +63,7 @@
                             "relation": "below",
                             "count": 2
                         }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
+                    }],
                 "oneShot": true,
                 "delay": 2500
             },
@@ -85,34 +79,12 @@
                             "anchor": "Rookie",
                             "relative": "true",
                             "position": [30, 4500, 200],
-                            "rotations": ["z+180"],
-                            "formation": {
-                                "type": "wedge",
-                                "spacing": [50, -50, 0]
-                            }
+                            "rotations": ["z+180"]
                         }
                     }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "squads": ["raider"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 2
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 4000
-            },
-            "actions": [{
+                }, {
                     "type": "command",
+                    "delay": 1500,
                     "subjects": {
                         "spacecrafts": ["marauder 2"]
                     },
@@ -125,27 +97,9 @@
                             "position": [100, -500, -20]
                         }
                     }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "squads": ["raider"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 2
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 4750
-            },
-            "actions": [{
+                }, {
                     "type": "command",
+                    "delay": 2250,
                     "subjects": {
                         "spacecrafts": ["marauder 3"]
                     },
@@ -165,49 +119,37 @@
             "class": "falcon",
             "piloted": true,
             "name": "Rookie",
-            "position": [0, 0, 0]
+            "position": [0, 0, 0],
+            "equipment": "player-tier1"
         }, {
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 1",
             "position": [0, 3200, -100],
-            "equipment": "medium",
+            "equipment": "pirate-medium",
             "rotations": ["z+180"]
         }, {
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 2",
-            "equipment": "weak",
+            "equipment": "pirate-weak",
             "away": true
         }, {
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 3",
-            "equipment": "weak",
+            "equipment": "pirate-weak",
             "away": true
         }, {
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
-            "squad": "marauder 1",
-            "equipment": "default",
-            "away": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 2",
-            "equipment": "weak",
-            "away": true
-        }, {
-            "team": "pirates",
-            "class": "wolf",
-            "ai": "fighter",
-            "squad": "marauder 3",
-            "equipment": "weak",
+            "squad": "marauder",
+            "count": 3,
+            "equipments": ["pirate-full", "pirate-weak", "pirate-weak"],
             "away": true
         }]
 }

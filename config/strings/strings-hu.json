@@ -64,7 +64,10 @@
         "noDescription": "A küldetéshez nem érhető el leírás.",
         "missionObjectivesTitle": "Feladatok:",
         "playerSpacecraftTitle": "Űrhajó:",
-        "playerSpacecraftData": "Osztály: {class}<br/>Tűzerő: {firepower}<br/>Pajzs: {shield}",
+        "playerSpacecraftData": "<strong>Osztály:</strong> {class}",
+        "playerSpacecraftWeapons": "<strong>Fegyverzet:</strong> {weapons}<br/><strong>Tűzerő:</strong> {firepower}, <strong>lőtávolság:</strong> {range}",
+        "playerSpacecraftShield": "<strong>Pajzs:</strong> {shield}<br/><strong>Kapacitás:</strong> {shieldCapacity}, <strong>újratöltés:</strong> {shieldRechargeRate}",
+        "playerSpacecraftPropulsion": "<strong>Meghajtás:</strong> {propulsion}<br/><strong>Harci sebesség:</strong> {speed}, <strong>fordulékonyság:</strong> {turnRate}",
         "objectiveSubjects": {
             "squad": "{ids} csapat",
             "squads": "{ids} csapat",
@@ -72,7 +75,7 @@
             "teams": "{ids} összes űrhajója"
         },
         "winObjective": {
-            "destroyAll": "Semmisíts meg minden ellenséget.",
+            "destroyAll": "Semmisítsen meg minden ellenséget.",
             "destroy": "Megsemmisítendő: {subjects}.",
             "countBelow": "Kevesebb, mint {count} maradhat meg a következőkből: {subjects}."
         },
@@ -156,7 +159,7 @@
     "mission": {
         "targetPracticeBoxes": {
             "name": "Kezdő lőgyakorlat",
-            "description": "Ebben a tréning küldetésben megismerkedhetsz az űrhajó irányításával, és szabadon gyakorolhatsz konténerek és fegyvertelen drónok ellen.",
+            "description": "Ebben a tréning küldetésben megismerkedhet az űrhajó irányításával, és szabadon gyakorolhat konténerek és fegyvertelen drónok ellen.",
             "messages": {
                 "tutorialWelcome": "Üdvözöllek a kezdő lőgyakorlaton!",
                 "tutorialAimFire1": "Célozz és tüzelj az előtted lévő konténerre!\nEgér: mozgatás és {controlStrings/mouse/fire}\nBillentyűzet: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} és {controlStrings/keyboard/fire}\nJoystick: botkormány mozgatása és {controlStrings/joystick/fire}",
@@ -182,68 +185,60 @@
         },
         "targetPracticeDrones": {
             "name": "Középhaladó lőgyakorlat",
-            "description": "Ebben a fegyvertelen és fegyveres drónokat is felvonultató küldetésben a kitérő manővereket és a mozgó célpontra tüzelést gyakorolhatod. A drónok lassabbak, és a páncélzatuk is gyengébb, mint az űrhajódé, ám ha túl óvatlan vagy, föléd kerekedhetnek. A hajódat gyakorló fegyverekkel szereltük fel."
+            "description": "Ebben a fegyvertelen és fegyveres drónokat is felvonultató küldetésben a kitérő manőverek és a mozgó célpontra tüzelés gyakorlására van lehetőség. A drónok lassabbak, és gyengébben páncélozottak, mint az űrhajója, ám ha túl óvatlan, veszélyt jelenthetnek. A hajóját gyakorló fegyverekkel szereltük fel."
         },
         "targetPracticeFalcon": {
             "name": "Haladó lőgyakorlat",
-            "description": "Használd fel az eddig tanultakat, hogy ezúttal a tiéddel azonos osztályú elfogó vadászokkal szemben is megálld a helyed! Immár szabványos plazmaágyúkkal szereltük fel a hajód, amik nagyobb tűzerőt biztosítanak. Cserébe viszont fix kialakításúak, így nem követik automatikusan a célpontot. Használd ki ezt a célzási technikád továbbfejlesztésére! Az ellenséges gépeket - szintén fix - gyakorló fegyverekkel szereltük fel."
+            "description": "Használja fel az eddig tanultakat, hogy ezúttal azonos osztályú elfogó vadászokkal szemben is megállja a helyét! Immár szabványos plazmaágyúkkal szereltük fel a hajóját, amik nagyobb tűzerőt biztosítanak. Viszont nem képesek ugyanakkora területen automatikusan követni a célpontot. Használja ki ezt a célzási technikája továbbfejlesztésére! Az ellenséges gépeket - rögzített - gyakorló fegyverekkel szereltük fel."
         },
         "pirates": {
             "name": "Kalózok",
-            "description": "Itt az ideje, hogy valódi ellenségekkel szemben is próbára tedd a harci képességeidet! Egy csapatnyi kalóz szétszóródott egy meghiúsult akciót követően. A célpontjukként választott kereskedő konvoj komolyabb védelemmel rendelkezett, mint ahogy számították. Az ő levadászásukban fogsz segédkezni. A Birodalom komolyan veszi a kalózkodás jelentette veszélyeket, és a megfelelő erővel vág vissza. A vezetés katonai elfogó vadászok - mint például az a Sólyom, amivel gyakoroltál - bevetése mellett döntött. Most rajtad a sor, hogy megmutasd, mit tanultál! Légy óvatos, a kalózok nem gyakorló fegyverekkel vannak felszerelve, de szerencsére egy kis harci gépnél jóval nagyobb méretű célpontokhoz vannak szokva."
+            "description": "Itt az ideje, hogy valódi ellenségekkel szemben is próbára tegye harci képességeit! Egy csapatnyi kalóz szétszóródott egy meghiúsult akciót követően. A célpontjukként választott kereskedő konvoj komolyabb védelemmel rendelkezett, mint amire számítottak. Az ő levadászásukban fog segédkezni. A Birodalom komolyan veszi a kalózkodás jelentette veszélyeket, és a megfelelő erővel vág vissza. A vezetés katonai elfogó vadászok - mint például a gyakorló küldetésekben megismert Sólyom - bevetése mellett döntött. Most magán a sor, hogy megmutassa, mit tanult! Legyen óvatos, a kalózok nem gyakorló fegyverekkel vannak felszerelve! Szerencsére viszont egy kis harci gépnél jóval nagyobb méretű célpontokhoz vannak szokva."
         },
         "headhunt": {
             "name": "Fejvadászat",
-            "description": "<p>Egy helyi kalózvezér, <strong>Hector Yccra</strong>, egyre aktívabbá vált az utóbbi időben, immár több birodalmi csillagrendszerben is problémákat okozva. Ügynökeinknek sikerült bemérniük, és csapdát állítottak neki a Blovell rendszerben. Mivel váltságdíjak jelentik az elsődleges bevételi forrását, ezért azt a hamis információt hitettük el vele, hogy a rendszeren egy fontos személyeket szállító, ám gyengén védett hajó fog áthaladni.</p><p>Egy hamis jeleket kibocsátó szonda segítségével fogjuk a konkrét helyszínre csalni. Nagyobb hadihajók vagy vadászkötelékek jelenléte idő előtt felfedné a csapdát számára, emiatt <strong>mindössze két elfogó vadásznak kell végrehajtania ezt a küldetést.</strong></p><p>Nagy hatótávolságú érzékelőink szerint már úton van a szonda felé jól felfegyverzett őrei társaságában, akik egyben a rajtaütések során fő csapásmérő erejét jelentik. Ezen kívül előreküldött egy kisebb felderítőcsapatot is. Semmisítsd meg a felderítőket, és amikor megérkezik a fő csapat, mérd be Hector vadászgépét, a <strong>Ruby Blade</strong>-et. A jelentések szerint vérfoltokra emlékeztető harci festés látható a gép testén. <strong>NE próbáld meg kilőni az egész csapatot</strong>, a kalózok túlerőben lesznek. Hagyd el a helyszínt, amint a Ruby Blade megsemmisült.</p>",
+            "description": "<p>Egy helyi kalózvezér, <strong>Hector Yccra</strong>, egyre aktívabbá vált az utóbbi időben, immár több birodalmi csillagrendszerben is problémákat okozva. Ügynökeinknek sikerült bemérniük, és csapdát állítottak neki a Blovell rendszerben. Mivel váltságdíjak jelentik az elsődleges bevételi forrását, ezért azt a hamis információt hitettük el vele, hogy a rendszeren egy fontos személyeket szállító, ám gyengén védett hajó fog áthaladni.</p><p>Egy hamis jeleket kibocsátó szonda segítségével fogjuk a konkrét helyszínre csalni. Nagyobb hadihajók vagy vadászkötelékek jelenléte idő előtt felfedné a csapdát számára, emiatt <strong>mindössze két elfogó vadásznak kell végrehajtania ezt a küldetést.</strong></p><p>Nagy hatótávolságú érzékelőink szerint már úton van a szonda felé jól felfegyverzett őrei társaságában, akik egyben a rajtaütések során fő csapásmérő erejét jelentik. Ezen kívül előreküldött egy kisebb felderítőcsapatot is. Semmisítse meg a felderítőket, és amikor megérkezik a fő csapat, mérje be Hector vadászgépét, a <strong>Ruby Blade</strong>-et. A jelentések szerint vérfoltokra emlékeztető harci festés látható a gép testén. <strong>NE próbálja meg kilőni az egész csapatot</strong>, a kalózok túlerőben lesznek. Hagyja el a helyszínt, amint a Ruby Blade megsemmisült.</p>",
             "messages": {
-                "rubyBladeArrived": "Gamma 1: Itt van! Hagyd az őröket! Gyorsan vedd célba a Ruby Blade-et, lőjük ki, aztán pucoljunk innen!"
+                "rubyBladeArrived": "[color:0,1,0,1]Gamma 1[]: Itt van! Hagyd az őröket! Gyorsan vedd célba a Ruby Blade-et, lőjük ki, aztán pucoljunk innen!"
             }
         },
         "1v1": {
             "name": "Egy egy ellen",
-            "description": "Gyakorló küldetés egyetlen, azonos osztályú, de gyengébben felfegyverzett ellenséggel szemben."
+            "description": "Gyakorló szimuláció egyetlen, lázadókra jellemzően felszerelt vadászgép ellen."
         },
-        "3v3": {
-            "name": "Három három ellen",
-            "description": "Gyakorold a csapatos harcot ebben a három-három elfogó vadászt egymással szembeállító küldetésben. A hajódat jobban felszereltük, mint a többiekét."
+        "destroyCorvette": {
+            "name": "A lázadók korvettje",
+            "description": "Érzékelőink egy sérült felszerelésű Aries korvettet észleltek két vadászkötelék társaságában. Lázadó társaik felé tartanak, ezért el kell őket fogni és megsemmisíteni, mielőtt egyesíthetnék erőiket. Az <strong>Alfa</strong> vadász csapat feladata, hogy megtisztítsa az utat a bombázóink (<strong>Delta</strong>) előtt a jelenlévő ellenséges vadászok semlegesítésével, majd védje a bombázókat, amíg azok célba veszik az ellenséges korvettet. A korvett fegyverei sérültek ugyan, de vadászgépekre még veszélyt jelentenek, ezért legyen óvatos, és maradjon folyamatosan mozgásban!"
         },
-        "bombers": {
-            "name": "Bombázók",
-            "description": "Ebben a küldetésben egy nehezebb páncélzatú és fegyverzetű bombázót próbálhatsz ki egy egyszerű három három ellen felállású manőverező űrharcban. Az ellenséges gépek gyengébben vannak felszerelve."
-        },
-        "mixed": {
-            "name": "Vegyes",
-            "description": "Három elfogó vadászból és három bombázóból álló vegyes csapatok néznek farkasszemet ebben a gyakorló küldetésben, ahol az egyik csapat elfogó vadász vezérét kell irányítanod. Vigyázz, hogy ne kerülj kereszttűzbe és ne találd el a csapattársaidat!"
+        "destroyFrigate": {
+            "name": "Bombázó bevetés",
+            "description": "Egy fregattkapitányunk átállt a lázadók oldalára, és most hajójával az egyik őrjáratunkat fenyegeti a Varanock rendszerben. Egy csapat Vipera bombázót (<strong>Delta</strong>) küldünk a semlegesítésére. Őn fogja vezetni a csapatot. Fogja el és semmisítse meg a hajót, mielőtt elérné az őrjáratunkat, utána pedig segítsen az esetlegesen megmaradó kisérő vadászgépek eltakarításában."
         },
         "defendCorvette": {
             "name": "Védd meg a korvettet",
-            "description": "Vadászok és bombázók támadnak hullámokban egy baráti korvettre. Fogd el és semmisítsd meg őket, mielőtt túl sok kárt okoznak, és a korvett megsemmisül! Különösen figyelj a nehezebb fegyverekkel felszerelt bombázókra!"
+            "description": "Szenzoraink közelítő vadászokat és bombázókat észleltek, melyek az őrjáratunk felé tartanak. Fogja el és semmisítsse meg őket, mielőtt túl sok kárt okoznak, és a korvett megsemmisül! Különösen figyeljen a nehezebb fegyverekkel felszerelt bombázókra!"
         },
         "1v6": {
-            "name": "Egy hat ellen",
-            "description": "A vegyes csapatokat szembeállító küldetéshez hasonló ellenfelekkel ezúttal egyedül kell szembenézned. Megállod a helyed hat harci géppel szemben?"
+            "name": "Egy a hat ellen",
+            "description": "Gyakorló szimuláció elit pilótáknak, hat lázadó vadészgép és bombázó ellen."
         },
         "corvette": {
             "name": "Korvett",
-            "description": "Ebben a küldetésben egy teljes (bár viszonylag kis méretű) hadihajót irányíthatsz. Tartsd szem előtt, hogy ez nagyban különbözik a vadászokkal megszokott manőverező űrharctól! A korvetted jóval lassabb, viszont a lövegei automatikusan ráállnak a megadott célra, így nem szükséges pont felé fordulnod a tüzeléshez. Ehelyett a manőverezést az ellenséges tűz elkerülésére használhatod, mivel bár a korvett páncélzata jelentősebb, mint egy vadászé, számos ellenséges vadász és bombázó fog rád támadni. Figyelj rá, milyen sorrendben jelölöd ki a célokat, hogy a legveszélyesebb vagy legkézenfekvőbb fenyegetéseket iktathasd ki először."
+            "description": "Ez egy szimuláció, melyet a hadihajó irányítási képesség felmérésére terveztünk. Tartsa szem előtt, hogy ez nagyban különbözik a vadászokkal megszokott manőverező űrharctól! A korvett jóval lassabb, viszont a lövegei automatikusan ráállnak a megadott célra, így nem szükséges pontosan felé fordulni a tüzeléshez. Ehelyett a manőverezést az ellenséges tűz elkerülésére használhatja, mivel bár a korvett páncélzata jelentősebb, mint egy vadászé, számos ellenséges vadász és bombázó fog támadni. Figyeljen rá, milyen sorrendben jelöli ki a célokat, hogy a legveszélyesebb vagy legkézenfekvőbb fenyegetéseket iktathassa ki először."
         },
         "defendFrigate": {
             "name": "Védd meg a fregattot",
-            "description": "Egy lázadó korvettet azonosítottunk a körzetben, melynek a megsemmisítésére egy Taurus osztályú fregattot jelöltünk ki. Hogy biztosan eljusson a célig, egy vadász kötelék fogja kísérni, aminek a tagjaként veszel részt ebben a küldetésben. A lázadók hullámokban vadászokat és bombázókat küldtek a fregattunk megállítására, melyeket időben kell elfognod és semlegesítened, mivel a fregatt nincs felszerelve gyorsan manőverező ellenségekkel szemben. Amennyiben a lázadók sikeresen megsemmisítik, egyedül nem lesz esélyed a korvett megállítására."
+            "description": "Egy lázadó korvettet azonosítottunk a körzetben, melynek a megsemmisítésére egy Taurus osztályú fregattot jelöltünk ki. Hogy biztosan eljusson a célig, egy vadász kötelék fogja kísérni, aminek a tagjaként vesz részt ebben a küldetésben. A lázadók hullámokban vadászokat és bombázókat küldtek a fregattunk megállítására, melyeket időben kell elfognia és semlegesítenie, mivel a fregatt nincs felszerelve gyorsan manőverező ellenségekkel szemben. Amennyiben a lázadók sikeresen megsemmisítik, egyedül nem lesz esélye a korvett megállítására."
         },
-        "patrolVsPatrol": {
-            "name": "Őrjárat őrjárat ellen",
-            "description": "Két azonos összetételű - egy korvettből és három elfogó vadászból álló - őrjárat csap össze ebben a gyakorló küldetésben. Az egyik vadászt irányítod. Vond el az ellenséges korvett tüzét a csapattársaidról ügyenesen manőverezve, de biztonságos távolságban maradva, közelről ugyanis könnyű célpontot jelentesz neki."
-        },
-        "strikeForceVsStrikeForce": {
-            "name": "Hajóraj összecsapás",
-            "description": "Két azonos erejű, három elfogó vadászból, három bombázóból és három kisebb hadihajóból álló hajóraj ütközethez készülődik. Rajtad áll, hogy a saját csapatod javára billentsd a mérleget!"
+        "battle": {
+            "name": "Csata a lázadókkal",
+            "description": "A lázadók szövetkeztek a helyi kalózokkal, és egy nagyobb flottát próbálnak összevonni a vadászaikból és kisebb hadihajóikból. Lokalizáltuk a találkozási pontjukat, és egy csapásmérő osztagot küldünk a felszámolásukra. Az <strong>Alfa</strong> csapatot fogja vezetni. Fókuszáljon az ellenséges bombázók és vadászok megsemmisítésére, hogy segítsen életben tartani a hajóinkat és a saját bombázóinkat. Figyeljen az ellenséges hajók lövegeinek tüzére!"
         },
         "defendFrigates": {
             "name": "Védd meg a fregattokat",
-            "description": "Egy birodalmi fregattokból álló raj a lázadók zászlóshajója - egy Libra osztályú cirkáló - megsemmísítésére indult. A lázadók utolsó elkeseredésükben több köteléknyi jól felfegyverzett bombázót mozgósítottak, hogy megállítsák a támadást. A küldetés célja elvonni a bombázók figyelmét és tűzerejét a fregattokról, hogy elegen eljuthassanak a cirkálóig a megsemmisítéséhez. Ha a raj kudarcot vall, a zászlóshajó kicsúszik a kezünk közül. A vadászgépeddel ne közelítsd meg a cirkálót, könnyű fegyverek számára nem áthatolható a péncélzata, és számos vadászok elleni löveggel van felszerelve!",
+            "description": "Egy birodalmi fregattokból álló raj a lázadók zászlóshajója - egy Libra osztályú cirkáló - megsemmísítésére indult. A lázadók utolsó elkeseredésükben több köteléknyi jól felfegyverzett bombázót mozgósítottak, hogy megállítsák a támadást. A küldetés célja elvonni a bombázók figyelmét és tűzerejét a fregattokról, hogy elegen eljuthassanak a cirkálóig a megsemmisítéséhez. Ha a raj kudarcot vall, a zászlóshajó kicsúszik a kezünk közül. A vadászgépével ne közelítse meg a cirkálót, könnyű fegyverek számára nem áthatolható a péncélzata, és számos vadászok elleni löveggel van felszerelve!",
             "messages": {
-                "caution": "Szép munka, az összes bombázó megsemmisült! Most dőlj hátra, és figyeld, ahogy a fregattok elvégzik a többit."
+                "caution": "[color:0,1,0,1]Irányítás[]: Szép munka, az összes bombázó megsemmisült! Most dőljön hátra, és figyelje, ahogy a fregattok elvégzik a többit."
             }
         },
         "test": {
@@ -262,6 +257,26 @@
         },
         "libraTest": {
             "name": "Libra teszt"
+        },
+        "3v3": {
+            "name": "Három három ellen",
+            "description": "Gyakorold a csapatos harcot ebben a három-három elfogó vadászt egymással szembeállító küldetésben. A hajódat jobban felszereltük, mint a többiekét."
+        },
+        "bombers": {
+            "name": "Bombázók",
+            "description": "Ebben a küldetésben egy nehezebb páncélzatú és fegyverzetű bombázót próbálhatsz ki egy egyszerű három három ellen felállású manőverező űrharcban. Az ellenséges gépek gyengébben vannak felszerelve."
+        },
+        "mixed": {
+            "name": "Vegyes",
+            "description": "Három elfogó vadászból és három bombázóból álló vegyes csapatok néznek farkasszemet ebben a gyakorló küldetésben, ahol az egyik csapat elfogó vadász vezérét kell irányítanod. Vigyázz, hogy ne kerülj kereszttűzbe és ne találd el a csapattársaidat!"
+        },
+        "patrolVsPatrol": {
+            "name": "Őrjárat őrjárat ellen",
+            "description": "Két azonos összetételű - egy korvettből és három elfogó vadászból álló - őrjárat csap össze ebben a gyakorló küldetésben. Az egyik vadászt irányítod. Vond el az ellenséges korvett tüzét a csapattársaidról ügyenesen manőverezve, de biztonságos távolságban maradva, közelről ugyanis könnyű célpontot jelentesz neki."
+        },
+        "strikeForceVsStrikeForce": {
+            "name": "Hajóraj összecsapás",
+            "description": "Két azonos erejű, három elfogó vadászból, három bombázóból és három kisebb hadihajóból álló hajóraj ütközethez készülődik. Rajtad áll, hogy a saját csapatod javára billentsd a mérleget!"
         },
         "staticAvoidance": {
             "name": "Statikus akadály teszt"
@@ -588,6 +603,120 @@
         "wolf": {
             "name": "Farkas",
             "description": "Módosított változata az eredeti Főnix osztályú vadászgépeknek, melyek a Birodalom kezdeti időszakától egészen a közelmúltig a legelterjedtebb harci gépek közé tartoztak. A Főnixek légkörben és mélyűrben is használható, sokoldalú vadászok voltak. A méretükhöz képest nagy raktérnek és térugró kapacitásnak köszönhetően hosszabb időtartamú küldetésekre is bevethetőek. Ahogy a Birodalom egyre több külső és belső fenyegetéssel kezdett szembenézni, a Főnix többfeladatú vadászokat leváltották az egy-egy szerepkörre specializálódott Szitakötő, Sólyom, Rinocérosz és Vipera osztályok, melyek a saját feladatukat hatékonyabban tudják ellátni. A legtöbb Főnixet átalakították polgári használatra, ám egyre több jelentés érkezik kalózokról, akik a vadász módosított változatát használják rajtaütéseik során. Ez a változat a Farkas megjelölést kapta."
+        }
+    },
+    "weaponClass": {
+        "fixedTrainingGun": {
+            "name": "Rögzített gyakorlófegyver"
+        },
+        "trainingGun": {
+            "name": "Gyakorlófegyver"
+        },
+        "plasmaGun": {
+            "name": "Plazmavető"
+        },
+        "fixedPlasmaGun": {
+            "name": "Rögzített plazmavető"
+        },
+        "pirateGun": {
+            "name": "Kalóz plazmavető"
+        },
+        "heavyPlasmaGun": {
+            "name": "Nehéz plazmavető"
+        },
+        "smallPlasmaTurret": {
+            "name": "Plazmavető löveg"
+        },
+        "damagedSmallPlasmaTurret": {
+            "name": "Sérült plazmavető löveg"
+        },
+        "smallProtonCannon": {
+            "name": "Protonágyú"
+        },
+        "largeIonCannon": {
+            "name": "Ionágyú"
+        }
+    },
+    "propulsionClass": {
+        "imperialDrone": {
+            "name": "Drón hajtómű"
+        },
+        "imperialFighterMk1": {
+            "name": "Szabványos vadászgép hajtómű"
+        },
+        "imperialFighterMk2": {
+            "name": "Fejlett vadászgép hajtómű"
+        },
+        "imperialFighterMk3": {
+            "name": "III-as típusú vadászgép hajtómű"
+        },
+        "imperialBomberMk1": {
+            "name": "Szabványos bombázó hajtómű"
+        },
+        "imperialBomberMk2": {
+            "name": "Fejlett bombázó hajtómű"
+        },
+        "imperialBomberMk3": {
+            "name": "III/B típusú bombázó hajtómű"
+        },
+        "imperialCorvetteMk1": {
+            "name": "Szabványos korvett hajtómű"
+        }, 
+        "imperialFrigateMk1": {
+            "name": "Szabványos fregatt hajtómű"
+        },
+        "imperialCruiserMk1": {
+            "name": "Szabványos cirkáló hajtómű"
+        },
+        "pirateFighterMk1": {
+            "name": "Kalóz vadász hajtómű"
+        },
+        "pirateFighterMk2": {
+            "name": "Fejlett kalóz vadász hajtómű"
+        },
+        "rebelFighterMk1": {
+            "name": "Lázadó vadász hajtómű"
+        },
+        "rebelBomberMk1": {
+            "name": "Lázadó bombázó hajtómű"
+        }
+    },
+    "shieldClass": {
+        "imperialFighterMk1": {
+            "name": "Könnyű vadászgép pajzs"
+        },
+        "imperialFighterMk2": {
+            "name": "Közepes vadászgép pajzs"
+        },
+        "imperialFighterMk3": {
+            "name": "Nehéz vadászgép pajzs"
+        },
+        "imperialBomberMk1": {
+            "name": "Könnyű bombázó pajzs"
+        },
+        "imperialBomberMk2": {
+            "name": "Közepes bombázó pajzs"
+        },
+        "imperialCorvetteMk1": {
+            "name": "Szabványos korvett pajzs"
+        },
+        "imperialFrigateMk1": {
+            "name": "Szabványos fregatt pajzs"
+        },
+        "imperialCruiserMk1": {
+            "name": "Szabványos cirkáló pajzs"
+        },
+        "pirateFighterMk1": {
+            "name": "Kalóz vadász pajzs"
+        },
+        "rebelBomberMk1": {
+            "name": "Lázadó bombázó pajzs"
+        },
+        "rebelCorvetteMk1": {
+            "name": "Lázadó korvett pajzs"
+        },
+        "rebelFrigateMk1": {
+            "name": "Lázadó fregatt pajzs"
         }
     },
     "objectView": {

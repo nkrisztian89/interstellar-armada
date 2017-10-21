@@ -10,7 +10,6 @@
 /*global define, Element, Float32Array, performance */
 
 /**
- * @param utils Used for solving quadratic equations
  * @param vec Vector operations are needed for several logic functions
  * @param mat Matrices are widely used for 3D simulation
  * @param application Used for file loading and logging functionality
@@ -32,7 +31,6 @@
  * @param explosion Used to create the explosion for exploding spacecrafts
  */
 define([
-    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -54,13 +52,23 @@ define([
     "armada/logic/explosion",
     "utils/polyfill"
 ], function (
-        utils, vec, mat,
+        vec, mat,
         application, managedGL, egomModel, physics, resources,
         renderableObjects, lights, sceneGraph,
         graphics, audio, classes, config, strings,
         constants, SpacecraftEvents, equipment, explosion) {
     "use strict";
     var
+            // ------------------------------------------------------------------------------
+            // enums
+            /**
+             * Spacecrafts can take one of these formations (e.g. for placing them initially in a mission or when jumping in)
+             * @enum {String}
+             */
+            SpacecraftFormation = {
+                /** X offset is alternating (+/-), all offset factors increase for every second ship */
+                WEDGE: "wedge"
+            },
             // ------------------------------------------------------------------------------
             // constants
             /**
@@ -92,6 +100,16 @@ define([
              * @type Number
              */
             HUM_SOUND_VOLUME_RAMP_DURATION = 0.020,
+            /**
+             * Used to create strings which display spacecraft equipment lists to the user
+             * @type String
+             */
+            DEFAULT_EQUIPMENT_STRING_SEPARATOR = ", ",
+            /**
+             * Used to create strings which display spacecraft weapon range lists to the user
+             * @type String
+             */
+            DEFAULT_WEAPON_RANGE_STRING_SEPARATOR = "/",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -462,6 +480,34 @@ define([
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, equipmentProfileName, spacecraftArray);
         }
     }
+    /**
+     * Returns the relative position for a spacecraft in a formation
+     * @param {SpacecraftEvents~JumpFormationData} formation The descriptor of the formation
+     * @param {Number} index The index of the spacecraft within the formation (the lead is 0)
+     * @param {Number[3]} [leadPosition] The 3D position vector of the lead ship in the formation
+     * @param {Float32Array} [orientation] The 4x4 orientation matrix of the formation
+     * @returns {Number[3]}
+     */
+    Spacecraft.getPositionInFormation = function (formation, index, leadPosition, orientation) {
+        var result, factor = Math.ceil(index / 2);
+        switch (formation.type) {
+            case SpacecraftFormation.WEDGE:
+                result= [
+                    (((index % 2) === 1) ? 1 : -1) * factor * formation.spacing[0],
+                    factor * formation.spacing[1],
+                    factor * formation.spacing[2]];
+                if (orientation) {
+                    vec.mulVec3Mat4(result, orientation);
+                }
+                if (leadPosition) {
+                    vec.add3(result, leadPosition);
+                }
+                return result;
+            default:
+                application.showError("Unknown formation type specified: '" + formation.type + "!");
+                return [0, 0, 0];
+        }
+    };
     // initializer
     /**
      * Initializes the properties of the spacecraft. Used by the constructor
@@ -679,6 +725,13 @@ define([
         return !!this._shield;
     };
     /**
+     * Returns the name of the shield equipped on this spacecraft in a way that can be presented to the user (translated)
+     * @returns {String}
+     */
+    Spacecraft.prototype.getShieldDisplayName = function () {
+        return this._shield.getDisplayName();
+    };
+    /**
      * Returns the current shield integrity ratio of the spacecraft - a number between 0.0 (indicating a depleted shield) and 1.0 (indicating a fully charged shield).
      * @returns {Number}
      */
@@ -691,6 +744,13 @@ define([
      */
     Spacecraft.prototype.getShieldCapacity = function () {
         return this._shield ? this._shield.getCapacity() : 0;
+    };
+    /**
+     * Returns the recharge rate (in capacity / second) of the equipped shield (if any)
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getShieldRechargeRate = function () {
+        return this._shield ? this._shield.getRechargeRate() : 0;
     };
     /**
      * Returns the state of the shield to be used for visuals (color and animation progress)
@@ -788,12 +848,57 @@ define([
         this._firingDisabled = true;
     };
     /**
+     * Returns the whether the spacecraft has any weapons equipped.
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.hasWeapons = function () {
+        return this._weapons && (this._weapons.length > 0);
+    };
+    /**
      * Returns the array of weapon equipped on this spacecraft.
      * @returns {Weapon[]}
      */
     Spacecraft.prototype.getWeapons = function () {
         return this._weapons;
     };
+    /**
+     * Returns a text listing the weapons of the spacecraft in a way that can be displayed to the user (translated)
+     * @param {String} [separator=DEFAULT_EQUIPMENT_STRING_SEPARATOR]
+     * @returns {String}
+     */
+    Spacecraft.prototype.getWeaponsDisplayText = function (separator) {
+        var i, result = "", weaponCounts = {}, weaponName, weaponNames;
+        separator = separator || DEFAULT_EQUIPMENT_STRING_SEPARATOR;
+        for (i = 0; i < this._weapons.length; i++) {
+            weaponName = this._weapons[i].getDisplayName();
+            if (!weaponCounts[weaponName]) {
+                weaponCounts[weaponName] = 1;
+            } else {
+                weaponCounts[weaponName] += 1;
+            }
+        }
+        weaponNames = Object.keys(weaponCounts);
+        for (i = 0; i < weaponNames.length; i++) {
+            result += weaponCounts[weaponNames[i]] + " × " + weaponNames[i] + ((i > 0) ? separator : "");
+        }
+        return result;
+    };
+    /**
+     * Returns a text listing the ranges of the weapons of the spacecraft in a way that can be displayed to the user
+     * @param {String} [separator=DEFAULT_WEAPON_RANGE_STRING_SEPARATOR]
+     * @returns {String}
+     */
+    Spacecraft.prototype.getWeaponRangesDisplayText = function (separator) {
+        separator = separator || DEFAULT_WEAPON_RANGE_STRING_SEPARATOR
+        var i, range, ranges = [];
+        for (i = 0; i < this._weapons.length; i++) {
+            range = this._weapons[i].getRange();
+            if (ranges.indexOf(range) < 0) {
+                ranges.push(range);
+            }
+        }
+        return ranges.join(separator);
+    }
     /**
      * Returns the sum of the firepower the weapons on this spacecraft have, that is, the total damage per second
      * they could do to a target with the passed armor rating. (not consider that it might be impossible to aim 
@@ -989,6 +1094,13 @@ define([
                 null;
     };
     /**
+     * Returns the maximum forward speed the spacecraft can achieve in "combat" flight mode using its currently equipped propulsion system.
+     * @returns {Number} The speed, in m/s. Zero, if no propulsion is equipped.
+     */
+    Spacecraft.prototype.getMaxCombatSpeed = function () {
+        return (this.getMaxAcceleration() * config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_FORWARD_SPEED_FACTOR)) || 0;
+    };
+    /**
      * Returns the maximum angular acceleration the spacecraft can achieve using its currently equipped propulsion system.
      * @returns {Number} The angular acceleration, in rad/s^2. Zero, if no propulsion is equipped.
      */
@@ -996,6 +1108,13 @@ define([
         return this._propulsion ?
                 this._propulsion.getAngularThrust() / this._physicalModel.getMass() :
                 0;
+    };
+    /**
+     * Returns the maximum turn rate the spacecraft can achieve in "combat" flight mode using its currently equipped propulsion system.
+     * @returns {Number} The turn rate, in degrees/s. Zero, if no propulsion is equipped.
+     */
+    Spacecraft.prototype.getMaxCombatTurnRate = function () {
+        return (this.getMaxAngularAcceleration() / Math.PI * 180 * config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S)) || 0;
     };
     /**
      * Returns the maximum thruster move burn level for the current propulsion
@@ -1070,14 +1189,8 @@ define([
                 undefined,
                 spacecraftArray);
         if (dataJSON.squad) {
-            if ((typeof dataJSON.squad) === "string") {
-                squadData = dataJSON.squad.split(" ");
-                this.setSquad(squadData[0], parseInt(squadData[1], 10));
-            } else if ((typeof dataJSON.squad) === "object") {
-                this.setSquad(dataJSON.squad.name, dataJSON.squad.index);
-            } else {
-                application.showError("Invalid squad property specified for spacecraft " + this.getID() + "!");
-            }
+            squadData = dataJSON.squad.split(" ");
+            this.setSquad(squadData[0], parseInt(squadData[1], 10));
         }
         // equipping the created spacecraft
         if (dataJSON.equipment) {
@@ -1092,8 +1205,8 @@ define([
                 application.showError("Invalid equipment property specified for spacecraft " + this.getID() + "!");
             }
             // if there is no equipment specified, attempt to load the default profile
-        } else if (this._class.getEquipmentProfile(config.getSetting(config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)) !== undefined) {
-            this.equipProfile(this._class.getEquipmentProfile(config.getSetting(config.BATTLE_SETTINGS.DEFAULT_EQUIPMENT_PROFILE_NAME)));
+        } else if (this._class.getDefaultEquipmentProfileName()) {
+            this.equipProfile(this._class.getEquipmentProfile(this._class.getDefaultEquipmentProfileName()));
         }
         if (dataJSON.away) {
             this.setAway(true);
@@ -1877,6 +1990,13 @@ define([
         return this._propulsion;
     };
     /**
+     * Returns the name of the propulsion system equipped on this spacecraft in a way that can be presented to the user (translated)
+     * @returns {String}
+     */
+    Spacecraft.prototype.getPropulsionDisplayName = function () {
+        return this._propulsion.getDisplayName();
+    };
+    /**
      * Resets all the thruster burn levels of the spacecraft to zero.
      */
     Spacecraft.prototype.resetThrusterBurn = function () {
@@ -2017,10 +2137,11 @@ define([
     };
     /**
      * Engages jump engines to leave the scene of the mission
+     * @param {Boolean} toggle If true, calling the method while the jump out sequence is under way will cancel the jump
      */
-    Spacecraft.prototype.jumpOut = function () {
+    Spacecraft.prototype.jumpOut = function (toggle) {
         if (!this._away && this._jumpEngine) {
-            this._jumpEngine.jumpOut();
+            this._jumpEngine.jumpOut(toggle);
         } else {
             application.log("Warning! Spacecraft '" + this.getDisplayName() + "' cannot jump out because it is already away or has no jump engines!");
         }

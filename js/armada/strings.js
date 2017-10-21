@@ -56,6 +56,9 @@ define([
         OBJECTIVES_TITLE: {name: "missions.missionObjectivesTitle"},
         SPACECRAFT_TITLE: {name: "missions.playerSpacecraftTitle"},
         SPACECRAFT_DATA: {name: "missions.playerSpacecraftData"},
+        SPACECRAFT_WEAPONS: {name: "missions.playerSpacecraftWeapons"},
+        SPACECRAFT_SHIELD: {name: "missions.playerSpacecraftShield"},
+        SPACECRAFT_PROPULSION: {name: "missions.playerSpacecraftPropulsion"},
         OBJECTIVE_SUBJECTS_SQUAD: {name: "missions.objectiveSubjects.squad"},
         OBJECTIVE_SUBJECTS_SQUADS: {name: "missions.objectiveSubjects.squads"},
         OBJECTIVE_SUBJECTS_TEAM: {name: "missions.objectiveSubjects.team"},
@@ -312,6 +315,21 @@ define([
     };
     strings.SPACECRAFT_TYPE = {
         PREFIX: {name: "spacecraftType.", optional: true},
+        NAME_SUFFIX: {name: ".name", optional: true},
+        DESCRIPTION_SUFFIX: {name: ".description", optional: true}
+    };
+    strings.WEAPON_CLASS = {
+        PREFIX: {name: "weaponClass.", optional: true},
+        NAME_SUFFIX: {name: ".name", optional: true},
+        DESCRIPTION_SUFFIX: {name: ".description", optional: true}
+    };
+    strings.PROPULSION_CLASS = {
+        PREFIX: {name: "propulsionClass.", optional: true},
+        NAME_SUFFIX: {name: ".name", optional: true},
+        DESCRIPTION_SUFFIX: {name: ".description", optional: true}
+    };
+    strings.SHIELD_CLASS = {
+        PREFIX: {name: "shieldClass.", optional: true},
         NAME_SUFFIX: {name: ".name", optional: true},
         DESCRIPTION_SUFFIX: {name: ".description", optional: true}
     };
