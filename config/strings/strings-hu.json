@@ -54,7 +54,7 @@
         "launchButton": "Indítás",
         "demoButton": "Demo",
         "notCompleted": "Nem teljesített",
-        "bestScore": "Legjobb pontszám: {score} ({medal})",
+        "bestScore": "Rekord: {score} ({medal})",
         "sandboxCompleted": "teszt kipróbálva",
         "noSelectedName": "Küldetésválasztás",
         "noSelectedDescription": "Válassz egy küldetést a listából.",
@@ -220,7 +220,7 @@
         },
         "1v6": {
             "name": "Egy a hat ellen",
-            "description": "Gyakorló szimuláció elit pilótáknak, hat lázadó vadészgép és bombázó ellen."
+            "description": "Gyakorló szimuláció elit pilótáknak, hat lázadó vadászgép és bombázó ellen."
         },
         "corvette": {
             "name": "Korvett",
