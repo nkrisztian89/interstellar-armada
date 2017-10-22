@@ -311,6 +311,12 @@ define([
          */
         this._physicalModel = null;
         /**
+         * A cache/reuse value for the 3D position vector of the physical model of the spacecraft to avoid
+         * creating new arrays every time it is needed
+         * @type Number[3]
+         */
+        this._physicalPositionVector = [0, 0, 0];
+        /**
          * Cached value of the matrix representing the relative velocity (translation in m/s in the coordinate space of the spacecraft)
          * of the spacecraft.
          * @type Float32Array
@@ -1004,7 +1010,8 @@ define([
      * @returns {Number[3]}
      */
     Spacecraft.prototype.getPhysicalPositionVector = function () {
-        return mat.translationVector3(this._physicalModel.getPositionMatrix());
+        this._physicalModel.copyPositionToVector(this._physicalPositionVector);
+        return this._physicalPositionVector;
     };
     /**
      * Sets a new orientation matrix (directly) for the physical model of the spacecrafts.

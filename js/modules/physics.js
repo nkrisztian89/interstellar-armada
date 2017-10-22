@@ -647,6 +647,15 @@ define([
         return this._positionMatrix;
     };
     /**
+     * Copies the value of a 3D vector describing the position of this object to the passed vector
+     * @param {Number[3]} destination 
+     */
+    PhysicalObject.prototype.copyPositionToVector = function (destination) {
+        destination[0] = this._positionMatrix[12];
+        destination[1] = this._positionMatrix[13];
+        destination[2] = this._positionMatrix[14];
+    };
+    /**
      * Returns the 4x4 rotation matrix describing the orientation of the object.
      * @returns {Float32Array}
      */

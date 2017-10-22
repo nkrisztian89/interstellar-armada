@@ -389,7 +389,7 @@ define([
             application.crash();
         } else {
             for (i = 0; i < this._followedObjects.length; i++) {
-                vec.add3(positionVector, this._followedObjects[i].getPositionVector());
+                this._followedObjects[i].addPositionToVector(positionVector);
             }
             positionVector = [
                 positionVector[0] / this._followedObjects.length,
@@ -981,7 +981,7 @@ define([
             application.crash();
         } else {
             for (i = 0; i < this._followedObjects.length; i++) {
-                vec.add3(positionVector, this._followedObjects[i].getPositionVector());
+                this._followedObjects[i].addPositionToVector(positionVector);
             }
             positionVector = [
                 positionVector[0] / this._followedObjects.length,

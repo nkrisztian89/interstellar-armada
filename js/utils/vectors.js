@@ -826,6 +826,16 @@ define(function () {
         v[2] = mr[2] * vl[0] + mr[6] * vl[1] + mr[10] * vl[2] + mr[14] * vl[3];
         v[3] = mr[3] * vl[0] + mr[7] * vl[1] + mr[11] * vl[2] + mr[15] * vl[3];
     };
+    /*
+     * Sets the given 3D vector to be equal to the (first 3 elements of the) second row of the passed 4x4 matrix
+     * @param {Number[3]} v The 3D vector to modify
+     * @param {Float32Array} m The 4x4 matrix to extract the row from
+     */
+    vec.setRowB43 = function (v, m) {
+        v[0] = m[4];
+        v[1] = m[5];
+        v[2] = m[6];
+    };
     // ----------------------------------------------------------------------
     // Initialization
     (function () {

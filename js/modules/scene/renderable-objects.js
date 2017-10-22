@@ -1237,6 +1237,16 @@ define([
          * @type Number[1]
          */
         this._sizeVector = [0];
+        /**
+         * The vector to be reused for storing the calculated position for rendering
+         * @type Number[3]
+         */
+        this._renderPosition = [0, 0, 0];
+        /**
+         * The vector to be reused for storing the calculated direction for rendering
+         * @type Number[3]
+         */
+        this._renderDirection = [0, 0, 0];
         if (model) {
             this.init(model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader);
         }
@@ -1244,10 +1254,12 @@ define([
             return this.getModelMatrix();
         });
         this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
-            return this.getPositionVector();
+            this.copyPositionToVector(this._renderPosition);
+            return this._renderPosition;
         });
         this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
-            return mat.getRowB43(this.getOrientationMatrix());
+            vec.setRowB43(this._renderDirection, this.getOrientationMatrix());
+            return this._renderDirection;
         });
         this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (contextName) {
             return (contextName === utils.EMPTY_STRING) ? this._sizeVector : this._sizeVector[0];
