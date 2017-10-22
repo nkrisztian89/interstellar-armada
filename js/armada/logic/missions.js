@@ -635,10 +635,12 @@ define([
     /**
      * Returns an array with the spacecrafts that are in this subject group (based on the passed mission)
      * @param {Mission} mission
+     * @param {Boolean} [reload=false] If true, the list of spacecrafts is queried from the mission again, even if 
+     * it has been cached before (and thus will not include ships that were destroyed, for example)
      * @returns {Spacecraft[]}
      */
-    SubjectGroup.prototype.getSpacecrafts = function (mission) {
-        if (!this._spacecrafts && mission) {
+    SubjectGroup.prototype.getSpacecrafts = function (mission, reload) {
+        if (mission && (!this._spacecrafts || reload)) {
             this._cacheSpacecrafts(mission);
         }
         return this._spacecrafts;
@@ -1715,7 +1717,7 @@ define([
      * @param {Mission} mission 
      */
     CommandAction.prototype.execute = function (mission) {
-        var i, spacecrafts = this._subjects.getSpacecrafts(mission);
+        var i, spacecrafts = this._subjects.getSpacecrafts(mission, true);
         if (spacecrafts.length > 0) {
             this._params.lead = spacecrafts[0];
             this._params.clearCache = true;
@@ -1724,7 +1726,6 @@ define([
                 spacecrafts[i].handleEvent(SpacecraftEvents.COMMAND_RECEIVED, this._params);
             }
         }
-
     };
     // #########################################################################
     /**
