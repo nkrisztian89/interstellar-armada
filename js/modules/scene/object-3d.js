@@ -245,6 +245,26 @@ define([
             ];
         }
         /**
+         * Copies the value of a 3D vector describing the position of this object to the passed vector
+         * @param {Number[3]} destination 
+         * @returns {Number[3]}
+         */
+        function copyPositionToVector(destination) {
+            destination[0] = this._positionMatrix[12];
+            destination[1] = this._positionMatrix[13];
+            destination[2] = this._positionMatrix[14];
+        }
+        /**
+         * Adds the value of a 3D vector describing the position of this object to the passed vector
+         * @param {Number[3]} destination 
+         * @returns {Number[3]}
+         */
+        function addPositionToVector(destination) {
+            destination[0] += this._positionMatrix[12];
+            destination[1] += this._positionMatrix[13];
+            destination[2] += this._positionMatrix[14];
+        }
+        /**
          * Sets the passed vector as the new position.
          * @param {Number[3]} v
          */
@@ -655,6 +675,8 @@ define([
             this.prototype.setScalingMatrix = setScalingMatrix;
             this.prototype.setScale = setScale;
             this.prototype.getPositionVector = getPositionVector;
+            this.prototype.copyPositionToVector = copyPositionToVector;
+            this.prototype.addPositionToVector = addPositionToVector;
             this.prototype.translate = translate;
             this.prototype.translatev = translatev;
             this.prototype.translateByMatrix = translateByMatrix;

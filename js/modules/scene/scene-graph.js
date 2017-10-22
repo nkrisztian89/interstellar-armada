@@ -1482,16 +1482,20 @@ define([
         // perform a full update (including e.g. world position calculation) only for those light sources that can be rendered
         for (i = 0, count = 0; (i < this._pointLightPriorityArrays.length); i++) {
             for (j = 0; (j < this._pointLightPriorityArrays[i].length) && (count < this._maxRenderedPointLights); j++) {
-                this._pointLightPriorityArrays[i][j].update(dt);
-                if (this._pointLightPriorityArrays[i][j].shouldBeRendered(this._camera)) {
-                    this._pointLightUniformData[count] = this._pointLightPriorityArrays[i][j].getUniformData();
-                    count++;
+                if (this._pointLightPriorityArrays[i][j].isVisible()) {
+                    this._pointLightPriorityArrays[i][j].update(dt);
+                    if (this._pointLightPriorityArrays[i][j].shouldBeRendered(this._camera)) {
+                        this._pointLightUniformData[count] = this._pointLightPriorityArrays[i][j].getUniformData();
+                        count++;
+                    }
                 }
             }
             // for the lights sources in this priority list that cannot be rendered, the state still needs to be updated to make sure if
             // they get rendered at one point, their state will be correct
             while (j < this._pointLightPriorityArrays[i].length) {
-                this._pointLightPriorityArrays[i][j].updateState(dt);
+                if (this._pointLightPriorityArrays[i][j].isVisible()) {
+                    this._pointLightPriorityArrays[i][j].updateState(dt);
+                }
                 j++;
             }
         }

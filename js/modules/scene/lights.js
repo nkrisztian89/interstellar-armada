@@ -255,10 +255,21 @@ define([
          */
         this._relativePositionVector = positionVector;
         /**
+         * Stores the calculated value of whether this point light has a non-zero relative position set, because position calculation can
+         * be much simpler then.
+         * @type Boolean
+         */
+        this._hasRelativePosition = (positionVector && ((positionVector[0] !== 0) || (positionVector[1] !== 0) || (positionVector[2] !== 0)));
+        /**
          * The list of all objects acting together as this light source. If null / undefined, then the light source is considered static.
          * @type RenderableObject3D[]
          */
         this._emittingObjects = emittingObjects;
+        /**
+         * Stores the calculated value of whether this light has exactly one emitting object set, because some calculations can be simpler if so.
+         * @type Boolean
+         */
+        this._singleEmittingObject = (emittingObjects && (emittingObjects.length === 1));
         /**
          * Storing the calculated total intensity of this light source emitted by all of its emitting objects.
          * @type Number
@@ -295,7 +306,7 @@ define([
          * A cached value of the color vector to be assigned to uniforms (containing the RGB color and the intensity)
          * @type Number[4]
          */
-        this._uniformColor = [0, 0, 0, 0];
+        this._uniformColor = [0, 0, 0, this._totalIntensity];
         /**
          * Holds the data to be passed to the corresponding uniform struct.
          * @type SceneGraph~PointLightUniformData
@@ -315,8 +326,26 @@ define([
         this._uniformColor[0] = this._color[0];
         this._uniformColor[1] = this._color[1];
         this._uniformColor[2] = this._color[2];
-        this._uniformColor[3] = this._totalIntensity;
     };
+    /**
+     * Returns whether the light is currently visible in the scene (it has at least one visible emitting object)
+     * @returns {Boolean}
+     */
+    PointLightSource.prototype.isVisible = function () {
+        var i;
+        if (!this._emittingObjects) {
+            return true;
+        }
+        if (this._singleEmittingObject) {
+            return this._emittingObjects[0].isVisible();
+        }
+        for (i = 0; i < this._emittingObjects.length; i++) {
+            if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused() && this._emittingObjects[i].isVisible()) {
+                return true;
+            }
+        }
+        return false;
+    }
     /**
      * Updates the properties of the light source that are defined in the state list.
      * @param {Number} dt The elapsed time since the last update, in milliseconds.
@@ -357,19 +386,18 @@ define([
         if (!this._emittingObjects) {
             this._totalIntensity = this._objectIntensity;
             vec.setVector3(this._positionVector, this._relativePositionVector);
-        } else if (this._emittingObjects.length === 1) {
-            if (this._emittingObjects[0].isVisible()) {
-                this._totalIntensity = this._objectIntensity;
-                vec.setSum3(this._positionVector, this._emittingObjects[0].getPositionVector(), vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
-            } else {
-                this._totalIntensity = 0;
+        } else if (this._singleEmittingObject) {
+            this._totalIntensity = this._objectIntensity;
+            this._emittingObjects[0].copyPositionToVector(this._positionVector);
+            if (this._hasRelativePosition) {
+                vec.add3(this._positionVector, vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
             }
         } else {
             vec.setNull3(this._positionVector);
             count = 0;
             for (i = 0; i < this._emittingObjects.length; i++) {
                 if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused() && this._emittingObjects[i].isVisible()) {
-                    vec.add3(this._positionVector, this._emittingObjects[i].getPositionVector());
+                    this._emittingObjects[i].addPositionToVector(this._positionVector);
                     count++;
                 }
             }
@@ -381,7 +409,7 @@ define([
             this._totalIntensity = this._objectIntensity * count;
         }
         if (this._totalIntensity !== previousIntensity) {
-            this._updateUniformColor();
+            this._uniformColor[3] = this._totalIntensity;
         }
     };
     /**
@@ -400,6 +428,9 @@ define([
         var i;
         if (!this._emittingObjects) {
             return false;
+        }
+        if (this._singleEmittingObject) {
+            return this._emittingObjects[0].canBeReused();
         }
         for (i = 0; i < this._emittingObjects.length; i++) {
             if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused()) {
@@ -429,6 +460,7 @@ define([
      */
     PointLightSource.prototype.addEmittingObject = function (emittingObject) {
         this._emittingObjects.push(emittingObject);
+        this._singleEmittingObject = (this._emittingObjects.length === 1);
     };
     /**
      * Returns whether the light source should be considered for rendering if the passed camera is used.
