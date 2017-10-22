@@ -345,10 +345,16 @@ define([
              */
             _newHostilesMessage,
             /**
-             * The sound played when the new hostiles message is displayed
+             * The sound played when the new hostiles arrive
              * @type SoundClip
              */
-            _newHostilesMessageSound,
+            _newHostilesAlertSound,
+            /**
+             * The time left from the new hostiles alert (both the message and enemy highlights) - we need to decrease this
+             * even when the message is not shown, because a higher priority message (e.g. winning or jump) pushed it. In milliseconds.
+             * @type Number
+             */
+            _newHostilesAlertTimeLeft,
             /**
              * An array holding references to the hostile spacecrafts that should be highlighted as newly arrived
              * @type Spacecraft[]
@@ -976,6 +982,7 @@ define([
         _targetScene = null;
         _messageQueues = null;
         _newHostilesMessage = null;
+        _newHostilesAlertTimeLeft = 0;
         _newHostiles = null;
         audio.playMusic(null);
         // HUD
@@ -1160,7 +1167,7 @@ define([
         /**@type Spacecraft */
         var craft = _mission.getPilotedSpacecraft();
         if (craft && craft.isAlive() && !craft.isAway() && craft.isHostile(this)) {
-            if (!_newHostilesMessage || (_newHostilesMessage.timeLeft <= 0)) {
+            if (!_newHostilesMessage || (_newHostilesAlertTimeLeft <= 0)) {
                 _newHostilesMessage = {
                     text: strings.get(strings.BATTLE.MESSAGE_NEW_HOSTILES),
                     color: _messageTextSettings.colors.alert,
@@ -1171,10 +1178,11 @@ define([
                 };
                 _battle.battleScreen.queueHUDMessage(_newHostilesMessage, true);
                 _newHostiles = [this];
+                _newHostilesAlertSound.play();
             } else {
-                _newHostilesMessage.timeLeft = _newHostilesMessage.duration;
                 _newHostiles.push(this);
             }
+            _newHostilesAlertTimeLeft = _newHostilesMessage.duration;
         }
     }
     // ##############################################################################
@@ -2836,8 +2844,6 @@ define([
                 if (messageQueue[0].new) {
                     if (!messageQueue[0].silent) {
                         _messageSound.play();
-                    } else if (messageQueue[0] === _newHostilesMessage) {
-                        _newHostilesMessageSound.play();
                     }
                     messageQueue[0].new = false;
                 }
@@ -2856,7 +2862,11 @@ define([
                 _messageText.setColor(color);
                 // managing timing
                 if (!messageQueue[0].permanent) {
-                    messageQueue[0].timeLeft -= dt;
+                    if ((messageQueue[0] === _newHostilesMessage)) {
+                        messageQueue[0].timeLeft = _newHostilesAlertTimeLeft;
+                    } else {
+                        messageQueue[0].timeLeft -= dt;
+                    }
                     if (messageQueue[0].timeLeft <= 0) {
                         messageQueue.shift();
                         if (messageQueue.length > 0) {
@@ -2870,6 +2880,9 @@ define([
             } else {
                 _messageTextLayer.hide();
                 _messageBackground.hide();
+            }
+            if (_newHostilesAlertTimeLeft > 0) {
+                _newHostilesAlertTimeLeft -= dt;
             }
             // .....................................................................................................
             // target related information
@@ -3268,9 +3281,9 @@ define([
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendly,
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.friendlyHighlight,
                     animationProgress);
-            if (control.isInPilotMode() && _newHostilesMessage && (_newHostilesMessage.timeLeft > 0)) {
+            if (control.isInPilotMode() && _newHostilesMessage && (_newHostilesAlertTimeLeft > 0)) {
                 newHostilesPresent = true;
-                animationProgress = Math.abs(((_newHostilesMessage.duration - _newHostilesMessage.timeLeft) % _newHostilesMessage.blinkInterval) / _newHostilesMessage.blinkInterval - 0.5) * 2;
+                animationProgress = Math.abs(((_newHostilesMessage.duration - _newHostilesAlertTimeLeft) % _newHostilesMessage.blinkInterval) / _newHostilesMessage.blinkInterval - 0.5) * 2;
                 newHostileColor = utils.getMixedColor(
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.hostile,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_INDICATOR).colors.newHostile,
@@ -3763,7 +3776,7 @@ define([
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
                             resources.SoundCategory.SOUND_EFFECT,
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).volume);
-                    _newHostilesMessageSound = resources.getSoundEffect(
+                    _newHostilesAlertSound = resources.getSoundEffect(
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name).createSoundClip(
                             resources.SoundCategory.SOUND_EFFECT,
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).volume);
