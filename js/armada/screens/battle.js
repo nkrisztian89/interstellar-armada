@@ -106,6 +106,8 @@ define([
             /** @type Number */
             HUD_MESSAGE_DURATION_PER_CHAR = 70, // based on average ~900 char per minute human reading speed
             HUD_MESSAGE_BASE_DURATION = 400, // fix extra time added to the duration of all HUD messages without explicit duration
+            /** ID for the HUD message queue for the hostile alert that is shown in parallel to highlighting the newly arrived hostiles, if no other message is visible @type String */
+            HOSTILE_ALERT_QUEUE = "hostileAlert",
             /** ID for the HUD message queue for general messages - messages without a specified queue go here @type String */
             INFO_QUEUE = "info",
             /** ID for the HUD message queue for mission state updates @type String */
@@ -113,7 +115,7 @@ define([
             /** ID for the HUD message queue for messages from the jump engine of the ship @type String */
             JUMP_QUEUE = "system",
             /** In descending priority order @type Array */
-            MESSAGE_QUEUES = [JUMP_QUEUE, MISSION_QUEUE, INFO_QUEUE],
+            MESSAGE_QUEUES = [JUMP_QUEUE, MISSION_QUEUE, INFO_QUEUE, HOSTILE_ALERT_QUEUE],
             // target info section names
             /** @type String */
             TARGET_INFO_NAME = "name",
@@ -1174,7 +1176,7 @@ define([
                     blinkInterval: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_BLINK_INTERVAL),
                     duration: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_DURATION),
                     silent: true,
-                    queue: MISSION_QUEUE
+                    queue: HOSTILE_ALERT_QUEUE
                 };
                 _battle.battleScreen.queueHUDMessage(_newHostilesMessage, true);
                 _newHostiles = [this];

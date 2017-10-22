@@ -66,6 +66,13 @@
                             "priority": true
                         }
                     }
+                }, {
+                    "type": "message",
+                    "delay": 500,
+                    "params": {
+                        "textID": "start",
+                        "source": "alpha 2"
+                    }
                 }]
         }, {
             "trigger": {
@@ -103,6 +110,13 @@
                                 "spacing": [150, -50, 0]
                             }
                         }
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 2000,
+                    "params": {
+                        "textID": "deltaArrived",
+                        "source": "delta 1"
                     }
                 }, {
                     "type": "command",
@@ -159,6 +173,13 @@
                         "target": {
                             "squads": ["serpent"]
                         }
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 5000,
+                    "params": {
+                        "textID": "hostileFightersArrived",
+                        "source": "delta 1"
                     }
                 }]
         }, {

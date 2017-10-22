@@ -104,6 +104,47 @@
                             "squads": ["wraith"]
                         }
                     }
+                }, {
+                    "type": "message",
+                    "delay": 2500,
+                    "params": {
+                        "textID": "hostileFightersArrived",
+                        "source": "alpha 1"
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 13000,
+                    "params": {
+                        "textID": "dniesterGettingClose",
+                        "source": "Amazonas"
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["Dniester"]
+                        }
+                    }, {
+                        "type": "count",
+                        "subjects": {
+                            "teams": ["rebels"]
+                        },
+                        "params": {
+                            "relation": "above",
+                            "count": 0
+                        }
+                    }],
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "message",
+                    "delay": 1000,
+                    "params": {
+                        "textID": "dniesterDestroyed",
+                        "source": "Amazonas"
+                    }
                 }]
         }, {
             "trigger": {

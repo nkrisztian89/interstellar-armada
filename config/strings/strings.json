@@ -173,13 +173,27 @@
             "name": "One versus one"
         },
         "destroyCorvette": {
-            "name": "The rebel corvette"
+            "name": "The rebel corvette",
+            "messages": {
+                "start": "Engaging enemy fighters! Watch out for incoming turret fire!",
+                "deltaArrived": "The cavalry has arrived! We're engaging the Dnieper!",
+                "hostileFightersArrived": "A new group of hostile fighters! Alpha squad, cover us!"
+            }
         },
         "destroyFrigate": {
-            "name": "Bomber run"
+            "name": "Bomber run",
+            "messages": {
+                "hostileFightersArrived": "We're dealing with those escorts! Delta squad, you can proceed to the Dniester!",
+                "dniesterGettingClose": "The Dniester is getting close! Delta squad, you need to engage it quickly! Fly in cruise mode to get there faster.",
+                "dniesterDestroyed": "Great job! Now let's clean up the remaining escorts!"
+            }
         },
         "defendCorvette": {
-            "name": "Defend the corvette"
+            "name": "Defend the corvette",
+            "messages": {
+                "bomberWave1": "Incoming bombers! Alpha squad, take them down quickly!",
+                "bomberWave2": "More bombers! Intercept them before they get close!"
+            }
         },
         "1v6": {
             "name": "One versus six"
@@ -188,10 +202,22 @@
             "name": "Corvette"
         },
         "defendFrigate": {
-            "name": "Defend the frigate"
+            "name": "Defend the frigate",
+            "messages": {
+                "fighterWave1": "Enemy fighters incoming! Alpha, take them out! We're proceeding towards the enemy corvette.",
+                "bomberWave1": "Hostile bombers jumped in! Cover me, Alpha squad!",
+                "bomberWave2": "Another wave of bombers! Alpha, you know what to do!",
+                "allWavesClear": "Good job, Alpha squad! I'm taking care of it from here. Stand clear and watch the show!"
+            }
         },
         "battle": {
-            "name": "Battle with the rebels"
+            "name": "Battle with the rebels",
+            "messages": {
+                "hostileFrigatesArrived": "They've got heavy firepower! Send in the bombers!",
+                "betaArrived": "Beta squad have arrived, engaging frigates! Cover us, Alpha squad!",
+                "hostileBombersArrived": "We're under attack from enemy bombers!",
+                "danubeDestroyed": "We've lost the Danube! Alpha squad, we need cover from those bombers!"
+            }
         },
         "defendFrigates": {
             "name": "Defend the frigates",

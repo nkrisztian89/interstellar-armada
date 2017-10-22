@@ -104,6 +104,13 @@
                             "priority": true
                         }
                     }
+                }, {
+                    "type": "message",
+                    "delay": 1500,
+                    "params": {
+                        "textID": "fighterWave1",
+                        "source": "Danube"
+                    }
                 }]
         }, {
             "trigger": {
@@ -133,6 +140,13 @@
                                 "spacing": [50, -50, 0]
                             }
                         }
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 1500,
+                    "params": {
+                        "textID": "bomberWave1",
+                        "source": "Danube"
                     }
                 }]
         }, {
@@ -202,6 +216,13 @@
                             }
                         }
                     }
+                }, {
+                    "type": "message",
+                    "delay": 1500,
+                    "params": {
+                        "textID": "bomberWave2",
+                        "source": "Danube"
+                    }
                 }]
         }, {
             "trigger": {
@@ -209,6 +230,15 @@
                         "type": "destroyed",
                         "subjects": {
                             "squads": ["wraith", "phantom", "serpent", "reaper"]
+                        }
+                    }, {
+                        "type": "count",
+                        "subjects": {
+                            "spacecrafts": ["Don"]
+                        },
+                        "params": {
+                            "relation": "above",
+                            "count": 0
                         }
                     }],
                 "oneShot": true
@@ -220,6 +250,13 @@
                     },
                     "params": {
                         "command": "standDown"
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 500,
+                    "params": {
+                        "textID": "allWavesClear",
+                        "source": "Danube"
                     }
                 }]
         }, {

@@ -103,6 +103,13 @@
                             }
                         }
                     }
+                }, {
+                    "type": "message",
+                    "delay": 1000,
+                    "params": {
+                        "textID": "bomberWave1",
+                        "source": "Ohio"
+                    }
                 }]
         }, {
             "trigger": {
@@ -170,6 +177,13 @@
                                 "spacing": [50, -50, 0]
                             }
                         }
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 1000,
+                    "params": {
+                        "textID": "bomberWave2",
+                        "source": "Ohio"
                     }
                 }]
         }, {

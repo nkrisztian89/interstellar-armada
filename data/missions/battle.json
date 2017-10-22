@@ -219,6 +219,13 @@
                         }
                     }
                 }, {
+                    "type": "message",
+                    "delay": 6000,
+                    "params": {
+                        "textID": "hostileFrigatesArrived",
+                        "source": "Ohio"
+                    }
+                }, {
                     "type": "command",
                     "delay": 7250,
                     "subjects": {
@@ -247,6 +254,13 @@
                         "target": {
                             "list": ["Tigris", "Ganges", "Thames", "Volga"]
                         }
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 7500,
+                    "params": {
+                        "textID": "betaArrived",
+                        "source": "beta 1"
                     }
                 }, {
                     "type": "command",
@@ -294,6 +308,13 @@
                         "target": {
                             "list": ["Danube", "Vistula"]
                         }
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 10000,
+                    "params": {
+                        "textID": "hostileBombersArrived",
+                        "source": "Danube"
                     }
                 }, {
                     "type": "command",
@@ -354,6 +375,24 @@
                         "target": {
                             "squads": ["phantom", "raider"]
                         }
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["Danube"]
+                        }
+                    }],
+                "oneShot": true,
+                "delay": 1500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "danubeDestroyed",
+                        "source": "Vistula"
                     }
                 }]
         }, {

@@ -208,15 +208,29 @@
         },
         "destroyCorvette": {
             "name": "A lázadók korvettje",
-            "description": "Érzékelőink egy sérült felszerelésű Aries korvettet észleltek két vadászkötelék társaságában. Lázadó társaik felé tartanak, ezért el kell őket fogni és megsemmisíteni, mielőtt egyesíthetnék erőiket. Az <strong>Alfa</strong> vadász csapat feladata, hogy megtisztítsa az utat a bombázóink (<strong>Delta</strong>) előtt a jelenlévő ellenséges vadászok semlegesítésével, majd védje a bombázókat, amíg azok célba veszik az ellenséges korvettet. A korvett fegyverei sérültek ugyan, de vadászgépekre még veszélyt jelentenek, ezért legyen óvatos, és maradjon folyamatosan mozgásban!"
+            "description": "Érzékelőink egy sérült felszerelésű Aries korvettet észleltek két vadászkötelék társaságában. Lázadó társaik felé tartanak, ezért el kell őket fogni és megsemmisíteni, mielőtt egyesíthetnék erőiket. Az <strong>Alfa</strong> vadász csapat feladata, hogy megtisztítsa az utat a bombázóink (<strong>Delta</strong>) előtt a jelenlévő ellenséges vadászok semlegesítésével, majd védje a bombázókat, amíg azok célba veszik az ellenséges korvettet. A korvett fegyverei sérültek ugyan, de vadászgépekre még veszélyt jelentenek, ezért legyen óvatos, és maradjon folyamatosan mozgásban!",
+            "messages": {
+                "start": "Célba vettük az ellenséges vadászokat! Figyeljetek a korvett lövegére!",
+                "deltaArrived": "Megérkezett a lovasság! Megtámadjuk Dniepert!",
+                "hostileFightersArrived": "Újabb ellenséges vadászok! Alfa csapat, fedezzetek!"
+            }
         },
         "destroyFrigate": {
             "name": "Bombázó bevetés",
-            "description": "Egy fregattkapitányunk átállt a lázadók oldalára, és most hajójával az egyik őrjáratunkat fenyegeti a Varanock rendszerben. Egy csapat Vipera bombázót (<strong>Delta</strong>) küldünk a semlegesítésére. Őn fogja vezetni a csapatot. Fogja el és semmisítse meg a hajót, mielőtt elérné az őrjáratunkat, utána pedig segítsen az esetlegesen megmaradó kisérő vadászgépek eltakarításában."
+            "description": "Egy fregattkapitányunk átállt a lázadók oldalára, és most hajójával az egyik őrjáratunkat fenyegeti a Varanock rendszerben. Egy csapat Vipera bombázót (<strong>Delta</strong>) küldünk a semlegesítésére. Őn fogja vezetni a csapatot. Fogja el és semmisítse meg a hajót, mielőtt elérné az őrjáratunkat, utána pedig segítsen az esetlegesen megmaradó kisérő vadászgépek eltakarításában.",
+            "messages": {
+                "hostileFightersArrived": "A kísérettel elbánunk mi! Delta csapat, haladjatok tovább a Dniester felé!",
+                "dniesterGettingClose": "A Dniester egyre közelebb ér! Delta csapat, lőjétek ki gyorsan! Váltsatok cirkáló módra, hogy hamarabb elérjétek!",
+                "dniesterDestroyed": "Szép munka! A kíséretből még maradt, szedjük le őket!"
+            }
         },
         "defendCorvette": {
             "name": "Védd meg a korvettet",
-            "description": "Szenzoraink közelítő vadászokat és bombázókat észleltek, melyek az őrjáratunk felé tartanak. Fogja el és semmisítsse meg őket, mielőtt túl sok kárt okoznak, és a korvett megsemmisül! Különösen figyeljen a nehezebb fegyverekkel felszerelt bombázókra!"
+            "description": "Szenzoraink közelítő vadászokat és bombázókat észleltek, melyek az őrjáratunk felé tartanak. Fogja el és semmisítsse meg őket, mielőtt túl sok kárt okoznak, és a korvett megsemmisül! Különösen figyeljen a nehezebb fegyverekkel felszerelt bombázókra!",
+            "messages": {
+                "bomberWave1": "Bombázók érkeztek! Alfa csapat, lőjétek ki őket gyorsan!",
+                "bomberWave2": "Még több bombázó! Kapjátok el őket, mielőtt még közelebb érnek!"
+            }
         },
         "1v6": {
             "name": "Egy a hat ellen",
@@ -228,11 +242,23 @@
         },
         "defendFrigate": {
             "name": "Védd meg a fregattot",
-            "description": "Egy lázadó korvettet azonosítottunk a körzetben, melynek a megsemmisítésére egy Taurus osztályú fregattot jelöltünk ki. Hogy biztosan eljusson a célig, egy vadász kötelék fogja kísérni, aminek a tagjaként vesz részt ebben a küldetésben. A lázadók hullámokban vadászokat és bombázókat küldtek a fregattunk megállítására, melyeket időben kell elfognia és semlegesítenie, mivel a fregatt nincs felszerelve gyorsan manőverező ellenségekkel szemben. Amennyiben a lázadók sikeresen megsemmisítik, egyedül nem lesz esélye a korvett megállítására."
+            "description": "Egy lázadó korvettet azonosítottunk a körzetben, melynek a megsemmisítésére egy Taurus osztályú fregattot jelöltünk ki. Hogy biztosan eljusson a célig, egy vadász kötelék fogja kísérni, aminek a tagjaként vesz részt ebben a küldetésben. A lázadók hullámokban vadászokat és bombázókat küldtek a fregattunk megállítására, melyeket időben kell elfognia és semlegesítenie, mivel a fregatt nincs felszerelve gyorsan manőverező ellenségekkel szemben. Amennyiben a lázadók sikeresen megsemmisítik, egyedül nem lesz esélye a korvett megállítására.",
+            "messages": {
+                "fighterWave1": "Ellenséges vadászok közelítenek! Alfa, szedjétek le őket! Mi haladunk tovább a korvett felé",
+                "bomberWave1": "Bombázók érkeztek! Alfa csapat, fedezzetek!",
+                "bomberWave2": "Egy újabb csapat bombázó! Alfa, tudjátok mi a dolgotok!",
+                "allWavesClear": "Szép munka, Alfa csapat! Innentől átveszem. Maradjatok hátul, és élvezzétek a műsort!"
+            }
         },
         "battle": {
             "name": "Csata a lázadókkal",
-            "description": "A lázadók szövetkeztek a helyi kalózokkal, és egy nagyobb flottát próbálnak összevonni a vadászaikból és kisebb hadihajóikból. Lokalizáltuk a találkozási pontjukat, és egy csapásmérő osztagot küldünk a felszámolásukra. Az <strong>Alfa</strong> csapatot fogja vezetni. Fókuszáljon az ellenséges bombázók és vadászok megsemmisítésére, hogy segítsen életben tartani a hajóinkat és a saját bombázóinkat. Figyeljen az ellenséges hajók lövegeinek tüzére!"
+            "description": "A lázadók szövetkeztek a helyi kalózokkal, és egy nagyobb flottát próbálnak összevonni a vadászaikból és kisebb hadihajóikból. Lokalizáltuk a találkozási pontjukat, és egy csapásmérő osztagot küldünk a felszámolásukra. Az <strong>Alfa</strong> csapatot fogja vezetni. Fókuszáljon az ellenséges bombázók és vadászok megsemmisítésére, hogy segítsen életben tartani a hajóinkat és a saját bombázóinkat. Figyeljen az ellenséges hajók lövegeinek tüzére!",
+            "messages": {
+                "hostileFrigatesArrived": "Nehéztüzérségük van! Küldjétek be a bombázókat!",
+                "betaArrived": "Béta csapat jelentkezik, célba vesszük a fregattokat! Fedezzetek, Alfa csapat!",
+                "hostileBombersArrived": "Bombázók vettek tűz alá minket!",
+                "danubeDestroyed": "Elvesztettük a Danube-ot! Alfa csapat, hol vagytok?"
+            }
         },
         "defendFrigates": {
             "name": "Védd meg a fregattokat",
