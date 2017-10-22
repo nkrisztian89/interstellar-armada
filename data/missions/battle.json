@@ -169,7 +169,9 @@
                             "anchor": "Thames",
                             "relative": "true",
                             "position": [300, -500, -40],
-                            "rotations": []
+                            "rotations": [],
+                            "fallbackPosition": [-600, 4650, -90],
+                            "fallbackRotations": ["z+180"]
                         }
                     }
                 }, {
@@ -185,7 +187,9 @@
                             "anchor": "Thames",
                             "relative": "true",
                             "position": [-300, -550, 20],
-                            "rotations": []
+                            "rotations": [],
+                            "fallbackPosition": [100, 4700, -30],
+                            "fallbackRotations": ["z+180"]
                         }
                     }
                 }, {
@@ -255,7 +259,9 @@
                         "jump": {
                             "way": "in",
                             "anchor": "Danube",
-                            "distance": 3000
+                            "distance": 3000,
+                            "fallbackPosition": [-3200, -50, 100],
+                            "fallbackRotations": ["z+90"]
                         }
                     }
                 }, {
@@ -301,7 +307,9 @@
                             "way": "in",
                             "anchor": "phantom 1",
                             "relative": "true",
-                            "position": [0, -50, -350]
+                            "position": [0, -50, -350],
+                            "fallbackPosition": [-3200, -50, -250],
+                            "fallbackRotations": ["z+90"]
                         }
                     }
                 }, {

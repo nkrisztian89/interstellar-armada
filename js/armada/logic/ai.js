@@ -621,8 +621,15 @@ define([
                                     this._spacecraft.setPhysicalPosition(vec.sum3(
                                             this._spacecraft.getPhysicalPositionVector(),
                                             anchor.getPhysicalPositionVector()));
+                                } else if (data.jump.fallbackPosition) {
+                                    // fallback to a specified position if the anchor spacecraft has been destroyed (will not be deterministic, depends on camera location)
+                                    this._spacecraft.setPhysicalPosition(data.jump.fallbackPosition);
+                                    if (data.jump.fallbackRotations) {
+                                        this._spacecraft.setPhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.fallbackRotations));
+                                    }
                                 } else {
-                                    application.showError("'" + this._spacecraft.getDisplayName() + "' has an invalid anchor for inward jump: '" + data.jump.anchor + "'!");
+                                    application.log("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid anchor for inward jump: '" + data.jump.anchor + "' and no fallback specified. Jump will be skipped. Might be because the anchor is already destroyed.");
+                                    break;
                                 }
                             }
                         }

@@ -106,7 +106,9 @@
                             "anchor": "Tiberis",
                             "relative": "true",
                             "position": [-180, -1000, 90],
-                            "rotations": []
+                            "rotations": [],
+                            "fallbackPosition": [-1100, 680, -310],
+                            "fallbackRotations": ["z+90"]
                         }
                     }
                 }, {
