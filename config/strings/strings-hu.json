@@ -199,7 +199,7 @@
             "name": "Fejvadászat",
             "description": "<p>Egy helyi kalózvezér, <strong>Hector Yccra</strong>, egyre aktívabbá vált az utóbbi időben, immár több birodalmi csillagrendszerben is problémákat okozva. Ügynökeinknek sikerült bemérniük, és csapdát állítottak neki a Blovell rendszerben. Mivel váltságdíjak jelentik az elsődleges bevételi forrását, ezért azt a hamis információt hitettük el vele, hogy a rendszeren egy fontos személyeket szállító, ám gyengén védett hajó fog áthaladni.</p><p>Egy hamis jeleket kibocsátó szonda segítségével fogjuk a konkrét helyszínre csalni. Nagyobb hadihajók vagy vadászkötelékek jelenléte idő előtt felfedné a csapdát számára, emiatt <strong>mindössze két elfogó vadásznak kell végrehajtania ezt a küldetést.</strong></p><p>Nagy hatótávolságú érzékelőink szerint már úton van a szonda felé jól felfegyverzett őrei társaságában, akik egyben a rajtaütések során fő csapásmérő erejét jelentik. Ezen kívül előreküldött egy kisebb felderítőcsapatot is. Semmisítse meg a felderítőket, és amikor megérkezik a fő csapat, mérje be Hector vadászgépét, a <strong>Ruby Blade</strong>-et. A jelentések szerint vérfoltokra emlékeztető harci festés látható a gép testén. <strong>NE próbálja meg kilőni az egész csapatot</strong>, a kalózok túlerőben lesznek. Hagyja el a helyszínt, amint a Ruby Blade megsemmisült.</p>",
             "messages": {
-                "rubyBladeArrived": "[color:0,1,0,1]Gamma 1[]: Itt van! Hagyd az őröket! Gyorsan vedd célba a Ruby Blade-et, lőjük ki, aztán pucoljunk innen!"
+                "rubyBladeArrived": "Itt van! Hagyd az őröket! Gyorsan vedd célba a Ruby Blade-et, lőjük ki, aztán pucoljunk innen!"
             }
         },
         "1v1": {

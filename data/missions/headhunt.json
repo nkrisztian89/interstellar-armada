@@ -202,31 +202,12 @@
                             "single": "Ruby Blade"
                         }
                     }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "destroyed",
-                        "subjects": {
-                            "squads": ["raider"]
-                        }
-                    }, {
-                        "type": "count",
-                        "subjects": {
-                            "spacecrafts": ["gamma 1"]
-                        },
-                        "params": {
-                            "relation": "above",
-                            "count": 0
-                        }
-                    }],
-                "oneShot": true,
-                "delay": 4500
-            },
-            "actions": [{
+                }, {
                     "type": "message",
+                    "delay": 2000,
                     "params": {
-                        "textID": "rubyBladeArrived"
+                        "textID": "rubyBladeArrived",
+                        "source": "gamma 1"
                     }
                 }]
         }, {

@@ -166,7 +166,7 @@
         "headhunt": {
             "name": "Headhunt",
             "messages": {
-                "rubyBladeArrived": "[color:0,1,0,1]Gamma 1[]: He's here! Ignore the guards! Quick, target the Ruby Blade, destroy it and let's get out of here!"
+                "rubyBladeArrived": "He's here! Ignore the guards! Quick, target the Ruby Blade, destroy it and let's get out of here!"
             }
         },
         "1v1": {

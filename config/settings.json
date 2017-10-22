@@ -664,7 +664,9 @@
                         "default": [1, 1, 1, 1],
                         "jump": [0, 1, 1, 1],
                         "alert": [1, 0.5, 0, 1],
-                        "controlString": [0, 1, 0, 1]
+                        "controlString": [0, 1, 0, 1],
+                        "friendlySpacecraft": [0, 1, 0, 1],
+                        "hostileSpacecraft": [1, 0, 0, 1]
                     },
                     "fontSize": 0.16,
                     "fontName": "hudFont",

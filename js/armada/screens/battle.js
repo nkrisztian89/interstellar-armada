@@ -2430,7 +2430,7 @@ define([
      * back of the queue.
      */
     BattleScreen.prototype.queueHUDMessage = function (message, urgent) {
-        var text, start, end, replacementID, replacementText;
+        var text, start, end, replacementID, replacementText, /**@type Spacecraft*/ craft;
         text = message.text;
         // replacing references in the text
         for (start = text.indexOf("{"); start >= 0; start = text.indexOf("{")) {
@@ -2443,6 +2443,13 @@ define([
                         replacementText =
                                 "[color:" + _messageTextSettings.colors.controlString.join(",") + "]" +
                                 control.getInputInterpreter(replacementID[1]).getControlStringForAction(replacementID[2]) +
+                                "[]";
+                        break;
+                    case "spacecrafts":
+                        craft = _mission.getSpacecraft(replacementID[1]);
+                        replacementText =
+                                "[color:" + (_spacecraft.isHostile(craft) ? _messageTextSettings.colors.hostileSpacecraft : _messageTextSettings.colors.friendlySpacecraft).join(",") + "]" +
+                                craft.getDisplayName() +
                                 "[]";
                         break;
                     default:

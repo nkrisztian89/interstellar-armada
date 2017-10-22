@@ -1243,7 +1243,7 @@ define([
             },
             MESSAGE_TEXT: {
                 name: "messageText",
-                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["default", "jump", "alert", "controlString"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["default", "jump", "alert", "controlString", "friendlySpacecraft", "hostileSpacecraft"]})
             },
             MESSAGE_TEXT_MARGIN: {
                 name: "messageTextMargin",

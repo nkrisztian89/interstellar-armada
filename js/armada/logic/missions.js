@@ -1612,6 +1612,8 @@ define([
      * @property {String} [textID] The translation ID to use for the text to be displayed. The full translation
      * ID will be mission.<missionName>.messages.<textID>
      * If a translation is found, it overrides the value of the text property.
+     * @property {String} [source] The name (id) of the spacecraft that this message originates from. Its display name will be added at the beginning
+     * of the message, and the message is not played if the ship is already destroyed
      * @property {Number} [duration] The duration to display the message for, in milliseconds. If not given, an automatic
      * duration will be set based on the length of the text
      * @property {Boolean} [permanent] If true, the message keeps being displayed until a new urgent
@@ -1634,6 +1636,7 @@ define([
                 ((!this._params.text) && (!this._params.textID)) ||
                 ((this._params.text !== undefined) && (typeof this._params.text !== "string") && (typeof this._params.text !== "object")) ||
                 ((this._params.textID !== undefined) && (typeof this._params.textID !== "string")) ||
+                ((this._params.source !== undefined) && (typeof this._params.source !== "string")) ||
                 ((this._params.duration !== undefined) && (typeof this._params.duration !== "number")) ||
                 ((this._params.permanent !== undefined) && (typeof this._params.permanent !== "boolean")) ||
                 ((this._params.urgent !== undefined) && (typeof this._params.urgent !== "boolean")) ||
@@ -1648,8 +1651,12 @@ define([
      * @param {Mission} mission 
      */
     MessageAction.prototype.execute = function (mission) {
+        if (this._params.source && !mission.getSpacecraft(this._params.source)) {
+            application.log("Warning: message not played, because the source spacecraft '" + this._params.source + "' does not exist (might have been destroyed)!");
+            return;
+        }
         game.getScreen().queueHUDMessage({
-            text: strings.get(
+            text: (this._params.source ? ("{spacecrafts/" + this._params.source + "}: ") : "") + strings.get(
                     strings.MISSION.PREFIX,
                     utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
                     (typeof this._params.text === "object") ? this._params.text[strings.getLanguage()] : this._params.text),
@@ -2966,11 +2973,11 @@ define([
                 if (this._dataJSON.spacecrafts[i].pilotedIndex) {
                     result = utils.deepCopy(this._dataJSON.spacecrafts[i]);
                     if (result.names) {
-                        result.name = result.names[result.pilotedIndex-1];
+                        result.name = result.names[result.pilotedIndex - 1];
                         delete result.names;
                     }
                     if (result.equipments) {
-                        result.equipment = result.equipments[result.pilotedIndex-1];
+                        result.equipment = result.equipments[result.pilotedIndex - 1];
                         delete result.equipments;
                     }
                     delete result.count;
