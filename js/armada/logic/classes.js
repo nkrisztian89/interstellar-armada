@@ -4150,6 +4150,7 @@ define([
         SOUND_EFFECT: SOUND_EFFECT,
         ParticleEmitterType: ParticleEmitterType,
         ObjectViewLookAtMode: ObjectViewLookAtMode,
+        SceneViewLookAtMode: SceneViewLookAtMode,
         WeaponRotationStyle: WeaponRotationStyle,
         SpacecraftTurnStyle: SpacecraftTurnStyle,
         TexturedModelClass: TexturedModelClass,
@@ -4174,6 +4175,7 @@ define([
         SceneView: SceneView,
         requestLoad: requestLoad,
         handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
+        executeWhenReady: _classManager.executeWhenReady.bind(_classManager),
         executeForAllClasses: _classManager.executeForAllResources.bind(_classManager),
         renameClass: _classManager.renameResource.bind(_classManager),
         moveClassAfter: _classManager.moveResourceAfter.bind(_classManager)

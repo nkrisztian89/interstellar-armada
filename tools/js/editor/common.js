@@ -15,13 +15,15 @@
  * @param resources Used for obtaining resource references
  * @param classes Used for obtaining class references
  * @param environments Used for obtaining environments
+ * @param missions Used for obtaining mission descriptors
  */
 define([
     "utils/utils",
     "modules/media-resources",
     "armada/logic/classes",
-    "armada/logic/environments"
-], function (utils, resources, classes, environments) {
+    "armada/logic/environments",
+    "armada/logic/missions",
+], function (utils, resources, classes, environments, missions) {
     "use strict";
     /**
      * @typedef {Object} Editor~Item
@@ -89,6 +91,7 @@ define([
      * @returns {GenericResource|GenericClass}
      */
     function getItemReference(item) {
+        var result;
         switch (item.type) {
             case ItemType.RESOURCE:
                 return resources.getResource(item.category, item.name);
@@ -97,11 +100,10 @@ define([
             case ItemType.ENVIRONMENT:
                 return environments.getEnvironment(item.name);
             case ItemType.MISSION:
-                return {
-                    getData: function () {
-                        return null;
-                    }
-                };
+                missions.requestMissionDescriptor(item.name, function (missionDescriptor) {
+                    result = missionDescriptor;
+                });
+                return result;
             default:
                 document.crash();
         }
@@ -160,7 +162,7 @@ define([
      */
     function createButton(caption, clickHandler, tooltip) {
         var result = document.createElement("button");
-        result.innerHTML = caption;
+        result.textContent = caption;
         result.type = "button";
         result.onclick = clickHandler;
         if (tooltip) {

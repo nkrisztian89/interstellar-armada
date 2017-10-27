@@ -419,6 +419,19 @@ define(function () {
         return result;
     };
     /**
+     * Returns an object that can be used as an enum definition object with the
+     * valid enum values being the strings in the passed array.
+     * @param {String[]} enumValues
+     * @returns {Object}
+     */
+    exports.getEnumObject = function (enumValues) {
+        var result = {}, i;
+        for (i = 0; i < enumValues.length; i++) {
+            result[enumValues[i]] = enumValues[i];
+        }
+        return result;
+    };
+    /**
      * Returns the key of a property of the given object that has the given value, if any.
      * @param {Object} obj
      * @param {} value

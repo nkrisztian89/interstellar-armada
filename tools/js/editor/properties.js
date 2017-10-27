@@ -48,7 +48,7 @@ define([
             UNSET_PROPERTY_BUTTON_CAPTION = "x",
             UNSET_PROPERTY_BUTTON_TOOLTIP = "Unset property",
             WITH_UNSET_PROPERTY_BUTTON_CLASS = "withUnsetButton",
-            JUMP_TO_REFERENCE_BUTTON_CAPTION = ">",
+            JUMP_TO_REFERENCE_BUTTON_CAPTION = "↷",
             JUMP_TO_REFERENCE_BUTTON_TOOLTIP = "Jump to referenced item",
             WITH_JUMP_TO_REFERENCE_BUTTON_CLASS = "withJumpButton",
             ADD_BUTTON_CAPTION = "+",
@@ -247,7 +247,7 @@ define([
         });
         popup = _createPopup(button, parentPopup, topName, null, function () {
             _changeData(topName, textarea.value, parent, name);
-            button.innerHTML = _getStringPreview(textarea.value);
+            button.textContent = _getStringPreview(textarea.value);
         });
         textarea.value = data;
         textarea.cols = TEXT_AREA_COLS;
@@ -483,7 +483,7 @@ define([
      */
     function _createObjectControl(topName, typeDescriptor, data, parentPopup, atLeastOneElementNeeded) {
         var
-                button = document.createElement("button"),
+                i, button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
                 isArray = (data instanceof Array),
                 type = new descriptors.Type(typeDescriptor),
@@ -526,17 +526,26 @@ define([
                     popup.alignPosition();
                 },
                 updateButtonText = function () {
-                    button.innerHTML = typeDescriptor.name + (isArray ? (" (" + data.length + ")") : "");
+                    button.textContent = ((!isArray && typeDescriptor.getPreviewText) ? typeDescriptor.getPreviewText(data) : typeDescriptor.name) + (isArray ? (" (" + data.length + ")") : "");
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }
                 };
         // for arrays: adding a selector at the top of the popup, using which the instance to modify within the array can be selected
         if (isArray) {
+            // some objecs have a string shorthand: if the data contains the shorthand, extract it to the full object so it can be edited as usual
+            // (only supported for arrays for now)
+            if (typeDescriptor.unpack) {
+                for (i = 0; i < data.length; i++) {
+                    if ((typeof data[i]) === "string") {
+                        data[i] = typeDescriptor.unpack(data[i]);
+                    }
+                }
+            }
             // if the array elements have a "name" property, use the values of that instead of indices for selection
             indices = [];
             while (indices.length < data.length) {
-                indices.push(hasName ? data[indices.length][descriptors.NAME_PROPERTY_NAME] : indices.length.toString());
+                indices.push(hasName ? type.getInstanceName(data[indices.length]) : indices.length.toString());
             }
             indexLabel = common.createLabel(typeDescriptor.name + (hasName ? ":" : " index:"));
             indexSelector = common.createSelector(indices, indices[0], false, indexChangeHandler);
@@ -545,7 +554,7 @@ define([
                 data.push(_getDefaultValue({type: typeDescriptor}, null, null, true));
                 updateButtonText();
                 newIndex = document.createElement("option");
-                newIndex.value = hasName ? data[data.length - 1][descriptors.NAME_PROPERTY_NAME] : (data.length - 1).toString();
+                newIndex.value = hasName ? type.getInstanceName(data[data.length - 1]) : (data.length - 1).toString();
                 newIndex.text = newIndex.value;
                 indexSelector.add(newIndex);
                 _updateData(topName);
@@ -562,12 +571,12 @@ define([
             duplicateElementButton = common.createButton(DUPLICATE_BUTTON_CAPTION, function () {
                 var newIndex;
                 data.push(utils.deepCopy(data[indexSelector.selectedIndex]));
-                if (hasName) {
+                if (hasName && data[data.length - 1][descriptors.NAME_PROPERTY_NAME]) {
                     data[data.length - 1][descriptors.NAME_PROPERTY_NAME] += DUPLICATE_ELEMENT_SUFFIX;
                 }
                 updateButtonText();
                 newIndex = document.createElement("option");
-                newIndex.value = hasName ? data[data.length - 1][descriptors.NAME_PROPERTY_NAME] : (data.length - 1).toString();
+                newIndex.value = hasName ? type.getInstanceName(data[data.length - 1]) : (data.length - 1).toString();
                 newIndex.text = newIndex.value;
                 indexSelector.add(newIndex);
                 _updateData(topName);
@@ -897,6 +906,15 @@ define([
             popup.alignPosition();
             _updateData(topName);
         });
+        // expand string shorthands to proper objects
+        for (i = 0; i < data.length; i++) {
+            if (typeof data[i] === "string") {
+                data[i] = {
+                    axis: data[i][0].toUpperCase(),
+                    degrees: parseFloat(data[i].substring(1))
+                }
+            }
+        }
         _addPropertyEditorHeader(popup, [], [addRotationButton]);
         table = document.createElement("table");
         refreshTable();
@@ -1082,11 +1100,25 @@ define([
      */
     function _createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler) {
         var result = document.createElement("div"),
-                label, button;
+                labelText, label, button, type;
         if ((!parent || (parent === _item.data)) && _basedOn) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
         } else if (!propertyDescriptor.optional && ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault)) {
-            label = _createDefaultControl(DEFAULT_PROPERTY_TEXT + ((typeof propertyDescriptor.defaultValue === "number") ? ": " + propertyDescriptor.defaultValue : ""));
+            labelText = DEFAULT_PROPERTY_TEXT;
+            if ((typeof propertyDescriptor.defaultValue === "number") || (typeof propertyDescriptor.defaultValue === "boolean")) {
+                labelText = propertyDescriptor.defaultValue.toString();
+                type = new descriptors.Type(propertyDescriptor.type);
+                if (type.getUnit()) {
+                    labelText += " " + type.getUnit();
+                }
+            }
+            if (typeof propertyDescriptor.defaultValue === "string") {
+                labelText = propertyDescriptor.defaultValue;
+                if (labelText.length > 15) {
+                    labelText = labelText.substring(0, 12) + "...";
+                }
+            }
+            label = _createDefaultControl(labelText);
         } else if (propertyDescriptor.defaultDerived) {
             label = _createDefaultControl(DERIVED_PROPERTY_TEXT);
         } else if (propertyDescriptor.optional) {

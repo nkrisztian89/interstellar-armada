@@ -2478,6 +2478,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        SpacecraftFormation: SpacecraftFormation,
         Spacecraft: Spacecraft
     };
 });

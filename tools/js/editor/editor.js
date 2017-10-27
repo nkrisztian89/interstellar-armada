@@ -485,11 +485,12 @@ define([
      * @param {Element} element The element that represents the item (typically <span>, showing the name of the item)
      * @param {String} type (enum ItemType) The type this item belongs to
      * @param {String} category The category the item belongs to (e.g. "spacecraftClasses")
+     * @param {String} name The name (string ID) of the item (e.g. "falcon")
      * @returns {Function}
      */
-    function _createElementClickHandler(element, type, category) {
+    function _createElementClickHandler(element, type, category, name) {
         return function () {
-            _selectItem(type, element.textContent, category, element);
+            _selectItem(type, name, category, element);
         };
     }
     /**
@@ -772,10 +773,13 @@ define([
                 itemElement.draggable = (itemType === common.ItemType.RESOURCE) || (itemType === common.ItemType.CLASS);
                 itemSpan = document.createElement("span");
                 itemSpan.classList.add(ELEMENT_CLASS);
-                itemSpan.innerHTML = items[j];
+                itemSpan.textContent = items[j];
+                if (itemType === common.ItemType.MISSION) {
+                    itemSpan.textContent = utils.getFilenameWithoutExtension(itemSpan.textContent);
+                }
                 itemElement.appendChild(itemSpan);
                 _itemElements[itemType][categories[i]][items[j]] = itemSpan;
-                itemSpan.onclick = _createElementClickHandler(itemSpan, itemType, categories[i]);
+                itemSpan.onclick = _createElementClickHandler(itemSpan, itemType, categories[i], items[j]);
                 if (itemElement.draggable) {
                     itemElement.ondragstart = _createElementDragStartHandler(itemElement, itemType, categories[i], itemElement.id);
                     itemElement.ondragend = _createElementDragEndHandler(itemElement);
@@ -947,7 +951,7 @@ define([
             config.executeWhenReady(function () {
                 environments.requestLoad();
                 environments.executeWhenReady(function () {
-                    missions.requestLoad();
+                    missions.requestLoad(true);
                     missions.executeWhenReady(function () {
                         application.log("Game settings loaded.", 1);
                         localStorage[constants.VERSION_LOCAL_STORAGE_ID] = application.getVersion();

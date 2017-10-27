@@ -278,6 +278,14 @@ define([
             _context;
     // ##############################################################################
     /**
+     * Returns a list of all the valid AI types
+     * @returns {String[]}
+     */
+    function getAITypes() {
+        return Object.keys(_aiConstructors);
+    }
+    // ##############################################################################
+    /**
      * @class
      * An abstract AI class that provides some generally useful methods for controlling a spacecraft.
      * @param {Spacecraft} spacecraft The AI will control this spacecraft.
@@ -1470,6 +1478,9 @@ define([
     return {
         FIGHTER_AI_NAME: FIGHTER_AI_NAME,
         SHIP_AI_NAME: SHIP_AI_NAME,
+        SpacecraftCommand: SpacecraftCommand,
+        JumpCommandWay: JumpCommandWay,
+        getAITypes: getAITypes,
         clearAIs: _context.clearAIs.bind(_context),
         addAI: _context.addAI.bind(_context),
         control: _context.control.bind(_context),

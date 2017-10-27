@@ -54,7 +54,7 @@
             "source": "tests/lineup.json",
             "test": true
         }, {
-            "source": "test/3v3.json",
+            "source": "tests/3v3.json",
             "test": true
         }, {
             "source": "tests/bombers.json",

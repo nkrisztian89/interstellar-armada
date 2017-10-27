@@ -3322,15 +3322,21 @@ define([
      * Sends an asynchronous request to grab the file containing the mission
      * descriptions and sets a callback to load those descriptions 
      * and set the resource state of this context to ready when done.
+     * @param {Boolean} [loadDescriptors=false] If true, the mission descriptors are also requested and loaded (used for the editor)
      */
-    MissionContext.prototype.requestLoad = function () {
-        var missionAssignment = {};
+    MissionContext.prototype.requestLoad = function (loadDescriptors) {
+        var missionAssignment = {}, setToReady = this.setToReady.bind(this);
         missionAssignment[MISSION_ARRAY_NAME] = MissionDescriptor;
         this._missionManager.requestConfigLoad(
                 config.getConfigurationSetting(config.CONFIGURATION.MISSION_FILES).filename,
                 config.getConfigurationSetting(config.CONFIGURATION.MISSION_FILES).folder,
                 missionAssignment,
-                this.setToReady.bind(this));
+                (loadDescriptors ? function () {
+                    this._missionManager.requestAllResources();
+                    this._missionManager.executeWhenReady(setToReady);
+                    this._missionManager.requestResourceLoad();
+                }.bind(this) :
+                setToReady));
     };
     /**
      * Returns the string ID of the currently chosen (default) difficulty level.
@@ -3485,6 +3491,12 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        ConditionType: ConditionType,
+        TriggerFireWhen: TriggerFireWhen,
+        TriggerConditionsRequired: TriggerConditionsRequired,
+        CountConditionRelation: CountConditionRelation,
+        TimeConditionSatisfiedWhen: TimeConditionSatisfiedWhen,
+        ActionType: ActionType,
         MissionState: MissionState,
         ObjectiveState: ObjectiveState,
         FAILED_MISSION_PERFORMACE: FAILED_MISSION_PERFORMACE,

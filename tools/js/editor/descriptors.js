@@ -19,7 +19,11 @@
  * @param config Used for configuration (setting) key strings
  * @param graphics Used to access contants
  * @param classes Used to access enums and retrieve class name lists
+ * @param environments Used to retrieve environment name lists
+ * @param missions Used to access enums
  * @param equipment Used to access enums 
+ * @param spacecraft Used to access enums 
+ * @param ai Used to access the list of valid AI types
  * @param common Used to access enums (ItemType)
  */
 define([
@@ -31,9 +35,13 @@ define([
     "armada/configuration",
     "armada/graphics",
     "armada/logic/classes",
+    "armada/logic/environments",
+    "armada/logic/missions",
     "armada/logic/equipment",
+    "armada/logic/spacecraft",
+    "armada/logic/ai",
     "editor/common"
-], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes, equipment, common) {
+], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes, environments, missions, equipment, spacecraft, ai, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -56,7 +64,7 @@ define([
                 CONFINES: "confines" // [[minX, maxX], [minY, maxY], [minZ, maxZ]]
             },
             Unit = {
-                TIMES: "x",
+                TIMES: "🞩",
                 METERS: "m",
                 METERS_PER_SECOND: "m/s",
                 METERS_PER_SECOND_SQUARED: "m/s²",
@@ -87,6 +95,7 @@ define([
              * @property {Boolean} [long=false] For BaseType.STRING
              * @property {String} [resourceReference] For BaseType.ENUM and BaseType.SET
              * @property {String} [classReference] For BaseType.ENUM and BaseType.SET
+             * @property {String} [environmentReference] For BaseType.ENUM and BaseType.SET
              * @property {String} [name] For BaseType.OBJECT and BaseType.SET
              * @property {Editor~ItemDescriptor} [properties] For BaseType.OBJECT
              * @property {Object} [values] For BaseType.ENUM and BaseType.SET
@@ -243,6 +252,13 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            MUSIC_REFERENCE = {
+                baseType: BaseType.ENUM,
+                resourceReference: "music"
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             SKYBOX_CLASS_REFERENCE = {
                 baseType: BaseType.ENUM,
                 classReference: "skyboxClasses"
@@ -316,6 +332,13 @@ define([
             SHIELD_CLASS_REFERENCE = {
                 baseType: BaseType.ENUM,
                 classReference: "shieldClasses"
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            ENVIRONMENT_REFERENCE = {
+                baseType: BaseType.ENUM,
+                environmentReference: "environments"
             },
             /**
              * @type Editor~TypeDescriptor
@@ -1978,6 +2001,842 @@ define([
                     name: "dustClouds",
                     type: _createTypedArrayType(DUST_CLOUD)
                 }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            TEAM = {
+                baseType: BaseType.OBJECT,
+                name: "Team",
+                unpack: function (stringValue) {
+                    return {
+                        id: stringValue,
+                        name: stringValue
+                    };
+                },
+                properties: {
+                    ID: {
+                        name: "id",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    NAME: {
+                        name: "name",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    COLOR: {
+                        name: "color",
+                        type: BaseType.COLOR4,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            CONDITION_TYPE = {
+                baseType: BaseType.ENUM,
+                values: missions.ConditionType
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SUBJECT_GROUP = {
+                baseType: BaseType.OBJECT,
+                name: "SubjectGroup",
+                getPreviewText: function (instance) {
+                    var subjects = [];
+                    if (instance.spacecrafts) {
+                        subjects = subjects.concat(instance.spacecrafts);
+                    }
+                    if (instance.squads) {
+                        subjects = subjects.concat(instance.squads);
+                    }
+                    if (instance.teams) {
+                        subjects = subjects.concat(instance.teams);
+                    }
+                    if (subjects.length === 0) {
+                        return "none";
+                    }
+                    if (subjects.length === 1) {
+                        return subjects[0];
+                    }
+                    if (subjects.length === 2) {
+                        return subjects[0] + ", " + subjects[1];
+                    }
+                    return subjects[0] + ", " + subjects[1] + "...";
+                },
+                properties: {
+                    SPACECRAFTS: {
+                        name: "spacecrafts",
+                        type: STRING_ARRAY,
+                        optional: true
+                    },
+                    SQUADS: {
+                        name: "squads",
+                        type: STRING_ARRAY,
+                        optional: true
+                    },
+                    TEAMS: {
+                        name: "teams",
+                        type: STRING_ARRAY,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            COUNT_CONDITION_RELATION = {
+                baseType: BaseType.ENUM,
+                values: missions.CountConditionRelation
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            TIME_CONDITION_SATISFIED_WHEN = {
+                baseType: BaseType.ENUM,
+                values: missions.TimeConditionSatisfiedWhen
+            },
+            /**
+             * A merge of all the different possible condition parameters
+             * @type Editor~TypeDescriptor
+             */
+            CONDITION_PARAMS = {
+                baseType: BaseType.OBJECT,
+                name: "ConditionParams",
+                getPreviewText: function (instance) {
+                    // CountCondition params:
+                    if (instance.relation !== undefined) {
+                        return instance.relation + " " + instance.count;
+                    }
+                    // TimeCondition params:
+                    if (instance.satisfiedWhen !== undefined) {
+                        return instance.satisfiedWhen + ": " + instance.time + " ms";
+                    }
+                    return "none";
+                },
+                properties: {
+                    // CountCondition params:
+                    COUNT: {
+                        name: "count",
+                        type: BaseType.NUMBER,
+                        optional: true
+                    },
+                    RELATION: {
+                        name: "relation",
+                        type: COUNT_CONDITION_RELATION,
+                        optional: true
+                    },
+                    // TimeCondition params:
+                    TIME: {
+                        name: "time",
+                        type: MILLISECONDS,
+                        optional: true
+                    },
+                    SATISFIED_WHEN: {
+                        name: "satisfiedWhen",
+                        type: TIME_CONDITION_SATISFIED_WHEN,
+                        optional: true
+                    },
+                    START: {
+                        name: "start",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    MAX_COUNT: {
+                        name: "maxCount",
+                        type: BaseType.NUMBER,
+                        optional: true
+                    },
+                    START_OFFSET: {
+                        name: "startOffset",
+                        type: MILLISECONDS,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            CONDITION = {
+                baseType: BaseType.OBJECT,
+                name: "Condition",
+                properties: {
+                    TYPE: {
+                        name: "type",
+                        type: CONDITION_TYPE
+                    },
+                    SUBJECTS: {
+                        name: "subjects",
+                        type: SUBJECT_GROUP,
+                        optional: true
+                    },
+                    PARAMS: {
+                        name: "params",
+                        type: CONDITION_PARAMS,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            TRIGGER_CONDITIONS_REQUIRED = {
+                baseType: BaseType.ENUM,
+                values: missions.TriggerConditionsRequired
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            TRIGGER_FIRE_WHEN = {
+                baseType: BaseType.ENUM,
+                values: missions.TriggerFireWhen
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            TRIGGER = {
+                baseType: BaseType.OBJECT,
+                name: "Trigger",
+                properties: {
+                    CONDITIONS: {
+                        name: "conditions",
+                        type: _createTypedArrayType(CONDITION)
+                    },
+                    CONDITIONS_REQUIRED: {
+                        name: "conditionsRequired",
+                        type: TRIGGER_CONDITIONS_REQUIRED,
+                        defaultValue: missions.TriggerConditionsRequired.ALL
+                    },
+                    FIRE_WHEN: {
+                        name: "fireWhen",
+                        type: TRIGGER_FIRE_WHEN,
+                        defaultValue: missions.TriggerFireWhen.CHANGE_TO_TRUE
+                    },
+                    ONE_SHOT: {
+                        name: "oneShot",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
+                    },
+                    DELAY: {
+                        name: "delay",
+                        type: MILLISECONDS,
+                        defaultValue: 0
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            ACTION_TYPE = {
+                baseType: BaseType.ENUM,
+                values: missions.ActionType
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SPACECRAFT_COMMAND = {
+                baseType: BaseType.ENUM,
+                values: ai.SpacecraftCommand
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            JUMP_COMMAND_WAY = {
+                baseType: BaseType.ENUM,
+                values: ai.JumpCommandWay
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SPACECRAFT_FORMATION = {
+                baseType: BaseType.ENUM,
+                values: spacecraft.SpacecraftFormation
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            FORMATION = {
+                baseType: BaseType.OBJECT,
+                name: "SpacecraftFormation",
+                getPreviewText: function (instance) {
+                    return instance.type + (instance.spacing ? " (" + instance.spacing.join(", ") + ")" : "");
+                },
+                properties: {
+                    TYPE: {
+                        name: "type",
+                        type: SPACECRAFT_FORMATION
+                    },
+                    SPACING: {
+                        name: "spacing",
+                        type: BaseType.VECTOR3
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            JUMP_COMMAND_PARAMS = {
+                baseType: BaseType.OBJECT,
+                name: "JumpCommandParams",
+                getPreviewText: function (instance) {
+                    return (instance.way || "") + (instance.anchor ? " (" + instance.anchor + ")" : "");
+                },
+                properties: {
+                    WAY: {
+                        name: "way",
+                        type: JUMP_COMMAND_WAY,
+                        optional: true
+                    },
+                    FORMATION: {
+                        name: "formation",
+                        type: FORMATION,
+                        optional: true
+                    },
+                    ANCHOR: {
+                        name: "anchor",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    DISTANCE: {
+                        name: "distance",
+                        type: METERS,
+                        optional: true
+                    },
+                    POSITION: {
+                        name: "position",
+                        type: BaseType.VECTOR3,
+                        optional: true
+                    },
+                    ROTATIONS: {
+                        name: "rotations",
+                        type: BaseType.ROTATIONS,
+                        optional: true
+                    },
+                    RELATIVE: {
+                        name: "relative",
+                        type: BaseType.BOOLEAN,
+                        optional: true
+                    },
+                    FALLBACK_POSITION: {
+                        name: "fallbackPosition",
+                        type: BaseType.VECTOR3,
+                        optional: true
+                    },
+                    FALLBACK_ROTATIONS: {
+                        name: "fallbackRotations",
+                        type: BaseType.ROTATIONS,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            TARGET_COMMAND_PARAMS = {
+                baseType: BaseType.OBJECT,
+                name: "TargetCommandParams",
+                getPreviewText: function (instance) {
+                    var result;
+                    if (instance.single) {
+                        result = instance.single;
+                    } else if (instance.list) {
+                        result =  "list (" + instance.list.length + ")";
+                    } else if (instance.squads) {
+                        result = "squads (" + instance.squads.length + ")";
+                    } else if (instance.none) {
+                        result = "none";
+                    }
+                    if (instance.priority) {
+                        result += "!";
+                    }
+                    return result;
+                },
+                properties: {
+                    SINGLE: {
+                        name: "single",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    LIST: {
+                        name: "list",
+                        type: STRING_ARRAY,
+                        optional: true
+                    },
+                    SQUADS: {
+                        name: "squads",
+                        type: STRING_ARRAY,
+                        optional: true
+                    },
+                    NONE: {
+                        name: "none",
+                        type: BaseType.BOOLEAN,
+                        optional: true
+                    },
+                    PRIORITY: {
+                        name: "priority",
+                        type: BaseType.BOOLEAN,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * A merge of all the different possible action parameters
+             * @type Editor~TypeDescriptor
+             */
+            ACTION_PARAMS = {
+                baseType: BaseType.OBJECT,
+                name: "ActionParams",
+                getPreviewText: function (instance) {
+                    // MessageAction params:
+                    if ((instance.text !== undefined) || (instance.textID !== undefined)) {
+                        return "message" + (instance.textID ? " (" + instance.textID + ")" : "");
+                    }
+                    // CommandAction params:
+                    if (instance.command !== undefined) {
+                        return "command: " + instance.command;
+                    }
+                    return "none";
+                },
+                properties: {
+                    // MessageAction params:
+                    TEXT: {
+                        name: "text",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    TEXT_ID: {
+                        name: "textID",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    SOURCE: {
+                        name: "source",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    DURATION: {
+                        name: "duration",
+                        type: MILLISECONDS,
+                        optional: true
+                    },
+                    PERMANENT: {
+                        name: "permanent",
+                        type: BaseType.BOOLEAN,
+                        optional: true
+                    },
+                    URGENT: {
+                        name: "urgent",
+                        type: BaseType.BOOLEAN,
+                        optional: true
+                    },
+                    COLOR: {
+                        name: "color",
+                        type: BaseType.COLOR4,
+                        optional: true
+                    },
+                    // CommandAction params:
+                    COMMAND: {
+                        name: "command",
+                        type: SPACECRAFT_COMMAND,
+                        optional: true
+                    },
+                    JUMP: {
+                        name: "jump",
+                        type: JUMP_COMMAND_PARAMS,
+                        optional: true
+                    },
+                    TARGET: {
+                        name: "target",
+                        type: TARGET_COMMAND_PARAMS,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            ACTION = {
+                baseType: BaseType.OBJECT,
+                name: "Action",
+                properties: {
+                    TYPE: {
+                        name: "type",
+                        type: ACTION_TYPE
+                    },
+                    DELAY: {
+                        name: "delay",
+                        type: MILLISECONDS,
+                        defaultValue: 0
+                    },
+                    SUBJECTS: {
+                        name: "subjects",
+                        type: SUBJECT_GROUP,
+                        optional: true
+                    },
+                    PARAMS: {
+                        name: "params",
+                        type: ACTION_PARAMS,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            MISSION_EVENT = {
+                baseType: BaseType.OBJECT,
+                name: "MissionEvent",
+                getName: function (instance) {
+                    if (instance.name) {
+                        return instance.name;
+                    }
+                    if (instance.actions && (instance.actions[0].type === missions.ActionType.WIN)) {
+                        return "win";
+                    }
+                    if (instance.actions && (instance.actions[0].type === missions.ActionType.LOSE)) {
+                        return "lose";
+                    }
+                    if (instance.trigger && (instance.trigger.fireWhen === missions.TriggerFireWhen.MISSION_STARTS)) {
+                        return "start";
+                    }
+                    if (instance.actions && (instance.actions.length === 1)) {
+                        return instance.actions[0].type;
+                    }
+                    return "event";
+                },
+                properties: {
+                    NAME: {
+                        name: "name",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    TRIGGER: {
+                        name: "trigger",
+                        type: TRIGGER
+                    },
+                    ACTIONS: {
+                        name: "actions",
+                        type: _createTypedArrayType(ACTION)
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SCENE_VIEW_LOOK_AT_MODE = {
+                baseType: BaseType.ENUM,
+                values: classes.SceneViewLookAtMode
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SCENE_VIEW = {
+                baseType: BaseType.OBJECT,
+                name: "SceneView",
+                properties: {
+                    NAME: {
+                        name: "name",
+                        type: BaseType.STRING
+                    },
+                    FOV: {
+                        name: "fov",
+                        type: DEGREES,
+                        globalDefault: true,
+                        settingName: config.CAMERA_SETTINGS.DEFAULT_FOV
+                    },
+                    FOV_RANGE: {
+                        name: "fovRange",
+                        type: BaseType.RANGE,
+                        globalDefault: true,
+                        settingName: config.CAMERA_SETTINGS.DEFAULT_FOV_RANGE
+                    },
+                    SPAN: {
+                        name: "span",
+                        type: METERS,
+                        globalDefault: true,
+                        settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN
+                    },
+                    SPAN_RANGE: {
+                        name: "spanRange",
+                        type: BaseType.RANGE,
+                        globalDefault: true,
+                        settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN_RANGE
+                    },
+                    FPS: {
+                        name: "fps",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
+                    },
+                    BASE_ORIENTATION: {
+                        name: "baseOrientation",
+                        type: BASE_ORIENTATION,
+                        defaultDerived: true
+                    },
+                    POINT_TO_FALLBACK: {
+                        name: "pointToFallback",
+                        type: POINT_TO_FALLBACK,
+                        optional: true
+                    },
+                    MOVABLE: {
+                        name: "movable",
+                        type: BaseType.BOOLEAN
+                    },
+                    TURNABLE: {
+                        name: "turnable",
+                        type: BaseType.BOOLEAN
+                    },
+                    ALPHA_RANGE: {
+                        name: "alphaRange",
+                        type: BaseType.RANGE,
+                        defaultDerived: true
+                    },
+                    BETA_RANGE: {
+                        name: "betaRange",
+                        type: BaseType.RANGE,
+                        defaultDerived: true
+                    },
+                    CONFINES: {
+                        name: "confines",
+                        type: BaseType.CONFINES,
+                        optional: true
+                    },
+                    RESETS_WHEN_LEAVING_CONFINES: {
+                        name: "resetsWhenLeavingConfines",
+                        type: BaseType.BOOLEAN,
+                        optional: true
+                    },
+                    POSITION: {
+                        name: "position",
+                        type: BaseType.VECTOR3
+                    },
+                    ROTATIONS: {
+                        name: "rotations",
+                        type: BaseType.ROTATIONS,
+                        optional: true
+                    },
+                    EXCLUDE_FROM_CYCLE: {
+                        name: "excludeFromCycle",
+                        type: BaseType.BOOLEAN,
+                        optional: true
+                    },
+                    TURN_AROUND_ALL: {
+                        name: "turnAroundAll",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
+                    },
+                    LOOK_AT: {
+                        name: "lookAt",
+                        type: SCENE_VIEW_LOOK_AT_MODE
+                    },
+                    DISTANCE_RANGE: {
+                        name: "distanceRange",
+                        type: BaseType.RANGE,
+                        optional: true
+                    },
+                    STARTS_WITH_RELATIVE_POSITION: {
+                        name: "startsWithRelativePosition",
+                        type: BaseType.BOOLEAN,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            AI_TYPE = {
+                baseType: BaseType.ENUM,
+                values: utils.getEnumObject(ai.getAITypes())
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SPACECRAFT = {
+                baseType: BaseType.OBJECT,
+                name: "Spacecraft",
+                getName: function (instance) {
+                    return instance.name || (instance.squad || instance.class) + (instance.count ? (" (" + instance.count +  ")") : "");
+                },
+                properties: {
+                    NAME: {
+                        name: "name",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    SQUAD: {
+                        name: "squad",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    TEAM: {
+                        name: "team",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    CLASS: {
+                        name: "class",
+                        type: SPACECRAFT_CLASS_REFERENCE
+                    },
+                    AI: {
+                        name: "ai",
+                        type: AI_TYPE,
+                        optional: true
+                    },
+                    POSITION: {
+                        name: "position",
+                        type: BaseType.VECTOR3,
+                        optional: true
+                    },
+                    ROTATIONS: {
+                        name: "rotations",
+                        type: BaseType.ROTATIONS,
+                        optional: true
+                    },
+                    EQUIPMENT: { //TODO: can be an object as well
+                        name: "equipment",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    AWAY: {
+                        name: "away",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
+                    },
+                    PILOTED: {
+                        name: "piloted",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
+                    },
+                    INITIAL_TARGET: {
+                        name: "initialTarget",
+                        type: BaseType.STRING,
+                        optional: true
+                    },
+                    EXCLUDE_FROM_REFERENCE_SCORE: {
+                        name: "excludeFromReferenceScore",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
+                    },
+                    COUNT: {
+                        name: "count",
+                        type: BaseType.NUMBER,
+                        optional: true
+                    },
+                    NAMES: {
+                        name: "names",
+                        type: STRING_ARRAY,
+                        optional: true
+                    },
+                    EQUIPMENTS: {
+                        name: "equipments",
+                        type: STRING_ARRAY,
+                        optional: true
+                    },
+                    PILOTED_INDEX: {
+                        name: "pilotedIndex",
+                        type: BaseType.NUMBER,
+                        optional: true
+                    },
+                    POSITIONS: {
+                        name: "positions",
+                        type: _createTypedArrayType(BaseType.VECTOR3),
+                        optional: true
+                    },
+                    FORMATION: {
+                        name: "formation",
+                        type: FORMATION,
+                        optional: true
+                    },
+                    ROTATIONS: {
+                        name: "rotations",
+                        type: BaseType.ROTATIONS,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SPACECRAFT_COUNTS = {
+                baseType: BaseType.ASSOCIATIVE_ARRAY,
+                name: "SpacecraftCounts",
+                validKeys: [],
+                elementType: BaseType.NUMBER
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            TIPS_SET = {
+                baseType: BaseType.SET,
+                values: []
+            },
+            /**
+             * @type Editor~ItemDescriptor
+             */
+            MISSION = {
+                DESCRIPTION: {
+                    name: "description",
+                    type: LONG_STRING
+                },
+                TIPS: {
+                    name: "tips",
+                    type: TIPS_SET,
+                    optional: true
+                },
+                ENVIRONMENT: { //TODO: can be an object as well
+                    name: "environment",
+                    type: ENVIRONMENT_REFERENCE
+                },
+                COMBAT_THEME: {
+                    name: "combatTheme",
+                    type: MUSIC_REFERENCE,
+                    optional: true
+                },
+                TEAMS: {
+                    name: "teams",
+                    type: _createTypedArrayType(TEAM),
+                    optional: true
+                },
+                EVENTS: {
+                    name: "events",
+                    type: _createTypedArrayType(MISSION_EVENT),
+                    optional: true
+                },
+                VIEWS: {
+                    name: "views",
+                    type: _createTypedArrayType(SCENE_VIEW)
+                },
+                SPACECRAFTS: {
+                    name: "spacecrafts",
+                    type: _createTypedArrayType(SPACECRAFT)
+                },
+                RANDOM_SHIPS: {
+                    name: "randomShips",
+                    type: SPACECRAFT_COUNTS,
+                    optional: true
+                },
+                RANDOM_SHIPS_MAP_SIZE: {
+                    name: "randomShipsMapSize",
+                    type: METERS,
+                    optional: true
+                },
+                RANDOM_SHIPS_HEADING_ANGLE: {
+                    name: "randomShipsHeadingAngle",
+                    type: DEGREES,
+                    defaultValue: 0
+                },
+                RANDOM_SHIPS_RANDOM_HEADING: {
+                    name: "randomShipsRandomHeading",
+                    type: BaseType.BOOLEAN,
+                    defaultValue: false
+                },
+                RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME: {
+                    name: "randomShipsEquipmentProfileName",
+                    type: BaseType.STRING,
+                    optional: true
+                }
             };
     /**
      * @class
@@ -2008,6 +2867,9 @@ define([
         if (!this._descriptor.properties) {
             return false;
         }
+        if (this._descriptor.getName) {
+            return true;
+        }
         props = Object.keys(this._descriptor.properties);
         for (i = 0; i < props.length; i++) {
             if (this._descriptor.properties[props[i]].name === NAME_PROPERTY_NAME) {
@@ -2015,6 +2877,18 @@ define([
             }
         }
         return false;
+    };
+    /**
+     * Returns the value of the name property for the passed instance (either obtained from the 
+     * corresponding field of the instance data or the getter function defined for the type)
+     * @param {Object} instance
+     * @returns {String}
+     */
+    Type.prototype.getInstanceName = function (instance) {
+        if (this._descriptor.getName) {
+            return this._descriptor.getName(instance);
+        }
+        return instance[NAME_PROPERTY_NAME];
     };
     /**
      * Returns the name of the type 
@@ -2044,6 +2918,9 @@ define([
         if (this._descriptor.classReference) {
             return this._descriptor.classReference;
         }
+        if (this._descriptor.environmentReference) {
+            return this._descriptor.environmentReference;
+        }
         return this._descriptor.baseType;
     };
     /**
@@ -2065,7 +2942,7 @@ define([
      * @returns {Boolean}
      */
     Type.prototype.isItemReference = function () {
-        return !!this._descriptor.resourceReference || !!this._descriptor.classReference;
+        return !!this._descriptor.resourceReference || !!this._descriptor.classReference || !!this._descriptor.environmentReference;
     };
     /**
      * For resource reference string types, returns the category of resources the type refers to
@@ -2082,6 +2959,13 @@ define([
         return this._descriptor.classReference;
     };
     /**
+     * For environment reference string types, returns the category of environments the type refers to
+     * @returns {String}
+     */
+    Type.prototype.getEnvironmentReference = function () {
+        return this._descriptor.environmentReference;
+    };
+    /**
      * For reference string types, returns the ItemType corresponding to the type of reference
      * @returns {ItemType}
      */
@@ -2092,6 +2976,9 @@ define([
         if (this.getClassReference()) {
             return common.ItemType.CLASS;
         }
+        if (this.getEnvironmentReference()) {
+            return common.ItemType.ENVIRONMENT;
+        }
         common.ItemType.NONE;
     };
     /**
@@ -2099,7 +2986,7 @@ define([
      * @returns {String}
      */
     Type.prototype.getReferenceItemCategory = function () {
-        return this._descriptor.resourceReference || this._descriptor.classReference;
+        return this._descriptor.resourceReference || this._descriptor.classReference || this._descriptor.environmentReference;
     };
     /**
      * For string types, returns whether the type is flagged as long
@@ -2121,6 +3008,9 @@ define([
         }
         if (this._descriptor.classReference) {
             return classes.getClassNames(this._descriptor.classReference);
+        }
+        if (this._descriptor.environmentReference) {
+            return environments.getEnvironmentNames();
         }
         document.crash();
     };
@@ -2182,6 +3072,12 @@ define([
         // graphics quality is set)
         SHADER_VARIANTS.validKeys = graphics.getShaderComplexities().concat(SHADER_VARIANTS.validKeys);
     });
+    classes.executeWhenReady(function () {
+        SPACECRAFT_COUNTS.validKeys = classes.getClassNames("spacecraftClasses"); //TODO: needs to refresh if classes change
+    });
+    missions.executeWhenReady(function () {
+        TIPS_SET.values = missions.getTipIDs();
+    });
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -2211,7 +3107,8 @@ define([
             "shieldClasses": SHIELD_CLASS,
             "spacecraftTypes": SPACECRAFT_TYPE,
             "spacecraftClasses": SPACECRAFT_CLASS,
-            "environments": ENVIRONMENT
+            "environments": ENVIRONMENT,
+            "missions": MISSION
         },
         Type: Type,
         getPropertyValues: getPropertyValues

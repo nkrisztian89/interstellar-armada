@@ -63,7 +63,7 @@ define([
             environments.requestLoad();
             environments.executeWhenReady(function () {
                 _progressBar.value = 2;
-                missions.requestLoad();
+                missions.requestLoad(false);
                 missions.executeWhenReady(function () {
                     _progressBar.value = 3;
                     callback();
