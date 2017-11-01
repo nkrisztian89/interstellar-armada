@@ -13,6 +13,7 @@
  * @param components Used for the components (i.e. Selectors) of the screen.
  * @param screens The settings screen is an HTMLScreen.
  * @param game Used for navigation and managing language settings.
+ * @param analytics Used for querying/setting analytics state
  * @param constants Used for accessing the language setting in HTML5 local storage.
  * @param strings Used for translation support.
  * @param armadaScreens Used for common screen constants.
@@ -21,24 +22,33 @@ define([
     "modules/components",
     "modules/screens",
     "modules/game",
+    "modules/analytics",
     "armada/constants",
     "armada/strings",
     "armada/screens/shared",
     "utils/polyfill"
-], function (components, screens, game, constants, strings, armadaScreens) {
+], function (components, screens, game, analytics, constants, strings, armadaScreens) {
     "use strict";
     var
+            // ------------------------------------------------------------------------------
+            // private functions
+            _getOnOffSettingValues = function () {
+                return [strings.get(strings.SETTING.OFF), strings.get(strings.SETTING.ON)];
+            },
             // ------------------------------------------------------------------------------
             // constants
             BACK_BUTTON_ID = "backButton",
             DEFAULTS_BUTTON_ID = "defaultsButton",
             LANGUAGE_SELECTOR_ID = "languageSelector",
+            ANALYTICS_SELECTOR_ID = "analyticsSelector",
             OPTION_PARENT_ID = "settingsDiv",
             /**
              * Stores the possible language setting options
              * @type String[]
              */
-            SETTING_LANGUAGE_VALUES = game.getLanguages();
+            SETTING_LANGUAGE_VALUES = game.getLanguages(),
+            SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
+            SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
     // ##############################################################################
     /**
      * @class Represents the general settings screen.
@@ -71,6 +81,12 @@ define([
         this._languageSelector = this._registerSelector(LANGUAGE_SELECTOR_ID,
                 strings.GENERAL_SETTINGS.LANGUAGE.name,
                 SETTING_LANGUAGE_VALUES);
+        /**
+         * @type ExternalComponent
+         */
+        this._analyticsSelector = this._registerSelector(ANALYTICS_SELECTOR_ID,
+                strings.GENERAL_SETTINGS.ANALYTICS.name,
+                _getOnOffSettingValues());
     }
     GeneralSettingsScreen.prototype = new screens.HTMLScreen();
     GeneralSettingsScreen.prototype.constructor = GeneralSettingsScreen;
@@ -78,6 +94,7 @@ define([
      * Applies the currently selected language setting and closes the screen.
      */
     GeneralSettingsScreen.prototype._applyAndClose = function () {
+        analytics.setEnabled((this._analyticsSelector.getSelectedIndex() === SETTING_ON_INDEX));
         document.body.style.cursor = "wait";
         game.requestLanguageChange(this._languageSelector.getSelectedValue(), strings, function () {
             document.body.style.cursor = game.getDefaultCursor();
@@ -111,6 +128,7 @@ define([
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {
+            analytics.enable();
             localStorage.removeItem(constants.LANGUAGE_LOCAL_STORAGE_ID);
             document.body.style.cursor = "wait";
             game.requestLanguageChange(game.getDefaultLanguage(), strings, function () {
@@ -126,6 +144,7 @@ define([
     GeneralSettingsScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
+        this._analyticsSelector.setValueList(_getOnOffSettingValues());
         this._updateValues();
     };
     /**
@@ -133,6 +152,7 @@ define([
      */
     GeneralSettingsScreen.prototype._updateValues = function () {
         this._languageSelector.selectValue(game.getLanguage());
+        this._analyticsSelector.selectValueWithIndex((analytics.isEnabled() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
     };
     /**
      * @override

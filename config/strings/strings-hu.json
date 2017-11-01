@@ -463,7 +463,8 @@
     "generalSettings": {
         "backButton": "Vissza a menübe",
         "title": "Általános beállítások",
-        "language": "Nyelv:"
+        "language": "Nyelv:",
+        "analytics": "Névtelen statisztikák küldése:"
     },
     "graphics": {
         "back": "Vissza a menübe",

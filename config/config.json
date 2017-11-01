@@ -1,5 +1,5 @@
 {
-    "version": "0.4.4-dev:661 (2017.10.27.)",
+    "version": "0.4.4-dev:662 (2017.11.01.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "folders": {
@@ -16,6 +16,7 @@
         "music": "{{data}}/music/",
         "mission": "{{data}}/missions/"
     },
+    "analyticsUrl": "https://armada-analytics.herokuapp.com/",
     "defaultLanguage": "English",
     "configFiles": {
         "settings": {

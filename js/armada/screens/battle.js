@@ -19,6 +19,7 @@
  * @param screens The battle screen is a HTMLScreenWithCanvases.
  * @param renderableObjects Used for creating the HUD elements
  * @param sceneGraph Used for creating the battle scene and the nodes for the HUD elements.
+ * @param analytics Used for reporting mission start/win/lose/score events.
  * @param resources Used for accessing the resources for the HUD and for requesting the loading of reasourcing and setting callback for when they are ready.
  * @param egomModel Used for creating the models for the HUD elements
  * @param strings Used for translation support.
@@ -45,6 +46,7 @@ define([
     "modules/egom-model",
     "modules/scene/renderable-objects",
     "modules/scene/scene-graph",
+    "modules/analytics",
     "armada/strings",
     "armada/screens/shared",
     "armada/graphics",
@@ -61,6 +63,7 @@ define([
         utils, vec, mat,
         application, game, components, screens, resources, egomModel,
         renderableObjects, sceneGraph,
+        analytics,
         strings, armadaScreens, graphics, audio, classes, config, control,
         SpacecraftEvents, missions, equipment, ai) {
     /* jshint validthis: true */
@@ -3489,6 +3492,7 @@ define([
         if (victory) {
             // updating the record if needed
             isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(perfStats.score, perfStats.performance);
+            analytics.sendEvent("score", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty, score: perfStats.score});
         }
         game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
             missionState: _mission.getState(),
@@ -3571,6 +3575,7 @@ define([
                     _timeSinceGameStateChanged += dt;
                     if (_timeSinceGameStateChanged >= config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = _mission.getState() === missions.MissionState.COMPLETED;
+                        analytics.sendEvent(victory ? "win" : "lose", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty, time: Math.round(_elapsedTime / 1000)});
                         if (craft && craft.isAlive()) {
                             this.queueHUDMessage({
                                 text: strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_FAIL),
@@ -3649,6 +3654,9 @@ define([
         }
         if (params.demoMode !== undefined) {
             _demoMode = params.demoMode;
+        }
+        if (!_demoMode) {
+            analytics.sendEvent("start", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty});
         }
         _clearData();
         _chooseTipText();

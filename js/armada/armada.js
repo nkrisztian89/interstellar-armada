@@ -13,6 +13,7 @@
 /**
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
  * @param components Used to clear the cached DOM models of all loaded components after the game has been initialized
+ * @param analytics Used for initializing game analytics
  * @param constants Used to access the language setting location in the local storage
  * @param graphics Used to load the graphics settings
  * @param audio Used to load the audio settings
@@ -25,6 +26,7 @@
 define([
     "modules/game",
     "modules/components",
+    "modules/analytics",
     "armada/constants",
     "armada/graphics",
     "armada/audio",
@@ -33,7 +35,7 @@ define([
     "armada/logic/missions",
     "armada/control",
     "armada/strings"
-], function (game, components, constants, graphics, audio, config, environments, missions, control, strings) {
+], function (game, components, analytics, constants, graphics, audio, config, environments, missions, control, strings) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -78,6 +80,7 @@ define([
         missions.loadConfigurationFromJSON(configJSON.logic);
         control.loadConfigurationFromJSON(configJSON.control);
         _progressBar.value = 1;
+        analytics.init(configJSON.analyticsUrl);
         callback();
     };
     game._buildScreensAndExecuteCallback = function (callback) {

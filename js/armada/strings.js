@@ -247,7 +247,8 @@ define([
     strings.GENERAL_SETTINGS = {
         BACK: {name: "generalSettings.backButton"},
         TITLE: {name: "generalSettings.title"},
-        LANGUAGE: {name: "generalSettings.language"}
+        LANGUAGE: {name: "generalSettings.language"},
+        ANALYTICS: {name: "generalSettings.analytics"}
     };
     strings.GRAPHICS = {
         PREFIX: {name: "graphics.", optional: true},

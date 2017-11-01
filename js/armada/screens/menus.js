@@ -14,6 +14,7 @@
  * @param application Used to check whether packaged with Electron
  * @param screens The menu screens are instances of MenuScreen.
  * @param game Used for navigation.
+ * @param analytics Used for reporting opening of the different menu items.
  * @param constants Used for global localStorage IDs
  * @param armadaScreens Used for common screen constants.
  * @param strings Used for translation support.
@@ -25,12 +26,13 @@ define([
     "modules/application",
     "modules/screens",
     "modules/game",
+    "modules/analytics",
     "armada/constants",
     "armada/screens/shared",
     "armada/strings",
     "armada/audio",
     "armada/screens/battle"
-], function (utils, application, screens, game, constants, armadaScreens, strings, audio, battle) {
+], function (utils, application, screens, game, analytics, constants, armadaScreens, strings, audio, battle) {
     "use strict";
     var
             // --------------------------------------------------------------------------------------------
@@ -46,16 +48,19 @@ define([
                 }, {
                     id: strings.MAIN_MENU.DATABASE.name,
                     action: function () {
+                        analytics.sendEvent("database");
                         game.setScreen(armadaScreens.DATABASE_SCREEN_NAME);
                     }
                 }, {
                     id: strings.MAIN_MENU.SETTINGS.name,
                     action: function () {
+                        analytics.sendEvent("settings");
                         game.setScreen(armadaScreens.SETTINGS_SCREEN_NAME);
                     }
                 }, {
                     id: strings.MAIN_MENU.ABOUT.name,
                     action: function () {
+                        analytics.sendEvent("about");
                         game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                     }
                 }];
