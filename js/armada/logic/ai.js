@@ -235,11 +235,15 @@ define([
              */
             AIM_ERROR_REDUCTION_THRESHOLD = 25 * 25,
             /**
-             * Once aimed, fighters will start firing after this time elapses, in milliseconds. (to simulate a reaction time and for easing
-             * difficulty)
+             * Once aimed, fighters will start firing after this time elapses, in milliseconds. (to simulate a reaction time)
              * @type Number
              */
             FIRE_DELAY = 350,
+            /**
+             * Fighters will start their evasive maneuvers this much time after triggered, in milliseconds. (to simulate a reaction time)
+             * @type Number
+             */
+            EVASIVE_MANEUVER_DELAY = 200,
             /**
              * When attacking an enemy, ships will approach their targets to at least the distance that is their weapon range
              * multiplied by this factor.
@@ -722,6 +726,7 @@ define([
      * @param {Mission} mission The mission within which this AI will control the fighter
      */
     function FighterAI(fighter, mission) {
+        var reactionTimeFactor = ((mission.getPilotedSpacecraft() && mission.getPilotedSpacecraft().isHostile(fighter)) ? mission.getDifficultyLevel().getEnemyReactionTimeFactor() : 1);
         SpacecraftAI.call(this, fighter, mission);
         /**
          * The time elapsed since finishing the last roll movement while firing (reset when not firing or when a new attack run starts), in 
@@ -741,6 +746,16 @@ define([
          * @type Number
          */
         this._timeSinceLastClosingIn = 0;
+        /**
+         * The amount of time left before starting an evasive maneuver, in milliseconds.
+         * @type Number
+         */
+        this._evasiveManeuverDelayLeft = 0;
+        /**
+         * The amount of time to wait before starting evasive maneuvers, in milliseconds.
+         * @type Number
+         */
+        this._evasiveManeuverDelay = EVASIVE_MANEUVER_DELAY * reactionTimeFactor;
         /**
          * The time elapsed since the current evasive maneuver started, in milliseconds, or -1 if there is no evasive maneuver in progress.
          * @type Number
@@ -822,7 +837,7 @@ define([
          * The amount of time to wait before starting to fire after aiming, in milliseconds.
          * @type Number
          */
-        this._fireDelay = FIRE_DELAY * ((mission.getPilotedSpacecraft() && mission.getPilotedSpacecraft().isHostile(fighter)) ? mission.getDifficultyLevel().getEnemyReactionTimeFactor() : 1);
+        this._fireDelay = FIRE_DELAY * reactionTimeFactor;
         // attaching handlers to the various spacecraft events
         this._spacecraft.addEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
         this._spacecraft.addEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
@@ -866,18 +881,31 @@ define([
         this._startNewAttackRun();
     };
     /**
+     * If there is no evasive maneuver in progress, triggers a new one, which will start after the evasive maneuver delay (reaction time)
+     * @returns {Boolean} Whether a new evasive maneuver has been triggered
+     */
+    FighterAI.prototype._triggerEvasiveManeuver = function () {
+        if (this._evasiveManeuverTime < 0) {
+            this._evasiveManeuverDelayLeft = this._evasiveManeuverDelay;
+            this._evasiveManeuverTime = 0;
+            return true;
+        }
+        return false;
+    };
+    /**
      * @override
      * @param {SpacecraftEvents~BeingHitData} data 
      */
     FighterAI.prototype._handleBeingHit = function (data) {
         // initiating a new evasive maneuver in case one is not already in progress
         // if the attack path is blocked by a spacecraft, then we are already strafing, so no evasive maneuver is started
-        if (!this._isBlockedBy && (this._evasiveManeuverTime < 0)) {
-            this._evasiveManeuverTime = 0;
-            // marking the direction opposite to the hit position so an appropriate evasive vector can be calculated
-            this._evasiveVelocityVector[0] = -data.hitPosition[0];
-            this._evasiveVelocityVector[1] = -data.hitPosition[2];
-            vec.normalize2(this._evasiveVelocityVector);
+        if (!this._isBlockedBy) {
+            if (this._triggerEvasiveManeuver()) {
+                // marking the direction opposite to the hit position so an appropriate evasive vector can be calculated
+                this._evasiveVelocityVector[0] = -data.hitPosition[0];
+                this._evasiveVelocityVector[1] = -data.hitPosition[2];
+                vec.normalize2(this._evasiveVelocityVector);
+            }
         }
         SpacecraftAI.prototype._handleBeingHit.call(this, data);
     };
@@ -912,14 +940,15 @@ define([
     FighterAI.prototype._handleTargetFired = function () {
         var angle;
         // if we see the current target firing at us, start a random evasive maneuver
-        if (!this._isBlockedBy && (this._evasiveManeuverTime < 0) &&
+        if (!this._isBlockedBy &&
                 this._facingTarget && this._spacecraft && this._spacecraft.getTarget() && (this._spacecraft.getTarget().getTarget() === this._spacecraft) &&
                 (this._targetDistance > this._weaponRange * MIN_EVADE_DISTANCE_FACTOR)) {
-            this._evasiveManeuverTime = 0;
-            angle = Math.random() * 2 * Math.PI;
-            this._evasiveVelocityVector[0] = 1;
-            this._evasiveVelocityVector[1] = 0;
-            vec.rotate2(this._evasiveVelocityVector, angle);
+            if (this._triggerEvasiveManeuver()) {
+                angle = Math.random() * 2 * Math.PI;
+                this._evasiveVelocityVector[0] = 1;
+                this._evasiveVelocityVector[1] = 0;
+                vec.rotate2(this._evasiveVelocityVector, angle);
+            }
         }
     };
     /**
@@ -1207,7 +1236,7 @@ define([
             if (!strafingHandled) {
                 // .................................................................................................
                 // performing evasive maneuver when hit
-                if (this._evasiveManeuverTime >= 0) {
+                if ((this._evasiveManeuverTime >= 0) && (this._evasiveManeuverDelayLeft <= 0)) {
                     // when initiating an evasive maneuver, the evasive velocity vector is a unit vector pointin in the opposite direction
                     // to where the spacecraft has been hit, so we scale it to the required speed and randomly rotate it -90 to +90 degrees
                     if (this._evasiveManeuverTime === 0) {
@@ -1238,6 +1267,9 @@ define([
                     }
                     // if no evasive maneuver is in progress and the firing path is not blocked, cancel all strafing
                 } else {
+                    if (this._evasiveManeuverDelayLeft > 0) {
+                        this._evasiveManeuverDelayLeft -= dt;
+                    }
                     this._spacecraft.stopLeftStrafe();
                     this._spacecraft.stopRightStrafe();
                     this._spacecraft.stopLower();
