@@ -12,3 +12,15 @@
     display: inline-block;
     width: 386px;
 }
+
+p.settings {
+    width: 370px;
+    box-sizing: border-box;
+    width: 370px;
+    padding-left: 11px;
+    padding-right: 11px;
+    margin-top: 4px;
+    margin-bottom: 24px;
+    margin-left: 16px;
+    margin-right: 16px;
+}

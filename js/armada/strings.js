@@ -248,7 +248,8 @@ define([
         BACK: {name: "generalSettings.backButton"},
         TITLE: {name: "generalSettings.title"},
         LANGUAGE: {name: "generalSettings.language"},
-        ANALYTICS: {name: "generalSettings.analytics"}
+        ANALYTICS: {name: "generalSettings.analytics"},
+        ANALYTICS_NOTE: {name: "generalSettings.analyticsNote"}
     };
     strings.GRAPHICS = {
         PREFIX: {name: "graphics.", optional: true},

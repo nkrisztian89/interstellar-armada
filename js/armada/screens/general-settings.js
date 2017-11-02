@@ -42,6 +42,7 @@ define([
             LANGUAGE_SELECTOR_ID = "languageSelector",
             ANALYTICS_SELECTOR_ID = "analyticsSelector",
             OPTION_PARENT_ID = "settingsDiv",
+            ANALYTICS_NOTE_ID = "analyticsNote",
             /**
              * Stores the possible language setting options
              * @type String[]
@@ -87,6 +88,10 @@ define([
         this._analyticsSelector = this._registerSelector(ANALYTICS_SELECTOR_ID,
                 strings.GENERAL_SETTINGS.ANALYTICS.name,
                 _getOnOffSettingValues());
+        /**
+         * @type SimpleComponent
+         */
+        this._analyticsNote = this.registerSimpleComponent(ANALYTICS_NOTE_ID);
     }
     GeneralSettingsScreen.prototype = new screens.HTMLScreen();
     GeneralSettingsScreen.prototype.constructor = GeneralSettingsScreen;
@@ -145,6 +150,7 @@ define([
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
         this._analyticsSelector.setValueList(_getOnOffSettingValues());
+        this._analyticsNote.setContent(strings.get(strings.GENERAL_SETTINGS.ANALYTICS_NOTE));
         this._updateValues();
     };
     /**

@@ -444,7 +444,8 @@
         "backButton": "Back to menu",
         "title": "General settings",
         "language": "Language:",
-        "analytics": "Report anonymous statistics:"
+        "analytics": "Report anonymous statistics:",
+        "analyticsNote": "No personal information is included in the reports, only statistics of feature usage and in-game performance with a random generated ID. Please help the development by keeping this option turned on."
     },
     "graphics": {
         "back": "Back to menu",
