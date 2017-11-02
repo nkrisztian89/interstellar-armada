@@ -1173,6 +1173,9 @@ define([
         var craft = _mission.getPilotedSpacecraft();
         if (craft && craft.isAlive() && !craft.isAway() && craft.isHostile(this)) {
             if (!_newHostilesMessage || (_newHostilesAlertTimeLeft <= 0)) {
+                if (_newHostilesMessage) {
+                    _newHostilesMessage.timeLeft = 0;
+                }
                 _newHostilesMessage = {
                     text: strings.get(strings.BATTLE.MESSAGE_NEW_HOSTILES),
                     color: _messageTextSettings.colors.alert,
