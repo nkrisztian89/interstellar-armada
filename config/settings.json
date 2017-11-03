@@ -800,6 +800,10 @@
                     "name": "blip_message",
                     "volume": 0.5
                 },
+                "messageTypeSound": {
+                    "name": "message_type_blip",
+                    "volume": 0.2
+                },
                 "newHostilesAlertSound": {
                     "name": "alert",
                     "volume": 0.15

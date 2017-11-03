@@ -18,6 +18,7 @@ computer/alert.wav
 computer/beep_targeting_denied.wav
 computer/beep_targeting.wav
 computer/blip_message.wav
+computer/message_type_blip.ogg
 computer/flight_mode_switch.ogg
 computer/jump_start.ogg
 computer/jump_stop.ogg

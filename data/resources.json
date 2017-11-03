@@ -1353,6 +1353,9 @@
             "name": "blip_message",
             "samples": ["computer/blip_message.wav"]
         }, {
+            "name": "message_type_blip",
+            "samples": ["computer/message_type_blip.ogg"]
+        }, {
             "name": "alert",
             "samples": ["computer/alert.wav"]
         }, {

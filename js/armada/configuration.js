@@ -1317,6 +1317,10 @@ define([
                 name: "messageSound",
                 type: classes.SOUND_EFFECT
             },
+            MESSAGE_TYPE_SOUND: {
+                name: "messageTypeSound",
+                type: classes.SOUND_EFFECT
+            },
             NEW_HOSTILES_ALERT_SOUND: {
                 name: "newHostilesAlertSound",
                 type: classes.SOUND_EFFECT

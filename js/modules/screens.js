@@ -1048,13 +1048,15 @@ define([
     };
     // #########################################################################
     /**
-     * @typedef {Object} TextSection Defines a renderable piece of text. Texts that span multiple lines or use different settings (such as
+     * @typedef {Object} Screens~TextSection Defines a renderable piece of text. Texts that span multiple lines or use different settings (such as
      * color) for different parts need to be rendered in several separate calls, because one text render call can only be one-lined and
      * us the current settings of the state machine.
      * @property {String} text The raw text to render, without any new lines or markup
      * @property {Number} xOffset The relative X position compared to the position of the CanvasText this section is part of 
      * @property {Number} yOffset The relative Y position compared to the position of the CanvasText this section is part of 
      * @property {Number[4]} [color] An optional color if a color different than the color of the CanvasText is to be used for this section
+     * @property {Number} startIndex The (calculated) index of the first character of this section within the whole text this section is part of
+     * @property {Number} length The (cached) length of the text of this section
      */
     /**
      * @class
@@ -1195,9 +1197,20 @@ define([
         /**
          * Actually renderable pieces of this text, with explicit relative positions (for mutliline support) and possibly other individual
          * settings (such as color for multi-color text)
-         * @type TextSection[]
+         * @type Screens~TextSection[]
          */
         this._sections = null;
+        /**
+         * The character count of the actually rendered text (without modifiers, line breaks)
+         * @type Number
+         */
+        this._textLength = 0;
+        /**
+         * A number between 0 and 1 which governs how much of the characters of the text should be rendered, starting from the first one (0-100%).
+         * Increase from 0 to 1 over time for a "typewriter" style appear animation effect.
+         * @type Number
+         */
+        this._revealState = 1;
         /**
          * The last measured value for offsetting lines, in pixels (based on the width of the letter 'M')
          * @type Number
@@ -1270,7 +1283,7 @@ define([
      * the sections
      */
     CanvasText.prototype._breakIntoSections = function (context) {
-        var i, j, lines, sections, align, text, lineIndex, newText, lineWidth, newLineWidth, maxLineWidth, lineHeight, first, section, word, wordLeft, noSpacing, xOffset, start, end, modifier, color,
+        var i, j, lines, sections, align, text, lineIndex, newText, lineWidth, newLineWidth, maxLineWidth, lineHeight, first, section, word, wordLeft, noSpacing, xOffset, start, end, modifier, color, index,
                 /**
                  * Goes through the sections that belong to the last line, and adjusts their offset X position according to the text alignment
                  * used for this text.
@@ -1297,6 +1310,12 @@ define([
                     adjustLineSections();
                     lineIndex++;
                     sections.push({text: newLineText, xOffset: 0, yOffset: lineIndex * lineHeight, color: section && section.color});
+                    // calculating section properties
+                    if (section) {
+                        section.length = section.text.length;
+                        section.startIndex = index;
+                        index += section.length;
+                    }
                     section = sections[sections.length - 1];
                     first = sections.length - 1;
                     xOffset = 0;
@@ -1310,6 +1329,10 @@ define([
                 startNewSectionInLine = function (sectionColor) {
                     xOffset += context.measureText(section.text).width;
                     sections.push({text: "", xOffset: xOffset, yOffset: lineIndex * lineHeight, color: sectionColor});
+                    // calculating section properties
+                    section.length = section.text.length;
+                    section.startIndex = index;
+                    index += section.length;
                     section = sections[sections.length - 1];
                 },
                 /**
@@ -1365,6 +1388,7 @@ define([
         xOffset = 0;
         lineWidth = 0;
         first = 0;
+        index = 0;
         // go through explicitly (\n) broken lines
         for (i = 0; i < this._words.length; i++) {
             breakLine("");
@@ -1425,16 +1449,31 @@ define([
                 }
             }
         }
+        // set properties of the last section
+        if (section) {
+            section.length = section.text.length;
+            section.startIndex = index;
+            index += section.length;
+        }
+        this._textLength = index;
         // adjust the section X offsets of the last line
         adjustLineSections();
     };
+    /**
+     * Set how many of the characters of the text should be rendered, as a number between 0 and 1, representing 0-100%
+     * Increase from 0 to 1 over time for a "typewriter" style appear animation effect.
+     * @param {Number} value
+     */
+    CanvasText.prototype.setRevealState = function (value) {
+        this._revealState = value;
+    }
     /**
      * Renders the text using the passed 2D rendering context (of a canvas) according to its current settings.
      * @param {CanvasRenderingContext2D} context
      * @returns {Boolean} Whether text that needs to be cleared before the next render has been rendered
      */
     CanvasText.prototype.render = function (context) {
-        var i, color, newColor;
+        var i, color, newColor, maxRenderIndex, text;
         if (this._visible) {
             this._clearBox(context);
             context.fillStyle = this._cssColor;
@@ -1455,7 +1494,9 @@ define([
             }
             // separately render each section for multiline and multi-color support
             color = this._cssColor;
-            for (i = 0; i < this._sections.length; i++) {
+            // calculate how many characters should be visible based on _revealState
+            maxRenderIndex = Math.round(this._revealState * this._textLength);
+            for (i = 0; (i < this._sections.length) && (this._sections[i].startIndex <= maxRenderIndex); i++) {
                 // multi-color support
                 if (this._sections[i].color) {
                     newColor = utils.getCSSColor(this._sections[i].color);
@@ -1466,8 +1507,14 @@ define([
                     color = newColor;
                     context.fillStyle = color;
                 }
+                // see if this section has all or only a part of its characters visible
+                if (this._sections[i].startIndex + this._sections[i].length - 1 > maxRenderIndex) {
+                    text = this._sections[i].text.substring(0, maxRenderIndex - this._sections[i].startIndex + 1);
+                } else {
+                    text = this._sections[i].text;
+                }
                 // rendering the section
-                context.fillText(this._sections[i].text, (this._x + 1) / 2 * this._lastWidth + this._sections[i].xOffset, (1 - this._y) / 2 * this._lastHeight + this._sections[i].yOffset);
+                context.fillText(text, (this._x + 1) / 2 * this._lastWidth + this._sections[i].xOffset, (1 - this._y) / 2 * this._lastHeight + this._sections[i].yOffset);
             }
             if (this._boxLayout) {
                 context.restore();

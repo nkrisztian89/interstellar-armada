@@ -109,6 +109,8 @@ define([
             /** @type Number */
             HUD_MESSAGE_DURATION_PER_CHAR = 70, // based on average ~900 char per minute human reading speed
             HUD_MESSAGE_BASE_DURATION = 400, // fix extra time added to the duration of all HUD messages without explicit duration
+            HUD_MESSAGE_APPEAR_DURATION_PER_CHAR = 7,
+            HUD_MESSAGE_APPEAR_SOUND_STOP_RAMP_DURATION = 0.01, // in seconds!
             /** ID for the HUD message queue for the hostile alert that is shown in parallel to highlighting the newly arrived hostiles, if no other message is visible @type String */
             HOSTILE_ALERT_QUEUE = "hostileAlert",
             /** ID for the HUD message queue for general messages - messages without a specified queue go here @type String */
@@ -327,6 +329,9 @@ define([
              * @property {Number} [blinkInterval] When given, the text will blink with this interval, in milliseconds
              * @property {Boolean} [silent=false] When true, the message sound effect will not be played for this message
              * @property {Boolean} [new=false] When a new message is put at the front of the queue, this flag is set to true
+             * @property {Boolean} [appearAnimation=false] If true, the message will have a "typewriter" style appearing animation
+             * @property {Number} appearDuration If appearAnimation is true, this holds the calculated value for the duration of the appear animation, in milliseconds
+             * @property {Number} appearDurationLeft If appearAnimation is true, this holds the time left from the appear animation, in milliseconds
              */
             /**
              * Contains the HUD message queues by their IDs. Each queue is the list of messages to be displayed on the HUD for that queue. 
@@ -339,6 +344,11 @@ define([
              * @type SoundClip
              */
             _messageSound,
+            /**
+             * The sound played while the "typewriter" appear animation for a new HUD message is in progress.
+             * @type SoundClip
+             */
+            _messageTypeSound,
             /**
              * The message that is displayed informing the player about engaged jump engines.
              * @type Battle~HUDMessage
@@ -1908,6 +1918,7 @@ define([
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_SWITCH_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name);
     }
     /**
@@ -2089,6 +2100,9 @@ define([
         if (dimSFX !== false) {
             audio.resetSFXVolume();
             audio.setSFXVolume(config.getSetting(config.BATTLE_SETTINGS.SFX_VOLUME_IN_MENUS) * audio.getSFXVolume(), false);
+        }
+        if (_messageTypeSound) {
+            _messageTypeSound.stopPlaying(HUD_MESSAGE_APPEAR_SOUND_STOP_RAMP_DURATION);
         }
         if (application.isDebugVersion()) {
             _battleScene.logNodes();
@@ -2438,7 +2452,7 @@ define([
      * back of the queue.
      */
     BattleScreen.prototype.queueHUDMessage = function (message, urgent) {
-        var text, start, end, replacementID, replacementText, /**@type Spacecraft*/ craft;
+        var text, start, end, i, length, replacementID, replacementText, modifier, /**@type Spacecraft*/ craft;
         text = message.text;
         // replacing references in the text
         for (start = text.indexOf("{"); start >= 0; start = text.indexOf("{")) {
@@ -2469,10 +2483,26 @@ define([
                 application.showError("Unclosed reference in HUD message: '" + message.text + "'!");
             }
         }
+        // calculate the real, visible length of the text, excluding modifiers and line breaks
+        // because appear animation and text visibility duration needs to take that as a base
+        length = 0;
+        modifier = false;
+        for (i = 0; i < text.length; i++) {
+            if (text[i] === "[") {
+                modifier = true;
+            } else if (text[i] === "]") {
+                modifier = false;
+            } else if ((modifier === false) && (text[i] !== "\n")) {
+                length++;
+            }
+        }
         message.text = text;
         message.new = true;
         // calculating duration based on message length if needed
-        message.timeLeft = message.duration || Math.round(message.text.length * HUD_MESSAGE_DURATION_PER_CHAR + HUD_MESSAGE_BASE_DURATION);
+        message.timeLeft = message.duration || Math.round(length * HUD_MESSAGE_DURATION_PER_CHAR + HUD_MESSAGE_BASE_DURATION);
+        // setting up appear animation
+        message.appearDuration = message.appearAnimation ? Math.round(length * HUD_MESSAGE_APPEAR_DURATION_PER_CHAR) : 0;
+        message.appearTimeLeft = message.appearDuration || 0;
         message.queue = message.queue || INFO_QUEUE;
         if (urgent) {
             _messageQueues[message.queue].unshift(message);
@@ -2855,15 +2885,28 @@ define([
             // if such a queue has been found, display the first message in the queue
             if ((control.isInPilotMode()) && (i < MESSAGE_QUEUES.length)) {
                 messageQueue = _messageQueues[MESSAGE_QUEUES[i]];
-                // playing sound
+                // playing sound for messages which appear instantly (without animation)
                 if (messageQueue[0].new) {
-                    if (!messageQueue[0].silent) {
+                    if (!messageQueue[0].silent && !messageQueue[0].appearTimeLeft) {
                         _messageSound.play();
                     }
                     messageQueue[0].new = false;
                 }
                 // setting text
                 _messageText.setText(messageQueue[0].text);
+                // setting reveal state based on appear animation for "typewriter" effect
+                if (messageQueue[0].appearTimeLeft > 0) {
+                    _messageText.setRevealState(1 - messageQueue[0].appearTimeLeft / messageQueue[0].appearDuration);
+                    messageQueue[0].appearTimeLeft -= dt;
+                    // playing appear animation sound
+                    if (!messageQueue[0].silent) {
+                        _messageTypeSound.setVolume(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).volume);
+                        _messageTypeSound.play();
+                    }
+                } else {
+                    _messageText.setRevealState(1);
+                    _messageTypeSound.stopPlaying(HUD_MESSAGE_APPEAR_SOUND_STOP_RAMP_DURATION);
+                }
                 // setting color
                 if (messageQueue[0].color) {
                     color = messageQueue[0].color;
@@ -2895,6 +2938,7 @@ define([
             } else {
                 _messageTextLayer.hide();
                 _messageBackground.hide();
+                _messageTypeSound.stopPlaying(HUD_MESSAGE_APPEAR_SOUND_STOP_RAMP_DURATION);
             }
             if (_newHostilesAlertTimeLeft > 0) {
                 _newHostilesAlertTimeLeft -= dt;
@@ -3469,6 +3513,7 @@ define([
             _objectivesTextLayer.hide();
             _escortsTextLayer.hide();
             _messageTextLayer.hide();
+            _messageTypeSound.stopPlaying(HUD_MESSAGE_APPEAR_SOUND_STOP_RAMP_DURATION);
             _distanceTextLayer.hide();
             _wingmenStatusTextLayer.hide();
         }
@@ -3796,6 +3841,11 @@ define([
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
                             resources.SoundCategory.SOUND_EFFECT,
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).volume);
+                    _messageTypeSound = resources.getSoundEffect(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name).createSoundClip(
+                            resources.SoundCategory.SOUND_EFFECT,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).volume,
+                            true);
                     _newHostilesAlertSound = resources.getSoundEffect(
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name).createSoundClip(
                             resources.SoundCategory.SOUND_EFFECT,

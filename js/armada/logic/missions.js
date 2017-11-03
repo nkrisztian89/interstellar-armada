@@ -1661,6 +1661,7 @@ define([
                     utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
                     (typeof this._params.text === "object") ? this._params.text[strings.getLanguage()] : this._params.text),
             duration: this._params.duration,
+            appearAnimation: true,
             permanent: this._params.permanent,
             color: this._params.color
         }, this._params.urgent);

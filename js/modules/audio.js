@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file This module provides some wrappers for Web Audio API functions for easier use.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -428,6 +428,11 @@ define([
          */
         this._playing = false;
         /**
+         * A flag marging whether the stopping of playback has already been scheduled
+         * @type Boolean
+         */
+        this._stopping = false;
+        /**
          * The function to execute whenever the playback of the sample stops / finishes
          * @type Function
          */
@@ -574,6 +579,7 @@ define([
             }
         }
         this._playing = true;
+        this._stopping = false;
         this._sourceNode.start(_context.currentTime, offset);
         this._playbackStartTime = _context.currentTime - offset;
     };
@@ -620,10 +626,11 @@ define([
      * @param {Number} [rampDuration=0] If given the volume will be ramped to 0 for this duration before stopping, in seconds
      */
     SoundClip.prototype.stopPlaying = function (rampDuration) {
-        if (this._sourceNode) {
+        if (this._sourceNode && this._playing && !this._stopping) {
             if (rampDuration) {
                 this.rampVolume(0, rampDuration);
                 setTimeout(this._sourceNode.stop.bind(this._sourceNode), rampDuration * 1000);
+                this._stopping = true;
             } else {
                 this._sourceNode.stop();
             }

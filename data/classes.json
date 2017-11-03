@@ -2212,7 +2212,7 @@
             "texture": "libra",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
             "grade": 1,
-            "cooldown": 750,
+            "cooldown": 400,
             "barrels": [{
                     "projectile": "training",
                     "projectileVelocity": 400,
