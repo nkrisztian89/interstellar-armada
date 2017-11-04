@@ -597,7 +597,7 @@ define([
             if (this._playing) {
                 if (restart) {
                     this.stopPlaying();
-                } else if (this._loop) {
+                } else if (this._loop && !this._stopping) {
                     return;
                 }
             }
@@ -634,6 +634,15 @@ define([
             } else {
                 this._sourceNode.stop();
             }
+        }
+    };
+    /**
+     * Stops the looped playback of the sound when it reaches the end of its current interval
+     */
+    SoundClip.prototype.stopLoop = function () {
+        if (this._sourceNode && this._playing && !this._stopping) {
+            this._sourceNode.loop = false;
+            this._stopping = true;
         }
     };
     /**

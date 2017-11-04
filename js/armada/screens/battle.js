@@ -1187,7 +1187,7 @@ define([
                     _newHostilesMessage.timeLeft = 0;
                 }
                 _newHostilesMessage = {
-                    text: strings.get(strings.BATTLE.MESSAGE_NEW_HOSTILES),
+                    text: "\n\n" + strings.get(strings.BATTLE.MESSAGE_NEW_HOSTILES),
                     color: _messageTextSettings.colors.alert,
                     blinkInterval: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_BLINK_INTERVAL),
                     duration: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_DURATION),
@@ -2905,7 +2905,7 @@ define([
                     }
                 } else {
                     _messageText.setRevealState(1);
-                    _messageTypeSound.stopPlaying(HUD_MESSAGE_APPEAR_SOUND_STOP_RAMP_DURATION);
+                    _messageTypeSound.stopLoop();
                 }
                 // setting color
                 if (messageQueue[0].color) {

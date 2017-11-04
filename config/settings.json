@@ -802,7 +802,7 @@
                 },
                 "messageTypeSound": {
                     "name": "message_type_blip",
-                    "volume": 0.2
+                    "volume": 0.1
                 },
                 "newHostilesAlertSound": {
                     "name": "alert",
