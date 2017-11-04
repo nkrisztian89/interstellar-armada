@@ -2554,7 +2554,7 @@ define([
                 /** @type HTMLCanvasElement */
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
                 /** @type Boolean */
-                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent,
+                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent, skip,
                 /** @type MouseInputIntepreter */
                 mouseInputInterpreter,
                 /** @type String[] */
@@ -2919,9 +2919,13 @@ define([
                 }
                 _messageText.setColor(color);
                 // managing timing
+                skip = false;
                 if (!messageQueue[0].permanent) {
                     if ((messageQueue[0] === _newHostilesMessage)) {
                         messageQueue[0].timeLeft = _newHostilesAlertTimeLeft;
+                        if (_newHostilesAlertTimeLeft <= 0) {
+                            skip = true;
+                        }
                     } else {
                         messageQueue[0].timeLeft -= dt;
                     }
@@ -2932,9 +2936,14 @@ define([
                         }
                     }
                 }
-                _messageBackground.applyLayout(_messageBackgroundLayout, canvas.width, canvas.height);
-                _messageBackground.show();
-                _messageTextLayer.show();
+                if (!skip) {
+                    _messageBackground.applyLayout(_messageBackgroundLayout, canvas.width, canvas.height);
+                    _messageBackground.show();
+                    _messageTextLayer.show();
+                } else {
+                    _messageTextLayer.hide();
+                    _messageBackground.hide();
+                }
             } else {
                 _messageTextLayer.hide();
                 _messageBackground.hide();
