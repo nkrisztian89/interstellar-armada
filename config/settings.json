@@ -90,11 +90,11 @@
             "musicFadeOutDuration": 0.1,
             "buttonSelectSound": {
                 "name": "buttonHover",
-                "volume": 0.5
+                "volume": 0.25
             },
             "buttonClickSound": {
                 "name": "buttonClick",
-                "volume": 1.0
+                "volume": 0.35
             }
         },
         "database": {

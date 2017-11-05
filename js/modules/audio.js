@@ -597,7 +597,7 @@ define([
             if (this._playing) {
                 if (restart) {
                     this.stopPlaying();
-                } else if (this._loop && !this._stopping) {
+                } else if (this._loop) {
                     return;
                 }
             }
@@ -744,14 +744,14 @@ define([
     // -------------------------------------------------------------------------
     // Initizalization
     _context = new AudioContext();
-    _compressor = _context.createDynamicsCompressor();
-    _compressor.connect(_context.destination);
     _masterGain = _context.createGain();
-    _masterGain.connect(_compressor);
+    _masterGain.connect(_context.destination);
+    _compressor = _context.createDynamicsCompressor();
+    _compressor.connect(_masterGain);
     _effectGain = _context.createGain();
-    _effectGain.connect(_masterGain);
+    _effectGain.connect(_compressor);
     _musicGain = _context.createGain();
-    _musicGain.connect(_masterGain);
+    _musicGain.connect(_compressor);
     _uiGain = _context.createGain();
     _uiGain.connect(_masterGain);
     _clip = new SoundClip();
