@@ -1291,7 +1291,7 @@ define([
             },
             ESCORTS_INTEGRITY_BARS: {
                 name: "escortsIntegrityBars",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["fullHull", "halfHull", "zeroHull", "destroyed", "shield", "lostShield"], LAYOUT: ["hull", "shield"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["fullHull", "halfHull", "zeroHull", "awayHull", "destroyed", "shield", "lostShield"], LAYOUT: ["hull", "shield"]})
             },
             ESCORTS_TEXT_OFFSET: {
                 name: "escortsTextOffset",

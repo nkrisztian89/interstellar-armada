@@ -2554,7 +2554,7 @@ define([
                 /** @type HTMLCanvasElement */
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
                 /** @type Boolean */
-                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent, skip,
+                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent, skip, away,
                 /** @type MouseInputIntepreter */
                 mouseInputInterpreter,
                 /** @type String[] */
@@ -2830,20 +2830,22 @@ define([
                     for (i = 0; i < _escortsTexts.length; i++) {
                         if (i < ships.length) {
                             _escortsTexts[i].setText(ships[i].getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
+                            away = ships[i].isAway();
                             _escortsTexts[i].setColor(ships[i].isAlive() ?
-                                    (ships[i].isAway() ?
+                                    (away ?
                                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.away :
                                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.alive) :
                                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_TEXT).colors.destroyed);
-                            _escortBars[i].hull.setColor(_getHullIntegrityColor(ships[i].getHullIntegrity(),
-                                    _escortsIntegrityBarsSettings.colors.fullHull,
-                                    _escortsIntegrityBarsSettings.colors.halfHull,
-                                    _escortsIntegrityBarsSettings.colors.zeroHull));
+                            _escortBars[i].hull.setColor(away ? _escortsIntegrityBarsSettings.colors.awayHull :
+                                    _getHullIntegrityColor(ships[i].getHullIntegrity(),
+                                            _escortsIntegrityBarsSettings.colors.fullHull,
+                                            _escortsIntegrityBarsSettings.colors.halfHull,
+                                            _escortsIntegrityBarsSettings.colors.zeroHull));
                             _escortBars[i].hull.clipX(0, ships[i].getHullIntegrity());
                             _escortBars[i].hull.applyLayout(_escortBars[i].hullLayout, canvas.width, canvas.height);
                             _escortsTexts[i].show();
                             _escortBars[i].hull.show();
-                            if (ships[i].hasShield()) {
+                            if (ships[i].hasShield() && !away) {
                                 _escortBars[i].shield.clipX(0, ships[i].getShieldIntegrity());
                                 _escortBars[i].shield.applyLayout(_escortBars[i].shieldLayout, canvas.width, canvas.height);
                                 _escortBars[i].shield.show();

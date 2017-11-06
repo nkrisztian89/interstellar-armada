@@ -777,6 +777,7 @@
                         "fullHull": [0, 1, 0, 1],
                         "halfHull": [1, 1, 0, 1],
                         "zeroHull": [1, 0, 0, 1],
+                        "awayHull": [0, 1, 0, 0.3],
                         "destroyed": [1, 0, 0, 0.3],
                         "shield": [0.35, 0.7, 1, 1],
                         "lostShield": [0.1, 0.2, 0.7, 0.2]
