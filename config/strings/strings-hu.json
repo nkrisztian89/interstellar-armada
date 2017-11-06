@@ -92,7 +92,7 @@
         "general": "Általános beállítások",
         "graphics": "Grafikai beállítások",
         "audio": "Hang beállítások",
-        "hud": "HUD beállítások",
+        "gameplay": "Játékmenet beállítások",
         "controls": "Irányítás beállításai",
         "defaults": "Alapértelmezések visszaállítása"
     },
@@ -494,11 +494,17 @@
         "sfxVolume": "Effektek hangereje:",
         "uiVolume": "Vezérlőelemek hangereje:"
     },
-    "hudSettings": {
+    "gameplaySettings": {
         "backButton": "Vissza a menübe",
-        "title": "HUD beállítások",
+        "title": "Játékmenet beállítások",
+         "hudTitle": "HUD",
+        "cameraTitle": "Kamera",
         "targetHealthAtCenter": "Célpont állapota mindig középen:",
-        "offsetImpactIndicators": "Célzás eltolt becsapódásjelzőkkel:"
+        "offsetImpactIndicators": "Célzás eltolt becsapódásjelzőkkel:",
+        "relativeTargetOrientation": "Célpont mutatása relatív helyzetben:",
+        "preferredFighterView": "Alapértelmezett vadászgép nézet:",
+        "preferredShipView": "Alapértelmezett hadihajó nézet:",
+        "demoViewSwitching": "Automatikus nézetváltogatás demo módban:"
     },
     "controller": {
         "general": "Általános",

@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2017 Krisztián Nagy
  * @file Provides type checking functionality for simple types (booleans, number, strings) as well as enums (with values defined in an object),
  * arrays and typed arrays, and custom objects through the usage of an object definition (i.e. schema) format. Types can be combined this
  * way and constraints can be set on types (such as a range for a number of an array's length, presence of certain properties, or passing
@@ -345,6 +345,16 @@ define([
      * @typedef {Function} Types~StringCallback
      * @param {String} safeValue
      * @returns {Boolean}
+     */
+    /**
+     * @typedef {Object} Types~StringValueParams
+     * @property {String} [name] The name of the variable you are trying to acquire a value for (to show in error messages)
+     * @property {Number} [defaultValue] If the original value is invalid, this value will be returned instead.
+     * @property {Types~StringCallback} [checkFunction] If the type of the value is correct and this function is given, it will be called with the 
+     * value passed to it to perform any additional checks to confirm the validity of the value. It should return whether the value is 
+     * valid.
+     * @property {String} [checkFailMessage] An explanatory error message to show it the value is invalid because it fails the check.
+     * @property {Object} [parentObject] If this value is the member of an object that is being verified, then this should be a reference to that object.
      */
     /**
      * Returns a type-safe string value. If the given original value is invalid, will show an error message and return the given default 
@@ -739,9 +749,20 @@ define([
         return exports.getEnumValue(enumObject, localStorage[storageLocation], params);
     };
     /**
+     * Reads, type verifies and returns a string value (or a supplied default) from local storage according to the specified parameters.
+     * @param {String} storageLocation The key locating the value in local storage.
+     * @param {Types~StringValueParams} params
+     * @returns {null|String}
+     */
+    exports.getStringValueFromLocalStorage = function (storageLocation, params) {
+        params = params || {};
+        params.name = params.name || "localStorage." + storageLocation;
+        return exports.getStringValue(params.name, localStorage[storageLocation], params.defaultValue, params.checkFunction, params.checkFailMessage);
+    };
+    /**
      * Reads, type verifies and returns a value of a given type (or a supplied default) from local storage according to the specified 
      * parameters. Currently only boolean and enum types are supported!
-     * @param {String|Object} type The type descriptor string or object. (currently boolean / enum only!)
+     * @param {String|Object} type The type descriptor string or object. (currently boolean / number / string / enum only!)
      * @param {String} storageLocation The key locating the value in local storage.
      * @param {Types~BooleanValueParams|Types~EnumValueParams} params
      * @returns {any}
@@ -758,6 +779,8 @@ define([
                 return exports.getNumberValueFromLocalStorage(storageLocation, params);
             case "enum":
                 return exports.getEnumValueFromLocalStorage(params.values, storageLocation, params);
+            case "string":
+                return exports.getStringValueFromLocalStorage(storageLocation, params);
             default:
                 application.crash();
         }

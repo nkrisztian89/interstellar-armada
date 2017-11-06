@@ -338,9 +338,10 @@ define([
      * @param {Object3D} renderableObject
      * @param {Number} [duration]
      * @param {String} [style] (enum Camera.TransitionStyle)
+     * @param {String} [configurationName] The name of the configuration (view) of the object to follow (if not given, the first one associated with the object is selected)
      */
-    CameraController.prototype.setCameraToFollowObject = function (renderableObject, duration, style) {
-        this._controlledCamera.followObject(renderableObject, false, duration, style);
+    CameraController.prototype.setCameraToFollowObject = function (renderableObject, duration, style, configurationName) {
+        this._controlledCamera.followObject(renderableObject, false, duration, style, configurationName);
     };
     /**
      * Sets the controlled camera to free control (not following any objects)

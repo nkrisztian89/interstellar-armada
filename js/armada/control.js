@@ -456,7 +456,10 @@ define([
         this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(
                 pilotedSpacecraft.getVisualModel(),
                 config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_DURATION),
-                config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_STYLE));
+                config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_STYLE),
+                (pilotedSpacecraft.isFighter() ?
+                        config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME) :
+                        config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME)));
         this.disableAction("followNext");
         this.disableAction("followPrevious");
         game.getScreen().setHeaderContent("");

@@ -140,9 +140,9 @@ define([
                             game.setScreen(armadaScreens.AUDIO_SCREEN_NAME);
                         }
                     }, {
-                        id: strings.SETTINGS.HUD.name,
+                        id: strings.SETTINGS.GAMEPLAY.name,
                         action: function () {
-                            game.setScreen(armadaScreens.HUD_SETTINGS_SCREEN_NAME);
+                            game.setScreen(armadaScreens.GAMEPLAY_SETTINGS_SCREEN_NAME);
                         }
                     }, {
                         id: strings.SETTINGS.CONTROLS.name,
@@ -189,9 +189,9 @@ define([
                             game.setScreen(armadaScreens.AUDIO_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
                         }
                     }, {
-                        id: strings.SETTINGS.HUD.name,
+                        id: strings.SETTINGS.GAMEPLAY.name,
                         action: function () {
-                            game.setScreen(armadaScreens.HUD_SETTINGS_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
+                            game.setScreen(armadaScreens.GAMEPLAY_SETTINGS_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
                         }
                     }, {
                         id: strings.INGAME_MENU.RESTART.name,

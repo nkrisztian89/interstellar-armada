@@ -266,7 +266,7 @@ define([
      * cleanup). Such a copy can be made from a configuration and then use it to transition to the regular configuration which gets properly
      * updated to provide a smooth transition between the non-updated and updated state
      */
-    CameraPositionConfiguration.prototype.init = function(fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines, isTransitionConfiguration) {
+    CameraPositionConfiguration.prototype.init = function (fixed, turnsAroundObjects, movesRelativeToObject, followedObjects, startsWithRelativePosition, positionMatrix, distanceRange, confines, resetsWhenLeavingConfines, isTransitionConfiguration) {
         this._fixed = fixed;
         this._turnsAroundObjects = turnsAroundObjects;
         this._movesRelativeToObject = movesRelativeToObject;
@@ -1616,8 +1616,8 @@ define([
         var angles = mat.getYawAndPitch(orientationMatrix);
         this._positionConfiguration.init(false, false, false, [], false, positionMatrix, null, null, false);
         this._orientationConfiguration.init(false, false, fps, [], orientationMatrix, Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined,
-                        CameraOrientationConfiguration.BaseOrientation.WORLD,
-                        CameraOrientationConfiguration.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD);
+                CameraOrientationConfiguration.BaseOrientation.WORLD,
+                CameraOrientationConfiguration.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD);
         this.init(
                 utils.EMPTY_STRING,
                 this._positionConfiguration,
@@ -2398,7 +2398,7 @@ define([
         return result;
     };
     /**
-     * Start a transition to the first camera configuration associated with the passed renderable node, if any.
+     * Start a transition to the first (or given) camera configuration associated with the passed renderable node, if any.
      * @param {RenderableNode} [node] If no node is given, the method will start a transition to the first camera configuration associated
      * with the scene itself.
      * @param {Boolean} forceFirstView If true, then even if the given node is already the followed one, the method will switch to its first
@@ -2406,17 +2406,24 @@ define([
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
      * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
+     * @param {String} [configurationName] If given, the camera will transition to the (first) configuration with this name instead of the first configuration
      * @returns {Boolean} Whether as a result of this call, the camera is now following the specified node. If the node has no associated
      * configurations to switch to, this will be false.
      */
-    Camera.prototype.followNode = function (node, forceFirstView, duration, style) {
-        var configuration;
+    Camera.prototype.followNode = function (node, forceFirstView, duration, style, configurationName) {
+        var configurations, configuration;
         if (!forceFirstView && (this._followedNode === node)) {
             return true;
         }
         this._followedNode = node;
         if (this._followedNode) {
-            configuration = this._followedNode.getNextCameraConfiguration();
+            if (configurationName) {
+                configurations = this._followedNode.getCameraConfigurationsWithName(configurationName);
+                if (configurations.length > 0) {
+                    configuration = configurations[0];
+                }
+            }
+            configuration = configuration || this._followedNode.getNextCameraConfiguration();
             if (configuration) {
                 this.startTransitionToConfiguration(configuration, duration, style);
                 return true;
@@ -2424,7 +2431,13 @@ define([
             return false;
         }
         // if no node was given
-        configuration = this._scene.getNextCameraConfiguration();
+        if (configurationName) {
+            configurations = this._scene.getCameraConfigurationsWithName(configurationName);
+            if (configurations.length > 0) {
+                configuration = configurations[0];
+            }
+        }
+        configuration = configuration || this._scene.getNextCameraConfiguration();
         if (configuration) {
             this.startTransitionToConfiguration(configuration, duration, style);
             return true;
@@ -2440,11 +2453,12 @@ define([
      * @param {Number} [duration] The duration of the transition, in milliseconds. If not given, the camera default will be used.
      * @param {Number} [style] (enum Camera.TransitionStyle) The style of the transition to use. If not given, the camera default 
      * will be used.
+     * @param {String} [configurationName] If given, the camera will transition to the (first) configuration with this name instead of the first configuration
      * @returns {Boolean} Whether as a result of this call, the camera is now following the specified object's node. If the node has no 
      * associated configurations to switch to, this will be false.
      */
-    Camera.prototype.followObject = function (objectToFollow, forceFirstView, duration, style) {
-        return this.followNode(objectToFollow.getNode(), forceFirstView, duration, style);
+    Camera.prototype.followObject = function (objectToFollow, forceFirstView, duration, style, configurationName) {
+        return this.followNode(objectToFollow.getNode(), forceFirstView, duration, style, configurationName);
     };
     /**
      * Start a transition to the next camera configuration associated with the currently followed node, or the scene, in case no node is

@@ -965,13 +965,15 @@ define([
                         _timeInSameView = 0;
                     }
                 } else if (_demoMode) {
-                    // automatic view switching in demo mode
-                    _timeInSameView += dt;
-                    if (_timeInSameView > config.getSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCH_INTERVAL)) {
-                        _timeInSameView = 0;
-                        _battleScene.getCamera().changeToNextView();
-                        if (Math.random() < config.getSetting(config.BATTLE_SETTINGS.DEMO_DOUBLE_VIEW_SWITCH_CHANCE)) {
+                    if (config.getBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING)) {
+                        // automatic view switching in demo mode
+                        _timeInSameView += dt;
+                        if (_timeInSameView > config.getSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCH_INTERVAL)) {
+                            _timeInSameView = 0;
                             _battleScene.getCamera().changeToNextView();
+                            if (Math.random() < config.getSetting(config.BATTLE_SETTINGS.DEMO_DOUBLE_VIEW_SWITCH_CHANCE)) {
+                                _battleScene.getCamera().changeToNextView();
+                            }
                         }
                     }
                 }
@@ -3095,11 +3097,12 @@ define([
                 }
                 // setting orientation of the target view model
                 if (_targetViewModel) {
-                    _targetViewModel.setOrientationM4(mat.prod4Aux(
+                    _targetViewModel.setOrientationM4(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION) ? mat.prod4Aux(
                             target.getPhysicalOrientationMatrix(),
                             mat.inverseOfRotation4Aux(mat.lookTowards4Aux(
                                     vec.normal3(vec.diff3Aux(craft.getPhysicalPositionVector(), target.getPhysicalPositionVector())),
-                                    mat.getRowC43(craft.getPhysicalOrientationMatrix())))));
+                                    mat.getRowC43(craft.getPhysicalOrientationMatrix())))) :
+                            mat.IDENTITY4);
                 }
                 _targetScene.setRelativeViewport(
                         _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),

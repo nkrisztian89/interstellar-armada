@@ -79,7 +79,7 @@ define([
         GENERAL: {name: "settings.general"},
         GRAPHICS: {name: "settings.graphics"},
         AUDIO: {name: "settings.audio"},
-        HUD: {name: "settings.hud"},
+        GAMEPLAY: {name: "settings.gameplay"},
         CONTROLS: {name: "settings.controls"},
         DEFAULTS: {name: "settings.defaults"}
     };
@@ -271,12 +271,18 @@ define([
         PARTICLE_AMOUNT: {name: "graphics.particleAmount"},
         DUST_PARTICLE_AMOUNT: {name: "graphics.dustParticleAmount"}
     };
-    strings.HUD_SETTINGS = {
-        PREFIX: {name: "hudSettings.", optional: true},
-        BACK: {name: "hudSettings.backButton"},
-        TITLE: {name: "hudSettings.title"},
-        TARGET_HEALTH_AT_CENTER: {name: "hudSettings.targetHealthAtCenter"},
-        OFFSET_IMPACT_INDICATORS: {name: "hudSettings.offsetImpactIndicators"}
+    strings.GAMEPLAY_SETTINGS = {
+        PREFIX: {name: "gameplaySettings.", optional: true},
+        BACK: {name: "gameplaySettings.backButton"},
+        TITLE: {name: "gameplaySettings.title"},
+        HUD_TITLE: {name: "gameplaySettings.hudTitle"},
+        CAMERA_TITLE: {name: "gameplaySettings.cameraTitle"},
+        TARGET_HEALTH_AT_CENTER: {name: "gameplaySettings.targetHealthAtCenter"},
+        OFFSET_IMPACT_INDICATORS: {name: "gameplaySettings.offsetImpactIndicators"},
+        RELATIVE_TARGET_ORIENTATION: {name: "gameplaySettings.relativeTargetOrientation"},
+        PREFERRED_FIGHTER_VIEW: {name: "gameplaySettings.preferredFighterView"},
+        PREFERRED_SHIP_VIEW: {name: "gameplaySettings.preferredShipView"},
+        DEMO_VIEW_SWITCHING: {name: "gameplaySettings.demoViewSwitching"}
     };
     strings.AUDIO = {
         PREFIX: {name: "audio.", optional: true},

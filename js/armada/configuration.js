@@ -85,6 +85,11 @@ define([
              */
             LOCAL_STORAGE_HUD_PREFIX,
             /**
+             * The full prefix to use for local storage IDs of battle settings
+             * @type String
+             */
+            LOCAL_STORAGE_BATTLE_PREFIX,
+            /**
              * The context storing the current settings and game data that can be accessed through the interface of this module
              * @type ConfigurationContext
              */
@@ -892,6 +897,34 @@ define([
             type: "boolean"
         },
         /**
+         * When a mission is started with a fighter, the camera will be set to this view of the fighter
+         */
+        DEFAULT_FIGHTER_VIEW_NAME: {
+            name: "defaultFighterViewName",
+            type: "string"
+        },
+        /**
+         * These options will be offered in the gameplay settings as possible preferred fighter views
+         */
+        DEFAULT_FIGHTER_VIEW_NAME_OPTIONS: {
+            name: "defaultFighterViewNameOptions",
+            type: _customTypes.STRING_ARRAY
+        },
+        /**
+         * When a mission is started with a ship (not fighter), the camera will be set to this view of the ship
+         */
+        DEFAULT_SHIP_VIEW_NAME: {
+            name: "defaultShipViewName",
+            type: "string"
+        },
+        /**
+         * These options will be offered in the gameplay settings as possible preferred ship views
+         */
+        DEFAULT_SHIP_VIEW_NAME_OPTIONS: {
+            name: "defaultShipViewNameOptions",
+            type: _customTypes.STRING_ARRAY
+        },
+        /**
          * Views (camera configurations) with this name will be treated as target views (and set to face the current target of the 
          * spacecraft)
          */
@@ -971,6 +1004,14 @@ define([
              */
             AIM_ASSIST_CROSSHAIRS: {
                 name: "aimAssistCrosshairs",
+                type: "boolean"
+            },
+            /**
+             * If true, the view (model) of the target on the HUD will be display in the orientation relative to the player ship, otherwise
+             * simply top-down
+             */
+            RELATIVE_TARGET_ORIENTATION: {
+                name: "relativeTargetOrientation",
                 type: "boolean"
             },
             TARGET_SWITCH_ANIMATION_DURATION: {
@@ -1378,6 +1419,13 @@ define([
             name: "demoShipAI",
             type: "string"
         },
+        /**
+         * Whether the views should automatically change every X seconds when in demo mode
+         */
+        DEMO_VIEW_SWITCHING: {
+            name: "demoViewSwitching",
+            type: "boolean"
+        },
         DEMO_VIEW_SWITCH_INTERVAL: {
             name: "demoViewSwitchInterval",
             type: "number"
@@ -1546,6 +1594,7 @@ define([
         }
     };
     LOCAL_STORAGE_HUD_PREFIX = MODULE_LOCAL_STORAGE_PREFIX + BATTLE_SETTINGS.HUD.name + LOCAL_STORAGE_SEPARATOR;
+    LOCAL_STORAGE_BATTLE_PREFIX = MODULE_LOCAL_STORAGE_PREFIX + "battle" + LOCAL_STORAGE_SEPARATOR;
     Object.freeze(_customTypes);
     // #########################################################################
     /**
@@ -1590,6 +1639,26 @@ define([
         return this._settings[settingDefinitionObject.name];
     };
     /**
+     * Returns the value for the battle setting identified by the passed setting definition object.
+     * Checks locally stored settings as well as defaults.
+     * @param {Object} settingDefinitionObject
+     */
+    ConfigurationContext.prototype.getBattleSetting = function (settingDefinitionObject) {
+        var local;
+        if (localStorage[LOCAL_STORAGE_BATTLE_PREFIX + settingDefinitionObject.name] !== undefined) {
+            local = types.getValueOfTypeFromLocalStorage(settingDefinitionObject.type, LOCAL_STORAGE_BATTLE_PREFIX + settingDefinitionObject.name);
+        }
+        return (local !== undefined) ? local : this._settings[settingDefinitionObject.name];
+    };
+    /**
+     * Overrides the local value for the battle setting identified by the passed setting definition object (storing it in local storage)
+     * @param {Object} settingDefinitionObject
+     * @param {} value
+     */
+    ConfigurationContext.prototype.setBattleSetting = function (settingDefinitionObject, value) {
+        localStorage[LOCAL_STORAGE_BATTLE_PREFIX + settingDefinitionObject.name] = value;
+    };
+    /**
      * Returns the value for the HUD setting identified by the passed setting definition object.
      * Checks locally stored settings as well as defaults.
      * @param {Object} settingDefinitionObject
@@ -1617,6 +1686,17 @@ define([
         for (i = 0; i < keys.length; i++) {
             if (typeof BATTLE_SETTINGS.HUD[keys[i]] === "object") {
                 localStorage.removeItem(LOCAL_STORAGE_HUD_PREFIX + BATTLE_SETTINGS.HUD[keys[i]].name);
+            }
+        }
+    };
+    /**
+     * Removes all local overrides for battle settings, resetting them to their default values (coming from the settings JSON)
+     */
+    ConfigurationContext.prototype.resetBattleSettings = function () {
+        var i, keys = Object.keys(BATTLE_SETTINGS);
+        for (i = 0; i < keys.length; i++) {
+            if (typeof BATTLE_SETTINGS[keys[i]] === "object") {
+                localStorage.removeItem(LOCAL_STORAGE_BATTLE_PREFIX + BATTLE_SETTINGS[keys[i]].name);
             }
         }
     };
@@ -1697,7 +1777,10 @@ define([
         getSetting: _context.getSetting.bind(_context),
         getHUDSetting: _context.getHUDSetting.bind(_context),
         setHUDSetting: _context.setHUDSetting.bind(_context),
+        getBattleSetting: _context.getBattleSetting.bind(_context),
+        setBattleSetting: _context.setBattleSetting.bind(_context),
         resetHUDSettings: _context.resetHUDSettings.bind(_context),
+        resetBattleSettings: _context.resetBattleSettings.bind(_context),
         getDefaultCameraFOV: _context.getDefaultCameraFOV.bind(_context),
         getDefaultCameraFOVRange: _context.getDefaultCameraFOVRange.bind(_context),
         getDefaultCameraSpan: _context.getDefaultCameraSpan.bind(_context),

@@ -92,7 +92,7 @@
         "general": "General settings",
         "graphics": "Graphics settings",
         "audio": "Audio settings",
-        "hud": "HUD settings",
+        "gameplay": "Gameplay settings",
         "controls": "Control settings",
         "defaults": "Reset to defaults"
     },
@@ -474,11 +474,17 @@
         "sfxVolume": "Sound effect volume:",
         "uiVolume": "User interface volume:"
     },
-    "hudSettings": {
+    "gameplaySettings": {
         "backButton": "Back to menu",
-        "title": "HUD settings",
+        "title": "Gameplay settings",
+        "hudTitle": "HUD",
+        "cameraTitle": "Camera",
         "targetHealthAtCenter": "Target integrity bar always at center:",
-        "offsetImpactIndicators": "Offset impact indicators:"
+        "offsetImpactIndicators": "Offset impact indicators:",
+        "relativeTargetOrientation": "Show target in relative orientation:",
+        "preferredFighterView": "Preferred fighter view:",
+        "preferredShipView": "Preferred ship view:",
+        "demoViewSwitching": "Automatic view switching in demo mode:"
     },
     "controller": {
         "general": "General",
@@ -552,6 +558,15 @@
         "nextView": "Change to the next view of the currently followed spacecraft or the scene",
         "previousView": "Change to the previous view of the currently followed spacecraft or the scene",
         "resetView": "Reset the current view to its original state"
+    },
+    "objectView": {
+        "near": "near",
+        "far": "far",
+        "cockpit": "cockpit",
+        "front": "front",
+        "free": "free",
+        "flyby": "flyby",
+        "target": "target"
     },
     "flightMode": {
         "free": "free",
