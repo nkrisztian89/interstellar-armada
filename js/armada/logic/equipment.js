@@ -1374,16 +1374,18 @@ define([
             // the game state might have changed since the ordered list was updated, so check until we find a still valid target
             length = this._orderedHostileTargets.length;
             index = newOrder ? 0 : (this._orderedHostileTargets.indexOf(this._target) + 1) % length;
+            // count invalid targets in the array
             count = 0;
-            if ((count < length) && !this._isValidNewTarget(this._orderedHostileTargets[index])) {
+            while ((count < length) && !this._isValidNewTarget(this._orderedHostileTargets[index])) {
                 index = (index + 1) % length;
                 count++;
             }
+            // if there is at least one valid target, select it
             if (count < length) {
                 this.setTarget(this._orderedHostileTargets[index]);
                 this._timeUntilHostileOrderReset = config.getSetting(config.BATTLE_SETTINGS.TARGET_ORDER_DURATION);
                 return true;
-            }
+            }   
         }
         this._timeUntilHostileOrderReset = 0;
         return false;
@@ -1399,11 +1401,13 @@ define([
             // the game state might have changed since the ordered list was updated, so check until we find a still valid target
             length = this._orderedHostileTargets.length;
             index = newOrder ? (length - 1) : (this._orderedHostileTargets.indexOf(this._target) + length - 1) % length;
+            // count invalid targets in the array
             count = 0;
-            if ((count < length) && !this._isValidNewTarget(this._orderedHostileTargets[index])) {
+            while ((count < length) && !this._isValidNewTarget(this._orderedHostileTargets[index])) {
                 index = (index + length - 1) % length;
                 count++;
             }
+            // if there is at least one valid target, select it
             if (count < length) {
                 this.setTarget(this._orderedHostileTargets[index]);
                 this._timeUntilHostileOrderReset = config.getSetting(config.BATTLE_SETTINGS.TARGET_ORDER_DURATION);
@@ -1448,11 +1452,13 @@ define([
             // the game state might have changed since the ordered list was updated, so check until we find a still valid target
             length = this._orderedNonHostileTargets.length;
             index = newOrder ? 0 : (this._orderedNonHostileTargets.indexOf(this._target) + 1) % length;
+            // count invalid targets in the array
             count = 0;
-            if ((count < length) && !this._isValidNewTarget(this._orderedNonHostileTargets[index])) {
+            while ((count < length) && !this._isValidNewTarget(this._orderedNonHostileTargets[index])) {
                 index = (index + 1) % length;
                 count++;
             }
+            // if there is at least one valid target, select it
             if (count < length) {
                 this.setTarget(this._orderedNonHostileTargets[index]);
                 this._timeUntilNonHostileOrderReset = config.getSetting(config.BATTLE_SETTINGS.TARGET_ORDER_DURATION);
