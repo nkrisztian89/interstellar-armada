@@ -1227,6 +1227,12 @@ define([
         this._physicalModel.moveByVector(v);
     };
     /**
+     * Function to reset state before starting to execute the control actions triggered in the current simulation step.
+     */
+    Spacecraft.prototype.prepareForControl = function () {
+        this._maneuveringComputer.prepareForControl();
+    };
+    /**
      * Returns whether the maneuvering computer is currently locked (not accepting new maneuvering commands)
      * @returns {Boolean}
      */

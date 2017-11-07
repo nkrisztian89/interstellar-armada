@@ -1958,6 +1958,13 @@ define([
          */
         this._holdSpeed = false;
         /**
+         * This will be true while the speed target (along the Y axis) is controlled by actions with
+         * specific intensity (such as the throttle on a joystick), as in this case the speed target
+         * should be displayed to the user, even when not it speed holding mode.
+         * @type Boolean
+         */
+        this._speedThrottled = false;
+        /**
          * The target speed along the Y axis (in model space). The computer will
          * use forward and reverse thrusters to reach this speed if interia
          * compensation and speed holding are turned on. (in m/s)
@@ -2037,6 +2044,12 @@ define([
         this._maxTurnBurnLevel = 0;
         this.updateForNewPropulsion();
     }
+    /**
+     * Function to reset state before starting to execute the control actions triggered in the current simulation step.
+     */
+    ManeuveringComputer.prototype.prepareForControl = function () {
+        this._speedThrottled = false;
+    };
     /**
      * Updates the speed increment per second to how much the ship can accelerate 
      * in one second with the current propulsion system.
@@ -2179,12 +2192,13 @@ define([
         if (!this._locked) {
             if (this._assisted) {
                 maxSpeed = this._restricted ? this._maxCruiseForwardSpeed : this._maxCombatForwardSpeed;
-                this._speedTarget = this._holdSpeed ?
+                this._speedThrottled = (intensity !== undefined);
+                this._speedTarget = (this._holdSpeed && !this._speedThrottled) ?
                         Math.min(
                                 Math.max(
                                         this._spacecraft.getRelativeVelocityMatrix()[13],
                                         this._speedTarget
-                                        ) + (intensity || this._speedIncrement),
+                                        ) + this._speedIncrement,
                                 maxSpeed) :
                         (intensity || 1) * maxSpeed;
             } else {
@@ -2220,12 +2234,13 @@ define([
         if (!this._locked) {
             if (this._assisted) {
                 maxSpeed = this._restricted ? this._maxCruiseReverseSpeed : this._maxCombatReverseSpeed;
-                this._speedTarget = this._holdSpeed ?
+                this._speedThrottled = (intensity !== undefined);
+                this._speedTarget = (this._holdSpeed && !this._speedThrottled) ?
                         Math.max(
                                 Math.min(
                                         this._spacecraft.getRelativeVelocityMatrix()[13],
                                         this._speedTarget
-                                        ) - (intensity || this._speedIncrement),
+                                        ) - this._speedIncrement,
                                 maxSpeed) :
                         (intensity || 1) * maxSpeed;
             } else {
@@ -2400,7 +2415,7 @@ define([
      * @returns {Boolean}
      */
     ManeuveringComputer.prototype.hasSpeedTarget = function () {
-        return this._assisted && this._holdSpeed;
+        return this._assisted && (this._holdSpeed || this._speedThrottled);
     };
     /**
      * If the current flight mode imposes a speed limit, returns it. (in m/s) Otherwise returns undefined.
