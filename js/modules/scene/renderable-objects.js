@@ -2287,6 +2287,13 @@ define([
     UIElement.prototype.setModel = function (value) {
         this._model = value;
     };
+    /**
+     * Sets a new scale mode for this UI element
+     * @param {String} value (enum ScaleMode)
+     */
+    UIElement.prototype.setScaleMode = function (value) {
+        this._scaleMode = _getScaleModeInt(value);
+    }
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

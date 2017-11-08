@@ -225,10 +225,11 @@
                         "friendlyHighlight": [0, 1, 0, 0.5],
                         "newHostile": [1, 1, 0, 0.8],
                         "hostileTarget": [1, 0, 0, 0.8],
-                        "friendlyTarget": [0, 1, 0, 0.8]
+                        "friendlyTarget": [0, 1, 0, 0.8],
+                        "transmission": [1, 1, 1, 0.75]
                     }
                 },
-                "shipArrowPositionRadius": 0.45,
+                "shipArrowPositionRadius": 0.44,
                 "targetArrowSwitchScale": 1.8,
                 "shipIndicator": {
                     "texture": "hud-atlas",
@@ -246,7 +247,8 @@
                         "friendlyHighlight": [0, 1, 0, 0.5],
                         "newHostile": [1, 1, 0, 0.8],
                         "hostileTarget": [1, 0, 0, 0.8],
-                        "friendlyTarget": [0, 1, 0, 0.8]
+                        "friendlyTarget": [0, 1, 0, 0.8],
+                        "transmission": [1, 1, 1, 0.75]
                     }
                 },
                 "shipIndicatorSizeFactor": 2,
@@ -272,6 +274,24 @@
                         "width": 0.08,
                         "height": 0.02,
                         "scaleMode": "maximum"
+                    }
+                },
+                "shipStatusIndicator": {
+                    "texture": "hud-atlas",
+                    "mappings": {
+                        "protect": [[0.6875, 0.5625], [0.75, 0.625]],
+                        "destroy": [[0.8125, 0.5625], [0.875, 0.625]],
+                        "transmission": [[0.9375, 0.5625], [1.0, 0.625]]
+                    }, 
+                    "sizes": {
+                        "reticle": [0.025, 0.025],
+                        "arrow": [0.04, 0.04]
+                    },
+                    "scaleMode": "maximum",
+                    "colors": {
+                        "protect": [0, 1, 1, 0.75],
+                        "destroy": [1, 0.8, 0.25, 0.85],
+                        "transmission": [1, 1, 1, 0.95]
                     }
                 },
                 "aimAssistIndicator": {

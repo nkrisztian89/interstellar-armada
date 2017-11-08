@@ -1052,7 +1052,7 @@ define([
             },
             SHIP_ARROW: {
                 name: "shipArrow",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "newHostile", "hostileTarget", "friendlyTarget"], SIZE: ["default", "target"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "newHostile", "hostileTarget", "friendlyTarget", "transmission"], SIZE: ["default", "target"]})
             },
             SHIP_ARROW_POSITION_RADIUS: {
                 name: "shipArrowPositionRadius",
@@ -1064,7 +1064,7 @@ define([
             },
             SHIP_INDICATOR: {
                 name: "shipIndicator",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "newHostile", "hostileTarget", "friendlyTarget"], SIZE: ["minimum", "targetMinimum", "maximum"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostile", "friendly", "hostileHighlight", "friendlyHighlight", "newHostile", "hostileTarget", "friendlyTarget", "transmission"], SIZE: ["minimum", "targetMinimum", "maximum"]})
             },
             SHIP_INDICATOR_SIZE_FACTOR: {
                 name: "shipIndicatorSizeFactor",
@@ -1081,6 +1081,10 @@ define([
             DISTANCE_TEXT: {
                 name: "distanceText",
                 type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["hostile", "friendly"]})
+            },
+            SHIP_STATUS_INDICATOR: {
+                name: "shipStatusIndicator",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["protect", "destroy", "transmission"], COLOR: ["protect", "destroy", "transmission"], SIZE: ["reticle", "arrow"]})
             },
             AIM_ASSIST_INDICATOR: {
                 name: "aimAssistIndicator",

@@ -843,8 +843,18 @@ define([
         return null;
     };
     /**
+     * If the condition corresponds to a mission objective that requires the player to destroy some spacecrafts, this method
+     * returns the list of these target spacecrafts.
+     * Overidde this for conditions that can correspond to mission objectives.
+     * @returns {Spacecraft[]}
+     */
+    Condition.prototype.getTargetSpacecrafts = function () {
+        application.showError("No target spacecrafts associated with condition type: '" + this._type + "'!");
+        return null;
+    };
+    /**
      * If the condition corresponds to a mission objective that requires the player to escort (protect) some spacecrafts, this method
-     * returns the list of these exported spacecrafts.
+     * returns the list of these escorted spacecrafts.
      * Overidde this for conditions that can correspond to mission objectives.
      * @returns {Spacecraft[]}
      */
@@ -913,6 +923,15 @@ define([
         }) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
+    };
+    /**
+     * @override
+     * Note: this is only correct if this condition belongs to the trigger of a WIN event
+     * @param {Mission} mission 
+     * @returns {Spacecraft[]}
+     */
+    DestroyedCondition.prototype.getTargetSpacecrafts = function (mission) {
+        return this._subjects.getSpacecrafts(mission);
     };
     /**
      * @override
@@ -1020,6 +1039,19 @@ define([
         }) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
+    };
+    /**
+     * @override
+     * Note: this is only correct if this condition belongs to the trigger of a WIN event
+     * @param {Mission} mission 
+     * @returns {Spacecraft[]}
+     */
+    CountCondition.prototype.getTargetSpacecrafts = function (mission) {
+        if (this._params.relation !== CountConditionRelation.BELOW) {
+            application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
+            return null;
+        }
+        return this._subjects.getSpacecrafts(mission);
     };
     /**
      * @override
@@ -1400,8 +1432,21 @@ define([
         return result;
     };
     /**
+     * If the event of the trigger corresponds to a mission objective that requires the player to destroy some spacecrafts, this 
+     * method returns the list of these target spacecrafts.
+     * @param {Mission} mission 
+     * @returns {Spacecraft[]}
+     */
+    Trigger.prototype.getTargetSpacecrafts = function (mission) {
+        var i, result = [];
+        for (i = 0; i < this._conditions.length; i++) {
+            result = result.concat(this._conditions[i].getTargetSpacecrafts(mission));
+        }
+        return result;
+    };
+    /**
      * If the event of the trigger corresponds to a mission objective that requires the player to escort (protect) some spacecrafts, this 
-     * method returns the list of these exported spacecrafts.
+     * method returns the list of these escorted spacecrafts.
      * @param {Mission} mission 
      * @returns {Spacecraft[]}
      */
@@ -1651,9 +1696,13 @@ define([
      * @param {Mission} mission 
      */
     MessageAction.prototype.execute = function (mission) {
-        if (this._params.source && !mission.getSpacecraft(this._params.source)) {
-            application.log("Warning: message not played, because the source spacecraft '" + this._params.source + "' does not exist (might have been destroyed)!");
-            return;
+        var source;
+        if (this._params.source) {
+            source = mission.getSpacecraft(this._params.source);
+            if (!source) {
+                application.log("Warning: message not played, because the source spacecraft '" + this._params.source + "' does not exist (might have been destroyed)!");
+                return;
+            }
         }
         game.getScreen().queueHUDMessage({
             text: (this._params.source ? ("{spacecrafts/" + this._params.source + "}: ") : "") + strings.get(
@@ -1663,7 +1712,8 @@ define([
             duration: this._params.duration,
             appearAnimation: true,
             permanent: this._params.permanent,
-            color: this._params.color
+            color: this._params.color,
+            source: source
         }, this._params.urgent);
     };
     // #########################################################################
@@ -1910,6 +1960,11 @@ define([
          */
         this._referenceScore = 0;
         /**
+         * The cached list of spacecrafts that needs to be destroyed by the player to complete this mission.
+         * @type Spacecrafts
+         */
+        this._targetSpacecrafts = null;
+        /**
          * The cached list of spacecrafts that needs to be escorted (protected) by the player for this mission.
          * @type Spacecrafts
          */
@@ -2001,6 +2056,13 @@ define([
                 (this._state === MissionState.FAILED) ||
                 (this._state === MissionState.DEFEAT) ||
                 (this._state === MissionState.ENDED);
+    };
+    /**
+     * Returns the list of spacecrafts that needs to be destroyed by the player to complete this mission.
+     * @returns {Spacecraft[]}
+     */
+    Mission.prototype.getTargetSpacecrafts = function () {
+        return this._targetSpacecrafts;
     };
     /**
      * Returns the list of spacecrafts that needs to be escorted (protected) by the player for this mission.
@@ -2458,6 +2520,16 @@ define([
         this._randomShipsHeadingAngle = dataJSON.randomShipsHeadingAngle || 0;
         this._randomShipsRandomHeading = dataJSON.randomShipsRandomHeading || false;
         this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || null;
+        // cache target spacecrafts
+        this._targetSpacecrafts = [];
+        for (i = 0; i < this._events.length; i++) {
+            actions = this._events[i].getActions();
+            for (j = 0; j < actions.length; j++) {
+                if (actions[j].getType() === ActionType.WIN) {
+                    this._targetSpacecrafts = this._targetSpacecrafts.concat(this._events[i].getTrigger().getTargetSpacecrafts(this));
+                }
+            }
+        }
         // cache escorted spacecrafts
         this._escortedSpacecrafts = [];
         for (i = 0; i < this._events.length; i++) {
@@ -3337,7 +3409,7 @@ define([
                     this._missionManager.executeWhenReady(setToReady);
                     this._missionManager.requestResourceLoad();
                 }.bind(this) :
-                setToReady));
+                        setToReady));
     };
     /**
      * Returns the string ID of the currently chosen (default) difficulty level.
