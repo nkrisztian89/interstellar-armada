@@ -142,6 +142,7 @@ define([
      * @typedef {Object} DialogScreen~Data
      * @property {String} header
      * @property {String} message
+     * @property {String} messageClass 
      * @property {DialogScreen~ButtonData[]} buttons
      * @property {Function} [onClose]
      */
@@ -157,6 +158,9 @@ define([
         this._header.setVisible(data.header && (data.header.length > 0));
         if (this._header.isVisible()) {
             this._header.setContent(data.header);
+        }
+        if (data.messageClass) {
+            this._message.getElement().className += " " + data.messageClass;
         }
         this._message.setContent(data.message);
         // setting up buttons

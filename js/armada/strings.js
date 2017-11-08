@@ -27,6 +27,13 @@ define([
         MESSAGE: {name: "firstRunNote.message"},
         BUTTON: {name: "firstRunNote.button"}
     };
+    strings.RELEASE_NOTES = {
+        PREFIX: {name: "releaseNotes.", optional: true},
+        HEADER: {name: "releaseNotes.header"},
+        GENERAL: {name: "releaseNotes.general"},
+        NO_NEWS: {name: "releaseNotes.noNews"},
+        BUTTON: {name: "releaseNotes.button"}
+    };
     strings.SCREEN = {
         BACK: {name: "screen.back"},
         CANCEL: {name: "screen.cancel"}

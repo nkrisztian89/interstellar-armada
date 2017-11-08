@@ -38,6 +38,11 @@ define([
              * @type Boolean
              */
             _enabled = true,
+            /**
+             * Whether the login request has already been sent to the analytics backend
+             * @type Boolean
+             */
+            _loginSent = false,
             // -------------------------------------------------------------------------
             // Private methods
             /**
@@ -69,7 +74,7 @@ define([
     // -------------------------------------------------------------------------
     // Public methods
     /**
-     * Initializes analytics settings from LocalStorage, notifies the backend of the login, if enabled (which is the default)
+     * Initializes analytics settings from LocalStorage
      * @param {String} baseUrl The base URL of the analytics backend
      */
     function init(baseUrl) {
@@ -77,7 +82,17 @@ define([
         _id = localStorage.analytics_id;
         _userID = localStorage.analytics_user_id;
         _enabled = localStorage.analytics_enabled ? (localStorage.analytics_enabled === true.toString()) : true;
+    }
+    /**
+     * Notifies the backend of the login, requesting and saving a new analytics ID if there is none (or an invalid one)
+     * The request is only executed once (nothing happens on subsequent calls)
+     */
+    function login() {
         var newUser = !(_id && _userID);
+        if (_loginSent) {
+            return;
+        }
+        _loginSent = true;
         _sendRequest("start" + (newUser ? "" : ("/" + _id + "/" + _userID)) + "?version=" + application.getVersion().split(" ")[0], function (request) {
             if (request) {
                 var data = JSON.parse(request.responseText);
@@ -169,6 +184,7 @@ define([
     // The public interface of the module
     return {
         init: init,
+        login: login,
         sendEvent: sendEvent,
         isEnabled: isEnabled,
         enable: enable,

@@ -100,7 +100,13 @@ define(function () {
              * Whether the application is run for the first time.
              * @type Boolean
              */
-            _firstRun;
+            _firstRun,
+            /**
+             * A list of version to be considered releases of the application. Can be used to query the list
+             * of releases since the previously run version.
+             * @type String
+             */
+            _releases;
     /**
      * Logs the passed message. (currently on console)
      * @param {String} message The message to log.
@@ -264,6 +270,26 @@ define(function () {
          */
         setDebugVersion: function (value) {
             _isDebugVersion = value;
+        },
+        /**
+         * Sets the list of versions to be considered releases of the application.
+         * @param {String[]} value
+         */
+        setReleases: function (value) {
+            _releases = value;
+        },
+        /**
+         * Returns the list of set releases which are newer than the previously run version of the application.
+         * @returns {String[]}
+         */
+        getNewReleases: function () {
+            var i, result = [];
+            for (i = 0; i < _releases.length; i++) {
+                if (_releases[i] > _previouslyRunVersion.substr(0, 5)) {
+                    result.push(_releases[i]);
+                }
+            }
+            return result;
         },
         /**
          * Returns whether the application is packaged using Electron (https://electron.atom.io/).

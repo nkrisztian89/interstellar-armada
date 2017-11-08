@@ -58,6 +58,8 @@ define([
                 SUPERIMPOSE_BACKGROUND_COLOR: [0.25, 0.25, 0.25, 0.5],
                 SCREEN_BACKGROUND_CLASS_NAME: "fullScreenFix",
                 SCREEN_CONTAINER_CLASS_NAME: "fullScreenContainer",
+                // welcome message
+                RELEASE_NOTES_CLASS_NAME: "releaseNotes",
                 // screens
                 MAIN_MENU_SCREEN_NAME: "mainMenu",
                 MAIN_MENU_SCREEN_SOURCE: "menu.html",

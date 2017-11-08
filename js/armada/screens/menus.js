@@ -40,6 +40,7 @@ define([
             FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID = constants.LOCAL_STORAGE_PREFIX + "firstRunNoteShown",
             // --------------------------------------------------------------------------------------------
             // Private variables
+            _releaseNotesShown = false,
             _mainMenuOptions = [{
                     id: strings.MAIN_MENU.NEW_GAME.name,
                     action: function () {
@@ -90,8 +91,10 @@ define([
                 armadaScreens.MAIN_MENU_CONTAINER_ID,
                 {
                     show: function () {
+                        var message, newReleases, i;
                         audio.resetMasterVolume();
                         audio.resetMusicVolume();
+                        // show first run message
                         if (localStorage[FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID] !== "true") {
                             localStorage[FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID] = "true";
                             armadaScreens.openDialog({
@@ -105,11 +108,42 @@ define([
                                         action: function () {
                                             game.closeSuperimposedScreen();
                                             audio.playMusic(armadaScreens.MENU_THEME);
+                                            analytics.login();
+                                        }
+                                    }]
+                            });
+                            // if running a new version for the first time, show release notes of version since the last played one
+                        } else if (application.hasVersionChanged() && !_releaseNotesShown) {
+                            _releaseNotesShown = true;
+                            message = utils.formatString(strings.get(strings.RELEASE_NOTES.GENERAL), {
+                                version: application.getVersion()
+                            }) + "<br/><br/>";
+                            newReleases = application.getNewReleases();
+                            if (newReleases.length > 0) {
+                                for (i = 0; i < newReleases.length; i++) {
+                                    message += "<h2>" + newReleases[i] + "</h2>" + utils.formatString(strings.get(strings.RELEASE_NOTES.PREFIX, newReleases[i]));
+                                }
+                            } else {
+                                message += utils.formatString(strings.get(strings.RELEASE_NOTES.NO_NEWS), {
+                                    github: '<a target="_blank" href="https://github.com/nkrisztian89/interstellar-armada/releases">Github</a>'
+                                });
+                            }
+                            armadaScreens.openDialog({
+                                header: strings.get(strings.RELEASE_NOTES.HEADER),
+                                message: message,
+                                messageClass: armadaScreens.RELEASE_NOTES_CLASS_NAME,
+                                buttons: [{
+                                        caption: strings.get(strings.RELEASE_NOTES.BUTTON),
+                                        action: function () {
+                                            game.closeSuperimposedScreen();
+                                            audio.playMusic(armadaScreens.MENU_THEME);
+                                            analytics.login();
                                         }
                                     }]
                             });
                         } else {
                             audio.playMusic(armadaScreens.MENU_THEME);
+                            analytics.login();
                         }
                     },
                     optionselect: armadaScreens.playButtonSelectSound,

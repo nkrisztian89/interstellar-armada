@@ -390,6 +390,20 @@ h3 {
     display: table;
 }
 
+.releaseNotes h2 {
+    margin: 0;
+}
+
+.releaseNotes ul {
+    margin-top: 0;
+    text-align: left;
+}
+
+.releaseNotes li {
+    list-style-type: square;
+    margin-bottom: 0.3em;
+}
+
 /******************************************************************************************/
 /* Styling of determinate progress bars */
 progress[value] {
