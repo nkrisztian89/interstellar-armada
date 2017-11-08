@@ -3543,6 +3543,12 @@ define([
                 }
                 // .....................................................................................................
                 // ship status indicators
+                // if all (visible) hostile ships are targets, we do not add "destroy" indicators to any of them (instead of adding to all of them)
+                // so we count the target ships with "j":
+                j = 0;
+                while ((j < ships.length) && (!ships[j].isHostile(craft) || (_targets.indexOf(ships[j]) >= 0))) {
+                    j++;
+                }
                 // collect the IDs of all indicators that are valid in this array
                 statusIndicators = [];
                 if (transmissionSource) {
@@ -3551,7 +3557,7 @@ define([
                 if (_escorts.indexOf(ships[i]) >= 0) {
                     statusIndicators.push("protect");
                 }
-                if (_targets.indexOf(ships[i]) >= 0) {
+                if ((j < ships.length) && (_targets.indexOf(ships[i]) >= 0)) {
                     statusIndicators.push("destroy");
                 }
                 // setting up the indicator(s)
