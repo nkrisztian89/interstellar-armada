@@ -116,7 +116,7 @@ define([
         /**
          * Stores the model of the screen's DOM structure after it has been loaded and is automatically
          * cleared (unless explicitly specified otherwise) when the screen is added to the page.
-         * @type HTMLDocument
+         * @type DocumentFragment
          */
         this._model = null;
         /**
@@ -239,8 +239,13 @@ define([
     HTMLScreen.prototype.requestModelLoad = function () {
         // send an asynchronous request to grab the HTML file containing the DOM of this screen
         application.requestTextFile(SCREEN_FOLDER, this._htmlFilename, function (responseText) {
-            this._model = document.implementation.createHTMLDocument(this._name);
-            this._model.documentElement.innerHTML = responseText;
+            var helperDiv;
+            this._model = document.createDocumentFragment();
+            // the DocumentFragment node has no innerHTML property, so we create a helper
+            // HTML element so we can convert the source file's text content to DOM
+            helperDiv = document.createElement("div");
+            helperDiv.innerHTML = responseText;
+            this._model.appendChild(helperDiv.firstElementChild);
             if (this._isLoaded()) {
                 this.setToReady();
             }
@@ -335,7 +340,11 @@ define([
             this._container.setAttribute("id", this._getElementID(SCREEN_CONTAINER_ID));
             this._container.className = this._style.containerClassName || DEFAULT_SCREEN_CONTAINER_CLASS_NAME;
             this._container.style.display = "none";
-            this._container.innerHTML = this._model.body.innerHTML;
+            if (!keepModelAfterAdding) {
+                this._container.appendChild(this._model.firstElementChild);
+            } else {
+                this._container.appendChild(this._model.firstElementChild.cloneNode(true));
+            }
             elements = this._container.querySelectorAll("[id]");
             for (i = 0; i < elements.length; i++) {
                 elements[i].setAttribute("id", this._getElementID(elements[i].getAttribute("id")));
