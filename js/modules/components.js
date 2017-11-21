@@ -27,7 +27,7 @@ define([
      * @typedef {Object} Components~ModelLoadInfoObject
      * Stores a model and its loading state
      * @property {Boolean} requested
-     * @property {HTMLDocument} model
+     * @property {DocumentFragment} model
      * @property {Function[]} onLoadQueue
      */
     /**
@@ -141,11 +141,15 @@ define([
             _modelLoadInfo[sourceFileName].onLoadQueue = [callback];
             // send an asynchronous request to grab the HTML file
             application.requestTextFile(COMPONENT_FOLDER, sourceFileName, function (responseText) {
-                var i;
-                // once the files has been loaded, create annd save the DOM model and execute all
-                // queued functions
-                _modelLoadInfo[sourceFileName].model = document.implementation.createHTMLDocument();
-                _modelLoadInfo[sourceFileName].model.documentElement.innerHTML = responseText;
+                var i, helperDiv;
+                // once the files has been loaded, create and save the DOM model
+                _modelLoadInfo[sourceFileName].model = document.createDocumentFragment();
+                // the DocumentFragment node has no innerHTML property, so we create a helper
+                // HTML element so we can convert the source file's text content to DOM
+                helperDiv = document.createElement("div");
+                helperDiv.innerHTML = responseText;
+                _modelLoadInfo[sourceFileName].model.appendChild(helperDiv.firstElementChild);
+                // execute all queued functions
                 for (i = 0; i < _modelLoadInfo[sourceFileName].onLoadQueue.length; i++) {
                     _modelLoadInfo[sourceFileName].onLoadQueue[i]();
                 }
@@ -321,7 +325,7 @@ define([
                     application.ErrorSeverity.SEVERE,
                     "No element can be found on the page with a corresponding ID: '" + this._elementID + "'!");
         } else {
-            this._displayStyle = this._element.style.display;
+            this._displayStyle = window.getComputedStyle(this._element).display;
         }
     };
     /**
@@ -337,7 +341,7 @@ define([
      * @returns {Boolean}
      */
     SimpleComponent.prototype.isVisible = function () {
-        return (this._element.style.display !== "none");
+        return (window.getComputedStyle(this._element).display !== "none");
     };
     /**
      * Hides the wrapped HTML element by setting its display CSS property.
@@ -561,9 +565,9 @@ define([
     ExternalComponent.prototype.appendToPage = function (parentNode) {
         var namedElements, i;
         parentNode = parentNode || document.body;
-        this._rootElement = parentNode.appendChild(document.importNode(_getModelForSource(this._htmlFilename).body.firstElementChild, true));
+        this._rootElement = parentNode.appendChild(document.importNode(_getModelForSource(this._htmlFilename).firstElementChild, true));
         this._rootElement.setAttribute("id", this._rootElementID);
-        this._rootElementDefaultDisplayMode = this._rootElement.style.display;
+        this._rootElementDefaultDisplayMode = window.getComputedStyle(this._rootElement).display;
         // All elements with an "id" attribute within this structure have to
         // be renamed to make sure their id does not conflict with other elements
         // in the main document (such as elements of another instance of the
@@ -660,7 +664,7 @@ define([
      * @returns {Boolean}
      */
     ExternalComponent.prototype.isVisible = function () {
-        return !(this._rootElement.style.display === "none");
+        return !(window.getComputedStyle(this._rootElement).display === "none");
     };
     /**
      * Sets the display CSS property of the root element of the component to show it.
