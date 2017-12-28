@@ -24,6 +24,13 @@
             },
             "pointLightAmount": "medium"
         },
+        "stereoscopy": {
+            "enabled": false,
+            "mode": "anaglyph",
+            "interocularDistance": 0.085,
+            "convergenceDistance": 20,
+            "sideBySideOriginalAspect": false
+        },
         "shaders": {
             "complexity": "medium"
         },

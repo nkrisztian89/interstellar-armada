@@ -509,6 +509,64 @@ define([
                 MAX_SHININESS_DEFINE_NAME: {
                     name: "maxShininessDefineName",
                     type: "string"
+                },
+                /**
+                 * Name of the shader that should be used when rendering the red filtered part of the anaglyph scene (for the left eye)
+                 */
+                ANAGLYPH_RED_SHADER_NAME: {
+                    name: "anaglyphRedShaderName",
+                    type: "string"
+                },
+                /**
+                 * Name of the shader that should be used when rendering the cyan filtered part of the anaglyph scene (for the right eye)
+                 */
+                ANAGLYPH_CYAN_SHADER_NAME: {
+                    name: "anaglyphCyanShaderName",
+                    type: "string"
+                },
+                /**
+                 * Name of the shader that should be used when rendering the left part of the side by side stereoscopic scene (for the left eye)
+                 */
+                SIDE_BY_SIDE_LEFT_SHADER_NAME: {
+                    name: "sideBySideLeftShaderName",
+                    type: "string"
+                },
+                /**
+                 * Name of the shader that should be used when rendering the right part of the side by side stereoscopic scene (for the right eye)
+                 */
+                SIDE_BY_SIDE_RIGHT_SHADER_NAME: {
+                    name: "sideBySideRightShaderName",
+                    type: "string"
+                },
+                /**
+                 * When coloring objects for an anaglyph stereoscopic scene, the color is a mix of the original color and the luminance
+                 * of the object (filtered with red/cyan), where the ratio of the original is as given in this define
+                 */
+                ANAGLYPH_ORIGINAL_COLOR_RATIO: {
+                    name: "anaglyphOriginalColorRatio",
+                    type: "string"
+                },
+                /**
+                 * The name of the #define that detemines tha anaglyph original color ratio
+                 */
+                ANAGLYPH_ORIGINAL_COLOR_RATIO_DEFINE_NAME: {
+                    name: "anaglyphOriginalColorRatioDefineName",
+                    type: "string"
+                },
+                /**
+                 * The value for the gamma correction applied on anaglyph stereoscopic scenes to compensate for the lower brightness
+                 * of the color-filtered images
+                 */
+                ANAGLYPH_GAMMA: {
+                    name: "anaglyphGamma",
+                    type: "string"
+                },
+                /**
+                 * The name of the #define that detemines tha anaglyph gamma value
+                 */
+                ANAGLYPH_GAMMA_DEFINE_NAME: {
+                    name: "anaglyphGammaDefineName",
+                    type: "string"
                 }
             },
             /**
@@ -1817,6 +1875,45 @@ define([
         return this._shadowDepthRatio;
     };
     /**
+     * Returns whether anaglyph stereoscopic rendering is enabled according to the graphics settings.
+     * @returns {Boolean}
+     */
+    GraphicsSettingsContext.prototype.isAnaglyphRenderingEnabled = function () {
+        return this._dataJSON.stereoscopy.enabled && (this._dataJSON.stereoscopy.mode === "anaglyph");
+    };
+    /**
+     * Returns an object containing the setup parameters for anaglyph stereoscopic rendering according to the graphics settings.
+     * @returns {Object}
+     */
+    GraphicsSettingsContext.prototype.getAnaglyphRenderingSettings = function () {
+        return  {
+            redShader: this.getManagedShader(this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_RED_SHADER_NAME)),
+            cyanShader: this.getManagedShader(this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_CYAN_SHADER_NAME)),
+            interocularDistance: this._dataJSON.stereoscopy.interocularDistance,
+            convergenceDistance: this._dataJSON.stereoscopy.convergenceDistance
+        };
+    };
+    /**
+     * Returns whether side by side stereoscopic rendering is enabled according to the graphics settings.
+     * @returns {Boolean}
+     */
+    GraphicsSettingsContext.prototype.isSideBySideRenderingEnabled = function () {
+        return this._dataJSON.stereoscopy.enabled && (this._dataJSON.stereoscopy.mode === "sideBySide");
+    };
+    /**
+     * Returns an object containing the setup parameters for side by side stereoscopic rendering according to the graphics settings.
+     * @returns {Object}
+     */
+    GraphicsSettingsContext.prototype.getSideBySideRenderingSettings = function () {
+        return  {
+            leftShader: this.getManagedShader(this.getShaderConfig(SHADER_CONFIG.SIDE_BY_SIDE_LEFT_SHADER_NAME)),
+            rightShader: this.getManagedShader(this.getShaderConfig(SHADER_CONFIG.SIDE_BY_SIDE_RIGHT_SHADER_NAME)),
+            interocularDistance: this._dataJSON.stereoscopy.interocularDistance,
+            convergenceDistance: this._dataJSON.stereoscopy.convergenceDistance,
+            originalAspect: this._dataJSON.stereoscopy.sideBySideOriginalAspect
+        };
+    };
+    /**
      * Returns the shader complexity descriptor object for the currently set shader complexity level.
      * @param {Number} [index] If given, the descriptor object belonging to the complexity level at this index is returned instead of the
      * one belonging to the current complexity.
@@ -2077,6 +2174,8 @@ define([
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DEPTH_TEXTURES_DEFINE_NAME)] = managedGL.areDepthTexturesAvailable() ? "1" : "0";
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS);
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_ORIGINAL_COLOR_RATIO_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_ORIGINAL_COLOR_RATIO);
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_GAMMA_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_GAMMA);
         result = this.getShader(shaderName).getManagedShader(replacedDefines, true);
         if (!result.isAllowedByRequirements(this._getShaderRequirements())) {
             application.showError("Shader '" + shaderName + "' has too high requirements!");
@@ -2124,6 +2223,34 @@ define([
                     numSamples: _context.getNumShadowMapSamples()
                 } :
                 null;
+    }
+    /**
+     * Returns the resource for the shader that is to be used when rendering the red part of anaglyph stereoscopic scenes
+     * @returns {ShaderResource}
+     */
+    function getAnaglyphRedShader() {
+        return _context.getShader(_context.getShaderConfig(SHADER_CONFIG.ANAGLYPH_RED_SHADER_NAME));
+    }
+    /**
+     * Returns the resource for the shader that is to be used when rendering the cyan part of anaglyph stereoscopic scenes
+     * @returns {ShaderResource}
+     */
+    function getAnaglyphCyanShader() {
+        return _context.getShader(_context.getShaderConfig(SHADER_CONFIG.ANAGLYPH_CYAN_SHADER_NAME));
+    }
+    /**
+     * Returns the resource for the shader that is to be used when rendering the left part of side by side stereoscopic scenes
+     * @returns {ShaderResource}
+     */
+    function getSideBySideLeftShader() {
+        return _context.getShader(_context.getShaderConfig(SHADER_CONFIG.SIDE_BY_SIDE_LEFT_SHADER_NAME));
+    }
+    /**
+     * Returns the resource for the shader that is to be used when rendering the right part of side by side stereoscopic scenes
+     * @returns {ShaderResource}
+     */
+    function getSideBySideRightShader() {
+        return _context.getShader(_context.getShaderConfig(SHADER_CONFIG.SIDE_BY_SIDE_RIGHT_SHADER_NAME));
     }
     _context = new GraphicsSettingsContext();
     // -------------------------------------------------------------------------
@@ -2194,9 +2321,17 @@ define([
         getShader: _context.getShader.bind(_context),
         getManagedShader: _context.getManagedShader.bind(_context),
         getModel: _context.getModel.bind(_context),
+        isAnaglyphRenderingEnabled: _context.isAnaglyphRenderingEnabled.bind(_context),
+        getAnaglyphRenderingSettings: _context.getAnaglyphRenderingSettings.bind(_context),
+        isSideBySideRenderingEnabled: _context.isSideBySideRenderingEnabled.bind(_context),
+        getSideBySideRenderingSettings: _context.getSideBySideRenderingSettings.bind(_context),
         shouldUseShadowMapping: shouldUseShadowMapping,
         getShadowMappingShader: getShadowMappingShader,
         getShadowMappingSettings: getShadowMappingSettings,
+        getAnaglyphRedShader: getAnaglyphRedShader,
+        getAnaglyphCyanShader: getAnaglyphCyanShader,
+        getSideBySideLeftShader: getSideBySideLeftShader,
+        getSideBySideRightShader: getSideBySideRightShader,
         executeWhenReady: _context.executeWhenReady.bind(_context)
     };
 });

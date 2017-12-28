@@ -72,7 +72,17 @@ define([
              * camera multiplied by this factor.
              * @type Number
              */
-            CAMERA_EXTENSION_FACTOR = 5;
+            CAMERA_EXTENSION_FACTOR = 5,
+            /**
+             * Half of the default interocular distance for stereoscopic cameras, in meters.
+             * @type Number
+             */
+            DEFAULT_INTEROCULAR_HALF_DISTANCE = 0.0635 / 1.5,
+            /**
+             * Default distance of the convergence point from the camera position for stereoscopic cameras, in meters.
+             * @type Number
+             */
+            DEFAULT_STEREOSCOPIC_CONVERGENCE_DISTANCE = 20;
     // #########################################################################
     /**
      * @class This class can update and compute the world position of a camera based on the related configuration settings, which it stores.
@@ -1848,10 +1858,67 @@ define([
          * @type Boolean
          */
         this._combinedExtendedCameraValid = false;
+        /**
+         * Holds the calculated camera position matrix based on the position of the camera and the stereoscopic settings.
+         * @type Float32Array
+         */
+        this._posMatrix = mat.identity4();
+        /**
+         * Holds the calculated camera orientation matrix based on the orientation of the camera and the stereoscopic settings.
+         * @type Float32Array
+         */
+        this._oriMatrix = mat.identity4();
+        // fields for stereoscopic rendering
+        /**
+         * Half of the interocular distance for stereoscopic rendering, in meters.
+         * @type Number
+         */
+        this._interocularHalfDistance = DEFAULT_INTEROCULAR_HALF_DISTANCE;
+        /**
+         * The distance between the convergence point and the camera position for stereoscopic rendering, in meters.
+         * @type Number
+         */
+        this._stereoscopicConvergenceDistance = DEFAULT_STEREOSCOPIC_CONVERGENCE_DISTANCE;
+        /**
+         * The calculated value of the angle the stereoscopic cameras need to be rotated, based on the interocular distance and 
+         * the distance to the convergence point. Do not modify directly. In radians.
+         * @type Number
+         */
+        this._stereoAngle = 0;
+        /**
+         * The current stereoscopic mode of the camera. Influences the position and orientation matrices returned using the
+         * getter methods.
+         * (enum Camera.Stereoscopy)
+         * @type Number
+         */
+        this._stereoscopy = Camera.Stereoscopy.NONE;
+        /**
+         * Whether the camera currently corresponds to the left eye in a stereoscopic setting.
+         * @type Boolean
+         */
+        this._leftEye = false;
+        /**
+         * Whether the camera currently corresponds to the right eye in a stereoscopic setting.
+         * @type Boolean
+         */
+        this._rightEye = false;
         // update to have appropriate starting values
         this._updateFOV();
         this._updateSpan();
+        this._updateStereoAngle();
     }
+    /**
+     * Each camera can be (is) in one of these states, corresponding to what role they are used in currently for stereoscopic rendering.
+     * @enum {Number}
+     */
+    Camera.Stereoscopy = {
+        /** Non-stereoscopic camera */
+        NONE: 0,
+        /** Camera currently used to render the image corresponding to the left eye in a stereoscopic setting */
+        LEFT: 1,
+        /** Camera currently used to render the image corresponding to the right eye in a stereoscopic setting */
+        RIGHT: 2
+    };
     /**
      * @enum {Number}
      * Options about how should the combination of the two configurations be calculated when the camera is transitioning from one
@@ -1940,13 +2007,28 @@ define([
     };
     /**
      * Returns the 4x4 translation matrix describing the current position of the camera in world space.
+     * Considers the stereoscopic state of the camera.
      * @returns {Float32Array}
      */
     Camera.prototype.getCameraPositionMatrix = function () {
-        return this._object3D.getPositionMatrix();
+        var ori;
+        mat.setMatrix4(this._posMatrix, this._object3D.getPositionMatrix());
+        if (this._leftEye) {
+            ori = this._object3D.getOrientationMatrix();
+            this._posMatrix[12] -= this._interocularHalfDistance * ori[0];
+            this._posMatrix[13] -= this._interocularHalfDistance * ori[1];
+            this._posMatrix[14] -= this._interocularHalfDistance * ori[2];
+        } else if (this._rightEye) {
+            ori = this._object3D.getOrientationMatrix();
+            this._posMatrix[12] += this._interocularHalfDistance * ori[0];
+            this._posMatrix[13] += this._interocularHalfDistance * ori[1];
+            this._posMatrix[14] += this._interocularHalfDistance * ori[2];
+        }
+        return this._posMatrix;
     };
     /**
      * Returns the 3D vector describing the current position of the camera in world space.
+     * Does not consider the stereoscopic state of the camera.
      * @returns {Number[3]}
      */
     Camera.prototype.getCameraPositionVector = function () {
@@ -1954,10 +2036,17 @@ define([
     };
     /**
      * Returns the 4x4 rotation matrix describing the current orientaton of the camera in world space.
+     * Considers the stereoscopic state of the camera.
      * @returns {Float32Array}
      */
     Camera.prototype.getCameraOrientationMatrix = function () {
-        return this._object3D.getOrientationMatrix();
+        mat.setMatrix4(this._oriMatrix, this._object3D.getOrientationMatrix());
+        if (this._leftEye) {
+            mat.rotate4(this._oriMatrix, mat.getRowB43(this._oriMatrix), this._stereoAngle);
+        } else if (this._rightEye) {
+            mat.rotate4(this._oriMatrix, mat.getRowB43(this._oriMatrix), -this._stereoAngle);
+        }
+        return this._oriMatrix;
     };
     /**
      * Sets a new position matrix for the camera. The update() method calculates the position and this should not be called from outside.
@@ -2032,6 +2121,7 @@ define([
     /**
      * Returns the current view matrix based on the position and orientation. This will be the inverse transformation
      * that is to be applied to objects to transform them from world space into camera space.
+     * Considers the stereoscopic state of the camera.
      * @returns {Float32Array}
      */
     Camera.prototype.getViewMatrix = function () {
@@ -2043,22 +2133,24 @@ define([
     };
     /**
      * Returns the inverse of the position matrix of the camera. Uses caching to eliminate unnecessary calculations.
+     * Considers the stereoscopic state of the camera.
      * @returns {Float32Array}
      */
     Camera.prototype.getInversePositionMatrix = function () {
         if (!this._inversePositionMatrixValid) {
-            mat.setInverseOfTranslation4(this._inversePositionMatrix, this._object3D.getPositionMatrix());
+            mat.setInverseOfTranslation4(this._inversePositionMatrix, this.getCameraPositionMatrix());
             this._inversePositionMatrixValid = true;
         }
         return this._inversePositionMatrix;
     };
     /**
      * Returns the inverse of the orientation matrix of the camera. Uses caching to eliminate unnecessary calculations.
+     * Considers the stereoscopic state of the camera.
      * @returns {Float32Array}
      */
     Camera.prototype.getInverseOrientationMatrix = function () {
         if (!this._inverseOrientationMatrixValid) {
-            mat.setInverseOfRotation4(this._inverseOrientationMatrix, this._object3D.getOrientationMatrix());
+            mat.setInverseOfRotation4(this._inverseOrientationMatrix, this.getCameraOrientationMatrix());
             this._inverseOrientationMatrixValid = true;
         }
         return this._inverseOrientationMatrix;
@@ -2606,6 +2698,12 @@ define([
                 this._currentConfiguration.getSpan();
     };
     /**
+     * Updates the cached value of the angle the camera needs to be rotated for stereoscopic rendering.
+     */
+    Camera.prototype._updateStereoAngle = function () {
+        this._stereoAngle = Math.atan(this._interocularHalfDistance / this._stereoscopicConvergenceDistance);
+    };
+    /**
      * Calculates and sets the world position and orientation and the relative velocity vector of the camera based on the configuration 
      * settings, the transition (if one is in progress) and the commands that were issued by the controller in this simulation step.
      * @param {Number} dt The time that has passed since the last simulation step (in milliseconds)
@@ -2696,6 +2794,62 @@ define([
         }
     };
     /**
+     * Puts the camera in the passed stereoscopic state.
+     * @param {Number} mode (enum Camera.Stereoscopy)
+     */
+    Camera.prototype.setStereoscopy = function (mode) {
+        if (this._stereoscopy !== mode) {
+            this._stereoscopy = mode;
+            this._leftEye = (mode === Camera.Stereoscopy.LEFT);
+            this._rightEye = (mode === Camera.Stereoscopy.RIGHT);
+            this._viewMatrixValid = false;
+            this._inversePositionMatrixValid = false;
+            this._inverseOrientationMatrixValid = false;
+        }
+    };
+    /**
+     * Puts the camera in the stereoscopic state corresponding to the left eye.
+     */
+    Camera.prototype.setLeftEye = function () {
+        this.setStereoscopy(Camera.Stereoscopy.LEFT);
+    };
+    /**
+     * Puts the camera in the stereoscopic state corresponding to the right eye.
+     */
+    Camera.prototype.setRightEye = function () {
+        this.setStereoscopy(Camera.Stereoscopy.RIGHT);
+    };
+    /**
+     * Sets a new interocular distance used for stereoscopic rendering.
+     * @param {Number} value In meters.
+     */
+    Camera.prototype.setInterocularDistance = function (value) {
+        this._interocularHalfDistance = value * 0.5;
+        this._updateStereoAngle();
+    };
+    /**
+     * Sets a new convergence distance (distance between convergence point and camera position) used for stereoscopic rendering.
+     * @param {Number} value In meters.
+     */
+    Camera.prototype.setStereoscopicConvergenceDistance = function (value) {
+        this._stereoscopicConvergenceDistance = value;
+        this._updateStereoAngle();
+    };
+    /**
+     * Copies the passed values to be the stereoscopic settings of this camera.
+     * @param {Number} mode (enum Camera.Stereoscopy)
+     * @param {Number} interocularHalfDistance
+     * @param {Number} convergenceDistance
+     */
+    Camera.prototype.copyStereoscopy = function (mode, interocularHalfDistance, convergenceDistance) {
+        this.setStereoscopy(mode);
+        if (mode !== Camera.Stereoscopy.NONE) {
+            this._interocularHalfDistance = interocularHalfDistance;
+            this._stereoscopicConvergenceDistance = convergenceDistance;
+            this._updateStereoAngle();
+        }
+    };
+    /**
      * Returns (and caches) a camera that has the same overall parameters as this one (with a free configuration), but its view frustum
      * starts where this one's ends and extends beyond it with a total view distance determined by the CAMERA_EXTENSION_FACTOR.
      * @param {Boolean} [includeOriginalFrustum=false] If true, the created extended camera will have the same near plane as the original,
@@ -2705,54 +2859,55 @@ define([
     Camera.prototype.getExtendedCamera = function (includeOriginalFrustum) {
         var /**@type Number*/ span, /**@type Camera*/ result;
         if (!includeOriginalFrustum && this._extendedCameraValid) {
-            return this._extendedCamera;
-        }
-        if (includeOriginalFrustum && this._combinedExtendedCameraValid) {
-            return this._combinedExtendedCamera;
-        }
-        if (this._fov === 0) {
-            this._updateFOV();
-            this._updateSpan();
-        }
-        span = includeOriginalFrustum ? this._span : this._span / this._near * this._viewDistance;
-        result = includeOriginalFrustum ? this._combinedExtendedCamera : this._extendedCamera;
-        if (!result) {
-            result = new Camera(
-                    this._scene,
-                    this._aspect,
-                    this._usesVerticalValues,
-                    this._viewDistance * CAMERA_EXTENSION_FACTOR,
-                    getFreeCameraConfiguration(
-                            false,
-                            this._object3D.getPositionMatrix(),
-                            this._object3D.getOrientationMatrix(),
-                            this._fov,
-                            this._fov, this._fov,
-                            span,
-                            span, span));
+            result = this._extendedCamera;
+        } else if (includeOriginalFrustum && this._combinedExtendedCameraValid) {
+            result = this._combinedExtendedCamera;
         } else {
-            result.getConfiguration().setToFree(
-                    false,
-                    this._object3D.getPositionMatrix(),
-                    this._object3D.getOrientationMatrix(),
-                    this._fov,
-                    this._fov, this._fov,
-                    span,
-                    span, span);
-            result.init(this._scene,
-                    this._aspect,
-                    this._usesVerticalValues,
-                    this._viewDistance * CAMERA_EXTENSION_FACTOR,
-                    result.getConfiguration());
+            if (this._fov === 0) {
+                this._updateFOV();
+                this._updateSpan();
+            }
+            span = includeOriginalFrustum ? this._span : this._span / this._near * this._viewDistance;
+            result = includeOriginalFrustum ? this._combinedExtendedCamera : this._extendedCamera;
+            if (!result) {
+                result = new Camera(
+                        this._scene,
+                        this._aspect,
+                        this._usesVerticalValues,
+                        this._viewDistance * CAMERA_EXTENSION_FACTOR,
+                        getFreeCameraConfiguration(
+                                false,
+                                this._object3D.getPositionMatrix(),
+                                this._object3D.getOrientationMatrix(),
+                                this._fov,
+                                this._fov, this._fov,
+                                span,
+                                span, span));
+            } else {
+                result.getConfiguration().setToFree(
+                        false,
+                        this._object3D.getPositionMatrix(),
+                        this._object3D.getOrientationMatrix(),
+                        this._fov,
+                        this._fov, this._fov,
+                        span,
+                        span, span);
+                result.init(this._scene,
+                        this._aspect,
+                        this._usesVerticalValues,
+                        this._viewDistance * CAMERA_EXTENSION_FACTOR,
+                        result.getConfiguration());
+            }
+            result.update(0);
+            if (!includeOriginalFrustum) {
+                this._extendedCameraValid = true;
+                this._extendedCamera = result;
+            } else {
+                this._combinedExtendedCameraValid = true;
+                this._combinedExtendedCamera = result;
+            }
         }
-        result.update(0);
-        if (!includeOriginalFrustum) {
-            this._extendedCameraValid = true;
-            this._extendedCamera = result;
-        } else {
-            this._combinedExtendedCameraValid = true;
-            this._combinedExtendedCamera = result;
-        }
+        result.copyStereoscopy(this._stereoscopy, this._interocularHalfDistance, this._stereoscopicConvergenceDistance);
         return result;
     };
     // -------------------------------------------------------------------------

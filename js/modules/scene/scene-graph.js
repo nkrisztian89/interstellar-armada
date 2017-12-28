@@ -129,6 +129,17 @@ define([
              */
             COLOR_MASK_ALL_TRUE = [true, true, true, true],
             /**
+             * This name is used for the full viewport quad models created for stereoscopic rendering (render-to-texture)
+             * @type String
+             */
+            STEREOSCOPY_FVQ_NAME = "fvq",
+            /**
+             * This name is used for the framebuffers created for stereoscopic rendering (render-to-texture)
+             * @type String
+             */
+            STEREOSCOPY_FRAMEBUFFER_NAME = "stereo",
+            UNIFORM_STEREOSCOPY_TEXTURE_NAME = "stereo",
+            /**
              * This string is available to other modules through a public function so that an arbitrary piece of information from this 
              * module can be exposed for debug purposes.
              * @type String
@@ -1247,12 +1258,41 @@ define([
          */
         this._shadowMapSampleOffsets = [];
         /**
-         * The functions that can be used to set the values of uniform variables in shaders when rendering this scene. When rendering any
-         * object in this scene with a shader that has a uniform with one of the names this object has a function for, its values will be 
-         * calculated with the function and passed to the shader.
+         * The functions that can be used to set the values of non-camera-related (e.g. light) uniform variables (which need to be
+         * updated once every frame) in shaders when rendering this scene. When rendering any object in this scene with a shader 
+         * that has a uniform with one of the names this object has a function for, its values will be calculated with the function 
+         * and passed to the shader.
          * @type Object.<String, Function>
          */
         this._uniformValueFunctions = {};
+        /**
+         * Same as _uniformValueFunctions, but for camera-related uniforms (which might need to be updated several times during one 
+         * frame - for extended camera / stereographic rendering)
+         * @type Object.<String, Function>
+         */
+        this._cameraUniformValueFunctions = {};
+        /**
+         * Same as _uniformValueFunctions, but for uniforms that only need to be updated when a context is set up. (e.g. shadow mapping
+         * settings)
+         * @type Object.<String, Function>
+         */
+        this._constantUniformValueFunctions = {};
+        /**
+         * The uniform value functions to be used for the shaders rendering the full viewport quads containing rendered stereoscopic images
+         * of this scene.
+         * @type Object.<String, Function>
+         */
+        this._stereoscopicUniformValueFunctions = {};
+        /**
+         * The index of the texture unit where the framebuffer texture used for rendering the stereoscopic images of this scene was 
+         * last bound.
+         * @type Number
+         */
+        this._stereoscopicTextureUnit = 0;
+        // setting up the uniform value function for stereoscopic rendering (to pass the bound framebuffer)
+        this._stereoscopicUniformValueFunctions[managedGL.getUniformName(managedGL.getTextureUniformRawName(UNIFORM_STEREOSCOPY_TEXTURE_NAME))] = function () {
+            return this._stereoscopicTextureUnit;
+        }.bind(this);
         /**
          * This array that stores those uniform value function bindings that are not the same across all contexts the scene has been added to.
          * In each element of the array, the bindings corresponding to the context with the same index are stored. For example, the function
@@ -1261,6 +1301,12 @@ define([
          * @type Array.<Object.<String, Function>>
          */
         this._contextUniformValueFunctions = [];
+        /**
+         * Same as _contextUniformValueFunctions, but for uniforms that only need to be updated when a context is set up. (e.g. shadow mapping
+         * settings)
+         * @type Array.<Object.<String, Function>>
+         */
+        this._contextConstantUniformValueFunctions = [];
         /**
          * Whether light sources and objects in the scene should be animated when rendering based on the elapsed time since the last render.
          * @type Boolean
@@ -1312,12 +1358,24 @@ define([
          */
         this._uniformsUpdatedForFrame = false;
         /**
-         * An associative array of boolean flags storing whether the values of the scene uniforms have been updated for the current frame 
-         * in the different shaders, with the names of the shaders being the keys. This is used to avoid updating the scene uniforms for
-         * the same shader multiple times during one frame.
+         * An associative array of boolean flags storing whether the values of the non-camera related (e.g. light) scene uniforms (which 
+         * need to be updated once every frame) have been updated for the current frame in the different shaders, with the names of the 
+         * shaders being the keys. This is used to avoid updating the scene uniforms for the same shader multiple times during one frame.
          * @type Object.<String, Boolean>
          */
         this._uniformsUpdated = null;
+        /**
+         * Similar to _uniformsUpdated, but marks updates for camera-related uniforms, which might need to be updated multiple times during
+         * a frame - for extended camera / stereographic rendering.
+         * @type Object.<String, Boolean>
+         */
+        this._cameraUniformsUpdated = null;
+        /**
+         * Similar to _uniformsUpdated, but marks updates for uniforms which only need to be updated when a context is set up (e.g. shadow
+         * mapping settings)
+         * @type Object.<String, Boolean>
+         */
+        this._constantUniformsUpdated = null;
         /**
          * Used for debug stat logging - counting the number of nodes in the scene.
          * @type Number
@@ -1338,10 +1396,58 @@ define([
          * @type ModelDebugStats
          */
         this._shadowMapDebugStats = null;
+        /**
+         * (enum Scene.StereoscopicMode) In what stereoscopic mode to render this scene.
+         * @type String
+         */
+        this._stereoscopicMode = Scene.StereoscopicMode.NONE;
+        /**
+         * For anaglyph stereoscopic rendering, the shader to be used for rendering scene for the left eye (with a red filter)
+         * @type ManagedShader
+         */
+        this._redShader = null;
+        /**
+         * For anaglyph stereoscopic rendering, the shader to be used for rendering scene for the right eye (with a cyan filter)
+         * @type ManagedShader
+         */
+        this._cyanShader = null;
+        /**
+         * The framebuffer used for rendering the left and right eye images when in stereoscopic mode
+         * @type FrameBuffer
+         */
+        this._stereoscopicFrameBuffer = null;
+        /**
+         * For side by side stereoscopic rendering, the shader to be used for rendering scene for the left eye (offset to the left)
+         * @type ManagedShader
+         */
+        this._leftShader = null;
+        /**
+         * For side by side stereoscopic rendering, the shader to be used for rendering scene for the right eye (offset to the right)
+         * @type ManagedShader
+         */
+        this._rightShader = null;
+        /**
+         * When in side by side stereoscopic rendering mode, this value determines whether to use the original aspect ratio when 
+         * rendering the two images (false means rendering the original area, condensed, thus at half the aspect ratio)
+         * @type Boolean
+         */
+        this._sideBySideOriginalAspect = false;
         this._initNodes();
         this.clearPointLights();
         this._setGeneralUniformValueFunctions();
     }
+    /**
+     * Scenes can be rendered in one of these stereoscopic modes
+     * @enum String
+     */
+    Scene.StereoscopicMode = {
+        /** Non-stereoscopig (plain, simple) rendering */
+        NONE: "none",
+        /** Anaglyph stereoscopic rendering - the scene rendered twice, on top of itself, using two different color filters */
+        ANAGLYPH: "anaglyph",
+        /** Side by side stereoscopic rendering - the scene rendered twice, reduced to 50% horizontal size, on the left and right side of the viewport */
+        SIDE_BY_SIDE: "sideBySide"
+    };
     /**
      * Sets the uniform value functions for the scene that can be used to set all the uniforms referring to data that belongs to the whole
      * scene. After this, any shader used when rendering objects of this scene using any of these uniforms will get the data.
@@ -1365,22 +1471,22 @@ define([
         this.setUniformValueFunction(UNIFORM_SPOT_LIGHTS_ARRAY_NAME, function () {
             return this._spotLightUniformData;
         });
-        this.setUniformValueFunction(UNIFORM_VIEW_MATRIX_NAME, function () {
+        this.setCameraUniformValueFunction(UNIFORM_VIEW_MATRIX_NAME, function () {
             return this._camera.getViewMatrix();
         });
-        this.setUniformValueFunction(UNIFORM_VIEW_ORIENTATION_MATRIX_NAME, function () {
+        this.setCameraUniformValueFunction(UNIFORM_VIEW_ORIENTATION_MATRIX_NAME, function () {
             return this._camera.getInverseOrientationMatrix();
         });
-        this.setUniformValueFunction(UNIFORM_VIEW_ASPECT_NAME, function () {
+        this.setCameraUniformValueFunction(UNIFORM_VIEW_ASPECT_NAME, function () {
             return this._camera.getAspect();
         });
-        this.setUniformValueFunction(lights.UNIFORM_PROJECTION_MATRIX_NAME, function () {
+        this.setCameraUniformValueFunction(lights.UNIFORM_PROJECTION_MATRIX_NAME, function () {
             return this._camera.getProjectionMatrix();
         });
-        this.setUniformValueFunction(UNIFORM_VIEW_PROJECTION_MATRIX_NAME, function () {
+        this.setCameraUniformValueFunction(UNIFORM_VIEW_PROJECTION_MATRIX_NAME, function () {
             return mat.prod4Aux(this._camera.getViewMatrix(), this._camera.getProjectionMatrix());
         });
-        this.setUniformValueFunction(UNIFORM_EYE_POSITION_VECTOR_NAME, function () {
+        this.setCameraUniformValueFunction(UNIFORM_EYE_POSITION_VECTOR_NAME, function () {
             return vec.floatVector3Aux(this._camera.getCameraPositionVector());
         });
     };
@@ -1391,12 +1497,12 @@ define([
      * @param {Number} contextIndex
      */
     Scene.prototype._setContextUniformValueFunctions = function (contextIndex) {
-        var gl = this._contexts[contextIndex].gl;
+        var gl = this._contexts[contextIndex].gl,
+                viewportSize = [0, 0];
         this.setContextUniformValueFunction(contextIndex, UNIFORM_VIEWPORT_SIZE_NAME, function () {
-            return [
-                gl.drawingBufferWidth * this._width,
-                gl.drawingBufferHeight * this._height
-            ];
+            viewportSize[0] = gl.drawingBufferWidth * this._width;
+            viewportSize[1] = gl.drawingBufferHeight * this._height;
+            return viewportSize;
         });
     };
     /**
@@ -1410,31 +1516,37 @@ define([
         var i;
         // there are some functions that are the same for all contexts, so only set these once, when the first context is chosen
         if (contextIndex === 0) {
-            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME, function () {
+            this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME, function () {
                 return this._shadowMapRanges.length;
             });
-            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME, function () {
+            this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME, function () {
                 return this._shadowMapRanges;
             });
-            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME, function () {
+            this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME, function () {
                 return this._shadowMapDepthRatio;
             });
-            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_TEXTURE_SIZE_NAME, function () {
+            this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_TEXTURE_SIZE_NAME, function () {
                 return this._shadowMapTextureSize;
             });
-            this.setUniformValueFunction(UNIFORM_SHADOW_MAPPING_SHADOW_MAP_SAMPLE_OFFSET_ARRAY_NAME, function () {
+            this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_SHADOW_MAP_SAMPLE_OFFSET_ARRAY_NAME, function () {
                 return this._shadowMapSampleOffsets;
             });
         }
         // if a specific index was given, set the values functions for that context
         if (contextIndex !== undefined) {
-            this.setContextUniformValueFunction(contextIndex, UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME, function () {
+            // NOTE: if multiple scenes use the same, shadow-map-utilizing shader, the uniform value set below will clash 
+            // as it is specified as a constant, set only for the first frame
+            // However, this is not a use case for now, so we can skip updating the uniform for better performance
+            // To avoid clashing the below code should be refactored so that the function simply returns the array, which is
+            // created during the first frame
+            this.setContextConstantUniformValueFunction(contextIndex, UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME, function () {
                 var j, k, shadowMaps = [];
                 for (j = 0; (j < this._directionalLights.length) && (j < this._maxRenderedDirectionalLights); j++) {
                     for (k = 0; k < this._shadowMapRanges.length; k++) {
                         shadowMaps.push(this._contexts[contextIndex].getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getLastTextureBindLocation(this._contexts[contextIndex].getName()));
                     }
                 }
+                console.log("update");
                 return new Int32Array(shadowMaps);
             });
             // if no specific index was given, set the functions up for all contexts
@@ -1530,28 +1642,98 @@ define([
         return SHADOW_MAP_BUFFER_NAME_PREFIX + lightIndex + SHADOW_MAP_BUFFER_NAME_INFIX;
     };
     /**
+     * Returns the width a rendering of this scene should use when rendered on the passed context, in pixels.
+     * @param {ManagedGLContext} context
+     * @returns {Number}
+     */
+    Scene.prototype._getWidthInPixels = function (context) {
+        return context.gl.drawingBufferWidth * this._width;
+    };
+    /**
+     * Returns the height a rendering of this scene should use when rendered on the passed context, in pixels.
+     * @param {ManagedGLContext} context
+     * @returns {Number}
+     */
+    Scene.prototype._getHeightInPixels = function (context) {
+        return context.gl.drawingBufferHeight * this._height;
+    };
+    /**
      * Does all preparations needed to render the scene to the associated context with the given index, according to the current scene 
      * settings. If no index is given, preparations are done for all contexts.
      * @param {Number} [contextIndex]
      */
     Scene.prototype._setupContext = function (contextIndex) {
-        var i;
+        var i, context;
+        this._constantUniformsUpdated = {};
         // if a specific index is given, set up the corresponding context
         if (contextIndex !== undefined) {
+            context = this._contexts[contextIndex];
             this._setContextUniformValueFunctions(contextIndex);
             // if shadow mapping is to be used, some additional preparations are needed
             if (this._shadowMappingEnabled) {
-                this._contexts[contextIndex].addShader(this._shadowMappingShader);
+                context.addShader(this._shadowMappingShader);
                 this._setShadowMappedShaderUniformValueFunctions(contextIndex);
             }
             for (i = 0; (i < this._directionalLights.length) && (i < this._maxRenderedDirectionalLights); i++) {
                 this._directionalLights[i].addToContext(this._contexts[contextIndex], this._shadowMappingEnabled, this._getShadowMapBufferNamePrefix(i), this._shadowMapRanges.length, this._shadowMapTextureSize);
+            }
+            // set up stereoscopic rendering
+            if (this._stereoscopicMode !== Scene.StereoscopicMode.NONE) {
+                // set up anaglyph stereoscopic rendering
+                if (this._stereoscopicMode === Scene.StereoscopicMode.ANAGLYPH) {
+                    context.addShader(this._redShader);
+                    context.addShader(this._cyanShader);
+                // set up side by side stereoscopic rendering
+                } else if (this._stereoscopicMode === Scene.StereoscopicMode.SIDE_BY_SIDE) {
+                    context.addShader(this._leftShader);
+                    context.addShader(this._rightShader);
+                }
+                this._stereoscopicFrameBuffer = this._stereoscopicFrameBuffer || new managedGL.FrameBuffer(STEREOSCOPY_FRAMEBUFFER_NAME,
+                        this._getWidthInPixels(context), this._getHeightInPixels(context), false);
+                context.addFrameBuffer(this._stereoscopicFrameBuffer);
+                this._fvq = this._fvq || egomModel.fvqModel(STEREOSCOPY_FVQ_NAME);
+                this._fvq.addToContext(context, false);
             }
             // if no specific index is given, set up all associated contexts
         } else {
             for (i = 0; i < this._contexts.length; i++) {
                 this._setupContext(i);
             }
+        }
+    };
+    /**
+     * Sets the scene up for anaglyph stereoscopic rendering mode, according to the passed parameters.
+     * Call before setting up the contexts!
+     * @param {Object} params
+     */
+    Scene.prototype.setAnaglyphRendering = function (params) {
+        this._stereoscopicMode = Scene.StereoscopicMode.ANAGLYPH;
+        this._redShader = params.redShader;
+        this._cyanShader = params.cyanShader;
+        if (params.interocularDistance !== undefined) {
+            this._camera.setInterocularDistance(params.interocularDistance);
+        }
+        if (params.convergenceDistance !== undefined) {
+            this._camera.setStereoscopicConvergenceDistance(params.convergenceDistance);
+        }
+    };
+    /**
+     * Sets the scene up for side by side stereoscopic rendering mode, according to the passed parameters.
+     * Call before setting up the contexts!
+     * @param {Object} params
+     */
+    Scene.prototype.setSideBySideRendering = function (params) {
+        this._stereoscopicMode = Scene.StereoscopicMode.SIDE_BY_SIDE;
+        this._leftShader = params.leftShader;
+        this._rightShader = params.rightShader;
+        if (params.interocularDistance !== undefined) {
+            this._camera.setInterocularDistance(params.interocularDistance);
+        }
+        if (params.convergenceDistance !== undefined) {
+            this._camera.setStereoscopicConvergenceDistance(params.convergenceDistance);
+        }
+        if (params.originalAspect !== undefined) {
+            this._sideBySideOriginalAspect = params.originalAspect;
         }
     };
     /**
@@ -1666,6 +1848,7 @@ define([
             this._numShadowMapSamples = 0;
             this._shadowMapSampleOffsets = [];
         }
+        this._constantUniformsUpdated = {};
     };
     /**
      * 
@@ -1968,9 +2151,9 @@ define([
         return this._lodContext;
     };
     /**
-     * Sets the passed function to be called when a shader asks for the value of a uniform with the given name while rendering this scene.
-     * The name given here is appropriately prefixed/suffixed by ManagedGL. The value of this will be the scene instance, when calling the
-     * function.
+     * Sets the passed function to be called when a shader asks for the value of a non-camera-related uniform (which need to be updated
+     * once every frame) with the given name while rendering this scene. The name given here is appropriately prefixed/suffixed by ManagedGL. 
+     * The value of this will be the scene instance, when calling the function.
      * @param {String} rawUniformName
      * @param {Function} valueFunction
      */
@@ -1978,10 +2161,28 @@ define([
         this._uniformValueFunctions[managedGL.getUniformName(rawUniformName)] = valueFunction.bind(this);
     };
     /**
+     * Same as setUniformValueFunction, but for camera-related uniforms (which might need to be updated multiple times during one
+     * frame, such as for extended or stereoscopic cameras)
+     * @param {String} rawUniformName
+     * @param {Function} valueFunction
+     */
+    Scene.prototype.setCameraUniformValueFunction = function (rawUniformName, valueFunction) {
+        this._cameraUniformValueFunctions[managedGL.getUniformName(rawUniformName)] = valueFunction.bind(this);
+    };
+    /**
+     * Same as setUniformValueFunction, but for uniforms which only need to be updated when the contexts are set up.
+     * @param {String} rawUniformName
+     * @param {Function} valueFunction
+     */
+    Scene.prototype.setConstantUniformValueFunction = function (rawUniformName, valueFunction) {
+        this._constantUniformValueFunctions[managedGL.getUniformName(rawUniformName)] = valueFunction.bind(this);
+    };
+    /**
      * Sets the passed function to be called when a shader asks for the value of a uniform with the given name while rendering this scene to
      * the associated context with the given index.
      * The name given here is appropriately prefixed/suffixed by ManagedGL. The value of this will be the scene instance, when calling the
      * function.
+     * Use for uniforms which need to be updated every frame.
      * @param {Number} contextIndex
      * @param {String} rawUniformName
      * @param {Function} valueFunction
@@ -1991,6 +2192,18 @@ define([
             this._contextUniformValueFunctions[contextIndex] = {};
         }
         this._contextUniformValueFunctions[contextIndex][managedGL.getUniformName(rawUniformName)] = valueFunction.bind(this);
+    };
+    /**
+     * Same as setContextUniformValueFunction, but for uniforms which only need to be updated when the context is set up.
+     * @param {Number} contextIndex
+     * @param {String} rawUniformName
+     * @param {Function} valueFunction
+     */
+    Scene.prototype.setContextConstantUniformValueFunction = function (contextIndex, rawUniformName, valueFunction) {
+        if (!this._contextConstantUniformValueFunctions[contextIndex]) {
+            this._contextConstantUniformValueFunctions[contextIndex] = {};
+        }
+        this._contextConstantUniformValueFunctions[contextIndex][managedGL.getUniformName(rawUniformName)] = valueFunction.bind(this);
     };
     /**
      * Adds a new camera configuration that will be associated with the scene itself.
@@ -2054,11 +2267,21 @@ define([
      * @param {ManagedShader} shader
      */
     Scene.prototype.assignUniforms = function (context, shader) {
-        if (!this._uniformsUpdated[shader.getName()]) {
+        var shaderName = shader.getName();
+        if (!this._uniformsUpdated[shaderName]) {
             shader.assignUniforms(context, this._uniformValueFunctions);
             shader.assignUniforms(context, this._contextUniformValueFunctions[this._contexts.indexOf(context)]);
-            this._uniformsUpdated[shader.getName()] = true;
+            this._uniformsUpdated[shaderName] = true;
             this._uniformsUpdatedForFrame = true;
+        }
+        if (!this._cameraUniformsUpdated[shaderName]) {
+            shader.assignUniforms(context, this._cameraUniformValueFunctions);
+            this._cameraUniformsUpdated[shaderName] = true;
+        }
+        if (!this._constantUniformsUpdated[shaderName]) {
+            shader.assignUniforms(context, this._constantUniformValueFunctions);
+            shader.assignUniforms(context, this._contextConstantUniformValueFunctions[this._contexts.indexOf(context)]);
+            this._constantUniformsUpdated[shaderName] = true;
         }
     };
     /**
@@ -2275,6 +2498,65 @@ define([
         }
     };
     /**
+     * An internal method used for rendering all objects, but without any proper frame data / shadow map preparation.
+     * Used multiple times within one frame for stereoscopic rendering.
+     * @param {ManagedGLContext} context
+     * @param {Boolean} distanceQueuesNotEmpty
+     * @param {Boolean} frontQueuesNotEmpty
+     * @param {Number} widthInPixels
+     * @param {Number} heightInPixels
+     * @param {Number} dt The time elapsed since the last render step, for animation, in milliseconds
+     */
+    Scene.prototype._render = function (context, distanceQueuesNotEmpty, frontQueuesNotEmpty, widthInPixels, heightInPixels, dt) {
+        var gl = context.gl, clearBits, originalCamera;
+        if (this._shouldClearColorOnRender) {
+            context.setColorMask(this._clearColorMask);
+            gl.clearColor(this._clearColor[0], this._clearColor[1], this._clearColor[2], this._clearColor[3]);
+        }
+        // glClear is affected by the depth mask, so we need to turn it on here!
+        // (it's disabled for the second (transparent) render pass)
+        context.setDepthMask(true);
+        // clearing color and depth buffers as set for this scene
+        clearBits = this._shouldClearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
+        clearBits = this._shouldClearDepthOnRender ? clearBits | gl.DEPTH_BUFFER_BIT : clearBits;
+        gl.clear(clearBits);
+        // -----------------------------------------------------------------------
+        // rendering the queues storing distant main objects
+        if (distanceQueuesNotEmpty) {
+            // switching to an extended camera
+            originalCamera = this._camera;
+            this._camera = this._camera.getExtendedCamera();
+            this._cameraUniformsUpdated = {};
+            // dynamic lights are not support for these objects as they are not really visible but expensive
+            this._clearDynamicLightUniformData();
+            this._renderMainObjects(context, widthInPixels, heightInPixels, this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX], true);
+            // switching back the camera
+            this._camera = originalCamera;
+            // there is no overlap in the two view frustums, simply a new blank depth buffer can be used for the front objects
+            context.setDepthMask(true);
+            gl.clear(gl.DEPTH_BUFFER_BIT);
+            // reset boolean flags as scene uniforms will have to be updated for all used shaders again
+            this._cameraUniformsUpdated = {};
+        }
+        // -----------------------------------------------------------------------
+        // rendering the queues storing front (close) main objects
+        // the background objects are rendered within _renderMainObjects so it needs to be called here even
+        // if there are no main objects in the scene at all 
+        if (frontQueuesNotEmpty || !distanceQueuesNotEmpty) {
+            // filling the arrays storing the light source data for uniforms that need it
+            this._updateDynamicLightUniformData(this._shouldAnimate ? dt : 0);
+            if (context.getCurrentShader()) {
+                // uniforms need to be updated with the new camera and light data in case the first used shader for the front object is the
+                // same as the last one used for the distant objects
+                this.assignUniforms(context, context.getCurrentShader());
+            }
+            this._renderMainObjects(context, widthInPixels, heightInPixels, this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX], !distanceQueuesNotEmpty);
+        }
+        // -----------------------------------------------------------------------
+        // rendering the UI objects
+        this._renderUIObjects(context, widthInPixels, heightInPixels);
+    };
+    /**
      * Renders the whole scene applying the general configuration and then rendering all background and main scene objects (as well as
      * shadow maps if applicable).
      * @param {ManagedGLContext} context
@@ -2282,11 +2564,12 @@ define([
      */
     Scene.prototype.render = function (context, dt) {
         var gl = context.gl,
-                clearBits, originalCamera, frontQueuesNotEmpty, distanceQueuesNotEmpty,
+                frontQueuesNotEmpty, distanceQueuesNotEmpty,
                 bufferWidth = gl.drawingBufferWidth,
                 bufferHeight = gl.drawingBufferHeight,
                 widthInPixels = bufferWidth * this._width,
-                heightInPixels = bufferHeight * this._height;
+                heightInPixels = bufferHeight * this._height,
+                anaglyph, leftShader, rightShader;
         application.log_DEBUG("Rendering scene...", 3);
         egomModel.resetDebugStats();
         this._camera.setAspect(widthInPixels / heightInPixels);
@@ -2298,6 +2581,13 @@ define([
         this._numDrawnTriangles = 0;
         // reset boolean flags as scene uniforms will have to be updated for all used shaders again
         this._uniformsUpdated = {};
+        this._cameraUniformsUpdated = {};
+        // if only one shader is used in rendering the whole scene, we will need to update its uniforms (as they are normally updated 
+        // every time a new shader is set)
+        if ((this._uniformsUpdatedForFrame === false) && context.getCurrentShader()) {
+            this.assignUniforms(context, context.getCurrentShader());
+        }
+        this._uniformsUpdatedForFrame = false;
         // resetting cached values that were only valid for one render
         this._rootNode.resetForNewFrame();
         // animating all the needed nodes and preparing them for rendering by organizing them to render queues
@@ -2323,57 +2613,40 @@ define([
         this._updateStaticLightUniformData();
         // viewport preparation
         gl.viewport(this._left * bufferWidth, this._bottom * bufferHeight, widthInPixels, heightInPixels);
-        if (this._shouldClearColorOnRender) {
-            context.setColorMask(this._clearColorMask);
-            gl.clearColor(this._clearColor[0], this._clearColor[1], this._clearColor[2], this._clearColor[3]);
-        }
-        // glClear is affected by the depth mask, so we need to turn it on here!
-        // (it's disabled for the second (transparent) render pass)
-        context.setDepthMask(true);
-        // clearing color and depth buffers as set for this scene
-        clearBits = this._shouldClearColorOnRender ? gl.COLOR_BUFFER_BIT : 0;
-        clearBits = this._shouldClearDepthOnRender ? clearBits | gl.DEPTH_BUFFER_BIT : clearBits;
-        gl.clear(clearBits);
-        // if only one shader is used in rendering the whole scene, we will need to update its uniforms (as they are normally updated 
-        // every time a new shader is set)
-        if ((this._uniformsUpdatedForFrame === false) && context.getCurrentShader()) {
-            this.assignUniforms(context, context.getCurrentShader());
-        }
-        this._uniformsUpdatedForFrame = false;
-        // -----------------------------------------------------------------------
-        // rendering the queues storing distant main objects
-        if (distanceQueuesNotEmpty) {
-            // switching to an extended camera
-            originalCamera = this._camera;
-            this._camera = this._camera.getExtendedCamera();
-            // dynamic lights are not support for these objects as they are not really visible but expensive
-            this._clearDynamicLightUniformData();
-            this._renderMainObjects(context, widthInPixels, heightInPixels, this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX], true);
-            // switching back the camera
-            this._camera = originalCamera;
-            // there is no overlap in the two view frustums, simply a new blank depth buffer can be used for the front objects
-            context.setDepthMask(true);
-            gl.clear(gl.DEPTH_BUFFER_BIT);
-            // reset boolean flags as scene uniforms will have to be updated for all used shaders again
-            this._uniformsUpdated = {};
-        }
-        // -----------------------------------------------------------------------
-        // rendering the queues storing front (close) main objects
-        // the background objects are rendered within _renderMainObjects so it needs to be called here even
-        // if there are no main objects in the scene at all 
-        if (frontQueuesNotEmpty || !distanceQueuesNotEmpty) {
-            // filling the arrays storing the light source data for uniforms that need it
-            this._updateDynamicLightUniformData(this._shouldAnimate ? dt : 0);
-            if (context.getCurrentShader()) {
-                // uniforms need to be updated with the new camera and light data in case the first used shader for the front object is the
-                // same as the last one used for the distant objects
-                this.assignUniforms(context, context.getCurrentShader());
+
+        if (this._stereoscopicMode !== Scene.StereoscopicMode.NONE) {
+            anaglyph = this._stereoscopicMode === Scene.StereoscopicMode.ANAGLYPH;
+            if (anaglyph) {
+                leftShader = this._redShader;
+                rightShader = this._cyanShader;
+            } else {
+                leftShader = this._leftShader;
+                rightShader = this._rightShader;
             }
-            this._renderMainObjects(context, widthInPixels, heightInPixels, this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX], !distanceQueuesNotEmpty);
+            context.setCurrentFrameBuffer(STEREOSCOPY_FRAMEBUFFER_NAME);
+            this._camera.setLeftEye();
+            if (this._sideBySideOriginalAspect) {
+                this._camera.setAspect(widthInPixels * 0.5 / heightInPixels);
+            }
+            this._cameraUniformsUpdated = {};
+            this._render(context, distanceQueuesNotEmpty, frontQueuesNotEmpty, widthInPixels * (anaglyph ? 1.0 : 0.5), heightInPixels, dt);
+            context.setCurrentFrameBuffer(null);
+            context.setCurrentShader(leftShader);
+            this._stereoscopicTextureUnit = context.bindTexture(context.getFrameBuffer(STEREOSCOPY_FRAMEBUFFER_NAME), undefined, true);
+            leftShader.assignUniforms(context, this._stereoscopicUniformValueFunctions);
+            this._fvq.render(context, false, true);
+
+            context.setCurrentFrameBuffer(STEREOSCOPY_FRAMEBUFFER_NAME);
+            this._camera.setRightEye();
+            this._cameraUniformsUpdated = {};
+            this._render(context, distanceQueuesNotEmpty, frontQueuesNotEmpty, widthInPixels * (anaglyph ? 1.0 : 0.5), heightInPixels, 0);
+            context.setCurrentFrameBuffer(null);
+            context.setCurrentShader(rightShader);
+            rightShader.assignUniforms(context, this._stereoscopicUniformValueFunctions);
+            this._fvq.render(context, false, true);
+        } else {
+            this._render(context, distanceQueuesNotEmpty, frontQueuesNotEmpty, widthInPixels, heightInPixels, dt);
         }
-        // -----------------------------------------------------------------------
-        // rendering the UI objects
-        this._renderUIObjects(context, widthInPixels, heightInPixels);
         if (application.isDebugVersion()) {
             this._mainDebugStats = utils.shallowCopy(egomModel.getDebugStats());
         }

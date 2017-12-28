@@ -910,6 +910,38 @@
                 "a_groupIndices": "groupIndices"
             }
         }, {
+            "name": "anaglyphRed",
+            "vertexShaderSource": "stereo/anaglyph/fvq.vert",
+            "fragmentShaderSource": "stereo/anaglyph/red.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        }, {
+            "name": "anaglyphCyan",
+            "vertexShaderSource": "stereo/anaglyph/fvq.vert",
+            "fragmentShaderSource": "stereo/anaglyph/cyan.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        }, {
+            "name": "sideBySideLeft",
+            "vertexShaderSource": "stereo/sideBySide/fvqLeft.vert",
+            "fragmentShaderSource": "stereo/sideBySide/plain.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        }, {
+            "name": "sideBySideRight",
+            "vertexShaderSource": "stereo/sideBySide/fvqRight.vert",
+            "fragmentShaderSource": "stereo/sideBySide/plain.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        }, {
             "name": "ui2d",
             "vertexShaderSource": "ui/ui2d.vert",
             "fragmentShaderSource": "ui/ui2d.frag",

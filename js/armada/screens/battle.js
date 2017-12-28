@@ -3853,6 +3853,14 @@ define([
             if (graphics.shouldUseShadowMapping()) {
                 graphics.getShadowMappingShader();
             }
+            if (graphics.isAnaglyphRenderingEnabled()) {
+                graphics.getAnaglyphRedShader();
+                graphics.getAnaglyphCyanShader();
+            }
+            if (graphics.isSideBySideRenderingEnabled()) {
+                graphics.getSideBySideLeftShader();
+                graphics.getSideBySideRightShader();
+            }
             _battleScene = new sceneGraph.Scene(
                     0, 0, 1, 1,
                     true, [true, true, true, true],
@@ -3928,6 +3936,12 @@ define([
             resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
             resources.executeWhenReady(function () {
                 _battleScene.setShadowMapping(graphics.getShadowMappingSettings());
+                if (graphics.isAnaglyphRenderingEnabled()) {
+                    _battleScene.setAnaglyphRendering(graphics.getAnaglyphRenderingSettings());
+                }
+                if (graphics.isSideBySideRenderingEnabled()) {
+                    _battleScene.setSideBySideRendering(graphics.getSideBySideRenderingSettings());
+                }
                 this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
                 utils.executeAsync(function () {
                     this.setAntialiasing(graphics.getAntialiasing());

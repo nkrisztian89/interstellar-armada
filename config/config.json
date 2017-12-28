@@ -1,5 +1,5 @@
 {
-    "version": "0.4.5-dev:680 (2017.11.21.)",
+    "version": "0.4.5-dev:681 (2017.12.28.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4"],
@@ -335,7 +335,15 @@
             "maxGroupTransformsDefineName": "MAX_GROUP_TRANSFORMS",
             "depthTexturesDefineName": "DEPTH_TEXTURES",
             "maxShininess": "512.0",
-            "maxShininessDefineName": "MAX_SHININESS"
+            "maxShininessDefineName": "MAX_SHININESS",
+            "anaglyphRedShaderName": "anaglyphRed",
+            "anaglyphCyanShaderName": "anaglyphCyan",
+            "sideBySideLeftShaderName": "sideBySideLeft",
+            "sideBySideRightShaderName": "sideBySideRight",
+            "anaglyphOriginalColorRatio": "0.25",
+            "anaglyphOriginalColorRatioDefineName": "ORIGINAL_COLOR_RATIO",
+            "anaglyphGamma": "1.6",
+            "anaglyphGammaDefineName": "ANAGLYPH_GAMMA"
         },
         "levelOfDetailSettings": {
             "lodLevels": [
