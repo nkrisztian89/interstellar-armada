@@ -885,7 +885,7 @@ define([
         }
         weaponNames = Object.keys(weaponCounts);
         for (i = 0; i < weaponNames.length; i++) {
-            result += weaponCounts[weaponNames[i]] + " × " + weaponNames[i] + ((i > 0) ? separator : "");
+            result += ((i > 0) ? separator : "") + weaponCounts[weaponNames[i]] + " × " + weaponNames[i];
         }
         return result;
     };
