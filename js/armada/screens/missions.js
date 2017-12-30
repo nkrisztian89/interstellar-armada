@@ -243,7 +243,7 @@ define([
                             this._playerSpacecraftShield.setContent("");
                             this._playerSpacecraftShield.hide();
                         }
-                        if (!!_spacecraft.getPropulsion()) {
+                        if (_spacecraft.getPropulsion()) {
                             this._playerSpacecraftPropulsion.setContent(strings.get(strings.MISSIONS.SPACECRAFT_PROPULSION), {
                                 propulsion: _spacecraft.getPropulsion() ? _spacecraft.getPropulsionDisplayName() : "-",
                                 speed: _spacecraft.getPropulsion() ? Math.round(_spacecraft.getMaxCombatSpeed()) + " m/s" : "-",

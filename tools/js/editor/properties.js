@@ -912,7 +912,7 @@ define([
                 data[i] = {
                     axis: data[i][0].toUpperCase(),
                     degrees: parseFloat(data[i].substring(1))
-                }
+                };
             }
         }
         _addPropertyEditorHeader(popup, [], [addRotationButton]);

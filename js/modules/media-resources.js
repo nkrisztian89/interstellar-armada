@@ -1000,14 +1000,14 @@ define([
      */
     ShaderResource.prototype.getVertexShaderSource = function () {
         return this._vertexShaderSource;
-    }
+    };
     /**
      * Returns the (resolved) fragment shader source code
      * @returns {String}
      */
     ShaderResource.prototype.getFragmentShaderSource = function () {
         return this._fragmentShaderSource;
-    }
+    };
     // ############################################################################################x
     /**
      * @typedef {Object} ModelResource~FileDescriptor

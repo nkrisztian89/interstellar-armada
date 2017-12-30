@@ -162,7 +162,8 @@ define([
             _resourceList,
             _classList,
             _environmentList,
-            _missionList;
+            _missionList,
+            _selectItem;
     // ------------------------------------------------------------------------------
     // Private functions
     /**
@@ -390,6 +391,14 @@ define([
         environments.executeForAllEnvironments(nameChangeHandler);
     }
     /**
+     * Updates the enabled / disabled states of history back / forward buttons, to be called every time
+     * we move within history
+     */
+    function _updateHistoryButtons() {
+        _backButton.disabled = _historyIndex <= 0;
+        _forwardButton.disabled = _historyIndex >= (_itemHistory.length - 1);
+    }
+    /**
      * Loads the content of the Properties window for the currently selected element.
      */
     function _loadProperties() {
@@ -453,14 +462,6 @@ define([
         };
     }
     /**
-     * Updates the enabled / disabled states of history back / forward buttons, to be called every time
-     * we move within history
-     */
-    function _updateHistoryButtons() {
-        _backButton.disabled = _historyIndex <= 0;
-        _forwardButton.disabled = _historyIndex >= (_itemHistory.length - 1);
-    }
-    /**
      * Sets the data for a new selected item and loads the appropriate Preview and Properties windows for it, if available
      * Also updates selection history
      * @param {String} type (enum ItemType) The type of the selected item
@@ -468,7 +469,7 @@ define([
      * @param {String} category The category the selected item belongs to (this will determine the format of the Preview and Properties windows)
      * @param {Element} [element] The HTML element (<span>) that references the item in the category list (if not given, will be looked up from the _itemElements object)
      */
-    function _selectItem(type, name, category, element) {
+    _selectItem = function(type, name, category, element) {
         if ((_selectedItem.type !== type) || (_selectedItem.name !== name) || (_selectedItem.category !== category)) {
             _loadItem(type, name, category, element);
             if ((_itemHistory.length > 0) && (_historyIndex < (_itemHistory.length - 1))) {
@@ -478,7 +479,7 @@ define([
             _historyIndex = _itemHistory.length - 1;
             _updateHistoryButtons();
         }
-    }
+    };
     /**
      * Creates and returns a function that can be used as the onclick event handler on an element representing a selectable item (such as
      * a resource or game class)

@@ -498,7 +498,7 @@ define([
         var result, factor = Math.ceil(index / 2);
         switch (formation.type) {
             case SpacecraftFormation.WEDGE:
-                result= [
+                result = [
                     (((index % 2) === 1) ? 1 : -1) * factor * formation.spacing[0],
                     factor * formation.spacing[1],
                     factor * formation.spacing[2]];
@@ -764,13 +764,13 @@ define([
      */
     Spacecraft.prototype.getShieldState = function () {
         return this._shield ? this._shield.getState() : vec.NULL4;
-    }
+    };
     /**
      * Starts recharging the shield of the spacecraft (skipping any recharge delay that might be due)
      */
     Spacecraft.prototype.rechargeShield = function () {
         this._shield.startRecharge();
-    }
+    };
     /**
      * Multiplies the amount of current and maximum hitpoints of the spacecraft has by the passed factor.
      * @param {Number} factor
@@ -895,7 +895,7 @@ define([
      * @returns {String}
      */
     Spacecraft.prototype.getWeaponRangesDisplayText = function (separator) {
-        separator = separator || DEFAULT_WEAPON_RANGE_STRING_SEPARATOR
+        separator = separator || DEFAULT_WEAPON_RANGE_STRING_SEPARATOR;
         var i, range, ranges = [];
         for (i = 0; i < this._weapons.length; i++) {
             range = this._weapons[i].getRange();
@@ -904,7 +904,7 @@ define([
             }
         }
         return ranges.join(separator);
-    }
+    };
     /**
      * Returns the sum of the firepower the weapons on this spacecraft have, that is, the total damage per second
      * they could do to a target with the passed armor rating. (not consider that it might be impossible to aim 

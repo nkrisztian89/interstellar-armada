@@ -2293,7 +2293,7 @@ define([
      */
     UIElement.prototype.setScaleMode = function (value) {
         this._scaleMode = _getScaleModeInt(value);
-    }
+    };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

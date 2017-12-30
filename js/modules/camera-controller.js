@@ -365,7 +365,7 @@ define([
         this._angularVelocityTargetVector[0] = 0;
         this._angularVelocityTargetVector[1] = 0;
         this._angularVelocityTargetVector[2] = 0;
-    }
+    };
     /**
      * Calculates the angular velocity for this control step based on the control inputs that were issued in this step.
      * @param {Number} dt The time that has passed since the last control step (in milliseconds)

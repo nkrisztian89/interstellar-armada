@@ -345,7 +345,7 @@ define([
             }
         }
         return false;
-    }
+    };
     /**
      * Updates the properties of the light source that are defined in the state list.
      * @param {Number} dt The elapsed time since the last update, in milliseconds.

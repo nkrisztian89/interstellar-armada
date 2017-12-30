@@ -2748,11 +2748,6 @@ define([
                         name: "formation",
                         type: FORMATION,
                         optional: true
-                    },
-                    ROTATIONS: {
-                        name: "rotations",
-                        type: BaseType.ROTATIONS,
-                        optional: true
                     }
                 }
             },
@@ -2979,7 +2974,7 @@ define([
         if (this.getEnvironmentReference()) {
             return common.ItemType.ENVIRONMENT;
         }
-        common.ItemType.NONE;
+        return common.ItemType.NONE;
     };
     /**
      * For reference string types, returns the name of the category of items it references

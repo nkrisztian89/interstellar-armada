@@ -2360,7 +2360,7 @@ define([
      */
     Mission.prototype.queueAction = function (action, delay) {
         this._actionQueue.push({action: action, delay: delay});
-    }
+    };
     /**
      * Returns the how much base score falls on the player in this mission (out of the total enemy score value, based on the team)
      * @returns {Number}
@@ -2840,7 +2840,7 @@ define([
      */
     Mission._filterActionEntry = function (actionEntry) {
         return actionEntry.delay > 0;
-    }
+    };
     /**
      * Performs the physics and game logic simulation of all the object in the mission.
      * @param {Number} dt The time passed since the last simulation step, in milliseconds.

@@ -2999,7 +2999,7 @@ define([
      */
     Shield.prototype.getState = function () {
         return this._state;
-    }
+    };
     /**
      * Call when the shield (the spacecraft that has the shield) is damaged
      * @param {Number} damage The amount of damage (to be) dealt to the spacecraft

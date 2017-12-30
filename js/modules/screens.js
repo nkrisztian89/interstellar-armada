@@ -1475,7 +1475,7 @@ define([
      */
     CanvasText.prototype.setRevealState = function (value) {
         this._revealState = value;
-    }
+    };
     /**
      * Renders the text using the passed 2D rendering context (of a canvas) according to its current settings.
      * @param {CanvasRenderingContext2D} context

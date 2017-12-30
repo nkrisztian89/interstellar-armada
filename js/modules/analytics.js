@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true */
-/*global define, requirejs, location, document, JSON */
+/*global define, location, document, JSON */
 
 /**
  * @param application Used for logging

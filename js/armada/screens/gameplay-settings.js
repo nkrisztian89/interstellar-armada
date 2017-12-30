@@ -10,6 +10,7 @@
 /*global define */
 
 /**
+ * @param application Used for showing error messages
  * @param components Used for the components (i.e. Selectors) of the screen.
  * @param screens The graphics screen is an HTMLScreen.
  * @param game Used for navigation.
@@ -18,6 +19,7 @@
  * @param config Used for accessing the gameplay settings.
  */
 define([
+    "modules/application",
     "modules/components",
     "modules/screens",
     "modules/game",
@@ -25,9 +27,13 @@ define([
     "armada/screens/shared",
     "armada/configuration",
     "utils/polyfill"
-], function (components, screens, game, strings, armadaScreens, config) {
+], function (application, components, screens, game, strings, armadaScreens, config) {
     "use strict";
     var
+            // ------------------------------------------------------------------------------
+            // local cache variables
+            _fighterViewOptions,
+            _shipViewOptions,
             // ------------------------------------------------------------------------------
             // private functions
             _getMapToCaptionFunction = function (stringCategory) {
@@ -67,11 +73,7 @@ define([
             HUD_OPTION_PARENT_ID = "hudSettingsDiv",
             CAMERA_OPTION_PARENT_ID = "cameraSettingsDiv",
             SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
-            SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF)),
-            // ------------------------------------------------------------------------------
-            // local cache variables
-            _fighterViewOptions,
-            _shipViewOptions;
+            SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
     // ##############################################################################
     /**
      * @class Represents the Gameplay settings screen.

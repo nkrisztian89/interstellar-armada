@@ -1525,7 +1525,7 @@ define([
         if (this._visualModel) {
             this._visualModel.setScaleMode(value);
         }
-    }
+    };
     /**
      * Sets new absolute (viewport) coordinates for the position and size of the element applying the rules
      * of the passed clip space layout to a viewport of the given size.
