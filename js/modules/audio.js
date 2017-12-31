@@ -696,50 +696,34 @@ define([
     /**
      * Sets a master volume applied to all sound effects.
      * @param {Number} value
-     * @param {Number} [duration=0] If given, the volume will be ramped for this duration, in seconds
+     * @param {Number} [duration=DEFAULT_RAMP_DURATION] The volume will be ramped for this duration, in seconds
      */
     function setEffectVolume(value, duration) {
-        if (duration) {
-            _rampVolume(_effectGain, value, duration);
-        } else {
-            _effectGain.gain.value = value;
-        }
+        _rampVolume(_effectGain, value, duration);
     }
     /**
      * Sets a master volume applied to music.
      * @param {Number} value
-     * @param {Number} [duration=0] If given, the volume will be ramped for this duration, in seconds
+     * @param {Number} [duration=DEFAULT_RAMP_DURATION] The volume will be ramped for this duration, in seconds
      */
     function setMusicVolume(value, duration) {
-        if (duration) {
-            _rampVolume(_musicGain, value, duration);
-        } else {
-            _musicGain.gain.value = value;
-        }
+        _rampVolume(_musicGain, value, duration);
     }
     /**
      * Sets a master volume applied to UI sounds.
      * @param {Number} value
-     * @param {Number} [duration=0] If given, the volume will be ramped for this duration, in seconds
+     * @param {Number} [duration=DEFAULT_RAMP_DURATION] The volume will be ramped for this duration, in seconds
      */
     function setUIVolume(value, duration) {
-        if (duration) {
-            _rampVolume(_uiGain, value, duration);
-        } else {
-            _uiGain.gain.value = value;
-        }
+        _rampVolume(_uiGain, value, duration);
     }
     /**
      * Sets a master volume applied to all sounds.
      * @param {Number} value
-     * @param {Number} [duration=0] If given, the volume will be ramped for this duration, in seconds
+     * @param {Number} [duration=DEFAULT_RAMP_DURATION] The volume will be ramped for this duration, in seconds
      */
     function setMasterVolume(value, duration) {
-        if (duration) {
-            _rampVolume(_masterGain, value, duration);
-        } else {
-            _masterGain.gain.value = value;
-        }
+        _rampVolume(_masterGain, value, duration);
     }
     // -------------------------------------------------------------------------
     // Initizalization
