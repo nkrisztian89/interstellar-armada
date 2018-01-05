@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides different types of light source classes to add to scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -103,6 +103,21 @@ define([
          */
         this._shadowMapBufferNamePrefix = null;
         /**
+         * The range of the shadow map currently used for this light source (size along X and Y axes)
+         * @type Number
+         */
+        this._shadowMapRange = 0;
+        /**
+         * The depth of the shadow map currently used for this light source (size along Z axis)
+         * @type Number
+         */
+        this._shadowMapDepth = 0;
+        /**
+         * The functions returning the values for the shader uniforms used for shadow mapping for this light source.
+         * @type Object.<String, Function>
+         */
+        this._uniformValueFunctions = {};
+        /**
          * Holds the data to be passed to the corresponding uniform struct.
          * @type SceneGraph~DirectionalLightUniformData
          */
@@ -112,6 +127,16 @@ define([
             matrix: this._baseMatrix,
             translationVector: vec.NULL3
         };
+        // set uniform value functions
+        this._uniformValueFunctions[managedGL.getUniformName(UNIFORM_LIGHT_MATRIX_NAME)] = function () {
+            return this._translatedMatrix;
+        }.bind(this);
+        this._uniformValueFunctions[managedGL.getUniformName(UNIFORM_SHADOW_MAP_DEPTH_NAME)] = function () {
+            return this._shadowMapDepth;
+        }.bind(this);
+        this._uniformValueFunctions[managedGL.getUniformName(UNIFORM_PROJECTION_MATRIX_NAME)] = function () {
+            return mat.orthographic4Aux(this._shadowMapRange, this._shadowMapRange, -this._shadowMapDepth, this._shadowMapDepth);
+        }.bind(this);
     }
     /**
      * Returns the name of the shadow map framebuffer to use for rendering the shadow map of the range with the given index for this light source.
@@ -170,8 +195,9 @@ define([
      * @param {Number} translationLength The length of the vector that point from the camera position center to the center of this shadow map.
      */
     DirectionalLightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth, translationLength) {
-        var uniformValueFunctions = {};
         context.setCurrentFrameBuffer(this.getShadowMapBufferName(rangeIndex));
+        this._shadowMapRange = range;
+        this._shadowMapDepth = depth;
         // this will be the matrix that transforms a world-space coordinate into shadow-space coordinate for this particular shadow map, 
         // considering also that the center of the shadow map is ahead of the camera
         mat.setProdTranslationRotation4(this._translatedMatrix,
@@ -187,16 +213,7 @@ define([
             this._baseMatrixValid = true;
         }
         this._translationVector = this._translationVector || vec.normal3(vec.diff3(mat.translationVector3(this._translatedMatrix), mat.translationVector3(this._baseMatrix)));
-        uniformValueFunctions[managedGL.getUniformName(UNIFORM_LIGHT_MATRIX_NAME)] = function () {
-            return this._translatedMatrix;
-        }.bind(this);
-        uniformValueFunctions[managedGL.getUniformName(UNIFORM_SHADOW_MAP_DEPTH_NAME)] = function () {
-            return depth;
-        };
-        uniformValueFunctions[managedGL.getUniformName(UNIFORM_PROJECTION_MATRIX_NAME)] = function () {
-            return mat.orthographic4Aux(range, range, -depth, depth);
-        };
-        context.getCurrentShader().assignUniforms(context, uniformValueFunctions);
+        context.getCurrentShader().assignUniforms(context, this._uniformValueFunctions);
     };
     /**
      * Returns an object that can be used to set the uniform object representing this light source in a shader using it.
