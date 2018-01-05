@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file A general purpose WebGL scene engine building on the functionality of ManagedGL.
  * Create a Scene, add background and main scene objects and light sources, then add it to a ManagedGLContext (or several ones), and it can
  * be rendered on them.
@@ -1358,24 +1358,24 @@ define([
          */
         this._uniformsUpdatedForFrame = false;
         /**
-         * An associative array of boolean flags storing whether the values of the non-camera related (e.g. light) scene uniforms (which 
-         * need to be updated once every frame) have been updated for the current frame in the different shaders, with the names of the 
-         * shaders being the keys. This is used to avoid updating the scene uniforms for the same shader multiple times during one frame.
-         * @type Object.<String, Boolean>
+         * The set containing the shaders for which the values of the non-camera related (e.g. light) scene uniforms (which 
+         * need to be updated once every frame) have been updated for the current frame.
+         * This is used to avoid updating the scene uniforms for the same shader multiple times during one frame.
+         * @type Set
          */
-        this._uniformsUpdated = null;
+        this._uniformsUpdated = new Set();
         /**
          * Similar to _uniformsUpdated, but marks updates for camera-related uniforms, which might need to be updated multiple times during
          * a frame - for extended camera / stereographic rendering.
-         * @type Object.<String, Boolean>
+         * @type Set
          */
-        this._cameraUniformsUpdated = null;
+        this._cameraUniformsUpdated = new Set();
         /**
          * Similar to _uniformsUpdated, but marks updates for uniforms which only need to be updated when a context is set up (e.g. shadow
          * mapping settings)
-         * @type Object.<String, Boolean>
+         * @type Set
          */
-        this._constantUniformsUpdated = null;
+        this._constantUniformsUpdated = new Set();
         /**
          * Used for debug stat logging - counting the number of nodes in the scene.
          * @type Number
@@ -1546,7 +1546,6 @@ define([
                         shadowMaps.push(this._contexts[contextIndex].getFrameBuffer(this._directionalLights[j].getShadowMapBufferName(k)).getLastTextureBindLocation(this._contexts[contextIndex].getName()));
                     }
                 }
-                console.log("update");
                 return new Int32Array(shadowMaps);
             });
             // if no specific index was given, set the functions up for all contexts
@@ -1664,7 +1663,7 @@ define([
      */
     Scene.prototype._setupContext = function (contextIndex) {
         var i, context;
-        this._constantUniformsUpdated = {};
+        this._constantUniformsUpdated.clear();
         // if a specific index is given, set up the corresponding context
         if (contextIndex !== undefined) {
             context = this._contexts[contextIndex];
@@ -1848,7 +1847,7 @@ define([
             this._numShadowMapSamples = 0;
             this._shadowMapSampleOffsets = [];
         }
-        this._constantUniformsUpdated = {};
+        this._constantUniformsUpdated.clear();
     };
     /**
      * 
@@ -2267,21 +2266,20 @@ define([
      * @param {ManagedShader} shader
      */
     Scene.prototype.assignUniforms = function (context, shader) {
-        var shaderName = shader.getName();
-        if (!this._uniformsUpdated[shaderName]) {
+        if (!this._uniformsUpdated.has(shader)) {
             shader.assignUniforms(context, this._uniformValueFunctions);
             shader.assignUniforms(context, this._contextUniformValueFunctions[this._contexts.indexOf(context)]);
-            this._uniformsUpdated[shaderName] = true;
+            this._uniformsUpdated.add(shader);
             this._uniformsUpdatedForFrame = true;
         }
-        if (!this._cameraUniformsUpdated[shaderName]) {
+        if (!this._cameraUniformsUpdated.has(shader)) {
             shader.assignUniforms(context, this._cameraUniformValueFunctions);
-            this._cameraUniformsUpdated[shaderName] = true;
+            this._cameraUniformsUpdated.add(shader);
         }
-        if (!this._constantUniformsUpdated[shaderName]) {
+        if (!this._constantUniformsUpdated.has(shader)) {
             shader.assignUniforms(context, this._constantUniformValueFunctions);
             shader.assignUniforms(context, this._contextConstantUniformValueFunctions[this._contexts.indexOf(context)]);
-            this._constantUniformsUpdated[shaderName] = true;
+            this._constantUniformsUpdated.add(shader);
         }
     };
     /**
@@ -2526,7 +2524,7 @@ define([
             // switching to an extended camera
             originalCamera = this._camera;
             this._camera = this._camera.getExtendedCamera();
-            this._cameraUniformsUpdated = {};
+            this._cameraUniformsUpdated.clear();
             // dynamic lights are not support for these objects as they are not really visible but expensive
             this._clearDynamicLightUniformData();
             this._renderMainObjects(context, widthInPixels, heightInPixels, this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX], this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX], true);
@@ -2535,8 +2533,7 @@ define([
             // there is no overlap in the two view frustums, simply a new blank depth buffer can be used for the front objects
             context.setDepthMask(true);
             gl.clear(gl.DEPTH_BUFFER_BIT);
-            // reset boolean flags as scene uniforms will have to be updated for all used shaders again
-            this._cameraUniformsUpdated = {};
+            this._cameraUniformsUpdated.clear();
         }
         // -----------------------------------------------------------------------
         // rendering the queues storing front (close) main objects
@@ -2579,9 +2576,9 @@ define([
         }
         // reset triangle counter so we can count all triangles for one render
         this._numDrawnTriangles = 0;
-        // reset boolean flags as scene uniforms will have to be updated for all used shaders again
-        this._uniformsUpdated = {};
-        this._cameraUniformsUpdated = {};
+        // scene uniforms will need to be updated for this frame
+        this._uniformsUpdated.clear();
+        this._cameraUniformsUpdated.clear();
         // if only one shader is used in rendering the whole scene, we will need to update its uniforms (as they are normally updated 
         // every time a new shader is set)
         if ((this._uniformsUpdatedForFrame === false) && context.getCurrentShader()) {
@@ -2628,7 +2625,7 @@ define([
             if (this._sideBySideOriginalAspect) {
                 this._camera.setAspect(widthInPixels * 0.5 / heightInPixels);
             }
-            this._cameraUniformsUpdated = {};
+            this._cameraUniformsUpdated.clear();
             this._render(context, distanceQueuesNotEmpty, frontQueuesNotEmpty, widthInPixels * (anaglyph ? 1.0 : 0.5), heightInPixels, dt);
             context.setCurrentFrameBuffer(null);
             context.setCurrentShader(leftShader);
@@ -2638,7 +2635,7 @@ define([
 
             context.setCurrentFrameBuffer(STEREOSCOPY_FRAMEBUFFER_NAME);
             this._camera.setRightEye();
-            this._cameraUniformsUpdated = {};
+            this._cameraUniformsUpdated.clear();
             this._render(context, distanceQueuesNotEmpty, frontQueuesNotEmpty, widthInPixels * (anaglyph ? 1.0 : 0.5), heightInPixels, 0);
             context.setCurrentFrameBuffer(null);
             context.setCurrentShader(rightShader);
