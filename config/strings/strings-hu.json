@@ -600,6 +600,10 @@
             "name": "bombázó",
             "description": "A bombázók kis, egy vagy két fős harci gépek, amik a kis és közepes méretű ellenséges hadihajók ellen jelentenek gazdaságos megoldást. Nehéz páncélzatuk és védőpajzsuk lehetővé teszi, hogy elég ideig harcképesek maradjanak a hajókkal szemben nagy tűzerejű rakétáik célba juttatásához. Ezt kihasználhatják akár létfontosságú rendszerek kiiktatására, akár a célpont pajzsának és páncélzatának jelentős megrongálására. A vadászokhoz képest nagyobb tömegük miatt rosszabbul manőverezhetőek, és ezáltal sebezhetőek is velük szemben."
         },
+        "heavyFighter": {
+            "name": "nehéz vadász",
+            "description": "A nehéz vadászok általában elfogó vadászokat, vagy bombázókat kiegészítő támogató harci gépek. A legerősebb páncélzattal és legnagyobb tűzerejű elsődleges fegyverzettel rendelkeznek, még az ellenséges hadihajók vadászellenes fegyverzetének tüzében is képesek helytállni.Az összes vadászgép típus közül azonban ezek a legkevésbé jól manőverezőek, ezért gyorsabb célpontok elfogására önmagukban nem alkalmasak. Fő szerepük az ellenség tüzének magukra vonása az elfogó vadászok és bombázók elől, amíg azok megsemmisítik a fő célpontokat. Ezen kívül ellenséges torpedónaszádok kilövésére is kiválóan alkalmazhatóak."
+        },
         "multiroleFighter": {
             "name": "többfeladatú vadász",
             "description": "A többfeladatú vadászok katonai szerepkörök széles spektrumát figyelembe véve tervezett kis méretű harci gépek. Békeidőben, illetve korlátozott katonai kapacitással bíró államok számára gazdaságos megoldást jelentenek, mivel egy kisebb számú vadászból álló flotta már bevethető erőt nyújt a legtöbb felmerülő harci szituáció esetére. Kiegyensúlyozott vadászgépek sokféle felszerelési lehetőséggel. Ugyanakkor még egy kifejezetten egy adott feladatra felkészített többfeladatú vadász is hátrányból indul az arra az egy feladatra kialakított vadász osztályokkal szemben."
@@ -632,6 +636,10 @@
         "viper": {
             "name": "Vipera",
             "description": "A Vipera egy könnyű bombázó osztály, jó önvédelmi és precíziós csapásmérő képességekkel. Sok kisméretű rakétát képes szállítani, valamint kellően erős páncélzattal és védőpajzzsal szerelhető fel."
+        },
+        "rhino": {
+            "name": "Rinocérosz",
+            "description": "Ahogy a Birodalom terjeszkedése során egyre komolyabb ellenállással kezdett szembenézni, nyilvánvalóvá vált, hogy Sólyom-Vipera kettősre épülő vadászrepülő századok nem tudnak optimálisan teljesíteni, ha nem fedezik őket. A Rinocéroszt erre válaszként állították hadrendbe. Ez a legrosszabban manőverező birodalmi vadászgép, ám ez szándékosan van így. Több, mint megfelelő kompenzációt nyújt ugyanis ezért a gyengeségéért cserébe páncélzata, pajzsa és elsődleges fegyverzete, melyekkel egyetlen más jelenlegi vadászgép sem versenyezhet. Csak azért kínálja magát látszólag könnyű célpontként, mert képes állni a tüzet, amíg az elfogó vadászok és bombázók teljesítik a feladatukat. A Rinocéroszok pilótáit sokan tartják a Birodalom legbátrabbjainak. Mások szerint egyszerűen őrültek."
         },
         "aries": {
             "description": "A Birodalomban jelenleg a legtöbb járőrhajó Aries osztályú. Két nagy tűzsebességű és pontosságú forgatható löveggel van felszerelve, ami rendkívül hatásossá teszi az ellenséges vadászok és könnyű bombázók ellen. Páncélzata ugyanakkor a nagyobb hadihajókéhoz képest csekély, így velük szemben elsősorban jobb manőverezhetősége jelent némi védelmet."
@@ -701,6 +709,9 @@
         "imperialBomberMk3": {
             "name": "III/B típusú bombázó hajtómű"
         },
+        "imperialHeavyFighterMk1": {
+            "name": "Szabványos nehéz vadász hajtómű"
+        },
         "imperialCorvetteMk1": {
             "name": "Szabványos korvett hajtómű"
         }, 
@@ -738,6 +749,9 @@
         },
         "imperialBomberMk2": {
             "name": "Közepes bombázó pajzs"
+        },
+        "imperialHeavyFighterMk1": {
+            "name": "Szabványos nehéz vadász pajzs"
         },
         "imperialCorvetteMk1": {
             "name": "Szabványos korvett pajzs"

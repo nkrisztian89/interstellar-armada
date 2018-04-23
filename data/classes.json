@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.3-dev:651 (2017.10.16.)",
-        "creationTime": "Mon Oct 16 2017 19:28:36 GMT+0200 (CEST)"
+        "version": "0.4.5-dev:688 (2018.04.23.)",
+        "creationTime": "Mon Apr 23 2018 15:26:57 GMT+0200 (CEST)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -2620,6 +2620,23 @@
             },
             "scoreValue": 20
         }, {
+            "name": "imperialHeavyFighterMk1",
+            "fullName": "Standard heavy fighter propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "grade": 1,
+            "referenceMass": 50000,
+            "thrust": 30,
+            "angularThrust": 175,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.7
+            },
+            "scoreValue": 10
+        }, {
             "name": "imperialCorvetteMk1",
             "fullName": "Standard corvette propulsion",
             "shader": "particle",
@@ -2953,6 +2970,19 @@
                 "volume": 1.2
             },
             "scoreValue": 30
+        }, {
+            "name": "imperialHeavyFighterMk1",
+            "fullName": "Standard heavy fighter shield",
+            "capacity": 15,
+            "rechargeDelay": 1800,
+            "rechargeRate": 1.5,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1.2
+            },
+            "scoreValue": 25
         }, {
             "name": "imperialCorvetteMk1",
             "fullName": "Standard corvette shield",
@@ -4724,6 +4754,521 @@
                 }],
             "blinkers": [],
             "scoreValue": 80
+        }, {
+            "name": "rhino",
+            "type": "heavyFighter",
+            "fullName": "Rhino",
+            "description": "As the Empire started to encounter more serious resistance during its expansion, it became apparent that fighter squadrons composed of Falcons and Vipers could not operate optimally without proper cover. The Rhino heavy fighter was introduced as an answer to this challenge. While it is the least maneuverable fighter in service, this is an intentional choice. It more than makes up for this weakness with its armor, shielding, and primary armament, which all surpass that of any other current fighter class. The Rhino provides itself as an easy target for the enemy only because it can tank the shots while the interceptors and bombers complete their mission. Rhinos pilots are  regarded by many as the bravest within the Empire. According to others, they are simply insane.",
+            "showInDatabase": true,
+            "hitpoints": 55,
+            "armor": 0,
+            "model": "rhino",
+            "shader": "ship",
+            "texture": "rhino",
+            "factionColor": [0.8, 0.2, 0.2, 1],
+            "mass": 50000,
+            "bodies": [{
+                    "position": [0, 1, 0],
+                    "size": [6, 16, 2]
+                }, {
+                    "position": [0, -3, 0],
+                    "size": [2, 5, 10]
+                }, {
+                    "position": [0, -6, 0.2],
+                    "size": [22, 6, 2.2]
+                }, {
+                    "position": [0, 4, 0],
+                    "size": [10, 4, 2]
+                }],
+            "maxPropulsionGrade": 1,
+            "views": [{
+                    "name": "near",
+                    "isAimingView": true,
+                    "fov": 40,
+                    "fovRange": [40, 40],
+                    "span": 0.2,
+                    "spanRange": [0.2, 0.2],
+                    "fps": false,
+                    "followsPosition": true,
+                    "baseOrientation": "world",
+                    "lookAt": "none",
+                    "movable": false,
+                    "turnable": false,
+                    "alphaRange": [0, 0],
+                    "betaRange": [0, 0],
+                    "rotationCenterIsObject": true,
+                    "position": [0, -38, 9.5],
+                    "movesRelativeToObject": false
+                }, {
+                    "name": "far",
+                    "isAimingView": true,
+                    "fov": 55,
+                    "fovRange": [55, 55],
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": false,
+                    "rotationCenterIsObject": true,
+                    "position": [0, -50, 15],
+                    "lookAt": "none"
+                }, {
+                    "name": "cockpit",
+                    "isAimingView": true,
+                    "fov": 45,
+                    "fovRange": [45, 45],
+                    "fps": true,
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": true,
+                    "alphaRange": [-120, 120],
+                    "betaRange": [-80, 50],
+                    "rotationCenterIsObject": false,
+                    "position": [0, 6.4, 1.45],
+                    "resetsOnFocusChange": true,
+                    "lookAt": "none"
+                }, {
+                    "name": "front",
+                    "isAimingView": false,
+                    "fov": 55,
+                    "fovRange": [55, 55],
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": false,
+                    "rotationCenterIsObject": false,
+                    "position": [0, 32, 12.5],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": 180
+                        }, {
+                            "axis": "X",
+                            "degrees": -8
+                        }],
+                    "lookAt": "none"
+                }, {
+                    "name": "free",
+                    "isAimingView": false,
+                    "fov": 45,
+                    "fovRange": [30, 60],
+                    "followsPosition": true,
+                    "movable": true,
+                    "turnable": true,
+                    "rotationCenterIsObject": true,
+                    "distanceRange": [15, 75],
+                    "position": [0, -40, 0],
+                    "lookAt": "none"
+                }, {
+                    "name": "flyby",
+                    "isAimingView": false,
+                    "fps": true,
+                    "fov": 45,
+                    "fovRange": [45, 45],
+                    "followsPosition": false,
+                    "baseOrientation": "orientationFollowedObject",
+                    "startsWithRelativePosition": true,
+                    "lookAt": "self",
+                    "movable": false,
+                    "turnable": false,
+                    "position": [24, 150, 7.5],
+                    "distanceRange": [15, 200]
+                }, {
+                    "name": "jump",
+                    "isAimingView": true,
+                    "fov": 75,
+                    "fovRange": [75, 75],
+                    "followsPosition": true,
+                    "movable": false,
+                    "turnable": false,
+                    "rotationCenterIsObject": true,
+                    "position": [0, -12, 6],
+                    "lookAt": "none",
+                    "excludeFromCycle": true
+                }, {
+                    "name": "target",
+                    "isAimingView": false,
+                    "fps": true,
+                    "fov": 55,
+                    "fovRange": [30, 55],
+                    "followsPosition": true,
+                    "lookAt": "target",
+                    "movable": true,
+                    "turnable": false,
+                    "rotationCenterIsObject": true,
+                    "position": [0, -40, 7.5],
+                    "distanceRange": [25, 80]
+                }],
+            "humSound": {
+                "name": "spacecraftHum",
+                "volume": 0.5
+            },
+            "explosion": "largeFighterExplosion",
+            "showTimeRatioDuringExplosion": 0.3,
+            "damageIndicators": [{
+                    "hullIntegrity": 25,
+                    "class": "smallFire"
+                }, {
+                    "hullIntegrity": 10,
+                    "class": "smallFire"
+                }],
+            "lights": [{
+                    "position": [1.74, 6.9, 1.16],
+                    "color": [1, 1, 1],
+                    "intensity": 6400,
+                    "spotDirection": [0, 1, 0],
+                    "spotCutoffAngle": 11,
+                    "spotFullIntensityAngle": 5
+                }],
+            "blinkers": [],
+            "scoreValue": 100,
+            "weaponSlots": [{
+                    "position": [7, -6, 0.7],
+                    "array": false,
+                    "maxGrade": 1
+                }, {
+                    "position": [-7, -6, 0.7],
+                    "array": false,
+                    "maxGrade": 1
+                }, {
+                    "position": [4, 3, -1],
+                    "array": false,
+                    "maxGrade": 1
+                }, {
+                    "position": [-4, 3, -1],
+                    "array": false,
+                    "maxGrade": 1
+                }, {
+                    "position": [4, 3, 1],
+                    "array": false,
+                    "maxGrade": 1,
+                    "rotations": [{
+                            "axis": "Y",
+                            "degrees": 180
+                        }]
+                }, {
+                    "position": [-4, 3, 1],
+                    "array": false,
+                    "maxGrade": 1,
+                    "rotations": [{
+                            "axis": "Y",
+                            "degrees": 180
+                        }]
+                }],
+            "equipmentProfiles": [{
+                    "name": "imperial-tier1",
+                    "weapons": [{
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialHeavyFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialHeavyFighterMk1"
+                    }
+                }],
+            "thrusterSlots": [{
+                    "group": 2,
+                    "uses": ["forward"],
+                    "thrusters": [{
+                            "position": [0, -5.7, 4],
+                            "size": 3,
+                            "groupIndex": 2,
+                            "uses": ["forward"]
+                        }, {
+                            "position": [0, -5.7, -4],
+                            "size": 3,
+                            "groupIndex": 2,
+                            "uses": ["forward"]
+                        }, {
+                            "position": [10, -10.2, 0],
+                            "size": 3,
+                            "groupIndex": 2,
+                            "uses": ["forward"]
+                        }, {
+                            "position": [-10, -10.2, 0],
+                            "size": 3,
+                            "groupIndex": 2,
+                            "uses": ["forward"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 1,
+                    "uses": ["reverse"],
+                    "thrusters": [{
+                            "position": [0, -0.3, 4],
+                            "size": 3,
+                            "groupIndex": 1,
+                            "uses": ["reverse"]
+                        }, {
+                            "position": [0, -0.3, -4],
+                            "size": 3,
+                            "groupIndex": 1,
+                            "uses": ["reverse"]
+                        }, {
+                            "position": [10, -4.8, 0],
+                            "size": 3,
+                            "groupIndex": 1,
+                            "uses": ["reverse"]
+                        }, {
+                            "position": [-10, -4.8, 0],
+                            "size": 3,
+                            "groupIndex": 1,
+                            "uses": ["reverse"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 3,
+                    "uses": ["strafeLeft", "yawRight", "rollLeft"],
+                    "thrusters": [{
+                            "position": [1.6, -2.5, 4.2],
+                            "size": 1.2,
+                            "groupIndex": 3,
+                            "uses": ["strafeLeft", "yawRight", "rollLeft"]
+                        }, {
+                            "position": [1.6, -3.5, 4.2],
+                            "size": 1.2,
+                            "groupIndex": 3,
+                            "uses": ["strafeLeft", "yawRight", "rollLeft"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 4,
+                    "uses": ["strafeRight", "yawLeft", "rollRight"],
+                    "thrusters": [{
+                            "position": [-1.6, -2.5, 4.2],
+                            "size": 1.2,
+                            "groupIndex": 4,
+                            "uses": ["strafeRight", "yawLeft", "rollRight"]
+                        }, {
+                            "position": [-1.6, -3.5, 4.2],
+                            "size": 1.2,
+                            "groupIndex": 4,
+                            "uses": ["strafeRight", "yawLeft", "rollRight"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 5,
+                    "uses": ["strafeLeft", "yawRight", "rollRight"],
+                    "thrusters": [{
+                            "position": [1.6, -2.5, -4.2],
+                            "size": 1.2,
+                            "groupIndex": 5,
+                            "uses": ["strafeLeft", "yawRight", "rollRight"]
+                        }, {
+                            "position": [1.6, -3.5, -4.2],
+                            "size": 1.2,
+                            "groupIndex": 5,
+                            "uses": ["strafeLeft", "yawRight", "rollRight"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 6,
+                    "uses": ["strafeRight", "yawLeft", "rollLeft"],
+                    "thrusters": [{
+                            "position": [-1.6, -2.5, -4.2],
+                            "size": 1.2,
+                            "groupIndex": 6,
+                            "uses": ["strafeRight", "yawLeft", "rollLeft"]
+                        }, {
+                            "position": [-1.6, -3.5, -4.2],
+                            "size": 1.2,
+                            "groupIndex": 6,
+                            "uses": ["strafeRight", "yawLeft", "rollLeft"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 7,
+                    "uses": ["raise", "rollLeft", "pitchDown"],
+                    "thrusters": [{
+                            "position": [10, -8, -1.95],
+                            "size": 1.6,
+                            "groupIndex": 7,
+                            "uses": ["raise", "rollLeft", "pitchDown"]
+                        }, {
+                            "position": [10, -7, -1.95],
+                            "size": 1.6,
+                            "groupIndex": 7,
+                            "uses": ["raise", "rollLeft", "pitchDown"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 8,
+                    "uses": ["lower", "rollRight", "pitchUp"],
+                    "thrusters": [{
+                            "position": [10, -8, 1.65],
+                            "size": 1.6,
+                            "groupIndex": 8,
+                            "uses": ["lower", "rollRight", "pitchUp"]
+                        }, {
+                            "position": [10, -7, 1.65],
+                            "size": 1.6,
+                            "groupIndex": 8,
+                            "uses": ["lower", "rollRight", "pitchUp"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 9,
+                    "uses": ["raise", "rollRight", "pitchDown"],
+                    "thrusters": [{
+                            "position": [-10, -8, -1.95],
+                            "size": 1.6,
+                            "groupIndex": 9,
+                            "uses": ["raise", "rollRight", "pitchDown"]
+                        }, {
+                            "position": [-10, -7, -1.95],
+                            "size": 1.6,
+                            "groupIndex": 9,
+                            "uses": ["raise", "rollRight", "pitchDown"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 10,
+                    "uses": ["lower", "rollLeft", "pitchUp"],
+                    "thrusters": [{
+                            "position": [-10, -8, 1.65],
+                            "size": 1.6,
+                            "groupIndex": 10,
+                            "uses": ["lower", "rollLeft", "pitchUp"]
+                        }, {
+                            "position": [-10, -7, 1.65],
+                            "size": 1.6,
+                            "groupIndex": 10,
+                            "uses": ["lower", "rollLeft", "pitchUp"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 11,
+                    "uses": ["lower", "pitchDown"],
+                    "thrusters": [{
+                            "position": [2, 2, 1.5],
+                            "size": 1.5,
+                            "groupIndex": 11,
+                            "uses": ["lower", "pitchDown"]
+                        }, {
+                            "position": [2, 4, 1.5],
+                            "size": 1.5,
+                            "groupIndex": 11,
+                            "uses": ["lower", "pitchDown"]
+                        }, {
+                            "position": [-2, 2, 1.5],
+                            "size": 1.5,
+                            "groupIndex": 11,
+                            "uses": ["lower", "pitchDown"]
+                        }, {
+                            "position": [-2, 4, 1.5],
+                            "size": 1.5,
+                            "groupIndex": 11,
+                            "uses": ["lower", "pitchDown"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 12,
+                    "uses": ["raise", "pitchUp"],
+                    "thrusters": [{
+                            "position": [2, 2, -1.5],
+                            "size": 1.5,
+                            "groupIndex": 12,
+                            "uses": ["raise", "pitchUp"]
+                        }, {
+                            "position": [2, 4, -1.5],
+                            "size": 1.5,
+                            "groupIndex": 12,
+                            "uses": ["raise", "pitchUp"]
+                        }, {
+                            "position": [-2, 2, -1.5],
+                            "size": 1.5,
+                            "groupIndex": 12,
+                            "uses": ["raise", "pitchUp"]
+                        }, {
+                            "position": [-2, 4, -1.5],
+                            "size": 1.5,
+                            "groupIndex": 12,
+                            "uses": ["raise", "pitchUp"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 13,
+                    "uses": ["strafeLeft", "yawLeft"],
+                    "thrusters": [{
+                            "position": [5.75, 3.2, 0],
+                            "size": 2.2,
+                            "groupIndex": 13,
+                            "uses": ["strafeLeft", "yawLeft"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 14,
+                    "uses": ["strafeRight", "yawRight"],
+                    "thrusters": [{
+                            "position": [-5.75, 3.2, 0],
+                            "size": 2.2,
+                            "groupIndex": 14,
+                            "uses": ["strafeRight", "yawRight"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 15,
+                    "uses": ["lower", "pitchUp"],
+                    "thrusters": [{
+                            "position": [2, -6.2, 2.5],
+                            "size": 1.6,
+                            "groupIndex": 15,
+                            "uses": ["lower", "pitchUp"]
+                        }, {
+                            "position": [-2, -6.2, 2.5],
+                            "size": 1.6,
+                            "groupIndex": 15,
+                            "uses": ["lower", "pitchUp"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 16,
+                    "uses": ["raise", "pitchDown"],
+                    "thrusters": [{
+                            "position": [2, -6.2, -0.5],
+                            "size": 1.6,
+                            "groupIndex": 16,
+                            "uses": ["raise", "pitchDown"]
+                        }, {
+                            "position": [-2, -6.2, -0.5],
+                            "size": 1.6,
+                            "groupIndex": 16,
+                            "uses": ["raise", "pitchDown"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 17,
+                    "uses": ["strafeLeft"],
+                    "thrusters": [{
+                            "position": [12, -8, 0],
+                            "size": 1.8,
+                            "groupIndex": 17,
+                            "uses": ["strafeLeft"]
+                        }],
+                    "array": false
+                }, {
+                    "group": 18,
+                    "uses": ["strafeRight"],
+                    "thrusters": [{
+                            "position": [-12, -8, 0],
+                            "size": 1.8,
+                            "groupIndex": 18,
+                            "uses": ["strafeRight"]
+                        }],
+                    "array": false
+                }],
+            "defaultLuminosityFactors": [[19, 1]],
+            "defaultEquipmentProfileName": "imperial-tier1"
         }, {
             "name": "drone",
             "type": "drone",

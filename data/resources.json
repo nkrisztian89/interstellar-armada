@@ -307,6 +307,21 @@
                 "high": "_1024"
             }
         }, {
+            "name": "rhino",
+            "basepath": "spacecraft/rhino",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
             "name": "aries",
             "basepath": "spacecraft/aries",
             "format": "png",
@@ -1225,6 +1240,26 @@
                     "suffix": "_lod0-4",
                     "maxLOD": 4
                 }]
+        }, {
+            "name": "rhino",
+            "basepath": "rhino",
+            "format": "egm",
+            "files": [{
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }]    
         }, {
             "name": "aries",
             "basepath": "aries",

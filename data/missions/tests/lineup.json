@@ -40,9 +40,15 @@
             "rotations": ["z+180"]
         }, 
         {
+            "team": "empire",
+            "class": "rhino",
+            "position": [46, 200, -100],
+            "rotations": ["z+180"]
+        },
+        {
             "team": "pirates",
             "class": "wolf",
-            "position": [43, 200, -100],
+            "position": [72, 200, -100],
             "rotations": ["z+180"]
         }
     ]
