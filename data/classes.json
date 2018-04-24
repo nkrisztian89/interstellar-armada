@@ -2627,8 +2627,8 @@
             "color": [0, 0.8, 1, 1],
             "grade": 1,
             "referenceMass": 50000,
-            "thrust": 30,
-            "angularThrust": 175,
+            "thrust": 35,
+            "angularThrust": 200,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
@@ -2973,9 +2973,9 @@
         }, {
             "name": "imperialHeavyFighterMk1",
             "fullName": "Standard heavy fighter shield",
-            "capacity": 15,
-            "rechargeDelay": 1800,
-            "rechargeRate": 1.5,
+            "capacity": 20,
+            "rechargeDelay": 100,
+            "rechargeRate": 2.0,
             "rechargeColor": [0.5, 0.85, 1],
             "rechargeAnimationDuration": 1000,
             "rechargeStartSound": {
@@ -3035,6 +3035,19 @@
                 "volume": 1
             },
             "scoreValue": 10
+        }, {
+            "name": "pirateFighterMk2",
+            "fullName": "Advanced pirate fighter shield",
+            "capacity": 8,
+            "rechargeDelay": 1000,
+            "rechargeRate": 1.2,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1
+            },
+            "scoreValue": 15
         }, {
             "name": "rebelBomberMk1",
             "fullName": "Rebel bomber shield",
@@ -3711,6 +3724,26 @@
                     },
                     "shield": {
                         "class": "imperialFighterMk2"
+                    }
+                }, {
+                    "name": "imperial-tier3",
+                    "weapons": [{
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialFighterMk3"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialFighterMk3"
                     }
                 }, {
                     "name": "rebel",
@@ -4760,8 +4793,8 @@
             "fullName": "Rhino",
             "description": "As the Empire started to encounter more serious resistance during its expansion, it became apparent that fighter squadrons composed of Falcons and Vipers could not operate optimally without proper cover. The Rhino heavy fighter was introduced as an answer to this challenge. While it is the least maneuverable fighter in service, this is an intentional choice. It more than makes up for this weakness with its armor, shielding, and primary armament, which all surpass that of any other current fighter class. The Rhino provides itself as an easy target for the enemy only because it can tank the shots while the interceptors and bombers complete their mission. Rhinos pilots are  regarded by many as the bravest within the Empire. According to others, they are simply insane.",
             "showInDatabase": true,
-            "hitpoints": 55,
-            "armor": 0,
+            "hitpoints": 60,
+            "armor": 0.5,
             "model": "rhino",
             "shader": "ship",
             "texture": "rhino",
@@ -7610,6 +7643,42 @@
                     },
                     "jumpEngine": {
                         "class": "pirateFighterMk1"
+                    }
+                }, {
+                    "name": "pirate-shielded",
+                    "weapons": [{
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }],
+                    "propulsion": {
+                        "class": "pirateFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "pirateFighterMk1"
+                    },
+                    "shield": {
+                        "class": "pirateFighterMk1"
+                    }
+                }, {
+                    "name": "pirate-elite",
+                    "weapons": [{
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }, {
+                            "class": "pirateGun"
+                        }],
+                    "propulsion": {
+                        "class": "pirateFighterMk2"
+                    },
+                    "jumpEngine": {
+                        "class": "pirateFighterMk1"
+                    },
+                    "shield": {
+                        "class": "pirateFighterMk2"
                     }
                 }, {
                     "name": "pirate-ruby-blade",

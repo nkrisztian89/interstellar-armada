@@ -275,6 +275,14 @@
                 "caution": "[color:0,1,0,1]Irányítás[]: Szép munka, az összes bombázó megsemmisült! Most dőljön hátra, és figyelje, ahogy a fregattok elvégzik a többit."
             }
         },
+        "heavy": {
+            "name": "Nehézfiúk",
+            "description": "<p>Nyomon követünk két sérült lázadó korvettet, amik elmenekültek a csatából. Az érzékelők szerint egy csapatnyi jól felfegyverzett kalózhoz szeretnének csatlakozni. Azonosítottuk a gyülekezőpontjukat, és vadászokat küldünk a megállításukra. Egy pár Rinocéroszt épp most készítettünk fel csatára, lent a hangárban várakoznak. Ön fogja vezetni őket <strong>Gamma 1</strong> hívójellel, és feladata az <strong>Alfa</strong> csapat támogatása lesz, akiket a kalózok ellen küldünk. Ha megtisztították a terepet a vadászoktól, beküldjük a bombázóinkat, a <strong>Béta</strong> csapatot, hogy intézzék el a korvetteket, mielőtt tovább tudnának ugrani. Őket is segíteni fogja a hadihajók megsemmisítésében. A bázisra akkor térjen vissza, ha minden kalóz és lázadó jelenlétet felszámoltak a szektorban.</p><p>A küldetéshez használt nehéz vadász jóval több lövést kibír, mint amihez hozzászokott, így tovább tarthat vele célra. De vigyázzon! Ha kereszttűzbe kerül, nehezebben tud majd csak kimenekülni belőle, és egy Rinocérosz sem megsemmisíthetetlen.</p>",
+            "messages": {
+                "firstCorvetteArrived": "Itt az első korvett, figyeljetek a lövegekre!",
+                "bombersArrived": "Béta vezér jelentkezik! Megérkeztünk, megkezdjük a támadást!"
+            }
+        },
         "test": {
             "name": "Teszt",
             "description": "Egy homokozó jellegű tesztpálya, ami felvonultatja a játékban szereplő legtöbb hajóosztályt, részben véletlenszerűen elhelyezve. Az űrhajók mozdulatlanul állnak. Demó módban a küldetés egy mindenki mindenki ellen jellegű összecsapássá változik, melynek célja a játék fejlesztés alatti teljesítménytesztelése.",

@@ -31,6 +31,8 @@
         }, {
             "source": "battle.json"
         }, {
+            "source": "heavy.json"
+        }, {
             "source": "tests/test.json"
         }, {
             "source": "tests/sandbox-30.json",

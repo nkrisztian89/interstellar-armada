@@ -233,6 +233,13 @@
                 "caution": "[color:0,1,0,1]Mission control[]: Nice work taking out the bombers! Now stay clear of the Mississippi and let the frigates do their job."
             }
         },
+        "heavy": {
+            "name": "Heavy duty",
+            "messages": {
+                "firstCorvetteArrived": "The first corvette is here, watch out for turret fire!",
+                "bombersArrived": "Beta leader here, we have arrived and are engaging the enemy!"
+            }
+        },
         "test": {
             "name": "Sandbox test",
             "messages": {
