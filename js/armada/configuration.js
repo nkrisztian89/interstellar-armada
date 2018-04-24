@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1167,7 +1167,7 @@ define([
              */
             WINGMEN_STATUS_CRAFT_INDICATOR: {
                 name: "wingmenStatusCraftIndicator",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["player", "shield", "general", "interceptor", "bomber"], COLOR: ["fullIntegrity", "halfIntegrity", "zeroIntegrity", "destroyed", "away", "fullShieldIntegrity", "halfShieldIntegrity", "zeroShieldIntegrity"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {MAPPING: ["player", "shield", "general", "interceptor", "bomber", "heavyFighter"], COLOR: ["fullIntegrity", "halfIntegrity", "zeroIntegrity", "destroyed", "away", "fullShieldIntegrity", "halfShieldIntegrity", "zeroShieldIntegrity"]})
             },
             /**
              * Stores the relative positions (within the area described by the squad layouts) of the individual spacecraft indicators for
