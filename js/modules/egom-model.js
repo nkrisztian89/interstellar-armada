@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file 
  * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
  * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
@@ -69,7 +69,7 @@ define([
              * The list of EgomModel versions that can be loaded from file.
              * @type String[]
              */
-            _supportedVersions = ["3.0"];
+            _supportedVersions = ["3.1"];
     // freezing enum objects
     Object.freeze(VertexAttributeRole);
     // -------------------------------------------------------------------------
@@ -1463,8 +1463,8 @@ define([
             index = dataJSON.vertices[i].i;
             minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
             maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
-            minLOD = dataJSON.vertices[i].lod ? dataJSON.vertices[i].lod[0] : minLOD;
-            maxLOD = dataJSON.vertices[i].lod ? dataJSON.vertices[i].lod[1] : maxLOD;
+            minLOD = dataJSON.vertices[i].l ? dataJSON.vertices[i].l[0] : minLOD;
+            maxLOD = dataJSON.vertices[i].l ? dataJSON.vertices[i].l[1] : maxLOD;
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             vertex = new Vertex(dataJSON.vertices[i].p);
@@ -1478,14 +1478,14 @@ define([
         for (i = 0; i < nLines; i++) {
             minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
             maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
-            minLOD = dataJSON.lines[i].lod ? dataJSON.lines[i].lod[0] : minLOD;
-            maxLOD = dataJSON.lines[i].lod ? dataJSON.lines[i].lod[1] : maxLOD;
+            minLOD = dataJSON.lines[i].l ? dataJSON.lines[i].l[0] : minLOD;
+            maxLOD = dataJSON.lines[i].l ? dataJSON.lines[i].l[1] : maxLOD;
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
             line = new Line(
                     dataJSON.lines[i].a,
                     dataJSON.lines[i].b,
-                    colorPalette ? colorPalette[dataJSON.lines[i].color] : dataJSON.lines[i].color,
+                    colorPalette ? colorPalette[dataJSON.lines[i].o] : dataJSON.lines[i].o,
                     dataJSON.lines[i].lum || 0,
                     dataJSON.lines[i].n);
             for (j = minLOD; j <= maxLOD; j++) {
@@ -1499,14 +1499,14 @@ define([
         for (i = 0; i < nTriangles; i++) {
             minLOD = defaultMinLOD === null ? defaultLOD : defaultMinLOD;
             maxLOD = defaultMaxLOD === null ? defaultLOD : defaultMaxLOD;
-            minLOD = dataJSON.triangles[i].lod ? dataJSON.triangles[i].lod[0] : minLOD;
-            maxLOD = dataJSON.triangles[i].lod ? dataJSON.triangles[i].lod[1] : maxLOD;
+            minLOD = dataJSON.triangles[i].l ? dataJSON.triangles[i].l[0] : minLOD;
+            maxLOD = dataJSON.triangles[i].l ? dataJSON.triangles[i].l[1] : maxLOD;
             this.updateLODInfo(minLOD, maxLOD);
             resetNewLoadedMeshes(minLOD, maxLOD);
-            params.color = colorPalette ? colorPalette[dataJSON.triangles[i].color] : dataJSON.triangles[i].color;
+            params.color = colorPalette ? colorPalette[dataJSON.triangles[i].o] : dataJSON.triangles[i].o;
             params.texCoords = dataJSON.triangles[i].t;
             params.normals = dataJSON.triangles[i].n;
-            params.groupIndices = (dataJSON.triangles[i].groups !== undefined) ? dataJSON.triangles[i].groups : null;
+            params.groupIndices = (dataJSON.triangles[i].g !== undefined) ? dataJSON.triangles[i].g : null;
             params.withoutLines = true;
             triangle = null;
             for (j = minLOD; j <= maxLOD; j++) {
