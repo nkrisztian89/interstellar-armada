@@ -1698,7 +1698,8 @@ define([
      */
     Particle.prototype.getWorldVelocityDirectionVector = function () {
         if (!this._worldVelocityDirectionVectorValid) {
-            this._worldVelocityDirectionVector = vec.normal3(vec.prodVec3Mat4Aux(this._velocityVector, this.getModelMatrix()));
+            vec.setProdVec3Mat4(this._worldVelocityDirectionVector, this._velocityVector, this.getModelMatrix());
+            vec.normalize3(this._worldVelocityDirectionVector);
             this._worldVelocityDirectionVectorValid = true;
         }
         return this._worldVelocityDirectionVector;
@@ -1907,7 +1908,7 @@ define([
         v = [0, 1];
         vec.rotate2(v, angle);
         up = [v[0], 0, v[1]];
-        direction = vec.normal3(mat.translationVector3(positionMatrix));
+        direction = vec.normalize3(mat.translationVector3(positionMatrix));
         directionYawAndPitch = vec.getYawAndPitch(direction);
         v = [0, v[1]];
         vec.rotate2(v, directionYawAndPitch.pitch);

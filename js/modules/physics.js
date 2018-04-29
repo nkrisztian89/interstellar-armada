@@ -848,7 +848,8 @@ define([
      */
     PhysicalObject.prototype.addForceAndTorque = function (position, direction, strength, duration) {
         var
-                leverDir = vec.normal3(position),
+                lever = vec.length3(position),
+                leverDir = vec.scaled3(position, 1 / lever),
                 parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
                 perpendicularForce = vec.diff3Aux(direction, parallelForce);
         this.addForce(new Force(
@@ -856,8 +857,8 @@ define([
                 direction,
                 duration));
         this.addTorque(new Torque(
-                strength * vec.length3(perpendicularForce) * vec.length3(position),
-                vec.normal3(vec.cross3(perpendicularForce, leverDir)),
+                strength * vec.length3(perpendicularForce) * lever,
+                vec.normalize3(vec.cross3(perpendicularForce, leverDir)),
                 duration));
     };
     /**
@@ -900,12 +901,13 @@ define([
         relativePos = vec.prodVec4Mat4Aux(vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
         relativeVelocityVector = vec.diff3(velocityVector, vec.setTranslationVector3(this._v, this.getVelocityMatrix()));
-        range = vec.length3(relativeVelocityVector) * dt * 0.001 * this._inverseScalingFactor;
+        i = vec.length3(relativeVelocityVector);
+        range = i * dt * 0.001 * this._inverseScalingFactor;
         // first, preliminary check based on position relative to the whole object
         if ((Math.abs(relativePos[0]) - range < this._bodySize) && (Math.abs(relativePos[1]) - range < this._bodySize) && (Math.abs(relativePos[2]) - range < this._bodySize)) {
             // if it is close enough to be hitting one of the bodies, check them
             vec.mulVec3Mat3(relativeVelocityVector, mat.matrix3from4Aux(this.getRotationMatrixInverse()));
-            vec.normalize3(relativeVelocityVector);
+            vec.scale3(relativeVelocityVector, 1 / i);
             for (i = 0; (result === null) && (i < this._bodies.length); i++) {
                 result = this._bodies[i].checkHit(relativePos, relativeVelocityVector, range, offset);
             }

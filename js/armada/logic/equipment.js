@@ -429,7 +429,7 @@ define([
     Projectile.prototype.simulate = function (dt, hitObjectOctree) {
         var i, hitObjects,
                 positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace,
-                relativeVelocityVectorInWorldSpace, relativeVelocity, relativeVelocityDirectionInWorldSpace,
+                relativeVelocity, relativeVelocityDirectionInWorldSpace,
                 exp, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, hitCheckDT;
         if (this.canBeReused()) {
             return;
@@ -460,12 +460,11 @@ define([
                 if (physicalHitObject && (_isSelfFireEnabled || (hitObjects[i] !== this._origin))) {
                     hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT);
                     if (hitPositionVectorInObjectSpace) {
-                        relativeVelocityVectorInWorldSpace = vec.diff3Aux(velocityVectorInWorldSpace, mat.translationVector3(physicalHitObject.getVelocityMatrix()));
-                        relativeVelocityDirectionInWorldSpace = vec.normal3(relativeVelocityVectorInWorldSpace);
-                        relativeVelocity = vec.length3(relativeVelocityVectorInWorldSpace);
+                        relativeVelocityDirectionInWorldSpace = vec.diffVec3Mat4(velocityVectorInWorldSpace, physicalHitObject.getVelocityMatrix());
+                        relativeVelocity = vec.extractLength3(relativeVelocityDirectionInWorldSpace);
                         relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4Aux(hitObjects[i].getVisualModel().getOrientationMatrix()));
                         hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
-                        relativeHitPositionVectorInWorldSpace = vec.diff3Aux(hitPositionVectorInWorldSpace, mat.translationVector3(physicalHitObject.getPositionMatrix()));
+                        relativeHitPositionVectorInWorldSpace = vec.diffVec3Mat4Aux(hitPositionVectorInWorldSpace, physicalHitObject.getPositionMatrix());
                         physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
                         exp = explosion.getExplosion();
                         exp.init(((hitObjects[i].getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
@@ -1065,8 +1064,7 @@ define([
             // transform to object space - relative to the weapon
             vectorToTarget = vec.prodMat4Vec3(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
             vectorToTarget = vec.prodMat4Vec3(this._slot.orientationMatrix, vectorToTarget);
-            inRange = vec.length3(vectorToTarget) <= this.getRange();
-            vec.normalize3(vectorToTarget);
+            inRange = vec.extractLength3(vectorToTarget) <= this.getRange();
             switch (this._class.getRotationStyle()) {
                 case classes.WeaponRotationStyle.YAW_PITCH:
                     yawAndPitch = vec.getYawAndPitch(vectorToTarget);
@@ -1258,7 +1256,7 @@ define([
             index: index,
             value: vec.angle3u(
                     mat.getRowB43(this._spacecraft.getPhysicalOrientationMatrix()),
-                    vec.normal3(vec.diff3(
+                    vec.normalize3(vec.diff3(
                             craft.getPhysicalPositionVector(), this._spacecraft.getPhysicalPositionVector())))
         };
     };

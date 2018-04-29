@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides a set of functions to operate on Float32Arrays as matrices
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1171,7 +1171,7 @@ define([
             result.alphaAxis = [0, 0, 1];
             result.alpha = dot > 0 ? 0 : Math.PI;
         } else {
-            result.alphaAxis = vec.normal3(vec.cross3(mat.getRowB43(m), vec.UNIT3_Y));
+            result.alphaAxis = vec.normalize3(vec.cross3(mat.getRowB43(m), vec.UNIT3_Y));
             result.alpha = vec.angle3u(mat.getRowB43(m), vec.UNIT3_Y);
         }
         if (result.alpha > Math.PI) {
@@ -1187,7 +1187,7 @@ define([
             result.gammaAxis = [0, 1, 0];
             result.gamma = dot > 0 ? 0 : Math.PI;
         } else {
-            result.gammaAxis = vec.normal3(vec.cross3(mat.getRowA43(halfMatrix), vec.UNIT3_X));
+            result.gammaAxis = vec.normalize3(vec.cross3(mat.getRowA43(halfMatrix), vec.UNIT3_X));
             result.gamma = vec.angle3u(mat.getRowA43(halfMatrix), vec.UNIT3_X);
         }
         if (result.gamma > Math.PI) {
@@ -1490,8 +1490,8 @@ define([
      */
     mat.correctedOrthogonal4 = function (m) {
         var
-                vx = vec.normal3([m[0], m[1], m[2]]),
-                vy = vec.normal3([m[4], m[5], m[6]]),
+                vx = vec.normalize3([m[0], m[1], m[2]]),
+                vy = vec.normalize3([m[4], m[5], m[6]]),
                 vz = vec.cross3(vx, vy);
         vy = vec.cross3(vz, vx);
         _matrixCount++;
@@ -2529,8 +2529,8 @@ define([
      */
     mat.correctOrthogonal4 = function (m) {
         var
-                vx = vec.normal3([m[0], m[1], m[2]]),
-                vy = vec.normal3([m[4], m[5], m[6]]),
+                vx = vec.normalize3([m[0], m[1], m[2]]),
+                vy = vec.normalize3([m[4], m[5], m[6]]),
                 vz = vec.cross3(vx, vy);
         vy = vec.cross3(vz, vx);
         m[0] = vx[0];

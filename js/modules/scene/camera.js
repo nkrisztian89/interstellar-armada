@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides a capable camera class to use with scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -531,19 +531,19 @@ define([
         if (this._distanceIsConfined) {
             if (this._followedObjects.length > 0) {
                 translationVector = mat.translationVector3(relativePositionMatrix);
-                distance = vec.length3(translationVector);
+                distance = vec.extractLength3(translationVector);
                 if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
                     if ((distance > this._maximumDistance) && (this._resetsWhenLeavingConfines)) {
                         this.resetToDefaults();
                         return false;
                     }
                     distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
-                    relativePositionMatrix = mat.translation4vAux(vec.scaled3(vec.normal3(translationVector), distance));
+                    relativePositionMatrix = mat.translation4vAux(vec.scale3(translationVector, distance));
                 }
                 // if the position is absolute, we will do the distance range check from the orientation followed object (if any)
             } else if (orientationFollowedObjectsPositionVector) {
                 translationVector = vec.diff3Aux(mat.translationVector3(relativePositionMatrix), orientationFollowedObjectsPositionVector);
-                distance = vec.length3(translationVector);
+                distance = vec.extractLength3(translationVector);
                 if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
                     if ((distance > this._maximumDistance) && (this._resetsWhenLeavingConfines)) {
                         // if we have absolute position and a distance confined for the orientation followed object, a reset is not possible
@@ -553,7 +553,7 @@ define([
                         return false;
                     }
                     distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
-                    relativePositionMatrix = mat.translation4vAux(vec.sum3(orientationFollowedObjectsPositionVector, vec.scaled3(vec.normal3(translationVector), distance)));
+                    relativePositionMatrix = mat.translation4vAux(vec.sum3(orientationFollowedObjectsPositionVector, vec.scale3(translationVector, distance)));
                 }
             }
         }
@@ -612,13 +612,12 @@ define([
         var translationVector, distance;
         if (!this._fixed) {
             if ((this._followedObjects.length === 0) || this._startsWithRelativePosition) {
-                translationVector = vec.scaled3(vec.prodVec3Mat4Aux(velocityVector, worldOrientationMatrix), dt / 1000);
-                mat.translateByVector(this._relativePositionMatrix, translationVector);
+                mat.translateByVector(this._relativePositionMatrix, vec.scale3(vec.prodVec3Mat4Aux(velocityVector, worldOrientationMatrix), dt / 1000));
             } else {
                 if (this._turnsAroundObjects) {
                     if (this._distanceIsConfined) {
                         translationVector = mat.translationVector3(this._relativePositionMatrix);
-                        distance = vec.length3(translationVector) + (velocityVector[2] * dt / 1000);
+                        distance = vec.extractLength3(translationVector) + (velocityVector[2] * dt / 1000);
                         if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
                             if (this._resetsWhenLeavingConfines) {
                                 this.resetToDefaults();
@@ -627,7 +626,7 @@ define([
                             velocityVector[2] = 0;
                             distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
                         }
-                        mat.setTranslation4v(this._relativePositionMatrix, vec.scaled3(vec.normal3(translationVector), distance));
+                        mat.setTranslation4v(this._relativePositionMatrix, vec.scale3(translationVector, distance));
                     }
                 } else {
                     if (this._movesRelativeToObject) {
@@ -1080,7 +1079,7 @@ define([
                 if (!worldPositionMatrix) {
                     application.crash();
                 } else {
-                    dirTowardsObject = vec.normal3(vec.diff3(this.getFollowedObjectsPositionVector(), mat.translationVector3(worldPositionMatrix)));
+                    dirTowardsObject = vec.normalize3(vec.diff3(this.getFollowedObjectsPositionVector(), mat.translationVector3(worldPositionMatrix)));
                     if (!this._fps) {
                         this._worldOrientationMatrix[8] = dirTowardsObject[0];
                         this._worldOrientationMatrix[9] = dirTowardsObject[1];
@@ -1186,6 +1185,7 @@ define([
      * @returns {Boolean} Whether the update finished successfully (true) or there was a change in the settings (false)
      */
     CameraOrientationConfiguration.prototype.update = function (angularVelocityVector, dt) {
+        var factor;
         if (this._pointsTowardsObjects && !this.followsObjects() && (this._pointToFallback === CameraOrientationConfiguration.PointToFallback.STATIONARY)) {
             return;
         }
@@ -1209,16 +1209,17 @@ define([
                 this._beta = Math.min(Math.max(this._minBeta, this._beta), this._maxBeta);
                 mat.setProd3x3SubOf4(this._relativeOrientationMatrix, mat.rotationX4Aux(this._beta * Math.PI / 180), mat.rotationZ4Aux(this._alpha * Math.PI / 180));
             } else {
+                factor = Math.PI / 180 * dt / 1000;
                 if (this._followedObjects.length > 0) {
                     mat.mul4(this._relativeOrientationMatrix, mat.prod34Aux(
-                            mat.rotation4Aux(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
-                            mat.rotation4Aux(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
-                            mat.rotation4Aux(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
+                            mat.rotation4Aux(vec.normalize3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[2] * factor),
+                            mat.rotation4Aux(vec.normalize3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * factor),
+                            mat.rotation4Aux(vec.normalize3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[1] * factor)));
                 } else {
                     mat.mul4(this._relativeOrientationMatrix, mat.prod34Aux(
-                            mat.rotation4Aux(vec.normal3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[2] * Math.PI / 180 * dt / 1000),
-                            mat.rotation4Aux(vec.normal3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * Math.PI / 180 * dt / 1000),
-                            mat.rotation4Aux(vec.normal3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[1] * Math.PI / 180 * dt / 1000)));
+                            mat.rotation4Aux(vec.normalize3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[2] * factor),
+                            mat.rotation4Aux(vec.normalize3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * factor),
+                            mat.rotation4Aux(vec.normalize3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[1] * factor)));
                 }
             }
         }

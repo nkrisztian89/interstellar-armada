@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2018 Krisztián Nagy
  * @file A stateful module providing a collection to which AIs of different types (at the moment only one type, an AI for fighters) can be
  * added which control their respective spacecraft when the control function of the module is called.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -1024,8 +1024,7 @@ define([
                 relativeTargetDirection = vec.prodVec3Mat4Aux(
                         vectorToTarget,
                         inverseOrientationMatrix);
-                this._targetDistance = vec.length3(relativeTargetDirection);
-                vec.normalize3(relativeTargetDirection);
+                this._targetDistance = vec.extractLength3(relativeTargetDirection);
                 targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
                 this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
                 this._spacecraft.setSpeedTarget(acceleration * CHARGE_EVADE_SPEED_FACTOR);
@@ -1057,8 +1056,7 @@ define([
                 relativeTargetDirection = vec.prodVec3Mat4Aux(
                         vectorToTarget,
                         inverseOrientationMatrix);
-                this._targetDistance = vec.length3(relativeTargetDirection);
-                vec.normalize3(relativeTargetDirection);
+                this._targetDistance = vec.extractLength3(relativeTargetDirection);
                 targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
                 targetYawAndPitch.yaw += this._aimError[0];
                 targetYawAndPitch.pitch += this._aimError[1];
@@ -1357,9 +1355,8 @@ define([
                 relativeTargetDirection = vec.prodVec3Mat4(
                         vectorToTarget,
                         inverseOrientationMatrix);
-                targetDistance = vec.length3(relativeTargetDirection);
+                targetDistance = vec.extractLength3(relativeTargetDirection);
                 if (hostileTarget) {
-                    vec.normalize3(relativeTargetDirection);
                     targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
                     facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
                 }

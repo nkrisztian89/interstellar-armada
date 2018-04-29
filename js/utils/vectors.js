@@ -799,6 +799,30 @@ define(function () {
         return v;
     };
     /**
+     * Returns the difference of a 3D vector and the translation component of a 4x4 transformation matrix
+     * @param {Number[3]} v The 3D vector.
+     * @param {Number[3]} m The 4x4 transformation matrix.
+     * @returns {Number[3]} The difference of v and the translation component of m.
+     */
+    vec.diffVec3Mat4 = function (v, m) {
+        return [v[0] - m[12], v[1] - m[13], v[2] - m[14]];
+    };
+    /**
+     * Returns the difference of a 3D vector and the translation component of a 4x4 transformation matrix
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v The 3D vector.
+     * @param {Number[3]} m The 4x4 transformation matrix.
+     * @returns {Number[3]} The difference of v and the translation component of m.
+     */
+    vec.diffVec3Mat4Aux = function (v, m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = v[0] - m[12];
+        aux[1] = v[1] - m[13];
+        aux[2] = v[2] - m[14];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Multiplies the given 3D row vector with the given 3x3 matrix from the right, modifying it in-place.
      * @param {Number[3]} v A 3D vector.
      * @param {Float32Array} m A 3x3 matrix.
@@ -875,6 +899,20 @@ define(function () {
         v[0] = m[4];
         v[1] = m[5];
         v[2] = m[6];
+    };
+    /**
+     * Normalizes the passed 3D vector and returns its length
+     * @param {Number[3]} v
+     * @returns {Number}
+     */
+    vec.extractLength3 = function (v) {
+        var
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+        v[0] *= factor;
+        v[1] *= factor;
+        v[2] *= factor;
+        return divisor;
     };
     // ----------------------------------------------------------------------
     // Initialization

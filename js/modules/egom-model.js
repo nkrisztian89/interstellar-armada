@@ -242,7 +242,7 @@ define([
          * elements.
          * @type Number[][3]
          */
-        this.normals = normals || vec.normal3(vec.cross3(this._mesh.getVector(a, b), this._mesh.getVector(a, c)));
+        this.normals = normals || vec.normalize3(vec.cross3(this._mesh.getVector(a, b), this._mesh.getVector(a, c)));
         /**
          * The indices of the groups (of various types) this triangle belongs to. Currently two groups types are used: the first index
          * indicates the transform group and the second one the luminosity group.
