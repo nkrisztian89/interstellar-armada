@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Implementation of the Spacecraft game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -481,6 +481,18 @@ define([
          * @type Number
          */
         this._timeElapsedSinceDestruction = -1;
+        // ---------------------------------------
+        // optimization
+        /**
+         * Cached factor to work with when asking for needed burn for speed change
+         * @type Number
+         */
+        this._burnForSpeedChangeFactor = 0;
+        /**
+         * Cached factor to work with when asking for needed burn for angular velocity change
+         * @type Number
+         */
+        this._burnForAngularVelocityChangeFactor = 0;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, equipmentProfileName, spacecraftArray);
@@ -572,6 +584,7 @@ define([
         this._hitSoundTimestamp = 0;
         this._updateIDAndName();
         this._updateScoreValue();
+        this._updateBurnNeedFactors();
     };
     /**
      * Updates the cached values for the spacecraft ID and display name based on the designation (name / squad) of the spacecraft.
@@ -583,6 +596,13 @@ define([
         this._displayName = (this._name || !this._squad) ?
                 this._name :
                 (strings.get(strings.SQUAD.PREFIX, this._squad)) + " " + this._indexInSquad.toString();
+    };
+    /**
+     * Updates the cached values for faster calculation of needed burn levels (depends on propulsion and phyiscal model (mass))
+     */
+    Spacecraft.prototype._updateBurnNeedFactors = function () {
+        this._burnForSpeedChangeFactor = this._propulsion ? (this._physicalModel.getMass() / this._propulsion.getThrust() * this._propulsion.getMaxMoveBurnLevel() * 1000) : 0;
+        this._burnForAngularVelocityChangeFactor = this._propulsion ? (1 / physics.ANGULAR_VELOCITY_MATRIX_DURATION_S * this._physicalModel.getMass() / this._propulsion.getAngularThrust() * this._propulsion.getMaxTurnBurnLevel() * 1000) : 0;
     };
     // direct getters and setters
     /**
@@ -1166,7 +1186,7 @@ define([
      * @returns {Number}
      */
     Spacecraft.prototype.getNeededBurnForSpeedChange = function (speedDifference, duration) {
-        return speedDifference * this._physicalModel.getMass() / this._propulsion.getThrust() * this._propulsion.getMaxMoveBurnLevel() / (duration / 1000);
+        return speedDifference * this._burnForSpeedChangeFactor / duration;
     };
     /**
      * Returns the thruster burn level that is needed to produce the passed difference in angular velocity using the current propulsion 
@@ -1176,7 +1196,7 @@ define([
      * @returns {Number}
      */
     Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function (angularVelocityDifference, duration) {
-        return angularVelocityDifference / physics.ANGULAR_VELOCITY_MATRIX_DURATION_S * this._physicalModel.getMass() / this._propulsion.getAngularThrust() * this._propulsion.getMaxTurnBurnLevel() / (duration / 1000);
+        return angularVelocityDifference * this._burnForAngularVelocityChangeFactor / duration;
     };
     // methods
     /**
@@ -1811,6 +1831,7 @@ define([
         this._propulsion = new equipment.Propulsion(propulsionClass, this._physicalModel);
         this._maneuveringComputer.updateForNewPropulsion();
         this._maneuveringComputer.updateTurningLimit();
+        this._updateBurnNeedFactors();
     };
     /**
      * Equips a jump engine of the given class to the ship, replacing the
