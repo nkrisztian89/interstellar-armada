@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -64,19 +64,31 @@ define(function () {
     vec.NULL4 = [0, 0, 0, 0];
     Object.freeze(vec.NULL4);
     /**
-     * A constant 3D unit vector point to the positive X direction.
+     * A constant 2D unit vector pointing towards the positive X direction.
+     * @type Number[3]
+     */
+    vec.UNIT2_X = [1, 0];
+    Object.freeze(vec.UNIT2_X);
+    /**
+     * A constant 2D unit vector pointing towards the positive Y direction.
+     * @type Number[3]
+     */
+    vec.UNIT2_Y = [0, 1];
+    Object.freeze(vec.UNIT2_Y);
+    /**
+     * A constant 3D unit vector pointing towards the positive X direction.
      * @type Number[3]
      */
     vec.UNIT3_X = [1, 0, 0];
     Object.freeze(vec.UNIT3_X);
     /**
-     * A constant 3D unit vector point to the positive Y direction.
+     * A constant 3D unit vector pointing towards the positive Y direction.
      * @type Number[3]
      */
     vec.UNIT3_Y = [0, 1, 0];
     Object.freeze(vec.UNIT3_Y);
     /**
-     * A constant 3D unit vector point to the positive Z direction.
+     * A constant 3D unit vector pointing towards the positive Z direction.
      * @type Number[3]
      */
     vec.UNIT3_Z = [0, 0, 1];
@@ -672,6 +684,7 @@ define(function () {
     /**
      * Scales the passed 2D vector to unit length.
      * @param {Number[2]} v A 2D vector
+     * @returns {Number[2]} v
      */
     vec.normalize2 = function (v) {
         var
@@ -679,10 +692,12 @@ define(function () {
                 factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
         v[0] *= factor;
         v[1] *= factor;
+        return v;
     };
     /**
      * Scales the passed 3D vector to unit length.
      * @param {Number[3]} v A 3D vector
+     * @returns {Number[2]} v
      */
     vec.normalize3 = function (v) {
         var
@@ -691,6 +706,7 @@ define(function () {
         v[0] *= factor;
         v[1] *= factor;
         v[2] *= factor;
+        return v;
     };
     /**
      * Normalizes the passed 4D vector by dividing all its coordinates by the last (4th) coordinate.
@@ -702,6 +718,18 @@ define(function () {
         v[1] /= v[3];
         v[2] /= v[3];
         v[3] = 1;
+    };
+    /**
+     * Multiplies the passed 3D vector with the passed scalar and then returns it.
+     * @param {Number[3]} v
+     * @param {Number} s
+     * @returns {Number[3]} v
+     */
+    vec.scale3 = function (v, s) {
+        v[0] *= s;
+        v[1] *= s;
+        v[2] *= s;
+        return v;
     };
     /**
      * Modifies the pased 3D vector, setting it to be the sum of the other two passed vectors
@@ -757,6 +785,18 @@ define(function () {
                 x = v[0];
         v[0] = v[0] * cosAngle + v[1] * -sinAngle;
         v[1] = x * sinAngle + v[1] * cosAngle;
+    };
+    /**
+     * Sets the passed 3D vector to the translation component of the passed 4x4 matrix.
+     * @param {Number[3]} v A 3D vector
+     * @param {Float32Array} m A 4x4 transformation matrix
+     * @returns {Number[3]} v
+     */
+    vec.setTranslationVector3 = function (v, m) {
+        v[0] = m[12];
+        v[1] = m[13];
+        v[2] = m[14];
+        return v;
     };
     /**
      * Multiplies the given 3D row vector with the given 3x3 matrix from the right, modifying it in-place.

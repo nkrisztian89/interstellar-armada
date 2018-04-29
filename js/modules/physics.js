@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides a basic physics engine with Newtonian mechanics
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -50,38 +50,32 @@ define([
     /**
      * @class Represents a force affecting a physical object, causing it to 
      * accelerate at a constant rate in the direction of the force.
-     * @param {String} id Can be used to identify continuous forces so that their
-     * properties can be subsequently renewed.
      * @param {Number} strength The strength of the force in newtons.
-     * @param {Number[]} direction The vector describing the direction in which
-     * the force creates the acceleration.
+     * @param {Number[3]} direction The vector describing the direction in which
+     * the force creates the acceleration. Needs to be a unit vector. 
+     * #persistent, #read-write
      * @param {Number} [duration] The duration while the force is still in effect, 
      * given in milliseconds. If omitted, the force will be created as continuous.
      */
-    function Force(id, strength, direction, duration) {
-        /**
-         * Can be used to identify and update a force that changes over time.
-         * @type String
-         */
-        this._id = id;
+    function Force(strength, direction, duration) {
         /**
          * Magnitude of the force, in newtons.
          * @type Number
          */
         this._strength = strength;
         /**
-         * Attack direction vector of the force. Always normalized.
+         * Attack direction vector of the force. Unit vector.
          * @type Number[3]
          */
-        this._direction = vec.normal3(direction);
+        this._direction = direction;
         /**
-         * For how much more time is this force in effect, in milliseconds.
+         * For how much more time is this force in effect, in milliseconds. For continuous forces, 0 means the force is in effect and a negative
+         * value means it is currently not in effect.
          * @type Number
          */
-        this._duration = duration;
+        this._duration = duration || 0;
         /**
-         * Whether this force is continuous - it is exerted continuously while being renewed in each simulation step, but will cease 
-         * existing as soon as it is not renewed
+         * Whether this force is continuous - it is exerted for (the entire duration of) every simulation step when it is renewed, and ignored when not.
          * @type Boolean
          */
         this._continuous = (duration === undefined);
@@ -90,26 +84,17 @@ define([
         this.previous = null;
         this.list = null;
     }
-    // direct getters and setters
-    /**
-     * Returns the force ID.
-     * @returns {String}
-     */
-    Force.prototype.getID = function () {
-        return this._id;
-    };
     // methods
     /**
-     * Updates the properties of the force to the passed ones.
-     * @param {Number} strength
-     * @param {Number[3]} direction
-     * @param {Number} [duration] If omitted, the force will be renewed as continuous.
+     * Updates the properties of a continuous force, placing it back into effect for the current simulation step
+     * @param {Number} strength In newtowns
+     * @param {Number[3]} direction A unit vector.
+     * #temporary, #ready-only
      */
-    Force.prototype.renew = function (strength, direction, duration) {
+    Force.prototype.renew = function (strength, direction) {
         this._strength = strength;
-        this._direction = vec.normal3(direction);
-        this._duration = duration;
-        this._continuous = (duration === undefined);
+        vec.setVector3(this._direction, direction);
+        this._duration = 0;
     };
     /**
      * Decreases the remaining exertion duration of the force by maxmimum the passed amount,
@@ -120,8 +105,10 @@ define([
      */
     Force.prototype.exert = function (dt) {
         if (this._continuous) {
-            this._continuous = false;
-            this._duration = 0;
+            if (this._duration < 0) {
+                return 0;
+            }
+            this._duration = -1;
             return dt;
         }
         if (this._duration >= MINIMUM_EFFECT_DURATION) {
@@ -151,37 +138,31 @@ define([
     /**
      * @class Represents a torque affecting a physical object, causing it to 
      * accelerate its spinning around the axis of the torque at a constant rate.
-     * @param {String} id Can be used to identify continuous torques so that their
-     * properties can be subsequently renewed.
      * @param {Number} strength The strength of the torque in kg*rad/s^2.
-     * @param {Number[]} axis The vector describing the axis of spinning.
+     * @param {Number[3]} axis The vector describing the axis of spinning. Needs to be a unit vector.
+     * #persistent, #read-write
      * @param {Number} [duration] The duration while the torque is still in effect,
      * given in milliseconds. If omitted, the torque will be created as continuous.
      */
-    function Torque(id, strength, axis, duration) {
-        /**
-         * Can be used to identify and update a torque that changes over time.
-         * @type String
-         */
-        this._id = id;
+    function Torque(strength, axis, duration) {
         /**
          * Magnitude of the torque, in kg*rad/s^2.
          * @type Number
          */
         this._strength = strength;
         /**
-         * Axis of the spinning which this torque accelerates. Always normalized.
+         * Axis of the spinning which this torque accelerates. Unit vector.
          * @type Number[3]
          */
-        this._axis = vec.normal3(axis);
+        this._axis = axis;
         /**
-         * For how much more time is this torque in effect, in milliseconds.
+         * For how much more time is this torque in effect, in milliseconds. For continuous torques, 0 means the torque is in effect and a negative
+         * value means it is currently not in effect.
          * @type Number
          */
-        this._duration = duration;
+        this._duration = duration || 0;
         /**
-         * Whether this torque is continuous - it is exerted continuously while being renewed in each simulation step, but will cease 
-         * existing as soon as it is not renewed
+         * Whether this torque is continuous - it is exerted for (the entire duration of) every simulation step when it is renewed, and ignored when not.
          * @type Boolean
          */
         this._continuous = (duration === undefined);
@@ -190,26 +171,16 @@ define([
         this.previous = null;
         this.list = null;
     }
-    // direct getters and setters
-    /**
-     * Returns the torque ID.
-     * @returns {String}
-     */
-    Torque.prototype.getID = function () {
-        return this._id;
-    };
     // methods
     /**
-     * Updates the properties of the torque to the passed ones.
+     * Updates the properties of a continuous torque.
      * @param {Number} strength
-     * @param {Number[3]} axis
-     * @param {Number} [duration] If omitted, the torque will be renewed as continuous
+     * @param {Number[3]} axis #temporary, #read-only
      */
-    Torque.prototype.renew = function (strength, axis, duration) {
+    Torque.prototype.renew = function (strength, axis) {
         this._strength = strength;
-        this._axis = axis;
-        this._duration = duration;
-        this._continuous = (duration === undefined);
+        vec.setVector3(this._axis, axis);
+        this._duration = 0;
     };
     /**
      * Decreases the remaining exertion duration of the torque by maxmimum the passed amount,
@@ -221,8 +192,10 @@ define([
      */
     Torque.prototype.exert = function (dt) {
         if (this._continuous) {
-            this._continuous = false;
-            this._duration = 0;
+            if (this._duration < 0) {
+                return 0;
+            }
+            this._duration = -1;
             return dt;
         }
         if (this._duration >= MINIMUM_EFFECT_DURATION) {
@@ -310,6 +283,11 @@ define([
          * @type Number
          */
         this._halfDepth = dimensions[2] * 0.5;
+        /**
+         * Reusable variable to temporarity store the result of the last model transform call
+         * @type Number
+         */
+        this._modelTransformResult = [0, 0, 0, 1];
     }
     // direct getters and setters
     /**
@@ -359,9 +337,12 @@ define([
      * @returns {Number[4]}
      */
     Body.prototype._modelTransform = function (vector) {
-        return this._rotated ?
-                vec.sum3(vec.prodVec3Mat4Aux(vector, this._orientationMatrix), this._positionVector).concat(1) :
-                vec.sum3(vector, this._positionVector).concat(1);
+        if (this._rotated) {
+            vec.setSum3(this._modelTransformResult, vec.prodVec3Mat4Aux(vector, this._orientationMatrix), this._positionVector);
+        } else {
+            vec.setSum3(this._modelTransformResult, vector, this._positionVector);
+        }       
+        return this._modelTransformResult;
     };
     /**
      * Returns the inverse of the model matrix (the matrix representing both the
@@ -419,7 +400,7 @@ define([
                     // if the impact already happened and it happened within the given range then we can return the intersection point
                     // (transformed back into model (physical object) space)
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([-halfWidth, ipx, ipy, 1]);
+                        return this._modelTransform([-halfWidth, ipx, ipy]);
                     }
                     // if the entry point is on the left face but the impact did not happen yet or happened too far in the past (which means 
                     // it is possible it did not even happen as this is just an extrapolation of the path to a whole infinite line, while 
@@ -434,7 +415,7 @@ define([
                 ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
                 if (utils.pointInRect(ipx, ipy, -halfHeight, -halfDepth, halfHeight, halfDepth)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([halfWidth, ipx, ipy, 1]);
+                        return this._modelTransform([halfWidth, ipx, ipy]);
                     }
                     return null;
                 }
@@ -449,7 +430,7 @@ define([
                 ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
                 if (utils.pointInRect(ipx, ipy, -halfWidth, -halfDepth, halfWidth, halfDepth)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([ipx, -halfHeight, ipy, 1]);
+                        return this._modelTransform([ipx, -halfHeight, ipy]);
                     }
                     return null;
                 }
@@ -459,7 +440,7 @@ define([
                 ipy = relativePositionVector[2] + relativeDirectionVector[2] * d;
                 if (utils.pointInRect(ipx, ipy, -halfWidth, -halfDepth, halfWidth, halfDepth)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([ipx, halfHeight, ipy, 1]);
+                        return this._modelTransform([ipx, halfHeight, ipy]);
                     }
                     return null;
                 }
@@ -472,7 +453,7 @@ define([
                 ipy = relativePositionVector[1] + relativeDirectionVector[1] * d;
                 if (utils.pointInRect(ipx, ipy, -halfWidth, -halfHeight, halfWidth, halfHeight)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([ipx, ipy, -halfDepth, 1]);
+                        return this._modelTransform([ipx, ipy, -halfDepth]);
                     }
                     return null;
                 }
@@ -482,7 +463,7 @@ define([
                 ipy = relativePositionVector[1] + relativeDirectionVector[1] * d;
                 if (utils.pointInRect(ipx, ipy, -halfWidth, -halfHeight, halfWidth, halfHeight)) {
                     if ((d <= 0) && (d >= -range)) {
-                        return this._modelTransform([ipx, ipy, halfDepth, 1]);
+                        return this._modelTransform([ipx, ipy, halfDepth]);
                     }
                     return null;
                 }
@@ -579,6 +560,7 @@ define([
          * @type Body[]
          */
         this._bodies = null;
+        // optimization variables:
         /**
          * The cached size of the whole structure (the distance between the center of the object and the farthest point of its bodies)
          * @type Number
@@ -590,6 +572,16 @@ define([
          * @type Boolean
          */
         this._fixedOrientation = false;
+        /**
+         * Cached value of the reciprocal of the current X scaling
+         * @type Number
+         */
+        this._inverseScalingFactor = 1;
+        /*
+         * Reusable vector variable to store temporary values without the need to create a new array for them
+         * @type Number[3]
+         */
+        this._v = [0, 0, 0];
         if (positionMatrix) {
             this.init(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation);
         }
@@ -614,6 +606,7 @@ define([
         this._modelMatrixInverseValid = false;
         mat.setMatrix4(this._velocityMatrix, initialVelocityMatrix);
         mat.setIdentity4(this._angularVelocityMatrix);
+        this._inverseScalingFactor = 1 / this._scalingMatrix[0];
         this._forces.clear();
         this._torques.clear();
         this._bodies = bodies || [];
@@ -711,16 +704,20 @@ define([
     /**
      * Adds a force that will affect this object from now on.
      * @param {Force} force
+     * @returns {Force} The added force
      */
     PhysicalObject.prototype.addForce = function (force) {
         this._forces.add(force);
+        return force;
     };
     /**
      * Adds a torque that will affect this object from now on.
      * @param {Torque} torque
+     * @returns {Torque} The added torque
      */
     PhysicalObject.prototype.addTorque = function (torque) {
         this._torques.add(torque);
+        return torque;
     };
     // indirect getters and setters
     /**
@@ -752,6 +749,7 @@ define([
         this._scalingMatrix = value;
         this._scalingMatrixInverseValid = false;
         this._modelMatrixInverseValid = false;
+        this._inverseScalingFactor = 1 / this._scalingMatrix[0];
     };
     /**
      * Returns the inverse of the rotation matrix and stores it in a cache to
@@ -803,56 +801,47 @@ define([
         this._modelMatrixInverseValid = false;
     };
     /**
-     * Checks the forces for one with the given ID, if it exists, renews its
-     * properties, if it does not, adds a new force with the given parameters. It
-     * will renew the first force found with the given ID, if more than one exists.
-     * @param {String} forceID The ID of the force to look for
+     * If a (continuous) force is passed, renews its properties, if not, adds a new force with the given parameters.
+     * Warning! Does not readd the force when renewing if it has been removed with PhysicalObject.reset()! Delete cached
+     * forces after calling that.
+     * @param {Force} [force] The force to renew, if it already exists. Should be a continuous force!
      * @param {Number} strength The new strength of the force in newtons.
-     * @param {Number[]} direction The vector describing the new direction of the force.
-     * @param {Number} [duration] The force will either created with, or renewed to
-     * last for this duration. If omitted, the force will be created or renewed as continuous.
+     * @param {Number[3]} direction The vector describing the new direction of the force. Needs to be a unit vector.
+     * #persistent, #read-write
+     * @returns {Force} The passed or created force
      */
-    PhysicalObject.prototype.addOrRenewForce = function (forceID, strength, direction, duration) {
-        var force, found = false;
-        for (force = this._forces.getFirst(); force; force = force.next) {
-            if (force.getID() === forceID) {
-                force.renew(strength, direction, duration);
-                found = true;
-                break;
-            }
+    PhysicalObject.prototype.addOrRenewForce = function (force, strength, direction) {
+        if (force) {
+            force.renew(strength, direction);
+        } else {
+            force = this.addForce(new Force(strength, direction));
         }
-        if (found === false) {
-            this.addForce(new Force(forceID, strength, direction, duration));
-        }
+        return force;
     };
     /**
-     * Checks the torques for one with the given ID, if it exists, renews its
-     * properties, if it does not, adds a new torque with the given parameters. It
-     * will renew the first torque found with the given ID, if more than one exists.
-     * @param {String} torqueID The ID of the torque to look for
+     * If a (continuous) torque is passed, renews its properties, if not, adds a new torque with the given parameters.
+     * Warning! Does not readd the torque when renewing if it has been removed with PhysicalObject.reset()! Delete cached
+     * torques after calling that.
+     * @param {Torque} [torque] The torque to renew, if it already exists. Should be a continuous torque!
      * @param {Number} strength The strength of the torque.
-     * @param {Number[]} axis The vector describing the axis of the torque.
-     * @param {Number} [duration] The torque will either created with, or renewed to
-     * last for this duration. If omitted, the torque will be created or renewed as continuous.
+     * @param {Number[3]} axis The vector describing the axis of the torque. Needs to be a unit vector.
+     * #persistent, #ready-write
+     * @returns {Torque} The passed of created torque
      */
-    PhysicalObject.prototype.addOrRenewTorque = function (torqueID, strength, axis, duration) {
-        var torque, found = false;
-        for (torque = this._torques.getFirst(); torque; torque = torque.next) {
-            if (torque.getID() === torqueID) {
-                torque.renew(strength, axis, duration);
-                found = true;
-                break;
-            }
+    PhysicalObject.prototype.addOrRenewTorque = function (torque, strength, axis) {
+        if (torque) {
+            torque.renew(strength, axis);
+        } else {
+            torque = this.addTorque(new Torque(strength, axis));
         }
-        if (found === false) {
-            this.addTorque(new Torque(torqueID, strength, axis, duration));
-        }
+        return torque;
     };
     /**
      * Simulates a force affecting the object that has an arbitrary point and direction
      * of attack, potentially affecting both the linear and angular momentum of the object.
      * @param {Number[3]} position Point of attack relative to this object (meters)
      * @param {Number[3]} direction Unit vector of the direction of the force to apply
+     * #persistent, #ready-write
      * @param {Number} strength Overall strength of the force in newtons
      * @param {Number} [duration] The force and torque will be exterted for this duration (milliseconds)
      * If omitted, they will be created as continuous.
@@ -863,12 +852,10 @@ define([
                 parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
                 perpendicularForce = vec.diff3Aux(direction, parallelForce);
         this.addForce(new Force(
-                utils.EMPTY_STRING,
                 strength,
                 direction,
                 duration));
         this.addTorque(new Torque(
-                utils.EMPTY_STRING,
                 strength * vec.length3(perpendicularForce) * vec.length3(position),
                 vec.normal3(vec.cross3(perpendicularForce, leverDir)),
                 duration));
@@ -878,10 +865,10 @@ define([
      * it in a cache to speed up hit checks.
      */
     PhysicalObject.prototype._calculateBodySize = function () {
-        var i, bodyPos, halfDim;
+        var i, bodyPos = [0, 0, 0], halfDim;
         this._bodySize = 0;
         for (i = 0; i < this._bodies.length; i++) {
-            bodyPos = mat.translationVector3(this._bodies[i].getPositionMatrix());
+            vec.setTranslationVector3(bodyPos, this._bodies[i].getPositionMatrix());
             halfDim = vec.prodVec3Mat3Aux(this._bodies[i].getHalfDimensions(), mat.prod3x3SubOf43(
                     this._orientationMatrix,
                     this._bodies[i].getOrientationMatrix()));
@@ -908,12 +895,12 @@ define([
     PhysicalObject.prototype.checkHit = function (positionVector, velocityVector, dt, offset) {
         var relativePos, relativeVelocityVector, i, range, result = null;
         offset = offset || 0;
-        offset /= this._scalingMatrix[0];
+        offset *= this._inverseScalingFactor;
         // transforms the position to object-space for preliminary check
         relativePos = vec.prodVec4Mat4Aux(vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
-        relativeVelocityVector = vec.diff3(velocityVector, mat.translationVector3(this.getVelocityMatrix()));
-        range = vec.length3(relativeVelocityVector) * dt * 0.001 / this._scalingMatrix[0];
+        relativeVelocityVector = vec.diff3(velocityVector, vec.setTranslationVector3(this._v, this.getVelocityMatrix()));
+        range = vec.length3(relativeVelocityVector) * dt * 0.001 * this._inverseScalingFactor;
         // first, preliminary check based on position relative to the whole object
         if ((Math.abs(relativePos[0]) - range < this._bodySize) && (Math.abs(relativePos[1]) - range < this._bodySize) && (Math.abs(relativePos[2]) - range < this._bodySize)) {
             // if it is close enough to be hitting one of the bodies, check them
@@ -946,7 +933,7 @@ define([
             // first calculate the movement that happened in the past dt
             // milliseconds as a result of the velocity sampled in the previous step
             // the velocity matrix is in m/s
-            mat.translateByVector(this._positionMatrix, vec.scaled3(mat.translationVector3(this._velocityMatrix), dt * 0.001));
+            mat.translateByVector(this._positionMatrix, vec.scale3(vec.setTranslationVector3(this._v, this._velocityMatrix), dt * 0.001));
             this.setPositionMatrix();
             // calculate the movement that happened as a result of the acceleration
             // the affecting forces caused since the previous step

@@ -632,12 +632,16 @@ define([
                 if (this._visualModel) {
                     this._visualModel.getNode().hide();
                 }
+                if (this._physicalModel) {
+                    this._physicalModel.reset();
+                }
                 if (this._humSoundClip) {
                     this._humSoundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
                 }
                 if (this._propulsion) {
                     this._propulsion.resetThrusterBurn();
                     this._propulsion.simulate(this.getSoundSource(), false);
+                    this._propulsion.resetForcesAndTorques();
                 }
             } else {
                 if (this._visualModel) {
