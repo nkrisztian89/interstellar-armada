@@ -1,0 +1,56 @@
+/*
+Copyright (C) 2017-2018 Krisztián Nagy
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+@function relDarken($color,$amount) {
+    @return darken($color,lightness($color)*$amount);
+}
+
+@function relLighten($color,$amount) {
+    @return lighten($color,lightness($color)*$amount);
+}
+
+$highlight-color: #00ff00;
+
+$light-highlight-color: relLighten($highlight-color,0.26);
+
+$text-color: #dddddd;
+$light-text-color: lighten($text-color,100%);
+$dark-text-color: darken($text-color,20%);
+$text-glow-color: #888888;
+
+$body-color: #000000;
+
+$shadow-color: #000000;
+$inset-shadow-color: rgba(0, 0, 0, 0.75);
+
+// ------------------------------------------
+
+$panel-opacity: 0.75;
+
+$panel-color: #222222;
+
+$panel-back-color: relDarken($panel-color,0.5);
+$panel-front-color: relLighten($panel-color,0.5);
+
+$separator-color: $panel-back-color;
+$panel-disabled-color: relDarken($panel-color,0.25);
+
+$link-color: $light-highlight-color;
+
+$glow-color: $highlight-color;
+
+$text-disabled-color: $dark-text-color;

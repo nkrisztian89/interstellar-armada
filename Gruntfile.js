@@ -22,13 +22,32 @@ module.exports = function (grunt) {
             }
         },
         rawClean: {
-            dev: ["js/main-optimized.js"]
+            dev: ["js/main-optimized.js", "css/*.map", "css/general.css"]
         },
         eslint: {
             options: {
                 configFile: ".eslintrc.js"
             },
             target: ["js/"]
+        },
+        sass: {
+            dev: {
+                options: {
+                    style: "expanded"
+                },
+                files: {
+                    "css/general.css": 'scss/general.scss'
+                }
+            },
+            dist: {
+                options: {
+                    sourcemap: "none",
+                    style: "compressed"
+                },
+                files: {
+                    "css/general.css": 'scss/general.scss'
+                }
+            }  
         },
         replace: {
             dist: {
@@ -150,12 +169,15 @@ module.exports = function (grunt) {
     // Plugins
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
+    grunt.loadNpmTasks('grunt-contrib-sass');
     grunt.loadNpmTasks('grunt-text-replace');
     grunt.loadNpmTasks('grunt-eslint');
     // Tasks
     grunt.registerTask('default', ['build']);
-    grunt.registerTask('build', ['replace:preOptimize', 'requirejs', 'replace:dist', 'replace:optimize', 'replace:postOptimize']);
+    grunt.registerTask('build', ['sass:dist', 'replace:preOptimize', 'requirejs', 'replace:dist', 'replace:optimize', 'replace:postOptimize']);
     grunt.renameTask('clean', 'rawClean');
     grunt.registerTask('clean', ['rawClean:dev', 'replace:dev']);
     grunt.registerTask('lint', ['eslint']);
+    grunt.registerTask('dev-build', ['sass:dev']);
+    grunt.registerTask('css-build', ['sass:dist']);
 };

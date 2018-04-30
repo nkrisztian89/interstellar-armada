@@ -1,0 +1,53 @@
+/*
+Copyright (C) 2017-2018 Krisztián Nagy
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// -----------------------------------------------------------------------------
+// imports
+
+@import "_color-scheme.scss";
+
+$glow: 0em 0em 0.5em $glow-color;
+$inner-glow: 0em 0em 0.5em $glow-color inset;
+$faint-glow: 0em 0em 0.4em darken($glow-color,7%);
+$shadow: 0em 0em 0.5em $shadow-color;
+
+$text-glow: $text-glow-color 0.1em 0.1em 0.5em;
+
+$cursor: url(../images/cursor.png) 6 6;
+$cursor-light: url(../images/cursor-light.png) 6 6;
+
+@mixin glowing {
+    box-shadow: $glow;
+}
+
+@mixin inner-glowing {
+    box-shadow: $inner-glow;
+}
+
+@mixin shadowed {
+    box-shadow: $shadow;
+}
+
+@mixin glowing-text {
+    text-shadow: $text-glow;
+}
+
+@mixin inset-bordered-panel {
+    border: 2px solid $panel-front-color;
+    background-color: $panel-color;
+    box-shadow: 0 2px 5px $inset-shadow-color inset;
+}

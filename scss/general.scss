@@ -1,3 +1,28 @@
+/*
+Copyright (C) 2017-2018 Krisztián Nagy
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// -----------------------------------------------------------------------------
+// imports
+
+@import "_common.scss";
+
+// -----------------------------------------------------------------------------
+// fonts
+
 @font-face {
     font-family: gameFont;
     src: url(../fonts/Sansation_Light.ttf);
@@ -14,6 +39,9 @@
     src: url(../fonts/Aldrich_Regular.ttf);
 }
 
+// -----------------------------------------------------------------------------
+// classes
+
 /* In order to size elements according to screen size relatively, all
    their parents' size must be explicit, so give them explicit auto. This
    will mean 100% together with padding, border and margin. (instead of explicit
@@ -23,12 +51,12 @@
 body,html {
     width: auto;
     height: auto;
-    cursor: url(../images/cursor.png) 6 6, auto;
+    cursor: $cursor, auto;
 }
 
 body {
-    color: #DDDDDD;
-    background-color: black;
+    color: $text-color;
+    background-color: $body-color;
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     font-size: 16px;
     margin: 0;
@@ -38,7 +66,7 @@ body {
 
 /* Adding this class to the body of the document will ensure the cursor will show wait above all elements */
 body.wait, body.wait * {
-    cursor: url(../images/cursor.png) 6 6, wait;
+    cursor: $cursor, wait;
 }
 
 canvas {
@@ -52,26 +80,25 @@ canvas {
     text-align: center;
     height: 100%;
     white-space: nowrap;
-}
-
-.pageGhost:before {
-    content: '';
-    display: inline-block;
-    height: 100%;
-    vertical-align: middle;
-    margin-right: -0.25em; /* Adjusts spacing to avoid horizontal scrollbar */
+    &:before {
+        content: '';
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+        margin-right: -0.25em; /* Adjusts spacing to avoid horizontal scrollbar */
+    }
 }
 
 .outerContainer {
-    background-color: rgba(17,17,17,0.75);
-    border: 2px solid #333333;
-    box-shadow: 0em 0em 0.5em #00FF00;
+    @include glowing;
+    background-color: rgba($panel-back-color,$panel-opacity);
+    border: 2px solid $panel-front-color;
 }
 
 .innerContainer {
-    background-color: rgba(34,34,34,0.75);
+    @include shadowed;
+    background-color: rgba($panel-color,$panel-opacity);
     border: none;
-    box-shadow: 0em 0em 0.5em #000000;
 }
 
 /* To use with the outermost container div which houses the page content */
@@ -182,7 +209,7 @@ canvas {
     background: 
         url(../images/empire_white_50.png) left center,
         url(../images/empire_white_50.png) right center;
-    background-color: #111111;
+    background-color: $separator-color;
     background-repeat: no-repeat;
     box-sizing: border-box; 
     border-left: 10px solid transparent;
@@ -206,13 +233,13 @@ th, td {
 
 th {
     text-align: left;
-    color: white;
+    color: $light-text-color;
 }
 
 td {
+    @include shadowed;
     border: none;
-    background-color: #222222;
-    box-shadow: 0em 0em 0.5em #000000;
+    background-color: $panel-color;
     font-size: 0.9em;
 }
 
@@ -221,7 +248,7 @@ li {
 }
 
 a {
-    color: #FFFFFF;
+    color: $light-text-color;
     text-decoration: none;
     font-weight: bold;
     font-variant: small-caps;
@@ -229,7 +256,7 @@ a {
 
 a:not(.button) {
     font-size: 1.1em;
-    color: #44FF44;
+    color: $link-color;
 }
 
 a.separate {
@@ -254,12 +281,12 @@ a.horizontalMenu {
 }
 
 a.button {
+    @include shadowed;
     min-width: 120px;
     font-size: 0.9em;
     text-align: center;
     padding: 0.5em;
-    background-color: #222222;
-    box-shadow: 0em 0em 0.5em #000000;
+    background-color: $panel-color;
 
     -moz-user-select: none;
     -webkit-user-select: none;
@@ -267,15 +294,15 @@ a.button {
 }
 
 a:hover:not(.disabled):not(.menu):not(.listElement), a.button.selected {
-    color: #FFFFFF;
+    color: $light-text-color;
     text-shadow:
-        #00FF00 0 0 0.2em,
-        #00FF00 0 0 0.2em;
+        $highlight-color 0 0 0.2em,
+        $highlight-color 0 0 0.2em;
     transition: all 0s;
 }
 
 a.button:hover:not(.disabled):not(.menu), a.button.selected {
-    background-color: #333333;
+    background-color: $panel-front-color;
     transition: all 0s;
 }
 
@@ -284,31 +311,31 @@ a {
 }
 
 a.button.disabled {
-    color: #AAAAAA;
-    background-color: #1A1A1A;
-    
-    cursor: url(../images/cursor.png) 6 6, default;
+    color: $text-disabled-color;
+    background-color: $panel-disabled-color;
+
+    cursor: $cursor, default;
 }
 
 a, a:hover, a:active {
-    cursor: url(../images/cursor-light.png) 6 6, pointer;
+    cursor: $cursor-light, pointer;
 }
 
 .clickable:hover {
-    color: #FFFFFF;
-    background-color: #333333;
-    cursor: url(../images/cursor-light.png) 6 6, pointer;
+    color: $light-text-color;
+    background-color: $panel-front-color;
+    cursor: $cursor-light, pointer;
 }
 
 .highlightedItem {
-    color: #FFFFFF;
-    background-color: #333333;
-    box-shadow: 0em 0em 0.5em #00FF00 inset;
-    text-shadow: #888888 0.1em 0.1em 0.5em;
+    @include inner-glowing;
+    color: $light-text-color;
+    background-color: $panel-front-color;
+    @include glowing-text;
 }
 
 .highlightedText {
-    color: #44FF44;
+    color: $light-highlight-color;
     font-weight: bold;
 }
 
@@ -326,11 +353,11 @@ img.menuHeaderImage {
 
 div#splashBackground {
     position: absolute;
-    
+
     padding: 0;
     margin: 0;
     border: 0;
-    
+
     width: 100%;
     height: 100%;
 }
@@ -364,14 +391,14 @@ p.sub {
 }
 
 h1 {
-    text-shadow: #888888 0.1em 0.1em 0.5em;
+    @include glowing-text;
     text-align: center;
     font-variant: small-caps;
     margin: 0.2em 0 0.5em 0;
 }
 
 h2 {
-    text-shadow: #888888 0.1em 0.1em 0.5em;
+    @include glowing-text;
     text-align: center;
     font-variant: small-caps;
 }
@@ -390,68 +417,65 @@ h3 {
     display: table;
 }
 
-.releaseNotes h2 {
-    margin: 0;
-}
-
-.releaseNotes ul {
-    margin-top: 0;
-    text-align: left;
-}
-
-.releaseNotes li {
-    list-style-type: square;
-    margin-bottom: 0.3em;
+.releaseNotes { 
+    h2 {
+        margin: 0;
+    }
+    ul {
+        margin-top: 0;
+        text-align: left;
+    }
+    li {
+        list-style-type: square;
+        margin-bottom: 0.3em;
+    }
 }
 
 /******************************************************************************************/
 /* Styling of determinate progress bars */
 progress[value] {
-    /* Reset the default appearance */
+    $inset-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
+
+    // Reset the default appearance 
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
 
-    /* Get rid of default border in Firefox. */
+    // Get rid of default border in Firefox. 
     border: none;
 
-    /* Styling of the container in Firefox */
+    // Styling of the container in Firefox 
     background-color: #444444;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
+    box-shadow: $inset-shadow;
     width: 220px;
     height: 6px;
+
+    // Styling of the container in Webkit browsers
+    &::-webkit-progress-bar {
+        background-color: #444444;
+        box-shadow: $inset-shadow;
+    }
+    // Styling of the value bar in Webkit browsers
+    &::-webkit-progress-value {
+        background-image:
+            -webkit-linear-gradient(
+            top, 
+            #00ee00,
+            #00aa00
+            );
+        box-shadow: $faint-glow;
+    }
+    // Styling of the value bar in Firefox
+    &::-moz-progress-bar { 
+        background-image:
+            -moz-linear-gradient(
+            top, 
+            #00ee00,
+            #00aa00
+            );
+        box-shadow: $faint-glow;
+    }
 }
-
-/* Styling of the container in Webkit browsers */
-progress[value]::-webkit-progress-bar {
-    background-color: #444444;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
-}
-
-/* Styling of the value bar in Webkit browsers */
-progress[value]::-webkit-progress-value {
-    background-image:
-        -webkit-linear-gradient(
-        top, 
-        #00ee00,
-        #00aa00
-        );
-
-    box-shadow: 0em 0em 0.4em #00dd00;
-}
-
-/* Styling of the value bar in Firefox */
-progress[value]::-moz-progress-bar { 
-    background-image:
-        -moz-linear-gradient(
-        top, 
-        #00ee00,
-        #00aa00
-        );
-
-    box-shadow: 0em 0em 0.4em #00dd00;
-}
-
 
 /******************************************************************************************/
 /* Styling of sliders */
@@ -461,116 +485,103 @@ input[type=range] {
     width: 100%; /* Specific width is required for Firefox. */
     background: transparent; /* Otherwise white in Chrome */
     height: 30px;
-    
+
     margin: 4px 0 0 4px;
     padding: 0;
-    cursor: url(../images/cursor.png) 6 6, pointer;
+    cursor: $cursor, pointer;
+
+    &:hover {
+        cursor: $cursor-light, pointer;
+    }
+    &:focus {
+        outline: none; /* Removes the blue border. */
+    }
+
+    /* Styling of sliders - thumb */
+    &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+
+        height: 24px;
+        width: 11px;
+        /*cursor: pointer;*/
+        margin-top: -9px; /* needed for Chrome, but in Firefox and IE it is automatic 
+                           * depends on height */
+
+        /* gray appearance similar to buttons - for consistent look */
+        background-color: $panel-front-color;
+        border: 2px solid #555555;
+        @include shadowed;
+        /* glowing green appearance for better contrast */
+        /*    background-color: #00cc00;
+            border: 2px solid #008800;
+            box-shadow: 0em 0em 0.5em #00cc00;*/
+
+        &:hover {
+            /* gray appearance similar to buttons - for consistent look */
+            background-color: #555555;
+            border: 2px solid #777777;
+            /* glowing green appearance for better contrast */
+            /*    background-color: #44ff44;
+                border: 2px solid #00aa00;
+                box-shadow: 0em 0em 0.5em #44ff44;*/
+        }
+    }
+
+    &::-moz-range-thumb {
+        height: 20px;
+        width: 7px;
+
+        border-radius: 0;
+
+        background-color: $panel-front-color;
+        border: 2px solid #555555;
+        @include shadowed;
+
+        &:hover {
+            background-color: #555555;
+            border: 2px solid #777777;
+        }
+    }
+
+    &::-ms-thumb {
+        height: 24px;
+        width: 11px;
+
+        border-radius: 0;
+
+        background-color: $panel-front-color;
+        border: 2px solid #555555;
+        @include shadowed;
+
+        &:hover {
+            background-color: #555555;
+            border: 2px solid #777777;
+        }
+    }
+
+    /* Styling of sliders - track */
+
+    &::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 10px;
+        @include inset-bordered-panel;
+    }
+
+    &::-moz-range-track {
+        width: 100%;
+        height: 6px;
+        @include inset-bordered-panel;
+    }
+    
+    &::-ms-track {
+        width: 100%;
+        height: 10px;
+        @include inset-bordered-panel;
+    }
+    
+    /* having different tracks to the left and right are only supported in IE and Firefox, not using for now */
+
+    /* IE pseudo elements: -ms-fill-lower, -ms-fill-upper
+       Firefox preudo element: -moz-range-progress 
+    */
 }
-
-input[type=range]:hover {
-    cursor: url(../images/cursor-light.png) 6 6, pointer;
-}
-
-input[type=range]:focus {
-    outline: none; /* Removes the blue border. */
-}
-
-/* ------------------------------------------------------------- */
-/* Styling of sliders - thumb */
-
-input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-
-    height: 24px;
-    width: 11px;
-    /*cursor: pointer;*/
-    margin-top: -9px; /* needed for Chrome, but in Firefox and IE it is automatic 
-                       * depends on height */
-
-    /* gray appearance similar to buttons - for consistent look */
-    background-color: #333333;
-    border: 2px solid #555555;
-    box-shadow: 0em 0em 0.5em #000000;
-    /* glowing green appearance for better contrast */
-    /*    background-color: #00cc00;
-        border: 2px solid #008800;
-        box-shadow: 0em 0em 0.5em #00cc00;*/
-}
-
-input[type=range]:hover::-webkit-slider-thumb {
-    /* gray appearance similar to buttons - for consistent look */
-    background-color: #555555;
-    border: 2px solid #777777;
-    /* glowing green appearance for better contrast */
-    /*    background-color: #44ff44;
-        border: 2px solid #00aa00;
-        box-shadow: 0em 0em 0.5em #44ff44;*/
-}
-
-input[type=range]::-moz-range-thumb {
-    height: 20px;
-    width: 7px;
-
-    border-radius: 0;
-
-    background-color: #333333;
-    border: 2px solid #555555;
-    box-shadow: 0em 0em 0.5em #000000;
-}
-
-input[type=range]:hover::-moz-range-thumb {
-    background-color: #555555;
-    border: 2px solid #777777;
-}
-
-input[type=range]::-ms-thumb {
-    height: 24px;
-    width: 11px;
-
-    border-radius: 0;
-
-    background-color: #333333;
-    border: 2px solid #555555;
-    box-shadow: 0em 0em 0.5em #000000;
-}
-
-input[type=range]:hover::-ms-thumb {
-    background-color: #555555;
-    border: 2px solid #777777;
-}
-
-/* ------------------------------------------------------------- */
-/* Styling of sliders - track */
-
-input[type=range]::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 10px;
-
-    border: 2px solid #333333;
-    background-color: #222222;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
-}
-
-input[type=range]::-moz-range-track {
-    width: 100%;
-    height: 6px;
-
-    border: 2px solid #333333;
-    background-color: #222222;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
-}
-
-input[type=range]::-ms-track {
-    width: 100%;
-    height: 10px;
-
-    border: 2px solid #333333;
-    background-color: #222222;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
-}
-
-/* having different tracks to the left and right are only supported in IE and Firefox, not using for now */
-
-/* IE pseudo elements: -ms-fill-lower, -ms-fill-upper
-   Firefox preudo element: -moz-range-progress 
-*/
