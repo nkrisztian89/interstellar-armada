@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -3154,7 +3154,7 @@ define([
                     _targetViewModel.setOrientationM4(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION) ? mat.prod4Aux(
                             target.getPhysicalOrientationMatrix(),
                             mat.inverseOfRotation4Aux(mat.lookTowards4Aux(
-                                    vec.normal3(vec.diff3Aux(craft.getPhysicalPositionVector(), target.getPhysicalPositionVector())),
+                                    vec.normalize3(vec.diff3Aux(craft.getPhysicalPositionVector(), target.getPhysicalPositionVector())),
                                     mat.getRowC43(craft.getPhysicalOrientationMatrix())))) :
                             mat.IDENTITY4);
                 }
@@ -3861,6 +3861,9 @@ define([
                 graphics.getSideBySideLeftShader();
                 graphics.getSideBySideRightShader();
             }
+            if (graphics.isShadowMapDebuggingEnabled()) {
+                graphics.getShadowMapDebugShader();
+            }
             _battleScene = new sceneGraph.Scene(
                     0, 0, 1, 1,
                     true, [true, true, true, true],
@@ -3941,6 +3944,9 @@ define([
                 }
                 if (graphics.isSideBySideRenderingEnabled()) {
                     _battleScene.setSideBySideRendering(graphics.getSideBySideRenderingSettings());
+                }
+                if (graphics.isShadowMapDebuggingEnabled()) {
+                    _battleScene.setupShadowMapDebugging(graphics.getShadowMapDebuggingSettings());
                 }
                 this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
                 utils.executeAsync(function () {

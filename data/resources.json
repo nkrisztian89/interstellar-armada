@@ -1019,6 +1019,14 @@
                 "a_position": "position",
                 "a_texCoord": "texCoord"
             }
+        }, {
+            "name": "shadowMapDebug",
+            "vertexShaderSource": "debug/fvq-top-left.vert",
+            "fragmentShaderSource": "debug/shadow-map.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
         }],
     "models": [{
             "name": "trainingGun",

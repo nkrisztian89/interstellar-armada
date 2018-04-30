@@ -1,5 +1,5 @@
 {
-    "version": "0.4.5-dev:696 (2018.04.29.)",
+    "version": "0.4.5-dev:697 (2018.04.30.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4"],
@@ -340,6 +340,7 @@
             "anaglyphCyanShaderName": "anaglyphCyan",
             "sideBySideLeftShaderName": "sideBySideLeft",
             "sideBySideRightShaderName": "sideBySideRight",
+            "shadowMapDebugShaderName": "shadowMapDebug",
             "anaglyphOriginalColorRatio": "0.25",
             "anaglyphOriginalColorRatioDefineName": "ORIGINAL_COLOR_RATIO",
             "anaglyphGamma": "1.6",

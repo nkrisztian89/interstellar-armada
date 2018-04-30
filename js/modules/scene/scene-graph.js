@@ -129,16 +129,25 @@ define([
              */
             COLOR_MASK_ALL_TRUE = [true, true, true, true],
             /**
-             * This name is used for the full viewport quad models created for stereoscopic rendering (render-to-texture)
+             * This name is used for the full viewport quad models created for render-to-texture effects / post-processing / etc
              * @type String
              */
-            STEREOSCOPY_FVQ_NAME = "fvq",
+            FVQ_NAME = "fvq",
             /**
              * This name is used for the framebuffers created for stereoscopic rendering (render-to-texture)
              * @type String
              */
             STEREOSCOPY_FRAMEBUFFER_NAME = "stereo",
+            /**
+             * Name for the uniform used to pass the texture unit for stereoscopic rendering
+             * @type String
+             */
             UNIFORM_STEREOSCOPY_TEXTURE_NAME = "stereo",
+            /**
+             * Name for the uniform used to pass the texture unit for shadow map debug rendering
+             * @type String
+             */
+            UNIFORM_SHADOW_MAP_DEBUG_TEXTURE_NAME = "shadowMapDebug",
             /**
              * This string is available to other modules through a public function so that an arbitrary piece of information from this 
              * module can be exposed for debug purposes.
@@ -1294,6 +1303,20 @@ define([
             return this._stereoscopicTextureUnit;
         }.bind(this);
         /**
+         * The uniform value functions to be used for the shader rendering the shadow map for debugging
+         * @type Object.<String, Function>
+         */
+        this._shadowMapDebugUniformValueFunctions = {};
+        /**
+         * The index of the texture unit where the framebuffer texture used for rendering the shadow map for debugging was last bound.
+         * @type Number
+         */
+        this._shadowMapTextureUnit = 0;
+        // setting up the uniform value function for shadow map debug rendering (to pass the bound framebuffer)
+        this._shadowMapDebugUniformValueFunctions[managedGL.getUniformName(UNIFORM_SHADOW_MAP_DEBUG_TEXTURE_NAME)] = function () {
+            return this._shadowMapTextureUnit;
+        }.bind(this);
+        /**
          * This array that stores those uniform value function bindings that are not the same across all contexts the scene has been added to.
          * In each element of the array, the bindings corresponding to the context with the same index are stored. For example, the function
          * with the key "uniformName" in the object at index 2 will return the value for the uniform named "uniformName" for shaders when
@@ -1432,6 +1455,26 @@ define([
          * @type Boolean
          */
         this._sideBySideOriginalAspect = false;
+        /**
+         * Whether shadow map debugging (rendering shadow map on screen) is currently enabled
+         * @type Boolean
+         */
+        this._shadowMapDebugging = false;
+        /**
+         * If shadow map rendering on screen is enabled, which light's shadow map to render
+         * @type Number
+         */
+        this._shadowMapDebugLightIndex = 0;
+        /**
+         * If shadow map rendering on screen is enabled, which shadow map range (cascade) to render
+         * @type Number
+         */
+        this._shadowMapDebugRangeIndex = 0;
+        /**
+         * The shader used to render a shadow map on the screen for debugging
+         * @type ManagedShader
+         */
+        this._shadowMapDebugShader = null;
         this._initNodes();
         this.clearPointLights();
         this._setGeneralUniformValueFunctions();
@@ -1690,11 +1733,16 @@ define([
                 this._stereoscopicFrameBuffer = this._stereoscopicFrameBuffer || new managedGL.FrameBuffer(STEREOSCOPY_FRAMEBUFFER_NAME,
                         this._getWidthInPixels(context), this._getHeightInPixels(context), false);
                 context.addFrameBuffer(this._stereoscopicFrameBuffer);
-                this._fvq = this._fvq || egomModel.fvqModel(STEREOSCOPY_FVQ_NAME);
+                this._fvq = this._fvq || egomModel.fvqModel(FVQ_NAME);
                 this._fvq.addToContext(context, false);
             }
-            // if no specific index is given, set up all associated contexts
+            if (this._shadowMapDebugging) {
+                context.addShader(this._shadowMapDebugShader);
+                this._fvq = this._fvq || egomModel.fvqModel(FVQ_NAME);
+                this._fvq.addToContext(context, false);
+            }
         } else {
+            // if no specific index is given, set up all associated contexts
             for (i = 0; i < this._contexts.length; i++) {
                 this._setupContext(i);
             }
@@ -1734,6 +1782,16 @@ define([
         if (params.originalAspect !== undefined) {
             this._sideBySideOriginalAspect = params.originalAspect;
         }
+    };
+    /**
+     * Sets the scene up for rendering shadow maps for debugging
+     * @param {Object} params
+     */
+    Scene.prototype.setupShadowMapDebugging = function (params) {
+        this._shadowMapDebugging = true;
+        this._shadowMapDebugShader = params.shader;
+        this._shadowMapDebugLightIndex = params.lightIndex || 0;
+        this._shadowMapDebugRangeIndex = params.rangeIndex || 0;
     };
     /**
      * Sets new relative coordinates for the viewport of this scene - when the scene is rendered to a canvas, its viewport will be 
@@ -2643,6 +2701,12 @@ define([
             this._fvq.render(context, false, true);
         } else {
             this._render(context, distanceQueuesNotEmpty, frontQueuesNotEmpty, widthInPixels, heightInPixels, dt);
+        }
+        if (this._shadowMapDebugging) {
+            context.setCurrentShader(this._shadowMapDebugShader);
+            this._shadowMapTextureUnit = context.bindTexture(context.getFrameBuffer(this._directionalLights[this._shadowMapDebugLightIndex].getShadowMapBufferName(this._shadowMapDebugRangeIndex)), undefined, true);
+            this._shadowMapDebugShader.assignUniforms(context, this._shadowMapDebugUniformValueFunctions);
+            this._fvq.render(context, false, true);
         }
         if (application.isDebugVersion()) {
             this._mainDebugStats = utils.shallowCopy(egomModel.getDebugStats());

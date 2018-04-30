@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides functionality to parse and load the graphics settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -536,6 +536,13 @@ define([
                  */
                 SIDE_BY_SIDE_RIGHT_SHADER_NAME: {
                     name: "sideBySideRightShaderName",
+                    type: "string"
+                },
+                /**
+                 * Name of the shader that should be used when rendering the shadow map on screen for debug purposes
+                 */
+                SHADOW_MAP_DEBUG_SHADER_NAME: {
+                    name: "shadowMapDebugShaderName",
                     type: "string"
                 },
                 /**
@@ -1914,6 +1921,24 @@ define([
         };
     };
     /**
+     * Returns whether shadow map debug rendering is enabled according to the graphics settings.
+     * @returns {Boolean}
+     */
+    GraphicsSettingsContext.prototype.isShadowMapDebuggingEnabled = function () {
+        return this._dataJSON.shadowMapDebugging.enabled;
+    };
+    /**
+     * Returns an object containing the setup parameters for shadow map debugging (rendering shadow maps on screen) according to the graphics settings.
+     * @returns {Object}
+     */
+    GraphicsSettingsContext.prototype.getShadowMapDebuggingSettings = function () {
+        return  {
+            shader: this.getManagedShader(this.getShaderConfig(SHADER_CONFIG.SHADOW_MAP_DEBUG_SHADER_NAME)),
+            lightIndex: this._dataJSON.shadowMapDebugging.lightIndex,
+            rangeIndex: this._dataJSON.shadowMapDebugging.rangeIndex
+        };
+    };
+    /**
      * Returns the shader complexity descriptor object for the currently set shader complexity level.
      * @param {Number} [index] If given, the descriptor object belonging to the complexity level at this index is returned instead of the
      * one belonging to the current complexity.
@@ -2252,6 +2277,13 @@ define([
     function getSideBySideRightShader() {
         return _context.getShader(_context.getShaderConfig(SHADER_CONFIG.SIDE_BY_SIDE_RIGHT_SHADER_NAME));
     }
+    /**
+     * Returns the resource for the shader that is to be used when rendering the shadow map on screen for debug purposes
+     * @returns {ShaderResource}
+     */
+    function getShadowMapDebugShader() {
+        return _context.getShader(_context.getShaderConfig(SHADER_CONFIG.SHADOW_MAP_DEBUG_SHADER_NAME));
+    }
     _context = new GraphicsSettingsContext();
     // -------------------------------------------------------------------------
     // The public interface of the module
@@ -2325,6 +2357,8 @@ define([
         getAnaglyphRenderingSettings: _context.getAnaglyphRenderingSettings.bind(_context),
         isSideBySideRenderingEnabled: _context.isSideBySideRenderingEnabled.bind(_context),
         getSideBySideRenderingSettings: _context.getSideBySideRenderingSettings.bind(_context),
+        isShadowMapDebuggingEnabled: _context.isShadowMapDebuggingEnabled.bind(_context),
+        getShadowMapDebuggingSettings: _context.getShadowMapDebuggingSettings.bind(_context),
         shouldUseShadowMapping: shouldUseShadowMapping,
         getShadowMappingShader: getShadowMappingShader,
         getShadowMappingSettings: getShadowMappingSettings,
@@ -2332,6 +2366,7 @@ define([
         getAnaglyphCyanShader: getAnaglyphCyanShader,
         getSideBySideLeftShader: getSideBySideLeftShader,
         getSideBySideRightShader: getSideBySideRightShader,
+        getShadowMapDebugShader: getShadowMapDebugShader,
         executeWhenReady: _context.executeWhenReady.bind(_context)
     };
 });

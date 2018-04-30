@@ -31,6 +31,11 @@
             "convergenceDistance": 20,
             "sideBySideOriginalAspect": false
         },
+        "shadowMapDebugging": {
+            "enabled": false,
+            "lightIndex": 0,
+            "rangeIndex": 0
+        },
         "shaders": {
             "complexity": "medium"
         },
