@@ -1,5 +1,5 @@
 {
-    "version": "0.4.5-dev:700 (2018.05.01.)",
+    "version": "0.4.5-dev:701 (2018.05.01.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4"],
@@ -344,7 +344,9 @@
             "anaglyphOriginalColorRatio": "0.25",
             "anaglyphOriginalColorRatioDefineName": "ORIGINAL_COLOR_RATIO",
             "anaglyphGamma": "1.6",
-            "anaglyphGammaDefineName": "ANAGLYPH_GAMMA"
+            "anaglyphGammaDefineName": "ANAGLYPH_GAMMA",
+            "anaglyphCyanFactor": "0.3",
+            "anaglyphCyanFactorDefineName": "ANAGLYPH_CYAN_FACTOR"
         },
         "levelOfDetailSettings": {
             "lodLevels": [

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides various simple, general usage utility methods.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -616,6 +616,39 @@ define(function () {
             color1[2] * color1Ratio + color2[2] * color2Ratio,
             color1[3] * color1Ratio + color2[3] * color2Ratio
         ];
+    };
+    /**
+     * Returns the luminance value of the passed RGB color
+     * @param {Number[3]} color
+     * @returns {Number}
+     */
+    exports.getLuminance = function (color) {
+        return 0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2];
+    };
+    /**
+     * Multiplies the given RGBA color with the given RGBA filter and also returns it.
+     * @param {Number[4]} color
+     * @param {Number[4]} filter
+     * @returns {Number[4]} The modified color
+     */
+    exports.filterColor = function (color, filter) {
+        color[0] *= filter[0];
+        color[1] *= filter[1];
+        color[2] *= filter[2];
+        color[3] *= filter[3];
+        return color;
+    };
+    /**
+     * Applies the given gamma correction to the given color, and returns the modified color.
+     * @param {Number[3]} color
+     * @param {Number} gamma
+     * @returns {Number[3]}
+     */
+    exports.gammaCorrect = function (color, gamma) {
+        color[0] = Math.pow(color[0], 1.0 / gamma);
+        color[1] = Math.pow(color[1], 1.0 / gamma);
+        color[2] = Math.pow(color[2], 1.0 / gamma);
+        return color;
     };
     /**
      * Converts the passed RGBA color from a 4 component float vector format to a string that can be used to set that color in CSS.

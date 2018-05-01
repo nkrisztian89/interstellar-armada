@@ -574,6 +574,21 @@ define([
                 ANAGLYPH_GAMMA_DEFINE_NAME: {
                     name: "anaglyphGammaDefineName",
                     type: "string"
+                },
+                /**
+                 * When coloring objects for an anaglyph stereoscopic scene, the luminance calculated for the cyan side gets corrected
+                 * using this factor (to compansate that cyan is seen brighter by the human eye)
+                 */
+                ANAGLYPH_CYAN_FACTOR: {
+                    name: "anaglyphCyanFactor",
+                    type: "string"
+                },
+                /**
+                 * The name of the #define that detemines tha anaglyph cyan factor
+                 */
+                ANAGLYPH_CYAN_FACTOR_DEFINE_NAME: {
+                    name: "anaglyphCyanFactorDefineName",
+                    type: "string"
                 }
             },
             /**
@@ -2201,6 +2216,7 @@ define([
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_ORIGINAL_COLOR_RATIO_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_ORIGINAL_COLOR_RATIO);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_GAMMA_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_GAMMA);
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_CYAN_FACTOR_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_CYAN_FACTOR);
         result = this.getShader(shaderName).getManagedShader(replacedDefines, true);
         if (!result.isAllowedByRequirements(this._getShaderRequirements())) {
             application.showError("Shader '" + shaderName + "' has too high requirements!");
@@ -2284,6 +2300,27 @@ define([
     function getShadowMapDebugShader() {
         return _context.getShader(_context.getShaderConfig(SHADER_CONFIG.SHADOW_MAP_DEBUG_SHADER_NAME));
     }
+    /**
+     * Returns the anaglyph original color ratio converted to a number (from string)
+     * @returns {Number}
+     */
+    function getAnaglyphOriginalColorRatio() {
+        return parseFloat(_context.getShaderConfig(SHADER_CONFIG.ANAGLYPH_ORIGINAL_COLOR_RATIO));
+    }
+    /**
+     * Returns the anaglyph gamma value converted to a number (from string)
+     * @returns {Number}
+     */
+    function getAnaglyphGamma() {
+        return parseFloat(_context.getShaderConfig(SHADER_CONFIG.ANAGLYPH_GAMMA));
+    }
+    /**
+     * Returns the anaglyph cyan factor converted to a number (from string)
+     * @returns {Number}
+     */
+    function getAnaglyphCyanFactor() {
+        return parseFloat(_context.getShaderConfig(SHADER_CONFIG.ANAGLYPH_CYAN_FACTOR));
+    }
     _context = new GraphicsSettingsContext();
     // -------------------------------------------------------------------------
     // The public interface of the module
@@ -2355,6 +2392,9 @@ define([
         getModel: _context.getModel.bind(_context),
         isAnaglyphRenderingEnabled: _context.isAnaglyphRenderingEnabled.bind(_context),
         getAnaglyphRenderingSettings: _context.getAnaglyphRenderingSettings.bind(_context),
+        getAnaglyphOriginalColorRatio: getAnaglyphOriginalColorRatio,
+        getAnaglyphGamma: getAnaglyphGamma,
+        getAnaglyphCyanFactor: getAnaglyphCyanFactor,
         isSideBySideRenderingEnabled: _context.isSideBySideRenderingEnabled.bind(_context),
         getSideBySideRenderingSettings: _context.getSideBySideRenderingSettings.bind(_context),
         isShadowMapDebuggingEnabled: _context.isShadowMapDebuggingEnabled.bind(_context),

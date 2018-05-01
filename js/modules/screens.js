@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides wrapper classes that can be used to manage (loading, assemblin, displaying, hiding, translating...) HTML based screens for
  * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -59,7 +59,41 @@ define([
             ANTIALIASING_CHANGE_ERROR_STRING = {
                 name: "error.antialiasingChange",
                 defaultValue: "The antialiasing setting has been changed. Please restart the application to apply the new setting!"
+            },
+            // ------------------------------------------------------------------------------
+            // private module variables
+            /**
+             * Stores the settings for rendering CanvasTexts for anaglyph display
+             * @type Object
+             */
+            _anaglyphTextRendering = {
+                enabled: false,
+                originalColorRatio: 0.5,
+                filter: [1, 1, 1, 1], // for cyan factor
+                gamma: 1
             };
+    // #########################################################################
+    // private module functions
+    /**
+     * If anaglyph text rendering is enabled, returns the converted color according
+     * to its settings, otherwise just returns back the color unchanged.
+     * @param {Number[4]} color
+     * @returns {Number[4]}
+     */
+    function _getColor(color) {
+        var luminance;
+        if (_anaglyphTextRendering.enabled) {
+            luminance = utils.getLuminance(color);
+            return utils.getMixedColor(
+                    utils.gammaCorrect(
+                            utils.filterColor([luminance, luminance, luminance, color[3]], _anaglyphTextRendering.filter),
+                            _anaglyphTextRendering.gamma),
+                    color,
+                    _anaglyphTextRendering.originalColorRatio);
+        } else {
+            return color;
+        }
+    }
     // #########################################################################
     /**
      * @typedef {Object} HTMLScreen~Style
@@ -1508,7 +1542,7 @@ define([
             for (i = 0; (i < this._sections.length) && (this._sections[i].startIndex <= maxRenderIndex); i++) {
                 // multi-color support
                 if (this._sections[i].color) {
-                    newColor = utils.getCSSColor(this._sections[i].color);
+                    newColor = utils.getCSSColor(_getColor(this._sections[i].color));
                 } else {
                     newColor = this._cssColor;
                 }
@@ -1568,12 +1602,12 @@ define([
         }
     };
     /**
-     * Sets a new RGBA color to use when rendering this text
+     * Sets a new RGBA color to use when rendering this text (also considers anaglyph rendering settings)
      * @param {Number[4]} color
      */
     CanvasText.prototype.setColor = function (color) {
         this._color = color;
-        this._cssColor = utils.getCSSColor(this._color);
+        this._cssColor = utils.getCSSColor(_getColor(color));
     };
     /**
      * After calling this, the text is rendered whenever calling render() (until hidden)
@@ -2365,6 +2399,24 @@ define([
         this._menuComponent.unselect();
     };
     // -------------------------------------------------------------------------
+    // Public functions
+    /**
+     * Sets up the anaglyph rendering settings. After anaglyph text rendering is enabled,
+     * setting a CanvasText color will consider the settings appropriately (existing colors
+     * will not be changed)
+     * @param {Boolean} enabled
+     * @param {Number} originalColorRatio
+     * @param {Number} cyanFactor
+     * @param {Number} gamma
+     */
+    function setAnaglyphTextRendering(enabled, originalColorRatio, cyanFactor, gamma) {
+        _anaglyphTextRendering.enabled = enabled;
+        _anaglyphTextRendering.originalColorRatio = originalColorRatio;
+        _anaglyphTextRendering.filter[1] = cyanFactor;
+        _anaglyphTextRendering.filter[2] = cyanFactor;
+        _anaglyphTextRendering.gamma = gamma;
+    }
+    // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         ELEMENT_ID_SEPARATOR: ELEMENT_ID_SEPARATOR,
@@ -2373,6 +2425,7 @@ define([
         ClipSpaceLayout: ClipSpaceLayout,
         TextLayer: TextLayer,
         HTMLScreenWithCanvases: HTMLScreenWithCanvases,
-        MenuScreen: MenuScreen
+        MenuScreen: MenuScreen,
+        setAnaglyphTextRendering: setAnaglyphTextRendering
     };
 });

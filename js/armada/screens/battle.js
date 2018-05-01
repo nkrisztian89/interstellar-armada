@@ -4048,6 +4048,12 @@ define([
         // music
         _combatThemeDurationAfterFire = config.getSetting(config.BATTLE_SETTINGS.COMBAT_THEME_DURATION_AFTER_FIRE) * 1000;
     });
+    // initializing anaglyph text rendering if needed
+    graphics.executeWhenReady(function () {
+        if (graphics.isAnaglyphRenderingEnabled()) {
+            screens.setAnaglyphTextRendering(true, graphics.getAnaglyphOriginalColorRatio(), graphics.getAnaglyphCyanFactor(), graphics.getAnaglyphGamma());
+        }
+    });
     // -------------------------------------------------------------------------
     // The public interface of the module
     _battle.battleScreen = new BattleScreen();
