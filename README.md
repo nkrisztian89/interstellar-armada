@@ -27,11 +27,14 @@ I use [NetBeans](https://netbeans.org/) (8.2) with its web development (+
 [GLSL](http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter) and 
 [Markdown](http://plugins.netbeans.org/plugin/50964/markdown-support)) plugins 
 to develop this game. For the (very rudimentary) build process, you will need
-[npm](https://www.npmjs.com/) and [Grunt](https://gruntjs.com/). After
-installing the dev dependencies with `npm install`, running `grunt build`
-creates a concatenated, minified (and somewhat optimized) source and changes 
-the reference to it in `index.html`. Use `grunt clean` to remove the built
-file and change back the reference to the regular source.
+[npm](https://www.npmjs.com/), [Grunt](https://gruntjs.com/) and 
+[Sass](http://sass-lang.com/). After installing the dev dependencies with 
+`npm install`, running `grunt build` creates a concatenated, minified (and 
+somewhat optimized) source and changes the reference to it in `index.html`. Use 
+`grunt clean` to remove the built file and change back the reference to the 
+regular source. Run `grunt dev-build` to create a build suitable for 
+development/testing (no minification or concatenation, but Sass files are 
+compiled).
 
 Editor
 ------
@@ -86,4 +89,4 @@ details and attributions please do check LICENSE.txt.
 
 Krisztián Nagy
 
-07.05.2017.
+01.05.2018.

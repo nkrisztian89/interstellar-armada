@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file This module manages and provides the About screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -104,6 +104,7 @@ define([
             git: '<a target="_blank" href="https://git-scm.com/">git</a>',
             npm: '<a target="_blank" href="https://www.npmjs.com/">npm</a>',
             grunt: '<a target="_blank" href="https://gruntjs.com/">Grunt</a>',
+            sass: '<a target="_blank" href="http://sass-lang.com/">Sass</a>',
             lazarus: '<a target="_blank" href="http://www.lazarus-ide.org/">Lazarus</a>',
             chrome: '<a target="_blank" href="https://www.google.com/chrome">Google Chrome</a>',
             firefox: '<a target="_blank" href="https://www.mozilla.org/firefox">Firefox</a>',
