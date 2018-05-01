@@ -2601,7 +2601,7 @@ define([
                 distance, aspect, i, j, count, scale, futureDistance, animationProgress, animation2Progress, aimAssistAppearAnimationProgress, targetSwitchAnimationProgress, shipWidth,
                 hullIntegrity, shieldIntegrity,
                 acceleration, speed, absSpeed, maxSpeed, stepFactor, stepBuffer, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
-                armor, craftCount, height, statusCount,
+                armor, craftCount, height, statusCount, angle,
                 /** @type Weapon[] */
                 weapons,
                 /** @type Number[2] */
@@ -2666,17 +2666,17 @@ define([
                     (position2D[0] / canvas.width - 0.5) * 2,
                     (0.5 - position2D[1] / canvas.height) * 2
                 ];
-                direction2D = vec.normal2([position2D[0] * canvas.width / canvas.height, position2D[1]]);
+                angle = vec.angle2y(position2D[0] * canvas.width / canvas.height, position2D[1]);
                 if (mouseInputInterpreter.isMouseDisplaced()) {
                     _hudStillCursor.hide();
                     _hudTurnCursor.show();
                     _hudTurnCursor.setPosition(position2D);
-                    _hudTurnCursor.setAngle(vec.angle2u([0, 1], direction2D) * ((direction2D[0] < 0) ? -1 : 1));
+                    _hudTurnCursor.setAngle(angle * ((position2D[0] < 0) ? -1 : 1));
                 } else {
                     _hudStillCursor.show();
                     _hudTurnCursor.hide();
                     _hudStillCursor.setPosition(position2D);
-                    _hudStillCursor.setAngle(vec.angle2u([0, 1], direction2D) * ((direction2D[0] < 0) ? -1 : 1));
+                    _hudStillCursor.setAngle(angle * ((position2D[0] < 0) ? -1 : 1));
                 }
             } else {
                 _hudStillCursor.hide();
@@ -2751,14 +2751,13 @@ define([
             // drift arrow
             if (isInAimingView) {
                 direction2D = [relativeVelocity[12], relativeVelocity[14]];
-                driftSpeed = vec.length2(direction2D);
-                vec.normalize2(direction2D);
+                driftSpeed = vec.extractLength2(direction2D);
                 if (driftSpeed > _driftArrowMinSpeed) {
                     _driftArrow.show();
                     aspect = _battleScene.getCamera().getAspect();
                     arrowPositionRadius = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DRIFT_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? 1 : aspect);
                     _driftArrow.setPosition(vec.scaled2([direction2D[0] / aspect, direction2D[1]], arrowPositionRadius));
-                    _driftArrow.setAngle(vec.angle2u([0, 1], direction2D) * ((direction2D[0] < 0) ? -1 : 1));
+                    _driftArrow.setAngle(Math.acos(direction2D[1]) * ((direction2D[0] < 0) ? -1 : 1));
                     driftArrowMaxSpeed = _driftArrowMaxSpeedFactor * acceleration;
                     if (driftArrowMaxSpeed === 0) {
                         driftArrowMaxSpeed = maxSpeed;
@@ -3472,7 +3471,7 @@ define([
                     }
                     arrowPositionRadius = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? (1 / aspect) : 1);
                     indicator.setPosition(vec.scaled2([direction[0], direction[1] * aspect], arrowPositionRadius));
-                    indicator.setAngle(vec.angle2u([0, 1], direction) * ((direction[0] < 0) ? -1 : 1));
+                    indicator.setAngle(Math.acos(direction[1]) * ((direction[0] < 0) ? -1 : 1));
                     colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors;
                     if (transmissionSource) {
                         indicator.setColor(colors.transmission);

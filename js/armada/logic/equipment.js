@@ -2606,7 +2606,7 @@ define([
             pitchTarget = Math.min(Math.max(pitchTarget, -turningLimit), turningLimit);
         }
         // controlling yaw
-        yawAngle = Math.sign(turningMatrix[4]) * vec.angle2u(vec.UNIT2_Y, vec.normalize2([turningMatrix[4], turningMatrix[5]]));
+        yawAngle = Math.sign(turningMatrix[4]) * vec.angle2y(turningMatrix[4], turningMatrix[5]);
         if ((yawTarget - yawAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn(ThrusterUse.YAW_RIGHT,
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle, dt)));
@@ -2615,7 +2615,7 @@ define([
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget, dt)));
         }
         // controlling pitch
-        pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2u(vec.UNIT2_X, vec.normalize2([turningMatrix[5], turningMatrix[6]]));
+        pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2x(turningMatrix[5], turningMatrix[6]);
         if ((pitchTarget - pitchAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn(ThrusterUse.PITCH_UP,
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle, dt)));
@@ -2624,7 +2624,7 @@ define([
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget, dt)));
         }
         // controlling roll
-        rollAngle = Math.sign(-turningMatrix[2]) * vec.angle2u(vec.UNIT2_X, vec.normalize2([turningMatrix[0], turningMatrix[2]]));
+        rollAngle = Math.sign(-turningMatrix[2]) * vec.angle2x(turningMatrix[0], turningMatrix[2]);
         if ((this._rollTarget - rollAngle) > turnThreshold) {
             this._spacecraft.addThrusterBurn(ThrusterUse.ROLL_RIGHT,
                     Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle, dt)));

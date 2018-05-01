@@ -363,14 +363,14 @@ define([
         // milliseconds (which will mean about the next simulation step with relatively stable framerates)
         turnIntensityFactor = _turnIntensityBaseFactor / (angularAcceleration * dt);
         // calculating how much will the spacecraft turn at the current angular velocity if it starts decelerating right now
-        angularVelocity = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        angularVelocity = Math.sign(turningMatrix[4]) * vec.angle2y(turningMatrix[4], turningMatrix[5]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
         if (yaw > turnStopAngle) {
             this._spacecraft.yawLeft(Math.min(Math.max(0, turnIntensityFactor * (yaw - turnStopAngle)), 1));
         } else if (yaw < -turnStopAngle) {
             this._spacecraft.yawRight(Math.min(Math.max(0, turnIntensityFactor * (-yaw - turnStopAngle)), 1));
         }
-        angularVelocity = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        angularVelocity = Math.sign(turningMatrix[6]) * vec.angle2x(turningMatrix[5], turningMatrix[6]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
         if (pitch > turnStopAngle) {
             this._spacecraft.pitchUp(Math.min(Math.max(0, turnIntensityFactor * (pitch - turnStopAngle)), 1));
@@ -396,14 +396,14 @@ define([
         // milliseconds (which will mean about the next simulation step with relatively stable framerates)
         turnIntensityFactor = _turnIntensityBaseFactor / (angularAcceleration * dt);
         // calculating how much will the spacecraft turn at the current angular velocity if it starts decelerating right now
-        angularVelocity = Math.sign(turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        angularVelocity = Math.sign(turningMatrix[2]) * vec.angle2x(turningMatrix[0], turningMatrix[2]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
         if (roll > turnStopAngle) {
             this._spacecraft.rollLeft(Math.min(Math.max(0, turnIntensityFactor * (roll - turnStopAngle)), 1));
         } else if (roll < -turnStopAngle) {
             this._spacecraft.rollRight(Math.min(Math.max(0, turnIntensityFactor * (-roll - turnStopAngle)), 1));
         }
-        angularVelocity = Math.sign(turningMatrix[4]) * vec.angle2u([0, 1], vec.normal2([turningMatrix[4], turningMatrix[5]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        angularVelocity = Math.sign(turningMatrix[4]) * vec.angle2y(turningMatrix[4], turningMatrix[5]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
         if (yaw > turnStopAngle) {
             this._spacecraft.yawLeft(Math.min(Math.max(0, turnIntensityFactor * (yaw - turnStopAngle)), 1));
@@ -423,14 +423,14 @@ define([
         turningMatrix = this._spacecraft.getTurningMatrix();
         angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
         turnIntensityFactor = _turnIntensityBaseFactor / (angularAcceleration * dt);
-        angularVelocity = Math.sign(turningMatrix[2]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[0], turningMatrix[2]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        angularVelocity = Math.sign(turningMatrix[2]) * vec.angle2x(turningMatrix[0], turningMatrix[2]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
         if (roll > turnStopAngle) {
             this._spacecraft.rollLeft(Math.min(Math.max(0, turnIntensityFactor * (roll - turnStopAngle)), 1));
         } else if (roll < -turnStopAngle) {
             this._spacecraft.rollRight(Math.min(Math.max(0, turnIntensityFactor * (-roll - turnStopAngle)), 1));
         }
-        angularVelocity = Math.sign(turningMatrix[6]) * vec.angle2u([1, 0], vec.normal2([turningMatrix[5], turningMatrix[6]])) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        angularVelocity = Math.sign(turningMatrix[6]) * vec.angle2x(turningMatrix[5], turningMatrix[6]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), TURN_THRESHOLD_ANGLE);
         if (pitch > turnStopAngle) {
             this._spacecraft.pitchUp(Math.min(Math.max(0, turnIntensityFactor * (pitch - turnStopAngle)), 1));

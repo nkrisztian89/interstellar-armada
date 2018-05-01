@@ -1119,7 +1119,7 @@ define([
                         } else {
                             baseOrientationMatrix = mat.IDENTITY4;
                         }
-                        this._alpha = vec.angle2uCapped([0, 1], vec.normal2([dirTowardsObject[0], dirTowardsObject[1]]));
+                        this._alpha = vec.angle2yCapped(dirTowardsObject[0], dirTowardsObject[1]);
                         if (dirTowardsObject[0] < 0) {
                             this._alpha = -this._alpha;
                         }

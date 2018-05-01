@@ -194,12 +194,12 @@ define(function () {
             result.yaw = 0;
             result.pitch = (v[2] > 0) ? -Math.PI / 2 : Math.PI / 2;
         } else {
-            result.yaw = vec.angle2uCapped([0, 1], vec.normal2([v[0], v[1]]));
+            result.yaw = vec.angle2yCapped(v[0], v[1]);
             if (v[0] > 0) {
                 result.yaw = -result.yaw;
             }
             yawRotated = vec.rotated2(v, -result.yaw);
-            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([yawRotated[1], v[2]]));
+            result.pitch = vec.angle2xCapped(yawRotated[1], v[2]);
             if (v[2] < 0) {
                 result.pitch = -result.pitch;
             }
@@ -226,12 +226,12 @@ define(function () {
             result.roll = 0;
             result.yaw = (v[1] > 0) ? 0 : Math.PI;
         } else {
-            result.roll = vec.angle2uCapped([1, 0], vec.normal2([v[0], v[2]]));
+            result.roll = vec.angle2xCapped(v[0], v[2]);
             if (v[2] < 0) {
                 result.roll = -result.roll;
             }
             rollRotated = vec.rotated2([v[0], v[2]], -result.roll);
-            result.yaw = vec.angle2uCapped([0, 1], vec.normal2([rollRotated[0], v[1]]));
+            result.yaw = vec.angle2yCapped(rollRotated[0], v[1]);
             if (!positiveYawOnly && (Math.abs(result.roll) > Math.PI / 2)) {
                 result.yaw = -result.yaw;
                 result.roll -= Math.PI * Math.sign(result.roll);
@@ -259,12 +259,12 @@ define(function () {
             result.roll = 0;
             result.pitch = (v[1] > 0) ? 0 : Math.PI;
         } else {
-            result.roll = vec.angle2uCapped([0, 1], vec.normal2([v[0], v[2]]));
+            result.roll = vec.angle2yCapped(v[0], v[2]);
             if (v[0] > 0) {
                 result.roll = -result.roll;
             }
             rollRotated = vec.rotated2([v[0], v[2]], -result.roll);
-            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([v[1], rollRotated[1]]));
+            result.pitch = vec.angle2xCapped(v[1], rollRotated[1]);
             if (!positivePitchOnly && (Math.abs(result.roll) > Math.PI / 2)) {
                 result.pitch = -result.pitch;
                 result.roll -= Math.PI * Math.sign(result.roll);
@@ -484,6 +484,24 @@ define(function () {
         return Math.acos(v1[0] * v2[0] + v1[1] * v2[1]);
     };
     /**
+     * Returns the angle of the a 2D vector and the X unit vector
+     * @param {Number} x The x coordinate of the vector
+     * @param {Number} y The y coordinate of the vector
+     * @returns {Number} The angle in radian.
+     */
+    vec.angle2x = function (x, y) {
+        return Math.acos(x / Math.sqrt(x * x + y * y));
+    };
+    /**
+     * Returns the angle of the a 2D vector and the Y unit vector
+     * @param {Number} x The x coordinate of the vector
+     * @param {Number} y The y coordinate of the vector
+     * @returns {Number} The angle in radian.
+     */
+    vec.angle2y = function (x, y) {
+        return Math.acos(y / Math.sqrt(x * x + y * y));
+    };
+    /**
      * Returns the angle of the two 2D unit vectors in radians. The dot product
      * of the vectors is capped between -1.0 and 1.0, and so this cannot return
      * NaN accidentally (with the product falling slightly out of range due to
@@ -494,6 +512,26 @@ define(function () {
      */
     vec.angle2uCapped = function (v1, v2) {
         return (Math.acos(Math.min(Math.max(-1.0, v1[0] * v2[0] + v1[1] * v2[1]), 1.0)));
+    };
+    /**
+     * Returns the angle of the a 2D vector and the X unit vector. This cannot return
+     * NaN accidentally (with the cosine slightly out of range due to float inaccuracy)
+     * @param {Number} x The x coordinate of the vector
+     * @param {Number} y The y coordinate of the vector
+     * @returns {Number} The angle in radian.
+     */
+    vec.angle2xCapped = function (x, y) {
+        return Math.acos(Math.min(Math.max(-1.0, x / Math.sqrt(x * x + y * y)), 1.0));
+    };
+    /**
+     * Returns the angle of the a 2D vector and the Y unit vector. This cannot return
+     * NaN accidentally (with the cosine slightly out of range due to float inaccuracy)
+     * @param {Number} x The x coordinate of the vector
+     * @param {Number} y The y coordinate of the vector
+     * @returns {Number} The angle in radian.
+     */
+    vec.angle2yCapped = function (x, y) {
+        return Math.acos(Math.min(Math.max(-1.0, y / Math.sqrt(x * x + y * y)), 1.0));
     };
     /**
      * Returns the angle of the two 3D unit vectors in radians.
@@ -899,6 +937,19 @@ define(function () {
         v[0] = m[4];
         v[1] = m[5];
         v[2] = m[6];
+    };
+    /**
+     * Normalizes the passed 2D vector and returns its length
+     * @param {Number[2]} v
+     * @returns {Number}
+     */
+    vec.extractLength2 = function (v) {
+        var
+                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]),
+                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
+        v[0] *= factor;
+        v[1] *= factor;
+        return divisor;
     };
     /**
      * Normalizes the passed 3D vector and returns its length

@@ -1115,12 +1115,12 @@ define([
             result.yaw = 0;
             result.pitch = (v[2] > 0) ? -Math.PI / 2 : Math.PI / 2;
         } else {
-            result.yaw = vec.angle2uCapped([0, 1], vec.normal2([v[0], v[1]]));
+            result.yaw = vec.angle2yCapped(v[0], v[1]);
             if (v[0] < 0) {
                 result.yaw = -result.yaw;
             }
             pitchVector = vec.prodVec3Mat4Aux(v, mat.rotationZ4Aux(-result.yaw));
-            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchVector[1], pitchVector[2]]));
+            result.pitch = vec.angle2xCapped(pitchVector[1], pitchVector[2]);
             if (pitchVector[2] > 0) {
                 result.pitch = -result.pitch;
             }
@@ -1141,13 +1141,13 @@ define([
             result.yaw = 0;
             result.pitch = (m[6] > 0) ? -Math.PI / 2 : Math.PI / 2;
         } else {
-            result.yaw = vec.angle2uCapped([0, 1], vec.normal2(m[10] > 0 ? [m[4], m[5]] : [-m[4], -m[5]]));
+            result.yaw = (m[10] > 0) ? vec.angle2yCapped(m[4], m[5]) : vec.angle2yCapped(-m[4], -m[5]);
             if (m[4] * m[10] < 0) {
                 result.yaw = -result.yaw;
             }
             pitchMatrix = mat.prod3x3SubOf4Aux(m, mat.rotationZ4Aux(-result.yaw));
             mat.correctOrthogonal4(pitchMatrix);
-            result.pitch = vec.angle2uCapped([1, 0], vec.normal2([pitchMatrix[5], pitchMatrix[6]]));
+            result.pitch = vec.angle2xCapped(pitchMatrix[5], pitchMatrix[6]);
             if (pitchMatrix[6] > 0) {
                 result.pitch = -result.pitch;
             }
