@@ -35,6 +35,9 @@
         }, {
             "source": "tests/test.json"
         }, {
+            "source": "tests/shadowTest.json",
+            "test": true
+        }, {
             "source": "tests/sandbox-30.json",
             "test": true
         }, {

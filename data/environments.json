@@ -262,5 +262,22 @@
             "dustClouds": [{
                     "class": "standard"
                 }]
+        }, {
+            "name": "shadowTest",
+            "location": "Shadow Test",
+            "skyboxes": [{
+                    "class": "stars_medium"
+                }],
+            "backgroundObjects": [{
+                    "class": "standardSun",
+                    "position": {
+                        "angleAlpha": 90,
+                        "angleBeta": 90
+                    },
+                    "size": 300
+                }],
+            "dustClouds": [{
+                    "class": "standard"
+                }]
         }]
 }

@@ -1,0 +1,30 @@
+{
+    "description": "A map for testing shadow mapping.",
+    "environment": "shadowTest",
+    "views": [{
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "fps": true,
+            "position": [-200, 500, -310]
+        }],
+    "events": [],
+    "spacecrafts": [{
+            "class": "libra",
+            "name": "Tiberis",
+            "ai": "ship",
+            "position": [-100, 500, -400],
+            "rotations": ["z+90"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "falcon",
+            "squad": "alpha",
+            "count": 9,
+            "formation": {
+                "type": "wedge",
+                "spacing": [40, 0, 0]
+            },
+            "position": [-200, 500, -100],
+            "equipment": "player-tier2"
+        }]
+}

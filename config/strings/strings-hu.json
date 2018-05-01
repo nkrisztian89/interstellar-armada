@@ -291,6 +291,9 @@
                 "test2": "Szabadon kilőheted a többi űrhajót."
             }
         },
+        "shadowTest": {
+            "name": "Árnyékolás teszt"
+        },
         "sandbox-30": {
             "name": "Sandbox 30"
         },

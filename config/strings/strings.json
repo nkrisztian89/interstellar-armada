@@ -247,6 +247,9 @@
                 "test2": "You can freely destroy other spacecrafts."
             }
         },
+        "shadowTest": {
+            "name": "Shadow map test"
+        },
         "sandbox-30": {
             "name": "Sandbox 30"
         },
