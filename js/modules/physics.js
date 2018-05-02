@@ -217,7 +217,7 @@ define([
     Torque.prototype.getAngularAccelerationMatrixOverTime = function (mass, t) {
         // in reality, the shape of the object should be taken into account,
         // for simplicity, the mass is taken as the only coefficient
-        return mat.rotation4Aux(this._axis, this._strength / mass * t);
+        return mat.rotation3Aux(this._axis, this._strength / mass * t);
     };
     /**
      * Returns whether this torque object can be reused as the torque represented is no longer in effect.
@@ -341,7 +341,7 @@ define([
             vec.setSum3(this._modelTransformResult, vec.prodVec3Mat4Aux(vector, this._orientationMatrix), this._positionVector);
         } else {
             vec.setSum3(this._modelTransformResult, vector, this._positionVector);
-        }       
+        }
         return this._modelTransformResult;
     };
     /**
@@ -930,7 +930,7 @@ define([
      * milliseconds.
      */
     PhysicalObject.prototype.simulate = function (dt) {
-        var i, a, t, accelerationMatrix, angularAccMatrix, force, nextForce, torque, nextTorque;
+        var i, a, t, angularAccMatrix, force, nextForce, torque, nextTorque;
         if (dt > 0) {
             // first calculate the movement that happened in the past dt
             // milliseconds as a result of the velocity sampled in the previous step
@@ -941,7 +941,7 @@ define([
             // the affecting forces caused since the previous step
             // (s=1/2*a*t^2)
             if (this._forces.getLength() > 0) {
-                accelerationMatrix = mat.identity4Aux();
+                vec.setNull3(this._v); // we will accumulate acceleration in this vector
                 for (force = this._forces.getFirst(); force; force = nextForce) {
                     nextForce = force.next;
                     if (force.canBeReused()) {
@@ -952,16 +952,16 @@ define([
                             a = force.getAccelerationVector(this._mass);
                             mat.translateByVector(
                                     this._positionMatrix,
-                                    vec.scaled3(a, 0.5 * t * t));
+                                    vec.scaled3Aux(a, 0.5 * t * t));
                             // calculate the caused acceleration to update the velocity matrix
-                            mat.translateByVector(
-                                    accelerationMatrix,
-                                    vec.scaled3(a, t));
+                            vec.add3(
+                                    this._v,
+                                    vec.scaled3Aux(a, t));
                         }
                     }
                 }
                 // update velocity matrix
-                mat.translateByMatrix(this._velocityMatrix, accelerationMatrix);
+                mat.translateByVector(this._velocityMatrix, this._v);
             }
             // correct matrix inaccuracies and close to zero values resulting from
             // floating point operations
@@ -978,7 +978,7 @@ define([
                 // calculate the rotation that happened as a result of the angular
                 // acceleration the affecting torques caused since the previous step
                 if (this._torques.getLength() > 0) {
-                    angularAccMatrix = mat.identity4Aux();
+                    angularAccMatrix = mat.identity3Aux();
                     for (torque = this._torques.getFirst(); torque; torque = nextTorque) {
                         nextTorque = torque.next;
                         if (torque.canBeReused()) {
@@ -986,18 +986,18 @@ define([
                         } else {
                             t = torque.exert(dt) * 0.001; // t is in seconds
                             if (t > 0) {
-                                mat.mul4(
+                                mat.mul43(
                                         this._orientationMatrix,
                                         torque.getAngularAccelerationMatrixOverTime(this._mass, 0.5 * t * t));
                                 // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
-                                mat.mul4(
+                                mat.mul3(
                                         angularAccMatrix,
                                         torque.getAngularAccelerationMatrixOverTime(this._mass, ANGULAR_VELOCITY_MATRIX_DURATION * t * 0.001));
                             }
                         }
                     }
                     // update angular velocity matrix
-                    mat.mul4(this._angularVelocityMatrix, angularAccMatrix);
+                    mat.mul43(this._angularVelocityMatrix, angularAccMatrix);
                 }
                 // correct matrix inaccuracies and close to zero values resulting from
                 // floating point operations

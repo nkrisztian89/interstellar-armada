@@ -138,6 +138,25 @@ define([
         ]);
     };
     /**
+     * Returns a 3x3 identity matrix.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @returns {Float32Array}
+     */
+    mat.identity3Aux = function () {
+        var aux = _auxMatrices3[_auxMatrix3Index];
+        aux[0] = 1.0;
+        aux[1] = 0.0;
+        aux[2] = 0.0;
+        aux[3] = 0.0;
+        aux[4] = 1.0;
+        aux[5] = 0.0;
+        aux[6] = 0.0;
+        aux[7] = 0.0;
+        aux[8] = 1.0;
+        _auxMatrix3Index = (_auxMatrix3Index + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * A constant 3x3 identity matrix.
      * @type Float32Array
      */
@@ -442,7 +461,7 @@ define([
         var
                 cosAngle = Math.cos(angle),
                 sinAngle = Math.sin(angle),
-                aux = _auxMatrices[_auxMatrixIndex];
+                aux = _auxMatrices3[_auxMatrix3Index];
         aux[0] = cosAngle + (1 - cosAngle) * axis[0] * axis[0];
         aux[1] = (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2];
         aux[2] = (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1];
@@ -452,7 +471,7 @@ define([
         aux[6] = (1 - cosAngle) * axis[0] * axis[2] - sinAngle * axis[1];
         aux[7] = (1 - cosAngle) * axis[1] * axis[2] + sinAngle * axis[0];
         aux[8] = cosAngle + (1 - cosAngle) * axis[2] * axis[2];
-        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        _auxMatrix3Index = (_auxMatrix3Index + 1) % AUX_MATRIX_COUNT;
         return aux;
     };
     /**
@@ -1217,7 +1236,7 @@ define([
             result.alpha -= 2 * Math.PI;
         }
         // calculate the matrix we would get if we rotated the Y vector into position
-        halfMatrix = mat.prod3x3SubOf4Aux(m, mat.rotation4Aux(result.alphaAxis, -result.alpha));
+        halfMatrix = mat.prod3x3SubOf43Aux(m, mat.rotation3Aux(result.alphaAxis, -result.alpha));
         mat.correctOrthogonal4(halfMatrix);
         // X and Z vectors might still be out of place, therefore do the same calculations as before to 
         // get the second rotation needed, which will put all vectors in place
@@ -1729,6 +1748,34 @@ define([
         aux[8] = m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8];
         aux[9] = m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9];
         aux[10] = m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10];
+        aux[11] = 0;
+        aux[12] = 0;
+        aux[13] = 0;
+        aux[14] = 0;
+        aux[15] = 1;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
+     * Multiplies the upper left 3x3 submatrix of the 4x4 matrix with the 3x3 matrix and returns the result padded to a 4x4 matrix.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m4 The 4x4 matrix on the left of the multiplicaton.
+     * @param {Float32Array} m3 The 3x3 matrix on the right of the multiplicaton.
+     * @returns {Float32Array} A 4x4 matrix. (one of the auxiliary matrices!)
+     */
+    mat.prod3x3SubOf43Aux = function (m4, m3) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = m4[0] * m3[0] + m4[1] * m3[3] + m4[2] * m3[6];
+        aux[1] = m4[0] * m3[1] + m4[1] * m3[4] + m4[2] * m3[7];
+        aux[2] = m4[0] * m3[2] + m4[1] * m3[5] + m4[2] * m3[8];
+        aux[3] = 0;
+        aux[4] = m4[4] * m3[0] + m4[5] * m3[3] + m4[6] * m3[6];
+        aux[5] = m4[4] * m3[1] + m4[5] * m3[4] + m4[6] * m3[7];
+        aux[6] = m4[4] * m3[2] + m4[5] * m3[5] + m4[6] * m3[8];
+        aux[7] = 0;
+        aux[8] = m4[8] * m3[0] + m4[9] * m3[3] + m4[10] * m3[6];
+        aux[9] = m4[8] * m3[1] + m4[9] * m3[4] + m4[10] * m3[7];
+        aux[10] = m4[8] * m3[2] + m4[9] * m3[5] + m4[10] * m3[8];
         aux[11] = 0;
         aux[12] = 0;
         aux[13] = 0;
@@ -2354,7 +2401,28 @@ define([
         m[15] = 1;
     };
     /**
-     * Multiples the given matrix m1 in place by the matrix m2 from the right.
+     * Multiples the given 3x3 matrix m1 in place by the 3x3 matrix m2 from the right.
+     * @param {Float32Array} m1
+     * @param {Float32Array} m2
+     */
+    mat.mul3 = function (m1, m2) {
+        var
+                index = _getFreeTempMatrixIndex(),
+                mt = _getTempMatrix(index);
+        mat.setMatrix3(mt, m1);
+        m1[0] = mt[0] * m2[0] + mt[1] * m2[3] + mt[2] * m2[6];
+        m1[1] = mt[0] * m2[1] + mt[1] * m2[4] + mt[2] * m2[7];
+        m1[2] = mt[0] * m2[2] + mt[1] * m2[5] + mt[2] * m2[8];
+        m1[3] = mt[3] * m2[0] + mt[4] * m2[3] + mt[5] * m2[6];
+        m1[4] = mt[3] * m2[1] + mt[4] * m2[4] + mt[5] * m2[7];
+        m1[5] = mt[3] * m2[2] + mt[4] * m2[5] + mt[5] * m2[8];
+        m1[6] = mt[6] * m2[0] + mt[7] * m2[3] + mt[8] * m2[6];
+        m1[7] = mt[6] * m2[1] + mt[7] * m2[4] + mt[8] * m2[7];
+        m1[8] = mt[6] * m2[2] + mt[7] * m2[5] + mt[8] * m2[8];
+        _releaseTempMatrix(index);
+    };
+    /**
+     * Multiples the given 4x4 matrix m1 in place by the 4x4 matrix m2 from the right.
      * @param {Float32Array} m1
      * @param {Float32Array} m2
      */

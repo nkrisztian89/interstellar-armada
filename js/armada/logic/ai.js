@@ -1214,7 +1214,7 @@ define([
                                                 vec.diff3(
                                                         vec.sum3(
                                                                 targetPositionVector,
-                                                                vec.scaled3(vec.normal3(vec.prodVec3Mat4Aux(vec.perpendicular3(directionToTarget), mat.rotation4Aux(directionToTarget, Math.random() * Math.PI * 2))), maxDistance)),
+                                                                vec.scaled3(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(directionToTarget), mat.rotation3Aux(directionToTarget, Math.random() * Math.PI * 2))), maxDistance)),
                                                         positionVector),
                                                 CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
                             }
