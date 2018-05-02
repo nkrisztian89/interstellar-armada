@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides various classes that can be used integrated with the Screen module as components on screens. Also manages a shader cache
  * for storing the downloaded source (HTML and CSS) files of the created components.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -281,13 +281,22 @@ define([
         return this._element.innerHTML;
     };
     /**
-     * Sets the inner HTML text content of the wrapped element.
+     * Sets the inner HTML content (parsing the passed string) of the wrapped element.
      * @param {String} newContent
      * @param {Object} [replacements] If given, the newContent string will be used as a format string and the named values given in this
      * object will be replaced in it
      */
     SimpleComponent.prototype.setContent = function (newContent, replacements) {
         this._element.innerHTML = replacements ? utils.formatString(newContent, replacements) : newContent;
+    };
+    /**
+     * Sets the inner text content of the wrapped element.
+     * @param {String} newContent
+     * @param {Object} [replacements] If given, the newContent string will be used as a format string and the named values given in this
+     * object will be replaced in it
+     */
+    SimpleComponent.prototype.setTextContent = function (newContent, replacements) {
+        this._element.textContent = replacements ? utils.formatString(newContent, replacements) : newContent;
     };
     /**
      * Replaces the named parameters in the inner HTML text content of the wrapped elements to the values defined in the passed object.

@@ -3716,7 +3716,7 @@ define([
                 mat.clearMatrixCount();
             } else {
                 if (this._stats.isVisible()) {
-                    this._stats.setContent(this.getFPSStats());
+                    this._stats.setTextContent(this.getFPSStats());
                 }
             }
         }

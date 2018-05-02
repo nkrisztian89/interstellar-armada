@@ -1618,6 +1618,11 @@ define([
          * @type Object
          */
         this._settings = null;
+        /**
+         * Cache storing the current HUD settings (considering both settings file and local storage) for faster access
+         * @type Object
+         */
+        this._hudSettings = {};
     }
     ConfigurationContext.prototype = new asyncResource.AsyncResource();
     ConfigurationContext.prototype.constructor = ConfigurationContext;
@@ -1669,10 +1674,13 @@ define([
      */
     ConfigurationContext.prototype.getHUDSetting = function (settingDefinitionObject) {
         var local;
-        if (localStorage[LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name] !== undefined) {
-            local = types.getValueOfTypeFromLocalStorage(settingDefinitionObject.type, LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name);
+        if (!this._hudSettings[settingDefinitionObject.name]) {
+            if (localStorage[LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name] !== undefined) {
+                local = types.getValueOfTypeFromLocalStorage(settingDefinitionObject.type, LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name);
+            }
+            this._hudSettings[settingDefinitionObject.name] = (local !== undefined) ? local : this._settings[BATTLE_SETTINGS.HUD.name][settingDefinitionObject.name];
         }
-        return (local !== undefined) ? local : this._settings[BATTLE_SETTINGS.HUD.name][settingDefinitionObject.name];
+        return this._hudSettings[settingDefinitionObject.name];
     };
     /**
      * Overrides the local value for the HUD setting identified by the passed setting definition object (storing it in local storage)
@@ -1681,6 +1689,7 @@ define([
      */
     ConfigurationContext.prototype.setHUDSetting = function (settingDefinitionObject, value) {
         localStorage[LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name] = value;
+        this._hudSettings[settingDefinitionObject.name] = value;
     };
     /**
      * Removes all local overrides for HUD settings, resetting them to their default values (coming from the settings JSON)
