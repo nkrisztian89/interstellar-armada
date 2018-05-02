@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides a particle system class that can be added to scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -529,7 +529,7 @@ define([
      * @param {Number} dt
      */
     ParticleSystem.prototype.performAnimate = function (dt) {
-        var i, j, particles, modelMatrix, positionMatrix, orientationMatrix;
+        var i, j, particles, modelMatrix, orientationMatrix;
         if ((!this._keepAlive) && (this._age > this._duration)) {
             this.getNode().markAsReusable(true);
             return;
@@ -544,17 +544,16 @@ define([
                     }
                 } else {
                     modelMatrix = this.getModelMatrix();
-                    positionMatrix = mat.translation4m4(modelMatrix);
-                    orientationMatrix = mat.rotation4m4Aux(modelMatrix);
+                    orientationMatrix = mat.matrix3from4Aux(modelMatrix);
                     for (j = 0; j < particles.length; j++) {
-                        particles[j].translateByMatrix(positionMatrix);
-                        particles[j].rotateByMatrix(orientationMatrix);
+                        particles[j].translateByMatrix(modelMatrix);
+                        particles[j].rotateByMatrix3(orientationMatrix);
                         this.getNode().getScene().addNode(new sceneGraph.RenderableNode(particles[j], false, false, this._minimumCountForInstancing));
                     }
                 }
             }
         }
-        this.translatev(vec.scaled3(mat.translationVector3(this._velocityMatrix), dt / 1000));
+        this.translatev(vec.scale3(mat.translationVector3(this._velocityMatrix), dt / 1000));
     };
     /**
      * Ceases emitting particles and clears the particle system for reuse when all last particles are gone.

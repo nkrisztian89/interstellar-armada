@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides a basic class to use as a mixin or base class for 3 dimensional objects.
  * be rendered on them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -436,11 +436,20 @@ define([
         }
         /**
          * Rotates the current orientation by multiplying it by the given 
-         * rotation matrix.
+         * 4x4 rotation matrix.
          * @param {Float32Array} matrix
          */
         function rotateByMatrix(matrix) {
             mat.mul4(this._orientationMatrix, matrix);
+            this.setOrientationMatrix();
+        }
+        /**
+         * Rotates the current orientation by multiplying it by the given 
+         * 3x3 rotation matrix.
+         * @param {Float32Array} matrix
+         */
+        function rotateByMatrix3(matrix) {
+            mat.mul43(this._orientationMatrix, matrix);
             this.setOrientationMatrix();
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -685,6 +694,7 @@ define([
             this.prototype.getZDirectionVector = getZDirectionVector;
             this.prototype.rotate = rotate;
             this.prototype.rotateByMatrix = rotateByMatrix;
+            this.prototype.rotateByMatrix3 = rotateByMatrix3;
             this.prototype.getCascadeScalingMatrix = getCascadeScalingMatrix;
             this.prototype.getModelMatrix = getModelMatrix;
             this.prototype.getModelMatrixInverse = getModelMatrixInverse;
