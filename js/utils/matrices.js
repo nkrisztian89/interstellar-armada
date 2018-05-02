@@ -417,6 +417,45 @@ define([
         ]);
     };
     /**
+     * Returns a new 3x3 transformation matrix describing a rotation around an arbitrary axis.
+     * @param {Number[]} axis A 3D unit vector describing the axis of the rotation
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotation3 = function (axis, angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle);
+        _matrixCount++;
+        return new Float32Array([
+            cosAngle + (1 - cosAngle) * axis[0] * axis[0], (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2], (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1],
+            (1 - cosAngle) * axis[0] * axis[1] + sinAngle * axis[2], cosAngle + (1 - cosAngle) * axis[1] * axis[1], (1 - cosAngle) * axis[1] * axis[2] - sinAngle * axis[0],
+            (1 - cosAngle) * axis[0] * axis[2] - sinAngle * axis[1], (1 - cosAngle) * axis[1] * axis[2] + sinAngle * axis[0], cosAngle + (1 - cosAngle) * axis[2] * axis[2]
+        ]);
+    };
+    /**
+     * Returns a new 3x3 transformation matrix describing a rotation around an arbitrary axis.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[]} axis An array of 3 numbers describing the axis of the rotation
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.rotation3Aux = function (axis, angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle),
+                aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = cosAngle + (1 - cosAngle) * axis[0] * axis[0];
+        aux[1] = (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2];
+        aux[2] = (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1];
+        aux[3] = (1 - cosAngle) * axis[0] * axis[1] + sinAngle * axis[2];
+        aux[4] = cosAngle + (1 - cosAngle) * axis[1] * axis[1];
+        aux[5] = (1 - cosAngle) * axis[1] * axis[2] - sinAngle * axis[0];
+        aux[6] = (1 - cosAngle) * axis[0] * axis[2] - sinAngle * axis[1];
+        aux[7] = (1 - cosAngle) * axis[1] * axis[2] + sinAngle * axis[0];
+        aux[8] = cosAngle + (1 - cosAngle) * axis[2] * axis[2];
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Returns a new 4x4 transformation matrix describing a rotation around an arbitrary axis.
      * @param {Number[]} axis A 3D unit vector describing the axis of the rotation
      * @param {Number} angle The angle of rotation in radian
@@ -1946,8 +1985,28 @@ define([
         m[3] = cosAngle;
     };
     /**
-     * Modifies the matrix m in-place, setting it to a 4x4 rotation matrix.
-     * @param {Float32Array} m The matrix to modify
+     * Modifies the 3x3 matrix m in-place, setting it to a 3x3 rotation matrix.
+     * @param {Float32Array} m The 3x3 matrix to modify
+     * @param {Number[]} axis An array of 3 numbers describing the axis of the rotation
+     * @param {Number} angle The angle of rotation in radian
+     */
+    mat.setRotation3 = function (m, axis, angle) {
+        var
+                cosAngle = Math.cos(angle),
+                sinAngle = Math.sin(angle);
+        m[0] = cosAngle + (1 - cosAngle) * axis[0] * axis[0];
+        m[1] = (1 - cosAngle) * axis[0] * axis[1] - sinAngle * axis[2];
+        m[2] = (1 - cosAngle) * axis[0] * axis[2] + sinAngle * axis[1];
+        m[3] = (1 - cosAngle) * axis[0] * axis[1] + sinAngle * axis[2];
+        m[4] = cosAngle + (1 - cosAngle) * axis[1] * axis[1];
+        m[5] = (1 - cosAngle) * axis[1] * axis[2] - sinAngle * axis[0];
+        m[6] = (1 - cosAngle) * axis[0] * axis[2] - sinAngle * axis[1];
+        m[7] = (1 - cosAngle) * axis[1] * axis[2] + sinAngle * axis[0];
+        m[8] = cosAngle + (1 - cosAngle) * axis[2] * axis[2];
+    };
+    /**
+     * Modifies the 4x4 matrix m in-place, setting it to a 4x4 rotation matrix.
+     * @param {Float32Array} m The 4x4 matrix to modify
      * @param {Number[]} axis An array of 3 numbers describing the axis of the rotation
      * @param {Number} angle The angle of rotation in radian
      */
@@ -2044,8 +2103,8 @@ define([
         var
                 index = _getFreeTempMatrixIndex(),
                 rot = _getTempMatrix(index);
-        mat.setRotation4(rot, axis, angle);
-        mat.mul4(m, rot);
+        mat.setRotation3(rot, axis, angle);
+        mat.mul43(m, rot);
         _releaseTempMatrix(index);
     };
     /**
@@ -2320,6 +2379,31 @@ define([
         m1[13] = m3[12] * m2[1] + m3[13] * m2[5] + m3[14] * m2[9] + m3[15] * m2[13];
         m1[14] = m3[12] * m2[2] + m3[13] * m2[6] + m3[14] * m2[10] + m3[15] * m2[14];
         m1[15] = m3[12] * m2[3] + m3[13] * m2[7] + m3[14] * m2[11] + m3[15] * m2[15];
+        _releaseTempMatrix(index);
+    };
+    /**
+     * Modifies the passed 4x4 matrix is place, multiplying it with the passed 3x3 matrix
+     * padded to a 4x4 matrix (complemented as an identity matrix, with a 0,0,0,1 last row/column)
+     * @param {Float32Array} m4 A 4x4 matrix
+     * @param {Float32Array} m3 A 3x3 matrix
+     */
+    mat.mul43 = function (m4, m3) {
+        var
+                index = _getFreeTempMatrixIndex(),
+                mt = _getTempMatrix(index);
+        mat.setMatrix4(mt, m4);
+        m4[0] = mt[0] * m3[0] + mt[1] * m3[3] + mt[2] * m3[6];
+        m4[1] = mt[0] * m3[1] + mt[1] * m3[4] + mt[2] * m3[7];
+        m4[2] = mt[0] * m3[2] + mt[1] * m3[5] + mt[2] * m3[8];
+        m4[4] = mt[4] * m3[0] + mt[5] * m3[3] + mt[6] * m3[6];
+        m4[5] = mt[4] * m3[1] + mt[5] * m3[4] + mt[6] * m3[7];
+        m4[6] = mt[4] * m3[2] + mt[5] * m3[5] + mt[6] * m3[8];
+        m4[8] = mt[8] * m3[0] + mt[9] * m3[3] + mt[10] * m3[6];
+        m4[9] = mt[8] * m3[1] + mt[9] * m3[4] + mt[10] * m3[7];
+        m4[10] = mt[8] * m3[2] + mt[9] * m3[5] + mt[10] * m3[8];
+        m4[12] = mt[12] * m3[0] + mt[13] * m3[3] + mt[14] * m3[6];
+        m4[13] = mt[12] * m3[1] + mt[13] * m3[4] + mt[14] * m3[7];
+        m4[14] = mt[12] * m3[2] + mt[13] * m3[5] + mt[14] * m3[8];
         _releaseTempMatrix(index);
     };
     /**

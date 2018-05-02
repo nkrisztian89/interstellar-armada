@@ -271,12 +271,15 @@ define([
      * @returns {Particle}
      */
     OmnidirectionalParticleEmitter.prototype._emitParticle = function () {
-        var velocity, velocityMatrix, particle = ParticleEmitter.prototype._emitParticle.call(this);
-        velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
-        velocityMatrix = mat.translation4Aux(0, velocity, 0);
-        mat.rotate4(velocityMatrix, vec.UNIT3_X, Math.random() * 2 * Math.PI);
-        mat.rotate4(velocityMatrix, vec.UNIT3_Z, Math.random() * 2 * Math.PI);
-        particle.setVelocityM(velocityMatrix);
+        var v, a, b, sinA, cosA, sinB, cosB, particle = ParticleEmitter.prototype._emitParticle.call(this);
+        v = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
+        a = Math.random() * 2 * Math.PI;
+        b = Math.random() * 2 * Math.PI;
+        sinA = Math.sin(a);
+        cosA = Math.cos(a);
+        sinB = Math.sin(b);
+        cosB = Math.cos(b);
+        particle.setVelocity(v * cosA * cosB, v * cosA * sinB, v * sinA);
         return particle;
     };
     // #########################################################################
@@ -326,15 +329,15 @@ define([
      * @returns {Particle}
      */
     UnidirectionalParticleEmitter.prototype._emitParticle = function () {
-        var velocity, velocityMatrix, axis, particle = ParticleEmitter.prototype._emitParticle.call(this);
+        var velocity, velocityVector, axis, particle = ParticleEmitter.prototype._emitParticle.call(this);
         velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
-        velocityMatrix = mat.translation4vAux(vec.scaled3(this._direction, velocity));
+        velocityVector = vec.scaled3Aux(this._direction, velocity);
         axis = (Math.abs(this._direction[0]) < 0.75) ? [1, 0, 0] : ((Math.abs(this._direction[1]) < 0.75) ? [0, 1, 0] : [0, 0, 1]);
         vec.mulCross3(axis, this._direction);
         vec.normalize3(axis);
-        mat.rotate4(velocityMatrix, axis, Math.random() * this._directionSpread / 180.0 * Math.PI);
-        mat.rotate4(velocityMatrix, this._direction, Math.random() * 360 / 180.0 * Math.PI);
-        particle.setVelocityM(velocityMatrix);
+        vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(axis, Math.random() * this._directionSpread / 180.0 * Math.PI));
+        vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(this._direction, Math.random() * 360 / 180.0 * Math.PI));
+        particle.setVelocity(velocityVector[0], velocityVector[1], velocityVector[2]);
         return particle;
     };
     // #########################################################################
