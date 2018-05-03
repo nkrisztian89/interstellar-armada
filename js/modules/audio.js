@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2018 Krisztián Nagy
  * @file This module provides some wrappers for Web Audio API functions for easier use.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -725,6 +725,13 @@ define([
     function setMasterVolume(value, duration) {
         _rampVolume(_masterGain, value, duration);
     }
+    /**
+     * Resumes audio playback (in case auto-play was prevented, this needs to be called from the event handler
+     * of user interaction, such as a button click, to start audio playback in general)
+     */
+    function resume() {
+        _context.resume();
+    }
     // -------------------------------------------------------------------------
     // Initizalization
     _context = new AudioContext();
@@ -752,7 +759,8 @@ define([
         setEffectVolume: setEffectVolume,
         setMusicVolume: setMusicVolume,
         setUIVolume: setUIVolume,
-        setMasterVolume: setMasterVolume
+        setMasterVolume: setMasterVolume,
+        resume: resume
     };
 });
 

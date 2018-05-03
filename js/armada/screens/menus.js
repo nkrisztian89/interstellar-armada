@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2018 Krisztián Nagy
  * @file Provides the menu screens of the Interstellar Armada game which are simply instances of MenuScreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -44,24 +44,28 @@ define([
             _mainMenuOptions = [{
                     id: strings.MAIN_MENU.NEW_GAME.name,
                     action: function () {
+                        audio.resume();
                         game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
                     }
                 }, {
                     id: strings.MAIN_MENU.DATABASE.name,
                     action: function () {
                         analytics.sendEvent("database");
+                        audio.resume();
                         game.setScreen(armadaScreens.DATABASE_SCREEN_NAME);
                     }
                 }, {
                     id: strings.MAIN_MENU.SETTINGS.name,
                     action: function () {
                         analytics.sendEvent("settings");
+                        audio.resume();
                         game.setScreen(armadaScreens.SETTINGS_SCREEN_NAME);
                     }
                 }, {
                     id: strings.MAIN_MENU.ABOUT.name,
                     action: function () {
                         analytics.sendEvent("about");
+                        audio.resume();
                         game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                     }
                 }];
@@ -135,6 +139,7 @@ define([
                                 buttons: [{
                                         caption: strings.get(strings.RELEASE_NOTES.BUTTON),
                                         action: function () {
+                                            audio.resume();
                                             game.closeSuperimposedScreen();
                                             audio.playMusic(armadaScreens.MENU_THEME);
                                             analytics.login();

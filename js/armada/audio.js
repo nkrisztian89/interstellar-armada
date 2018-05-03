@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016-2018 Krisztián Nagy
  * @file Provides functionality to parse and load the audio settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -437,6 +437,13 @@ define([
         }
         _currentTheme = null;
     }
+    /**
+     * Resumes audio playback (in case auto-play was prevented, this needs to be called from the event handler
+     * of user interaction, such as a button click, to start audio playback in general)
+     */
+    function resume() {
+        audio.resume();
+    }
     // -------------------------------------------------------------------------
     // Initialization
     _context = new AudioSettingsContext();
@@ -473,6 +480,7 @@ define([
         executeWhenReady: _context.executeWhenReady.bind(_context),
         initMusic: initMusic,
         playMusic: playMusic,
-        stopMusic: stopMusic
+        stopMusic: stopMusic,
+        resume: resume
     };
 });
