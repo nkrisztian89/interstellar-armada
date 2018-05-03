@@ -866,6 +866,21 @@ define([
         ]);
     };
     /**
+     * Returns a 4x4 transformation matrix describing a translation and a rotation based on
+     * two separate matrices, only the translation / rotation part of which are taken into
+     * account and combined.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} t A 4x4 translation matrix, without rotation, scaling or projection.
+     * @param {Float32Array} r A 4x4 rotation or scaling and rotation matrix, without translation or projection.
+     * @returns {Float32Array}
+     */
+    mat.translationRotationAux = function (t, r) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        mat.setTranslationRotation(aux, t, r);
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Returns a 4x4 transformation matrix describing a perspective projection.
      * @param {Number} right
      * @param {Number} top
@@ -2497,6 +2512,31 @@ define([
         m[13] = m1[12] * m2[1] + m1[13] * m2[5] + m1[14] * m2[9] + m1[15] * m2[13];
         m[14] = m1[12] * m2[2] + m1[13] * m2[6] + m1[14] * m2[10] + m1[15] * m2[14];
         m[15] = m1[12] * m2[3] + m1[13] * m2[7] + m1[14] * m2[11] + m1[15] * m2[15];
+    };
+    /**
+     * Sets a passed 4x4 matrix to be equal with the product of two other 4x4 matrices, assuming
+     * that the 4th columns are all (0, 0, 0, 1)
+     * @param {Float32Array} m The 4x4 matrix to modify.
+     * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
+     * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
+     */
+    mat.setProd4NoProj = function (m, m1, m2) {
+        m[0] = m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8];
+        m[1] = m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9];
+        m[2] = m1[0] * m2[2] + m1[1] * m2[6] + m1[2] * m2[10];
+        m[3] = 0;
+        m[4] = m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8];
+        m[5] = m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9];
+        m[6] = m1[4] * m2[2] + m1[5] * m2[6] + m1[6] * m2[10];
+        m[7] = 0;
+        m[8] = m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8];
+        m[9] = m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9];
+        m[10] = m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10];
+        m[11] = 0;
+        m[12] = m1[12] * m2[0] + m1[13] * m2[4] + m1[14] * m2[8] + m2[12];
+        m[13] = m1[12] * m2[1] + m1[13] * m2[5] + m1[14] * m2[9] + m2[13];
+        m[14] = m1[12] * m2[2] + m1[13] * m2[6] + m1[14] * m2[10] + m2[14];
+        m[15] = 1;
     };
     /**
      * Modifies a 4x4 matrix in-place to be equal to the product of the upper left 3x3 submatrices of two 4x4 matrices padded to a 4x4 matrix.

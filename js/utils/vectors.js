@@ -639,6 +639,32 @@ define(function () {
         return aux;
     };
     /**
+     * Multiplies the a 4D row vector: (X, 0, 0, 1) with the given 4x4 matrix. (from the right)
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number} x The X coordinate of the vector
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[4]} v*m
+     */
+    vec.prodVecX4Mat4Aux = function (x, m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        vec.setProdVecX4Mat4(aux, x, m);
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Multiplies the a 4D row vector: (0, Y, 0, 1) with the given 4x4 matrix. (from the right)
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number} y The Y coordinate of the vector
+     * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[4]} v*m
+     */
+    vec.prodVecY4Mat4Aux = function (y, m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        vec.setProdVecY4Mat4(aux, y, m);
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Multiplies the given 3x3 matrix with the given 3D row vector. (from the right)
      * @param {Float32Array} m A 3x3 matrix.
      * @param {Number[3]} v A 3D vector.
@@ -927,6 +953,30 @@ define(function () {
         v[1] = mr[1] * vl[0] + mr[5] * vl[1] + mr[9] * vl[2] + mr[13] * vl[3];
         v[2] = mr[2] * vl[0] + mr[6] * vl[1] + mr[10] * vl[2] + mr[14] * vl[3];
         v[3] = mr[3] * vl[0] + mr[7] * vl[1] + mr[11] * vl[2] + mr[15] * vl[3];
+    };
+    /**
+     * Sets the given vector to be equal to the product of the 4D row vector: (X, 0, 0, 1) and the given 4x4 matrix.
+     * @param {Number[4]} v The 4D vector to modify
+     * @param {Number} x The X coordinate of the 4D vector on the left of the multiplication
+     * @param {Float32Array} mr A 4x4 matrix on the right of the multiplication
+     */
+    vec.setProdVecX4Mat4 = function (v, x, mr) {
+        v[0] = mr[0] * x + mr[12];
+        v[1] = mr[1] * x + mr[13];
+        v[2] = mr[2] * x + mr[14];
+        v[3] = mr[3] * x + mr[15];
+    };
+    /**
+     * Sets the given vector to be equal to the product of the 4D row vector: (0, Y, 0, 1) and the given 4x4 matrix.
+     * @param {Number[4]} v The 4D vector to modify
+     * @param {Number} y The Y coordinate of the 4D vector on the left of the multiplication
+     * @param {Float32Array} mr A 4x4 matrix on the right of the multiplication
+     */
+    vec.setProdVecY4Mat4 = function (v, y, mr) {
+        v[0] = mr[4] * y + mr[12];
+        v[1] = mr[5] * y + mr[13];
+        v[2] = mr[6] * y + mr[14];
+        v[3] = mr[7] * y + mr[15];
     };
     /*
      * Sets the given 3D vector to be equal to the (first 3 elements of the) second row of the passed 4x4 matrix

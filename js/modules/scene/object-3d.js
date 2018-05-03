@@ -510,7 +510,7 @@ define([
                     this._modelMatrixValid = true;
                 }
                 if (this._parent && !this._parent.shouldIgnoreTransform()) {
-                    mat.setProd4(this._modelMatrixForFrame, this._modelMatrix, this._parent.getModelMatrix());
+                    mat.setProd4NoProj(this._modelMatrixForFrame, this._modelMatrix, this._parent.getModelMatrix());
                 } else {
                     mat.setMatrix4(this._modelMatrixForFrame, this._modelMatrix);
                 }
@@ -529,7 +529,7 @@ define([
                     this._modelMatrixInverseValid = true;
                 }
                 if (this._parent && !this._parent.shouldIgnoreTransform()) {
-                    mat.setProd4(this._modelMatrixInverseForFrame, this._parent.getModelMatrixInverse(), this._modelMatrixInverse);
+                    mat.setProd4NoProj(this._modelMatrixInverseForFrame, this._parent.getModelMatrixInverse(), this._modelMatrixInverse);
                 } else {
                     mat.setMatrix4(this._modelMatrixInverseForFrame, this._modelMatrixInverse);
                 }
@@ -622,15 +622,16 @@ define([
             // we reintroduce appropriate scaling, but not the orientation, so 
             // we can check border points of the properly scaled model, but translated
             // along the axes of the camera space
-            fullMatrix = mat.prod34Aux(scalingMatrix, baseMatrix, camera.getProjectionMatrix());
+            fullMatrix = mat.translationRotationAux(baseMatrix, scalingMatrix);
+            mat.mul4(fullMatrix, camera.getProjectionMatrix());
             size = this.getSize();
             factor = 1 / fullMatrix[15];
             positionX = (fullMatrix[12] === 0.0) ? 0.0 : fullMatrix[12] * factor;
             positionY = (fullMatrix[13] === 0.0) ? 0.0 : fullMatrix[13] * factor;
             // Z coordinate is not needed
             // frustum culling: sides
-            xOffsetPosition = vec.prodVec4Mat4Aux([size, 0.0, 0.0, 1.0], fullMatrix);
-            yOffsetPosition = vec.prodVec4Mat4Aux([0.0, size, 0.0, 1.0], fullMatrix);
+            xOffsetPosition = vec.prodVecX4Mat4Aux(size, fullMatrix);
+            yOffsetPosition = vec.prodVecY4Mat4Aux(size, fullMatrix);
             xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - positionX);
             yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - positionY);
             if (!((positionX + xOffset < -1) || (positionX - xOffset > 1)) &&

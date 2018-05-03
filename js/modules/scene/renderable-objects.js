@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides various basic renderable object classes that can be added to scenes inside renderable nodes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -120,11 +120,6 @@ define([
          */
         this._node = null;
         /**
-         * A flag marking whether this object has been rendered in the current frame already.
-         * @type Boolean
-         */
-        this._wasRendered = false;
-        /**
          * The shader to use while rendering this object.
          * @type ManagedShader
          */
@@ -198,7 +193,6 @@ define([
      */
     RenderableObject.prototype.init = function (shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader, castsShadows) {
         this._node = null;
-        this._wasRendered = false;
         this._shader = shader;
         this._textures = {};
         this._textureRoles = [];
@@ -208,7 +202,6 @@ define([
         this._canBeReused = false;
         this._visible = true;
         this._castsShadows = (castsShadows !== undefined) ? castsShadows : true;
-        this._wasRenderedToShadowMap = false;
         this._name = null;
     };
     /**
@@ -390,16 +383,6 @@ define([
         return this._visible && (!this._node || this._node.isVisible());
     };
     /**
-     * Called at the beginning of the render of each frame, to reset object,
-     * e.g. to invalidate all cached values that were only valid for one frame.
-     * Subclasses must extend its functionality to reset their additional 
-     * attributes.
-     */
-    RenderableObject.prototype.resetForNewFrame = function () {
-        this._wasRendered = false;
-        this._wasRenderedToShadowMap = false;
-    };
-    /**
      * Returns a combination of bits corresponding to which rendered queues (based on distance) should this object be added to for rendering
      * for the current frame. Will get the camera to the view point of which the distance should be calculated as parameter when called.
      * @returns {Number} (enum RenderQueueBits)
@@ -470,13 +453,6 @@ define([
         return true;
     };
     /**
-     * Called after a render has been finished. Additional cleanup/logging can
-     * be added to this in subclasses.
-     */
-    RenderableObject.prototype.finishRender = function () {
-        this._wasRendered = true;
-    };
-    /**
      * Handles the full render flow, with checks and preparations. Don't override this.
      * In instanced mode, only performs the preparation and the finish step, and not the rendering itself.
      * @param {RenderParameters} renderParameters
@@ -488,7 +464,6 @@ define([
             if (!renderParameters.useInstancing) {
                 this.performRender(renderParameters);
             }
-            this.finishRender(renderParameters);
             return true;
         }
         return false;
@@ -598,14 +573,6 @@ define([
         }
     };
     /**
-     * Returns whether this object has (already) been rendered in the current
-     * frame.
-     * @returns {Boolean}
-     */
-    RenderableObject.prototype.wasRendered = function () {
-        return this._wasRendered;
-    };
-    /**
      * Returns whether this object can be put in the same rendering queue as the passed other rendering object.
      * @param {RenderableObject} otherRenderableObject
      * @returns {Boolean}
@@ -651,11 +618,10 @@ define([
          */
         this._visibleSize = {width: -1, height: -1};
         /**
-         * The cached value marking whether the object fell within the shadow
-         * cast frustum during the last calculation.
-         * @type ?Boolean
+         * Whether the visible size has already been updated for the current frame (before used in shouldBeRendered())
+         * @type Boolean
          */
-        this._insideShadowCastFrustum = null;
+        this._visibleSizeUpdated = false;
         /**
          * If the visible width or height of the object is below this limit, it
          * will not be rendered. (measured in pixels)
@@ -681,7 +647,6 @@ define([
         RenderableObject.prototype.init.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader);
         object3D.Object3D.prototype.init.call(this, positionMatrix, orientationMatrix, scalingMatrix, size);
         this._visibleSize = {width: -1, height: -1};
-        this._insideShadowCastFrustum = null;
         this._smallestSizeWhenDrawn = 0;
     };
     /**
@@ -695,46 +660,38 @@ define([
      * Returns the size of the object on the screen, using the frustum of the
      * camera of the passed render parameters. Uses caching.
      * @param {RenderParameters} renderParameters
+     * @param {Boolean} beforeMainRender Whether this update comes before the main render (the main update is in shouldBeRendered())
      * @returns {{width: Number, height: Number}}
      */
-    RenderableObject3D.prototype.getVisibleSize = function (renderParameters) {
-        if (this._visibleSize.width < 0) {
+    RenderableObject3D.prototype.updateVisibleSize = function (renderParameters, beforeMainRender) {
+        // we only recalculate if the last call was not before the call in the main render (but that one itself, which is the last one for the frame)
+        if (!this._visibleSizeUpdated) {
             this._visibleSize = this.getSizeInsideViewFrustum(renderParameters.camera);
         }
+        this._visibleSizeUpdated = beforeMainRender;
         return this._visibleSize;
     };
     /**
-     * Returns whether the object is within the view frustum, using the passed
-     * camera. Uses caching.
-     * @param {RenderParameters} renderParameters
-     * @returns {Boolean}
+     * Returns the size of the object on the screen as last updated by updateVisibleSize()
+     * @returns {{width: Number, height: Number}}
      */
-    RenderableObject3D.prototype.isInsideViewFrustum = function (renderParameters) {
-        return (this.getVisibleSize(renderParameters).width > 0);
+    RenderableObject3D.prototype.getVisibleSize = function () {
+        return this._visibleSize;
     };
     /**
      * Return the maximum (horizontal or vertical) span of the object on the
-     * screen. Uses caching.
+     * screen. Uses the cached visible size value.
      * @param {RenderParameters} renderParameters
      * @returns {Number}
      */
     RenderableObject3D.prototype.getSizeInPixels = function (renderParameters) {
-        this.getVisibleSize(renderParameters);
-        if (this._visibleSize.width < 0) {
-            application.showError("Attempting to access the size of an object on the screen in pixels, before the size has been calculated.");
-        }
         return Math.max(this._visibleSize.width * renderParameters.viewportWidth / 2, this._visibleSize.height * renderParameters.viewportHeight / 2);
     };
     /**
-     * @override
-     * Extend's the superclass method, erases cached values.
+     * Erases cached values that are only valid for one frame.
      */
     RenderableObject3D.prototype.resetForNewFrame = function () {
-        RenderableObject.prototype.resetForNewFrame.call(this);
         RenderableObject3D.prototype.resetCachedValues.call(this);
-        this._visibleSize.width = -1;
-        this._visibleSize.height = -1;
-        this._insideShadowCastFrustum = null;
     };
     /**
      * @override
@@ -768,26 +725,22 @@ define([
         var visibleSize, relativeFactor;
         if (RenderableObject.prototype.shouldBeRendered.call(this, renderParameters)) {
             if (this.isInsideParent() === true) {
-                if ((renderParameters.parent.isInsideViewFrustum === undefined) || (renderParameters.parent.isInsideViewFrustum(renderParameters))) {
-                    visibleSize = renderParameters.parent.getVisibleSize(renderParameters);
+                visibleSize = renderParameters.parent.getVisibleSize(renderParameters);
+                if (visibleSize.width > 0) {
                     relativeFactor = Math.max(this.getSize() / renderParameters.parent.getSize(), renderParameters.lodContext.minimumRelativeSize);
                     this._visibleSize.width = visibleSize.width * relativeFactor;
                     this._visibleSize.height = visibleSize.height * relativeFactor;
-                    if (this.getSizeInPixels(renderParameters) < this._smallestSizeWhenDrawn) {
-                        return false;
-                    }
-                    return true;
+                    return (this.getSizeInPixels(renderParameters) >= this._smallestSizeWhenDrawn);
                 }
                 this._visibleSize.width = 0;
                 this._visibleSize.height = 0;
                 return false;
             }
-            visibleSize = this.getVisibleSize(renderParameters);
-            if (this.getSizeInPixels(renderParameters) < this._smallestSizeWhenDrawn) {
-                return false;
-            }
-            return this.isInsideViewFrustum(renderParameters);
+            visibleSize = this.updateVisibleSize(renderParameters, false);
+            return ((visibleSize.width > 0) && (this.getSizeInPixels(renderParameters) >= this._smallestSizeWhenDrawn));
         }
+        this._visibleSize.width = 0;
+        this._visibleSize.height = 0;
         return false;
     };
     /**
@@ -1017,6 +970,7 @@ define([
                 if (!renderParameters) {
                     return this.LOD_NOT_SET;
                 }
+                this.updateVisibleSize(renderParameters, true);
                 visibleSize = this.getSizeInPixels(renderParameters);
                 lodSize = renderParameters.lodContext.compensateForObjectSize ? this.getLODSize(visibleSize, renderParameters.lodContext.referenceSize) : visibleSize;
                 if (lodSize > 0) {
@@ -1312,15 +1266,6 @@ define([
     Billboard.prototype.addToContext = function (context) {
         RenderableObject3D.prototype.addToContext.call(this, context);
         this._model.addToContext(context, this._wireframe);
-    };
-    /**
-     * Always returns true as is it faster to skip the check because anyway we are
-     * only rendering 2 triangles here.
-     * @override
-     * @returns {Boolean} Always true.
-     */
-    Billboard.prototype.isInsideViewFrustum = function () {
-        return true;
     };
     /**
      * @override
@@ -1735,14 +1680,6 @@ define([
         this._model.addToContext(context, false);
     };
     /**
-     * We are only rendering 2 triangles, so only returns false if there is a parent that is not
-     * visible, but does not perform real frustum check as that would be slower.
-     * @returns {boolean} Always true.
-     */
-    Particle.prototype.isInsideViewFrustum = function () {
-        return (this.getParent() && this.isInsideParent()) ? this.getParent().isInsideViewFrustum() : true;
-    };
-    /**
      * @override
      * Adds a quick check for visibility to the superclass method.
      * @param {Camera} camera
@@ -1923,14 +1860,6 @@ define([
     }
     BackgroundBillboard.prototype = new Particle();
     BackgroundBillboard.prototype.constructor = BackgroundBillboard;
-    /**
-     * @override
-     * It is faster not to do any check for an object as simple as a billboard. Will always return true.
-     * @returns {Boolean}
-     */
-    BackgroundBillboard.prototype.isInsideViewFrustum = function () {
-        return true;
-    };
     /**
      * @override
      * Will only do the same basic check as for a general RenderableObject

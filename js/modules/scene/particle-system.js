@@ -518,9 +518,12 @@ define([
     /**
      * @override
      * Always false, as particle system object itself is never rendered, only the particles it has emitted.
+     * @param {RenderParameters} renderParameters
      * @returns {Boolean}
      */
-    ParticleSystem.prototype.shouldBeRendered = function () {
+    ParticleSystem.prototype.shouldBeRendered = function (renderParameters) {
+        this.updateVisibleSize(renderParameters, false); // visible size needs to be updated during shouldBeRendered()
+                                                         // so that based on it the particles can decide if they are to be rendered   
         return false;
     };
     /**

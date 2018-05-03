@@ -3415,7 +3415,7 @@ define([
                 indicator = _shipIndicators[i];
                 indicator.setPosition(targetPosition);
                 targetIsHostile = ships[i].isHostile(craft);
-                shipWidth = ships[i].getVisualModel().getVisibleSize({camera: _battleScene.getCamera()}).width * _shipIndicatorSizeFactor;
+                shipWidth = ships[i].getVisualModel().updateVisibleSize({camera: _battleScene.getCamera()}, true).width * _shipIndicatorSizeFactor;
                 shipIndicatorMinSize = (ships[i] === target) ? _shipIndicatorSizes.targetMinimum : _shipIndicatorSizes.minimum;
                 shipIndicatorSize = [
                     Math.min(Math.max(shipIndicatorMinSize[0], shipWidth), _shipIndicatorSizes.maximum[0]),

@@ -787,7 +787,9 @@ define([
      */
     RenderableNode.prototype.resetForNewFrame = function () {
         var subnode;
-        this._renderableObject.resetForNewFrame();
+        if (this._renderableObject.resetForNewFrame) {
+            this._renderableObject.resetForNewFrame();
+        }
         for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
             subnode.resetForNewFrame();
         }
@@ -1725,7 +1727,7 @@ define([
                 if (this._stereoscopicMode === Scene.StereoscopicMode.ANAGLYPH) {
                     context.addShader(this._redShader);
                     context.addShader(this._cyanShader);
-                // set up side by side stereoscopic rendering
+                    // set up side by side stereoscopic rendering
                 } else if (this._stereoscopicMode === Scene.StereoscopicMode.SIDE_BY_SIDE) {
                     context.addShader(this._leftShader);
                     context.addShader(this._rightShader);
