@@ -623,7 +623,7 @@ define([
             // we can check border points of the properly scaled model, but translated
             // along the axes of the camera space
             fullMatrix = mat.translationRotationAux(baseMatrix, scalingMatrix);
-            mat.mul4(fullMatrix, camera.getProjectionMatrix());
+            mat.mulModelProj(fullMatrix, camera.getProjectionMatrix());
             size = this.getSize();
             factor = 1 / fullMatrix[15];
             positionX = (fullMatrix[12] === 0.0) ? 0.0 : fullMatrix[12] * factor;

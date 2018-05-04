@@ -2465,6 +2465,59 @@ define([
         _releaseTempMatrix(index);
     };
     /**
+     * Multiples the given 4x4 matrix mm in place by the 4x4 perspective 
+     * projection matrix pm from the right.
+     * @param {Float32Array} m Any 4x4 transformation matrix
+     * @param {Float32Array} pm A 4x4 perspective projection matrix (perspective along Z)
+     */
+    mat.mul4Proj = function (m, pm) {
+        var
+                index = _getFreeTempMatrixIndex(),
+                tm = _getTempMatrix(index);
+        mat.setMatrix4(tm, m);
+        m[0] = tm[0] * pm[0];
+        m[1] = tm[1] * pm[5];
+        m[2] = tm[2] * pm[10] + tm[3] * pm[14];
+        m[3] = -tm[2];
+        m[4] = tm[4] * pm[0];
+        m[5] = tm[5] * pm[5];
+        m[6] = tm[6] * pm[10] + tm[7] * pm[14];
+        m[7] = -tm[6];
+        m[8] = tm[8] * pm[0];
+        m[9] = tm[9] * pm[5];
+        m[10] = tm[10] * pm[10] + tm[11] * pm[14];
+        m[11] = -tm[10];
+        m[12] = tm[12] * pm[0];
+        m[13] = tm[13] * pm[5];
+        m[14] = tm[14] * pm[10] + tm[15] * pm[14];
+        m[15] = -tm[14];
+        _releaseTempMatrix(index);
+    };
+    /**
+     * Multiples the given 4x4 model matrix (having translation, rotation and scaling, but no
+     * projection component) mm in place by the 4x4 perspective projection matrix pm from the right.
+     * @param {Float32Array} mm A 4x4 model matrix
+     * @param {Float32Array} pm A 4x4 perspective projection matrix (perspective along Z)
+     */
+    mat.mulModelProj = function (mm, pm) {
+        mm[0] = mm[0] * pm[0];
+        mm[1] = mm[1] * pm[5];
+        mm[3] = -mm[2];
+        mm[2] = mm[2] * pm[10];
+        mm[4] = mm[4] * pm[0];
+        mm[5] = mm[5] * pm[5];
+        mm[7] = -mm[6];
+        mm[6] = mm[6] * pm[10];
+        mm[8] = mm[8] * pm[0];
+        mm[9] = mm[9] * pm[5];
+        mm[11] = -mm[10];
+        mm[10] = mm[10] * pm[10];
+        mm[12] = mm[12] * pm[0];
+        mm[13] = mm[13] * pm[5];
+        mm[15] = -mm[14];
+        mm[14] = mm[14] * pm[10] + pm[14];
+    };
+    /**
      * Modifies the passed 4x4 matrix is place, multiplying it with the passed 3x3 matrix
      * padded to a 4x4 matrix (complemented as an identity matrix, with a 0,0,0,1 last row/column)
      * @param {Float32Array} m4 A 4x4 matrix
