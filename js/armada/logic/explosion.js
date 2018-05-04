@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Implementation of the Explosion game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -154,11 +154,11 @@ define([
      */
     Explosion.prototype.init = function (explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles, velocityMatrix) {
         this._class = explosionClass;
-        mat.setMatrix4(this._positionMatrix, positionMatrix);
+        mat.copyTranslation4(this._positionMatrix, positionMatrix);
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
         this._direction = direction;
         this._carriesParticles = (carriesParticles === true);
-        mat.setMatrix4(this._velocityMatrix, velocityMatrix || mat.IDENTITY4);
+        mat.copyTranslation4(this._velocityMatrix, velocityMatrix || mat.IDENTITY4);
     };
     /**
      * Creates a new particle system to be used as the visual model for this explosion. Safe to be called on Explosion objects that have not

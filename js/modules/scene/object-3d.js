@@ -83,7 +83,13 @@ define([
          * The cached calculated value of the cascaded model matrix (with the transformations of the parents applied) for the current frame.
          * @type Float32Array
          */
-        this._modelMatrixForFrame = mat.identity4();
+        this._cascadedModelMatrix = mat.identity4();
+        /**
+         * The matrix to be used as the model matrix for the current frame (points to the calculated cascaded matrix, if there is a parent, 
+         * and to the simple local model matrix if there isn't)
+         * @type Float32Array
+         */
+        this._modelMatrixForFrame = this._modelMatrix;
         /**
          * Whether the cached cascaded model matrix value is currently valid
          * @type Boolean
@@ -104,7 +110,13 @@ define([
          * current frame.
          * @type Float32Array
          */
-        this._modelMatrixInverseForFrame = mat.identity4();
+        this._cascadedModelMatrixInverse = mat.identity4();
+        /**
+         * The matrix to be used as the inverse model matrix for the current frame (points to the calculated cascaded inverse model matrix, if there is a parent, 
+         * and to the simple local inverse model matrix if there isn't)
+         * @type Float32Array
+         */
+        this._modelMatrixInverseForFrame = this._modelMatrixInverse;
         /**
          * Whether the cached cascaded inverse model matrix value is currently valid
          * @type Boolean
@@ -173,9 +185,11 @@ define([
          */
         function init(positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside) {
             this._parent = null;
-            mat.setMatrix4(this._positionMatrix, positionMatrix || mat.IDENTITY4);
+            mat.copyTranslation4(this._positionMatrix, positionMatrix || mat.IDENTITY4);
             mat.setMatrix4(this._orientationMatrix, orientationMatrix || mat.IDENTITY4);
-            mat.setMatrix4(this._scalingMatrix, scalingMatrix || mat.IDENTITY4);
+            mat.copyScaling4(this._scalingMatrix, scalingMatrix || mat.IDENTITY4);
+            this._modelMatrixForFrame = this._modelMatrix;
+            this._modelMatrixInverseForFrame = this._modelMatrixInverse;
             this._cascadeScalingMatrixValid = false;
             this._modelMatrixValid = false;
             this._modelMatrixForFrameValid = false;
@@ -208,6 +222,8 @@ define([
          */
         function setParent(parent) {
             this._parent = parent;
+            this._modelMatrixForFrame = (parent && !parent.shouldIgnoreTransform()) ? this._cascadedModelMatrix : this._modelMatrix;
+            this._modelMatrixInverseForFrame = (parent && !parent.shouldIgnoreTransform()) ? this._cascadedModelMatrixInverse : this._modelMatrixInverse;
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**
@@ -490,9 +506,9 @@ define([
         function getCascadeScalingMatrix() {
             if (!this._cascadeScalingMatrixValid) {
                 if (this._parent && !this._parent.shouldIgnoreTransform()) {
-                    mat.setProd3x3SubOf4(this._cascadeScalingMatrix, this._parent.getCascadeScalingMatrix(), this._scalingMatrix);
+                    mat.setScalingToProdScalingScaling4(this._cascadeScalingMatrix, this._parent.getCascadeScalingMatrix(), this._scalingMatrix);
                 } else {
-                    mat.setMatrix4(this._cascadeScalingMatrix, this._scalingMatrix);
+                    mat.copyScaling4(this._cascadeScalingMatrix, this._scalingMatrix);
                 }
                 this._cascadeScalingMatrixValid = true;
             }
@@ -506,13 +522,11 @@ define([
         function getModelMatrix() {
             if (!this._modelMatrixForFrameValid) {
                 if (!this._modelMatrixValid) {
-                    mat.setTranslationRotation(this._modelMatrix, this._positionMatrix, mat.prod3x3SubOf4Aux(this._scalingMatrix, this._orientationMatrix));
+                    mat.setTranslationRotation(this._modelMatrix, this._positionMatrix, mat.prodScalingRotationAux(this._scalingMatrix, this._orientationMatrix));
                     this._modelMatrixValid = true;
                 }
                 if (this._parent && !this._parent.shouldIgnoreTransform()) {
-                    mat.setProd4NoProj(this._modelMatrixForFrame, this._modelMatrix, this._parent.getModelMatrix());
-                } else {
-                    mat.setMatrix4(this._modelMatrixForFrame, this._modelMatrix);
+                    mat.setProd4NoProj(this._cascadedModelMatrix, this._modelMatrix, this._parent.getModelMatrix());
                 }
                 this._modelMatrixForFrameValid = true;
             }
@@ -529,9 +543,7 @@ define([
                     this._modelMatrixInverseValid = true;
                 }
                 if (this._parent && !this._parent.shouldIgnoreTransform()) {
-                    mat.setProd4NoProj(this._modelMatrixInverseForFrame, this._parent.getModelMatrixInverse(), this._modelMatrixInverse);
-                } else {
-                    mat.setMatrix4(this._modelMatrixInverseForFrame, this._modelMatrixInverse);
+                    mat.setProd4NoProj(this._cascadedModelMatrixInverse, this._parent.getModelMatrixInverse(), this._modelMatrixInverse);
                 }
                 this._modelMatrixInverseForFrameValid = true;
             }
@@ -591,7 +603,7 @@ define([
          */
         function getPositionMatrixInCameraSpace(camera) {
             if (!this._positionMatrixInCameraSpaceValid) {
-                mat.setTranslation4v(this._positionMatrixInCameraSpace, vec.prodVec4Mat4Aux(mat.translationVector4(this.getModelMatrix()), camera.getViewMatrix()));
+                mat.updateTranslation4v(this._positionMatrixInCameraSpace, vec.prodVec4Mat4Aux(mat.translationVector4(this.getModelMatrix()), camera.getViewMatrix()));
                 this._positionMatrixInCameraSpaceValid = true;
             }
             return this._positionMatrixInCameraSpace;

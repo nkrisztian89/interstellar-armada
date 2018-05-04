@@ -1772,6 +1772,34 @@ define([
         return aux;
     };
     /**
+     * Multiplies the a 4x4 scaling matrix with a 4x4 rotation matrix.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} sm The 4x4 scaling matrix on the left of the multiplicaton.
+     * @param {Float32Array} rm The 4x4 rotation matrix on the right of the multiplicaton.
+     * @returns {Float32Array} A 4x4 matrix. (one of the auxiliary matrices!)
+     */
+    mat.prodScalingRotationAux = function (sm, rm) {
+        var aux = _auxMatrices[_auxMatrixIndex];
+        aux[0] = sm[0] * rm[0];
+        aux[1] = sm[0] * rm[1];
+        aux[2] = sm[0] * rm[2];
+        aux[3] = 0;
+        aux[4] = sm[5] * rm[4];
+        aux[5] = sm[5] * rm[5];
+        aux[6] = sm[5] * rm[6];
+        aux[7] = 0;
+        aux[8] = sm[10] * rm[8];
+        aux[9] = sm[10] * rm[9];
+        aux[10] = sm[10] * rm[10];
+        aux[11] = 0;
+        aux[12] = 0;
+        aux[13] = 0;
+        aux[14] = 0;
+        aux[15] = 1;
+        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Multiplies the upper left 3x3 submatrix of the 4x4 matrix with the 3x3 matrix and returns the result padded to a 4x4 matrix.
      * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
      * @param {Float32Array} m4 The 4x4 matrix on the left of the multiplicaton.
@@ -2009,6 +2037,26 @@ define([
         }
     };
     /**
+     * Copies the value of the right 4x4 translation matrix into the left 4x4 translation matrix
+     * @param {Float32Array} left The leftvalue, a 4x4 translation matrix
+     * @param {Float32Array} right The rightvalue, a 4x4 translation matrix
+     */
+    mat.copyTranslation4 = function (left, right) {
+        left[12] = right[12];
+        left[13] = right[13];
+        left[14] = right[14];
+    };
+    /**
+     * Copies the value of the right 4x4 scaling matrix into the left 4x4 scaling matrix
+     * @param {Float32Array} left The leftvalue, a 4x4 scaling matrix
+     * @param {Float32Array} right The rightvalue, a 4x4 scaling matrix
+     */
+    mat.copyScaling4 = function (left, right) {
+        left[0] = right[0];
+        left[5] = right[5];
+        left[10] = right[10];
+    };
+    /**
      * Sets the components of a 4x4 matrix to correspond to a translation defined by the passed vector.
      * @param {Float32Array} m
      * @param {Number[3]} v The vector of the translation ([x,y,z]).
@@ -2031,6 +2079,17 @@ define([
         m[13] = v[1];
         m[14] = v[2];
         m[15] = 1.0;
+    };
+    /**
+     * Sets the components of a 4x4 translation matrix to correspond to a translation defined by the passed vector.
+     * @param {Float32Array} m
+     * @param {Number[3]} v The vector of the translation ([x,y,z]).
+     * @returns {Float32Array}
+     */
+    mat.updateTranslation4v = function (m, v) {
+        m[12] = v[0];
+        m[13] = v[1];
+        m[14] = v[2];
     };
     /**
      * Modifies a 2x2 transformation matrix to describe a rotation.
@@ -2614,6 +2673,41 @@ define([
         m[13] = 0;
         m[14] = 0;
         m[15] = 1;
+    };
+     /**
+     * Modifies a 4x4 matrix in-place to be equal to the product of two 4x4 sacling matrices.
+     * @param {Float32Array} m The 4x4 matrix to modify
+     * @param {Float32Array} m1 The 4x4 scaling matrix on the left of the multiplicaton.
+     * @param {Float32Array} m2 The 4x4 scaling matrix on the right of the multiplicaton.
+     */
+    mat.setProdScalingScaling4 = function (m, m1, m2) {
+        m[0] = m1[0] * m2[0];
+        m[1] = 0;
+        m[2] = 0;
+        m[3] = 0;
+        m[4] = 0;
+        m[5] = m1[5] * m2[5];
+        m[6] = 0;
+        m[7] = 0;
+        m[8] = 0;
+        m[9] = 0;
+        m[10] = m1[10] * m2[10];
+        m[11] = 0;
+        m[12] = 0;
+        m[13] = 0;
+        m[14] = 0;
+        m[15] = 1;
+    };
+    /**
+     * Modifies a 4x4 scaling matrix in-place to be equal to the product of two 4x4 sacling matrices.
+     * @param {Float32Array} m The 4x4 scaling matrix to modify
+     * @param {Float32Array} m1 The 4x4 scaling matrix on the left of the multiplicaton.
+     * @param {Float32Array} m2 The 4x4 scaling matrix on the right of the multiplicaton.
+     */
+    mat.setScalingToProdScalingScaling4 = function (m, m1, m2) {
+        m[0] = m1[0] * m2[0];
+        m[5] = m1[5] * m2[5];
+        m[10] = m1[10] * m2[10];
     };
     /**
      * Performs an optimized multiplication of two matrices using the assumption that the left matrix is a translation matrix and the right

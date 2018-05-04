@@ -598,13 +598,13 @@ define([
      */
     PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation) {
         this._mass = mass;
-        mat.setMatrix4(this._positionMatrix, positionMatrix);
+        mat.copyTranslation4(this._positionMatrix, positionMatrix);
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
-        mat.setMatrix4(this._scalingMatrix, scalingMatrix);
+        mat.copyScaling4(this._scalingMatrix, scalingMatrix);
         this._rotationMatrixInverseValid = false;
         this._scalingMatrixInverseValid = false;
         this._modelMatrixInverseValid = false;
-        mat.setMatrix4(this._velocityMatrix, initialVelocityMatrix);
+        mat.copyTranslation4(this._velocityMatrix, initialVelocityMatrix);
         mat.setIdentity4(this._angularVelocityMatrix);
         this._inverseScalingFactor = 1 / this._scalingMatrix[0];
         this._forces.clear();

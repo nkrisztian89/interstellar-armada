@@ -650,7 +650,7 @@ define([
                 this._slot ? this._slot.positionMatrix : mat.IDENTITY4,
                 vec.prodVec3Mat4Aux(
                         vec.scaled3(this._class.getAttachmentPoint(), -1),
-                        mat.prod3x3SubOf4Aux(
+                        mat.prodScalingRotationAux(
                                 mat.scaling4(this._class.getModel().getScale() / (this._spacecraft ? this._spacecraft.getPhysicalScalingMatrix()[0] : 1)),
                                 this._slot ? this._slot.orientationMatrix : mat.IDENTITY4)));
         return this._origoPositionMatrix;
