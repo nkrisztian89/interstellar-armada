@@ -20,11 +20,13 @@ attribute vec3 i_position;
 
 varying vec3 v_position;
 varying float v_dist;
+varying float v_ratio;
 
 void main() {
     gl_Position = u_cameraMatrix * vec4(i_position, 1.0);
     gl_Position.xyz += a_position.x * (u_shift / DUST_LENGTH_DIVISOR);
     v_dist = max(-gl_Position.z / u_farthestZ, 0.0);
+    v_ratio = min(1.0, (DUST_LENGTH_DIVISOR * DUST_LENGTH_DIVISOR) / dot(u_shift, u_shift));
     gl_Position = u_projMatrix * gl_Position;
     v_position = a_position;
 }

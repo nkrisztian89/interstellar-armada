@@ -1926,9 +1926,6 @@ define([
             this.setUniformValueFunction(UNIFORM_POINT_CLOUD_SHIFT_NAME, function () {
                 return this._shift;
             });
-            this.setUniformValueFunction(UNIFORM_POINT_CLOUD_LENGTH_NAME, function () {
-                return vec.length3(this._shift);
-            });
             this.setUniformValueFunction(UNIFORM_POINT_CLOUD_FARTHEST_Z_NAME, function () {
                 return this._range;
             });
