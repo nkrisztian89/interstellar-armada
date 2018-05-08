@@ -466,9 +466,12 @@ define([
      * @param {queueBits} [parentQueueBits] The render queue bits of the parent node
      */
     RenderableNode.prototype.animateAndAddToRenderQueues = function (renderQueues, distanceRendering, camera, dt, parentQueueBits) {
-        var queueBits, subnode, next, renderQueueIndex, transparent, opaque;
+        var queueBits, subnode, next, renderQueueIndex, transparent, opaque, object;
         if (!this._visible) {
             return;
+        }
+        if (this._renderableObject.resetForNewFrame) {
+            this._renderableObject.resetForNewFrame();
         }
         if (this._scene.shouldAnimate()) {
             this._renderableObject.animate(dt);
@@ -519,10 +522,23 @@ define([
                 }
             } else {
                 // if subnodes can be added to the same instanced queue, do the addition and animation directly and do not go into recursion further
+                // as a result, we need to do the frame reset manually for them as well here
                 if (this._scene.shouldAnimate()) {
                     for (subnode = this._subnodes.getFirst(); subnode; subnode = next) {
                         next = subnode.next;
-                        subnode.getRenderableObject().animate(dt);
+                        object = subnode.getRenderableObject();
+                        object.animate(dt);
+                        if (object.resetForNewFrame) {
+                            object.resetForNewFrame();
+                        }
+                    }
+                } else {
+                    for (subnode = this._subnodes.getFirst(); subnode; subnode = next) {
+                        next = subnode.next;
+                        object = subnode.getRenderableObject();
+                        if (object.resetForNewFrame) {
+                            object.resetForNewFrame();
+                        }
                     }
                 }
                 subnode = this._subnodes.getFirst();
@@ -782,19 +798,6 @@ define([
         }
     };
     /**
-     * Resets the held object and all subnodes. Called at the beginning of each
-     * frame.
-     */
-    RenderableNode.prototype.resetForNewFrame = function () {
-        var subnode;
-        if (this._renderableObject.resetForNewFrame) {
-            this._renderableObject.resetForNewFrame();
-        }
-        for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
-            subnode.resetForNewFrame();
-        }
-    };
-    /**
      * Sets up the stored render parameters that are passed to the held renderable object for the next rendering.
      * @param {ManagedGLContext} context
      * @param {Number} screenWidth
@@ -833,12 +836,17 @@ define([
      * instance attribute buffers.
      * @param {Number} [instanceQueueIndex] This index identifies the instance queue so that instance attribute buffer data for different
      * queues using the same shader do not mix
+     * @param {Boolean} [noReset=false] If true, resetForNewFrame() will not be called on the node and its subnodes (used when the nodes are added to render
+     * queues, as in that case the reset is already called there)
      * @returns {Boolean} Whether the node was rendered.
      */
-    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, withoutSubnodes, useInstancing, instanceQueueIndex) {
+    RenderableNode.prototype.render = function (context, screenWidth, screenHeight, depthMask, withoutSubnodes, useInstancing, instanceQueueIndex, noReset) {
         var subnode, result;
         // the visible property determines visibility of all subnodes as well
         if (this._visible) {
+            if (!noReset && this._renderableObject.resetForNewFrame) {
+                this._renderableObject.resetForNewFrame();
+            }
             if (this._renderableObject.mightBeRendered()) {
                 this.setRenderParameters(context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex);
                 result = this._renderableObject.render(this._renderParameters);
@@ -847,7 +855,7 @@ define([
             }
             if (!withoutSubnodes) {
                 for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
-                    subnode.render(context, screenWidth, screenHeight, depthMask, withoutSubnodes, useInstancing, instanceQueueIndex);
+                    subnode.render(context, screenWidth, screenHeight, depthMask, withoutSubnodes, useInstancing, instanceQueueIndex, noReset);
                 }
             }
             return result;
@@ -2454,7 +2462,6 @@ define([
         context.enableBlending();
         context.setDepthMask(false);
         // rendering background objects
-        this._rootBackgroundNode.resetForNewFrame();
         this._rootBackgroundNode.render(context, widthInPixels, heightInPixels, false);
     };
     /**
@@ -2474,7 +2481,7 @@ define([
                 count = 0;
                 renderQueue[0].prepareForInstancedRender(context, index, queueLength);
                 for (i = 0; i < queueLength; i++) {
-                    if (renderQueue[i].render(context, widthInPixels, heightInPixels, depthMask, true, true, index)) {
+                    if (renderQueue[i].render(context, widthInPixels, heightInPixels, depthMask, true, true, index, true)) {
                         count++;
                     }
                 }
@@ -2483,7 +2490,7 @@ define([
                 }
             } else {
                 for (i = 0; i < queueLength; i++) {
-                    renderQueue[i].render(context, widthInPixels, heightInPixels, depthMask, true);
+                    renderQueue[i].render(context, widthInPixels, heightInPixels, depthMask, true, undefined, undefined, true);
                 }
             }
         }
@@ -2549,7 +2556,6 @@ define([
             gl.disable(gl.DEPTH_TEST);
             context.setDepthMask(false);
             // rendering background objects
-            this._rootUINode.resetForNewFrame();
             this._rootUINode.render(context, widthInPixels, heightInPixels, false);
             gl.enable(gl.DEPTH_TEST);
             this._camera = originalCamera;
@@ -2645,14 +2651,12 @@ define([
             this.assignUniforms(context, context.getCurrentShader());
         }
         this._uniformsUpdatedForFrame = false;
-        // resetting cached values that were only valid for one render
-        this._rootNode.resetForNewFrame();
         // animating all the needed nodes and preparing them for rendering by organizing them to render queues
-        this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX] = [];
-        this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX] = [];
+        this._renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX].length = 0;
+        this._renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX].length = 0;
         if (this._distanceRendering) {
-            this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX] = [];
-            this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX] = [];
+            this._renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX].length = 0;
+            this._renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX].length = 0;
         }
         this._rootNode.animateAndAddToRenderQueues(this._renderQueues, this._distanceRendering, this._camera, dt);
         this.cleanUpLights(); // the animation might have removed some light sources
