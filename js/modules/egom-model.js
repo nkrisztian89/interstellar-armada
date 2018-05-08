@@ -69,7 +69,7 @@ define([
              * The list of EgomModel versions that can be loaded from file.
              * @type String[]
              */
-            _supportedVersions = ["3.2"];
+            _supportedVersions = ["3.3"];
     // freezing enum objects
     Object.freeze(VertexAttributeRole);
     // -------------------------------------------------------------------------
@@ -1394,6 +1394,49 @@ define([
         this._editedMesh = (this._minEditedLOD === this._maxEditedLOD) ? this.getMeshWithLOD(value) : null;
     };
     /**
+     * Directly sets the vertex of the passed index in the meshes belonging in the passed LOD range (no LOD existence check)
+     * @param {Number} minLOD
+     * @param {Number} maxLOD
+     * @param {Number} index
+     * @param {Vertex} vertex
+     */
+    Model.prototype.setVertex = function (minLOD, maxLOD, index, vertex) {
+        var i;
+        for (i = minLOD; i <= maxLOD; i++) {
+            this._meshes[i].setVertex(index, vertex);
+        }
+    };
+    /**
+     * Directly adds the passed line in the meshes belonging in the passed LOD range (no LOD existence check)
+     * @param {Number} minLOD
+     * @param {Number} maxLOD
+     * @param {Line} line
+     */
+    Model.prototype.addLineDirect = function (minLOD, maxLOD, line) {
+        var i;
+        for (i = minLOD; i <= maxLOD; i++) {
+            this._meshes[i].addLine(line);
+        }
+    };
+    /**
+     * Directly adds a triangle with the passed parameters in the meshes belonging in the passed LOD range (no LOD existence check),
+     * and also returns it
+     * @param {Number} minLOD
+     * @param {Number} maxLOD
+     * @param {Number} a
+     * @param {Number} b
+     * @param {Number} c
+     * @param {Mesh~TriangleParams} params
+     * @returns {Triangle} The added triangle
+     */
+    Model.prototype.addTriangleDirect = function (minLOD, maxLOD, a, b, c, params) {
+        var i, triangle = this._meshes[minLOD].addTriangleWithParams(a, b, c, params);
+        for (i = minLOD + 1; i <= maxLOD; i++) {
+            this._meshes[i].addTriangle(triangle, params.withoutLines);
+        }
+        return triangle;
+    };
+    /**
      * Loads the model data from the passed JSON object.
      * @param {String} filename
      * @param {Object} dataJSON
@@ -1401,7 +1444,7 @@ define([
      * @returns {Boolean} Whether the model has been successfully loaded.
      */
     Model.prototype.loadFromJSON = function (filename, dataJSON, defaultLOD) {
-        var i, j, str,
+        var i, str,
                 minLoadedLOD = null,
                 maxLoadedLOD = null,
                 defaultMinLOD = null,
@@ -1410,7 +1453,7 @@ define([
                 version, colorPalette,
                 params,
                 nVertices, nLines, nTriangles,
-                index, vertex, line, triangle, length,
+                index, vertex, line, length,
                 resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
                     var lod;
                     if (minLoadedLOD === null) {
@@ -1456,25 +1499,29 @@ define([
         this._infoProperties = dataJSON.info || {};
         this._name = dataJSON.info.name || null;
         this._scale = dataJSON.info.scale || 1;
-        defaultMinLOD = dataJSON.info.defaultLOD[0] === null ? defaultLOD : dataJSON.info.defaultLOD[0];
-        defaultMaxLOD = dataJSON.info.defaultLOD[1] === null ? defaultLOD : dataJSON.info.defaultLOD[1];
+        defaultMinLOD = dataJSON.info.LOD[0] === null ? defaultLOD : dataJSON.info.LOD[0];
+        defaultMaxLOD = dataJSON.info.LOD[1] === null ? defaultLOD : dataJSON.info.LOD[1];
+        this.updateLODInfo(defaultMinLOD, defaultMaxLOD);
+        resetNewLoadedMeshes(defaultMinLOD, defaultMaxLOD);
         colorPalette = dataJSON.info.colorPalette;
         // loading vertices
         nVertices = dataJSON.vertices.length;
+        index = 0;
         for (i = 0; i < nVertices; i++) {
-            index = dataJSON.vertices[i][0];
-            if (dataJSON.vertices[i].length >= 6) {
-                minLOD = dataJSON.vertices[i][4];
-                maxLOD = dataJSON.vertices[i][5];
+            length = dataJSON.vertices[i].length;
+            if (length === 1) {
+                index += dataJSON.vertices[i][0];
             } else {
-                minLOD = defaultMinLOD;
-                maxLOD = defaultMaxLOD;
-            }
-            this.updateLODInfo(minLOD, maxLOD);
-            resetNewLoadedMeshes(minLOD, maxLOD);
-            vertex = new Vertex(dataJSON.vertices[i][1], dataJSON.vertices[i][2], dataJSON.vertices[i][3]); // x,y,z
-            for (j = minLOD; j <= maxLOD; j++) {
-                this.getMeshWithLOD(j).setVertex(index, vertex);
+                if (dataJSON.vertices[i].length >= 5) {
+                    minLOD = dataJSON.vertices[i][3];
+                    maxLOD = dataJSON.vertices[i][4];
+                } else {
+                    minLOD = defaultMinLOD;
+                    maxLOD = defaultMaxLOD;
+                }
+                vertex = new Vertex(dataJSON.vertices[i][0], dataJSON.vertices[i][1], dataJSON.vertices[i][2]); // x,y,z
+                this.setVertex(minLOD, maxLOD, index, vertex);
+                index++;
             }
         }
         application.log_DEBUG("Loaded " + nVertices + " vertices.", 3);
@@ -1488,17 +1535,13 @@ define([
                 minLOD = defaultMinLOD;
                 maxLOD = defaultMaxLOD;
             }
-            this.updateLODInfo(minLOD, maxLOD);
-            resetNewLoadedMeshes(minLOD, maxLOD);
             line = new Line(
                     dataJSON.lines[i][0], // a
-                    dataJSON.lines[i][1], // b
+                    dataJSON.lines[i][0] + dataJSON.lines[i][1], // b
                     colorPalette[dataJSON.lines[i][2]],
                     0,
                     dataJSON.lines[i].slice(3, 6)); // normal
-            for (j = minLOD; j <= maxLOD; j++) {
-                this.getMeshWithLOD(j).addLine(line);
-            }
+            this.addLineDirect(minLOD, maxLOD, line);
         }
         application.log_DEBUG("Loaded " + nLines + " lines.", 3);
         // loading triangles
@@ -1517,31 +1560,23 @@ define([
                 minLOD = defaultMinLOD;
                 maxLOD = defaultMaxLOD;
             }
-            this.updateLODInfo(minLOD, maxLOD);
-            resetNewLoadedMeshes(minLOD, maxLOD);
             params.color = colorPalette[dataJSON.triangles[i][0][3]];
-            params.texCoords = (length >= 10) ? [dataJSON.triangles[i][0].slice(4, 6), dataJSON.triangles[i][0].slice(6, 8), dataJSON.triangles[i][0].slice(8, 10)] : triangle.texCoords;
+            params.texCoords = (length >= 10) ? [dataJSON.triangles[i][0].slice(4, 6), dataJSON.triangles[i][0].slice(6, 8), dataJSON.triangles[i][0].slice(8, 10)] : params.texCoords;
             params.normals = (dataJSON.triangles[i][1].length > 0) ?
                     ((dataJSON.triangles[i][1].length > 3) ?
                             [dataJSON.triangles[i][1].slice(0, 3), dataJSON.triangles[i][1].slice(3, 6), dataJSON.triangles[i][1].slice(6, 9)] :
                             [dataJSON.triangles[i][1]]) :
-                    triangle.normals;
+                    params.normals;
             params.groupIndices = (dataJSON.triangles[i].length >= 3) ?
-                    ((dataJSON.triangles[i][2].length > 0) ? dataJSON.triangles[i][2] : triangle.groupIndices) :
+                    ((dataJSON.triangles[i][2].length > 0) ? dataJSON.triangles[i][2] : params.groupIndices) :
                     null;
             params.withoutLines = true;
-            triangle = null;
-            for (j = minLOD; j <= maxLOD; j++) {
-                if (!triangle) {
-                    triangle = this.getMeshWithLOD(j).addTriangleWithParams(
-                            dataJSON.triangles[i][0][0], // a
-                            dataJSON.triangles[i][0][1], // b
-                            dataJSON.triangles[i][0][2], // c
+            index = dataJSON.triangles[i][0][0];
+            this.addTriangleDirect(minLOD, maxLOD,
+                            index, // a
+                            index + dataJSON.triangles[i][0][1], // b
+                            index + dataJSON.triangles[i][0][2], // c
                             params);
-                } else {
-                    this.getMeshWithLOD(j).addTriangle(triangle, params.withoutLines);
-                }
-            }
         }
         application.log_DEBUG("Loaded " + nTriangles + " triangles.", 3);
         application.log_DEBUG("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
