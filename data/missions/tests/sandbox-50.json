@@ -95,7 +95,7 @@
             "class": "falcon",
             "piloted": true,
             "position": [0, 0, -60],
-            "equipment": "full"
+            "equipment": "imperial-tier3"
         },
         {
             "class": "falcon",
@@ -108,7 +108,7 @@
         {
             "class": "viper",
             "position": [50, -30, -170],
-            "equipment": "full"
+            "equipment": "imperial-tier1"
         },
         {
             "class": "viper",
@@ -147,7 +147,7 @@
             "class": "taurus",
             "position": [200, -80, -350],
             "rotations": ["z+90"],
-            "equipment": "full"
+            "equipment": "imperial-tier1"
         },
         {
             "class": "libra",
@@ -164,7 +164,7 @@
         "libra": 1
     },
     "randomShipsMapSize": 3000,
-    "randomShipsEquipmentProfileName": "full",
+    "randomShipsEquipmentProfileName": "imperial-tier1",
     "randomShipsHeadingAngle": 90,
     "randomShipsRandomHeading": true
 }
