@@ -10,6 +10,7 @@
 /*global define, Element, Float32Array, performance */
 
 /**
+ * @param utils Used for Pi related constants
  * @param vec Vector operations are needed for several logic functions
  * @param mat Matrices are widely used for 3D simulation
  * @param application Used for file loading and logging functionality
@@ -31,6 +32,7 @@
  * @param explosion Used to create the explosion for exploding spacecrafts
  */
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -52,7 +54,7 @@ define([
     "armada/logic/explosion",
     "utils/polyfill"
 ], function (
-        vec, mat,
+        utils, vec, mat,
         application, managedGL, egomModel, physics, resources,
         renderableObjects, lights, sceneGraph,
         graphics, audio, classes, config, strings,
@@ -1145,7 +1147,7 @@ define([
      * @returns {Number} The turn rate, in degrees/s. Zero, if no propulsion is equipped.
      */
     Spacecraft.prototype.getMaxCombatTurnRate = function () {
-        return (this.getMaxAngularAcceleration() / Math.PI * 180 * config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S)) || 0;
+        return (this.getMaxAngularAcceleration() * utils.DEG * config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S)) || 0;
     };
     /**
      * Returns the maximum thruster move burn level for the current propulsion

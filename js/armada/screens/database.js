@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file This module manages and provides the in-game database screen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -11,6 +11,7 @@
 
 /**
  * @param utils Used for string formatting and async calls.
+ * @param vec Used for unit matrix constants
  * @param mat Used for the rotation and scaling of item view models.
  * @param components Used for the components (i.e. the loading box) of the screen.
  * @param screens The database screen is a HTMLScreenWithCanvases.
@@ -28,6 +29,7 @@
  */
 define([
     "utils/utils",
+    "utils/vectors",
     "utils/matrices",
     "modules/components",
     "modules/screens",
@@ -44,7 +46,7 @@ define([
     "armada/logic/spacecraft",
     "utils/polyfill"
 ], function (
-        utils, mat,
+        utils, vec, mat,
         components, screens, game, resources,
         lights, sceneGraph,
         armadaScreens, strings, graphics, classes, config, missions, spacecraft) {
@@ -222,8 +224,8 @@ define([
      */
     function _setRotation(angle) {
         var orientationMatrix = mat.prod3x3SubOf4Aux(
-                mat.rotationZ4Aux(Math.radians(angle)),
-                mat.rotationX4Aux(Math.radians(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE))));
+                mat.rotationZ4Aux(angle * utils.RAD),
+                mat.rotationX4Aux(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE) * utils.RAD));
         if (_solidModel) {
             _solidModel.setOrientationMatrix(mat.matrix4(orientationMatrix));
         }
@@ -369,12 +371,12 @@ define([
      */
     function handleMouseMove(event) {
         if (_solidModel) {
-            _solidModel.rotate([0.0, 1.0, 0.0], -(event.screenX - _mousePos[0]) * Math.radians(_getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY)));
-            _solidModel.rotate([1.0, 0.0, 0.0], -(event.screenY - _mousePos[1]) * Math.radians(_getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY)));
+            _solidModel.rotate(vec.UNIT3_Y, -(event.screenX - _mousePos[0]) * _getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY) * utils.RAD);
+            _solidModel.rotate(vec.UNIT3_X, -(event.screenY - _mousePos[1]) * _getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY) * utils.RAD);
         }
         if (_wireframeModel) {
-            _wireframeModel.rotate([0.0, 1.0, 0.0], -(event.screenX - _mousePos[0]) * Math.radians(_getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY)));
-            _wireframeModel.rotate([1.0, 0.0, 0.0], -(event.screenY - _mousePos[1]) * Math.radians(_getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY)));
+            _wireframeModel.rotate(vec.UNIT3_Y, -(event.screenX - _mousePos[0]) * _getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY) * utils.RAD);
+            _wireframeModel.rotate(vec.UNIT3_X, -(event.screenY - _mousePos[1]) * _getSetting(SETTINGS.ROTATION_MOUSE_SENSITIVITY) * utils.RAD);
         }
         _mousePos = [event.screenX, event.screenY];
     }

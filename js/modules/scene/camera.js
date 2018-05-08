@@ -1207,9 +1207,9 @@ define([
                 }
                 this._alpha = Math.min(Math.max(this._minAlpha, this._alpha), this._maxAlpha);
                 this._beta = Math.min(Math.max(this._minBeta, this._beta), this._maxBeta);
-                mat.setProd3x3SubOf4(this._relativeOrientationMatrix, mat.rotationX4Aux(this._beta * Math.PI / 180), mat.rotationZ4Aux(this._alpha * Math.PI / 180));
+                mat.setProd3x3SubOf4(this._relativeOrientationMatrix, mat.rotationX4Aux(this._beta * utils.RAD), mat.rotationZ4Aux(this._alpha * utils.RAD));
             } else {
-                factor = Math.PI / 180 * dt / 1000;
+                factor = utils.RAD * dt / 1000;
                 if (this._followedObjects.length > 0) {
                     mat.mul4(this._relativeOrientationMatrix, mat.prod34Aux(
                             mat.rotation4Aux(vec.normalize3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[2] * factor),
@@ -2195,11 +2195,11 @@ define([
      */
     Camera.prototype._updateProjectionMatrix = function (fov, span) {
         // update the near cutting plane
-        this._near = span / 2.0 / Math.tan(Math.radians(fov) / 2);
+        this._near = span * 0.5 / Math.tan(fov * utils.RAD * 0.5);
         if (this._usesVerticalValues) {
-            mat.setPerspective4(this._projectionMatrix, span * this._aspect / 2.0, span / 2.0, this._near, this._viewDistance);
+            mat.setPerspective4(this._projectionMatrix, span * this._aspect * 0.5, span * 0.5, this._near, this._viewDistance);
         } else {
-            mat.setPerspective4(this._projectionMatrix, span / 2.0, span / this._aspect / 2.0, this._near, this._viewDistance);
+            mat.setPerspective4(this._projectionMatrix, span * 0.5, span / this._aspect * 0.5, this._near, this._viewDistance);
         }
         this._projectionMatrixValid = true;
     };

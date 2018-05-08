@@ -10,17 +10,19 @@
 /*global define, Float32Array, Int32Array */
 
 /**
+ * @param utils Used for Pi related constants
  * @param vec Used for 3D (and 4D) vector operations.
  * @param mat Used for 3D (and 4D) matrix operations.
  * @param renderableObjects ParticleSystem is a subclass of RenderableObject3D
  * @param sceneGraph The particle systems edit the scene graph to add their particles
  */
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/scene/renderable-objects",
     "modules/scene/scene-graph"
-], function (vec, mat, renderableObjects, sceneGraph) {
+], function (utils, vec, mat, renderableObjects, sceneGraph) {
     "use strict";
     // #########################################################################
     /**
@@ -273,8 +275,8 @@ define([
     OmnidirectionalParticleEmitter.prototype._emitParticle = function () {
         var v, a, b, sinA, cosA, sinB, cosB, particle = ParticleEmitter.prototype._emitParticle.call(this);
         v = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
-        a = Math.random() * 2 * Math.PI;
-        b = Math.random() * 2 * Math.PI;
+        a = Math.random() * utils.DOUBLE_PI;
+        b = Math.random() * utils.DOUBLE_PI;
         sinA = Math.sin(a);
         cosA = Math.cos(a);
         sinB = Math.sin(b);
@@ -316,10 +318,10 @@ define([
         this._direction = direction;
         /**
          * The maximum angle that the random generated direction of the generated
-         * particles can deviate from the main direction (degrees)
+         * particles can deviate from the main direction (radians)
          * @type Number
          */
-        this._directionSpread = directionSpread;
+        this._directionSpread = directionSpread * utils.RAD;
     }
     UnidirectionalParticleEmitter.prototype = new ParticleEmitter();
     UnidirectionalParticleEmitter.prototype.constructor = UnidirectionalParticleEmitter;
@@ -332,11 +334,11 @@ define([
         var velocity, velocityVector, axis, particle = ParticleEmitter.prototype._emitParticle.call(this);
         velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
         velocityVector = vec.scaled3Aux(this._direction, velocity);
-        axis = (Math.abs(this._direction[0]) < 0.75) ? [1, 0, 0] : ((Math.abs(this._direction[1]) < 0.75) ? [0, 1, 0] : [0, 0, 1]);
+        axis = (Math.abs(this._direction[0]) < 0.75) ? vec.x3Aux() : ((Math.abs(this._direction[1]) < 0.75) ? vec.y3Aux() : vec.z3Aux());
         vec.mulCross3(axis, this._direction);
         vec.normalize3(axis);
-        vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(axis, Math.random() * this._directionSpread / 180.0 * Math.PI));
-        vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(this._direction, Math.random() * 360 / 180.0 * Math.PI));
+        vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(axis, Math.random() * this._directionSpread));
+        vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(this._direction, Math.random() * utils.DOUBLE_PI));
         particle.setVelocity(velocityVector[0], velocityVector[1], velocityVector[2]);
         return particle;
     };
@@ -376,10 +378,10 @@ define([
         this._planeNormal = planeNormal;
         /**
          * The maximum angle that the random generated direction of the generated
-         * particles can deviate from the given plane (degrees)
+         * particles can deviate from the given plane (radians)
          * @type Number
          */
-        this._directionSpread = directionSpread;
+        this._directionSpread = directionSpread * utils.RAD;
     }
     PlanarParticleEmitter.prototype = new ParticleEmitter();
     PlanarParticleEmitter.prototype.constructor = UnidirectionalParticleEmitter;
@@ -389,15 +391,15 @@ define([
      * @returns {Particle}
      */
     PlanarParticleEmitter.prototype._emitParticle = function () {
-        var directionVector, velocity, velocityMatrix, particle = ParticleEmitter.prototype._emitParticle.call(this);
+        var directionVector, velocity, velocityVector, particle = ParticleEmitter.prototype._emitParticle.call(this);
         velocity = this._velocity + (Math.random() - 0.5) * this._velocitySpread;
-        directionVector = (Math.abs(this._planeNormal[0]) < 0.75) ? [1, 0, 0] : ((Math.abs(this._planeNormal[1]) < 0.75) ? [0, 1, 0] : [0, 0, 1]);
+        directionVector = (Math.abs(this._planeNormal[0]) < 0.75) ? vec.x3Aux() : ((Math.abs(this._planeNormal[1]) < 0.75) ? vec.y3Aux() : vec.z3Aux());
         vec.mulCross3(directionVector, this._planeNormal);
         vec.normalize3(directionVector);
-        velocityMatrix = mat.translation4vAux(vec.scaled3(directionVector, velocity));
-        mat.rotate4(velocityMatrix, vec.cross3(directionVector, this._planeNormal), (Math.random() - 0.5) * this._directionSpread / 180.0 * Math.PI);
-        mat.rotate4(velocityMatrix, this._planeNormal, Math.random() * 2 * Math.PI);
-        particle.setVelocityM(velocityMatrix);
+        velocityVector = vec.scaled3(directionVector, velocity);
+        vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(vec.cross3(directionVector, this._planeNormal), (Math.random() - 0.5) * this._directionSpread));
+        vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(this._planeNormal, Math.random() * utils.DOUBLE_PI));
+        particle.setVelocity(velocityVector[0], velocityVector[1], velocityVector[2]);
         return particle;
     };
     // #########################################################################

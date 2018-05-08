@@ -11,6 +11,7 @@
 /*global define */
 
 /**
+ * @param utils Used for PI related constants
  * @param vec Used for vector operations the AIs need to calculate their actions.
  * @param mat Used for matrix operations the AIs need to calculate their actions.
  * @param application Used for displaying error messages
@@ -22,6 +23,7 @@
  * @param equipment Used to access the FlightMode enum
  */
 define([
+    "utils/utils",
     "utils/vectors",
     "utils/matrices",
     "modules/application",
@@ -32,7 +34,7 @@ define([
     "armada/logic/spacecraft",
     "armada/logic/equipment",
     "utils/polyfill"
-], function (vec, mat, application, physics, config, SpacecraftEvents, classes, spacecraft, equipment) {
+], function (utils, vec, mat, application, physics, config, SpacecraftEvents, classes, spacecraft, equipment) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -606,7 +608,7 @@ define([
                                     if (data.jump.distance) {
                                         this._spacecraft.setPhysicalOrientationMatrix(mat.prod3x3SubOf4(
                                                 mat.rotationX4Aux((_jumpInPositionSeed() - 0.5) * Math.PI),
-                                                mat.rotationZ4Aux(_jumpInPositionSeed() * 2 * Math.PI)));
+                                                mat.rotationZ4Aux(_jumpInPositionSeed() * utils.DOUBLE_PI)));
                                         this._spacecraft.setPhysicalPosition(vec.scaled3(
                                                 mat.getRowB4(this._spacecraft.getPhysicalOrientationMatrix()),
                                                 -data.jump.distance));
@@ -944,7 +946,7 @@ define([
                 this._facingTarget && this._spacecraft && this._spacecraft.getTarget() && (this._spacecraft.getTarget().getTarget() === this._spacecraft) &&
                 (this._targetDistance > this._weaponRange * MIN_EVADE_DISTANCE_FACTOR)) {
             if (this._triggerEvasiveManeuver()) {
-                angle = Math.random() * 2 * Math.PI;
+                angle = Math.random() * utils.DOUBLE_PI;
                 this._evasiveVelocityVector[0] = 1;
                 this._evasiveVelocityVector[1] = 0;
                 vec.rotate2(this._evasiveVelocityVector, angle);
@@ -1214,7 +1216,7 @@ define([
                                                 vec.diff3(
                                                         vec.sum3(
                                                                 targetPositionVector,
-                                                                vec.scaled3(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(directionToTarget), mat.rotation3Aux(directionToTarget, Math.random() * Math.PI * 2))), maxDistance)),
+                                                                vec.scaled3(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(directionToTarget), mat.rotation3Aux(directionToTarget, Math.random() * utils.DOUBLE_PI))), maxDistance)),
                                                         positionVector),
                                                 CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
                             }
@@ -1398,9 +1400,9 @@ define([
                                     targetAngles = vec.getRollAndYaw(relativeTargetDirection, true);
                                     angleDifference = [targetAngles.roll - angles[0], targetAngles.yaw - angles[1]];
                                     if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
-                                        if (Math.abs(angleDifference[1]) > Math.PI / 2) {
+                                        if (Math.abs(angleDifference[1]) > utils.HALF_PI) {
                                             angleDifference[0] = 0;
-                                        } else if (Math.abs(angleDifference[0]) > Math.PI / 2) {
+                                        } else if (Math.abs(angleDifference[0]) > utils.HALF_PI) {
                                             angleDifference[1] = 0;
                                         }
                                         this.rollAndYaw(angleDifference[0], angleDifference[1], dt);
@@ -1410,7 +1412,7 @@ define([
                                     targetAngles = vec.getRollAndPitch(relativeTargetDirection, true);
                                     angleDifference = [targetAngles.roll - angles[0], targetAngles.pitch - angles[1]];
                                     if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
-                                        if (Math.abs(angleDifference[1]) > Math.PI / 2) {
+                                        if (Math.abs(angleDifference[1]) > utils.HALF_PI) {
                                             angleDifference[0] = 0;
                                         } else if (Math.abs(angleDifference[0] - Math.sign(angleDifference[0]) * Math.PI) < Math.abs(angleDifference[0])) {
                                             angleDifference[0] -= Math.sign(angleDifference[0]) * Math.PI;

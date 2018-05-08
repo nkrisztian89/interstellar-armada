@@ -57,6 +57,10 @@ define(function () {
             EMPTY_STRING = "",
             EMPTY_ARRAY = [],
             NUMBER_THOUSANDS_DELIMITER = " ",
+            DEG = 180 / Math.PI,
+            RAD = Math.PI / 180,
+            HALF_PI = 0.5 * Math.PI,
+            DOUBLE_PI = 2 * Math.PI,
             // ------------------------------------------------------------------------------
             // private variables
             _keyCodeTable = {
@@ -100,6 +104,10 @@ define(function () {
     // public constants
     exports.EMPTY_ARRAY = EMPTY_ARRAY;
     exports.EMPTY_STRING = EMPTY_STRING;
+    exports.DEG = DEG;
+    exports.RAD = RAD;
+    exports.HALF_PI = HALF_PI;
+    exports.DOUBLE_PI = DOUBLE_PI;
     // ------------------------------------------------------------------------------
     // public enums
     exports.ScaleMode = ScaleMode;

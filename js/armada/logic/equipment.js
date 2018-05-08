@@ -955,8 +955,8 @@ define([
      */
     Weapon.prototype.setRotation = function (angleOne, angleTwo) {
         if (!this._fixed) {
-            this._rotationAngles[0] = Math.radians(angleOne);
-            this._rotationAngles[1] = Math.radians(angleTwo);
+            this._rotationAngles[0] = angleOne * utils.RAD;
+            this._rotationAngles[1] = angleTwo * utils.RAD;
             this._rotationChanged = true;
         }
     };
@@ -996,9 +996,9 @@ define([
                 // difference is larger than 180 degrees
                 if (!rotators[i].restricted) {
                     if (angleDifference > Math.PI) {
-                        angleDifference -= 2 * Math.PI;
+                        angleDifference -= utils.DOUBLE_PI;
                     } else if (angleDifference < -Math.PI) {
-                        angleDifference += 2 * Math.PI;
+                        angleDifference += utils.DOUBLE_PI;
                     }
                 }
                 // perform the actual turn, if needed
@@ -1018,10 +1018,10 @@ define([
                 if (!rotators[i].restricted) {
                     // if the weapon can turn around in 360 degrees, make sure its angle stays in the -180,180 range
                     if (this._rotationAngles[i] > Math.PI) {
-                        this._rotationAngles[i] -= 2 * Math.PI;
+                        this._rotationAngles[i] -= utils.DOUBLE_PI;
                     }
                     if (this._rotationAngles[i] < -Math.PI) {
-                        this._rotationAngles[i] += 2 * Math.PI;
+                        this._rotationAngles[i] += utils.DOUBLE_PI;
                     }
                 } else {
                     // if the weapon is restricted in turning around, apply the restriction

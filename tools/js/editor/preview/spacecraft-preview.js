@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2018 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for spacecraft classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -503,7 +503,7 @@ define([
         if (_spacecraft) {
             if (_spacecraft.getPropulsion()) {
                 result += "accel.: " + Math.round(_spacecraft.getMaxAcceleration()) + " m/s², speed: " + Math.round(_spacecraft.getMaxCombatSpeed()) + " m/s, ";
-                result += "ang.accel.: " + Math.round(_spacecraft.getMaxAngularAcceleration() / Math.PI * 180) + " °/s², turn rate: " + Math.round(_spacecraft.getMaxCombatTurnRate()) + " °/s";
+                result += "ang.accel.: " + Math.round(_spacecraft.getMaxAngularAcceleration() * utils.DEG) + " °/s², turn rate: " + Math.round(_spacecraft.getMaxCombatTurnRate()) + " °/s";
             }
             firepower = _spacecraft.getFirepower();
             if (firepower > 0) {

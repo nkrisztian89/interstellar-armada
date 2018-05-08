@@ -300,6 +300,61 @@ define(function () {
         return aux;
     };
     /**
+     * Returns a 3D vector with the passed coordinates
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} z
+     * @returns {Number[3]}
+     */
+    vec.vector3Aux = function (x, y, z) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = x;
+        aux[1] = y;
+        aux[2] = z;
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the (1,0,0) 3D X unit vector
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @returns {Number[3]}
+     */
+    vec.x3Aux = function () {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = 1;
+        aux[1] = 0;
+        aux[2] = 0;
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the (0,1,0) 3D Y unit vector
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @returns {Number[3]}
+     */
+    vec.y3Aux = function () {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = 0;
+        aux[1] = 1;
+        aux[2] = 0;
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the (0,0,1) 3D Z unit vector
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @returns {Number[3]}
+     */
+    vec.z3Aux = function () {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = 0;
+        aux[1] = 0;
+        aux[2] = 1;
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Returns the passed 2D vector scaled to unit length.
      * @param {Number[2]} v A 2D vector
      * @returns {Number[2]} The normalized 3D vector.

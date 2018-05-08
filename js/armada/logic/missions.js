@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Implementation of loading and managing missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2565,7 +2565,7 @@ define([
                     orientation = orientationMatrix ?
                             mat.matrix4(orientationMatrix) : mat.identity4();
                     if (this._randomShipsRandomHeading) {
-                        mat.mul4(orientation, mat.rotation4Aux(mat.getRowC4(orientation), random() * Math.PI * 2));
+                        mat.mul43(orientation, mat.rotation3Aux(mat.getRowC4(orientation), random() * utils.DOUBLE_PI));
                     }
                     craft = new spacecraft.Spacecraft(
                             classes.getSpacecraftClass(shipClass),
