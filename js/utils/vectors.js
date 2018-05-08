@@ -626,7 +626,7 @@ define(function () {
         ];
     };
     /**
-     * Multiplies the given 4D row vector with the given 4x4 matrix. (from the right)
+     * Returns the product of the given 4D row vector with the given 4x4 matrix. (from the right)
      * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
      * @param {Number[4]} v A 4D vector.
      * @param {Float32Array} m A 4x4 matrix.
@@ -661,6 +661,20 @@ define(function () {
     vec.prodVecY4Mat4Aux = function (y, m) {
         var aux = _auxVectors[_auxVectorIndex];
         vec.setProdVecY4Mat4(aux, y, m);
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the product of the translation component of a 4x4 matrix and a 4x4 model matrix (a matrix
+     * with translation, rotation and scaling, but no projection)
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[4]} tm A 4x4 transformation matrix (only the translation component is considered)
+     * @param {Float32Array} mm A 4x4 model matrix
+     * @returns {Number[4]} Only the first three components are set
+     */
+    vec.prodTranslationModel3Aux = function (tm, mm) {
+        var aux = _auxVectors[_auxVectorIndex];
+        vec.setProdTranslationModel3(aux, tm, mm);
         _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
         return aux;
     };
@@ -977,6 +991,18 @@ define(function () {
         v[1] = mr[5] * y + mr[13];
         v[2] = mr[6] * y + mr[14];
         v[3] = mr[7] * y + mr[15];
+    };
+    /**
+     * Sets the given 3D vector to be equal to the product of the translation component of a 4x4 matrix and a 4x4 model matrix (a matrix
+     * with translation, rotation and scaling, but no projection)
+     * @param {Number[3]} v The 3D vector to modify
+     * @param {Float32Array} tm A 4x4 transformation matrix (only the translation component is considered)
+     * @param {Float32Array} mm A 4x4 model matrix
+     */
+    vec.setProdTranslationModel3 = function (v, tm, mm) {
+        v[0] = mm[0] * tm[12] + mm[4] * tm[13] + mm[8] * tm[14] + mm[12];
+        v[1] = mm[1] * tm[12] + mm[5] * tm[13] + mm[9] * tm[14] + mm[13];
+        v[2] = mm[2] * tm[12] + mm[6] * tm[13] + mm[10] * tm[14] + mm[14];
     };
     /*
      * Sets the given 3D vector to be equal to the (first 3 elements of the) second row of the passed 4x4 matrix

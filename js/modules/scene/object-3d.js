@@ -603,7 +603,7 @@ define([
          */
         function getPositionMatrixInCameraSpace(camera) {
             if (!this._positionMatrixInCameraSpaceValid) {
-                mat.updateTranslation4v(this._positionMatrixInCameraSpace, vec.prodVec4Mat4Aux(mat.translationVector4(this.getModelMatrix()), camera.getViewMatrix()));
+                mat.updateTranslation4v(this._positionMatrixInCameraSpace, vec.prodTranslationModel3Aux(this.getModelMatrix(), camera.getViewMatrix()));
                 this._positionMatrixInCameraSpaceValid = true;
             }
             return this._positionMatrixInCameraSpace;
