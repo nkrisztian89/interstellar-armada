@@ -49,7 +49,6 @@ define([
             UNIFORM_BILLBOARD_SIZE_NAME = "billboardSize",
             UNIFORM_COLOR_NAME = "color",
             UNIFORM_POINT_CLOUD_SHIFT_NAME = "shift",
-            UNIFORM_POINT_CLOUD_LENGTH_NAME = "length",
             UNIFORM_POINT_CLOUD_FARTHEST_Z_NAME = "farthestZ",
             UNIFORM_POSITION_NAME = "position",
             UNIFORM_DIRECTION_NAME = "direction",
@@ -753,7 +752,7 @@ define([
         if (this.isInsideParent() === true) {
             return renderParameters.parent.wasRenderedToShadowMap();
         }
-        return this.isInsideShadowRegion(renderParameters.lightMatrix, renderParameters.shadowMapRange, renderParameters.shadowMapDepthRatio);
+        return this.isInsideShadowRegion(renderParameters.light);
     };
     // #########################################################################
     /**

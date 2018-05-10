@@ -17,7 +17,7 @@
         // only go through actual light sources
         if (i < u_numDirLights) {
             // how much is the fragment lighted based on angle
-            diffuseFactor = max(0.0, dot(+u_dirLights[i].direction, normal));
+            diffuseFactor = max(0.0, dot(+u_dirLights[i].direction.xyz, normal));
             // how much is the fragment lighted based on shadows
             lighted = 0.0;
             // any calculations only need to be done if the fragment gets lit somewhat in the first place
@@ -34,6 +34,7 @@
                 // fallen into the covered area
                 notCovered = 1.0;
                 float range = 0.0;
+                float parallelism = u_dirLights[i].direction.w;
                 // going through each shadow map (start and end indices need to be constant)
                 for (int j = 0; j < MAX_SHADOW_MAP_RANGES; j++) {
                     // only go through existing shadow maps
@@ -45,16 +46,23 @@
                         // the coordinates in shadow mapping space translated to have the current map center in the origo
                         // an offset based on the normal vector of the surface is also applied to help eliminate shadow acne, which has a higher coefficient for surfaces more parallel to the light
                         float normalOffsetScale = NORMAL_OFFSET_SCALE / u_shadowMapTextureSize;
-                        shadowMapPosition = u_dirLights[i].translationVector * range + v_shadowMapPosition[i].xyz + normalize(v_shadowMapNormal[i]) * (normalOffsetScale * range * (-1.0 * diffuseFactor * diffuseFactor + 1.0));
                         // calculate texture coordinates on the current shadow map
-                        shadowMapPosition.xy = shadowMapPosition.xy / range;
-                        float shMapDepthCoord = shadowMapPosition.z / depthRange;
+                        shadowMapPosition = v_shadowMapPosition[i].xyz;
+                        shadowMapPosition += normalize(v_shadowMapNormal[i]) * (normalOffsetScale * range * (-1.0 * diffuseFactor * diffuseFactor + 1.0));
+                        // calculate texture coordinates on the current shadow map
+                        float shMapDepthCoord = shadowMapPosition.z;
+                        
+#include "lisptm.glsl"
+                        vec4 temp = LiSPTM * vec4(shadowMapPosition.xy - vec2(0.0, parallelism * range + near), shMapDepthCoord - parallelism * range, 1.0);
+                        shadowMapPosition = temp.xyz / temp.w;
+                        shMapDepthCoord = shadowMapPosition.z;
+
                         // convert from -1.0;1.0 range to 0.0;1.0
                         vec2 shMapTexCoords = shadowMapPosition.xy * 0.5 + vec2(0.5, 0.5);
                         float depth = shMapDepthCoord * 0.5 + 0.5;
                         // only check the texture if we have valid coordinates for it
                         if (shMapTexCoords == clamp(shMapTexCoords, 0.0, 1.0)) {
-                            shade = 1.0 - ifEqualInt(j, u_numRanges - 1) * ifGreater(distFromEye, range) * clamp(
+                            shade = 1.0 - ifEqualInt(j, u_numRanges - 1) * clamp(
                                         max((abs(shadowMapPosition.x) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0) +
                                         max((abs(shadowMapPosition.y) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0) +
                                         clamp((abs(shMapDepthCoord) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0, 1.0),
@@ -145,7 +153,7 @@
                     }
                 }
 
-                specularFactor = ifGreater(min(shininess, lighted), 0.0) * pow(max(dot(normal, normalize(u_dirLights[i].direction - viewDir)), 0.0), shininess);
+                specularFactor = ifGreater(min(shininess, lighted), 0.0) * pow(max(dot(normal, normalize(u_dirLights[i].direction.xyz - viewDir)), 0.0), shininess);
 
                 gl_FragColor.rgb += lighted *
                     vec3(

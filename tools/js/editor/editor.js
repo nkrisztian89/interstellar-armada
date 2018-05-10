@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2018 Krisztián Nagy
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -13,6 +13,7 @@
  * @param utils Used for deep copying 
  * @param application Used for logging, configuration setup and downloading files
  * @param resources Used for loading the resource configuration and displaying it in the Resources window
+ * @param lights Used to set up light space perspective shadow mapping
  * @param constants Used for accessing the previously run version number in the local storage
  * @param config Used to load game configuration and settings from file
  * @param graphics Used to load the graphics settings from file
@@ -35,6 +36,7 @@ define([
     "utils/utils",
     "modules/application",
     "modules/media-resources",
+    "modules/scene/lights",
     "armada/constants",
     "armada/configuration",
     "armada/graphics",
@@ -54,7 +56,7 @@ define([
     "editor/preview/environment-preview"
 ], function (
         utils,
-        application, resources,
+        application, resources, lights,
         constants, config, graphics, classes,
         environments, missions,
         control,
@@ -949,6 +951,9 @@ define([
             graphics.loadSettingsFromJSON(settingsJSON.graphics);
             graphics.loadSettingsFromLocalStorage();
             config.loadSettingsFromJSON(settingsJSON.logic);
+            graphics.executeWhenReady(function () {
+                lights.setupLiSPSM(graphics.getLispsmMinimumNear(), graphics.getLispsmNearFactor());
+            });
             config.executeWhenReady(function () {
                 environments.requestLoad();
                 environments.executeWhenReady(function () {

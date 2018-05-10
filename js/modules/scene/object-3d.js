@@ -658,20 +658,11 @@ define([
         }
         /**
          * Returns whether the object (or at least a part of it) lies within a specific shadow map region.
-         * @param {Float32Array} lightMatrix The 4x4 matrix to transform coordinates from world into shadow (light) space.
-         * @param {Number} range The world-space distance from the center to the sides of planes of shadow map region perpendicular to the
-         * light.
-         * @param {Number} depthRatio The factor by which the depth of the shadow map region (its size along the axis parallel to light
-         * rays) is larger than its width/height (specified by range).
+         * @param {DirectionalLight} light The currently rendered shadow map of this light will be considered
          * @returns {Boolean}
          */
-        function isInsideShadowRegion(lightMatrix, range, depthRatio) {
-            var positionInLightSpace, size;
-            positionInLightSpace = vec.prodVec4Mat4Aux(mat.translationVector4(this.getModelMatrix()), lightMatrix);
-            size = this.getScaledSize();
-            return (Math.abs(positionInLightSpace[0]) - size < range) &&
-                    (Math.abs(positionInLightSpace[1]) - size < range) &&
-                    (Math.abs(positionInLightSpace[2]) - size < range * depthRatio);
+        function isInsideShadowRegion(light) {
+            return light.isInsideCurrentMap(this.getModelMatrix(), this.getScaledSize());
         }
         /**
          * If returns true, the transforms of this object should be ignored when calculating its children's model matrix.

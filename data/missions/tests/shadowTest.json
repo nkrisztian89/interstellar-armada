@@ -6,7 +6,8 @@
             "movable": true,
             "turnable": true,
             "fps": true,
-            "position": [-200, 500, -310]
+            "position": [-200, 500, -310],
+            "rotations": ["z+90"]
         }],
     "events": [],
     "spacecrafts": [{

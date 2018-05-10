@@ -511,6 +511,34 @@ define([
                     type: "string"
                 },
                 /**
+                 * The minimum near value for Light-Space Perspective Shadow Mapping (the value to replace the shader #define value with)
+                 */
+                LISPSM_MINIMUM_NEAR: {
+                    name: "lispsmMinimumNear",
+                    type: "string"
+                },
+                /**
+                 * The name of the #define that detemines the minimum near value for Light-Space Perspective Shadow Mapping
+                 */
+                LISPSM_MINIMUM_NEAR_DEFINE_NAME: {
+                    name: "lispsmMinimumNearDefineName",
+                    type: "string"
+                },
+                /**
+                 * The near factor for Light-Space Perspective Shadow Mapping (the value to replace the shader #define value with)
+                 */
+                LISPSM_NEAR_FACTOR: {
+                    name: "lispsmNearFactor",
+                    type: "string"
+                },
+                /**
+                 * The name of the #define that detemines the near factor for Light-Space Perspective Shadow Mapping
+                 */
+                LISPSM_NEAR_FACTOR_DEFINE_NAME: {
+                    name: "lispsmNearFactorDefineName",
+                    type: "string"
+                },
+                /**
                  * Name of the shader that should be used when rendering the red filtered part of the anaglyph scene (for the left eye)
                  */
                 ANAGLYPH_RED_SHADER_NAME: {
@@ -2214,6 +2242,8 @@ define([
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DEPTH_TEXTURES_DEFINE_NAME)] = managedGL.areDepthTexturesAvailable() ? "1" : "0";
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_SHININESS);
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.LISPSM_MINIMUM_NEAR_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.LISPSM_MINIMUM_NEAR);
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.LISPSM_NEAR_FACTOR_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.LISPSM_NEAR_FACTOR);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_ORIGINAL_COLOR_RATIO_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_ORIGINAL_COLOR_RATIO);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_GAMMA_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_GAMMA);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_CYAN_FACTOR_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.ANAGLYPH_CYAN_FACTOR);
@@ -2321,6 +2351,20 @@ define([
     function getAnaglyphCyanFactor() {
         return parseFloat(_context.getShaderConfig(SHADER_CONFIG.ANAGLYPH_CYAN_FACTOR));
     }
+    /**
+     * Returns the LiSPSM minimum near value converted to a number (from string)
+     * @returns {Number}
+     */
+    function getLispsmMinimumNear() {
+        return parseFloat(_context.getShaderConfig(SHADER_CONFIG.LISPSM_MINIMUM_NEAR));
+    }
+    /**
+     * Returns the LiSPSM near factor converted to a number (from string)
+     * @returns {Number}
+     */
+    function getLispsmNearFactor() {
+        return parseFloat(_context.getShaderConfig(SHADER_CONFIG.LISPSM_NEAR_FACTOR));
+    }
     _context = new GraphicsSettingsContext();
     // -------------------------------------------------------------------------
     // The public interface of the module
@@ -2354,6 +2398,8 @@ define([
         getShaderComplexities: _context.getShaderComplexities.bind(_context),
         getMaxLuminosityFactors: _context.getShaderConfig.bind(_context, SHADER_CONFIG.MAX_LUMINOSITY_FACTORS),
         getMaxGroupTransforms: _context.getShaderConfig.bind(_context, SHADER_CONFIG.MAX_GROUP_TRANSFORMS),
+        getLispsmMinimumNear: getLispsmMinimumNear,
+        getLispsmNearFactor: getLispsmNearFactor,
         getShadowMappingShaderName: _context.getShadowMappingShaderName.bind(_context),
         isShadowMappingEnabled: _context.isShadowMappingEnabled.bind(_context),
         setShadowMapping: _context.setShadowMapping.bind(_context),

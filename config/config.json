@@ -1,5 +1,5 @@
 {
-    "version": "0.4.5-dev:717 (2018.05.08.)",
+    "version": "0.4.5-dev:718 (2018.05.10.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4"],
@@ -94,23 +94,20 @@
                         "maximumResolution": 4096
                     }
                 ],
-                "ranges": [2, 6, 18, 54, 162, 486, 1458],
+                "ranges": [4, 24, 162, 486, 1458],
                 "distances": [
                     {
-                        "name": "veryClose",
-                        "numRanges": 3
-                    }, {
                         "name": "close",
-                        "numRanges": 4
+                        "numRanges": 2
                     }, {
                         "name": "medium",
-                        "numRanges": 5
+                        "numRanges": 3
                     }, {
                         "name": "far",
-                        "numRanges": 6
+                        "numRanges": 4
                     }, {
                         "name": "veryFar",
-                        "numRanges": 7
+                        "numRanges": 5
                     }
                 ],
                 "depthRatio": 16
@@ -184,7 +181,7 @@
                     },
                     "requiredFragmentUniformVectors": 3,
                     "requiredFragmentUniformVectorsPer": {
-                        "dirLight": 5,
+                        "dirLight": 4,
                         "shadowMap": 1,
                         "shadowMapRange": 1,
                         "shadowMapSample": 1
@@ -336,6 +333,10 @@
             "depthTexturesDefineName": "DEPTH_TEXTURES",
             "maxShininess": "512.0",
             "maxShininessDefineName": "MAX_SHININESS",
+            "lispsmMinimumNearDefineName": "LISPSM_MINIMUM_NEAR",
+            "lispsmMinimumNear": "40.0",
+            "lispsmNearFactorDefineName": "LISPSM_NEAR_FACTOR",
+            "lispsmNearFactor": "1000.0",
             "anaglyphRedShaderName": "anaglyphRed",
             "anaglyphCyanShaderName": "anaglyphCyan",
             "sideBySideLeftShaderName": "sideBySideLeft",

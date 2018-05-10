@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Augments the template provided by the game module to define the basic structure and initialization process of the Interstellar
  * Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -14,6 +14,7 @@
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
  * @param components Used to clear the cached DOM models of all loaded components after the game has been initialized
  * @param analytics Used for initializing game analytics
+ * @param lights Used to set up light space perspective shadow mapping
  * @param constants Used to access the language setting location in the local storage
  * @param graphics Used to load the graphics settings
  * @param audio Used to load the audio settings
@@ -27,6 +28,7 @@ define([
     "modules/game",
     "modules/components",
     "modules/analytics",
+    "modules/scene/lights",
     "armada/constants",
     "armada/graphics",
     "armada/audio",
@@ -35,7 +37,7 @@ define([
     "armada/logic/missions",
     "armada/control",
     "armada/strings"
-], function (game, components, analytics, constants, graphics, audio, config, environments, missions, control, strings) {
+], function (game, components, analytics, lights, constants, graphics, audio, config, environments, missions, control, strings) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -61,6 +63,9 @@ define([
         control.loadSettingsFromJSON(settingsJSON.control);
         control.loadSettingsFromLocalStorage();
         missions.loadSettingsFromLocalStorage();
+        graphics.executeWhenReady(function () {
+            lights.setupLiSPSM(graphics.getLispsmMinimumNear(), graphics.getLispsmNearFactor());
+        });
         config.executeWhenReady(function () {
             environments.requestLoad();
             environments.executeWhenReady(function () {

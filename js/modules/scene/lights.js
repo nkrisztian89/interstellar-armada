@@ -30,15 +30,31 @@ define([
              */
             UNIFORM_LIGHT_MATRIX_NAME = "lightMatrix",
             /**
-             * When rendering a shadow map, the shadow depth data will be loaded to the uniform with this name.
+             * When rendering a shadow map, the shadow map parameters will be loaded to the uniform with this name.
              * @type String
              */
-            UNIFORM_SHADOW_MAP_DEPTH_NAME = "shadowMapDepth",
+            UNIFORM_SHADOW_MAP_PARAMS_NAME = "shadowMapParams",
             /**
-             * When rendering a shadow map, the projection matrix data will be loaded to the uniform with this name.
-             * @type String
+             * The near value to use for light space perspective shadow mapping, when the view is fully perpendicular to the light direction
+             * @type Number
              */
-            UNIFORM_PROJECTION_MATRIX_NAME = "projMatrix";
+            _lispsmMinimumNear = 10,
+            /**
+             * In light space perspective shadow mapping, when the view is not perpendicular to the light direction, the near value should be 
+             * increased for weaker perspective effect. The increase is multiplied by this factor.
+             * @type Number
+             */
+            _lispsmNearFactor = 100;
+    // #########################################################################
+    /**
+     * Set up the general parameters to use for light space perspective shadow mapping from now on
+     * @param {Number} minimumNear
+     * @param {Number} nearFactor
+     */
+    function setupLiSPSM(minimumNear, nearFactor) {
+        _lispsmMinimumNear = minimumNear;
+        _lispsmNearFactor = nearFactor;
+    }
     // #########################################################################
     /**
      * @typedef {Object} SceneGraph~DirectionalLightUniformData
@@ -85,33 +101,30 @@ define([
          */
         this._baseMatrixValid = false;
         /**
-         * A unit vector that points from the camera center towards the centers of the shadow maps (which reside in from of the camera), 
-         * for the current camera that is used to render a scene with this light source. Using this vector, shaders can calculate the
-         * position of a 3D point on every shadow map just based on the matrix that refers to a shadow map with the camera in center.
-         * @type Float32Array
+         * A cached value of the near value of the latest calculated LiSP transformation matrix
+         * @type Number
          */
-        this._translationVector = null;
+        this._near = 0;
         /**
-         * The matrix that transforms world coordinates into shadow (light) space coordinates, taking into account the camera position and
-         * orientation.
+         * A cached value of the far value of the latest calculated LiSP transformation matrix
+         * @type Number
+         */
+        this._far = 0;
+        /**
+         * Stores the latest calculated LiSP transformation matrix
          * @type Float32Array
          */
-        this._translatedMatrix = mat.identity4();
+        this._lispMatrix = mat.matrix4([
+            1, 0, 0, 0,
+            0, 1, 0, -1,
+            0, 0, 1, 0,
+            0, 0, 0, 0
+        ]);
         /**
          * The prefix to use for creating frambuffer names for the shadow maps of different ranges for this light source.
          * @type String
          */
         this._shadowMapBufferNamePrefix = null;
-        /**
-         * The range of the shadow map currently used for this light source (size along X and Y axes)
-         * @type Number
-         */
-        this._shadowMapRange = 0;
-        /**
-         * The depth of the shadow map currently used for this light source (size along Z axis)
-         * @type Number
-         */
-        this._shadowMapDepth = 0;
         /**
          * The functions returning the values for the shader uniforms used for shadow mapping for this light source.
          * @type Object.<String, Function>
@@ -123,19 +136,22 @@ define([
          */
         this._uniformData = {
             color: this._color,
-            direction: this._direction,
-            matrix: this._baseMatrix,
-            translationVector: vec.NULL3
+            direction: [this._direction[0], this._direction[1], this._direction[2], 1], // fourth coordinate is parallelism
+            matrix: this._baseMatrix
         };
+        /**
+         * Stores the values to be passed to the shadow mapping shader. Parallelism is how much is the view direction parallel to the light direction
+         * (the cosine of their angle)
+         * [range, depth, parallelism]
+         * @type Number[3]
+         */
+        this._shadowMapParams = [0, 0, 1];
         // set uniform value functions
         this._uniformValueFunctions[managedGL.getUniformName(UNIFORM_LIGHT_MATRIX_NAME)] = function () {
-            return this._translatedMatrix;
+            return this._baseMatrix;
         }.bind(this);
-        this._uniformValueFunctions[managedGL.getUniformName(UNIFORM_SHADOW_MAP_DEPTH_NAME)] = function () {
-            return this._shadowMapDepth;
-        }.bind(this);
-        this._uniformValueFunctions[managedGL.getUniformName(UNIFORM_PROJECTION_MATRIX_NAME)] = function () {
-            return mat.orthographic4Aux(this._shadowMapRange, this._shadowMapRange, -this._shadowMapDepth, this._shadowMapDepth);
+        this._uniformValueFunctions[managedGL.getUniformName(UNIFORM_SHADOW_MAP_PARAMS_NAME)] = function () {
+            return this._shadowMapParams;
         }.bind(this);
     }
     /**
@@ -168,20 +184,70 @@ define([
     };
     /**
      * Call at the beginning of each render to clear stored values that refer to the state of the previous render.
-     * @returns {undefined}
      */
     DirectionalLightSource.prototype.reset = function () {
         this._baseMatrixValid = false;
-        this._translationVector = null;
-        mat.setIdentity4(this._translatedMatrix);
     };
     /**
-     * Returns the 4x4 transformation matrix that can transform world-space coordinates into the current light space of this light source.
-     * (taking into account camera position and orientation)
+     * Updates the stored Light-Space Perspective transformation matrix according to the latest started shadow map
      * @returns {Float32Array}
      */
-    DirectionalLightSource.prototype.getTranslatedMatrix = function () {
-        return this._translatedMatrix;
+    DirectionalLightSource.prototype._updateLiSPMatrix = function () {
+        var
+                range = this._shadowMapParams[0],
+                depth = this._shadowMapParams[1];
+        this._near = (_lispsmNearFactor + range) * this._shadowMapParams[2] + _lispsmMinimumNear;
+        this._far = 2.0 * range + this._near;
+        this._lispMatrix[0] = this._far / range;
+        this._lispMatrix[5] = (this._far + this._near) / (this._far - this._near);
+        this._lispMatrix[10] = this._far / depth;
+        this._lispMatrix[13] = 2.0 * this._far * this._near / (this._far - this._near);
+    };
+    /**
+     * Returns whether an object specified by the passed transformation matrix and size should be rendered onto
+     * the current (latest started) shadow map for this light
+     * @param {Float32Array} modelMatrix
+     * @param {Number} size
+     * @returns {Boolean}
+     */
+    DirectionalLightSource.prototype.isInsideCurrentMap = function (modelMatrix, size) {
+        var
+                positionInLightSpace, x, y1, y2, z, w, wp,
+                range = this._shadowMapParams[0],
+                parallelism = this._shadowMapParams[2];
+        size *= 0.5;
+        // position / orientation transformation
+        positionInLightSpace = vec.prodTranslationModel3Aux(modelMatrix, this._baseMatrix);
+        // additional position transformation
+        positionInLightSpace[1] -= parallelism * range + this._near;
+        positionInLightSpace[2] = -positionInLightSpace[2] + parallelism * range;
+        // perspective transformation (multiplying with the list matrix manually, only considering the non-zero elements)
+        x = positionInLightSpace[0] * this._lispMatrix[0]; // left-right plane
+        y1 = (positionInLightSpace[1] + size) * this._lispMatrix[5] + this._lispMatrix[13]; // far plane
+        y2 = (positionInLightSpace[1] - size) * this._lispMatrix[5] + this._lispMatrix[13]; // near plane
+        z = positionInLightSpace[2] * this._lispMatrix[10]; // top-bottom plane
+        w = -positionInLightSpace[1];
+        wp = Math.max(w, 0); // w-positive - for objects behind the projection point, w would be negative, indicating a negative (mirrored) frustum,
+                             // possibly resulting in false negative result when checking side planes, if part of the object is still in front of the
+                             // projection point:
+                             //
+                             // top down view on XY plane, field of view above 'p' projection point:
+                             //
+                             //   \     /
+                             //    \   /
+                             //     \^/   _
+                             //      p    |
+                             //     / \   |
+                             //    / |----o
+                             //   /     \
+                             //
+                             // object 'o' is behind projection point 'p', but it is still visible, yet it would fail the X coordinate check as at the
+                             // o point, the w will be even more negative (w will follow the frustum, the bottom-left / top-right diagonal line here)
+                             
+        return (Math.abs(x) - size * this._lispMatrix[0] < wp) && // left-right plane
+                ((y1 > 0) || (y1 > -(w - size))) &&               // far plane (w is calculated for y1 by also negating the added size)
+                ((y2 < 0) || (y2 < (w + size))) &&                // near plane (w is calculated for y2 by also negating the subtracted size)
+                (Math.abs(z) - size * this._lispMatrix[10] < wp); // top-bottom plane
     };
     /**
      * Performs all actions necesary to set up the passed context for rendering the shadow map of the given range for this light source.
@@ -192,27 +258,25 @@ define([
      * @param {Number} rangeIndex The index of the shadow map range that is to be rendered
      * @param {Number} range The range of this shadow map (the size of the shadow map area on axes X and Y)
      * @param {Number} depth The depth of this shadow map (the size of the shadow map area on axis Z)
-     * @param {Number} translationLength The length of the vector that point from the camera position center to the center of this shadow map.
      */
-    DirectionalLightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth, translationLength) {
+    DirectionalLightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth) {
+        var viewDir, cos;
         context.setCurrentFrameBuffer(this.getShadowMapBufferName(rangeIndex));
-        this._shadowMapRange = range;
-        this._shadowMapDepth = depth;
-        // this will be the matrix that transforms a world-space coordinate into shadow-space coordinate for this particular shadow map, 
-        // considering also that the center of the shadow map is ahead of the camera
-        mat.setProdTranslationRotation4(this._translatedMatrix,
-                mat.translatedByVectorAux(
-                        camera.getInversePositionMatrix(),
-                        vec.scaled3(mat.getRowC43(camera.getCameraOrientationMatrix()), translationLength)),
-                this._orientationMatrix);
-        // a matrix referring to shadow map that would have its center at the camera and the unit vector that points from this center towards
-        // the actual centers of shadow maps (which are in the same direction) are calculated (once and saved) for each light based on which
-        // the shaders can calculate all the shadow map positions, without passing all the above calculated matrices for all lights
+        viewDir = mat.getRowC43(camera.getCameraOrientationMatrix());
+        cos = Math.abs(vec.dot3(viewDir, this._direction)); // parallelism, which will determine the amount of perspective transformation
+        this._shadowMapParams[0] = range;
+        this._shadowMapParams[1] = depth;
+        this._shadowMapParams[2] = cos;
+        // this will be the matrix that transforms a world-space coordinate into shadow-space coordinate for this particular shadow map
+        // (not counting the light-space perspective transform)
         if (!this._baseMatrixValid) {
+            // up vector on shadow map is aligned with camera view direction, so as a result with the perspective transform
+            mat.setInverseOfRotation4(this._orientationMatrix, mat.lookTowards4Aux(this._direction, viewDir));
             mat.setProdTranslationRotation4(this._baseMatrix, camera.getInversePositionMatrix(), this._orientationMatrix);
             this._baseMatrixValid = true;
         }
-        this._translationVector = this._translationVector || vec.normal3(vec.diff3(mat.translationVector3(this._translatedMatrix), mat.translationVector3(this._baseMatrix)));
+        this._uniformData.direction[3] = cos;
+        this._updateLiSPMatrix();
         context.getCurrentShader().assignUniforms(context, this._uniformValueFunctions);
     };
     /**
@@ -220,8 +284,6 @@ define([
      * @returns {SceneGraph~DirectionalLightUniformData}
      */
     DirectionalLightSource.prototype.getUniformData = function () {
-        // null cannot be passed to uniforms of vector / matrix type
-        this._uniformData.translationVector = this._translationVector || vec.NULL3;
         return this._uniformData;
     };
     // #########################################################################
@@ -600,7 +662,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        UNIFORM_PROJECTION_MATRIX_NAME: UNIFORM_PROJECTION_MATRIX_NAME,
+        setupLiSPSM: setupLiSPSM,
         DirectionalLightSource: DirectionalLightSource,
         PointLightSource: PointLightSource,
         SpotLightSource: SpotLightSource

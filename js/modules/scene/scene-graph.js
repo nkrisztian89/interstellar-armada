@@ -22,7 +22,6 @@
  * @param containers Used for linked lists
  * @param camera Used for creating default cameras for scenes
  * @param renderableObjects Used to create container nodes and for accessing render queue bits
- * @param lights Used to access the projection matrix uniform name
  */
 define([
     "utils/utils",
@@ -34,9 +33,8 @@ define([
     "modules/egom-model",
     "modules/containers",
     "modules/scene/camera",
-    "modules/scene/renderable-objects",
-    "modules/scene/lights"
-], function (utils, types, vec, mat, application, managedGL, egomModel, containers, camera, renderableObjects, lights) {
+    "modules/scene/renderable-objects"
+], function (utils, types, vec, mat, application, managedGL, egomModel, containers, camera, renderableObjects) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -81,6 +79,7 @@ define([
             UNIFORM_NUM_SPOT_LIGHTS_NAME = "numSpotLights",
             UNIFORM_SPOT_LIGHTS_ARRAY_NAME = "spotLights",
             UNIFORM_VIEW_MATRIX_NAME = "cameraMatrix",
+            UNIFORM_PROJECTION_MATRIX_NAME = "projMatrix",
             UNIFORM_VIEW_PROJECTION_MATRIX_NAME = "viewProjMatrix",
             UNIFORM_VIEW_ORIENTATION_MATRIX_NAME = "cameraOrientationMatrix",
             UNIFORM_VIEW_ASPECT_NAME = "aspect",
@@ -235,12 +234,10 @@ define([
      * @param {Number} dt
      * @param {Boolean} [useInstancing=false] 
      * @param {Number} [instanceQueueIndex]
-     * @param {Float32Array} [lightMatrix]
-     * @param {Number} [range]
-     * @param {Number} [depthRatio]
+     * @param {DirectionalLight} [light]
      * @returns {RenderParameters}
      */
-    function RenderParameters(context, depthMask, scene, parent, camera, viewportWidth, viewportHeight, lodContext, dt, useInstancing, instanceQueueIndex, lightMatrix, range, depthRatio) {
+    function RenderParameters(context, depthMask, scene, parent, camera, viewportWidth, viewportHeight, lodContext, dt, useInstancing, instanceQueueIndex, light) {
         /**
          * @type ManagedGLContext
          */
@@ -286,17 +283,9 @@ define([
          */
         this.instanceQueueIndex = instanceQueueIndex;
         /**
-         * @type Float32Array
+         * @type DirectionalLight
          */
-        this.lightMatrix = lightMatrix;
-        /**
-         * @type Number
-         */
-        this.shadowMapRange = range;
-        /**
-         * @type Number
-         */
-        this.shadowMapDepthRatio = depthRatio;
+        this.light = light;
     }
     // #########################################################################
     /**
@@ -805,11 +794,9 @@ define([
      * @param {Boolean} depthMask
      * @param {Boolean} [useInstancing=false] 
      * @param {Number} [instanceQueueIndex]
-     * @param {Float32Array} [lightMatrix]
-     * @param {Number} [range]
-     * @param {Number} [depthRatio]
+     * @param {DirectionalLight} [light]
      */
-    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex, lightMatrix, range, depthRatio) {
+    RenderableNode.prototype.setRenderParameters = function (context, screenWidth, screenHeight, depthMask, useInstancing, instanceQueueIndex, light) {
         var rp = this._renderParameters;
         rp.context = context;
         rp.depthMask = depthMask;
@@ -821,9 +808,7 @@ define([
         rp.lodContext = this._scene.getLODContext();
         rp.useInstancing = useInstancing;
         rp.instanceQueueIndex = instanceQueueIndex;
-        rp.lightMatrix = lightMatrix;
-        rp.shadowMapRange = range;
-        rp.shadowMapDepthRatio = depthRatio;
+        rp.light = light;
     };
     /**
      * Renders the object at this node and all subnodes, if visible.
@@ -887,24 +872,22 @@ define([
      * @param {ManagedGLContext} context
      * @param {Number} screenWidth
      * @param {Number} screenHeight
-     * @param {Float32Array} [lightMatrix]
-     * @param {Number} [range]
-     * @param {Number} [depthRatio]
+     * @param {DirectionalLight} [light]
      * @returns {Boolean}
      */
-    RenderableNode.prototype.renderToShadowMap = function (context, screenWidth, screenHeight, lightMatrix, range, depthRatio) {
+    RenderableNode.prototype.renderToShadowMap = function (context, screenWidth, screenHeight, light) {
         var subnode, result;
         // the visible property determines visibility of all subnodes as well
         if (this._visible && this._isRenderedToShadowMap) {
             if (this._renderableObject.mightBeRenderedToShadowMap()) {
-                this.setRenderParameters(context, screenWidth, screenHeight, true, undefined, undefined, lightMatrix, range, depthRatio);
+                this.setRenderParameters(context, screenWidth, screenHeight, true, undefined, undefined, light);
                 result = this._renderableObject.renderToShadowMap(this._renderParameters);
             } else {
                 result = false;
             }
             // recursive rendering of all subnodes
             for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
-                subnode.renderToShadowMap(context, screenWidth, screenHeight, lightMatrix, range, depthRatio);
+                subnode.renderToShadowMap(context, screenWidth, screenHeight, light);
             }
             return result;
         }
@@ -1533,7 +1516,7 @@ define([
         this.setCameraUniformValueFunction(UNIFORM_VIEW_ASPECT_NAME, function () {
             return this._camera.getAspect();
         });
-        this.setCameraUniformValueFunction(lights.UNIFORM_PROJECTION_MATRIX_NAME, function () {
+        this.setCameraUniformValueFunction(UNIFORM_PROJECTION_MATRIX_NAME, function () {
             return this._camera.getProjectionMatrix();
         });
         this.setCameraUniformValueFunction(UNIFORM_VIEW_PROJECTION_MATRIX_NAME, function () {
@@ -2384,11 +2367,9 @@ define([
      * @param {ManagedGLContext} context
      * @param {Number} widthInPixels The width of the viewport in pixels.
      * @param {Number} heightInPixels The height of the viewport in pixels.
-     * @param {Float32Array} lightMatrix
-     * @param {Number} range
-     * @param {Number} depthRatio
+     * @param {DirectionalLight} light
      */
-    Scene.prototype._renderShadowMap = function (context, widthInPixels, heightInPixels, lightMatrix, range, depthRatio) {
+    Scene.prototype._renderShadowMap = function (context, widthInPixels, heightInPixels, light) {
         var gl = context.gl, i, newShadowQueue;
         application.log_DEBUG("Starting new shadow map...", 4);
         if (this._shadowQueue.length > 0) {
@@ -2399,7 +2380,7 @@ define([
             }
             newShadowQueue = [];
             for (i = 0; i < this._shadowQueue.length; i++) {
-                if (this._shadowQueue[i].renderToShadowMap(context, widthInPixels, heightInPixels, lightMatrix, range, depthRatio)) {
+                if (this._shadowQueue[i].renderToShadowMap(context, widthInPixels, heightInPixels, light)) {
                     newShadowQueue.push(this._shadowQueue[i]);
                 }
             }
@@ -2436,8 +2417,8 @@ define([
                 }
                 application.log_DEBUG("Rendering shadow maps for light " + i + "...", 4);
                 for (j = this._shadowMapRanges.length - 1; j >= 0; j--) {
-                    this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio, this._shadowMapRanges[j]);
-                    this._renderShadowMap(context, widthInPixels, heightInPixels, this._directionalLights[i].getTranslatedMatrix(), this._shadowMapRanges[j], this._shadowMapDepthRatio);
+                    this._directionalLights[i].startShadowMap(context, this._camera, j, this._shadowMapRanges[j], this._shadowMapRanges[j] * this._shadowMapDepthRatio);
+                    this._renderShadowMap(context, widthInPixels, heightInPixels, this._directionalLights[i]);
                 }
             }
             // binding the created textures to be used by the subsequent rendering calls
