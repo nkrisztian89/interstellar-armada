@@ -47,122 +47,155 @@ module.exports = function (grunt) {
                 files: {
                     "css/general.css": 'scss/general.scss'
                 }
-            }  
+            }
         },
         replace: {
             dist: {
-                src: ['index.html'],
-                dest: "./",
-                replacements: [{
-                        from: 'main.js',
-                        to: 'main-optimized.js'
-                    }]
+                options: {
+                    patterns: [
+                        {
+                            match: 'main.js',
+                            replacement: 'main-optimized.js'
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, flatten: true, src: ['index.html'], dest: './'}
+                ]
             },
             preOptimize: {
-                src: ['js/utils/matrices.js'],
-                dest: 'js/utils/',
-                replacements: [{
-                        from: '_matrixCount++;',
-                        to: '//_matrixCount++;'
-                    }, {
-                        from: 'application.log_DEBUG',
-                        to: '//application.log_DEBUG'
-                    }, {
-                        from: '_DEBUG_STATS.',
-                        to: '//_DEBUG_STATS.'
-                    }, {
-                        from: 'egomModel.resetDebugStats();',
-                        to: '//egomModel.resetDebugStats();'
-                    }]
+                options: {
+                    patterns: [
+                        {
+                            match: '_matrixCount++;',
+                            replacement: '//_matrixCount++;'
+                        }, {
+                            match: 'application.log_DEBUG',
+                            replacement: '//application.log_DEBUG'
+                        }, {
+                            match: '_DEBUG_STATS.',
+                            replacement: '//_DEBUG_STATS.'
+                        }, {
+                            match: 'egomModel.resetDebugStats();',
+                            replacement: '//egomModel.resetDebugStats();'
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, flatten: true, src: ['js/utils/matrices.js'], dest: 'js/utils/'},
+                    {expand: true, flatten: true, src: ['js/modules/egom-model.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/modules/scene/scene-graph.js'], dest: 'js/modules/scene/'},
+                    {expand: true, flatten: true, src: ['js/modules/managed-gl.js'], dest: 'js/modules/'}
+                ]
             },
             // replacing some widely and frequently used one-line getter calls with the direct access of their respective properties to
             // avoid the overhead of calling the getter functions
             optimize: {
-                src: ['js/main-optimized.js'],
-                dest: 'js/',
-                replacements: [{
-                        from: '.getPositionMatrix()',
-                        to: '._positionMatrix'
-                    }, {
-                        from: '.getOrientationMatrix()',
-                        to: '._orientationMatrix'
-                    }, {
-                        from: '.getScalingMatrix()',
-                        to: '._scalingMatrix'
-                    }, {
-                        from: '.getParent()',
-                        to: '._parent'
-                    }, {
-                        from: '.getScene()',
-                        to: '._scene'
-                    }, {
-                        from: '.getRenderableObject()',
-                        to: '._renderableObject'
-                    }, {
-                        from: '.getSubnodes()',
-                        to: '._subnodes'
-                    }, {
-                        from: '.wasRendered()',
-                        to: '._wasRendered'
-                    }, {
-                        from: '.getMinimumCountForInstancing()',
-                        to: '._minimumCountForInstancing'
-                    }, {
-                        from: '.getRootNode()',
-                        to: '._rootNode'
-                    }, {
-                        from: '.getCamera()',
-                        to: '._camera'
-                    }, {
-                        from: '.getLODContext()',
-                        to: '._lodContext'
-                    }, {
-                        from: '.getStates()',
-                        to: '._states'
-                    }, {
-                        from: '.getDuration()',
-                        to: '._duration'
-                    }, {
-                        from: '.getVisualModel()',
-                        to: '._visualModel'
-                    }, {
-                        from: '.getPhysicalModel()',
-                        to: '._physicalModel'
-                    }, {
-                        from: '.childrenAlwaysInside()',
-                        to: '._childrenAlwaysInside'
-                    }, {
-                        from: '.shouldIgnoreTransform()',
-                        to: '._ignoreTransform'
-                    }, {
-                        from: 'setFileCacheBypassEnabled(!0)',
-                        to: 'setFileCacheBypassEnabled(0)'
-                    }]
+                options: {
+                    patterns: [
+                        {
+                            match: '.getPositionMatrix()',
+                            replacement: '._positionMatrix'
+                        }, {
+                            match: '.getOrientationMatrix()',
+                            replacement: '._orientationMatrix'
+                        }, {
+                            match: '.getScalingMatrix()',
+                            replacement: '._scalingMatrix'
+                        }, {
+                            match: '.getParent()',
+                            replacement: '._parent'
+                        }, {
+                            match: '.getScene()',
+                            replacement: '._scene'
+                        }, {
+                            match: '.getRenderableObject()',
+                            replacement: '._renderableObject'
+                        }, {
+                            match: '.getSubnodes()',
+                            replacement: '._subnodes'
+                        }, {
+                            match: '.getMinimumCountForInstancing()',
+                            replacement: '._minimumCountForInstancing'
+                        }, {
+                            match: '.getRootNode()',
+                            replacement: '._rootNode'
+                        }, {
+                            match: '.getCamera()',
+                            replacement: '._camera'
+                        }, {
+                            match: '.getLODContext()',
+                            replacement: '._lodContext'
+                        }, {
+                            match: '.getStates()',
+                            replacement: '._states'
+                        }, {
+                            match: '.getDuration()',
+                            replacement: '._duration'
+                        }, {
+                            match: '.getVisualModel()',
+                            replacement: '._visualModel'
+                        }, {
+                            match: '.getPhysicalModel()',
+                            replacement: '._physicalModel'
+                        }, {
+                            match: '.childrenAlwaysInside()',
+                            replacement: '._childrenAlwaysInside'
+                        }, {
+                            match: '.shouldIgnoreTransform()',
+                            replacement: '._ignoreTransform'
+                        }, {
+                            match: 'setFileCacheBypassEnabled(!0)',
+                            replacement: 'setFileCacheBypassEnabled(0)'
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, flatten: true, src: ['js/main-optimized.js'], dest: 'js/'}
+                ]
             },
             postOptimize: {
-                src: ['js/utils/matrices.js'],
-                dest: 'js/utils/',
-                replacements: [{
-                        from: '//_matrixCount++;',
-                        to: '_matrixCount++;'
-                    }, {
-                        from: '//application.log_DEBUG',
-                        to: 'application.log_DEBUG'
-                    }, {
-                        from: '//_DEBUG_STATS.',
-                        to: '_DEBUG_STATS.'
-                    }, {
-                        from: '//egomModel.resetDebugStats();',
-                        to: 'egomModel.resetDebugStats();'
-                    }]
+                options: {
+                    patterns: [
+                        {
+                            match: '//_matrixCount++;',
+                            replacement: '_matrixCount++;'
+                        }, {
+                            match: '//application.log_DEBUG',
+                            replacement: 'application.log_DEBUG'
+                        }, {
+                            match: '//_DEBUG_STATS.',
+                            replacement: '_DEBUG_STATS.'
+                        }, {
+                            match: '//egomModel.resetDebugStats();',
+                            replacement: 'egomModel.resetDebugStats();'
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, flatten: true, src: ['js/utils/matrices.js'], dest: 'js/utils/'},
+                    {expand: true, flatten: true, src: ['js/modules/egom-model.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/modules/scene/scene-graph.js'], dest: 'js/modules/scene/'},
+                    {expand: true, flatten: true, src: ['js/modules/managed-gl.js'], dest: 'js/modules/'}
+                ]
             },
             dev: {
-                src: ['index.html'],
-                dest: "./",
-                replacements: [{
-                        from: 'main-optimized.js',
-                        to: 'main.js'
-                    }]
+                options: {
+                    patterns: [
+                        {
+                            match: 'main-optimized.js',
+                            replacement: 'main.js'
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, flatten: true, src: ['index.html'], dest: './'}
+                ]
             }
         }
     });
@@ -170,7 +203,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-requirejs');
     grunt.loadNpmTasks('grunt-contrib-sass');
-    grunt.loadNpmTasks('grunt-text-replace');
+    grunt.loadNpmTasks('grunt-replace');
     grunt.loadNpmTasks('grunt-eslint');
     // Tasks
     grunt.registerTask('default', ['build']);
