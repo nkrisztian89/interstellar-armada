@@ -269,9 +269,9 @@ define([
      * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the projectile.
      * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the projectile.
      * @param {Spacecraft} [spacecraft] The spacecraft which fired the projectile.
-     * @param {Force} [startingForce] A force that will be applied to the (physical model of) projectile to kick off its movement.
+     * @param {Number} [muzzleVelocity] The starting velocity of the projectile, in its +Y direction, in m/s
      */
-    function Projectile(projectileClass, positionMatrix, orientationMatrix, spacecraft, startingForce) {
+    function Projectile(projectileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity) {
         /**
          * The class storing the general characteristics of this projectile.
          * @type ProjectileClass
@@ -301,7 +301,7 @@ define([
          */
         this._origin = null;
         if (projectileClass) {
-            this.init(projectileClass, positionMatrix, orientationMatrix, spacecraft, startingForce);
+            this.init(projectileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity);
         }
     }
     /**
@@ -309,24 +309,30 @@ define([
      * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the projectile.
      * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the projectile.
      * @param {Spacecraft} [spacecraft] The spacecraft which fired the projectile.
-     * @param {Force} [startingForce] A force that will be applied to the (physical model of) projectile to kick off its movement.
+     * @param {Number} [muzzleVelocity] The starting velocity of the projectile, in its +Y direction, in m/s
      */
-    Projectile.prototype.init = function (projectileClass, positionMatrix, orientationMatrix, spacecraft, startingForce) {
+    Projectile.prototype.init = function (projectileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity) {
+        var velocityMatrix = mat.identity4Aux();
+        if (spacecraft) {
+            mat.copyTranslation4(velocityMatrix, spacecraft.getVelocityMatrix());
+        }
+        if (muzzleVelocity) {
+            velocityMatrix[12] += orientationMatrix[4] * muzzleVelocity;
+            velocityMatrix[13] += orientationMatrix[5] * muzzleVelocity;
+            velocityMatrix[14] += orientationMatrix[6] * muzzleVelocity;
+        }
         this._class = projectileClass;
         this._physicalModel.init(
                 projectileClass.getMass(),
                 positionMatrix || mat.IDENTITY4,
                 orientationMatrix || mat.IDENTITY4,
                 mat.scaling4Aux(projectileClass.getSize()),
-                spacecraft ? spacecraft.getVelocityMatrix() : mat.NULL4,
-                [],
+                velocityMatrix,
+                utils.EMPTY_ARRAY,
+                true,
                 true);
         this._timeLeft = projectileClass.getDuration();
         this._origin = spacecraft;
-        // kick off the movement of the projectile with the supplied force
-        if (startingForce) {
-            this._physicalModel.addForce(startingForce);
-        }
     };
     /**
      * Returns whether this projectile object can be reused to represent a new
@@ -465,7 +471,7 @@ define([
                         relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4Aux(hitObjects[i].getVisualModel().getOrientationMatrix()));
                         hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
                         relativeHitPositionVectorInWorldSpace = vec.diffVec3Mat4Aux(hitPositionVectorInWorldSpace, physicalHitObject.getPositionMatrix());
-                        physicalHitObject.addForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
+                        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
                         exp = explosion.getExplosion();
                         exp.init(((hitObjects[i].getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
                         exp.addToScene(this._visualModel.getNode().getScene().getRootNode(), hitObjects[i].getSoundSource(), true);
@@ -915,7 +921,7 @@ define([
                         Weapon._projectilePosMatrix,
                         projectileOriMatrix,
                         this._spacecraft,
-                        new physics.Force(barrels[i].getForceForDuration(_momentDuration), [projectileOriMatrix[4], projectileOriMatrix[5], projectileOriMatrix[6]], _momentDuration));
+                        barrels[i].getProjectileVelocity());
                 p.addToScene(scene);
                 // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
                 // been created, so that projectiles from the same weapon and of the same class only use one light source object
@@ -925,7 +931,7 @@ define([
                     projectileLights[projectileClass.getName()].addEmittingObject(p.getVisualModel());
                 }
                 // create the counter-force affecting the firing ship
-                this._spacecraft.getPhysicalModel().addForceAndTorque(
+                this._spacecraft.getPhysicalModel().applyForceAndTorque(
                         vec.diff3(
                                 mat.translationVector3(Weapon._projectilePosMatrix),
                                 mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix())),
@@ -1682,21 +1688,6 @@ define([
         this._thrusterSoundClip = null;
         // the continuous forces and torques used to move the ship
         /**
-         * Force to move along Y axis (forward/reverse)
-         * @type Force
-         */
-        this._yForce = null;
-        /**
-         * Force to move along X axis (strafe left/right)
-         * @type Force
-         */
-        this._xForce = null;
-        /**
-         * Force to move along Z axis (strafe up/down)
-         * @type Force
-         */
-        this._zForce = null;
-        /**
          * Torque to rotate along Z axis (yaw left/right)
          * @type Torque
          */
@@ -1728,9 +1719,6 @@ define([
      * the forces and torques should be readded to it.
      */
     Propulsion.prototype.resetForcesAndTorques = function () {
-        this._yForce = null;
-        this._xForce = null;
-        this._zForce = null;
         this._yawTorque = null;
         this._pitchTorque = null;
         this._rollTorque = null;
@@ -1870,30 +1858,31 @@ define([
     /**
      * Applies the forces and torques that are created by this propulsion system
      * to the physical object it drives.
+     * @param {Number} dt Time passed in the current simulation step, in milliseconds
      * @param {SoundSource} spacecraftSoundSource The sound source belonging to the spacecraft that has this propulsion equipped
      * @param {Boolean} [applyForces=true] If false, the forces and torques generated by the thrusters are not applied to the spacecraft 
      * (only e.g. sound effect volume is updated)
      */
-    Propulsion.prototype.simulate = function (spacecraftSoundSource, applyForces) {
+    Propulsion.prototype.simulate = function (dt, spacecraftSoundSource, applyForces) {
         var directionVector, yawAxis, pitchAxis;
         if (applyForces !== false) {
             directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix());
             yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix());
             pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
             if (this._thrusterUses.forward.burn > 0) {
-                this._yForce = this._drivenPhysicalObject.addOrRenewForce(this._yForce, this._thrustFactor * this._thrusterUses.forward.burn, directionVector);
+                this._drivenPhysicalObject.applyForce(this._thrustFactor * this._thrusterUses.forward.burn, directionVector[0], directionVector[1], directionVector[2], dt);
             } else if (this._thrusterUses.reverse.burn > 0) {
-                this._yForce = this._drivenPhysicalObject.addOrRenewForce(this._yForce, -this._thrustFactor * this._thrusterUses.reverse.burn, directionVector);
+                this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._thrusterUses.reverse.burn, directionVector[0], directionVector[1], directionVector[2], dt);
             }
             if (this._thrusterUses.strafeRight.burn > 0) {
-                this._xForce = this._drivenPhysicalObject.addOrRenewForce(this._xForce, this._thrustFactor * this._thrusterUses.strafeRight.burn, pitchAxis);
+                this._drivenPhysicalObject.applyForce(this._thrustFactor * this._thrusterUses.strafeRight.burn, pitchAxis[0], pitchAxis[1], pitchAxis[2], dt);
             } else if (this._thrusterUses.strafeLeft.burn > 0) {
-                this._xForce = this._drivenPhysicalObject.addOrRenewForce(this._xForce, -this._thrustFactor * this._thrusterUses.strafeLeft.burn, pitchAxis);
+                this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._thrusterUses.strafeLeft.burn, pitchAxis[0], pitchAxis[1], pitchAxis[2], dt);
             }
             if (this._thrusterUses.raise.burn > 0) {
-                this._zForce = this._drivenPhysicalObject.addOrRenewForce(this._zForce, this._thrustFactor * this._thrusterUses.raise.burn, yawAxis);
+                this._drivenPhysicalObject.applyForce(this._thrustFactor * this._thrusterUses.raise.burn, yawAxis[0], yawAxis[1], yawAxis[2], dt);
             } else if (this._thrusterUses.lower.burn > 0) {
-                this._zForce = this._drivenPhysicalObject.addOrRenewForce(this._zForce, -this._thrustFactor * this._thrusterUses.lower.burn, yawAxis);
+                this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._thrusterUses.lower.burn, yawAxis[0], yawAxis[1], yawAxis[2], dt);
             }
             if (this._thrusterUses.yawRight.burn > 0) {
                 this._yawTorque = this._drivenPhysicalObject.addOrRenewTorque(this._yawTorque, this._angularThrustFactor * this._thrusterUses.yawRight.burn, yawAxis);

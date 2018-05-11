@@ -2604,6 +2604,49 @@ define([
         _releaseTempMatrix(index);
     };
     /**
+     * Modifies the passed 4x4 rotation matrix is place, multiplying it with the passed 3x3 matrix
+     * padded to a 4x4 matrix (complemented as an identity matrix, with a 0,0,0,1 last row/column)
+     * @param {Float32Array} m4 A 4x4 rotation matrix
+     * @param {Float32Array} m3 A 3x3 matrix
+     */
+    mat.mulRotation43 = function (m4, m3) {
+        var
+                index = _getFreeTempMatrixIndex(),
+                mt = _getTempMatrix(index);
+        mat.setMatrix4(mt, m4);
+        m4[0] = mt[0] * m3[0] + mt[1] * m3[3] + mt[2] * m3[6];
+        m4[1] = mt[0] * m3[1] + mt[1] * m3[4] + mt[2] * m3[7];
+        m4[2] = mt[0] * m3[2] + mt[1] * m3[5] + mt[2] * m3[8];
+        m4[4] = mt[4] * m3[0] + mt[5] * m3[3] + mt[6] * m3[6];
+        m4[5] = mt[4] * m3[1] + mt[5] * m3[4] + mt[6] * m3[7];
+        m4[6] = mt[4] * m3[2] + mt[5] * m3[5] + mt[6] * m3[8];
+        m4[8] = mt[8] * m3[0] + mt[9] * m3[3] + mt[10] * m3[6];
+        m4[9] = mt[8] * m3[1] + mt[9] * m3[4] + mt[10] * m3[7];
+        m4[10] = mt[8] * m3[2] + mt[9] * m3[5] + mt[10] * m3[8];
+        _releaseTempMatrix(index);
+    };
+    /**
+     * Multiples the given 4x4 rotation matrix m1 in place by the 4x4 rotation matrix m2 from the right.
+     * @param {Float32Array} m1
+     * @param {Float32Array} m2
+     */
+    mat.mulRotationRotation4 = function (m1, m2) {
+        var
+                index = _getFreeTempMatrixIndex(),
+                m3 = _getTempMatrix(index);
+        mat.setMatrix4(m3, m1);
+        m1[0] = m3[0] * m2[0] + m3[1] * m2[4] + m3[2] * m2[8];
+        m1[1] = m3[0] * m2[1] + m3[1] * m2[5] + m3[2] * m2[9];
+        m1[2] = m3[0] * m2[2] + m3[1] * m2[6] + m3[2] * m2[10];
+        m1[4] = m3[4] * m2[0] + m3[5] * m2[4] + m3[6] * m2[8];
+        m1[5] = m3[4] * m2[1] + m3[5] * m2[5] + m3[6] * m2[9];
+        m1[6] = m3[4] * m2[2] + m3[5] * m2[6] + m3[6] * m2[10];
+        m1[8] = m3[8] * m2[0] + m3[9] * m2[4] + m3[10] * m2[8];
+        m1[9] = m3[8] * m2[1] + m3[9] * m2[5] + m3[10] * m2[9];
+        m1[10] = m3[8] * m2[2] + m3[9] * m2[6] + m3[10] * m2[10];
+        _releaseTempMatrix(index);
+    };
+    /**
      * Sets a passed 4x4 matrix to be equal with the product of two other 4x4 matrices
      * @param {Float32Array} m The 4x4 matrix to modify.
      * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
@@ -2892,7 +2935,7 @@ define([
         m[15] = 1.0;
     };
     /**
-     * Modifies the passed matrix m to a "straigthened" version, wich means every value
+     * Modifies the passed matrix m to a "straigthened" version, which means every value
      * within the matrix that is at least epsilon-close to -1, 0 or 1 will be changed
      * to -1, 0 or 1 respectively. Works with both 3x3 and 4x4 matrices.
      * @param {Float32Array} m The input matrix.
@@ -2902,6 +2945,44 @@ define([
     mat.straighten = function (m, epsilon) {
         var i;
         for (i = 0; i < m.length; i++) {
+            m[i] = (Math.abs(m[i]) < epsilon) ?
+                    0.0 :
+                    ((Math.abs(1 - m[i]) < epsilon) ?
+                            1.0 :
+                            ((Math.abs(-1 - m[i]) < epsilon) ?
+                                    -1.0 : m[i]));
+        }
+    };
+    /**
+     * Modifies the passed 4x4 translation matrix m to a "straigthened" version, 
+     * which means that the translation coordinates which are at least epsilon-close 
+     * to -1, 0 or 1 will be changed to -1, 0 or 1 respectively.
+     * @param {Float32Array} m The input 4x4 translation matrix.
+     * @param {Number} epsilon The difference threshold within the matrix components
+     * will be corrected.
+     */
+    mat.straightenTranslation = function (m, epsilon) {
+        var i;
+        for (i = 12; i < 14; i++) {
+            m[i] = (Math.abs(m[i]) < epsilon) ?
+                    0.0 :
+                    ((Math.abs(1 - m[i]) < epsilon) ?
+                            1.0 :
+                            ((Math.abs(-1 - m[i]) < epsilon) ?
+                                    -1.0 : m[i]));
+        }
+    };
+    /**
+     * Modifies the passed 4x4 rotation matrix m to a "straigthened" version, 
+     * which means that the rotation coordinates which are at least epsilon-close 
+     * to -1, 0 or 1 will be changed to -1, 0 or 1 respectively.
+     * @param {Float32Array} m The input 4x4 translation matrix.
+     * @param {Number} epsilon The difference threshold within the matrix components
+     * will be corrected.
+     */
+    mat.straightenRotation4 = function (m, epsilon) {
+        var i;
+        for (i = 0; i < 10; i++) {
             m[i] = (Math.abs(m[i]) < epsilon) ?
                     0.0 :
                     ((Math.abs(1 - m[i]) < epsilon) ?

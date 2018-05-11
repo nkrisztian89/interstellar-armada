@@ -1603,10 +1603,10 @@ define([
     };
     /**
      * @param {Number} duration In milliseconds
-     * @returns {Number}
+     * @returns {Number} In newtons (kg*m/s^2)
      */
     Barrel.prototype.getForceForDuration = function (duration) {
-        return this._projectileVelocity * this._projectileClass.getMass() / (duration / 1000);
+        return this._projectileVelocity * this._projectileClass.getMass() / (duration * 0.001); // ms -> s
     };
     /**
      * @returns {Number[4]}

@@ -647,7 +647,7 @@ define([
                 }
                 if (this._propulsion) {
                     this._propulsion.resetThrusterBurn();
-                    this._propulsion.simulate(this.getSoundSource(), false);
+                    this._propulsion.simulate(0, this.getSoundSource(), false);
                     this._propulsion.resetForcesAndTorques();
                 }
             } else {
@@ -2303,7 +2303,7 @@ define([
                 }
                 if (this._propulsion) {
                     this._propulsion.resetThrusterBurn();
-                    this._propulsion.simulate(this.getSoundSource(), false);
+                    this._propulsion.simulate(0, this.getSoundSource(), false);
                 }
                 this._explosion = explosion.getExplosion();
                 this._explosion.init(
@@ -2336,7 +2336,7 @@ define([
                 if (params.controlThrusters) {
                     this._maneuveringComputer.controlThrusters(dt);
                 }
-                this._propulsion.simulate(this._soundSource, params.applyThrusterForces);
+                this._propulsion.simulate(dt, this._soundSource, params.applyThrusterForces);
             }
             if (this._jumpEngine) {
                 this._jumpEngine.simulate(dt);

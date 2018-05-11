@@ -540,11 +540,40 @@ define([
          */
         this._velocityMatrix = mat.identity4();
         /**
+         * The acceleration caused by the directly applied and the added forces is
+         * accumulated for the current simulation step in this vector.
+         * @type Number[3]
+         */
+        this._acceleration = [0, 0, 0];
+        /**
+         * The movement caused by the directly applied forces during the current
+         * simulation step (a/2*t^2) is accumulated in this vector.
+         * @type Number[3]
+         */
+        this._offset = [0, 0, 0];
+        /**
          * The 4x4 rotation matrix describing the rotation the current angular velocity of the object causes over 
          * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds. (because rotation is performed in steps as matrix rotation cannot be interpolated)
          * @type Float32Array
          */
         this._angularVelocityMatrix = mat.identity4();
+        /**
+         * The angular acceleration caused by the directly applied and the added 
+         * torques is accumulated for the current simulation step in this 3x3 rotation matrix.
+         * @type Float32Array
+         */
+        this._angularAccelerationMatrix = mat.identity3();
+        /**
+         * The rotation caused by the directly applied torques during the current
+         * simulation step (a/2*t^2) is accumulated in this 3x3 rotation matrix.
+         * @type Float32Array
+         */
+        this._orientationOffset = mat.identity3();
+        /**
+         * Whether the object has angular acceleration in the current simulation step.
+         * @type Boolean
+         */
+        this._hasAngularAcceleration = false;
         /**
          * The list of forces affecting this object.
          * @type DirectDoubleLinkedList
@@ -567,6 +596,12 @@ define([
          */
         this._bodySize = -1;
         /**
+         * When true, the velocity of the object is not changed by any added forces (can still be changed by directly applying forces)
+         * Makes the simulate() call faster by omitting the related calculations
+         * @type Boolean
+         */
+        this._fixedVelocity = false;
+        /**
          * When true, the orientation of the object cannot change during simulation steps as the related calculations are not performed 
          * (for optimization)
          * @type Boolean
@@ -577,6 +612,11 @@ define([
          * @type Number
          */
         this._inverseScalingFactor = 1;
+        /**
+         * Cached value of the reciprocal of the mass of this object
+         * @type Number
+         */
+        this._inverseMass = 0;
         /*
          * Reusable vector variable to store temporary values without the need to create a new array for them
          * @type Number[3]
@@ -595,9 +635,12 @@ define([
      * @param {Body[]} [bodies] The array of bodies this object is comprised of.
      * @param {Boolean} [fixedOrientation=false] When true, the orientation of the object cannot change during simulation steps as the 
      * related calculations are not performed (for optimization)
+     * @param {Boolean} [fixedVelocity=false] When true, the velocity of the object is not changed by any added forces (can still be 
+     * changed by directly applying forces)
      */
-    PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation) {
+    PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation, fixedVelocity) {
         this._mass = mass;
+        this._inverseMass = 1 / mass;
         mat.copyTranslation4(this._positionMatrix, positionMatrix);
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
         mat.copyScaling4(this._scalingMatrix, scalingMatrix);
@@ -605,14 +648,20 @@ define([
         this._scalingMatrixInverseValid = false;
         this._modelMatrixInverseValid = false;
         mat.copyTranslation4(this._velocityMatrix, initialVelocityMatrix);
+        vec.setNull3(this._acceleration);
+        vec.setNull3(this._offset);
         mat.setIdentity4(this._angularVelocityMatrix);
+        mat.setIdentity3(this._angularAccelerationMatrix);
+        mat.setIdentity3(this._orientationOffset);
+        this._hasAngularAcceleration = false;
         this._inverseScalingFactor = 1 / this._scalingMatrix[0];
         this._forces.clear();
         this._torques.clear();
-        this._bodies = bodies || [];
+        this._bodies = bodies || utils.EMPTY_ARRAY;
         this._bodySize = -1;
         this._calculateBodySize();
         this._fixedOrientation = !!fixedOrientation;
+        this._fixedVelocity = !!fixedVelocity;
     };
     /**
      * Removes all forces, torques, velocity and angular velocity from the object.
@@ -711,6 +760,27 @@ define([
         return force;
     };
     /**
+     * Directly applies the force described by the parameters, without adding it to the 
+     * list of active forces.
+     * @param {Number} strength In newtons (kg*m/s^2)
+     * @param {Number} x X coordinate of the direction of the force
+     * @param {Number} y Y coordinate of the direction of the force
+     * @param {Number} z Z coordinate of the direction of the force
+     * @param {Number} duration In ms
+     */
+    PhysicalObject.prototype.applyForce = function (strength, x, y, z, duration) {
+        var
+                t = duration * 0.001, // t is in seconds
+                factor = strength * this._inverseMass * 0.5 * t * t;
+        this._offset[0] += x * factor;
+        this._offset[1] += y * factor;
+        this._offset[2] += z * factor;
+        factor = strength * this._inverseMass * t;
+        this._acceleration[0] += x * factor;
+        this._acceleration[1] += y * factor;
+        this._acceleration[2] += z * factor;
+    };
+    /**
      * Adds a torque that will affect this object from now on.
      * @param {Torque} torque
      * @returns {Torque} The added torque
@@ -718,6 +788,26 @@ define([
     PhysicalObject.prototype.addTorque = function (torque) {
         this._torques.add(torque);
         return torque;
+    };
+    /**
+     * Directly applies the torque described by the parameters, without adding it to the 
+     * list of active torques.
+     * @param {Number} strength In kg*rad/s^2
+     * @param {Number[3]} axis Needs to be a unit vector
+     * @param {Number} duration In ms
+     */
+    PhysicalObject.prototype.applyTorque = function (strength, axis, duration) {
+        var
+                t = duration * 0.001, // t is in seconds
+                factor = strength * this._inverseMass * t;
+        this._hasAngularAcceleration = true;
+        mat.mul3(
+                this._orientationOffset,
+                mat.rotation3Aux(axis, factor * 0.5 * t));
+        // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
+        mat.mul3(
+                this._angularAccelerationMatrix,
+                mat.rotation3Aux(axis, factor * ANGULAR_VELOCITY_MATRIX_DURATION * 0.001));
     };
     // indirect getters and setters
     /**
@@ -841,7 +931,7 @@ define([
      * of attack, potentially affecting both the linear and angular momentum of the object.
      * @param {Number[3]} position Point of attack relative to this object (meters)
      * @param {Number[3]} direction Unit vector of the direction of the force to apply
-     * #persistent, #ready-write
+     * #persistent, #read-write
      * @param {Number} strength Overall strength of the force in newtons
      * @param {Number} [duration] The force and torque will be exterted for this duration (milliseconds)
      * If omitted, they will be created as continuous.
@@ -860,6 +950,34 @@ define([
                 strength * vec.length3(perpendicularForce) * lever,
                 vec.normalize3(vec.cross3(perpendicularForce, leverDir)),
                 duration));
+    };
+    /**
+     * Simulates a force affecting the object that has an arbitrary point and direction
+     * of attack, potentially affecting both the linear and angular momentum of the object.
+     * Directly applies the force and the torque, without adding them to the list of 
+     * active forces / torques
+     * @param {Number[3]} position Point of attack relative to this object (meters)
+     * @param {Number[3]} direction Unit vector of the direction of the force to apply
+     * #temporary, #read-only
+     * @param {Number} strength Overall strength of the force in newtons
+     * @param {Number} duration The force and torque will be exterted for this duration (milliseconds)
+     */
+    PhysicalObject.prototype.applyForceAndTorque = function (position, direction, strength, duration) {
+        var
+                lever = vec.length3(position),
+                leverDir = vec.scaled3(position, 1 / lever),
+                parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
+                perpendicularForce = vec.diff3Aux(direction, parallelForce);
+        this.applyForce(
+                strength,
+                direction[0],
+                direction[1],
+                direction[2],
+                duration);
+        this.applyTorque(
+                strength * vec.length3(perpendicularForce) * lever,
+                vec.normalize3(vec.cross3(perpendicularForce, leverDir)),
+                duration);
     };
     /**
      * Calculates the size of the structure of this physical object and stores 
@@ -930,55 +1048,67 @@ define([
      * milliseconds.
      */
     PhysicalObject.prototype.simulate = function (dt) {
-        var i, a, t, angularAccMatrix, force, nextForce, torque, nextTorque;
+        var i, a, t, force, nextForce, torque, nextTorque;
         if (dt > 0) {
             // first calculate the movement that happened in the past dt
             // milliseconds as a result of the velocity sampled in the previous step
             // the velocity matrix is in m/s
             mat.translateByVector(this._positionMatrix, vec.scale3(vec.setTranslationVector3(this._v, this._velocityMatrix), dt * 0.001));
-            this.setPositionMatrix();
-            // calculate the movement that happened as a result of the acceleration
-            // the affecting forces caused since the previous step
-            // (s=1/2*a*t^2)
-            if (this._forces.getLength() > 0) {
-                vec.setNull3(this._v); // we will accumulate acceleration in this vector
-                for (force = this._forces.getFirst(); force; force = nextForce) {
-                    nextForce = force.next;
-                    if (force.canBeReused()) {
-                        this._forces.remove(force);
-                    } else {
-                        t = force.exert(dt) * 0.001; // t is in seconds
-                        if (t > 0) {
-                            a = force.getAccelerationVector(this._mass);
-                            mat.translateByVector(
-                                    this._positionMatrix,
-                                    vec.scaled3Aux(a, 0.5 * t * t));
-                            // calculate the caused acceleration to update the velocity matrix
-                            vec.add3(
-                                    this._v,
-                                    vec.scaled3Aux(a, t));
+            if (this._fixedVelocity) {
+                this.setPositionMatrix();
+            } else {
+                mat.translateByVector(this._positionMatrix, this._offset);
+                this.setPositionMatrix();
+                // calculate the movement that happened as a result of the acceleration
+                // the affecting forces caused since the previous step
+                // (s=1/2*a*t^2)
+                if (this._forces.getLength() > 0) {
+                    for (force = this._forces.getFirst(); force; force = nextForce) {
+                        nextForce = force.next;
+                        if (force.canBeReused()) {
+                            this._forces.remove(force);
+                        } else {
+                            t = force.exert(dt) * 0.001; // t is in seconds
+                            if (t > 0) {
+                                a = force.getAccelerationVector(this._mass);
+                                mat.translateByVector(
+                                        this._positionMatrix,
+                                        vec.scaled3Aux(a, 0.5 * t * t));
+                                // calculate the caused acceleration to update the velocity matrix
+                                vec.add3(
+                                        this._acceleration,
+                                        vec.scaled3Aux(a, t));
+                            }
                         }
                     }
                 }
                 // update velocity matrix
-                mat.translateByVector(this._velocityMatrix, this._v);
+                mat.translateByVector(this._velocityMatrix, this._acceleration);
+                vec.setNull3(this._acceleration);
+                vec.setNull3(this._offset);
+                // correct matrix inaccuracies and close to zero values resulting from
+                // floating point operations
+                mat.straightenTranslation(this._velocityMatrix, VELOCITY_MATRIX_ERROR_THRESHOLD);
             }
-            // correct matrix inaccuracies and close to zero values resulting from
-            // floating point operations
-            mat.straighten(this._velocityMatrix, VELOCITY_MATRIX_ERROR_THRESHOLD);
             if (!this._fixedOrientation) {
                 // the same process with rotation and torques
                 // the angular velocity matrix represents the rotation that happens
                 // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
                 // interpolated easily, for that quaternions should be used)
                 for (i = 0; (i + ANGULAR_VELOCITY_MATRIX_DURATION * 0.5) < dt; i += ANGULAR_VELOCITY_MATRIX_DURATION) {
-                    mat.mul4(this._orientationMatrix, this._angularVelocityMatrix);
+                    mat.mulRotationRotation4(this._orientationMatrix, this._angularVelocityMatrix);
+                }
+                if (this._hasAngularAcceleration) {
+                    mat.mulRotation43(
+                            this._orientationMatrix,
+                            this._orientationOffset);
+                    mat.setIdentity3(this._orientationOffset);
                 }
                 this.setOrientationMatrix();
                 // calculate the rotation that happened as a result of the angular
                 // acceleration the affecting torques caused since the previous step
                 if (this._torques.getLength() > 0) {
-                    angularAccMatrix = mat.identity3Aux();
+                    this._hasAngularAcceleration = true;
                     for (torque = this._torques.getFirst(); torque; torque = nextTorque) {
                         nextTorque = torque.next;
                         if (torque.canBeReused()) {
@@ -986,22 +1116,26 @@ define([
                         } else {
                             t = torque.exert(dt) * 0.001; // t is in seconds
                             if (t > 0) {
-                                mat.mul43(
+                                mat.mulRotation43(
                                         this._orientationMatrix,
                                         torque.getAngularAccelerationMatrixOverTime(this._mass, 0.5 * t * t));
                                 // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
                                 mat.mul3(
-                                        angularAccMatrix,
+                                        this._angularAccelerationMatrix,
                                         torque.getAngularAccelerationMatrixOverTime(this._mass, ANGULAR_VELOCITY_MATRIX_DURATION * t * 0.001));
                             }
                         }
                     }
-                    // update angular velocity matrix
-                    mat.mul43(this._angularVelocityMatrix, angularAccMatrix);
                 }
-                // correct matrix inaccuracies and close to zero values resulting from
-                // floating point operations
-                mat.straighten(this._angularVelocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
+                if (this._hasAngularAcceleration) {
+                    // update angular velocity matrix
+                    mat.mulRotation43(this._angularVelocityMatrix, this._angularAccelerationMatrix);
+                    mat.setIdentity3(this._angularAccelerationMatrix);
+                    this._hasAngularAcceleration = false;
+                    // correct matrix inaccuracies and close to zero values resulting from
+                    // floating point operations
+                    mat.straightenRotation4(this._angularVelocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
+                }
                 this._correctMatrices();
             }
         }
