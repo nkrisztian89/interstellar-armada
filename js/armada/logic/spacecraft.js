@@ -442,6 +442,11 @@ define([
          * @type SoundSource
          */
         this._soundSource = null;
+        /**
+         * Reusable vector for storing the calculated sound source position
+         * @type Number[3]
+         */
+        this._soundSourcePosition = [0, 0, 0];
         // ---------------------------------------
         // statistics
         /**
@@ -2201,13 +2206,11 @@ define([
      * @returns {Number[3]}
      */
     Spacecraft.prototype._getSoundSourcePosition = function () {
-        var result = this.getPositionMatrixInCameraSpace();
-        result = [
-            parseFloat(result[12].toPrecision(1)),
-            parseFloat(result[13].toPrecision(1)),
-            parseFloat(result[14].toPrecision(1))
-        ];
-        return result;
+        var pos = this.getPositionMatrixInCameraSpace();
+        this._soundSourcePosition[0] = Math.round(pos[12] * 10) * 0.1;
+        this._soundSourcePosition[1] = Math.round(pos[13] * 10) * 0.1;
+        this._soundSourcePosition[2] = Math.round(pos[14] * 10) * 0.1;
+        return this._soundSourcePosition;
     };
     /**
      * Returns the sound source beloning to this spacecraft (that can be used to play sound effects positioned in 3D)
