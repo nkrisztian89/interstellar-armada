@@ -1914,11 +1914,12 @@ define([
          * the trails of the particles can be visualised to indicate the direction of their movement.
          * @type Number[3]
          */
-        this._shift = [0.0, 0.0, 0.0];
+        this._shift = null;
         this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
             return this._positionVector;
         });
         if (this._color) {
+            this._shift = [0.0, 0.0, 0.0];
             this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
                 return this._color;
             });

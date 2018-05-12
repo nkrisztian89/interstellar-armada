@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Implementation of loading and managing environments
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -226,7 +226,7 @@ define([
                 this._cloud.getClass().getInstancedShader(),
                 this._positionVector,
                 addOwnProperties ? this._cloud.getClass().getColor() : null,
-                addOwnProperties ? this._range : null);
+                addOwnProperties ? this._range : 0);
         cloudNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING)));
     };
     /**
