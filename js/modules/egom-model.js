@@ -27,6 +27,7 @@ define([
             // enums
             VertexAttributeRole = {
                 POSITION: "position",
+                POSITION4: "position4",
                 TEXTURE_COORDINATES: "texCoord",
                 NORMAL: "normal",
                 COLOR: "color",
@@ -723,27 +724,44 @@ define([
      * will be used (inside a bigger buffer with data from multiple models).
      * Triangles can be indexed uniquely across all models by requesting the
      * model data with the right start index for each.
+     * @param {Boolean} [position4=false] If true, a 4th coordinate will be 
+     * included in the vertex positions, containing the index of the vertex
+     * within the primitive (e.g. for triangles, 0, 1 or 2)
      * @returns {Object} An associative array, with all the buffer data for this
      * model. (Float32Arrays)
      * The names of the properties correspond to the roles of each of the arrays:
      * position, texCoord, normal, color, groupIndices.
      * The dataSize property contains the number of vertices.
      */
-    Mesh.prototype.getBufferData = function (wireframe, startIndex) {
+    Mesh.prototype.getBufferData = function (wireframe, startIndex, position4) {
         var i, j, nLines, nTriangles, ix, index,
                 vertexData, texCoordData, normalData, colorData,
                 groupIndexData, triangleIndexData, result;
         startIndex = startIndex || 0;
         if (wireframe === true) {
             nLines = this._lines.length;
-            vertexData = new Float32Array(nLines * 6);
-            for (i = 0; i < nLines; i++) {
-                vertexData[i * 6] = this._vertices[this._lines[i].a].x;
-                vertexData[i * 6 + 1] = this._vertices[this._lines[i].a].y;
-                vertexData[i * 6 + 2] = this._vertices[this._lines[i].a].z;
-                vertexData[i * 6 + 3] = this._vertices[this._lines[i].b].x;
-                vertexData[i * 6 + 4] = this._vertices[this._lines[i].b].y;
-                vertexData[i * 6 + 5] = this._vertices[this._lines[i].b].z;
+            if (position4) {
+                vertexData = new Float32Array(nLines * 8);
+                for (i = 0; i < nLines; i++) {
+                    vertexData[i * 8] = this._vertices[this._lines[i].a].x;
+                    vertexData[i * 8 + 1] = this._vertices[this._lines[i].a].y;
+                    vertexData[i * 8 + 2] = this._vertices[this._lines[i].a].z;
+                    vertexData[i * 8 + 3] = 0;
+                    vertexData[i * 8 + 4] = this._vertices[this._lines[i].b].x;
+                    vertexData[i * 8 + 5] = this._vertices[this._lines[i].b].y;
+                    vertexData[i * 8 + 6] = this._vertices[this._lines[i].b].z;
+                    vertexData[i * 8 + 7] = 1;
+                }
+            } else {
+                vertexData = new Float32Array(nLines * 6);
+                for (i = 0; i < nLines; i++) {
+                    vertexData[i * 6] = this._vertices[this._lines[i].a].x;
+                    vertexData[i * 6 + 1] = this._vertices[this._lines[i].a].y;
+                    vertexData[i * 6 + 2] = this._vertices[this._lines[i].a].z;
+                    vertexData[i * 6 + 3] = this._vertices[this._lines[i].b].x;
+                    vertexData[i * 6 + 4] = this._vertices[this._lines[i].b].y;
+                    vertexData[i * 6 + 5] = this._vertices[this._lines[i].b].z;
+                }
             }
             texCoordData = new Float32Array(nLines * 4);
             for (i = 0; i < nLines; i++) {
@@ -797,17 +815,35 @@ define([
             }
         } else {
             nTriangles = this._triangles.length;
-            vertexData = new Float32Array(nTriangles * 9);
-            for (i = 0; i < nTriangles; i++) {
-                vertexData[i * 9] = this._vertices[this._triangles[i].a].x;
-                vertexData[i * 9 + 1] = this._vertices[this._triangles[i].a].y;
-                vertexData[i * 9 + 2] = this._vertices[this._triangles[i].a].z;
-                vertexData[i * 9 + 3] = this._vertices[this._triangles[i].b].x;
-                vertexData[i * 9 + 4] = this._vertices[this._triangles[i].b].y;
-                vertexData[i * 9 + 5] = this._vertices[this._triangles[i].b].z;
-                vertexData[i * 9 + 6] = this._vertices[this._triangles[i].c].x;
-                vertexData[i * 9 + 7] = this._vertices[this._triangles[i].c].y;
-                vertexData[i * 9 + 8] = this._vertices[this._triangles[i].c].z;
+            if (position4) {
+                vertexData = new Float32Array(nTriangles * 12);
+                for (i = 0; i < nTriangles; i++) {
+                    vertexData[i * 12] = this._vertices[this._triangles[i].a].x;
+                    vertexData[i * 12 + 1] = this._vertices[this._triangles[i].a].y;
+                    vertexData[i * 12 + 2] = this._vertices[this._triangles[i].a].z;
+                    vertexData[i * 12 + 3] = 0;
+                    vertexData[i * 12 + 4] = this._vertices[this._triangles[i].b].x;
+                    vertexData[i * 12 + 5] = this._vertices[this._triangles[i].b].y;
+                    vertexData[i * 12 + 6] = this._vertices[this._triangles[i].b].z;
+                    vertexData[i * 12 + 7] = 1;
+                    vertexData[i * 12 + 8] = this._vertices[this._triangles[i].c].x;
+                    vertexData[i * 12 + 9] = this._vertices[this._triangles[i].c].y;
+                    vertexData[i * 12 + 10] = this._vertices[this._triangles[i].c].z;
+                    vertexData[i * 12 + 11] = 2;
+                }
+            } else {
+                vertexData = new Float32Array(nTriangles * 9);
+                for (i = 0; i < nTriangles; i++) {
+                    vertexData[i * 9] = this._vertices[this._triangles[i].a].x;
+                    vertexData[i * 9 + 1] = this._vertices[this._triangles[i].a].y;
+                    vertexData[i * 9 + 2] = this._vertices[this._triangles[i].a].z;
+                    vertexData[i * 9 + 3] = this._vertices[this._triangles[i].b].x;
+                    vertexData[i * 9 + 4] = this._vertices[this._triangles[i].b].y;
+                    vertexData[i * 9 + 5] = this._vertices[this._triangles[i].b].z;
+                    vertexData[i * 9 + 6] = this._vertices[this._triangles[i].c].x;
+                    vertexData[i * 9 + 7] = this._vertices[this._triangles[i].c].y;
+                    vertexData[i * 9 + 8] = this._vertices[this._triangles[i].c].z;
+                }
             }
             texCoordData = new Float32Array(nTriangles * 6);
             for (i = 0; i < nTriangles; i++) {
@@ -877,7 +913,7 @@ define([
             }
         }
         result = {};
-        result[VertexAttributeRole.POSITION] = vertexData;
+        result[position4 ? VertexAttributeRole.POSITION4 : VertexAttributeRole.POSITION] = vertexData;
         result[VertexAttributeRole.TEXTURE_COORDINATES] = texCoordData;
         result[VertexAttributeRole.NORMAL] = normalData;
         result[VertexAttributeRole.COLOR] = colorData;
@@ -905,21 +941,24 @@ define([
      * vertex index within the buffer objects.
      * @param {Boolean} wireframe
      * @param {Boolean} solid
+     * @param {Boolean} [position4=false] If true, a 4th coordinate will be 
+     * included in the vertex positions, containing the index of the vertex
+     * within the primitive (e.g. for triangles, 0, 1 or 2)
      * @returns {Number} The number of vertices for which data has been added.
      */
-    Mesh.prototype.loadToVertexBuffers = function (context, startIndex, wireframe, solid) {
+    Mesh.prototype.loadToVertexBuffers = function (context, startIndex, wireframe, solid, position4) {
         var bufferData = null,
                 dataSize = 0,
                 props = this._contextProperties[context.getName()] || new MeshContextProperties();
         if (wireframe) {
-            bufferData = this.getBufferData(true, startIndex);
+            bufferData = this.getBufferData(true, startIndex, position4);
             props.bufferStartWireframe = startIndex;
             context.setVertexBufferData(bufferData, startIndex);
             dataSize += bufferData.dataSize;
             startIndex += bufferData.dataSize;
         }
         if (solid) {
-            bufferData = this.getBufferData(false, startIndex);
+            bufferData = this.getBufferData(false, startIndex, position4);
             props.bufferStartSolid = startIndex;
             props.bufferStartTransparent = startIndex + this._nOpaqueTriangles * 3;
             context.setVertexBufferData(bufferData, startIndex);
@@ -1285,6 +1324,13 @@ define([
          * @type Object.<String, ModelContextProperties>
          */
         this._contextProperties = {};
+        /**
+         * Whether a 4 coordinate (XYZW) position vertex attribute should be used
+         * for this model, the 4th coordinate containing the index of the vertex
+         * within the primitive (0-1 for lines, 0-1-2 for triangles)
+         * @type Boolean
+         */
+        this._position4 = false;
     }
     /**
      * The value for LOD levels that have not been set yet
@@ -1321,6 +1367,15 @@ define([
      */
     Model.prototype.getMaxLOD = function () {
         return this._maxLOD;
+    };
+    /**
+     * Sets whether to include the index of vertices within the primitive in
+     * the position attributes as the W coordinate (valid for subsequent 
+     * getBufferData() / loadToVertexBuffers() calls)
+     * @param {Boolean} value
+     */
+    Model.prototype.includeVertexIndicesInPosition = function (value) {
+        this._position4 = value;
     };
     /**
      * Returns the LOD closest to the specified level this model has a mesh for.
@@ -1573,10 +1628,10 @@ define([
             params.withoutLines = true;
             index = dataJSON.triangles[i][0][0];
             this.addTriangleDirect(minLOD, maxLOD,
-                            index, // a
-                            index + dataJSON.triangles[i][0][1], // b
-                            index + dataJSON.triangles[i][0][2], // c
-                            params);
+                    index, // a
+                    index + dataJSON.triangles[i][0][1], // b
+                    index + dataJSON.triangles[i][0][2], // c
+                    params);
         }
         application.log_DEBUG("Loaded " + nTriangles + " triangles.", 3);
         application.log_DEBUG("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
@@ -1908,7 +1963,7 @@ define([
      */
     Model.prototype.getBufferData = function (wireframe, startIndex, lod) {
         lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getBufferData(wireframe, startIndex);
+        return this.getMeshWithLOD(lod).getBufferData(wireframe, startIndex, this._position4);
     };
 
     /**
@@ -1940,7 +1995,7 @@ define([
     Model.prototype.loadToVertexBuffers = function (context, startIndex, lod) {
         lod = (lod !== undefined) ? lod : this._minLOD;
         var props = this._contextProperties[context.getName()];
-        return this.getMeshWithLOD(lod).loadToVertexBuffers(context, startIndex, props.wireframe, props.solid);
+        return this.getMeshWithLOD(lod).loadToVertexBuffers(context, startIndex, props.wireframe, props.solid, this._position4);
     };
 
     /**
@@ -2177,7 +2232,7 @@ define([
          * @param {String} [name] The name of the model to be created.
          * @param {Number[3]} vector The vector pointing from the origo towards 
          * the second vertex.
-         * @param {Number[4]} color The RGB components of the color to use for 
+         * @param {Number[3]} color The RGB components of the color to use for 
          * the line.
          * @returns {Model}
          */
@@ -2189,6 +2244,36 @@ define([
             result.appendVertex([0.0, 0.0, 0.0]);
             result.appendVertex(vector);
             result.addLine(new Line(0, 1, color, vector));
+            return result;
+        },
+        /**
+         * Creates and returns a model with randomly scattered vertice pairs
+         * connected with lines. The two vertices of each pair are in the same 
+         * (random) position, but in the 4th coordinate, the index of the vertex
+         * within the line (0 and 1) is included, so that the second vertex can
+         * be offset using a uniform vector.
+         * @param {String} [name] The name to set for the model
+         * @param {Number[3]} normal The vector to use as a normal for the lines
+         * @param {Number[3]} color
+         * @param {Number} count The number of lines to add
+         * @param {Number} range The random positions will be generated in the
+         * [-range:+range] range along all 3 axes
+         * @returns {Model}
+         */
+        lineCloudModel: function (name, normal, color, count, range) {
+            var i, v = [0, 0, 0], result = new Model();
+            if (name) {
+                result.setName(name);
+            }
+            result.includeVertexIndicesInPosition(true);
+            for (i = 0; i < count; i++) {
+                v[0] = (Math.random() - 0.5) * 2 * range;
+                v[1] = (Math.random() - 0.5) * 2 * range;
+                v[2] = (Math.random() - 0.5) * 2 * range;
+                result.appendVertex(v);
+                result.appendVertex(v);
+                result.addLine(new Line(i * 2, i * 2 + 1, color, normal));
+            }
             return result;
         }
     };
