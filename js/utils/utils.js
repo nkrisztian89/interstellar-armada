@@ -56,6 +56,7 @@ define(function () {
             // constants
             EMPTY_STRING = "",
             EMPTY_ARRAY = [],
+            EMPTY_OBJECT = {},
             NUMBER_THOUSANDS_DELIMITER = " ",
             DEG = 180 / Math.PI,
             RAD = Math.PI / 180,
@@ -104,6 +105,7 @@ define(function () {
     // public constants
     exports.EMPTY_ARRAY = EMPTY_ARRAY;
     exports.EMPTY_STRING = EMPTY_STRING;
+    exports.EMPTY_OBJECT = EMPTY_OBJECT;
     exports.DEG = DEG;
     exports.RAD = RAD;
     exports.HALF_PI = HALF_PI;

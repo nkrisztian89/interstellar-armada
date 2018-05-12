@@ -713,6 +713,7 @@ define([
     };
     /**
      * @typedef {Object} Weapon~AddToSceneParams
+     * @property {Boolean} [skipResources=false] If true, resources will not be acquired
      * @property {String} [shaderName] If given, the original shader of this weapon will be substituted by the shader with this name.
      * @property {Float32Array} [orientationMatrix]
      */
@@ -735,9 +736,11 @@ define([
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe, params, callback) {
         var i, n;
-        this.acquireResources({omitShader: !!params.shaderName});
-        if (params.shaderName) {
-            graphics.getShader(params.shaderName);
+        if (!params.skipResources) {
+            this.acquireResources({omitShader: !!params.shaderName});
+            if (params.shaderName) {
+                graphics.getShader(params.shaderName);
+            }
         }
         resources.executeWhenReady(function () {
             var visualModel, scale, parameterArrays = {};
@@ -1386,7 +1389,7 @@ define([
                 this.setTarget(this._orderedHostileTargets[index]);
                 this._timeUntilHostileOrderReset = config.getSetting(config.BATTLE_SETTINGS.TARGET_ORDER_DURATION);
                 return true;
-            }   
+            }
         }
         this._timeUntilHostileOrderReset = 0;
         return false;

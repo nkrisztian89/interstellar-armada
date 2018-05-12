@@ -132,6 +132,8 @@ define([
             /** From top to bottom in the info panel
              * @type Array */
             TARGET_INFO_SECTIONS = [TARGET_INFO_NAME, TARGET_INFO_CLASS, TARGET_INFO_TEAM, TARGET_INFO_FIREPOWER, TARGET_INFO_DISTANCE, TARGET_INFO_VELOCITY],
+            /** This governs what suppements are target view items added with @type Object */
+            TARGET_VIEW_SUPPLEMENTS = {weapons: true},
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -493,10 +495,20 @@ define([
              */
             _targetViewItem,
             /**
-             * A reference to the visual model that was added to the target view scen to display the current target
+             * A reference to the visual model that was added to the target view scene to display the current target
              * @type ParameterizedMesh
              */
             _targetViewModel,
+            /**
+             * The reusable matrix to store the orientation of the target view item
+             * @type Float32Array
+             */
+            _targetViewOrientationMatrix = mat.identity4(),
+            /**
+             * Stores the parameters for adding the target view item to the target view scene
+             * @type Object
+             */
+            _targetViewParams,
             /**
              * The RGBA color of the currently displayed spacecraft in the target view screen. (based on its hull integrity)
              * @type Number[4]
@@ -2031,6 +2043,17 @@ define([
                         halfColor,
                         hullIntegrity * 2);
     }
+    /**
+     * The callback to execute when adding the target view model to its scene
+     * @param {Model} model
+     */
+    function _targetViewAddCallback(model) {
+        model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
+            return _targetViewItemColor;
+        });
+        model.setScale(1 / model.getSize());
+        _targetViewModel = model;
+    }
     // ##############################################################################
     /**
      * @class Represents the battle screen.
@@ -3133,20 +3156,9 @@ define([
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR));
                 if (_targetViewItem !== target) {
                     _targetScene.clearNodes(true);
-                    m = _targetViewModel ? _targetViewModel.getOrientationMatrix() : mat.identity4();
                     _targetViewModel = null;
                     _targetViewItem = target;
-                    _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, {
-                        shaderName: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_SHADER),
-                        positionMatrix: mat.IDENTITY4,
-                        orientationMatrix: m
-                    }, function (model) {
-                        model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
-                            return _targetViewItemColor;
-                        });
-                        model.setScale(1 / model.getSize());
-                        _targetViewModel = model;
-                    });
+                    _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, TARGET_VIEW_SUPPLEMENTS, _targetViewParams, _targetViewAddCallback);
                 }
                 // setting orientation of the target view model
                 if (_targetViewModel) {
@@ -4044,6 +4056,12 @@ define([
         _wingmenStatusCraftIndicatorSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_INDICATOR);
         _wingmenStatusMaxSquadMemberCount = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS).length;
         _messageTextSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT);
+        _targetViewParams = {
+            shaderName: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_SHADER),
+            positionMatrix: mat.IDENTITY4,
+            orientationMatrix: _targetViewOrientationMatrix,
+            skipResources: true
+        };
         // music
         _combatThemeDurationAfterFire = config.getSetting(config.BATTLE_SETTINGS.COMBAT_THEME_DURATION_AFTER_FIRE) * 1000;
     });

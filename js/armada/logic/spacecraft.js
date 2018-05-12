@@ -1565,6 +1565,7 @@ define([
      */
     /**
      * @typedef {Object} Spacecraft~AddToSceneParams
+     * @property {Boolean} [skipResources=false] If true, resources will not be acquired
      * @property {String} [shaderName]
      * @property {Float32Array} [positionMatrix]
      * @property {Float32Array} [orientationMatrix]
@@ -1598,16 +1599,18 @@ define([
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback) {
         var i, blinkerDescriptors, visualModel, animationTime;
-        addSupplements = addSupplements || {};
-        params = params || {};
+        addSupplements = addSupplements || utils.EMPTY_OBJECT;
+        params = params || utils.EMPTY_OBJECT;
         // getting resources
-        this.acquireResources(lod, addSupplements && (addSupplements.hitboxes === true), !!params.shaderName);
-        if (params.shaderName) {
-            graphics.getShader(params.shaderName);
-        }
-        if (addSupplements.weapons === true) {
-            for (i = 0; i < this._weapons.length; i++) {
-                this._weapons[i].acquireResources(lod, addSupplements.projectileResources);
+        if (!params.skipResources) {
+            this.acquireResources(lod, addSupplements && (addSupplements.hitboxes === true), !!params.shaderName);
+            if (params.shaderName) {
+                graphics.getShader(params.shaderName);
+            }
+            if (addSupplements.weapons === true) {
+                for (i = 0; i < this._weapons.length; i++) {
+                    this._weapons[i].acquireResources(lod, addSupplements.projectileResources);
+                }
             }
         }
         // add the thruster particles
@@ -1718,7 +1721,7 @@ define([
             // add the weapons
             if (addSupplements.weapons === true) {
                 for (i = 0; i < this._weapons.length; i++) {
-                    this._weapons[i].addToScene(node, lod, wireframe, {shaderName: params.shaderName}, weaponCallback);
+                    this._weapons[i].addToScene(node, lod, wireframe, {shaderName: params.shaderName, skipResource: true}, weaponCallback);
                 }
             }
             // add the thruster particles
