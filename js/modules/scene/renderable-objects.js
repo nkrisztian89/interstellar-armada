@@ -1938,8 +1938,10 @@ define([
      * @param {ManagedGLContext} context
      */
     PointParticle.prototype.addToContext = function (context) {
-        RenderableObject.prototype.addToContext.call(this, context);
-        this._model.addToContext(context, false);
+        if (this._color) {
+            RenderableObject.prototype.addToContext.call(this, context);
+            this._model.addToContext(context, true);
+        }
     };
     /**
      * Updates the shift vector.

@@ -12,5 +12,5 @@ varying float v_ratio;
 void main() {
     gl_FragColor = vec4(
         u_color.rgb,
-        (min(1.0, - 2.0 * v_dist + 2.0) * (1.0 - v_position.x)) * v_ratio);
+        (min(1.0, - 4.0 * v_dist + 4.0) * (1.0 - v_position.x)) * v_ratio);
 }

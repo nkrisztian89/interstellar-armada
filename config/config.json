@@ -1,5 +1,5 @@
 {
-    "version": "0.4.5-dev:722 (2018.05.12.)",
+    "version": "0.4.5-dev:723 (2018.05.12.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4"],
@@ -324,7 +324,7 @@
             "maxShadowMapRangesDefineName": "MAX_SHADOW_MAP_RANGES",
             "maxShadowMapsDefineName": "MAX_SHADOW_MAPS",
             "numShadowMapSamplesDefineName": "NUM_SHADOW_MAP_SAMPLES",
-            "dustLengthDivisor": "200.0",
+            "dustLengthDivisor": "100.0",
             "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR",
             "maxLuminosityFactors": 20,
             "maxLuminosityFactorsDefineName": "MAX_LUMINOSITY_FACTORS",
