@@ -965,9 +965,9 @@ define([
                 }
                 // create the counter-force affecting the firing ship
                 this._spacecraft.getPhysicalModel().applyForceAndTorque(
-                        vec.diff3(
-                                mat.translationVector3(Weapon._projectilePosMatrix),
-                                mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix())),
+                        vec.diffTranslation3(
+                                Weapon._projectilePosMatrix,
+                                this._spacecraft.getPhysicalPositionMatrix()),
                         mat.getRowB43Neg(projectileOriMatrix),
                         barrels[i].getForceForDuration(_momentDuration),
                         _momentDuration
@@ -1311,14 +1311,14 @@ define([
      */
     TargetingComputer.prototype._mapTargetToCombinedValue = function (craft, index) {
         var
-                vector = vec.diff3(craft.getPhysicalPositionVector(), this._spacecraft.getPhysicalPositionVector()),
-                distance = vec.length3(vector);
+                vector = vec.diffTranslation3(craft.getPhysicalPositionMatrix(), this._spacecraft.getPhysicalPositionMatrix()),
+                distance = vec.extractLength3(vector);
         return {
             index: index,
             value: (distance +
                     TARGET_MAPPING_ANGLE_FACTOR * vec.angle3u(
                             mat.getRowB43(this._spacecraft.getPhysicalOrientationMatrix()),
-                            vec.scaled3(vector, 1 / distance))
+                            vector)
                     ) *
                     (this._spacecraft.isGoodAgainst(craft) ? TARGET_MAPPING_GOOD_AGAINST_FACTOR : (
                             this._spacecraft.isBadAgainst(craft) ? TARGET_MAPPING_BAD_AGAINST_FACTOR : 1))
@@ -1533,7 +1533,7 @@ define([
                 return targetPosition;
             }
             position = this._spacecraft.getPhysicalPositionVector();
-            relativeTargetVelocity = vec.diff3(mat.translationVector3(this._target.getVelocityMatrix()), mat.translationVector3(this._spacecraft.getVelocityMatrix()));
+            relativeTargetVelocity = vec.diffTranslation3(this._target.getVelocityMatrix(), this._spacecraft.getVelocityMatrix());
             projectileSpeed = weapons[0].getProjectileVelocity();
             a = projectileSpeed * projectileSpeed - (relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
             b = 0;

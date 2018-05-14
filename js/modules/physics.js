@@ -617,11 +617,6 @@ define([
          * @type Number
          */
         this._inverseMass = 0;
-        /*
-         * Reusable vector variable to store temporary values without the need to create a new array for them
-         * @type Number[3]
-         */
-        this._v = [0, 0, 0];
         if (positionMatrix) {
             this.init(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation);
         }
@@ -1018,7 +1013,7 @@ define([
         // transforms the position to object-space for preliminary check
         relativePos = vec.prodVec4Mat4Aux(vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
-        relativeVelocityVector = vec.diff3(velocityVector, vec.setTranslationVector3(this._v, this.getVelocityMatrix()));
+        relativeVelocityVector = vec.diffVec3Mat4(velocityVector, this.getVelocityMatrix());
         i = vec.length3(relativeVelocityVector);
         range = i * dt * 0.001 * this._inverseScalingFactor;
         // first, preliminary check based on position relative to the whole object
@@ -1053,7 +1048,7 @@ define([
             // first calculate the movement that happened in the past dt
             // milliseconds as a result of the velocity sampled in the previous step
             // the velocity matrix is in m/s
-            mat.translateByVector(this._positionMatrix, vec.scale3(vec.setTranslationVector3(this._v, this._velocityMatrix), dt * 0.001));
+            mat.translateByMatrixMul(this._positionMatrix, this._velocityMatrix, dt * 0.001);
             if (this._fixedVelocity) {
                 this.setPositionMatrix();
             } else {

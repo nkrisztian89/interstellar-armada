@@ -2217,6 +2217,19 @@ define([
         m[14] += n[14];
     };
     /**
+     * Applies a translation to the passed 4x4 transformation matrix described by the second
+     * passed transformation matrix, which is treated like a translation matrix (other parts
+     * of the matrix are not considered), multiplied by a scalar.
+     * @param {Float32Array} m A 4x4 matrix
+     * @param {Float32Array} n A 4x4 translation matrix
+     * @param {Number} s The scalar to multiply with
+     */
+    mat.translateByMatrixMul = function (m, n, s) {
+        m[12] += n[12] * s;
+        m[13] += n[13] * s;
+        m[14] += n[14] * s;
+    };
+    /**
      * Modifies the passed 4x4 transformation matrix m in-place to be rotated around the given axis by the given angle.
      * @param {Float32Array} m The matrix to modify
      * @param {Number[]} axis An array of 3 numbers describing the axis of the rotation

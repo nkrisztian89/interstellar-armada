@@ -3165,7 +3165,7 @@ define([
                     _targetViewModel.setOrientationM4(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION) ? mat.prod4Aux(
                             target.getPhysicalOrientationMatrix(),
                             mat.inverseOfRotation4Aux(mat.lookTowards4Aux(
-                                    vec.normalize3(vec.diff3Aux(craft.getPhysicalPositionVector(), target.getPhysicalPositionVector())),
+                                    vec.normalize3(vec.diffTranslation3Aux(craft.getPhysicalPositionMatrix(), target.getPhysicalPositionMatrix())),
                                     mat.getRowC43(craft.getPhysicalOrientationMatrix())))) :
                             mat.IDENTITY4);
                 }

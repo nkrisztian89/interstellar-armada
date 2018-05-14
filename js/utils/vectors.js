@@ -508,6 +508,30 @@ define(function () {
         return aux;
     };
     /**
+     * Returns the difference of the 3D translation components of two 4x4 transformation matrices.
+     * @param {Float32Array} m1 The first 4x4 matrix.
+     * @param {Float32Array} m2 The second 4x4 matrix.
+     * @returns {Number[3]}
+     */
+    vec.diffTranslation3 = function (m1, m2) {
+        return [m1[12] - m2[12], m1[13] - m2[13], m1[14] - m2[14]];
+    };
+    /**
+     * Returns the difference of the 3D translation components of two 4x4 transformation matrices.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m1 The first 4x4 matrix.
+     * @param {Float32Array} m2 The second 4x4 matrix.
+     * @returns {Number[3]}
+     */
+    vec.diffTranslation3Aux = function (m1, m2) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = m1[12] - m2[12];
+        aux[1] = m1[13] - m2[13];
+        aux[2] = m1[14] - m2[14];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Returns the dot product of the 2 given 3D vectors.
      * @param {Number[3]} v1 A 3D vector.
      * @param {Number[3]} v2 A 3D vector.
