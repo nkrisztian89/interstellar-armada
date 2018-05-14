@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides an interface to interact with WebGL in a managed way. Offers
  * rather low level functionality, but using it is still much more transparent 
  * than accessing WebGL directly.
@@ -1117,6 +1117,13 @@ define([
      */
     FrameBuffer.prototype.getName = function () {
         return this._name;
+    };
+    /**
+     * Returns the width of (the area represented by) this buffer in pixels/texels
+     * @returns {String}
+     */
+    FrameBuffer.prototype.getWidth = function () {
+        return this._width;
     };
     /**
      * Returns the texture unit index where the texture associated with this 
@@ -2494,11 +2501,13 @@ define([
         return this._frameBuffers[name];
     };
     /**
-     * Adds the passed frame buffer objec to the managed context.
+     * Adds the passed frame buffer object to the managed context.
      * @param {FrameBuffer} frameBuffer
+     * @param {Boolean} [replace=false] If true and a buffer already exists with the same name, it will be
+     * replaced by this new one (otherwise, the old one is kept and the new one disregarded)
      */
-    ManagedGLContext.prototype.addFrameBuffer = function (frameBuffer) {
-        if (this._frameBuffers[frameBuffer.getName()] === undefined) {
+    ManagedGLContext.prototype.addFrameBuffer = function (frameBuffer, replace) {
+        if ((this._frameBuffers[frameBuffer.getName()] === undefined) || replace) {
             application.log_DEBUG("Adding new framebuffer '" + frameBuffer.getName() + "' to context (" + this._name + ")...", 2);
             this._frameBuffers[frameBuffer.getName()] = frameBuffer;
             if (this.isReadyToUse()) {

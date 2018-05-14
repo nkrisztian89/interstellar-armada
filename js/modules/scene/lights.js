@@ -172,13 +172,15 @@ define([
      * @param {Number} shadowMapTextureSize The size (width and height, in texels) that the shadow map framebuffers should have
      */
     DirectionalLightSource.prototype.addToContext = function (context, shadowMappingEnabled, shadowMapBufferNamePrefix, numRanges, shadowMapTextureSize) {
-        var i;
+        var i, name, existingBuffer;
         this._shadowMapBufferNamePrefix = shadowMapBufferNamePrefix;
         if (shadowMappingEnabled) {
             for (i = 0; i < numRanges; i++) {
-                if (!context.getFrameBuffer(this.getShadowMapBufferName(i))) {
-                    context.addFrameBuffer(new managedGL.FrameBuffer(this.getShadowMapBufferName(i), shadowMapTextureSize, shadowMapTextureSize, true));
-                }
+                name = this.getShadowMapBufferName(i);
+                existingBuffer = context.getFrameBuffer(name);
+                context.addFrameBuffer(
+                        new managedGL.FrameBuffer(name, shadowMapTextureSize, shadowMapTextureSize, true),
+                        existingBuffer && (existingBuffer.getWidth() !== shadowMapTextureSize));
             }
         }
     };
@@ -228,22 +230,22 @@ define([
         z = positionInLightSpace[2] * this._lispMatrix[10]; // top-bottom plane
         w = -positionInLightSpace[1];
         wp = Math.max(w, 0); // w-positive - for objects behind the projection point, w would be negative, indicating a negative (mirrored) frustum,
-                             // possibly resulting in false negative result when checking side planes, if part of the object is still in front of the
-                             // projection point:
-                             //
-                             // top down view on XY plane, field of view above 'p' projection point:
-                             //
-                             //   \     /
-                             //    \   /
-                             //     \^/   _
-                             //      p    |
-                             //     / \   |
-                             //    / |----o
-                             //   /     \
-                             //
-                             // object 'o' is behind projection point 'p', but it is still visible, yet it would fail the X coordinate check as at the
-                             // o point, the w will be even more negative (w will follow the frustum, the bottom-left / top-right diagonal line here)
-                             
+        // possibly resulting in false negative result when checking side planes, if part of the object is still in front of the
+        // projection point:
+        //
+        // top down view on XY plane, field of view above 'p' projection point:
+        //
+        //   \     /
+        //    \   /
+        //     \^/   _
+        //      p    |
+        //     / \   |
+        //    / |----o
+        //   /     \
+        //
+        // object 'o' is behind projection point 'p', but it is still visible, yet it would fail the X coordinate check as at the
+        // o point, the w will be even more negative (w will follow the frustum, the bottom-left / top-right diagonal line here)
+
         return (Math.abs(x) - size * this._lispMatrix[0] < wp) && // left-right plane
                 ((y1 > 0) || (y1 > -(w - size))) &&               // far plane (w is calculated for y1 by also negating the added size)
                 ((y2 < 0) || (y2 < (w + size))) &&                // near plane (w is calculated for y2 by also negating the subtracted size)
