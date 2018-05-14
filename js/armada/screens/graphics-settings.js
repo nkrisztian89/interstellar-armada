@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file This module manages and provides the Graphics settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -20,6 +20,8 @@
  * @param armadaScreens Used for common screen constants.
  * @param graphics Used for accessing the graphics settings and setting options.
  * @param classes Used to notify classes about graphics settings change
+ * @param equipment Used to notify it about graphics settings change
+ * @param spacecraft Used to notify it about graphics settings change
  * @param battle Used to notify HUD element classes about graphics settings change
  */
 define([
@@ -33,9 +35,11 @@ define([
     "armada/screens/shared",
     "armada/graphics",
     "armada/logic/classes",
+    "armada/logic/equipment",
+    "armada/logic/spacecraft",
     "armada/screens/battle",
     "utils/polyfill"
-], function (utils, application, components, screens, managedGL, game, strings, armadaScreens, graphics, classes, battle) {
+], function (utils, application, components, screens, managedGL, game, strings, armadaScreens, graphics, classes, equipment, spacecraft, battle) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -323,6 +327,8 @@ define([
         graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
         graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
         classes.handleGraphicsSettingsChanged();
+        equipment.handleGraphicsSettingsChanged();
+        spacecraft.handleGraphicsSettingsChanged();
         battle.handleGraphicsSettingsChanged();
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };

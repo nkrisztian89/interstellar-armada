@@ -239,6 +239,18 @@ define([
              */
             _groupTransformsArrayName = null,
             /**
+             * Precalculated value of an array containing as many identity matrices (flattened into a single one dimensional array) as the
+             * number of available transform groups.
+             * @type Float32Array
+             */
+            _groupTransformIdentityArray = null,
+            /**
+             * Stores the uniform parameter array definitions (what arrays are there and what are their types in
+             * name: type format) to use when creating visual models for equipment
+             * @type Object
+             */
+            _parameterArrays = null,
+            /**
              * Cached value of the configuration setting of the same name (see configuration.json)
              * @type Number
              */
@@ -262,6 +274,18 @@ define([
     Object.freeze(FlightMode);
     Object.freeze(WeaponAimStatus);
     Object.freeze(ThrusterUse);
+    // #########################################################################
+    /**
+     * Needs to be executed whenever the settings in the graphics module change
+     */
+    function handleGraphicsSettingsChanged() {
+        _parameterArrays = {};
+        // setting up parameter array declarations (name: type)
+        _parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
+        if (graphics.areLuminosityTexturesAvailable()) {
+            _parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
+        }
+    }
     // ##############################################################################
     /**
      * @class Represents a projectile fired from a weapon.
@@ -382,13 +406,13 @@ define([
         this._physicalModel.moveByVector(v);
     };
     /**
-     * Private function used as a callback after resource load to add the projectile to a scene.
+     * Adds the projectile to a scene immediately, assuming its resources have already been loaded.
      * @param {Scene} scene The scene to which to add the renderable object presenting the projectile.
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
      * @param {Function} [callback] If given, this function will be executed right after the projectile is addded to the scene, with the 
      * visual model of the projectile passed to it as its only argument
      */
-    Projectile.prototype._addToSceneCallback = function (scene, wireframe, callback) {
+    Projectile.prototype.addToSceneNow = function (scene, wireframe, callback) {
         this._initVisualModel(wireframe);
         scene.addObject(this._visualModel, false, _minimumProjectileCountForInstancing);
         if (callback) {
@@ -403,7 +427,7 @@ define([
      * visual model of the projectile passed to it as its only argument
      */
     Projectile.prototype.addToScene = function (scene, wireframe, callback) {
-        resources.executeWhenReady(this._addToSceneCallback.bind(this, scene, wireframe, callback));
+        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, wireframe, callback));
     };
     /**
      * Adds the resources required to render this projectile to the passed scene,
@@ -474,7 +498,7 @@ define([
                         physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
                         exp = explosion.getExplosion();
                         exp.init(((hitObjects[i].getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
-                        exp.addToScene(this._visualModel.getNode().getScene().getRootNode(), hitObjects[i].getSoundSource(), true);
+                        exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObjects[i].getSoundSource(), true);
                         hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
                         this._timeLeft = 0;
                         this._visualModel.markAsReusable(true);
@@ -723,6 +747,46 @@ define([
      */
     /**
      * Adds a renderable node representing this weapon to the scene under the
+     * passed parent node, assuming its resources have already been loaded.
+     * @param {ParameterizedMesh} parentNode See addToScene()
+     * @param {Number} [lod] See addToScene()
+     * @param {Boolean} wireframe See addToScene()
+     * @param {Weapon~AddToSceneParams} params See addToScene()
+     * @param {logic~addToSceneCallback} [callback] See addToScene()
+     */
+    Weapon.prototype.addToSceneNow = function (parentNode, lod, wireframe, params, callback) {
+        var visualModel, scale;
+        application.log_DEBUG("Adding weapon (" + this._class.getName() + ") to scene...", 2);
+        scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
+        visualModel = new renderableObjects.ParameterizedMesh(
+                this._class.getModel(),
+                params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
+                this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                this._slot ? this.getOrigoPositionMatrix() : mat.identity4(),
+                params.orientationMatrix || (this._slot ? this._slot.orientationMatrix : mat.identity4()),
+                mat.scaling4(scale),
+                (wireframe === true),
+                lod,
+                _parameterArrays);
+        parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel));
+        // setting the starting values of the parameter arrays
+        // setting an identity transformation for all transform groups
+        if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
+            visualModel.setParameterArray(_groupTransformsArrayName, _groupTransformIdentityArray);
+        }
+        // setting the default luminosity for all luminosity groups
+        if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
+            visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+        }
+        if (!this._visualModel) {
+            this._visualModel = visualModel;
+        }
+        if (callback) {
+            callback(visualModel);
+        }
+    };
+    /**
+     * Adds a renderable node representing this weapon to the scene under the
      * passed parent node.
      * @param {ParameterizedMesh} parentNode The parent node to which to attach this
      * weapon in the scene. (normally the renderable node of the spacecraft
@@ -735,57 +799,13 @@ define([
      * @param {logic~addToSceneCallback} [callback]
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe, params, callback) {
-        var i, n;
         if (!params.skipResources) {
             this.acquireResources({omitShader: !!params.shaderName});
             if (params.shaderName) {
                 graphics.getShader(params.shaderName);
             }
         }
-        resources.executeWhenReady(function () {
-            var visualModel, scale, parameterArrays = {};
-            application.log_DEBUG("Adding weapon (" + this._class.getName() + ") to scene...", 2);
-            scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
-            // setting up parameter array declarations (name: type)
-            parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
-            if (graphics.areLuminosityTexturesAvailable()) {
-                parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
-            }
-            visualModel = new renderableObjects.ParameterizedMesh(
-                    this._class.getModel(),
-                    params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
-                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                    this._slot ? this.getOrigoPositionMatrix() : mat.identity4(),
-                    params.orientationMatrix || (this._slot ? this._slot.orientationMatrix : mat.identity4()),
-                    mat.scaling4(scale),
-                    (wireframe === true),
-                    lod,
-                    parameterArrays);
-            parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel));
-            // setting the starting values of the parameter arrays
-            // setting an identity transformation for all transform groups
-            for (i = 0, n = graphics.getMaxGroupTransforms(); i < n; i++) {
-                visualModel.setMat4Parameter(
-                        _groupTransformsArrayName,
-                        i,
-                        mat.IDENTITY4);
-            }
-            // setting the default luminosity for all luminosity groups
-            if (graphics.areLuminosityTexturesAvailable()) {
-                for (i = 0, n = graphics.getMaxLuminosityFactors(); i < n; i++) {
-                    visualModel.setFloatParameter(
-                            _luminosityFactorsArrayName,
-                            i,
-                            this._class.getDefaultGroupLuminosity(i));
-                }
-            }
-            if (!this._visualModel) {
-                this._visualModel = visualModel;
-            }
-            if (callback) {
-                callback(visualModel);
-            }
-        }.bind(this));
+        resources.executeWhenReady(this.addToSceneNow.bind(this, parentNode, lod, wireframe, params, callback));
     };
     /**
      * Returns the renderable object representing the muzzle flash that is visible
@@ -925,7 +945,7 @@ define([
                         projectileOriMatrix,
                         this._spacecraft,
                         barrels[i].getProjectileVelocity());
-                p.addToScene(scene);
+                p.addToSceneNow(scene);
                 // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
                 // been created, so that projectiles from the same weapon and of the same class only use one light source object
                 if (!projectileLights[projectileClass.getName()]) {
@@ -2824,7 +2844,7 @@ define([
                     mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
                     true,
                     mat.IDENTITY4);
-            exp.addToScene(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
+            exp.addToSceneNow(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
             this._originalScalingMatrix = mat.matrix4(this._spacecraft.getVisualModel().getScalingMatrix());
             physicalModel = this._spacecraft.getPhysicalModel();
             directionVector = mat.getRowB4(physicalModel.getOrientationMatrix());
@@ -2902,7 +2922,7 @@ define([
                             mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
                             true,
                             mat.IDENTITY4);
-                    exp.addToScene(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
+                    exp.addToSceneNow(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
                     this._spacecraft.getVisualModel().setScalingMatrix(this._originalScalingMatrix);
                     this._spacecraft.setAway(true);
                     this._spacecraft.handleEvent(SpacecraftEvents.JUMPED_OUT);
@@ -3099,6 +3119,7 @@ define([
     _projectilePool = pools.getPool(Projectile);
     // caching configuration settings
     config.executeWhenReady(function () {
+        var i;
         _isSelfFireEnabled = config.getSetting(config.BATTLE_SETTINGS.SELF_FIRE);
         _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
         _minimumMuzzleFlashParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING);
@@ -3110,14 +3131,20 @@ define([
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
         _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
         _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
+        _groupTransformIdentityArray = new Float32Array(graphics.getMaxGroupTransforms() * 16);
+        for (i = 0; i < _groupTransformIdentityArray.length; i++) {
+            _groupTransformIdentityArray[i] = mat.IDENTITY4[i % 16];
+        }
         _fireSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_TIME_THRESHOLD);
         _fireSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_VOLUME_FACTOR);
+        graphics.executeWhenReady(handleGraphicsSettingsChanged);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         FlightMode: FlightMode,
         ThrusterUse: ThrusterUse,
+        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
         Projectile: Projectile,
         Weapon: Weapon,
         TargetingComputer: TargetingComputer,

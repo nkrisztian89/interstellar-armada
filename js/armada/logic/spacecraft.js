@@ -131,6 +131,12 @@ define([
              */
             _groupTransformIdentityArray = null,
             /**
+             * Stores the uniform parameter array definitions (what arrays are there and what are their types in
+             * name: type format) to use when creating visual models for spacecraft
+             * @type Object
+             */
+            _parameterArrays = null,
+            /**
              * Cached value of the configuration setting for hit zone visualization color.
              * @type Number[4]
              */
@@ -145,6 +151,18 @@ define([
              * @type Number
              */
             _scoreFactorForKill;
+    // #########################################################################
+    /**
+     * Needs to be executed whenever the settings in the graphics module change
+     */
+    function handleGraphicsSettingsChanged() {
+        _parameterArrays = {};
+        // setting up parameter array declarations (name: type)
+        _parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
+        if (graphics.areLuminosityTexturesAvailable()) {
+            _parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
+        }
+    }
     // #########################################################################
     /**
      * @class
@@ -1580,10 +1598,147 @@ define([
      * state (the same state for all of them)
      */
     /**
-     * @function
+     * Adds the spacecraft's visual representation to a scene, assuming that its resources have already been loaded.
+     * @param {Scene} scene See addToScene()
+     * @param {Number} [lod] See addToScene()
+     * @param {Boolean} [wireframe=false] See addToScene()
+     * @param {Spacecraft~Supplements} addSupplements See addToScene()
+     * @param {Spacecraft~AddToSceneParams} params See addToScene()
+     * @param {logic~addToSceneCallback} [callback] See addToScene()
+     * @param {logic~addToSceneCallback} [weaponCallback] See addToScene()
+     */
+    Spacecraft.prototype.addToSceneNow = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback) {
+        var i, node, exp, lightSources, originalFactionColor, replacementFactionColor, visualModel, animationTime, weaponParams;
+        if (!this._class) {
+            application.log("WARNING! Cannot add spacecraft to scene because it has already been destroyed!");
+            return;
+        }
+        application.log_DEBUG("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
+        if (addSupplements.self !== false) {
+            visualModel = new renderableObjects.ParameterizedMesh(
+                    this._class.getModel(),
+                    params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
+                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                    params.positionMatrix || this._physicalModel.getPositionMatrix(),
+                    params.orientationMatrix || this._physicalModel.getOrientationMatrix(),
+                    params.scalingMatrix || mat.scaling4(this._class.getModel().getScale()),
+                    (wireframe === true),
+                    lod,
+                    _parameterArrays);
+            if (!this._visualModel || params.replaceVisualModel) {
+                this._visualModel = visualModel;
+            }
+            if (this._name) {
+                visualModel.setName(this._name);
+            }
+            originalFactionColor = this._class.getFactionColor();
+            replacementFactionColor = params.factionColor || (this._team && this._team.getColor()) || originalFactionColor;
+            visualModel.setUniformValueFunction(UNIFORM_ORIGINAL_FACTION_COLOR_NAME, function () {
+                return originalFactionColor;
+            });
+            visualModel.setUniformValueFunction(UNIFORM_REPLACEMENT_FACTION_COLOR_NAME, function () {
+                return replacementFactionColor;
+            });
+            visualModel.setUniformValueFunction(UNIFORM_SHIELD_STATE_NAME, function () {
+                return this.getShieldState();
+            }.bind(this));
+            // setting the starting values of the parameter arrays
+            // setting an identity transformation for all transform groups
+            if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
+                visualModel.setParameterArray(_groupTransformsArrayName, _groupTransformIdentityArray);
+            }
+            // setting the default luminosity for all luminosity groups
+            if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
+                visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+            }
+            node = scene.addObject(visualModel);
+            if (params.visualModel) {
+                application.showError("Attempting to specify a visual model for the Spacecraft.addToScene() operation while a new one is also created!", application.ErrorSeverity.MINOR);
+            }
+        } else {
+            visualModel = params.visualModel || this._visualModel;
+            node = visualModel.getNode();
+        }
+        // visualize physical model (hitboxes)
+        if (addSupplements.hitboxes === true) {
+            // add the parent objects for the hitboxes
+            this._hitbox = new sceneGraph.RenderableNode(new renderableObjects.RenderableObject3D(
+                    this._class.getShader(),
+                    false,
+                    false), false);
+            // add the models for the hitboxes themselves
+            for (i = 0; i < this._class.getBodies().length; i++) {
+                this._addHitboxModel(i);
+            }
+            this._hitbox.hide();
+            node.addSubnode(this._hitbox);
+        }
+        // add the weapons
+        if (addSupplements.weapons === true) {
+            weaponParams = {shaderName: params.shaderName};
+            for (i = 0; i < this._weapons.length; i++) {
+                this._weapons[i].addToSceneNow(node, lod, wireframe, weaponParams, weaponCallback);
+            }
+        }
+        // add the thruster particles
+        if (addSupplements.thrusterParticles === true) {
+            if (this._propulsion) {
+                this._propulsion.addToScene(node);
+            }
+        }
+        // add projectile resources
+        if (addSupplements.projectileResources === true) {
+            for (i = 0; i < this._weapons.length; i++) {
+                this._weapons[i].addProjectileResourcesToScene(scene);
+            }
+        }
+        // add projectile resources
+        if (addSupplements.explosion === true) {
+            exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, vec.NULL3, true);
+            exp.addResourcesToScene(scene);
+        }
+        // add comera configurations
+        if (addSupplements.cameraConfigurations === true) {
+            this._addCameraConfigurationsForViews();
+        }
+        // add light sources
+        if (addSupplements.lightSources === true) {
+            lightSources = this._class.getLightSources();
+            for (i = 0; i < lightSources.length; i++) {
+                if (lightSources[i].spotDirection) {
+                    scene.addSpotLightSource(new lights.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, [visualModel]));
+                } else {
+                    scene.addPointLightSource(
+                            new lights.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [visualModel]),
+                            constants.SPACECRAFT_LIGHT_PRIORITY);
+                }
+            }
+        }
+        // add blinking lights
+        if (addSupplements.blinkers === true) {
+            for (i = 0; i < this._blinkers.length; i++) {
+                this._blinkers[i].addToScene(node, addSupplements.lightSources);
+                if (params.randomAnimationTime) {
+                    if (i === 0) {
+                        animationTime = this._blinkers[i].setRandomTime();
+                    } else {
+                        this._blinkers[i].setTime(animationTime);
+                    }
+                }
+            }
+        }
+        // if the spacecraft is away, hide the visuals
+        if (this._away) {
+            node.hide();
+        }
+        if (callback) {
+            callback(visualModel);
+        }
+    };
+    /**
      * Creates and adds the renderable objects to represent this spacecraft to
      * the passed scene.
-     * @param {sceneGraph} scene The scene to which the objects will be added.
+     * @param {Scene} scene The scene to which the objects will be added.
      * @param {Number} [lod] The level of detail to use for adding the models.
      * If not given, all available LODs will be added for dynamic LOD rendering.
      * @param {Boolean} [wireframe=false] Whether to add the models in wireframe
@@ -1598,7 +1753,7 @@ define([
      * @param {logic~addToSceneCallback} [weaponCallback]
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback) {
-        var i, blinkerDescriptors, visualModel, animationTime;
+        var i, blinkerDescriptors;
         addSupplements = addSupplements || utils.EMPTY_OBJECT;
         params = params || utils.EMPTY_OBJECT;
         // getting resources
@@ -1612,173 +1767,34 @@ define([
                     this._weapons[i].acquireResources(lod, addSupplements.projectileResources);
                 }
             }
-        }
-        // add the thruster particles
-        if (addSupplements.thrusterParticles === true) {
-            if (this._propulsion) {
-                this._propulsion.addThrusters(this._class.getThrusterSlots());
-                this._propulsion.acquireResources();
-            }
-        }
-        if (addSupplements.jumpEngine === true) {
-            if (this._jumpEngine) {
-                this._jumpEngine.acquireResources();
-            }
-        }
-        if (addSupplements.shield === true) {
-            if (this._shield) {
-                this._shield.acquireResources();
-            }
-        }
-        if (addSupplements.explosion === true) {
-            this._class.getExplosionClass().acquireResources();
-        }
-        if (addSupplements.blinkers === true) {
-            blinkerDescriptors = this._class.getBlinkerDescriptors();
-            for (i = 0; i < blinkerDescriptors.length; i++) {
-                blinkerDescriptors[i].acquireResources();
-            }
-        }
-        resources.executeWhenReady(function () {
-            var j, n, node, exp, lightSources, parameterArrays = {}, originalFactionColor, replacementFactionColor;
-            if (!this._class) {
-                application.log("WARNING! Cannot add spacecraft to scene because it has already been destroyed!");
-                return;
-            }
-            application.log_DEBUG("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
-            if (addSupplements.self !== false) {
-                // setting up parameter array declarations (name: type)
-                parameterArrays[_groupTransformsArrayName] = managedGL.ShaderVariableType.MAT4;
-                if (graphics.areLuminosityTexturesAvailable()) {
-                    parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
-                }
-                visualModel = new renderableObjects.ParameterizedMesh(
-                        this._class.getModel(),
-                        params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
-                        this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                        params.positionMatrix || this._physicalModel.getPositionMatrix(),
-                        params.orientationMatrix || this._physicalModel.getOrientationMatrix(),
-                        params.scalingMatrix || mat.scaling4(this._class.getModel().getScale()),
-                        (wireframe === true),
-                        lod,
-                        parameterArrays);
-                if (!this._visualModel || params.replaceVisualModel) {
-                    this._visualModel = visualModel;
-                }
-                if (this._name) {
-                    visualModel.setName(this._name);
-                }
-                originalFactionColor = this._class.getFactionColor();
-                replacementFactionColor = params.factionColor || (this._team && this._team.getColor()) || originalFactionColor;
-                visualModel.setUniformValueFunction(UNIFORM_ORIGINAL_FACTION_COLOR_NAME, function () {
-                    return originalFactionColor;
-                });
-                visualModel.setUniformValueFunction(UNIFORM_REPLACEMENT_FACTION_COLOR_NAME, function () {
-                    return replacementFactionColor;
-                });
-                visualModel.setUniformValueFunction(UNIFORM_SHIELD_STATE_NAME, function () {
-                    return this.getShieldState();
-                }.bind(this));
-                // setting the starting values of the parameter arrays
-                // setting an identity transformation for all transform groups
-                for (i = 0, n = graphics.getMaxGroupTransforms(); i < n; i++) {
-                    visualModel.setMat4Parameter(
-                            _groupTransformsArrayName,
-                            i,
-                            mat.IDENTITY4);
-                }
-                // setting the default luminosity for all luminosity groups
-                if (graphics.areLuminosityTexturesAvailable()) {
-                    for (j = 0, n = graphics.getMaxLuminosityFactors(); j < n; j++) {
-                        visualModel.setFloatParameter(
-                                _luminosityFactorsArrayName,
-                                j,
-                                this._class.getDefaultGroupLuminosity(j));
-                    }
-                }
-                node = scene.addObject(visualModel);
-                if (params.visualModel) {
-                    application.showError("Attempting to specify a visual model for the Spacecraft.addToScene() operation while a new one is also created!", application.ErrorSeverity.MINOR);
-                }
-            } else {
-                visualModel = params.visualModel || this._visualModel;
-                node = visualModel.getNode();
-            }
-            // visualize physical model (hitboxes)
-            if (addSupplements.hitboxes === true) {
-                // add the parent objects for the hitboxes
-                this._hitbox = new sceneGraph.RenderableNode(new renderableObjects.RenderableObject3D(
-                        this._class.getShader(),
-                        false,
-                        false), false);
-                // add the models for the hitboxes themselves
-                for (i = 0; i < this._class.getBodies().length; i++) {
-                    this._addHitboxModel(i);
-                }
-                this._hitbox.hide();
-                node.addSubnode(this._hitbox);
-            }
-            // add the weapons
-            if (addSupplements.weapons === true) {
-                for (i = 0; i < this._weapons.length; i++) {
-                    this._weapons[i].addToScene(node, lod, wireframe, {shaderName: params.shaderName, skipResource: true}, weaponCallback);
-                }
-            }
             // add the thruster particles
             if (addSupplements.thrusterParticles === true) {
                 if (this._propulsion) {
-                    this._propulsion.addToScene(node);
+                    this._propulsion.addThrusters(this._class.getThrusterSlots());
+                    this._propulsion.acquireResources();
                 }
             }
-            // add projectile resources
-            if (addSupplements.projectileResources === true) {
-                for (i = 0; i < this._weapons.length; i++) {
-                    this._weapons[i].addProjectileResourcesToScene(scene);
+            if (addSupplements.jumpEngine === true) {
+                if (this._jumpEngine) {
+                    this._jumpEngine.acquireResources();
                 }
             }
-            // add projectile resources
+            if (addSupplements.shield === true) {
+                if (this._shield) {
+                    this._shield.acquireResources();
+                }
+            }
             if (addSupplements.explosion === true) {
-                exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, vec.NULL3, true);
-                exp.addResourcesToScene(scene);
+                this._class.getExplosionClass().acquireResources();
             }
-            // add comera configurations
-            if (addSupplements.cameraConfigurations === true) {
-                this._addCameraConfigurationsForViews();
-            }
-            // add light sources
-            if (addSupplements.lightSources === true) {
-                lightSources = this._class.getLightSources();
-                for (i = 0; i < lightSources.length; i++) {
-                    if (lightSources[i].spotDirection) {
-                        scene.addSpotLightSource(new lights.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, [visualModel]));
-                    } else {
-                        scene.addPointLightSource(
-                                new lights.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [visualModel]),
-                                constants.SPACECRAFT_LIGHT_PRIORITY);
-                    }
-                }
-            }
-            // add blinking lights
             if (addSupplements.blinkers === true) {
-                for (i = 0; i < this._blinkers.length; i++) {
-                    this._blinkers[i].addToScene(node, addSupplements.lightSources);
-                    if (params.randomAnimationTime) {
-                        if (i === 0) {
-                            animationTime = this._blinkers[i].setRandomTime();
-                        } else {
-                            this._blinkers[i].setTime(animationTime);
-                        }
-                    }
+                blinkerDescriptors = this._class.getBlinkerDescriptors();
+                for (i = 0; i < blinkerDescriptors.length; i++) {
+                    blinkerDescriptors[i].acquireResources();
                 }
             }
-            // if the spacecraft is away, hide the visuals
-            if (this._away) {
-                node.hide();
-            }
-            if (callback) {
-                callback(visualModel);
-            }
-        }.bind(this));
+        }
+        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, lod, wireframe, addSupplements, params, callback, weaponCallback));
     };
     /**
      * Creates and returns a camera configuration set up for following the spacecraft according to the view's parameters.
@@ -2138,7 +2154,7 @@ define([
                             mat.IDENTITY4,
                             damageDir,
                             true);
-                    exp.addToScene(this._visualModel.getNode(), this.getSoundSource());
+                    exp.addToSceneNow(this._visualModel.getNode(), this.getSoundSource());
                     this._activeDamageIndicators.push(exp);
                 }
             }
@@ -2513,11 +2529,13 @@ define([
         _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
         _weaponFireSoundStackMinimumDistance = config.getSetting(config.BATTLE_SETTINGS.WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE);
         _scoreFactorForKill = config.getSetting(config.BATTLE_SETTINGS.SCORE_FRACTION_FOR_KILL);
+        graphics.executeWhenReady(handleGraphicsSettingsChanged);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         SpacecraftFormation: SpacecraftFormation,
+        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
         Spacecraft: Spacecraft
     };
 });

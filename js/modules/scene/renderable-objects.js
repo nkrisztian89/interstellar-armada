@@ -1138,6 +1138,13 @@ define([
         };
     };
     /**
+     * Returns whether the mesh has a parameter array available with the passed name
+     * @param {String} name
+     */
+    ParameterizedMesh.prototype.hasParameterArray = function (name) {
+        return !!this._parameterArrays[name] && (this._parameterArrays[name].length > 0);
+    };
+    /**
      * Sets the value of the float element at the passed index of the parameter array identified by the passed name.
      * @param {String} name
      * @param {Number} index
@@ -1153,10 +1160,15 @@ define([
      * @param {Float32Array} value
      */
     ParameterizedMesh.prototype.setMat4Parameter = function (name, index, value) {
-        var i;
-        for (i = 0; i < 16; i++) {
-            this._parameterArrays[name][16 * index + i] = value[i];
-        }
+        this._parameterArrays[name].set(value, 16 * index);
+    };
+    /**
+     * Copies the values in the passed array to the parameter array identified by the passed name.
+     * @param {String} name
+     * @param {Float32Array} value
+     */
+    ParameterizedMesh.prototype.setParameterArray = function (name, value) {
+        this._parameterArrays[name].set(value, 0);
     };
     // #########################################################################
     /**

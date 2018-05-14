@@ -299,13 +299,13 @@ define([
         }
     };
     /**
-     * The callback that adds the explosion to a scene (called by addToScene())
+     * Adds the explosion to a scene immediately (assuming its resources have already been loaded)
      * @param {RenderableNode} parentNode See addToScene()
      * @param {SoundSource} [soundSource] See addToScene()
      * @param {Boolean} [isHit=false] See addToScene()
      * @param {Function} [callback] See addToScene()
      */
-    Explosion.prototype._addToSceneCallback = function (parentNode, soundSource, isHit, callback) {
+    Explosion.prototype.addToSceneNow = function (parentNode, soundSource, isHit, callback) {
         var lightStates, scene = parentNode.getScene();
         this._initVisualModel(1 / parentNode.getRenderableObject().getCascadeScalingMatrix()[0]);
         parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false));
@@ -329,7 +329,7 @@ define([
      * single argument
      */
     Explosion.prototype.addToScene = function (parentNode, soundSource, isHit, callback) {
-        resources.executeWhenReady(this._addToSceneCallback.bind(this, parentNode, soundSource, isHit, callback));
+        resources.executeWhenReady(this.addToSceneNow.bind(this, parentNode, soundSource, isHit, callback));
     };
     /**
      * Adds the resources required to render this explosion to the passed scene,

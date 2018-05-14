@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
  * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -805,6 +805,12 @@ define([
      */
     TexturedModelClass.prototype.getDefaultGroupLuminosity = function (groupIndex) {
         return this._defaultLuminosityFactors[groupIndex];
+    };
+    /**
+     * @returns {Number[]}
+     */
+    TexturedModelClass.prototype.getDefaultGroupLuminosityFactors = function () {
+        return this._defaultLuminosityFactors;
     };
     /**
      * @override
