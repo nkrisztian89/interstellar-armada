@@ -41,7 +41,7 @@ module.exports = function (grunt) {
             },
             dist: {
                 options: {
-                    sourcemap: "none",
+                    noSourceMap: true,
                     style: "compressed"
                 },
                 files: {
@@ -87,7 +87,14 @@ module.exports = function (grunt) {
                     {expand: true, flatten: true, src: ['js/utils/matrices.js'], dest: 'js/utils/'},
                     {expand: true, flatten: true, src: ['js/modules/egom-model.js'], dest: 'js/modules/'},
                     {expand: true, flatten: true, src: ['js/modules/scene/scene-graph.js'], dest: 'js/modules/scene/'},
-                    {expand: true, flatten: true, src: ['js/modules/managed-gl.js'], dest: 'js/modules/'}
+                    {expand: true, flatten: true, src: ['js/modules/scene/renderable-objects.js'], dest: 'js/modules/scene/'},
+                    {expand: true, flatten: true, src: ['js/modules/managed-gl.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/modules/resource-manager.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/modules/media-resources.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/modules/control.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/armada/graphics.js'], dest: 'js/armada/'},
+                    {expand: true, flatten: true, src: ['js/armada/logic/equipment.js'], dest: 'js/armada/logic/'},
+                    {expand: true, flatten: true, src: ['js/armada/logic/spacecraft.js'], dest: 'js/armada/logic/'}
                 ]
             },
             // replacing some widely and frequently used one-line getter calls with the direct access of their respective properties to
@@ -180,7 +187,14 @@ module.exports = function (grunt) {
                     {expand: true, flatten: true, src: ['js/utils/matrices.js'], dest: 'js/utils/'},
                     {expand: true, flatten: true, src: ['js/modules/egom-model.js'], dest: 'js/modules/'},
                     {expand: true, flatten: true, src: ['js/modules/scene/scene-graph.js'], dest: 'js/modules/scene/'},
-                    {expand: true, flatten: true, src: ['js/modules/managed-gl.js'], dest: 'js/modules/'}
+                    {expand: true, flatten: true, src: ['js/modules/scene/renderable-objects.js'], dest: 'js/modules/scene/'},
+                    {expand: true, flatten: true, src: ['js/modules/managed-gl.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/modules/resource-manager.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/modules/media-resources.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/modules/control.js'], dest: 'js/modules/'},
+                    {expand: true, flatten: true, src: ['js/armada/graphics.js'], dest: 'js/armada/'},
+                    {expand: true, flatten: true, src: ['js/armada/logic/equipment.js'], dest: 'js/armada/logic/'},
+                    {expand: true, flatten: true, src: ['js/armada/logic/spacecraft.js'], dest: 'js/armada/logic/'}
                 ]
             },
             dev: {
