@@ -137,6 +137,11 @@ define([
              */
             _parameterArrays = null,
             /**
+             * A cached value of whether dynamic lights are turned on / available
+             * @type Boolean
+             */
+            _dynamicLights = false,
+            /**
              * Cached value of the configuration setting for hit zone visualization color.
              * @type Number[4]
              */
@@ -162,6 +167,7 @@ define([
         if (graphics.areLuminosityTexturesAvailable()) {
             _parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
         }
+        _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
     }
     // #########################################################################
     /**
@@ -203,7 +209,7 @@ define([
                 this._descriptor.getParticle().getInstancedShader(),
                 0);
         parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
-        if ((addLightSource === true) && (this._descriptor.getIntensity() > 0)) {
+        if (_dynamicLights && (addLightSource === true) && (this._descriptor.getIntensity() > 0)) {
             this._lightSource = new lights.PointLightSource(
                     this._descriptor.getLightColor(),
                     0,
@@ -1702,7 +1708,7 @@ define([
             this._addCameraConfigurationsForViews();
         }
         // add light sources
-        if (addSupplements.lightSources === true) {
+        if (_dynamicLights && addSupplements.lightSources === true) {
             lightSources = this._class.getLightSources();
             for (i = 0; i < lightSources.length; i++) {
                 if (lightSources[i].spotDirection) {

@@ -58,6 +58,11 @@ define([
             // ------------------------------------------------------------------------------
             // private variables
             /**
+             * A cached value of whether dynamic lights are turned on / available
+             * @type Boolean
+             */
+            _dynamicLights = false,
+            /**
              * Cached value of the configuration setting of the same name (see configuration.json)
              * @type Number
              */
@@ -80,6 +85,12 @@ define([
             _explosionPool;
     // ------------------------------------------------------------------------------
     // public functions
+    /**
+     * Needs to be executed whenever the settings in the graphics module change
+     */
+    function handleGraphicsSettingsChanged() {
+        _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
+    }
     /**
      * Returns an explosion object instance that can be (re)used - creating a new one only if needed.
      * @returns {Explosion}
@@ -309,11 +320,13 @@ define([
         var lightStates, scene = parentNode.getScene();
         this._initVisualModel(1 / parentNode.getRenderableObject().getCascadeScalingMatrix()[0]);
         parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false));
-        lightStates = this._class.getLightStates();
-        if (lightStates) {
-            scene.addPointLightSource(
-                    new lights.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates),
-                    constants.EXPLOSION_LIGHT_PRIORITY);
+        if (_dynamicLights) {
+            lightStates = this._class.getLightStates();
+            if (lightStates) {
+                scene.addPointLightSource(
+                        new lights.PointLightSource(lightStates[0].color, lightStates[0].intensity, vec.NULL3, [this._visualModel], lightStates),
+                        constants.EXPLOSION_LIGHT_PRIORITY);
+            }
         }
         this._class.playSound(soundSource, isHit, _hitSoundStackingTimeThreshold, _hitSoundStackingVolumeFactor);
         if (callback) {
@@ -374,10 +387,12 @@ define([
     config.executeWhenReady(function () {
         _hitSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_TIME_THRESHOLD);
         _hitSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_VOLUME_FACTOR);
+        graphics.executeWhenReady(handleGraphicsSettingsChanged);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
         getExplosion: getExplosion,
         Explosion: Explosion
     };

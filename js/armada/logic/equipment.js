@@ -251,6 +251,11 @@ define([
              */
             _parameterArrays = null,
             /**
+             * A cached value of whether dynamic lights are turned on / available
+             * @type Boolean
+             */
+            _dynamicLights = false,
+            /**
              * Cached value of the configuration setting of the same name (see configuration.json)
              * @type Number
              */
@@ -285,6 +290,7 @@ define([
         if (graphics.areLuminosityTexturesAvailable()) {
             _parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
         }
+        _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
     }
     // ##############################################################################
     /**
@@ -922,7 +928,9 @@ define([
             mat.setTranslatedByVector(Weapon._weaponSlotPosMatrix, this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
             projectileOriMatrix = this.getProjectileOrientationMatrix();
             barrels = this._class.getBarrels();
-            projectileLights = {};
+            if (_dynamicLights) {
+                projectileLights = {};
+            }
             result = 0;
             // generate the muzzle flashes and projectiles for each barrel
             for (i = 0; i < barrels.length; i++) {
@@ -946,12 +954,14 @@ define([
                         this._spacecraft,
                         barrels[i].getProjectileVelocity());
                 p.addToSceneNow(scene);
-                // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
-                // been created, so that projectiles from the same weapon and of the same class only use one light source object
-                if (!projectileLights[projectileClass.getName()]) {
-                    projectileLights[projectileClass.getName()] = new lights.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), vec.NULL3, [p.getVisualModel()]);
-                } else {
-                    projectileLights[projectileClass.getName()].addEmittingObject(p.getVisualModel());
+                if (_dynamicLights) {
+                    // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
+                    // been created, so that projectiles from the same weapon and of the same class only use one light source object
+                    if (!projectileLights[projectileClass.getName()]) {
+                        projectileLights[projectileClass.getName()] = new lights.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), vec.NULL3, [p.getVisualModel()]);
+                    } else {
+                        projectileLights[projectileClass.getName()].addEmittingObject(p.getVisualModel());
+                    }
                 }
                 // create the counter-force affecting the firing ship
                 this._spacecraft.getPhysicalModel().applyForceAndTorque(
@@ -964,9 +974,11 @@ define([
                         );
                 result++;
             }
-            for (projClassName in projectileLights) {
-                if (projectileLights.hasOwnProperty(projClassName)) {
-                    scene.addPointLightSource(projectileLights[projClassName], constants.PROJECTILE_LIGHT_PRIORITY);
+            if (_dynamicLights) {
+                for (projClassName in projectileLights) {
+                    if (projectileLights.hasOwnProperty(projClassName)) {
+                        scene.addPointLightSource(projectileLights[projClassName], constants.PROJECTILE_LIGHT_PRIORITY);
+                    }
                 }
             }
             if (!shipSoundSource) {

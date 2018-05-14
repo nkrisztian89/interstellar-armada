@@ -22,6 +22,7 @@
  * @param classes Used to notify classes about graphics settings change
  * @param equipment Used to notify it about graphics settings change
  * @param spacecraft Used to notify it about graphics settings change
+ * @param explosion Used to notify it about graphics settings change
  * @param battle Used to notify HUD element classes about graphics settings change
  */
 define([
@@ -37,9 +38,12 @@ define([
     "armada/logic/classes",
     "armada/logic/equipment",
     "armada/logic/spacecraft",
+    "armada/logic/explosion",
     "armada/screens/battle",
     "utils/polyfill"
-], function (utils, application, components, screens, managedGL, game, strings, armadaScreens, graphics, classes, equipment, spacecraft, battle) {
+], function (utils,
+        application, components, screens, managedGL, game,
+        strings, armadaScreens, graphics, classes, equipment, spacecraft, explosion, battle) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -329,6 +333,7 @@ define([
         classes.handleGraphicsSettingsChanged();
         equipment.handleGraphicsSettingsChanged();
         spacecraft.handleGraphicsSettingsChanged();
+        explosion.handleGraphicsSettingsChanged();
         battle.handleGraphicsSettingsChanged();
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };
