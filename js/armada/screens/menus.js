@@ -44,6 +44,7 @@ define([
             _mainMenuOptions = [{
                     id: strings.MAIN_MENU.NEW_GAME.name,
                     action: function () {
+                        analytics.sendEvent("newgame");
                         audio.resume();
                         game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
                     }
@@ -245,7 +246,7 @@ define([
                                         }
                                     }, {
                                         caption: strings.get(strings.INGAME_MENU.RESTART_RESTART),
-                                        action: function () {
+                                        action: function () {                                            
                                             game.closeSuperimposedScreen();
                                             game.closeSuperimposedScreen();
                                             game.getScreen().startNewBattle({
@@ -269,12 +270,12 @@ define([
                                         }
                                     }, {
                                         caption: strings.get(strings.INGAME_MENU.QUIT_TO_MISSIONS),
-                                        action: function () {
+                                        action: function () {   
                                             game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
                                         }
                                     }, {
                                         caption: strings.get(strings.INGAME_MENU.QUIT_TO_MAIN_MENU),
-                                        action: function () {
+                                        action: function () {    
                                             game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
                                         }
                                     }

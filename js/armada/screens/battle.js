@@ -172,6 +172,11 @@ define([
              */
             _handleResize,
             /**
+             * Stores the parameters of the last sent analytics event
+             * @type Object
+             */
+            _analyticsState,
+            /**
              * The object that will be returned as this module
              * @type Battle
              */
@@ -3699,6 +3704,8 @@ define([
         var
                 /**@type Boolean*/ victory,
                 /**@type Spacecraft*/ craft,
+                /**@type Number */ time,
+                /**@type Object */ analyticsParams,
                 /**@type ModelDebugStats*/ mainStats, shadowStats;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
@@ -3752,7 +3759,23 @@ define([
                     _timeSinceGameStateChanged += dt;
                     if (_timeSinceGameStateChanged >= config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = _mission.getState() === missions.MissionState.COMPLETED;
-                        analytics.sendEvent(victory ? "win" : "lose", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty, time: Math.round(_elapsedTime / 1000)});
+                        time = Math.round(_elapsedTime / 1000);
+                        analyticsParams = {difficulty: _difficulty, time: time};
+                        if (_analyticsState) {
+                            if (_analyticsState.win) {
+                                analyticsParams.prevwin = true;
+                            } else {
+                                analyticsParams.prevlose = true;
+                            }
+                            analyticsParams.prevdifficulty = _analyticsState.difficulty;
+                            analyticsParams.prevtime = _analyticsState.time;
+                        }
+                        analytics.sendEvent(victory ? "win" : "lose", [utils.getFilenameWithoutExtension(_missionSourceFilename)], analyticsParams);
+                        _analyticsState = {
+                            win: victory,
+                            difficulty: _difficulty,
+                            time: time
+                        };
                         if (craft && craft.isAlive()) {
                             this.queueHUDMessage({
                                 text: strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_FAIL),
@@ -3833,6 +3856,7 @@ define([
             _demoMode = params.demoMode;
         }
         if (!_demoMode) {
+            _analyticsState = null;
             analytics.sendEvent("start", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty});
         }
         _clearData();
