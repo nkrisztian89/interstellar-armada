@@ -564,6 +564,7 @@ define(function () {
     };
     /**
      * Returns the angle of the a 2D vector and the X unit vector
+     * Returns NaN for null vectors!
      * @param {Number} x The x coordinate of the vector
      * @param {Number} y The y coordinate of the vector
      * @returns {Number} The angle in radian.
@@ -573,6 +574,7 @@ define(function () {
     };
     /**
      * Returns the angle of the a 2D vector and the Y unit vector
+     * Returns NaN for null vectors!
      * @param {Number} x The x coordinate of the vector
      * @param {Number} y The y coordinate of the vector
      * @returns {Number} The angle in radian.
@@ -595,6 +597,7 @@ define(function () {
     /**
      * Returns the angle of the a 2D vector and the X unit vector. This cannot return
      * NaN accidentally (with the cosine slightly out of range due to float inaccuracy)
+     * Still, (consistently) returns NaN for null vectors!
      * @param {Number} x The x coordinate of the vector
      * @param {Number} y The y coordinate of the vector
      * @returns {Number} The angle in radian.
@@ -605,6 +608,7 @@ define(function () {
     /**
      * Returns the angle of the a 2D vector and the Y unit vector. This cannot return
      * NaN accidentally (with the cosine slightly out of range due to float inaccuracy)
+     * Still, (consistently) returns NaN for null vectors!
      * @param {Number} x The x coordinate of the vector
      * @param {Number} y The y coordinate of the vector
      * @returns {Number} The angle in radian.
