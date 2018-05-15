@@ -2689,17 +2689,16 @@ define([
                     (position2D[0] / canvas.width - 0.5) * 2,
                     (0.5 - position2D[1] / canvas.height) * 2
                 ];
-                angle = vec.angle2y(position2D[0] * canvas.width / canvas.height, position2D[1]);
                 if (mouseInputInterpreter.isMouseDisplaced()) {
                     _hudStillCursor.hide();
                     _hudTurnCursor.show();
                     _hudTurnCursor.setPosition(position2D);
+                    angle = vec.angle2y(position2D[0] * canvas.width / canvas.height, position2D[1]);
                     _hudTurnCursor.setAngle(angle * ((position2D[0] < 0) ? -1 : 1));
                 } else {
                     _hudStillCursor.show();
                     _hudTurnCursor.hide();
                     _hudStillCursor.setPosition(position2D);
-                    _hudStillCursor.setAngle(angle * ((position2D[0] < 0) ? -1 : 1));
                 }
             } else {
                 _hudStillCursor.hide();

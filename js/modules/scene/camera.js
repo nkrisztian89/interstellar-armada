@@ -1056,7 +1056,7 @@ define([
      * in point-to mode, as a fallback base orientation
      */
     CameraOrientationConfiguration.prototype._calculateWorldOrientationMatrix = function (worldPositionMatrix, positionFollowedObjectOrientationMatrix) {
-        var baseOrientationMatrix, dirTowardsObject, axis,
+        var baseOrientationMatrix, dirTowardsObject, axis, v,
                 calculateRelative = function (followedOrientationMatrix) {
                     // look in direction y instead of z:
                     mat.setProd3x3SubOf4(this._worldOrientationMatrix,
@@ -1119,7 +1119,9 @@ define([
                         } else {
                             baseOrientationMatrix = mat.IDENTITY4;
                         }
-                        this._alpha = vec.angle2yCapped(dirTowardsObject[0], dirTowardsObject[1]);
+                        this._alpha = ((dirTowardsObject[0] !== 0) || (dirTowardsObject[1] !== 0)) ?
+                                vec.angle2yCapped(dirTowardsObject[0], dirTowardsObject[1]) :
+                                0;
                         if (dirTowardsObject[0] < 0) {
                             this._alpha = -this._alpha;
                         }
