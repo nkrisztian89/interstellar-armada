@@ -111,6 +111,7 @@ define([
                                 buttons: [{
                                         caption: strings.get(strings.FIRST_RUN_NOTE.BUTTON),
                                         action: function () {
+                                            audio.resume();
                                             game.closeSuperimposedScreen();
                                             audio.playMusic(armadaScreens.MENU_THEME);
                                             analytics.login();
