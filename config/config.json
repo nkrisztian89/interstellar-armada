@@ -1,8 +1,8 @@
 {
-    "version": "0.4.5-dev:739 (2018.05.18.)",
+    "version": "0.4.5:740 (2018.05.18.)",
     "debugVersion": false,
     "logVerbosity": 1,
-    "releases": ["0.4.3", "0.4.4"],
+    "releases": ["0.4.3", "0.4.4", "0.4.5"],
     "folders": {
         "config": "config/",
         "strings": "{{config}}/strings/",
