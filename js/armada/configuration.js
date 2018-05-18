@@ -1674,7 +1674,7 @@ define([
      */
     ConfigurationContext.prototype.getHUDSetting = function (settingDefinitionObject) {
         var local;
-        if (!this._hudSettings[settingDefinitionObject.name]) {
+        if (this._hudSettings[settingDefinitionObject.name] === undefined) {
             if (localStorage[LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name] !== undefined) {
                 local = types.getValueOfTypeFromLocalStorage(settingDefinitionObject.type, LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name);
             }
@@ -1695,10 +1695,12 @@ define([
      * Removes all local overrides for HUD settings, resetting them to their default values (coming from the settings JSON)
      */
     ConfigurationContext.prototype.resetHUDSettings = function () {
-        var i, keys = Object.keys(BATTLE_SETTINGS.HUD);
+        var i, name, keys = Object.keys(BATTLE_SETTINGS.HUD);
         for (i = 0; i < keys.length; i++) {
             if (typeof BATTLE_SETTINGS.HUD[keys[i]] === "object") {
-                localStorage.removeItem(LOCAL_STORAGE_HUD_PREFIX + BATTLE_SETTINGS.HUD[keys[i]].name);
+                name = BATTLE_SETTINGS.HUD[keys[i]].name;
+                localStorage.removeItem(LOCAL_STORAGE_HUD_PREFIX + name);
+                this._hudSettings[name] = this._settings[BATTLE_SETTINGS.HUD.name][name];
             }
         }
     };
