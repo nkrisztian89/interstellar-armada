@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2018 Krisztián Nagy
  * @file Provides functionality to load and access control configuration and settings for Interstellar Armada.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -12,6 +12,9 @@
 /**
  * @param application Used to check if the application is in debug mode.
  * @param control This module builds its game-specific functionality on the general control module
+ * @param keyboard Used to include keyboard input handling
+ * @param mouse Used to include mouse input handling
+ * @param gamepad Used to include joystick(/gamepad) input handling
  * @param cameraController This module uses the CameraController class made for SceneGraph
  * @param game To access screen-changing functionality
  * @param resources Used to access the sound effects triggered by controls
@@ -21,14 +24,17 @@
  */
 define([
     "modules/application",
-    "modules/control",
+    "modules/control/control",
+    "modules/control/keyboard",
+    "modules/control/mouse",
+    "modules/control/gamepad",
     "modules/camera-controller",
     "modules/game",
     "modules/media-resources",
     "armada/screens/shared",
     "armada/strings",
     "armada/configuration"
-], function (application, control, cameraController, game, resources, armadaScreens, strings, config) {
+], function (application, control, keyboard, mouse, gamepad, cameraController, game, resources, armadaScreens, strings, config) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -72,7 +78,9 @@ define([
              * @type MouseInputInterpreter
              */
             _mouseInputInterpreter;
-    control.setModulePrefix("interstellarArmada_control_");
+    keyboard.setModulePrefix("interstellarArmada_control_");
+    mouse.setModulePrefix("interstellarArmada_control_");
+    gamepad.setModulePrefix("interstellarArmada_control_");
     // #########################################################################
     /**
      * Creates a general controller object.
@@ -424,9 +432,9 @@ define([
          * @type Boolean
          */
         this._mouseTurningDisabled = false;
-        this.registerInputInterpreterType(KEYBOARD_NAME, control.KeyboardInputInterpreter);
-        this.registerInputInterpreterType(MOUSE_NAME, control.MouseInputInterpreter);
-        this.registerInputInterpreterType(JOYSTICK_NAME, control.GamepadInputInterpreter);
+        this.registerInputInterpreterType(KEYBOARD_NAME, keyboard.KeyboardInputInterpreter);
+        this.registerInputInterpreterType(MOUSE_NAME, mouse.MouseInputInterpreter);
+        this.registerInputInterpreterType(JOYSTICK_NAME, gamepad.GamepadInputInterpreter);
         this.registerControllerType(GENERAL_CONTROLLER_NAME, GeneralController);
         this.registerControllerType(FIGHTER_CONTROLLER_NAME, FighterController);
         this.registerControllerType(CAMERA_CONTROLLER_NAME, cameraController.CameraController);
@@ -549,7 +557,7 @@ define([
         GENERAL_CONTROLLER_NAME: GENERAL_CONTROLLER_NAME,
         FIGHTER_CONTROLLER_NAME: FIGHTER_CONTROLLER_NAME,
         CAMERA_CONTROLLER_NAME: CAMERA_CONTROLLER_NAME,
-        KeyBinding: control.KeyBinding,
+        KeyBinding: keyboard.KeyBinding,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
         loadSettingsFromLocalStorage: _context.loadSettingsFromLocalStorage.bind(_context),

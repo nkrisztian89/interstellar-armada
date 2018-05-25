@@ -18,7 +18,7 @@
 define([
     "utils/types",
     "modules/application",
-    "modules/control",
+    "modules/control/control",
     "modules/scene/camera"
 ], function (types, application, control, camera) {
     "use strict";
