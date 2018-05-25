@@ -1056,7 +1056,7 @@ define([
      * in point-to mode, as a fallback base orientation
      */
     CameraOrientationConfiguration.prototype._calculateWorldOrientationMatrix = function (worldPositionMatrix, positionFollowedObjectOrientationMatrix) {
-        var baseOrientationMatrix, dirTowardsObject, axis, v,
+        var baseOrientationMatrix, dirTowardsObject, axis,
                 calculateRelative = function (followedOrientationMatrix) {
                     // look in direction y instead of z:
                     mat.setProd3x3SubOf4(this._worldOrientationMatrix,
