@@ -5,7 +5,7 @@ module.exports = function (grunt) {
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        requirejs: {
+        _requirejs: {
             compile: {
                 options: {
                     baseUrl: "js",
@@ -21,16 +21,16 @@ module.exports = function (grunt) {
                 }
             }
         },
-        rawClean: {
+        _clean: {
             dev: ["js/main-optimized.js", "css/*.map", "css/general.css"]
         },
-        eslint: {
+        _eslint: {
             options: {
                 configFile: ".eslintrc.js"
             },
             target: ["js/"]
         },
-        sass: {
+        _sass: {
             dev: {
                 options: {
                     style: "expanded"
@@ -49,7 +49,7 @@ module.exports = function (grunt) {
                 }
             }
         },
-        replace: {
+        _replace: {
             dist: {
                 options: {
                     patterns: [
@@ -219,12 +219,17 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-sass');
     grunt.loadNpmTasks('grunt-replace');
     grunt.loadNpmTasks('grunt-eslint');
-    // Tasks
+    // "Private" tasks (meant only to be used to construct the pulbic tasks, not to be run directly)
+    grunt.renameTask('clean', '_clean');
+    grunt.renameTask('eslint', '_eslint');
+    grunt.renameTask('replace', '_replace');
+    grunt.renameTask('sass', '_sass');
+    grunt.renameTask('requirejs', '_requirejs');
+    // "Public" tasks (meant to be run directly)
     grunt.registerTask('default', ['build']);
-    grunt.registerTask('build', ['sass:dist', 'replace:preOptimize', 'requirejs', 'replace:dist', 'replace:optimize', 'replace:postOptimize']);
-    grunt.renameTask('clean', 'rawClean');
-    grunt.registerTask('clean', ['rawClean:dev', 'replace:dev']);
-    grunt.registerTask('lint', ['eslint']);
-    grunt.registerTask('dev-build', ['sass:dev']);
-    grunt.registerTask('css-build', ['sass:dist']);
+    grunt.registerTask('build', ['_sass:dist', '_replace:preOptimize', '_requirejs', '_replace:dist', '_replace:optimize', '_replace:postOptimize']);
+    grunt.registerTask('clean', ['_clean:dev', '_replace:dev']);
+    grunt.registerTask('lint', ['_eslint']);
+    grunt.registerTask('dev-build', ['_sass:dev']);
+    grunt.registerTask('css-build', ['_sass:dist']);
 };
