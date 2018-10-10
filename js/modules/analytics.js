@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Krisztián Nagy
+ * Copyright 2017-2018 Krisztián Nagy
  * @file This is a simple analytics module that sends requests to an analytics backend
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -37,7 +37,7 @@ define([
              * Whether analytics reporting is currently enabled
              * @type Boolean
              */
-            _enabled = true,
+            _enabled = false,
             /**
              * Whether the login request has already been sent to the analytics backend
              * @type Boolean

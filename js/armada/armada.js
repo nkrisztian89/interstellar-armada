@@ -86,7 +86,9 @@ define([
         missions.loadConfigurationFromJSON(configJSON.logic);
         control.loadConfigurationFromJSON(configJSON.control);
         _progressBar.value = 1;
-        analytics.init(configJSON.analyticsUrl);
+        if (configJSON.analyticsEnabled) {
+            analytics.init(configJSON.analyticsUrl);
+        }
         game.showError = function (message, severity, details) {
             analytics.sendEvent("error", undefined, {message: (message.length > 120) ? message.substr(0, 120) + "..." : message});
             showError(message, severity, details);
