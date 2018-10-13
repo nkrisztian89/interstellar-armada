@@ -1204,6 +1204,7 @@
             },
             {
                 "type": "touch",
+                "optional": true,
                 "bindings": [
                     {
                         "action": "quit",

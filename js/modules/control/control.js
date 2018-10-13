@@ -1020,7 +1020,7 @@ define([
             for (i = 0, n = dataJSON.inputDevices.length; i < n; i++) {
                 if (this._inputInterpreterTypes[dataJSON.inputDevices[i].type]) {
                     this.addInputInterpreter(new this._inputInterpreterTypes[dataJSON.inputDevices[i].type](dataJSON.inputDevices[i]));
-                } else {
+                } else if (!dataJSON.inputDevices[i].optional) {
                     application.showError("Attempting to load unregistered input device type: '" + dataJSON.inputDevices[i].type + "'!",
                             application.ErrorSeverity.SEVERE,
                             (Object.keys(this._inputInterpreterTypes).length > 0) ?

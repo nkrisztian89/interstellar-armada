@@ -725,5 +725,12 @@ define(function () {
         var d = b * b - 4 * a * c;
         return (d >= 0) ? ((Math.sqrt(d) - b) / (2 * a)) : NaN;
     };
+    /**
+     * Returns whether the current environment supports touch events
+     * @returns {Boolean}
+     */
+    exports.areTouchEventsSupported = function () {
+        return "ontouchstart" in window;
+    };
     return exports;
 });

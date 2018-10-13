@@ -10,6 +10,7 @@
 /*global define, Element, localStorage, document, window, navigator */
 
 /**
+ * @param utils Used to check for touch event support
  * @param application Used to check if the application is in debug mode.
  * @param control This module builds its game-specific functionality on the general control module
  * @param keyboard Used to include keyboard input handling
@@ -24,6 +25,7 @@
  * @param config Used to access settings
  */
 define([
+    "utils/utils",
     "modules/application",
     "modules/control/control",
     "modules/control/keyboard",
@@ -36,7 +38,7 @@ define([
     "armada/screens/shared",
     "armada/strings",
     "armada/configuration"
-], function (application, control, keyboard, mouse, gamepad, touch, cameraController, game, resources, armadaScreens, strings, config) {
+], function (utils, application, control, keyboard, mouse, gamepad, touch, cameraController, game, resources, armadaScreens, strings, config) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -439,7 +441,9 @@ define([
         this.registerInputInterpreterType(KEYBOARD_NAME, keyboard.KeyboardInputInterpreter);
         this.registerInputInterpreterType(MOUSE_NAME, mouse.MouseInputInterpreter);
         this.registerInputInterpreterType(JOYSTICK_NAME, gamepad.GamepadInputInterpreter);
-        this.registerInputInterpreterType(TOUCH_NAME, touch.TouchInputInterpreter);
+        if (utils.areTouchEventsSupported()) {
+            this.registerInputInterpreterType(TOUCH_NAME, touch.TouchInputInterpreter);
+        }
         this.registerControllerType(GENERAL_CONTROLLER_NAME, GeneralController);
         this.registerControllerType(FIGHTER_CONTROLLER_NAME, FighterController);
         this.registerControllerType(CAMERA_CONTROLLER_NAME, cameraController.CameraController);
