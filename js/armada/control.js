@@ -15,6 +15,7 @@
  * @param keyboard Used to include keyboard input handling
  * @param mouse Used to include mouse input handling
  * @param gamepad Used to include joystick(/gamepad) input handling
+ * @param touch Used to include touch input handling
  * @param cameraController This module uses the CameraController class made for SceneGraph
  * @param game To access screen-changing functionality
  * @param resources Used to access the sound effects triggered by controls
@@ -28,13 +29,14 @@ define([
     "modules/control/keyboard",
     "modules/control/mouse",
     "modules/control/gamepad",
+    "modules/control/touch",
     "modules/camera-controller",
     "modules/game",
     "modules/media-resources",
     "armada/screens/shared",
     "armada/strings",
     "armada/configuration"
-], function (application, control, keyboard, mouse, gamepad, cameraController, game, resources, armadaScreens, strings, config) {
+], function (application, control, keyboard, mouse, gamepad, touch, cameraController, game, resources, armadaScreens, strings, config) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -43,6 +45,7 @@ define([
             MOUSE_NAME = "mouse",
             JOYSTICK_NAME = "joystick",
             GAMEPAD_NAME = JOYSTICK_NAME,
+            TOUCH_NAME = "touch",
             GENERAL_CONTROLLER_NAME = "general",
             FIGHTER_CONTROLLER_NAME = "fighter",
             CAMERA_CONTROLLER_NAME = "camera",
@@ -81,6 +84,7 @@ define([
     keyboard.setModulePrefix("interstellarArmada_control_");
     mouse.setModulePrefix("interstellarArmada_control_");
     gamepad.setModulePrefix("interstellarArmada_control_");
+    touch.setModulePrefix("interstellarArmada_control_");
     // #########################################################################
     /**
      * Creates a general controller object.
@@ -435,6 +439,7 @@ define([
         this.registerInputInterpreterType(KEYBOARD_NAME, keyboard.KeyboardInputInterpreter);
         this.registerInputInterpreterType(MOUSE_NAME, mouse.MouseInputInterpreter);
         this.registerInputInterpreterType(JOYSTICK_NAME, gamepad.GamepadInputInterpreter);
+        this.registerInputInterpreterType(TOUCH_NAME, touch.TouchInputInterpreter);
         this.registerControllerType(GENERAL_CONTROLLER_NAME, GeneralController);
         this.registerControllerType(FIGHTER_CONTROLLER_NAME, FighterController);
         this.registerControllerType(CAMERA_CONTROLLER_NAME, cameraController.CameraController);

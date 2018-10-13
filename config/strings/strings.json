@@ -513,7 +513,16 @@
     "inputDevice": {
         "keyboard": "Keyboard",
         "mouse": "Mouse",
-        "joystick": "Joystick"
+        "joystick": "Joystick",
+        "touch": "Touchscreen"
+    },
+    "touchArea": {
+        "default": "an",
+        "FULL": "any",
+        "top-left": "the top left",
+        "top-right": "the top right",
+        "bottom-right": "the bottom right",
+        "bottom-left": "the bottom left"
     },
     "controls": {
         "back": "Back to menu",

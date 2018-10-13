@@ -31,6 +31,20 @@
         "positiveDirection": "hátra/jobbra",
         "negativeDirection": "előre/balra"
     },
+    "touch": {
+        "leftDirection": "balra",
+        "rightDirection": "jobbra",
+        "upDirection": "felfelé",
+        "downDirection": "lefelé",
+        "tap": "koppintás (a képernyő {area} részén)",
+        "longTap": "hosszú koppintás (a képernyő {area} részén)",
+        "twoPointTap": "koppintás két ujjal (a képernyő {area} részén)",
+        "threePointTap": "koppintás három ujjal (a képernyő {area} részén)",
+        "swipe": "elhúzás {direction} (a képernyő {area} részén)",
+        "hold": "koppintás és tartás (a képernyő {area} részén)",
+        "holdDirection": "elhúzás {direction} és tartás (a képernyő {area} részén)",
+        "slide": "csúsztatás {direction} (a képernyő {area} részén)"
+    },
     "firstRunNote": {
         "header": "Üdvözöllek!",
         "message": "Ez a Nagy Krisztián által fejlesztett Interstellar Armada: Galactic Ace böngésző alapú 3D űrharc szimulátor előzetes kiadása.<br><br>Kérlek vedd figyelembe, hogy <strong>a játék fejlesztés alatt áll</strong> - semmi sem végleges benne, több funkció még hiányzik, programhibák és teljesítményproblémák előfordulhatnak.<br><br>A játék <strong>névtelen statisztikai adatokat gyűjt</strong> kizárólag fejlesztési célra (mint például a játékegyensúly javítása vagy a legtöbbet használt funkciókra fókuszálás), melyek nem kapcsolódnak semmilyen személyes adathoz vagy IP címhez. Ez a funckió a beállításokban kikapcsolható.<br><br>A legjobb élmény érdekében <strong>kérlek a {chrome} (vagy Chromium) böngészőt használd</strong>, mivel az előzetes tesztek során messze megelőzte a vetélytársait, és jelenleg az egyetlen böngésző, ami a 3D hangzást problémamentesen támogatja. (a játék nem alapszik Chrome technológiákon, ezért ez a helyzet a jövőben változhat)<br><br>Ha tetszik a játék, keresd fel a {facebook} oldalt, ahol követheted a fejlesztés előrehaladását!<br><br>Köszönöm, hogy kipróbálod, és élvezetes játékot kívánok!",
@@ -534,7 +548,16 @@
     "inputDevice": {
         "keyboard": "Billentyűzet",
         "mouse": "Egér",
-        "joystick": "Joystick"
+        "joystick": "Joystick",
+        "touch": "Érintőképernyő"
+    },
+    "touchArea": {
+        "default": "egy",
+        "FULL": "bármelyik",
+        "top-left": "bal felső",
+        "top-right": "jobb felső",
+        "bottom-right": "jobb alsó",
+        "bottom-left": "bal alsó"
     },
     "controls": {
         "back": "Vissza a menübe",

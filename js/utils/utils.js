@@ -55,6 +55,9 @@ define(function () {
             // ------------------------------------------------------------------------------
             // constants
             EMPTY_STRING = "",
+            UNDERSCORE = "_",
+            SPACE = " ",
+            DASH = "-",
             EMPTY_ARRAY = [],
             EMPTY_OBJECT = {},
             NUMBER_THOUSANDS_DELIMITER = " ",
@@ -415,6 +418,21 @@ define(function () {
         return defaultValue || null;
     };
     /**
+     * Returns a value that is guaranteed to be among the possible values of an enumeration object.
+     * @param {Object} enumObject
+     * @param {String} key The key for the value - this will be converted to a constant name!
+     * @param {any} [defaultValue]
+     * @returns {any}
+     */
+    exports.getSafeEnumValueForKey = function (enumObject, key, defaultValue) {
+        defaultValue = defaultValue ? exports.getSafeEnumValue(enumObject, defaultValue) : null;
+        key = exports.constantName(key);
+        if (enumObject.hasOwnProperty(key)) {
+            return enumObject[key];
+        }
+        return defaultValue || null;
+    };
+    /**
      * Returns an array of the possible values of an object serving as an enum.
      * @param {Object} enumObject
      * @returns {Array}
@@ -513,7 +531,7 @@ define(function () {
                         exports.getDelimitedStringForNumber(Math.round(massInKilograms / 1000)) + " t");
     };
     /**
-     * Converts the string to all uppercase and replaces spaces with underscores as well as inserts underscores before uppercase letters
+     * Converts the string to all uppercase and replaces spaces and dashes with underscores as well as inserts underscores before uppercase letters
      * @param {String} string
      * @returns {String}
      */
@@ -521,9 +539,9 @@ define(function () {
         var result = "", i;
         for (i = 0; i < string.length; i++) {
             if (string[i].match(/[A-Z]/)) {
-                result += "_";
+                result += UNDERSCORE;
             }
-            result += (string[i] === " ") ? "_" : string[i].toUpperCase();
+            result += ((string[i] === SPACE) || (string[i] === DASH)) ? UNDERSCORE : string[i].toUpperCase();
         }
         return result;
     };

@@ -1201,6 +1201,105 @@
                         "button": 5
                     }
                 ]
+            },
+            {
+                "type": "touch",
+                "bindings": [
+                    {
+                        "action": "quit",
+                        "type": "three-point-tap"
+                    }, {
+                        "action": "fire",
+                        "type": "hold",
+                        "area": "bottom-right"
+                    }, {
+                        "action": "nextNearestHostileTarget",
+                        "type": "tap",
+                        "area": "top-right"
+                    }, {
+                        "action": "previousNearestHostileTarget",
+                        "type": "swipe",
+                        "direction": "left",
+                        "area": "top-right"
+                    }, {
+                        "action": "nextNearestNonHostileTarget",
+                        "type": "long-tap",
+                        "area": "top-right"
+                    }, {
+                        "action": "jumpOut",
+                        "type": "two-point-tap",
+                        "area": "top-left"
+                    }, {
+                        "action": "toggleCruise",
+                        "type": "swipe",
+                        "direction": "right",
+                        "area": "top-left"
+                    }, {
+                        "action": "resetSpeed",
+                        "type": "tap",
+                        "area": "top-left"
+                    }, {
+                        "action": "yawLeft",
+                        "type": "hold",
+                        "direction": "left",
+                        "area": "bottom-left",
+                        "range": 0.2
+                    }, {
+                        "action": "yawRight",
+                        "type": "hold",
+                        "direction": "right",
+                        "area": "bottom-left",
+                        "range": 0.2
+                    }, {
+                        "action": "pitchDown",
+                        "type": "hold",
+                        "direction": "down",
+                        "area": "bottom-left",
+                        "range": 0.2
+                    }, {
+                        "action": "pitchUp",
+                        "type": "hold",
+                        "direction": "up",
+                        "area": "bottom-left",
+                        "range": 0.2
+                    }, {
+                        "action": "forward",
+                        "type": "slide",
+                        "direction": "up",
+                        "area": "top-left",
+                        "range": 0.2
+                    }, {
+                        "action": "reverse",
+                        "type": "slide",
+                        "direction": "down",
+                        "area": "top-left",
+                        "range": 0.2
+                    }, {
+                        "action": "strafeLeft",
+                        "type": "hold",
+                        "direction": "left",
+                        "area": "bottom-right",
+                        "range": 0.2
+                    }, {
+                        "action": "strafeRight",
+                        "type": "hold",
+                        "direction": "right",
+                        "area": "bottom-right",
+                        "range": 0.2
+                    }, {
+                        "action": "raise",
+                        "type": "hold",
+                        "direction": "up",
+                        "area": "bottom-right",
+                        "range": 0.2
+                    }, {
+                        "action": "lower",
+                        "type": "hold",
+                        "direction": "down",
+                        "area": "bottom-right",
+                        "range": 0.2
+                    }
+                ]
             }
         ]
     }

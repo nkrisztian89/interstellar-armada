@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2018 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -311,6 +311,10 @@ define([
         DEVICE_KEYBOARD: {name: "inputDevice.keyboard"},
         DEVICE_MOUSE: {name: "inputDevice.mouse"},
         DEVICE_JOYSTICK: {name: "inputDevice.joystick"}
+    };
+    strings.TOUCH_AREA = {
+        PREFIX: {name: "touchArea.", optional: true},
+        DEFAULT: {name: "touchArea.default"}
     };
     strings.CONTROLS = {
         BACK: {name: "controls.back"},
