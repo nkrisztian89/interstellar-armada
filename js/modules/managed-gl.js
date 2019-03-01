@@ -911,6 +911,11 @@ define([
          * @type Number
          */
         this._filledVectors = 0;
+        /**
+         * A flag to mark if the data referenced by this vertex buffer has changed since last update to the GPU
+         * @type Boolean
+         */
+        this._dirty = false;
     }
     /**
      * Returns the name of this vertex buffer.
@@ -974,6 +979,12 @@ define([
         this._data = null;
     };
     /**
+     * Mark that the vertex buffer data has changed and needs to be updated on the GPU
+     */
+    VertexBuffer.prototype.markDirty = function () {
+        this._dirty = true;
+    };
+    /**
      * Creates the needed VBO in the supplied context and sends over the data (set
      * by setData) using it to the GPU, then erases the original data array. (unless otherwise specified)
      * @param {String} contextName
@@ -1007,7 +1018,7 @@ define([
         }
         var location = this._locations[shader.getName()];
         if (location >= 0) {
-            if (context.getBoundVertexBuffer(location) !== this) {
+            if ((context.getBoundVertexBuffer(location) !== this) || this._dirty) {
                 application.log_DEBUG("Binding " + (instanced ? "instance" : "vertex") + " buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
                 if (instanced) {
                     this.loadToGPUMemory(context.getName(), context.gl, true);
@@ -1015,6 +1026,7 @@ define([
                     context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._ids[context.getName()]);
                 }
                 context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
+                this._dirty = false;
             } 
             context.setBoundVertexBuffer(location, this, instanced);
         }
@@ -1813,6 +1825,7 @@ define([
             } else {
                 this._instanceAttributeBuffers[index][attributeName].resize(instanceCount);
                 this._instanceAttributeBuffers[index][attributeName].resetFilledVectors();
+                this._instanceAttributeBuffers[index][attributeName].markDirty();
             }
         }
     };
