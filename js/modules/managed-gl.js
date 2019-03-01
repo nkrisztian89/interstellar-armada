@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Provides an interface to interact with WebGL in a managed way. Offers
  * rather low level functionality, but using it is still much more transparent 
  * than accessing WebGL directly.
@@ -1006,25 +1006,17 @@ define([
             this._locations[shader.getName()] = context.gl.getAttribLocation(shader.getIDForContext(context.getName()), this._name);
         }
         var location = this._locations[shader.getName()];
-        if ((location >= 0) && (context.getBoundVertexBuffer(location) !== this)) {
-            application.log_DEBUG("Binding " + (instanced ? "instance" : "vertex") + " buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
-            if (instanced) {
-                this.loadToGPUMemory(context.getName(), context.gl, true);
-            } else {
-                context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._ids[context.getName()]);
-            }
-            if (!context.getBoundVertexBuffer(location)) {
-                context.gl.enableVertexAttribArray(location);
-            }
-            context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
-            if (context.instancingExt) {
+        if (location >= 0) {
+            if (context.getBoundVertexBuffer(location) !== this) {
+                application.log_DEBUG("Binding " + (instanced ? "instance" : "vertex") + " buffer '" + this._name + "' to attribute location " + location + " in shader '" + shader.getName() + "'.", 3);
                 if (instanced) {
-                    context.instancingExt.vertexAttribDivisorANGLE(location, 1);
+                    this.loadToGPUMemory(context.getName(), context.gl, true);
                 } else {
-                    context.instancingExt.vertexAttribDivisorANGLE(location, 0);
+                    context.gl.bindBuffer(context.gl.ARRAY_BUFFER, this._ids[context.getName()]);
                 }
-            }
-            context.setBoundVertexBuffer(location, this);
+                context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
+            } 
+            context.setBoundVertexBuffer(location, this, instanced);
         }
     };
     /**
@@ -1039,7 +1031,6 @@ define([
                 location = this._locations[shaderName];
                 if (context.getBoundVertexBuffer(location) === this) {
                     context.setBoundVertexBuffer(location, null);
-                    context.gl.disableVertexAttribArray(location);
                 }
             }
         }
@@ -1745,10 +1736,11 @@ define([
      */
     ManagedShader.prototype.bindVertexBuffers = function (context) {
         var i;
+        context.clearVertexBufferUsage();
         for (i = 0; i < this._vertexAttributes.length; i++) {
             context.getVertexBuffer(this._vertexAttributes[i].name).bind(context, this);
         }
-        context.disableUnusedVertexBuffers(this._vertexAttributes.length);
+        context.disableUnusedVertexBuffers();
     };
     /**
      * If the shader has a uniform array variable with the given name, this will return the length
@@ -2001,10 +1993,25 @@ define([
          */
         this._boundVertexBuffers = [];
         /**
-         * The number of currently bound vertex buffers (active, enabled vertex attributes).
-         * @type Number
+         * Whether the vertex attribute arrays belonging to the vertex attributes
+         * are currently enabled (to check easily - prevent unnecessary 
+         * enable/disable GL calls)
+         * @type Boolean[]
          */
-        this._boundVertexBufferCount = 0;
+        this._vertexBuffersEnabled = [];
+        /**
+         * Flags marking which vertex attributes are to be used (have valid
+         * vertex buffers bound to them, their arrays should be enabled)
+         * @type Boolean[]
+         */
+        this._vertexBuffersUsed = [];
+        /**
+         * Flags marking which vertex attributes have a non-zero divisor
+         * set for them for instancing (to check easily - prevent unnecessary
+         * divisor setting GL calls)
+         * @type Boolean[]
+         */
+        this._vertexBuffersInstanced = [];
         /**
          * The associative array of frame buffer objects, stored by their names 
          * (which equal the names of their corresponding attributes) as the keys.
@@ -2391,26 +2398,54 @@ define([
     /**
      * Sets the vertex buffer as the currently bound buffer for the passed vertex
      * attribute index. (does not actually bind the buffer!)
+     * If the buffer was not enabled (and the passed vertexBuffer is not null)
+     * then also enables it (if null disables)
+     * If needed for instancing, changes the attribute divisor as well.
      * @param {Number} attributeLocation
-     * @param {VertexBuffer} vertexBuffer
+     * @param {VertexBuffer} [vertexBuffer]
+     * @param {Boolean} [instanced]
      */
-    ManagedGLContext.prototype.setBoundVertexBuffer = function (attributeLocation, vertexBuffer) {
+    ManagedGLContext.prototype.setBoundVertexBuffer = function (attributeLocation, vertexBuffer, instanced) {
         this._boundVertexBuffers[attributeLocation] = vertexBuffer;
-        if (vertexBuffer && (attributeLocation >= this._boundVertexBufferCount)) {
-            this._boundVertexBufferCount = attributeLocation + 1;
+        this._vertexBuffersUsed[attributeLocation] = !!vertexBuffer;
+        if (vertexBuffer) {
+            if (!this._vertexBuffersEnabled[attributeLocation]) {
+                this.gl.enableVertexAttribArray(attributeLocation);
+                this._vertexBuffersEnabled[attributeLocation] = true;
+            }
+            if (this.instancingExt) {
+                if (instanced !== this._vertexBuffersInstanced[attributeLocation]) {
+                    this.instancingExt.vertexAttribDivisorANGLE(attributeLocation, instanced ? 1 : 0);
+                    this._vertexBuffersInstanced[attributeLocation] = instanced;
+                }
+            }
+        } else {
+            if (this._vertexBuffersEnabled[attributeLocation]) {
+                this.gl.disableVertexAttribArray(attributeLocation);
+                this._vertexBuffersEnabled[attributeLocation] = false;
+            }
         }
     };
     /**
-     * Disables the bound vertex attribute buffers that belong to vertex attributes above the passed count.
-     * @param {Number} attributeCount
+     * Mark all vertex buffers as unused (call before binding the buffers for a new shader, so the proper arrays can be enabled/disabled)
      */
-    ManagedGLContext.prototype.disableUnusedVertexBuffers = function (attributeCount) {
+    ManagedGLContext.prototype.clearVertexBufferUsage = function () {
         var i;
-        for (i = attributeCount; i < this._boundVertexBufferCount; i++) {
-            this.gl.disableVertexAttribArray(i);
-            this._boundVertexBuffers[i] = null;
+        for (i = 0; i < this._vertexBuffersUsed.length; i++) {
+            this._vertexBuffersUsed[i] = false;
         }
-        this._boundVertexBufferCount = attributeCount;
+    };
+    /**
+     * Disables the vertex attribute buffers that are enabled but not marked as used
+     */
+    ManagedGLContext.prototype.disableUnusedVertexBuffers = function () {
+        var i;
+        for (i = 0; i < this._vertexBuffersEnabled.length; i++) {
+            if (this._vertexBuffersEnabled[i] && !this._vertexBuffersUsed[i]) {
+                this.gl.disableVertexAttribArray(i);
+                this._vertexBuffersEnabled[i] = false;
+            }
+        }
     };
     /**
      * Passes the data to the stored vertex buffer objects.
@@ -2572,8 +2607,10 @@ define([
         for (i = 0; i < this._boundVertexBuffers.length; i++) {
             this.gl.disableVertexAttribArray(i);
         }
-        this._boundVertexBufferCount = 0;
-        this._boundVertexBuffers = [];
+        this._boundVertexBuffers.length = 0;
+        this._vertexBuffersUsed.length = 0;
+        this._vertexBuffersEnabled.length = 0;
+        this._vertexBuffersInstanced.length = 0;
     };
     /**
      * Removes all the shader added to this managed context and deletes their underlying WebGL shaders.
