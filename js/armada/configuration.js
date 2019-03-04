@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1460,12 +1460,12 @@ define([
             type: "string"
         },
         /**
-         * The ID (resource name) of the song (MusicResource) that should play during battles while there are hostiles, but there is no
-         * fighting.
+         * The IDs (resource names) of the songs (MusicResource) that can be played during battles while there are hostiles, but there is no
+         * fighting. One of these is chosen randomly for each mission when it starts (unless there is a specific track set in the mission data)
          */
         ANTICIPATION_MUSIC: {
             name: "anticipationMusic",
-            type: "string"
+            type: _customTypes.STRING_ARRAY
         },
         /**
          * The IDs (resource names) of the songs (MusicResources) that can be played during battles while fighting is going on.

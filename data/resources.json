@@ -1456,11 +1456,17 @@
             "name": "anticipation",
             "sample": "anticipation.ogg"
         }, {
+            "name": "anticipation2",
+            "sample": "anticipation2.ogg"
+        }, {
             "name": "combat",
             "sample": "combat.ogg"
         }, {
             "name": "combat2",
             "sample": "combat2.ogg"
+        }, {
+            "name": "combat3",
+            "sample": "combat3.ogg"
         }, {
             "name": "victory",
             "sample": "victory.ogg"

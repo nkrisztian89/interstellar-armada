@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Implementation of loading and managing missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1869,6 +1869,12 @@ define([
          */
         this._ownsEnvironment = false;
         /**
+         * The ID (resource name) of the music that should play during anticipation phase within this mission (if not given, a random one is chosen
+         * from the available anticipation themes each time the mission starts)
+         * @type String
+         */
+        this._anticipationTheme = null;
+        /**
          * The ID (resource name) of the music that should play while in combat within this mission (if not given, a random one is chosen
          * from the available combat themes each time the mission starts)
          * @type String
@@ -1980,6 +1986,13 @@ define([
      */
     Mission.prototype.getName = function () {
         return this._name;
+    };
+    /**
+     * Returns the ID (resource name) of the music that should play during anticipation phase within this mission (if it is specified)
+     * @returns {String}
+     */
+    Mission.prototype.getAnticipationTheme = function () {
+        return this._anticipationTheme;
     };
     /**
      * Returns the ID (resource name) of the music that should play while in combat within this mission (if it is specified)
