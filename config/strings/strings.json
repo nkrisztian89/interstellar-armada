@@ -257,6 +257,9 @@
         "sandbox-50": {
             "name": "Sandbox 50"
         },
+        "shipcount": {
+            "name": "Ship count test"
+        },
         "libraTest": {
             "name": "Libra test"
         },

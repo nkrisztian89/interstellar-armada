@@ -1,0 +1,120 @@
+{
+    "description": "A performance test containing many ships that will move but not fire for a while, as they are far from each other.",
+    "environment": "mera",
+    "teams": [
+        "empire",
+        {
+            "name": "rebels",
+            "color": [0.2, 0.2, 0.8, 1.0]
+        }
+    ],
+    "views": [{
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, 3150, -80],
+            "rotations": ["x-75"]
+        }],
+    "spacecrafts": [{
+            "team": "empire",
+            "class": "falcon",
+            "squad": "alpha",
+            "count": 9,
+            "pilotedIndex": 1,
+            "ai": "fighter",
+            "position": [0, 0, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipments": ["player-tier2", "imperial-tier1", "imperial-tier1"]
+        }, {
+            "team": "empire",
+            "class": "falcon",
+            "squad": "beta",
+            "count": 9,
+            "ai": "fighter",
+            "position": [0, 0, 100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipment": "imperial-tier1"
+        }, {
+            "team": "empire",
+            "class": "falcon",
+            "squad": "gamma",
+            "count": 9,
+            "ai": "fighter",
+            "position": [0, 0, -100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipment": "imperial-tier1"
+        }, {
+            "team": "empire",
+            "class": "falcon",
+            "squad": "delta",
+            "count": 9,
+            "ai": "fighter",
+            "position": [0, 0, 200],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipment": "imperial-tier1"
+        }, {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": "wraith",
+            "count": 9,
+            "ai": "fighter",
+            "position": [0, 10200, 0],
+            "rotations": ["z+180"],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipment": "rebel"
+        }, {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": "serpent",
+            "count": 9,
+            "ai": "fighter",
+            "position": [0, 10200, 100],
+            "rotations": ["z+180"],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipment": "rebel"
+        }, {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": "phantom",
+            "count": 9,
+            "ai": "fighter",
+            "position": [0, 10200, -100],
+            "rotations": ["z+180"],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipment": "rebel"
+        }, {
+            "team": "rebels",
+            "class": "falcon",
+            "squad": "reaper",
+            "count": 9,
+            "ai": "fighter",
+            "position": [0, 10200, 200],
+            "rotations": ["z+180"],
+            "formation": {
+                "type": "wedge",
+                "spacing": [35, -35, 0]
+            },
+            "equipment": "rebel"
+        }]
+}
