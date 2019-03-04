@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Implementations of the various classes that represent all the different types of equipment to be added to spacecrafts
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -131,13 +131,6 @@ define([
             },
             // ------------------------------------------------------------------------------
             // constants
-            /**
-             * The list of valid thruster use identifiers
-             * @type String[]
-             */
-            THRUSTER_USES = [
-                ThrusterUse.FORWARD, ThrusterUse.REVERSE, ThrusterUse.STRAFE_LEFT, ThrusterUse.STRAFE_RIGHT, ThrusterUse.RAISE, ThrusterUse.LOWER,
-                ThrusterUse.YAW_LEFT, ThrusterUse.YAW_RIGHT, ThrusterUse.PITCH_UP, ThrusterUse.PITCH_DOWN, ThrusterUse.ROLL_LEFT, ThrusterUse.ROLL_RIGHT],
             /**
              * When adding the resources of a projectile (class) to a scene, this prefix is used in the ID to avoid adding the same one multiple
              * times
@@ -291,6 +284,19 @@ define([
             _parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
         }
         _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
+    }
+    /**
+     * Adds to the thruster burn level corresponding to a specific use command
+     * @param {Object} use The object storing the burn level and thruster list
+     * corresponding to the use command
+     * @param {Number} value The amount added to the thruster burn level.
+     */
+    function addThrusterBurn (use, value) {
+        var i;
+        use.burn += value;
+        for (i = 0; i < use.thrusters.length; i++) {
+            use.thrusters[i].addBurn(value);
+        }
     }
     // ##############################################################################
     /**
@@ -1690,7 +1696,6 @@ define([
      * driven by this propulsion (the physical model of the spacecraft)
      */
     function Propulsion(propulsionClass, drivenPhysicalObject) {
-        var i;
         /**
          * The class describing the general properties of this propulsion.
          * @type PropulsionClass
@@ -1708,14 +1713,21 @@ define([
          */
         this._thrusters = [];
         /**
-         * An associative array containing the burn level and nozzles associated
-         * with each thruster use command.
+         * The burn level and nozzles associated with each thruster use command.
          * @type Object
          */
-        this._thrusterUses = {};
-        for (i = 0; i < THRUSTER_USES.length; i++) {
-            this._thrusterUses[THRUSTER_USES[i]] = {burn: 0, thrusters: []};
-        }
+        this._forward = {burn: 0, thrusters: []};
+        this._reverse = {burn: 0, thrusters: []};
+        this._strafeLeft = {burn: 0, thrusters: []};
+        this._strafeRight = {burn: 0, thrusters: []};
+        this._raise = {burn: 0, thrusters: []};
+        this._lower = {burn: 0, thrusters: []};
+        this._yawLeft = {burn: 0, thrusters: []};
+        this._yawRight = {burn: 0, thrusters: []};
+        this._pitchUp = {burn: 0, thrusters: []};
+        this._pitchDown = {burn: 0, thrusters: []};
+        this._rollLeft = {burn: 0, thrusters: []};
+        this._rollRight = {burn: 0, thrusters: []};
         /**
          * Sound clip used for playing the thruster sound effect for this propulsion.
          * @type SoundClip
@@ -1801,17 +1813,57 @@ define([
         return this._class.getMaxTurnBurnLevel();
     };
     /**
+     * Returns the object storing the burn level and thruster list associated
+     * with the passed thruster use command
+     * @param {String} name
+     * @returns {Object}
+     */
+    Propulsion.prototype.getThrusterUse = function (name) {
+        switch(name) {
+            case ThrusterUse.FORWARD:
+                return this._forward;
+            case ThrusterUse.REVERSE:
+                return this._reverse;
+            case ThrusterUse.STRAFE_LEFT:
+                return this._strafeLeft;
+            case ThrusterUse.STRAFE_RIGHT:
+                return this._strafeRight;
+            case ThrusterUse.RAISE:
+                return this._raise;
+            case ThrusterUse.LOWER:
+                return this._lower;
+            case ThrusterUse.YAW_LEFT:
+                return this._yawLeft;
+            case ThrusterUse.YAW_RIGHT:
+                return this._yawRight;
+            case ThrusterUse.PITCH_UP:
+                return this._pitchUp;
+            case ThrusterUse.PITCH_DOWN:
+                return this._pitchDown;
+            case ThrusterUse.ROLL_LEFT:
+                return this._rollLeft;
+            case ThrusterUse.ROLL_RIGHT:
+                return this._rollRight;
+            default:
+                application.showError("Invalid thruster use specified: '" + name + "'!", application.ErrorSeverity.SEVERE);
+                return null;
+        }
+    };
+    /**
      * Creates and adds thruster objects to all the thruster slots in the passed
      * array
      * @param {ThrusterSlot[]} slots
      */
     Propulsion.prototype.addThrusters = function (slots) {
-        var i, j, thruster;
+        var i, j, thruster, use;
         for (i = 0; i < slots.length; i++) {
             thruster = new Thruster(this._class, slots[i]);
             this._thrusters.push(thruster);
             for (j = 0; j < slots[i].uses.length; j++) {
-                this._thrusterUses[slots[i].uses[j]].thrusters.push(thruster);
+                use = this.getThrusterUse(slots[i].uses[j]);
+                if (use) {
+                    use.thrusters.push(thruster);
+                }
             }
         }
     };
@@ -1827,36 +1879,71 @@ define([
         }
     };
     /**
-     * Return the currently set thruster burn level corresponding to the thrusters
-     * of the passed use command. (e.g. "forward")
-     * @param {String} use
-     * @returns {Number}
-     */
-    Propulsion.prototype.getThrusterBurn = function (use) {
-        return this._thrusterUses[use].burn;
-    };
-    /**
      * Adds to the thruster burn level corresponding to the thrusters of the passed 
      * use command.
+     * This is slow, only to be used in non-performance-critical cases, when
+     * the specific thruster use is not known. Otherwise, use the specific
+     * methods for each thruster use instead. (below)
      * @param {String} use The use identifying which thrusters' level to increase. 
      * e.g. "forward" or "yawLeft"
      * @param {Number} value The amount added to the thruster burn level.
      */
     Propulsion.prototype.addThrusterBurn = function (use, value) {
-        var i;
-        this._thrusterUses[use].burn += value;
-        for (i = 0; i < this._thrusterUses[use].thrusters.length; i++) {
-            this._thrusterUses[use].thrusters[i].addBurn(value);
-        }
+        addThrusterBurn(this.getThrusterUse(use), value);
+    };
+    Propulsion.prototype.addThrusterBurnForward = function (value) {
+        addThrusterBurn(this._forward, value);
+    };
+    Propulsion.prototype.addThrusterBurnReverse = function (value) {
+        addThrusterBurn(this._reverse, value);
+    };
+    Propulsion.prototype.addThrusterBurnLeft = function (value) {
+        addThrusterBurn(this._strafeLeft, value);
+    };
+    Propulsion.prototype.addThrusterBurnRight = function (value) {
+        addThrusterBurn(this._strafeRight, value);
+    };
+    Propulsion.prototype.addThrusterBurnUp = function (value) {
+        addThrusterBurn(this._raise, value);
+    };
+    Propulsion.prototype.addThrusterBurnDown = function (value) {
+        addThrusterBurn(this._lower, value);
+    };
+    Propulsion.prototype.addThrusterBurnYawLeft = function (value) {
+        addThrusterBurn(this._yawLeft, value);
+    };
+    Propulsion.prototype.addThrusterBurnYawRight = function (value) {
+        addThrusterBurn(this._yawRight, value);
+    };
+    Propulsion.prototype.addThrusterBurnPitchUp = function (value) {
+        addThrusterBurn(this._pitchUp, value);
+    };
+    Propulsion.prototype.addThrusterBurnPitchDown = function (value) {
+        addThrusterBurn(this._pitchDown, value);
+    };
+    Propulsion.prototype.addThrusterBurnRollLeft = function (value) {
+        addThrusterBurn(this._rollLeft, value);
+    };
+    Propulsion.prototype.addThrusterBurnRollRight = function (value) {
+        addThrusterBurn(this._rollRight, value);
     };
     /**
      * Resets the all the thruster burn levels to zero.
      */
     Propulsion.prototype.resetThrusterBurn = function () {
         var i;
-        for (i = THRUSTER_USES.length - 1; i >= 0; i--) {
-            this._thrusterUses[THRUSTER_USES[i]].burn = 0;
-        }
+        this._forward.burn = 0;
+        this._reverse.burn = 0;
+        this._strafeLeft.burn = 0;
+        this._strafeRight.burn = 0;
+        this._raise.burn = 0;
+        this._lower.burn = 0;
+        this._yawLeft.burn = 0;
+        this._yawRight.burn = 0;
+        this._pitchUp.burn = 0;
+        this._pitchDown.burn = 0;
+        this._rollLeft.burn = 0;
+        this._rollRight.burn = 0;
         for (i = 0; i < this._thrusters.length; i++) {
             this._thrusters[i].resetBurn();
         }
@@ -1879,14 +1966,14 @@ define([
         var move, turn, max;
         max = this._class.getMaxMoveBurnLevel();
         move = max ? Math.max(
-                this._thrusterUses.forward.burn, this._thrusterUses.reverse.burn,
-                this._thrusterUses.strafeRight.burn, this._thrusterUses.strafeLeft.burn,
-                this._thrusterUses.raise.burn, this._thrusterUses.lower.burn) / max : 0;
+                this._forward.burn, this._reverse.burn,
+                this._strafeRight.burn, this._strafeLeft.burn,
+                this._raise.burn, this._lower.burn) / max : 0;
         max = this._class.getMaxTurnBurnLevel();
         turn = max ? Math.max(
-                this._thrusterUses.yawRight.burn, this._thrusterUses.yawLeft.burn,
-                this._thrusterUses.pitchUp.burn, this._thrusterUses.pitchDown.burn,
-                this._thrusterUses.rollRight.burn, this._thrusterUses.rollLeft.burn) / max : 0;
+                this._yawRight.burn, this._yawLeft.burn,
+                this._pitchUp.burn, this._pitchDown.burn,
+                this._rollRight.burn, this._rollLeft.burn) / max : 0;
         max = Math.round((move + turn) * THRUSTER_SOUND_VOLUME_GRADES) / THRUSTER_SOUND_VOLUME_GRADES;
         return max;
     };
@@ -1904,35 +1991,35 @@ define([
             directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix());
             yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix());
             pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
-            if (this._thrusterUses.forward.burn > 0) {
-                this._drivenPhysicalObject.applyForce(this._thrustFactor * this._thrusterUses.forward.burn, directionVector[0], directionVector[1], directionVector[2], dt);
-            } else if (this._thrusterUses.reverse.burn > 0) {
-                this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._thrusterUses.reverse.burn, directionVector[0], directionVector[1], directionVector[2], dt);
+            if (this._forward.burn > 0) {
+                this._drivenPhysicalObject.applyForce(this._thrustFactor * this._forward.burn, directionVector[0], directionVector[1], directionVector[2], dt);
+            } else if (this._reverse.burn > 0) {
+                this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._reverse.burn, directionVector[0], directionVector[1], directionVector[2], dt);
             }
-            if (this._thrusterUses.strafeRight.burn > 0) {
-                this._drivenPhysicalObject.applyForce(this._thrustFactor * this._thrusterUses.strafeRight.burn, pitchAxis[0], pitchAxis[1], pitchAxis[2], dt);
-            } else if (this._thrusterUses.strafeLeft.burn > 0) {
-                this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._thrusterUses.strafeLeft.burn, pitchAxis[0], pitchAxis[1], pitchAxis[2], dt);
+            if (this._strafeRight.burn > 0) {
+                this._drivenPhysicalObject.applyForce(this._thrustFactor * this._strafeRight.burn, pitchAxis[0], pitchAxis[1], pitchAxis[2], dt);
+            } else if (this._strafeLeft.burn > 0) {
+                this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._strafeLeft.burn, pitchAxis[0], pitchAxis[1], pitchAxis[2], dt);
             }
-            if (this._thrusterUses.raise.burn > 0) {
-                this._drivenPhysicalObject.applyForce(this._thrustFactor * this._thrusterUses.raise.burn, yawAxis[0], yawAxis[1], yawAxis[2], dt);
-            } else if (this._thrusterUses.lower.burn > 0) {
-                this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._thrusterUses.lower.burn, yawAxis[0], yawAxis[1], yawAxis[2], dt);
+            if (this._raise.burn > 0) {
+                this._drivenPhysicalObject.applyForce(this._thrustFactor * this._raise.burn, yawAxis[0], yawAxis[1], yawAxis[2], dt);
+            } else if (this._lower.burn > 0) {
+                this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._lower.burn, yawAxis[0], yawAxis[1], yawAxis[2], dt);
             }
-            if (this._thrusterUses.yawRight.burn > 0) {
-                this._yawTorque = this._drivenPhysicalObject.addOrRenewTorque(this._yawTorque, this._angularThrustFactor * this._thrusterUses.yawRight.burn, yawAxis);
-            } else if (this._thrusterUses.yawLeft.burn > 0) {
-                this._yawTorque = this._drivenPhysicalObject.addOrRenewTorque(this._yawTorque, -this._angularThrustFactor * this._thrusterUses.yawLeft.burn, yawAxis);
+            if (this._yawRight.burn > 0) {
+                this._yawTorque = this._drivenPhysicalObject.addOrRenewTorque(this._yawTorque, this._angularThrustFactor * this._yawRight.burn, yawAxis);
+            } else if (this._yawLeft.burn > 0) {
+                this._yawTorque = this._drivenPhysicalObject.addOrRenewTorque(this._yawTorque, -this._angularThrustFactor * this._yawLeft.burn, yawAxis);
             }
-            if (this._thrusterUses.pitchUp.burn > 0) {
-                this._pitchTorque = this._drivenPhysicalObject.addOrRenewTorque(this._pitchTorque, -this._angularThrustFactor * this._thrusterUses.pitchUp.burn, pitchAxis);
-            } else if (this._thrusterUses.pitchDown.burn > 0) {
-                this._pitchTorque = this._drivenPhysicalObject.addOrRenewTorque(this._pitchTorque, this._angularThrustFactor * this._thrusterUses.pitchDown.burn, pitchAxis);
+            if (this._pitchUp.burn > 0) {
+                this._pitchTorque = this._drivenPhysicalObject.addOrRenewTorque(this._pitchTorque, -this._angularThrustFactor * this._pitchUp.burn, pitchAxis);
+            } else if (this._pitchDown.burn > 0) {
+                this._pitchTorque = this._drivenPhysicalObject.addOrRenewTorque(this._pitchTorque, this._angularThrustFactor * this._pitchDown.burn, pitchAxis);
             }
-            if (this._thrusterUses.rollRight.burn > 0) {
-                this._rollTorque = this._drivenPhysicalObject.addOrRenewTorque(this._rollTorque, -this._angularThrustFactor * this._thrusterUses.rollRight.burn, directionVector);
-            } else if (this._thrusterUses.rollLeft.burn > 0) {
-                this._rollTorque = this._drivenPhysicalObject.addOrRenewTorque(this._rollTorque, this._angularThrustFactor * this._thrusterUses.rollLeft.burn, directionVector);
+            if (this._rollRight.burn > 0) {
+                this._rollTorque = this._drivenPhysicalObject.addOrRenewTorque(this._rollTorque, -this._angularThrustFactor * this._rollRight.burn, directionVector);
+            } else if (this._rollLeft.burn > 0) {
+                this._rollTorque = this._drivenPhysicalObject.addOrRenewTorque(this._rollTorque, this._angularThrustFactor * this._rollLeft.burn, directionVector);
             }
         }
         if (!this._thrusterSoundClip) {
@@ -1960,7 +2047,18 @@ define([
         this._class = null;
         this._drivenPhysicalObject = null;
         this._thrusters = null;
-        this._thrusterUses = null;
+        this._forward = null;
+        this._reverse = null;
+        this._strafeLeft = null;
+        this._strafeRight = null;
+        this._raise = null;
+        this._lower = null;
+        this._yawLeft = null;
+        this._yawRight = null;
+        this._pitchUp = null;
+        this._pitchDown = null;
+        this._rollLeft = null;
+        this._rollRight = null;
         if (this._thrusterSoundClip) {
             this._thrusterSoundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
             setTimeout(function () {
@@ -2618,9 +2716,10 @@ define([
                 turningLimit,
                 yawTarget = this._yawTarget,
                 pitchTarget = this._pitchTarget,
-                yawAngle, pitchAngle, rollAngle;
+                yawAngle, pitchAngle, rollAngle,
+                propulsion = this._spacecraft.getPropulsion();
         // we will add the needed burn levels together, so start from zero
-        this._spacecraft.resetThrusterBurn();
+        propulsion.resetThrusterBurn();
         // restrict turning according to current speed in restricted mode
         if (this._restricted && (speed !== 0.0)) {
             // restrict the limit if needed (convert from rad/sec to rad / ANGULAR_VELOCITY_MATRIX_DURATION ms)
@@ -2632,61 +2731,49 @@ define([
         // controlling yaw
         yawAngle = Math.sign(turningMatrix[4]) * vec.angle2y(turningMatrix[4], turningMatrix[5]);
         if ((yawTarget - yawAngle) > turnThreshold) {
-            this._spacecraft.addThrusterBurn(ThrusterUse.YAW_RIGHT,
-                    Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle, dt)));
+            propulsion.addThrusterBurnYawRight(Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(yawTarget - yawAngle, dt)));
         } else if ((yawTarget - yawAngle) < -turnThreshold) {
-            this._spacecraft.addThrusterBurn(ThrusterUse.YAW_LEFT,
-                    Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget, dt)));
+            propulsion.addThrusterBurnYawLeft(Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(yawAngle - yawTarget, dt)));
         }
         // controlling pitch
         pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2x(turningMatrix[5], turningMatrix[6]);
         if ((pitchTarget - pitchAngle) > turnThreshold) {
-            this._spacecraft.addThrusterBurn(ThrusterUse.PITCH_UP,
-                    Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle, dt)));
+            propulsion.addThrusterBurnPitchUp(Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchTarget - pitchAngle, dt)));
         } else if ((pitchTarget - pitchAngle) < -turnThreshold) {
-            this._spacecraft.addThrusterBurn(ThrusterUse.PITCH_DOWN,
-                    Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget, dt)));
+            propulsion.addThrusterBurnPitchDown(Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(pitchAngle - pitchTarget, dt)));
         }
         // controlling roll
         rollAngle = Math.sign(-turningMatrix[2]) * vec.angle2x(turningMatrix[0], turningMatrix[2]);
         if ((this._rollTarget - rollAngle) > turnThreshold) {
-            this._spacecraft.addThrusterBurn(ThrusterUse.ROLL_RIGHT,
-                    Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle, dt)));
+            propulsion.addThrusterBurnRollRight(Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(this._rollTarget - rollAngle, dt)));
         } else if ((this._rollTarget - rollAngle) < -turnThreshold) {
-            this._spacecraft.addThrusterBurn(ThrusterUse.ROLL_LEFT,
-                    Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget, dt)));
+            propulsion.addThrusterBurnRollLeft(Math.min(this._maxTurnBurnLevel, this._spacecraft.getNeededBurnForAngularVelocityChange(rollAngle - this._rollTarget, dt)));
         }
         // controlling forward/reverse
         if ((this._speedTarget - speed) > speedThreshold) {
-            this._spacecraft.addThrusterBurn(ThrusterUse.FORWARD,
-                    Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed, dt)));
+            propulsion.addThrusterBurnForward(Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(this._speedTarget - speed, dt)));
         } else if ((this._speedTarget - speed) < -speedThreshold) {
-            this._spacecraft.addThrusterBurn(ThrusterUse.REVERSE,
-                    Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget, dt)));
+            propulsion.addThrusterBurnReverse(Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._speedTarget, dt)));
         }
         // controlling horizontal drift
         if (this._assisted || (this._strafeTarget !== 0)) {
             speed = relativeVelocityMatrix[12];
             if ((this._strafeTarget - speed) > speedThreshold) {
-                this._spacecraft.addThrusterBurn(ThrusterUse.STRAFE_RIGHT,
-                        Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed, dt)));
+                propulsion.addThrusterBurnRight(Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(this._strafeTarget - speed, dt)));
             } else if ((this._strafeTarget - speed) < -speedThreshold) {
-                this._spacecraft.addThrusterBurn(ThrusterUse.STRAFE_LEFT,
-                        Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget, dt)));
+                propulsion.addThrusterBurnLeft(Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._strafeTarget, dt)));
             }
         }
         // controlling vertical drift
         if (this._assisted || (this._liftTarget !== 0)) {
             speed = relativeVelocityMatrix[14];
             if ((this._liftTarget - speed) > speedThreshold) {
-                this._spacecraft.addThrusterBurn(ThrusterUse.RAISE,
-                        Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed, dt)));
+                propulsion.addThrusterBurnUp(Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(this._liftTarget - speed, dt)));
             } else if ((this._liftTarget - speed) < -speedThreshold) {
-                this._spacecraft.addThrusterBurn(ThrusterUse.LOWER,
-                        Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget, dt)));
+                propulsion.addThrusterBurnDown(Math.min(this._maxMoveBurnLevel, this._spacecraft.getNeededBurnForSpeedChange(speed - this._liftTarget, dt)));
             }
         }
-        this._spacecraft.updatePropulsionVisuals();
+        propulsion.updateVisuals();
         // reset the targets, as new controls are needed from the pilot in the
         // next step to keep these targets up (e.g. continuously pressing the
         // key, moving the mouse or keeping the mouse displaced from center)
