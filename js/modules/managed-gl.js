@@ -1028,7 +1028,7 @@ define([
                 context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
                 this._dirty = false;
             } 
-            context.setBoundVertexBuffer(location, this, instanced);
+            context.setBoundVertexBuffer(location, this, !!instanced);
         }
     };
     /**
@@ -1042,7 +1042,7 @@ define([
             if (this._locations.hasOwnProperty(shaderName)) {
                 location = this._locations[shaderName];
                 if (context.getBoundVertexBuffer(location) === this) {
-                    context.setBoundVertexBuffer(location, null);
+                    context.setBoundVertexBuffer(location, null, false);
                 }
             }
         }
@@ -2416,7 +2416,7 @@ define([
      * If needed for instancing, changes the attribute divisor as well.
      * @param {Number} attributeLocation
      * @param {VertexBuffer} [vertexBuffer]
-     * @param {Boolean} [instanced]
+     * @param {Boolean} instanced Should not be undefined!
      */
     ManagedGLContext.prototype.setBoundVertexBuffer = function (attributeLocation, vertexBuffer, instanced) {
         this._boundVertexBuffers[attributeLocation] = vertexBuffer;
