@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Provides various simple, general usage utility methods.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -447,6 +447,20 @@ define(function () {
         return result;
     };
     /**
+     * Returns an array with the possible keys of an enum definition object,
+     * converted to camelCase.
+     * E.g. {VALUE: 1, OTHER_VALUE: 2} -> ["value", "otherValue"]
+     * @param {Object} enumObject
+     * @returns {Array}
+     */
+    exports.getEnumKeys = function (enumObject) {
+        var result = Object.keys(enumObject), i;
+        for (i = 0; i < result.length; i++) {
+            result[i] = exports.camelCase(result[i]);
+        }
+        return result;
+    };
+    /**
      * Returns an object that can be used as an enum definition object with the
      * valid enum values being the strings in the passed array.
      * @param {String[]} enumValues
@@ -542,6 +556,23 @@ define(function () {
                 result += UNDERSCORE;
             }
             result += ((string[i] === SPACE) || (string[i] === DASH)) ? UNDERSCORE : string[i].toUpperCase();
+        }
+        return result;
+    };
+    /**
+     * Converts the passed string from CONSTANT_NAME_FORMAT to camelCaseFormat
+     * @param {String} string
+     * @returns {String}
+     */
+    exports.camelCase = function (string) {
+        var result = "", i, capital = false;
+        for (i = 0; i < string.length; i++) {
+            if (string[i] === UNDERSCORE) {
+                capital = true;
+            } else {
+                result += capital ? string[i] : string[i].toLowerCase();
+                capital = false;
+            }
         }
         return result;
     };

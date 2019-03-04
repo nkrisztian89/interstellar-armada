@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2017, 2019 Krisztián Nagy
  * @file Provides the content and event handlers for the Properties window of the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -737,13 +737,7 @@ define([
         var
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
-                values = (typeDescriptor.values ?
-                        utils.getEnumValues(typeDescriptor.values) :
-                        (typeDescriptor.resourceReference ?
-                                resources.getResourceNames(typeDescriptor.resourceReference) :
-                                (typeDescriptor.classReference ?
-                                        classes.getClassNames(typeDescriptor.classReference) :
-                                        []))),
+                values = new descriptors.Type(typeDescriptor).getValues(true) || [],
                 table, i,
                 typeName = new descriptors.Type(typeDescriptor).getDisplayName(),
                 updateButtonText = function () {

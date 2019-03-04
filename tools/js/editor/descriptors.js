@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2017, 2019 Krisztián Nagy
  * @file Provides the descriptor objects that outline the structure of properties for the various resource / class categories of 
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -2992,11 +2992,14 @@ define([
     };
     /**
      * For enum and set types, returns the list of possible values
+     * @param {Boolean} [allowNull=false] 
      * @returns {String[]}
      */
-    Type.prototype.getValues = function () {
+    Type.prototype.getValues = function (allowNull) {
+        var values;
         if (this._descriptor.values) {
-            return utils.getEnumValues(this._descriptor.values);
+            values = utils.getEnumValues(this._descriptor.values);
+            return (typeof values[0] === "number") ? utils.getEnumKeys(this._descriptor.values) : values;
         }
         if (this._descriptor.resourceReference) {
             return resources.getResourceNames(this._descriptor.resourceReference);
@@ -3006,6 +3009,9 @@ define([
         }
         if (this._descriptor.environmentReference) {
             return environments.getEnvironmentNames();
+        }
+        if (allowNull) {
+            return null;
         }
         document.crash();
     };
