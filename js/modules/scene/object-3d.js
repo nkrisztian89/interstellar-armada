@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Provides a basic class to use as a mixin or base class for 3 dimensional objects.
  * be rendered on them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -368,6 +368,29 @@ define([
             }
             this._positionMatrixInCameraSpaceValid = false;
         }
+        /**
+         * Translates the position to be the linear combination of the current
+         * position and the one define by the passed matrix.
+         * @param {Float32Array} matrix A 4x4 matrix
+         * @param {Number} ratio The ratio for the linear interpolation: 0 
+         * corresponds to the current, 1 to the given position
+         */
+        function translateTowardsM4(matrix, ratio) {
+            var delta = (ratio * matrix[12]) + ((1 - ratio) * this._positionMatrix[12]) - this._positionMatrix[12];
+            this._positionMatrix[12] += delta;
+            this._modelMatrix[12] += delta;
+            delta = (ratio * matrix[13]) + ((1 - ratio) * this._positionMatrix[13]) - this._positionMatrix[13];
+            this._positionMatrix[13] += delta;
+            this._modelMatrix[13] += delta;
+            delta = (ratio * matrix[14]) + ((1 - ratio) * this._positionMatrix[14]) - this._positionMatrix[14];
+            this._positionMatrix[14] += delta;
+            this._modelMatrix[14] += delta;
+            this._modelMatrixInverseValid = false;
+            if (!this._parent || !this._parent.childrenAlwaysInside()) {
+                this._insideParent = null;
+            }
+            this._positionMatrixInCameraSpaceValid = false;
+        }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**
          * Returns the rotation matrix describing the orientation of the object.
@@ -456,7 +479,7 @@ define([
          * @param {Float32Array} matrix
          */
         function rotateByMatrix(matrix) {
-            mat.mul4(this._orientationMatrix, matrix);
+            mat.mulRotationRotation4(this._orientationMatrix, matrix);
             this.setOrientationMatrix();
         }
         /**
@@ -465,7 +488,7 @@ define([
          * @param {Float32Array} matrix
          */
         function rotateByMatrix3(matrix) {
-            mat.mul43(this._orientationMatrix, matrix);
+            mat.mulRotation43(this._orientationMatrix, matrix);
             this.setOrientationMatrix();
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -693,6 +716,7 @@ define([
             this.prototype.translate = translate;
             this.prototype.translatev = translatev;
             this.prototype.translateByMatrix = translateByMatrix;
+            this.prototype.translateTowardsM4 = translateTowardsM4;
             this.prototype.getXDirectionVector = getXDirectionVector;
             this.prototype.getYDirectionVector = getYDirectionVector;
             this.prototype.getZDirectionVector = getZDirectionVector;
