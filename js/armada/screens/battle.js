@@ -1461,7 +1461,8 @@ define([
      */
     HUDElement.prototype.setSize = function (value) {
         // square model coordinates are -1 to 1, resulting in a scale of 1 corresponding to a size of 2
-        this._scale = [0.5 * value[0], 0.5 * value[1]];
+        this._scale[0] = 0.5 * value[0];
+        this._scale[1] = 0.5 * value[1];
         if (this._visualModel) {
             this._visualModel.setSize(this._scale);
         }
