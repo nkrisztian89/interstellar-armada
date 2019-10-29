@@ -1,7 +1,7 @@
 div.slider {
     display: table;
     box-sizing: border-box;
-    width: 370px;
+    width: 24.5em;
     padding-left: 11px;
     padding-right: 11px;
     margin: 4px auto;
@@ -14,7 +14,7 @@ div.sliderValueContainer {
     display: table-cell;
     box-sizing: border-box;
     vertical-align: middle;
-    width: 120px;
+    width: 8em;
     margin: 0;
     padding-left: 11px;
     padding-right: 0;
@@ -22,11 +22,11 @@ div.sliderValueContainer {
 
 div.sliderPropertyContainer {
     box-sizing: border-box;
-    font-size: 11pt;
+    font-size: 90%;
     display: table-cell;
     text-align: left;
     vertical-align: middle;
-    width: 250px;
+    width: 16.5em;
     margin: 0;
     padding: 0.5em 0;
 }

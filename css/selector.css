@@ -1,7 +1,7 @@
 div.selector {
     display: table;
     box-sizing: border-box;
-    width: 370px;
+    width: 24.5em;
     padding-left: 11px;
     padding-right: 11px;
     margin-top: 4px;
@@ -16,17 +16,16 @@ div.selector {
 div.selectorButtonContainer {
     display: table-cell;
     vertical-align: middle;
-    width: 120px;
+    width: 8em;
     margin: 0;
-    padding-right: 0.5em;
 }
 
 div.selectorPropertyContainer {
-    font-size: 11pt;
+    font-size: 90%;
     display: table-cell;
     text-align: left;
     vertical-align: middle;
-    width: 250px;
+    width: 16.5em;
     margin: 0;
     padding: 0;
 }
@@ -36,7 +35,7 @@ div.smallSelector {
 }
 
 div.smallSelectorPropertyContainer {
-    font-size: 11pt;
+    font-size: 75%;
     display: table-cell;
     text-align: left;
     vertical-align: middle;

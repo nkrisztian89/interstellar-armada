@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2019 Krisztián Nagy
  * @file Contains the common constants and functions accessible to all screens of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -89,6 +89,7 @@ define([
                 AUDIO_SCREEN_SOURCE: "audio.html",
                 CONTROLS_SCREEN_NAME: "controls",
                 CONTROLS_SCREEN_SOURCE: "controls.html",
+                CONTROLS_SCREEN_CSS: "controls.css",
                 GAMEPLAY_SETTINGS_SCREEN_NAME: "gameplaySettings",
                 GAMEPLAY_SETTINGS_SCREEN_SOURCE: "gameplay-settings.html",
                 ABOUT_SCREEN_NAME: "about",

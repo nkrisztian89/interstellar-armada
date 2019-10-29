@@ -58,10 +58,22 @@ body {
     color: $text-color;
     background-color: $body-color;
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
-    font-size: 16px;
+    font-size: 2vmin;
     margin: 0;
     padding: 0;
     border: 5px transparent;
+}
+
+@media screen and (orientation: portrait) {
+    body {
+        font-size: 3vmin;
+    }
+}
+
+@media screen and (min-aspect-ratio: 2/1) {
+    body {
+        font-size: 2.5vmin;
+    }
 }
 
 /* Adding this class to the body of the document will ensure the cursor will show wait above all elements */
@@ -218,6 +230,12 @@ canvas {
     border-bottom: none;
 }
 
+.footer {
+    position: absolute;
+    bottom: 1em;
+    width: calc(100% - 2em);
+}
+
 table {
     margin-bottom: 1em;
 }
@@ -282,7 +300,7 @@ a.horizontalMenu {
 
 a.button {
     @include shadowed;
-    min-width: 120px;
+    min-width: 8em;
     font-size: 0.9em;
     text-align: center;
     padding: 0.5em;
@@ -381,7 +399,7 @@ progress#splashProgress {
 }
 
 p {
-    font-size: 14px;
+    font-size: 90%;
     text-align: left;
 }
 

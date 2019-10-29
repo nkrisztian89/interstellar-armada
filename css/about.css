@@ -1,7 +1,40 @@
+.about.pageContainer {
+    width: 90%;
+    height: 90%;
+}
+
+.about.innerContainer {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.about.pageContent {
+    box-sizing: border-box;
+    width: 100%;
+    height: calc(100% - 8em);
+    position: relative;
+    overflow-y: scroll;
+}
+
+.about.pageContent::-webkit-scrollbar {
+    width: 0.2vw;
+    min-width: 2px;
+    background: transparent;
+}
+
+.about.pageContent::-webkit-scrollbar-thumb {
+    background: #00aa00;
+}
+
 p.about {
-    padding-left: 70px;
-    padding-right: 70px;
-    width: 760px;
+    width: 100%;
+    padding-left: 10%;
+    padding-right: 10%;
+    margin-left: 0;
+    margin-right: 0;
+    box-sizing: border-box;
 }
 
 p.aboutCentered {

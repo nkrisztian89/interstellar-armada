@@ -1,30 +1,44 @@
-.pageContent {
-    width: 900px;
-    height: 420px;
+.missions.pageContainer {
+    width: 90%;
+    height: 90%;
+}
+
+.missions.innerContainer {
     position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+}
+
+.missions.pageContent {
+    position: relative;
+    box-sizing: border-box;
+    width: calc(100% - 1em);
+    height: calc(100% - 12em);
 }
 
 .missionListContainer {
+    box-sizing: border-box;
     position: absolute;
     top: 0;
     left: 0;
-    width: 200px;
-    height: 400px;
+    width: 12em;
+    height: 100%;
 }
 
 .missionInfoContainer {
     position: absolute;
     top: 0;
     right: 0;
-    width: 680px;
-    height: 400px;
+    width: calc(100% - 13em);
+    height: 100%;
     
     text-align: left;
 }
 
 .missionInfoHeader {
-    width: 440px;
-    height: 50px;
+    width: 29em;
+    height: 3em;
 }
 
 .missionTitle {
@@ -40,8 +54,8 @@
     position: absolute;
     right: 0;
     top: 0;
-    max-width: 290px;
-    height: 50px;
+    max-width: 19em;
+    height: 3em;
     padding-top: 0.25em;
     padding-right: 1em;
 }
@@ -51,12 +65,13 @@
     margin-top: 10px;
     border-top: 2px solid #333333;
     padding-top: 0.5em;
-    height: 340px;
+    height: calc(100% - 3.5em);
     overflow-y: scroll;
 }
 
 .missionInfoBody::-webkit-scrollbar {
-    width: 2px; 
+    width: 0.2vw;
+    min-width: 2px;
     background: transparent;
 }
 
@@ -80,8 +95,13 @@
     color: #00CC00;
 }
 
-@media screen and (max-width: 420px) {
-    .pageContent {
+@media screen and (orientation: portrait) {
+    .missions.pageContainer {
+        width: auto;
+        height: auto;
+    }
+    
+    .missions.pageContent {
         position: relative;
         margin-left: 0;
         margin-left: 0;
@@ -96,7 +116,18 @@
         margin-bottom: 1em;
 
         width: 90%;
-        height: 300px;
+        height: 60vh;
+    }
+    
+    .difficultyContainer {
+        left: 0;
+        right: auto;
+        margin-top: 3.5em;
+    }
+    
+    .missionInfoBody {
+        margin-top: 3.5em;
+        margin-bottom: 4em;
     }
 
     .missionInfoContainer {
@@ -104,6 +135,7 @@
         margin-left: auto;
         margin-right: auto;
         width: 100%;
+        height: auto;
     }
 }
 
@@ -113,14 +145,14 @@
 
 .missionObjectivesTitle, .playerSpacecraftTitle {
     text-align: left;
-    font-size: 18px;
+    font-size: 110%;
     padding: 0;
     margin: 0;
 }
 
 .missionObjectives {
     text-align: left;
-    font-size: 14px;
+    font-size: 90%;
     padding: 0;
 }
 

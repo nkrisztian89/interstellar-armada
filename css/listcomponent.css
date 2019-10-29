@@ -12,7 +12,8 @@
 }
 
 .listContainer::-webkit-scrollbar {
-    width: 2px; 
+    width: 0.2vw;
+    min-width: 2px;
     background: transparent;
 }
 

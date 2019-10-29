@@ -1,22 +1,20 @@
 .settingsDiv {
-    width: 800px;
-    padding: 1em 0;
+    padding: 0.5em 0;
 }
 
 .settingsDivLeft {
     display: inline-block;
-    width: 386px;
+    width: 25em;
 }
 
 .settingsDivRight {
     display: inline-block;
-    width: 386px;
+    width: 25em;
 }
 
 p.settings {
-    width: 370px;
     box-sizing: border-box;
-    width: 370px;
+    width: 28em;
     padding-left: 11px;
     padding-right: 11px;
     margin-top: 4px;

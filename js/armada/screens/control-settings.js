@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2019, Krisztián Nagy
  * @file This module manages and provides the Control settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -39,7 +39,9 @@ define([
             MOUSE_TURN_SENSITIVITY_SLIDER_ID = "mouseTurnSensitivitySlider",
             CLICKABLE_CLASS_NAME = "clickable",
             HIGHLIGHTED_CLASS_NAME = "highlightedItem",
-            TABLE_CLASS_NAME = "horizontallyCentered outerContainer",
+            TABLE_TITLE_CLASS_NAME = "controls tableTitle",
+            TABLE_ID_PREFIX = "table_",
+            TABLE_CLASS_NAME = "controlsTable horizontallyCentered outerContainer",
             CONTROL_STRING_DURING_SETTING = "?",
             SHIFT_CODE = 16,
             CTRL_CODE = 17,
@@ -181,6 +183,7 @@ define([
                 armadaScreens.CONTROLS_SCREEN_NAME,
                 armadaScreens.CONTROLS_SCREEN_SOURCE,
                 {
+                    cssFilename: armadaScreens.CONTROLS_SCREEN_CSS,
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
@@ -261,19 +264,28 @@ define([
             var i, j, k, n,
                     tablesContainer = this.getElement(TABLES_CONTAINER_ID),
                     gameControllers = control.getControllers(),
+                    tableId,
                     h2Element, tableElement, theadElement, thElement, tbodyElement, actions, trElement, td1Element, td2Element,
                     actionStringDefinitionObject = {},
+                    tableToggleFunction = function (id) {
+                        var element = this.getElement(id);
+                        element.style.display = (element.style.display === "none") ? "table" : "none";
+                    },
                     keySetterFunction = function () {
                         startKeySetting(this);
                     };
             tablesContainer.innerHTML = "";
             for (i = 0; i < gameControllers.length; i++) {
+                tableId = TABLE_ID_PREFIX + gameControllers[i].getType();
                 h2Element = document.createElement("h2");
                 h2Element.innerHTML = utils.formatString(
                         strings.get(strings.CONTROLS.CONTROLLER_TYPE_HEADING),
                         {controllerType: strings.get(strings.CONTOLLER.PREFIX, gameControllers[i].getType())});
+                h2Element.className = TABLE_TITLE_CLASS_NAME;
+                h2Element.onclick = tableToggleFunction.bind(this, tableId);
                 tablesContainer.appendChild(h2Element);
                 tableElement = document.createElement("table");
+                tableElement.id = this._getElementID(tableId);
                 tableElement.className = TABLE_CLASS_NAME;
                 theadElement = document.createElement("thead");
                 for (j = 0, n = control.getInputInterpreters().length; j < n; j++) {
@@ -306,6 +318,7 @@ define([
                 }
                 tableElement.appendChild(theadElement);
                 tableElement.appendChild(tbodyElement);
+                tableElement.style.display = "none";
                 tablesContainer.appendChild(tableElement);
             }
         }.bind(this));
