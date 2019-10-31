@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018 Krisztián Nagy
+ * Copyright 2016-2019 Krisztián Nagy
  * @file Provides the menu screens of the Interstellar Armada game which are simply instances of MenuScreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -38,6 +38,7 @@ define([
             // --------------------------------------------------------------------------------------------
             // Constants
             FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID = constants.LOCAL_STORAGE_PREFIX + "firstRunNoteShown",
+            FULLSCREEN_BUTTON_ID = "fullscreenButton",
             // --------------------------------------------------------------------------------------------
             // Private variables
             _releaseNotesShown = false,
@@ -70,6 +71,31 @@ define([
                         game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                     }
                 }];
+    // --------------------------------------------------------------------------------------------
+    // Private functions
+    function _toggleFullscreen() {
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) {
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozExitFullScreen) {
+                document.mozExitFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+    }
     // -------------------------------------------------------------------------
     // Initialization
     if (application.usesElectron()) {
@@ -152,6 +178,7 @@ define([
                             audio.playMusic(armadaScreens.MENU_THEME);
                             analytics.login();
                         }
+                        this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
                     },
                     optionselect: armadaScreens.playButtonSelectSound,
                     optionclick: armadaScreens.playButtonClickSound
@@ -247,7 +274,7 @@ define([
                                         }
                                     }, {
                                         caption: strings.get(strings.INGAME_MENU.RESTART_RESTART),
-                                        action: function () {                                            
+                                        action: function () {
                                             game.closeSuperimposedScreen();
                                             game.closeSuperimposedScreen();
                                             game.getScreen().startNewBattle({
@@ -271,12 +298,12 @@ define([
                                         }
                                     }, {
                                         caption: strings.get(strings.INGAME_MENU.QUIT_TO_MISSIONS),
-                                        action: function () {   
+                                        action: function () {
                                             game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
                                         }
                                     }, {
                                         caption: strings.get(strings.INGAME_MENU.QUIT_TO_MAIN_MENU),
-                                        action: function () {    
+                                        action: function () {
                                             game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
                                         }
                                     }
@@ -285,8 +312,13 @@ define([
                         }
                     }],
                 armadaScreens.INGAME_MENU_CONTAINER_ID,
-                armadaScreens.MENU_EVENT_HANDLERS,
                 {
+                    show: function () {
+                        this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
+                    },
+                    optionselect: armadaScreens.playButtonSelectSound,
+                    optionclick: armadaScreens.playButtonClickSound
+                }, {
                     "escape": function () {
                         game.closeSuperimposedScreen();
                         battle.resumeBattle();

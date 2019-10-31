@@ -603,3 +603,16 @@ input[type=range] {
        Firefox preudo element: -moz-range-progress 
     */
 }
+
+a.fullscreenButton {
+    position: fixed;
+    right: 0.5em;
+    bottom: 0.5em;
+    width: 4em;
+    height: 4em;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background-image: url(../images/fullscreen.png);
+    background-size: cover;
+}
