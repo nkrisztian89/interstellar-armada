@@ -138,11 +138,23 @@ define([
              */
             PROJECTILE_RESOURCE_ID_PREFIX = "projectile/",
             /**
+             * When adding the resources of a missile (class) to a scene, this prefix is used in the ID to avoid adding the same one multiple
+             * times
+             * @type String
+             */
+            MISSILE_RESOURCE_ID_PREFIX = "missile/",
+            /**
              * When adding the resources of a weapon (class) to a scene, this prefix is used in the ID to avoid adding the same one multiple
              * times
              * @type String
              */
             WEAPON_RESOURCE_ID_PREFIX = "weapon/",
+            /**
+             * When adding the resources of a missile launcher to a scene, this prefix is used in the ID to avoid adding the same one multiple
+             * times
+             * @type String
+             */
+            MISSILE_LAUNCHER_RESOURCE_ID_PREFIX = "missileLauncher/",
             /**
              * The number of discrete volume levels to which the thruster sounds can be set according to the rate at which the thrusters
              * are firing (so that the sound source is not ramping the volume all the time as the thruster fire rate changes)
@@ -173,6 +185,30 @@ define([
              * @type Number
              */
             TARGET_MAPPING_BAD_AGAINST_FACTOR = 2.0,
+            /**
+             * Missiles will stop turning towards the specified direction when reaching this angle (in radians).
+             * (note that they will activate their main thruster to accelerate with a higher threshold defined
+             * for the specific missile class)
+             * @type Number
+             */
+            MISSILE_TURN_THRESHOLD_ANGLE = Math.radians(0.05),
+            /**
+             * The factor to apply when converting angular velocity (turning) matrix angles to rad / s.
+             * @type Number
+             */
+            ANGULAR_VELOCITY_CONVERSION_FACTOR = 1000 / physics.ANGULAR_VELOCITY_MATRIX_DURATION,
+            /**
+             * Missiles will use their maneuvering thrusters for maximum this long bursts to spin
+             * them up for the proper rotation towards the desired orientation, in seconds
+             * @type Number
+             */
+            MISSILE_TURN_ACCELERATION_DURATION_S = 0.2,
+            /**
+             * Cached value of the reciprocal of the missile turn acceleration duration (converted to
+             * 1 / ms) for faster missile turn calculations
+             * @type Number
+             */
+            MISSILE_TURN_INTENSITY_BASE_FACTOR = 1000 / MISSILE_TURN_ACCELERATION_DURATION_S,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -268,11 +304,17 @@ define([
              * A pool containing projectiles for reuse, so that creation of new projectile objects can be decreased for optimization.
              * @type Pool
              */
-            _projectilePool;
+            _projectilePool,
+            /**
+             * A pool containing missiles for reuse, so that creation of new missile objects can be decreased for optimization.
+             * @type Pool
+             */
+            _missilePool;
     Object.freeze(FlightMode);
     Object.freeze(WeaponAimStatus);
     Object.freeze(ThrusterUse);
     // #########################################################################
+    // public functions
     /**
      * Needs to be executed whenever the settings in the graphics module change
      */
@@ -285,17 +327,84 @@ define([
         }
         _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
     }
+    // ------------------------------------------------------------------------------
+    // private functions
     /**
      * Adds to the thruster burn level corresponding to a specific use command
      * @param {Object} use The object storing the burn level and thruster list
      * corresponding to the use command
      * @param {Number} value The amount added to the thruster burn level.
      */
-    function addThrusterBurn (use, value) {
+    function _addThrusterBurn(use, value) {
         var i;
         use.burn += value;
         for (i = 0; i < use.thrusters.length; i++) {
             use.thrusters[i].addBurn(value);
+        }
+    }
+    /**
+     * Get the offset to be used for hit checks for projectiles (the sides of the hitboxes
+     * are offset towards the outside (i.e. the hitbox is enlarged in all directions) by this
+     * much, in meters)
+     * @returns {Number}
+     */
+    function _getDefaultOffset() {
+        return 0;
+    }
+    /**
+     * @callback HitCallback
+     * @param {Spacecraft} hitObject 
+     * @param {PhysicalObject} physicalHitObject 
+     * @param {Number[4]} hitPositionVectorInObjectSpace 
+     * @param {Number[4]} hitPositionVectorInWorldSpace 
+     * @param {Number[3]} relativeHitPositionVectorInWorldSpace
+     * @param {Number[3]} relativeVelocityDirectionInObjectSpace
+     * @param {Number[3]} relativeVelocityDirectionInWorldSpace
+     * @param {Number} relativeVelocity
+     */
+    /**
+     * The common code to use for both projectile and missile hitchecks.
+     * @param {PhysicalObject} object The physical model of the object (i.e. projectile or missile) that can hit the others
+     * @param {Octree} hitObjectOctree The octree containing the objects that our projectile/missile can hit
+     * @param {Number} hitCheckDT The elapsed time to consider for the hit check (since last hitcheck, in ms)
+     * @param {Spacecraft} origin The spacecraft that fired our projectile / missile (for self hit checks)
+     * @param {Function} offsetCallback The function to return the offset to be used for the hitchecks (modifying
+     * the hitbox sizes so that e.g. missiles can already hit the object from farther away)
+     * @param {HitCallback} hitCallback The function to call if an object is hit, passing the parameters of the hit to it
+     */
+    function _checkHit(object, hitObjectOctree, hitCheckDT, origin, offsetCallback, hitCallback) {
+        var i, hitObjects,
+                positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace,
+                relativeVelocity, relativeVelocityDirectionInWorldSpace,
+                physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace;
+        positionVectorInWorldSpace = mat.translationVector3(object.getPositionMatrix());
+        velocityVectorInWorldSpace = mat.translationVector3(object.getVelocityMatrix());
+        hitObjects = hitObjectOctree.getObjects(
+                Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
+                Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
+                Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT * 0.001),
+                Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT * 0.001),
+                Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT * 0.001),
+                Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT * 0.001));
+        if (_showHitboxesForHitchecks) {
+            for (i = 0; i < hitObjects.length; i++) {
+                hitObjects[i].showHitbox();
+            }
+        }
+        for (i = 0; i < hitObjects.length; i++) {
+            physicalHitObject = hitObjects[i].getPhysicalModel();
+            if (physicalHitObject && (_isSelfFireEnabled || (hitObjects[i] !== origin))) {
+                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT, offsetCallback(hitObjects[i]));
+                if (hitPositionVectorInObjectSpace) {
+                    relativeVelocityDirectionInWorldSpace = vec.diffVec3Mat4(velocityVectorInWorldSpace, physicalHitObject.getVelocityMatrix());
+                    relativeVelocity = vec.extractLength3(relativeVelocityDirectionInWorldSpace);
+                    relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4Aux(hitObjects[i].getVisualModel().getOrientationMatrix()));
+                    hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
+                    relativeHitPositionVectorInWorldSpace = vec.diffVec3Mat4Aux(hitPositionVectorInWorldSpace, physicalHitObject.getPositionMatrix());
+                    hitCallback(hitObjects[i], physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity);
+                    return;
+                }
+            }
         }
     }
     // ##############################################################################
@@ -336,6 +445,11 @@ define([
          * @type Spacecraft
          */
         this._origin = null;
+        /**
+         * The callback function to use when the projectile hits a spacecraft, bound to this instance
+         * @type HitCallback
+         */
+        this._hitCallback = Projectile.prototype._hitCallback.bind(this);
         if (projectileClass) {
             this.init(projectileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity);
         }
@@ -463,16 +577,34 @@ define([
         }.bind(this));
     };
     /**
+     * The function to call when the projectile hits a spacecraft
+     * @param {Spacecraft} hitObject 
+     * @param {PhysicalObject} physicalHitObject 
+     * @param {Number[4]} hitPositionVectorInObjectSpace 
+     * @param {Number[4]} hitPositionVectorInWorldSpace 
+     * @param {Number[3]} relativeHitPositionVectorInWorldSpace
+     * @param {Number[3]} relativeVelocityDirectionInObjectSpace
+     * @param {Number[3]} relativeVelocityDirectionInWorldSpace
+     * @param {Number} relativeVelocity
+     */
+    Projectile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity) {
+        var exp;
+        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
+        exp = explosion.getExplosion();
+        exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
+        exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObject.getSoundSource(), true);
+        hitObject.damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, false);
+        this._timeLeft = 0;
+        this._visualModel.markAsReusable(true);
+    };
+    /**
      * Simulates the movement of the projectile and checks if it hit any objects.
      * @param {Number} dt The passed time since the last simulation in milliseconds.
      * @param {Octree} hitObjectOctree The root node of the octree that is used to spatially partition the spacecrafts this projectile can
      * hit.
      */
     Projectile.prototype.simulate = function (dt, hitObjectOctree) {
-        var i, hitObjects,
-                positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace,
-                relativeVelocity, relativeVelocityDirectionInWorldSpace,
-                exp, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, hitCheckDT;
+        var hitCheckDT;
         if (this.canBeReused()) {
             return;
         }
@@ -482,42 +614,7 @@ define([
         if (this._timeLeft > 0) {
             this._physicalModel.simulate(dt);
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
-            positionVectorInWorldSpace = mat.translationVector3(this._physicalModel.getPositionMatrix());
-            velocityVectorInWorldSpace = mat.translationVector3(this._physicalModel.getVelocityMatrix());
-            hitObjects = hitObjectOctree.getObjects(
-                    Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
-                    Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
-                    Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT * 0.001),
-                    Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT * 0.001),
-                    Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT * 0.001),
-                    Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT * 0.001));
-            // checking for hits
-            if (_showHitboxesForHitchecks) {
-                for (i = 0; i < hitObjects.length; i++) {
-                    hitObjects[i].showHitbox();
-                }
-            }
-            for (i = 0; i < hitObjects.length; i++) {
-                physicalHitObject = hitObjects[i].getPhysicalModel();
-                if (physicalHitObject && (_isSelfFireEnabled || (hitObjects[i] !== this._origin))) {
-                    hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT);
-                    if (hitPositionVectorInObjectSpace) {
-                        relativeVelocityDirectionInWorldSpace = vec.diffVec3Mat4(velocityVectorInWorldSpace, physicalHitObject.getVelocityMatrix());
-                        relativeVelocity = vec.extractLength3(relativeVelocityDirectionInWorldSpace);
-                        relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4Aux(hitObjects[i].getVisualModel().getOrientationMatrix()));
-                        hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
-                        relativeHitPositionVectorInWorldSpace = vec.diffVec3Mat4Aux(hitPositionVectorInWorldSpace, physicalHitObject.getPositionMatrix());
-                        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
-                        exp = explosion.getExplosion();
-                        exp.init(((hitObjects[i].getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
-                        exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObjects[i].getSoundSource(), true);
-                        hitObjects[i].damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin);
-                        this._timeLeft = 0;
-                        this._visualModel.markAsReusable(true);
-                        return;
-                    }
-                }
-            }
+            _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, _getDefaultOffset, this._hitCallback);
         } else {
             this._visualModel.markAsReusable(true);
         }
@@ -535,6 +632,791 @@ define([
         }
         this._visualModel = null;
         this._physicalModel = null;
+    };
+    // ##############################################################################
+    /**
+     * @class Represents a missile launched from a missile launcher.
+     * @param {MissileClass} missileClass The class of the missile defining its general properties.
+     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the missile.
+     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the missile.
+     * @param {Spacecraft} [spacecraft] The spacecraft which launched the missile.
+     * @param {Number} [muzzleVelocity] The starting velocity of the missile, in its +Y direction, in m/s
+     * @param {Spacecraft} [target] 
+     */
+    function Missile(missileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity, target) {
+        /**
+         * The class storing the general characteristics of this missile.
+         * @type MissileClass
+         */
+        this._class = null;
+        /**
+         * The renderable node that represents this missile in a scene.
+         * @type RenderableObject
+         */
+        this._visualModel = null;
+        /**
+         * The object that represents and simulates the physical behaviour of
+         * this missile.
+         * @type PhysicalObject
+         */
+        this._physicalModel = new physics.PhysicalObject();
+        /**
+         * The amount of time this missile has before it explodes (even if not
+         * hitting anything), in milliseconds.
+         * @type Number
+         */
+        this._timeLeft = 0;
+        /**
+         * The spacecraft that originally launched this missile. If self fire is
+         * off, it will be excluded from hit check so that a missile cannot hit 
+         * the same craft it was launched from.
+         * @type Spacecraft
+         */
+        this._origin = null;
+        /**
+         * Cached value of the matrix representing the turning the current angular velocity of the object causes over 
+         * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds in model space.
+         * @type Float32Array
+         */
+        this._turningMatrix = mat.identity4();
+        /**
+         * Whether the currently stored turning matrix value is up-to-date.
+         * @type Boolean
+         */
+        this._turningMatrixValid = false;
+        /**
+         * The target angle in radian between the identity orientation and the
+         * relative angular velocity matrix on the yawing (XY) plane. The missile
+         * will use the yawing thursters to reach this angle.
+         * (representing rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms turn)
+         * @type Number
+         */
+        this._yawTarget = 0;
+        /**
+         * The target angle in radian between the identity orientation and the
+         * relative angular velocity matrix on the pitching (YZ) plane. The missile
+         * will use the pitching thursters to reach this angle.
+         * (representing rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms turn)
+         * @type Number
+         */
+        this._pitchTarget = 0;
+        /**
+         * The maximum angle between vectors of the relative angular acceleration 
+         * matrix and the identity axes on the yaw and pitch planes
+         * (representing rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms turn)
+         * This is the general limit based on the missile's class (angular acceleration)
+         * I.e. the missile will accelerate it's turning up to this rate and then 
+         * decelerate from it when close to the target direction.
+         * @type Number
+         */
+        this._turningLimit = 0;
+        /**
+         * An array storing direct references to all the thrusters of the missile.
+         * @type Thruster[]
+         */
+        this._thrusters = [];
+        /**
+         * The burn level and nozzles associated with each thruster use command.
+         * @type Object
+         */
+        this._forward = {burn: 0, thrusters: []};
+        this._yawLeft = {burn: 0, thrusters: []};
+        this._yawRight = {burn: 0, thrusters: []};
+        this._pitchUp = {burn: 0, thrusters: []};
+        this._pitchDown = {burn: 0, thrusters: []};
+        /**
+         * Cached value to enable faster calculation of the needed burn for 
+         * specific angular velocity change, based on the missile's parameters.
+         * @type Number
+         */
+        this._burnForAngularVelocityChangeFactor = 0;
+        /**
+         * Whether the main engine (forward thruster) is currently turned on.
+         * (this thruster always operates at 100% burn when turned on)
+         * The main thruster gets turned off if the missile is homing and the
+         * target gets outside of its course too much, until the course is
+         * corrected via the maneuvering thrusters.
+         * @type Boolean
+         */
+        this._mainBurn = false;
+        /**
+         * Whether the missile has already ignited its engines (after its ignitionTime)
+         * Once this is set to true, it remains true for the rest of the missile's lifetime.
+         * @type Boolean
+         */
+        this._started = false;
+        /**
+         * Whether the missile is currently using its maneuvering thrusters to home in on the target
+         * @type Boolean
+         */
+        this._homing = false;
+        /**
+         * Whether the missile is currently finishing its homing maneuver (only using maneuvering
+         * thrusters to cancel any spin)
+         * @type Boolean
+         */
+        this._stopHoming = false;
+        /**
+         * The target the missile is aiming for (for homing)
+         * @type Spacecraft
+         */
+        this._target = null;
+        /**
+         * The estimated (calculated) position where the missile will (can) hit its target
+         * (and thus which it should turn towards) based on the target's current
+         * relative position and velocity and the acceleration capability of the missile.
+         * @type Number[3]
+         */
+        this._targetHitPosition = [0, 0, 0];
+        /**
+         * Whether the stored target hit position has been updated for the current frame.
+         * @type Boolean
+         */
+        this._targetHitPositionValid = false;
+        /**
+         * The light source associated with the missile (representing light from its main
+         * thruster, with its intensity set according to whether the thruster is on)
+         * @type PointLightSource
+         */
+        this._lightSource = null;
+        /**
+         * The sound source used to position the sound effects beloning to this missile in 3D sound (=camera) space
+         * @type SoundSource
+         */
+        this._soundSource = null;
+        /**
+         * Reusable vector for storing the calculated sound source position
+         * @type Number[3]
+         */
+        this._soundSourcePosition = [0, 0, 0];
+        /**
+         * The callback function to execute when the missile hits a spacecraft.
+         * (bound to this in the constructor so it can be readily passed to _checkHit)
+         * @tpye HitCallback
+         */
+        this._hitCallback = Missile.prototype._hitCallback.bind(this);
+        /**
+         * The callback to get the offset to be used for hit checks for this missile
+         * (the sides of the hitboxes are offset towards the outside (i.e. the hitbox 
+         * is enlarged in all directions) by this much, in meters)
+         * (bound to this in the constructor so it can be readily passed to _checkHit)
+         * @type Function
+         */
+        this._getHitOffset = Missile.prototype._getHitOffset.bind(this);
+        if (missileClass) {
+            this.init(missileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity, target);
+        }
+    }
+    /**
+     * We reuse the same Missile instance for multiple missiles in a single games, as old missiles are
+     * destroyed. This method is called to reinitialize this Missile instance for a new missile.
+     * @param {MissileClass} missileClass The class of the missile defining its general properties.
+     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the missile.
+     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the missile.
+     * @param {Spacecraft} [spacecraft] The spacecraft which launched the missile.
+     * @param {Number} [muzzleVelocity] The starting velocity of the missile, in its +Y direction, in m/s
+     * @param {Spacecraft} [target] 
+     */
+    Missile.prototype.init = function (missileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity, target) {
+        var i, velocityMatrix = mat.identity4Aux();
+        if (spacecraft) {
+            mat.copyTranslation4(velocityMatrix, spacecraft.getVelocityMatrix());
+        }
+        if (muzzleVelocity) {
+            velocityMatrix[12] += orientationMatrix[4] * muzzleVelocity;
+            velocityMatrix[13] += orientationMatrix[5] * muzzleVelocity;
+            velocityMatrix[14] += orientationMatrix[6] * muzzleVelocity;
+        }
+        this._class = missileClass;
+        this._physicalModel.init(
+                missileClass.getMass(),
+                positionMatrix || mat.IDENTITY4,
+                orientationMatrix || mat.IDENTITY4,
+                mat.scaling4Aux(missileClass.getModelScale()),
+                velocityMatrix,
+                utils.EMPTY_ARRAY,
+                false,
+                false);
+        this._timeLeft = missileClass.getDuration();
+        this._timeLeftForIgnition = missileClass.getIgnitionTime();
+        this._origin = spacecraft;
+        this._turningLimit = missileClass.getAngularAcceleration() * MISSILE_TURN_ACCELERATION_DURATION_S * physics.ANGULAR_VELOCITY_MATRIX_DURATION_S;
+        for (i = 0; i < this._thrusters.length; i++) {
+            this._thrusters[i].destroy();
+        }
+        this._thrusters.length = 0;
+        this._forward.thrusters.length = 0;
+        this._yawLeft.thrusters.length = 0;
+        this._yawRight.thrusters.length = 0;
+        this._pitchUp.thrusters.length = 0;
+        this._pitchDown.thrusters.length = 0;
+        this.addThrusters(missileClass.getThrusterSlots());
+        this._burnForAngularVelocityChangeFactor = (1 / physics.ANGULAR_VELOCITY_MATRIX_DURATION_S * missileClass.getMass() / missileClass.getAngularThrust() * 1000);
+        this._target = target || null;
+        this._targetHitPositionValid = false;
+        this._yawTorque = null;
+        this._pitchTorque = null;
+        this._mainBurn = false;
+        this._started = false;
+        this._homing = (missileClass.getHomingMode() !== classes.MissileHomingMode.NONE);
+        this._stopHoming = false;
+        this._startSound = null;
+    };
+    /**
+     * Returns whether this missile object can be reused to represent a new
+     * missile.
+     * @returns {Boolean}
+     */
+    Missile.prototype.canBeReused = function () {
+        return (this._timeLeft <= 0);
+    };
+    /**
+     * Creates a new ParameterizedMesh to be used as the visual model for this missile. 
+     * Safe to be called on Missile objects that have not been set up yet, so 
+     * that the visual model objects can be created in advance.
+     */
+    Missile.prototype.createVisualModel = function () {
+        this._visualModel = new renderableObjects.ParameterizedMesh();
+    };
+    /**
+     * Sets up the renderable object that can be used to represent this missile in a visual scene.
+     * @param {Boolean} [wireframe=false] Whether to set up the model in wireframe mode
+     * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
+     */
+    Missile.prototype._initVisualModel = function (wireframe, lod) {
+        if (!this._visualModel) {
+            this.createVisualModel();
+        }
+        this._visualModel.init(
+                this._class.getModel(),
+                this._class.getShader(),
+                this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                this._physicalModel.getPositionMatrix(),
+                this._physicalModel.getOrientationMatrix(),
+                this._physicalModel.getScalingMatrix(),
+                wireframe,
+                lod,
+                _parameterArrays);
+        // setting the starting values of the parameter arrays
+        // setting an identity transformation for all transform groups
+        if (this._visualModel.hasParameterArray(_groupTransformsArrayName)) {
+            this._visualModel.setParameterArray(_groupTransformsArrayName, _groupTransformIdentityArray);
+        }
+        // setting the default luminosity for all luminosity groups
+        if (graphics.areLuminosityTexturesAvailable() && this._visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
+            this._visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+        }
+    };
+    /**
+     * Returns the visual model of the missile.
+     * @returns {ParameterizedMesh}
+     */
+    Missile.prototype.getVisualModel = function () {
+        return this._visualModel;
+    };
+    /**
+     * Adds the missile to a scene immediately, assuming its resources have already been loaded.
+     * @param {Scene} scene The scene to which to add the renderable object presenting the missile.
+     * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
+     * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
+     * @param {Function} [callback] If given, this function will be executed right after the missile is addded to the scene, with the 
+     * visual model of the missile passed to it as its only argument
+     */
+    Missile.prototype.addToSceneNow = function (scene, wireframe, lod, callback) {
+        var i;
+        this._initVisualModel(wireframe, lod);
+        scene.addObject(this._visualModel, true);
+        for (i = 0; i < this._thrusters.length; i++) {
+            this._thrusters[i].addToScene(this._visualModel.getNode());
+        }
+        if (_dynamicLights) {
+            if (!this._lightSource) {
+                this._lightSource = new lights.PointLightSource(this._class.getLightColor(), 0, vec.NULL3, [this._visualModel]);
+            }
+            scene.addPointLightSource(this._lightSource, constants.MISSILE_LIGHT_PRIORITY);
+        }
+        if (callback) {
+            callback(this._visualModel);
+        }
+    };
+    /**
+     * Adds a renderable node representing this missile to the passed scene.
+     * @param {Scene} scene The scene to which to add the renderable object presenting the missile.
+     * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
+     * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
+     * @param {Function} [callback] If given, this function will be executed right after the missile is addded to the scene, with the 
+     * visual model of the missile passed to it as its only argument
+     */
+    Missile.prototype.addToScene = function (scene, wireframe, lod, callback) {
+        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, wireframe, lod, callback));
+    };
+    /**
+     * Adds the resources required to render this missile to the passed scene,
+     * so they get loaded at the next resource load as well as added to any context
+     * the scene is added to.
+     * @param {Scene} scene
+     * @param {Boolean} [wireframe=false] Whether to add the model resource for wireframe rendering
+     * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
+     */
+    Missile.prototype.addResourcesToScene = function (scene, wireframe, lod) {
+        var exp, resourceID = MISSILE_RESOURCE_ID_PREFIX + this._class.getName();
+        this._class.acquireResources();
+        resources.executeWhenReady(function () {
+            if (!scene.hasResourcesOfObject(resourceID)) {
+                this._initVisualModel(wireframe, lod);
+                scene.addResourcesOfObject(this._visualModel, resourceID);
+                exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
+                exp.addResourcesToScene(scene);
+                exp = new explosion.Explosion(this._class.getShieldExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
+                exp.addResourcesToScene(scene);
+            }
+        }.bind(this));
+    };
+    /**
+     * Returns the object storing the burn level and thruster list associated
+     * with the passed thruster use command
+     * @param {String} name
+     * @returns {Object}
+     */
+    Missile.prototype.getThrusterUse = function (name) {
+        switch (name) {
+            case ThrusterUse.FORWARD:
+                return this._forward;
+            case ThrusterUse.YAW_LEFT:
+                return this._yawLeft;
+            case ThrusterUse.YAW_RIGHT:
+                return this._yawRight;
+            case ThrusterUse.PITCH_UP:
+                return this._pitchUp;
+            case ThrusterUse.PITCH_DOWN:
+                return this._pitchDown;
+            default:
+                application.showError("Invalid thruster use specified for missile: '" + name + "'!", application.ErrorSeverity.SEVERE);
+                return null;
+        }
+    };
+    /**
+     * Creates and adds thruster objects to all the thruster slots in the passed
+     * array
+     * @param {ThrusterSlot[]} slots
+     */
+    Missile.prototype.addThrusters = function (slots) {
+        var i, j, thruster, use;
+        for (i = 0; i < slots.length; i++) {
+            thruster = new Thruster(this._class.getPropulsionClass(), slots[i]); //eslint-disable-line no-use-before-define
+            this._thrusters.push(thruster);
+            for (j = 0; j < slots[i].uses.length; j++) {
+                use = this.getThrusterUse(slots[i].uses[j]);
+                if (use) {
+                    use.thrusters.push(thruster);
+                }
+            }
+        }
+    };
+    /**
+     * Returns the 4x4 rotation matrix describing the current rotation of this missile in relative (model) space.
+     * @returns {Float32Array}
+     */
+    Missile.prototype.getTurningMatrix = function () {
+        if (!this._turningMatrixValid) {
+            mat.setProd3x3SubOf4(this._turningMatrix,
+                    mat.prod3x3SubOf4Aux(
+                            this._physicalModel.getOrientationMatrix(),
+                            this._physicalModel.getAngularVelocityMatrix()),
+                    mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
+            this._turningMatrixValid = true;
+        }
+        return this._turningMatrix;
+    };
+    /**
+     * Sets the target angular velocity to yaw to the left with the given intensity 
+     * multiplied by the turning limit.
+     * @param {Number} intensity
+     */
+    Missile.prototype.yawLeft = function (intensity) {
+        this._yawTarget = -intensity * this._turningLimit;
+    };
+    /**
+     * Sets the target angular velocity to yaw to the right with the given intensity 
+     * multiplied by the turning limit.
+     * @param {Number} intensity
+     */
+    Missile.prototype.yawRight = function (intensity) {
+        this._yawTarget = intensity * this._turningLimit;
+    };
+    /**
+     * Sets the target angular velocity to pitch down with the given intensity 
+     * multiplied by the turning limit.
+     * @param {Number} intensity
+     */
+    Missile.prototype.pitchDown = function (intensity) {
+        this._pitchTarget = -intensity * this._turningLimit;
+    };
+    /**
+     * Sets the target angular velocity to pitch up with the given intensity 
+     * multiplied by the turning limit.
+     * @param {Number} intensity
+     */
+    Missile.prototype.pitchUp = function (intensity) {
+        this._pitchTarget = intensity * this._turningLimit;
+    };
+    /**
+     * Resets the all the thruster burn levels to zero.
+     */
+    Missile.prototype.resetThrusterBurn = function () {
+        var i;
+        this._forward.burn = 0;
+        this._yawLeft.burn = 0;
+        this._yawRight.burn = 0;
+        this._pitchUp.burn = 0;
+        this._pitchDown.burn = 0;
+        for (i = 0; i < this._thrusters.length; i++) {
+            this._thrusters[i].resetBurn();
+        }
+    };
+    Missile.prototype.addThrusterBurnForward = function (value) {
+        _addThrusterBurn(this._forward, value);
+    };
+    Missile.prototype.addThrusterBurnYawLeft = function (value) {
+        _addThrusterBurn(this._yawLeft, value);
+    };
+    Missile.prototype.addThrusterBurnYawRight = function (value) {
+        _addThrusterBurn(this._yawRight, value);
+    };
+    Missile.prototype.addThrusterBurnPitchUp = function (value) {
+        _addThrusterBurn(this._pitchUp, value);
+    };
+    Missile.prototype.addThrusterBurnPitchDown = function (value) {
+        _addThrusterBurn(this._pitchDown, value);
+    };
+    /**
+     * Returns the thruster burn level that is needed to produce the passed difference in angular velocity for the given duration.
+     * @param {Number} angularVelocityDifference The angular velocity difference that needs to be produced, in rad / physics.ANGULAR_VELOCITY_MATRIX_DURATION ms !!.
+     * @param {Number} duration The length of time during which the difference needs to be produced, in milliseconds
+     * @returns {Number}
+     */
+    Missile.prototype.getNeededBurnForAngularVelocityChange = function (angularVelocityDifference, duration) {
+        return angularVelocityDifference * this._burnForAngularVelocityChangeFactor / duration;
+    };
+    /**
+     * Sets the appropriate thruster burn levels for the maneuvering thrusters of the missile 
+     * based on the current targets (pitch and yaw)
+     * @param {Number} dt The time elapsed since the last control step, in ms
+     */
+    Missile.prototype._controlTurnThrusters = function (dt) {
+        var
+                // grab flight parameters for turning control
+                turningMatrix = this.getTurningMatrix(),
+                turnThreshold = physics.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD,
+                // for caching turn parameters (in rad / ANGULAR_VELOCITY_MATRIX_DURATION ms),
+                yawAngle, pitchAngle, turnEnd;
+        // controlling yaw
+        yawAngle = Math.sign(turningMatrix[4]) * vec.angle2y(turningMatrix[4], turningMatrix[5]);
+        if ((this._yawTarget - yawAngle) > turnThreshold) {
+            this.addThrusterBurnYawRight(Math.min(1, this.getNeededBurnForAngularVelocityChange(this._yawTarget - yawAngle, dt)));
+        } else if ((this._yawTarget - yawAngle) < -turnThreshold) {
+            this.addThrusterBurnYawLeft(Math.min(1, this.getNeededBurnForAngularVelocityChange(yawAngle - this._yawTarget, dt)));
+        } else {
+            turnEnd = true;
+        }
+        // controlling pitch
+        pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2x(turningMatrix[5], turningMatrix[6]);
+        if ((this._pitchTarget - pitchAngle) > turnThreshold) {
+            this.addThrusterBurnPitchUp(Math.min(1, this.getNeededBurnForAngularVelocityChange(this._pitchTarget - pitchAngle, dt)));
+        } else if ((this._pitchTarget - pitchAngle) < -turnThreshold) {
+            this.addThrusterBurnPitchDown(Math.min(1, this.getNeededBurnForAngularVelocityChange(pitchAngle - this._pitchTarget, dt)));
+        } else if (turnEnd && this._stopHoming) {
+            this._homing = false;
+        }
+        // reset the targets, as they have been processed, the new targets will be set by the next control step
+        this._yawTarget = 0;
+        this._pitchTarget = 0;
+    };
+    /**
+     * Apply the torques caused by the currently operating maneuvering thrusters to the physical
+     * model of the missile
+     */
+    Missile.prototype._applyTurnThrust = function () {
+        var yawAxis, pitchAxis;
+        yawAxis = mat.getRowC4(this._physicalModel.getOrientationMatrix());
+        pitchAxis = mat.getRowA4(this._physicalModel.getOrientationMatrix());
+        if (this._yawRight.burn > 0) {
+            this._yawTorque = this._physicalModel.addOrRenewTorque(this._yawTorque, this._class.getAngularThrust() * this._yawRight.burn, yawAxis);
+        } else if (this._yawLeft.burn > 0) {
+            this._yawTorque = this._physicalModel.addOrRenewTorque(this._yawTorque, -this._class.getAngularThrust() * this._yawLeft.burn, yawAxis);
+        }
+        if (this._pitchUp.burn > 0) {
+            this._pitchTorque = this._physicalModel.addOrRenewTorque(this._pitchTorque, -this._class.getAngularThrust() * this._pitchUp.burn, pitchAxis);
+        } else if (this._pitchDown.burn > 0) {
+            this._pitchTorque = this._physicalModel.addOrRenewTorque(this._pitchTorque, this._class.getAngularThrust() * this._pitchDown.burn, pitchAxis);
+        }
+    };
+    /**
+     * Calculate and return the expected (world) position where the missile can hit its current target, given
+     * the target's relative position and velocity and the acceleration capabilities of the missile (assuming
+     * it is constantly accelerating towards this point)
+     * @returns {Number[3]}
+     */
+    Missile.prototype._getTargetHitPosition = function () {
+        var
+                position, targetPosition,
+                relativeTargetVelocity,
+                acceleration,
+                a, c, d, e, i, hitTime;
+        if (!this._targetHitPositionValid) {
+            targetPosition = this._target.getPhysicalPositionVector();
+            position = mat.translationVector3(this._physicalModel.getPositionMatrix());
+            relativeTargetVelocity = vec.diffTranslation3(this._target.getVelocityMatrix(), this._physicalModel.getVelocityMatrix());
+            acceleration = this._class.getThrust() / this._class.getMass();
+            a = acceleration * acceleration * 0.25;
+            c = -(relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
+            d = 0;
+            for (i = 0; i < 3; i++) {
+                d += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
+            }
+            e = 0;
+            for (i = 0; i < 3; i++) {
+                e += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
+            }
+            hitTime = utils.getSmallestPositiveSolutionOf4thDegreeEquationWithoutDegree3(a, c, d, e);
+            this._targetHitPosition[0] = targetPosition[0] + hitTime * relativeTargetVelocity[0];
+            this._targetHitPosition[1] = targetPosition[1] + hitTime * relativeTargetVelocity[1];
+            this._targetHitPosition[2] = targetPosition[2] + hitTime * relativeTargetVelocity[2];
+            this._targetHitPositionValid = true;
+        }
+        return this._targetHitPosition;
+    };
+    /**
+     * Sets the yaw and pitch targets to turn the missile in the desired direction specified by the given two angles.
+     * To be executed while the missile is actively homing.
+     * @param {Number} yaw The yaw angle of the direction to turn towards, with a positive number meaning a direction to the left, in radians.
+     * @param {Number} pitch The pitch angle of the direction to turn towards, with a positive number meaning a direction upwards, in radians.
+     * @param {Number} dt The time passed since the last turn command in milliseconds - for an estimation of the time the set yaw and pitch 
+     * angular velocity will be in effect, so that they can be limited to avoid overshooting the desired angles
+     */
+    Missile.prototype._turn = function (yaw, pitch, dt) {
+        var turningMatrix, angularVelocity, angularAcceleration, turnStopAngle, turnIntensityFactor;
+        turningMatrix = this.getTurningMatrix();
+        angularAcceleration = this._class.getAngularAcceleration();
+        // a turn intensity of 1 means to accelerate the angular velocity to TURN_ACCELERATION_DURATION_S * acceleration (in rad / sec) and
+        // lower values represent a linear portion of this intended angular velocity
+        // the base intensity factor converts dt to seconds and counts in TURN_ACCELERATION_DURATION_S
+        // based on angle = angular velocity * time, we choose an angular velocity that will not overshoot the intended angle in the next dt
+        // milliseconds (which will mean about the next simulation step with relatively stable framerates)
+        turnIntensityFactor = MISSILE_TURN_INTENSITY_BASE_FACTOR / (angularAcceleration * dt);
+        // calculating how much will the missile turn at the current angular velocity if it starts decelerating right now
+        angularVelocity = Math.sign(turningMatrix[4]) * vec.angle2y(turningMatrix[4], turningMatrix[5]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), MISSILE_TURN_THRESHOLD_ANGLE);
+        if (yaw > turnStopAngle) {
+            this.yawLeft(Math.min(Math.max(0, turnIntensityFactor * (yaw - turnStopAngle)), 1));
+        } else if (yaw < -turnStopAngle) {
+            this.yawRight(Math.min(Math.max(0, turnIntensityFactor * (-yaw - turnStopAngle)), 1));
+        }
+        angularVelocity = Math.sign(turningMatrix[6]) * vec.angle2x(turningMatrix[5], turningMatrix[6]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), MISSILE_TURN_THRESHOLD_ANGLE);
+        if (pitch > turnStopAngle) {
+            this.pitchUp(Math.min(Math.max(0, turnIntensityFactor * (pitch - turnStopAngle)), 1));
+        } else if (pitch < -turnStopAngle) {
+            this.pitchDown(Math.min(Math.max(0, turnIntensityFactor * (-pitch - turnStopAngle)), 1));
+        }
+    };
+    /**
+     * Returns a 3D vector that can be used to position the sound source of this missile in the soundscape
+     * @returns {Number[3]}
+     */
+    Missile.prototype._getSoundSourcePosition = function () {
+        var pos = this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera());
+        this._soundSourcePosition[0] = Math.round(pos[12] * 10) * 0.1;
+        this._soundSourcePosition[1] = Math.round(pos[13] * 10) * 0.1;
+        this._soundSourcePosition[2] = Math.round(pos[14] * 10) * 0.1;
+        return this._soundSourcePosition;
+    };
+    /**
+     * Returns the sound source to be used for the sounds emitted by this missile.
+     * @returns {SoundSource}
+     */
+    Missile.prototype.getSoundSource = function () {
+        if (!this._soundSource) {
+            this._soundSource = audio.createSoundSource([0, 0, 0]);
+        }
+        return this._soundSource;
+    };
+    /**
+     * Performs the destruction of the missile, complete with explosion
+     * @param {ExplosionClass} explosionClass The class of the explosion to use
+     * @param {Float32Array} positionMatrix The world position where the missile explodes
+     * @param {Number[3]} direction The direction (unit) vector to use for the explosion (directional particle emitters)
+     * @param {Float32Array} velocityMatrix The velocity matrix to use for the explosion
+     * @param {SoundSource} soundSource The sound source to use for the explosion
+     * @param {Boolean} isHit Whether the destruction was the result of the missile hitting a spacecraft
+     */
+    Missile.prototype._destruct = function (explosionClass, positionMatrix, direction, velocityMatrix, soundSource, isHit) {
+        var exp;
+        this._target = null;
+        exp = explosion.getExplosion();
+        exp.init(explosionClass, positionMatrix, mat.IDENTITY4, direction, true, velocityMatrix);
+        exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), soundSource, isHit);
+        this._visualModel.markAsReusable(true);
+        if (this._startSound) {
+            this._startSound.stopPlaying(audio.SOUND_RAMP_DURATION);
+            this._startSound = null;
+        }
+    };
+    /**
+     * The callback to get the offset to be used for hit checks for this missile
+     * (the sides of the hitboxes are offset towards the outside (i.e. the hitbox 
+     * is enlarged in all directions) by this much, in meters)
+     * @param {Spacecraft} hitObject The spacecraft that is getting checked for hit
+     * @returns {Number}
+     */
+    Missile.prototype._getHitOffset = function (hitObject) {
+        return this._origin.isHostile(hitObject) ? this._class.getProximityRange() : 0;
+    };
+    /**
+     * The function to call when the missile hits a spacecraft
+     * @param {Spacecraft} hitObject 
+     * @param {PhysicalObject} physicalHitObject 
+     * @param {Number[4]} hitPositionVectorInObjectSpace 
+     * @param {Number[4]} hitPositionVectorInWorldSpace 
+     * @param {Number[3]} relativeHitPositionVectorInWorldSpace
+     * @param {Number[3]} relativeVelocityDirectionInObjectSpace
+     * @param {Number[3]} relativeVelocityDirectionInWorldSpace
+     * @param {Number} relativeVelocity
+     */
+    Missile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity) {
+        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
+        this._destruct(
+                ((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()),
+                mat.translation4vAux(hitPositionVectorInWorldSpace),
+                vec.scaled3(relativeVelocityDirectionInWorldSpace, -1),
+                physicalHitObject.getVelocityMatrix(),
+                hitObject.getSoundSource(),
+                true);
+        hitObject.damage(this._class.getDamage(0), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, true);
+        this._timeLeft = 0;
+    };
+    /**
+     * Simulates the movement of the missile and checks if it hit any objects.
+     * @param {Number} dt The passed time since the last simulation in milliseconds.
+     * @param {Octree} hitObjectOctree The root node of the octree that is used to spatially partition the spacecrafts this missile can
+     * hit.
+     */
+    Missile.prototype.simulate = function (dt, hitObjectOctree) {
+        var i, p, oriMatrix, targetYawAndPitch, threshold, hitCheckDT;
+        if (this.canBeReused()) {
+            return;
+        }
+        // avoid hit checking right after the missile is launched, as it could hit the launching ship
+        hitCheckDT = Math.min(dt, this._class.getDuration() - this._timeLeft);
+        this._timeLeft -= dt;
+        this._timeLeftForIgnition -= dt;
+        // if the target the missile is trying to home in on has been destroyed, self-destruct the missile
+        if (this._target && this._homing && !this._target.isAlive()) {
+            this._target = null;
+            if (this._timeLeftForIgnition <= 0) {
+                this._timeLeft = 0;
+            }
+        }
+        this._mainBurn = false;
+        if (this._timeLeft > 0) {
+            // set up and apply the main and maneuvering thrusters
+            if ((this._timeLeftForIgnition <= 0) && this._target) {
+                oriMatrix = this._physicalModel.getOrientationMatrix();
+                this.resetThrusterBurn();
+                if (this._homing && !this._stopHoming) {
+                    // for homing, calculate expected target hit position and the yaw and pitch angles towards it
+                    targetYawAndPitch = vec.getYawAndPitch(vec.normalize3(vec.prodVec3Mat4Aux(
+                            vec.diff3(this._getTargetHitPosition(), mat.translationVector3(this._physicalModel.getPositionMatrix())),
+                            mat.inverseOfRotation4Aux(oriMatrix))));
+                    threshold = this._class.getMainBurnAngleThreshold();
+                }
+                // apply main thrust if the missile is not homing or is homing and sufficiently facing the target
+                // direction
+                if (!this._homing || this._stopHoming || (Math.abs(targetYawAndPitch.yaw) < threshold && Math.abs(targetYawAndPitch.pitch) < threshold)) {
+                    this._physicalModel.applyForce(this._class.getThrust(), oriMatrix[4], oriMatrix[5], oriMatrix[6], dt);
+                    this._mainBurn = true;
+                    this.addThrusterBurnForward(1);
+                    if (!this._started) {
+                        this._started = true;
+                        if (this._class.getHomingMode() === classes.MissileHomingMode.INITIAL) {
+                            this._stopHoming = true;
+                        }
+                        this._startSound = this._class.playStartSound(this.getSoundSource());
+                    }
+                }
+                // use maneuvering thrusters for homing
+                if (this._homing) {
+                    if (!this._stopHoming) {
+                        this._turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                    }
+                    this._controlTurnThrusters(dt);
+                    this._applyTurnThrust();
+                }
+                for (i = 0; i < this._thrusters.length; i++) {
+                    this._thrusters[i].updateVisuals();
+                }
+            }
+            // update sound position
+            if (this._started) {
+                p = this._getSoundSourcePosition();
+                this.getSoundSource().setPosition(p[0], p[1], p[2]);
+            }
+            // update lightsource
+            if (this._lightSource) {
+                this._lightSource.setObjectIntensity(this._mainBurn ? this._class.getLightIntensity() : 0);
+            }
+            this._physicalModel.simulate(dt);
+            this._turningMatrixValid = false;
+            this._targetHitPositionValid = false;
+            this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
+            this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
+            _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, this._getHitOffset, this._hitCallback);
+        } else {
+            // self-destruct if the time has run out
+            this._timeLeft = 0;
+            if (!this._visualModel.canBeReused()) {
+                this._destruct(
+                        this._class.getExplosionClass(),
+                        this._physicalModel.getPositionMatrix(),
+                        vec.scaled3(vec.normalize3(mat.translationVector3(this._physicalModel.getVelocityMatrix())), -1),
+                        this._physicalModel.getVelocityMatrix(),
+                        audio.createSoundSource(mat.translationVector3(this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera()))),
+                        false);
+            }
+        }
+    };
+    /**
+     * Removes all references from the missile.
+     */
+    Missile.prototype.destroy = function () {
+        this._timeLeft = 0;
+        this._class = null;
+        this._origin = null;
+        this._turningMatrix = null;
+        this._target = null;
+        this._targetHitPosition = null;
+        this._thrusters = null;
+        this._forward = null;
+        this._yawLeft = null;
+        this._yawRight = null;
+        this._pitchUp = null;
+        this._pitchDown = null;
+        this._yawTorque = null;
+        this._pitchTorque = null;
+        if (this._visualModel && this._visualModel.getNode()) {
+            this._visualModel.getNode().markAsReusable(true);
+        }
+        this._visualModel = null;
+        this._physicalModel = null;
+        if (this._startSound) {
+            this._startSound.stopPlaying(audio.SOUND_RAMP_DURATION);
+            this._startSound = null;
+        }
+        this._soundSource = null;
+        this._soundSourcePosition = null;
+        this._lightSource = null;
+        this._hitCallback = null;
+        this._getHitOffset = null;
     };
     // #########################################################################
     /**
@@ -564,7 +1446,7 @@ define([
          */
         this._slot = slot;
         /**
-         * The time passed since the last firing in milliseconds
+         * The time remaining until the weapon can fire again, in milliseconds
          * @type Number
          */
         this._cooldown = 0;
@@ -884,7 +1766,7 @@ define([
      */
     Weapon.prototype.simulate = function (dt) {
         var i, rotators;
-        this._cooldown = Math.min(this._cooldown + dt, this._class.getCooldown());
+        this._cooldown = Math.max(this._cooldown - dt, 0);
         // updating the group transform matrices of the visual model if needed as well as recalculating the final transform matrix
         if (this._rotationChanged) {
             mat.setIdentity4(this._transformMatrix);
@@ -927,8 +1809,8 @@ define([
             return 0;
         }
         // check cooldown
-        if (this._cooldown >= this._class.getCooldown()) {
-            this._cooldown = 0;
+        if (this._cooldown <= 0) {
+            this._cooldown = this._class.getCooldown();
             // cache the matrices valid for the whole weapon
             weaponSlotPosVector = vec.prodVec3Mat4Aux(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
             mat.setTranslatedByVector(Weapon._weaponSlotPosMatrix, this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
@@ -1181,6 +2063,223 @@ define([
             this._visualModel.markAsReusable(true);
         }
         this._visualModel = null;
+    };
+    // #########################################################################
+    /**
+     * @class Represents a missile launcher with fixed tubes on a spacecraft.
+     * @param {MissileClass} missileClass The class storing the general 
+     * characteristics of the missiles loaded into this launcher.
+     * (a launcher can only have one class of missiles equipped at a time)
+     * @param {Spacecraft} spacecraft The spacecraft on which this launcher is 
+     * located.
+     * @param {MissileLauncherDescriptor} descriptor The descriptor belonging to
+     * the spacecraft's class that corresponds to this launcher.
+     * @param {Number} missileCount The amount of missiles currently loaded into this
+     * launcher.
+     */
+    function MissileLauncher(missileClass, spacecraft, descriptor, missileCount) {
+        /**
+         * The class storing the general characteristics of the missiles loaded 
+         * into this launcher.
+         * (a launcher can only have one class of missiles equipped at a time)
+         * @type MissileClass
+         */
+        this._class = missileClass;
+        /**
+         * The spacecraft on which this launcher is located.
+         * @type Spacecraft
+         */
+        this._spacecraft = spacecraft;
+        /**
+         * The descriptor belonging to the spacecraft's class that corresponds 
+         * to this launcher.
+         * @type MissileLauncherDescriptor
+         */
+        this._descriptor = descriptor;
+        /**
+         * The amount of missiles loaded into this launcher.
+         * @type Number
+         */
+        this._missileCount = missileCount;
+        /**
+         * The time remaining until the next missile can be launched, in milliseconds.
+         * @type Number
+         */
+        this._cooldown = 0;
+    }
+    /**
+     * Returns the name of the weapon in a way that can be displayed to the user (translated)
+     * @returns {String}
+     */
+    MissileLauncher.prototype.getDisplayName = function () {
+        return this._missileCount + " × " + this._class.getDisplayName();
+    };
+    /**
+     * Returns the damage one missile from this launcher deals to a target with 
+     * the passed armor rating.
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getDamage = function (armorRating) {
+        return this._class.getDamage(armorRating);
+    };
+    /**
+     * Returns the damage per second dealt by missiles from this launcher to a
+     * target with the passed armor rating, assuming continuous launches and
+     * that every missile hits.
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getFirepower = function (armorRating) {
+        return this._class.getFirepower(armorRating);
+    };
+    /**
+     * Returns the rate of fire of this launcher, in shots per second
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getFireRate = function () {
+        return this._class.getFireRate();
+    };
+    /**
+     * Return the duration this launcher needs between launches, in milliseconds.
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getCooldown = function () {
+        return this._class.getCooldown();
+    };
+    /**
+     * Returns a 4x4 rotation matrix describing the orientation of missiles launched by this launcher in world space.
+     * Uses an auxiliary matrix common to all MissileLaunchers.
+     * @returns {Float32Array}
+     */
+    MissileLauncher.prototype.getMissileOrientationMatrix = function () {
+        mat.setProd3x3SubOf4(MissileLauncher._missileOriMatrix, this._descriptor.orientationMatrix, this._spacecraft.getPhysicalOrientationMatrix());
+        return MissileLauncher._missileOriMatrix;
+    };
+    /**
+     * Marks the resources necessary to render missiles from this launcher for loading.
+     * @param {Object} params
+     */
+    MissileLauncher.prototype.acquireResources = function (params) {
+        this._class.acquireResources(params);
+    };
+    /**
+     * Adds the resources required to render the missiles launched by this launcher
+     * to the passed scene, so they get loaded at the next resource load as well 
+     * as added to any context the scene is added to.
+     * @param {Scene} scene
+     */
+    MissileLauncher.prototype.addMissileResourcesToScene = function (scene) {
+        var missile, resourceID = MISSILE_LAUNCHER_RESOURCE_ID_PREFIX + this._class.getName();
+        missile = new Missile(this._class);
+        missile.addResourcesToScene(scene);
+        resources.executeWhenReady(function () {
+            scene.addResourcesOfObject(null, resourceID);
+        });
+    };
+    /**
+     * Does all the needed updates to the missile launcher's state for one simulation step.
+     * @param {Number} dt The time elapsed since the last simulation step, in milliseconds
+     */
+    MissileLauncher.prototype.simulate = function (dt) {
+        this._cooldown = Math.max(this._cooldown - dt, 0);
+    };
+    // static auxiliary matrices to be used in the luanch() method (to avoid created new matrices during each execution of the method)
+    MissileLauncher._tubePosMatrix = mat.identity4();
+    MissileLauncher._missileOriMatrix = mat.identity4();
+    /**
+     * Launches a missile and adds it (if any) to the passed pool.
+     * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this launcher - it
+     * is more effective to calculate it once for a spacecraft and pass it to all launchers as a parameter.
+     * @param {SoundSource} shipSoundSource The sound source belonging to the spacecraft this launcher is on
+     * @returns {Number} How many missiles did the launcher launch.
+     */
+    MissileLauncher.prototype.launch = function (shipScaledOriMatrix, shipSoundSource) {
+        var m, result,
+                tubePosVector,
+                missileOriMatrix,
+                soundPosition,
+                scene = this._spacecraft.getVisualModel().getNode().getScene();
+        // check missile count and cooldown
+        if ((this._missileCount > 0) && (this._cooldown <= 0)) {
+            this._cooldown = this._class.getCooldown();
+            this._missileCount--;
+            tubePosVector = vec.prodVec3Mat4Aux(this._descriptor.tubePositions[0], shipScaledOriMatrix);
+            mat.setTranslatedByVector(MissileLauncher._tubePosMatrix, this._spacecraft.getPhysicalPositionMatrix(), tubePosVector);
+            missileOriMatrix = this.getMissileOrientationMatrix();
+            result = 0;
+            // generate the missile
+            // add the projectile of this barrel
+            m = _missilePool.getObject();
+            m.init(
+                    this._class,
+                    MissileLauncher._tubePosMatrix,
+                    missileOriMatrix,
+                    this._spacecraft,
+                    this._class.getLaunchVelocity(),
+                    this._spacecraft.getTarget());
+            m.addToSceneNow(scene);
+            // create the counter-force affecting the firing ship
+            this._spacecraft.getPhysicalModel().applyForceAndTorque(
+                    tubePosVector,
+                    mat.getRowB43Neg(missileOriMatrix),
+                    this._class.getForceForDuration(_momentDuration),
+                    _momentDuration
+                    );
+            result++;
+            if (!shipSoundSource) {
+                soundPosition = mat.translationVector3(m.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera()));
+            }
+            this._class.playLaunchSound(soundPosition, shipSoundSource, _fireSoundStackingTimeThreshold, _fireSoundStackingVolumeFactor);
+            return result;
+        }
+        return 0;
+    };
+    /**
+     * Returns the amount of score points to be added to the total score value of spacecrafts that have this launcher
+     * (and the missiles loaded to it) equipped
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getScoreValue = function () {
+        return this._class.getScoreValue() * this._missileCount;
+    };
+    /**
+     * Returns the amount of missiles currently loaded into this launcher.
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getMissileCount = function () {
+        return this._missileCount;
+    };
+    /**
+     * Returns the highest number of missiles that might be simultaneously used (flying, rendered on the battle)
+     * for this launcher in one battle.
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getMaxMissileCount = function () {
+        return Math.min(this._missileCount, this._class.getMaxCount());
+    };
+    /**
+     * Returns the highest number of explosions that might be used for this launcher simultaneously in one battle.
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getMaxExplosionCount = function () {
+        // all the missiles might theoretically explode at the same time
+        return this.getMaxMissileCount();
+    };
+    /**
+     * Returns the highest number of particles that might be used (rendered) for this launcher simultaneously in one battle.
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getMaxParticleCount = function () {
+        return this.getMaxMissileCount() * this._class.getParticleCount();
+    };
+    /**
+     * Removes all references stored by this object
+     */
+    MissileLauncher.prototype.destroy = function () {
+        this._class = null;
+        this._spacecraft = null;
+        this._descriptor = null;
     };
     // #########################################################################
     /**
@@ -1684,6 +2783,9 @@ define([
     Thruster.prototype.destroy = function () {
         this._propulsionClass = null;
         this._slot = null;
+        if (this._visualModel) {
+            this._visualModel.markAsReusable(true);
+        }
         this._visualModel = null;
         this._shipModel = null;
     };
@@ -1819,7 +2921,7 @@ define([
      * @returns {Object}
      */
     Propulsion.prototype.getThrusterUse = function (name) {
-        switch(name) {
+        switch (name) {
             case ThrusterUse.FORWARD:
                 return this._forward;
             case ThrusterUse.REVERSE:
@@ -1889,43 +2991,43 @@ define([
      * @param {Number} value The amount added to the thruster burn level.
      */
     Propulsion.prototype.addThrusterBurn = function (use, value) {
-        addThrusterBurn(this.getThrusterUse(use), value);
+        _addThrusterBurn(this.getThrusterUse(use), value);
     };
     Propulsion.prototype.addThrusterBurnForward = function (value) {
-        addThrusterBurn(this._forward, value);
+        _addThrusterBurn(this._forward, value);
     };
     Propulsion.prototype.addThrusterBurnReverse = function (value) {
-        addThrusterBurn(this._reverse, value);
+        _addThrusterBurn(this._reverse, value);
     };
     Propulsion.prototype.addThrusterBurnLeft = function (value) {
-        addThrusterBurn(this._strafeLeft, value);
+        _addThrusterBurn(this._strafeLeft, value);
     };
     Propulsion.prototype.addThrusterBurnRight = function (value) {
-        addThrusterBurn(this._strafeRight, value);
+        _addThrusterBurn(this._strafeRight, value);
     };
     Propulsion.prototype.addThrusterBurnUp = function (value) {
-        addThrusterBurn(this._raise, value);
+        _addThrusterBurn(this._raise, value);
     };
     Propulsion.prototype.addThrusterBurnDown = function (value) {
-        addThrusterBurn(this._lower, value);
+        _addThrusterBurn(this._lower, value);
     };
     Propulsion.prototype.addThrusterBurnYawLeft = function (value) {
-        addThrusterBurn(this._yawLeft, value);
+        _addThrusterBurn(this._yawLeft, value);
     };
     Propulsion.prototype.addThrusterBurnYawRight = function (value) {
-        addThrusterBurn(this._yawRight, value);
+        _addThrusterBurn(this._yawRight, value);
     };
     Propulsion.prototype.addThrusterBurnPitchUp = function (value) {
-        addThrusterBurn(this._pitchUp, value);
+        _addThrusterBurn(this._pitchUp, value);
     };
     Propulsion.prototype.addThrusterBurnPitchDown = function (value) {
-        addThrusterBurn(this._pitchDown, value);
+        _addThrusterBurn(this._pitchDown, value);
     };
     Propulsion.prototype.addThrusterBurnRollLeft = function (value) {
-        addThrusterBurn(this._rollLeft, value);
+        _addThrusterBurn(this._rollLeft, value);
     };
     Propulsion.prototype.addThrusterBurnRollRight = function (value) {
-        addThrusterBurn(this._rollRight, value);
+        _addThrusterBurn(this._rollRight, value);
     };
     /**
      * Resets the all the thruster burn levels to zero.
@@ -3216,6 +4318,7 @@ define([
     // obtaining pool references
     _particlePool = pools.getPool(renderableObjects.Particle);
     _projectilePool = pools.getPool(Projectile);
+    _missilePool = pools.getPool(Missile);
     // caching configuration settings
     config.executeWhenReady(function () {
         var i;
@@ -3245,7 +4348,9 @@ define([
         ThrusterUse: ThrusterUse,
         handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
         Projectile: Projectile,
+        Missile: Missile,
         Weapon: Weapon,
+        MissileLauncher: MissileLauncher,
         TargetingComputer: TargetingComputer,
         Propulsion: Propulsion,
         JumpEngine: JumpEngine,

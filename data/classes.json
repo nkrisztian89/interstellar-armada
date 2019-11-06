@@ -2184,6 +2184,78 @@
             "explosion": "largeHitExplosion",
             "shieldExplosion": "largeShieldHitExplosion"
         }],
+    "missileClasses": [{
+            "name": "mediumMissile",
+            "fullName": "Medium missile",
+            "model": "mediumMissile",
+            "modelScale": 1,
+            "shader": "ship",
+            "texture": "libra",
+            "damage": 12,
+            "size": 3,
+            "capacity": 2,
+            "homingMode": "continuous",
+            "mass": 50,
+            "launchVelocity": 25,
+            "ignitionTime": 500,
+            "acceleration": 250,
+            "angularAcceleration": 720,
+            "mainBurnAngleThreshold": 2.5,
+            "duration": 5000,
+            "cooldown": 2000,
+            "proximityRange": 5,
+            "kineticFactor": 0.25,
+            "lightColor": [0, 0.5, 1],
+            "lightIntensity": 100,
+            "explosion": "mediumHitExplosion",
+            "shieldExplosion": "mediumHitExplosion",
+            "scoreValue": 5,
+            "launchSound": {
+                "name": "missileLaunch",
+                "volume": 0.5
+            },
+            "startSound": {
+                "name": "missileStart",
+                "volume": 0.5
+            },
+            "propulsion": "missile",
+            "thrusterSlots": [{
+                    "group": 1,
+                    "uses": ["forward"],
+                    "thrusters": [{
+                            "position": [0, -0.78, 0],
+                            "size": 0.8
+                        }]
+                }, {
+                    "group": 2,
+                    "uses": ["yawLeft"],
+                    "thrusters": [{
+                            "position": [-0.32, -0.435, 0],
+                            "size": 0.25
+                        }]
+                }, {
+                    "group": 3,
+                    "uses": ["yawRight"],
+                    "thrusters": [{
+                            "position": [0.32, -0.435, 0],
+                            "size": 0.25
+                        }]
+                }, {
+                    "group": 4,
+                    "uses": ["pitchUp"],
+                    "thrusters": [{
+                            "position": [0, -0.435, 0.32],
+                            "size": 0.25
+                        }]
+                }, {
+                    "group": 5,
+                    "uses": ["pitchDown"],
+                    "thrusters": [{
+                            "position": [0, -0.435, -0.32],
+                            "size": 0.25
+                        }]
+                }]
+        }],
     "weaponClasses": [{
             "name": "fixedTrainingGun",
             "fullName": "Fixed training gun",
@@ -2501,6 +2573,23 @@
             "scoreValue": 100
         }],
     "propulsionClasses": [{
+            "name": "missile",
+            "fullName": "Missile propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "grade": 1,
+            "referenceMass": 1,
+            "thrust": 1,
+            "angularThrust": 1,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 0.8
+            },
+            "scoreValue": 1
+        }, {
             "name": "imperialDrone",
             "fullName": "Drone propulsion",
             "shader": "particle",
@@ -3261,6 +3350,15 @@
                     "position": [-22, 9, 1.85],
                     "maxGrade": 3
                 }],
+            "missileLaunchers": [{
+                    "tubePositions": [[11, 18, 6.5]],
+                    "size": 3,
+                    "capacity": 10
+                }, {
+                    "tubePositions": [[-11, 18, 6.5]],
+                    "size": 3,
+                    "capacity": 10
+                }],
             "maxPropulsionGrade": 3,
             "thrusterSlots": [{
                     "group": 1,
@@ -3597,6 +3695,13 @@
                         }, {
                             "class": "plasmaGun"
                         }],
+                    "missiles": [{
+                            "class": "mediumMissile",
+                            "amount": 3
+                        }, {
+                            "class": "mediumMissile",
+                            "amount": 3
+                        }],
                     "propulsion": {
                         "class": "imperialFighterMk1"
                     },
@@ -3617,6 +3722,13 @@
                         }, {
                             "class": "plasmaGun"
                         }],
+                    "missiles": [{
+                            "class": "mediumMissile",
+                            "amount": 4
+                        }, {
+                            "class": "mediumMissile",
+                            "amount": 4
+                        }],
                     "propulsion": {
                         "class": "imperialFighterMk2"
                     },
@@ -3636,6 +3748,13 @@
                             "class": "plasmaGun"
                         }, {
                             "class": "plasmaGun"
+                        }],
+                    "missiles": [{
+                            "class": "mediumMissile",
+                            "amount": 5
+                        }, {
+                            "class": "mediumMissile",
+                            "amount": 5
                         }],
                     "propulsion": {
                         "class": "imperialFighterMk3"

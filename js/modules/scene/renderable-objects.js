@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Provides various basic renderable object classes that can be added to scenes inside renderable nodes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -828,23 +828,18 @@ define([
      * will be used for rendering this model
      */
     function ShadedLODMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod) {
-        RenderableObject3D.call(this, shader, true, true, positionMatrix, orientationMatrix, scalingMatrix);
-        this.setSmallestSizeWhenDrawn(5);
-        this.setTextures(textures);
+        RenderableObject3D.call(this);
         /**
          * Stores all the models representing this mesh at different levels of
          * detail.
          * @type Model
          */
-        this._model = model;
+        this._model = null;
         /**
          * Whether or not the rendering mode of this mesh is wireframe.
          * @type Boolean
          */
-        this._wireframe = (wireframe === true);
-        if (this._wireframe) {
-            this._isRenderedWithDepthMask = false;
-        }
+        this._wireframe = false;
         /**
          * The model currently chosen for rendering. Acts as a cached reference
          * to be used after the proper model has been chosen for a frame.
@@ -869,27 +864,22 @@ define([
          * the reference sizes.
          * @type Object.<String, Number>
          */
-        this._lodSizeFactors = {};
+        this._lodSizeFactors = null;
         /**
          * If a static LOD is chosen, the model is always rendered using this 
          * LOD (or the closest available one)
          * @type Number
          */
-        this._staticLOD = (lod !== undefined) ? lod : this.LOD_NOT_SET;
+        this._staticLOD = this.LOD_NOT_SET;
+        if (model) {
+            this.init(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod);
+        }
         this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
         });
         this.setUniformValueFunction(UNIFORM_NORMAL_MATRIX_NAME, function () {
             return mat.transposed3Aux(mat.inverse3Aux(mat.matrix3from4Aux(this.getModelMatrix())));
         });
-        // initializing modelSize
-        if (this._model) {
-            for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
-                if (this._model.getSize(i) > this._modelSize) {
-                    this._modelSize = this._model.getSize(i);
-                }
-            }
-        }
     }
     ShadedLODMesh.prototype = new RenderableObject3D();
     ShadedLODMesh.prototype.constructor = ShadedLODMesh;
@@ -899,6 +889,46 @@ define([
      * @type Number
      */
     ShadedLODMesh.prototype.LOD_NOT_SET = -1;
+    /**
+     * @override
+     * @param {Model} model The 3D model with meshes for different LODs.
+     * @param {ManagedShader} shader The shader that should be active while rendering 
+     * this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
+     * should be bound while rendering this object in an associative array, with 
+     * the roles as keys.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix 
+     * representing the initial position of the object.
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix 
+     * representing the initial orientation of the object.
+     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing 
+     * the initial size of the object.
+     * @param {Boolean} wireframe Whether the mesh should be drawn as wireframe 
+     * instead of solid.
+     * @param {Number} [lod] If given, only this specific LOD (if available) 
+     * will be used for rendering this model
+     */
+    ShadedLODMesh.prototype.init = function (model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod) {
+        RenderableObject3D.prototype.init.call(this, shader, true, true, positionMatrix, orientationMatrix, scalingMatrix);
+        this.setSmallestSizeWhenDrawn(5);
+        this.setTextures(textures);
+        this._model = model;
+        this._wireframe = (wireframe === true);
+        if (this._wireframe) {
+            this._isRenderedWithDepthMask = false;
+        }
+        this._currentLOD = this.LOD_NOT_SET;
+        this._lastLOD = this.LOD_NOT_SET;
+        this._modelSize = 0;
+        this._lodSizeFactors = {};
+        this._staticLOD = (lod !== undefined) ? lod : this.LOD_NOT_SET;
+        // initializing modelSize
+        for (var i = this._model.getMinLOD(); i <= this._model.getMaxLOD(); i++) {
+            if (this._model.getSize(i) > this._modelSize) {
+                this._modelSize = this._model.getSize(i);
+            }
+        }
+    };
     /**
      * @override
      * @param {ManagedGLContext} context
@@ -1089,11 +1119,45 @@ define([
      * The keys in this object should be the names (the uniform variables will be identified by names based on these - generated by 
      * managedGL), and the values should indicate the type of elements in the corresponding uniform array (using the enum 
      * managedGL.ShaderVariableType). E.g. { "myFloatArray": managedGL.ShaderVariableType.FLOAT }
-     * @returns {ParameterizedMesh}
      */
     function ParameterizedMesh(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod, parameterArrayDeclarations) {
+        ShadedLODMesh.call(this);
+        /**
+         * The values of the parameter arrays.
+         * @type Object.<String, Float32Array>
+         */
+        this._parameterArrays = null;
+        if (model) {
+            this.init(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod, parameterArrayDeclarations);
+        }
+    }
+    ParameterizedMesh.prototype = new ShadedLODMesh();
+    ParameterizedMesh.prototype.constructor = ParameterizedMesh;
+    /**
+     * @param {Model} model
+     * @param {ManagedShader} shader The shader that should be active while rendering 
+     * this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that 
+     * should be bound while rendering this object in an associative array, with 
+     * the roles as keys.
+     * @param {Float32Array} positionMatrix The 4x4 translation matrix 
+     * representing the initial position of the object.
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix 
+     * representing the initial orientation of the object.
+     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix representing 
+     * the initial size of the object.
+     * @param {Boolean} wireframe Whether the mesh should be drawn as wireframe 
+     * instead of solid.
+     * @param {Number} [lod] If given, only this specific LOD (if available) 
+     * will be used for rendering this model
+     * @param {Object} parameterArrayDeclarations The names and types to identify the parameter arrays later when setting their values.
+     * The keys in this object should be the names (the uniform variables will be identified by names based on these - generated by 
+     * managedGL), and the values should indicate the type of elements in the corresponding uniform array (using the enum 
+     * managedGL.ShaderVariableType). E.g. { "myFloatArray": managedGL.ShaderVariableType.FLOAT }
+     */
+    ParameterizedMesh.prototype.init = function(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod, parameterArrayDeclarations) {
         var i, j, uniformArrayName, uniformArrayLength, parameterArrayNames;
-        ShadedLODMesh.call(this, model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod);
+        ShadedLODMesh.prototype.init.call(this, model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod);
         /**
          * The values of the parameter arrays.
          * @type Object.<String, Float32Array>
@@ -1123,9 +1187,7 @@ define([
                 this._parameterArrays[parameterArrayNames[i]] = new Float32Array();
             }
         }
-    }
-    ParameterizedMesh.prototype = new ShadedLODMesh();
-    ParameterizedMesh.prototype.constructor = ParameterizedMesh;
+    };
     /**
      * Returns a function to that returns the parameter array identified by the 
      * passed name.

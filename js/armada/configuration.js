@@ -698,6 +698,14 @@ define([
             type: "number"
         },
         /**
+         * When prefilling the missile pool at the start of a battle, the size of the pool will be set to the maximum possible amount of 
+         * missiles multiplied by this factor.
+         */
+        MISSILE_POOL_PREFILL_FACTOR: {
+            name: "missilePoolPrefillFactor",
+            type: "number"
+        },
+        /**
          * When prefilling the explosion pool at the start of a battle, the size of the pool will be set to the maximum possible amount of 
          * explosions multiplied by this factor.
          */

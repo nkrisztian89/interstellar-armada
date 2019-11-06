@@ -90,6 +90,21 @@ Copyright: freesound user cydon, license: CC0 1.0
 
 ---
 
+missile/missile-launch.ogg
+missile/missile-start.ogg
+
+Edited by Krisztián Nagy with Audacity
+License: CC BY 4.0
+Created (edited and mixed) from the following sound effects:
+
+http://freesound.org/people/RSilveira_88/sounds/216277
+Copyright: freesound user RSilveira_88, license: CC BY 3.0
+
+https://freesound.org/people/mensageirocs/sounds/232680/
+Copyright: freesound user mensageirocs, license: CC BY 3.0
+
+---
+
 spacecraft/hum.ogg
 spacecraft/jump_cancel_fighter.ogg
 spacecraft/jump_cancel_ship.ogg

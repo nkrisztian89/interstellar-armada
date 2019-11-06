@@ -554,6 +554,7 @@
         "nextNearestNonHostileTarget": "Target the next non-hostile (friendly or neutral) spacecraft",
         "toggleAutoTargeting": "Toggle automatic targeting of hostiles",
         "fire": "Fire primary weapons",
+        "launchMissile": "Launch missile",
         "forward": "Forward thrust / increase speed",
         "reverse": "Reverse thrust / decrease speed",
         "strafeLeft": "Strafe left",

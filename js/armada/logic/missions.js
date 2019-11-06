@@ -199,6 +199,11 @@ define([
              */
             _projectilePool,
             /**
+             * A pool containing missiles for reuse, so that creation of new missile objects can be decreased for optimization.
+             * @type Pool
+             */
+            _missilePool,
+            /**
              * A pool containing explosions for reuse, so that creation of new explosion objects can be decreased for optimization.
              * @type Pool
              */
@@ -2726,6 +2731,17 @@ define([
         return result;
     };
     /**
+     * Returns the highest number of missiles that might be used by the spacecrafts of this mission simultaneously.
+     * @returns {Number}
+     */
+    Mission.prototype.getMaxMissileCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            result += this._spacecrafts[i].getMaxMissileCount();
+        }
+        return result;
+    };
+    /**
      * Returns the highest number of explosions that might be used by the spacecrafts of this mission simultaneously.
      * @returns {Number}
      */
@@ -2764,6 +2780,7 @@ define([
                 weapons: true,
                 thrusterParticles: true,
                 projectileResources: true,
+                missileResources: true,
                 explosion: true,
                 cameraConfigurations: true,
                 lightSources: true,
@@ -2799,6 +2816,9 @@ define([
             _projectilePool.prefill(Math.ceil(this.getMaxProjectileCount() * config.getSetting(config.BATTLE_SETTINGS.PROJECTILE_POOL_PREFILL_FACTOR)), function (proj) {
                 proj.createVisualModel();
             });
+            _missilePool.prefill(Math.ceil(this.getMaxMissileCount() * config.getSetting(config.BATTLE_SETTINGS.MISSILE_POOL_PREFILL_FACTOR)), function (miss) {
+                miss.createVisualModel();
+            });
             _explosionPool.prefill(Math.ceil(this.getMaxExplosionCount() * config.getSetting(config.BATTLE_SETTINGS.EXPLOSION_POOL_PREFILL_FACTOR)), function (exp) {
                 exp.createVisualModel();
             });
@@ -2824,6 +2844,19 @@ define([
         projectile.simulate(dt, octree);
         if (projectile.canBeReused()) {
             _projectilePool.markAsFree(indexInPool);
+        }
+    };
+    /**
+     * Function to execute during every simulation step on missiles taken from the missile pool
+     * @param {Number} dt The elapsed time since the last simulation step
+     * @param {Octree} octree An octree containing the objects that can be hit by the missiles
+     * @param {Missile} missile The missile to handle
+     * @param {Number} indexInPool The index of the missile within the missile pool
+     */
+    Mission._handleMissile = function (dt, octree, missile, indexInPool) {
+        missile.simulate(dt, octree);
+        if (missile.canBeReused()) {
+            _missilePool.markAsFree(indexInPool);
         }
     };
     /**
@@ -2896,6 +2929,10 @@ define([
             octree = new Octree(this._hitObjects, 2, 1, true);
             _projectilePool.executeForLockedObjects(Mission._handleProjectile.bind(this, dt, octree));
         }
+        if (_missilePool.hasLockedObjects()) {
+            octree = octree || new Octree(this._hitObjects, 2, 1, true);
+            _missilePool.executeForLockedObjects(Mission._handleMissile.bind(this, dt, octree));
+        }
         if (_explosionPool.hasLockedObjects()) {
             _explosionPool.executeForLockedObjects(Mission._handleExplosion);
         }
@@ -2914,6 +2951,7 @@ define([
             _debugInfo =
                     "Part: " + _particlePool.getLockedObjectCount() + " / " + _particlePool._objects.length + "<br/>" +
                     "Proj: " + _projectilePool.getLockedObjectCount() + " / " + _projectilePool._objects.length + "<br/>" +
+                    "Miss: " + _missilePool.getLockedObjectCount() + " / " + _missilePool._objects.length + "<br/>" +
                     "Expl: " + _explosionPool.getLockedObjectCount() + " / " + _explosionPool._objects.length;
         }
     };
@@ -2952,6 +2990,7 @@ define([
         this._hitObjects = null;
         _particlePool.clear();
         _projectilePool.clear();
+        _missilePool.clear();
         _explosionPool.clear();
     };
     // #########################################################################
@@ -3555,6 +3594,7 @@ define([
     // obtaining pool references
     _particlePool = pools.getPool(renderableObjects.Particle);
     _projectilePool = pools.getPool(equipment.Projectile);
+    _missilePool = pools.getPool(equipment.Missile);
     _explosionPool = pools.getPool(explosion.Explosion);
     // creating the default context
     _context = new MissionContext();

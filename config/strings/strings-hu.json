@@ -589,6 +589,7 @@
         "nextNearestNonHostileTarget": "Következő nem ellenséges (baráti vagy semleges) célpont kijelölése",
         "toggleAutoTargeting": "Ellenséges célpontok automatikus kijelölésének ki-/bekapcsolása",
         "fire": "Tüzelés az elsődleges fegyverekkel",
+        "launchMissile": "Rakéta kilövése",
         "forward": "Gyorsítás előre / kívánt sebesség növelése",
         "reverse": "Gyorsítás hátrafelé / kívánt sebesség csökkentése",
         "strafeLeft": "Gyorsítás balra",

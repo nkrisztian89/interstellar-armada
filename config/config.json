@@ -1,5 +1,5 @@
 {
-    "version": "0.4.6-dev:759 (2019.10.31.)",
+    "version": "0.4.6-dev:760 (2019.11.06.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4", "0.4.5"],
@@ -493,6 +493,9 @@
                     {
                         "name": "fire",
                         "continuous": true
+                    }, {
+                        "name": "launchMissile",
+                        "continuous": false
                     }, {
                         "name": "forward",
                         "continuous": true

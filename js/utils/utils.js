@@ -425,12 +425,12 @@ define(function () {
      * @returns {any}
      */
     exports.getSafeEnumValueForKey = function (enumObject, key, defaultValue) {
-        defaultValue = defaultValue ? exports.getSafeEnumValue(enumObject, defaultValue) : null;
+        defaultValue = (defaultValue !== undefined) ? exports.getSafeEnumValue(enumObject, defaultValue) : null;
         key = exports.constantName(key);
         if (enumObject.hasOwnProperty(key)) {
             return enumObject[key];
         }
-        return defaultValue || null;
+        return (defaultValue !== undefined) ? defaultValue : null;
     };
     /**
      * Returns an array of the possible values of an object serving as an enum.
@@ -755,6 +755,126 @@ define(function () {
     exports.getGreaterSolutionOfQuadraticEquation = function (a, b, c) {
         var d = b * b - 4 * a * c;
         return (d >= 0) ? ((Math.sqrt(d) - b) / (2 * a)) : NaN;
+    };
+    /**
+     * Solves the 4th degree equation a * x^4 + c * x^2 + d * x + e = 0 for x, and returns the smallest positive,
+     * non-complex solution (or NaN, if such a solution doesn't exist)
+     * @param {Number} a
+     * @param {Number} c
+     * @param {Number} d
+     * @param {Number} e
+     * @returns {Number}
+     */
+    exports.getSmallestPositiveSolutionOf4thDegreeEquationWithoutDegree3 = function (a, c, d, e) {
+        var 
+            A = c / a,
+            B = d / a,
+            C = e / a,
+            P = -(A * A / 48) - (C / 4),
+            Q = -(A * A * A / 864) - (B * B / 64) + (A * C / 24),
+            delta = (Q * Q / 4) + (P * P * P / 27),
+            sqrtDelta, u, v, w, aux, x1, x2, Y1, Y2, Y3, x3, x4;
+        if (delta >= 0) {
+            if ((B === 0) && (A > 0) && (C === (A * A / 4))) {
+                return NaN;
+            } else {
+                sqrtDelta = Math.sqrt(delta);
+                u = Math.cbrt(-Q / 2 + sqrtDelta);
+                v = Math.cbrt(-Q / 2 - sqrtDelta);
+                aux = (A / 6) + 2 * (u + v);
+                w = Math.sqrt(-(A / 3) - (u + v) + Math.sqrt(aux * aux - C));
+                aux = ((B > 0) ? -1 : 1) * Math.sqrt(-(A / 6) + u + v);
+                x1 = aux + w;
+                x2 = aux - w;
+                if (x1 < 0) {
+                    return x2;
+                } else if (x2 < 0) {
+                    return x1;
+                } else {
+                    return Math.min(x1, x2);
+                }
+            }
+        } else {
+            aux = 2 * Math.sqrt(-P / 3);
+            w = 1 / 3 * Math.acos(-Q / 2 / Math.sqrt(-Math.pow(P / 3, 3)));
+            Y1 = -(A / 6) + aux * Math.cos(w);
+            Y2 = -(A / 6) + aux * Math.cos(2 * Math.PI / 3 + w);
+            Y3 = -(A / 6) + aux * Math.cos(4 * Math.PI / 3 + w);
+            if ((C > (A * A / 4)) || (A > 0)) {
+                return NaN;
+            } else {
+                aux = ((B > 0) ? -1 : 1) * Math.sqrt(Y1);
+                Y2 = Math.sqrt(Y2);
+                Y3 = Math.sqrt(Y3);
+                w = Y2 + Y3;
+                x1 = aux + w;
+                x2 = aux - w;
+                w = Y2 - Y3;
+                x3 = -aux + w;
+                x4 = -aux - w;
+                if (x1 < 0) {
+                    if (x2 < 0) {
+                        if (x3 < 0) {
+                            if (x4 < 0) {
+                                return NaN;
+                            } else {
+                                return x4;
+                            }
+                        } else {
+                            if (x4 < 0) {
+                                return x3;
+                            } else {
+                                return Math.min(x3, x4);
+                            }
+                        }
+                    } else {
+                        if (x3 < 0) {
+                            if (x4 < 0) {
+                                return x2;
+                            } else {
+                                return Math.min(x2, x4);
+                            }
+                        } else {
+                            if (x4 < 0) {
+                                return Math.min(x2, x3);
+                            } else {
+                                return Math.min(x2, x3, x4);
+                            }
+                        }
+                    }
+                } else {
+                    if (x2 < 0) {
+                        if (x3 < 0) {
+                            if (x4 < 0) {
+                                return x1;
+                            } else {
+                                return Math.min(x1, x4);
+                            }
+                        } else {
+                            if (x4 < 0) {
+                                return Math.min(x1, x3);
+                            } else {
+                                return Math.min(x1, x3, x4);
+                            }
+                        }
+                    } else {
+                        if (x3 < 0) {
+                            if (x4 < 0) {
+                                return Math.min(x1, x2);
+                            } else {
+                                return Math.min(x1, x2, x4);
+                            }
+                        } else {
+                            if (x4 < 0) {
+                                return Math.min(x1, x2, x3);
+                            } else {
+                                return Math.min(x1, x2, x3, x4);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     };
     /**
      * Returns whether the current environment supports touch events

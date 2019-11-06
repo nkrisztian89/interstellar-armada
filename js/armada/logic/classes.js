@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
  * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -61,6 +61,28 @@ define([
             SceneViewLookAtMode = {
                 NONE: "none",
                 ALL: "all"
+            },
+            /**
+             * @enum {Number}
+             * Determines the way the missile homes in on its target
+             * @type Object
+             */
+            MissileHomingMode = {
+                /**
+                 * The missile has no homing capabilities (i.e. no maneuvering thrusters), it flies
+                 * straight in the way it was launched
+                 */
+                NONE: 0,
+                /**
+                 * The missile orients itself towards the target's expected position after launch,
+                 * and flies straight from then onwards
+                 */
+                INITIAL: 1,
+                /**
+                 * The missile continuously uses its maneuvering thrusters to orient itself towards
+                 * the target's expected position
+                 */
+                CONTINUOUS: 2
             },
             /**
              * @enum {String}
@@ -129,6 +151,11 @@ define([
              * @type String
              */
             PROJECTILE_CLASS_ARRAY_NAME = "projectileClasses",
+            /**
+             * In the class description file, missile classes will be initialized from the array with this name
+             * @type String
+             */
+            MISSILE_CLASS_ARRAY_NAME = "missileClasses",
             /**
              * In the class description file, weapon classes will be initialized from the array with this name
              * @type String
@@ -253,6 +280,9 @@ define([
     Object.freeze(ParticleEmitterType);
     Object.freeze(ObjectViewLookAtMode);
     Object.freeze(SceneViewLookAtMode);
+    Object.freeze(MissileHomingMode);
+    Object.freeze(WeaponRotationStyle);
+    Object.freeze(SpacecraftTurnStyle);
     // ------------------------------------------------------------------------------
     // public functions to access the classes
     /**
@@ -294,6 +324,14 @@ define([
      */
     function getProjectileClass(name) {
         return _classManager.getResource(PROJECTILE_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the missile class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {MissileClass}
+     */
+    function getMissileClass(name) {
+        return _classManager.getResource(MISSILE_CLASS_ARRAY_NAME, name);
     }
     /**
      * Return the weapon class with the given name if it exists, otherwise null.
@@ -440,6 +478,42 @@ define([
                         shouldStack, stackTimeThreshold, stackVolumeFactor,
                         soundSource) :
                 null;
+    }
+    /**
+     * Load the thruster slot configuration data from the passed JSON into the passed ThrusterSlot array
+     * @param {Object} dataJSON
+     * @param {MissileClass|SpacecraftClass} object The class to load the thrusterslots for - used 
+     * for displaying error messages
+     * @param {ThrusterSlot[]} thrusterSlots
+     */
+    function _loadThrusterSlots(dataJSON, object, thrusterSlots) {
+        var i, j, groupIndex, uses, startPosition, translationVector, size, count, jsonObject;
+        for (i = 0; i < dataJSON.thrusterSlots.length; i++) {
+            groupIndex = dataJSON.thrusterSlots[i].group;
+            uses = dataJSON.thrusterSlots[i].uses;
+            if (dataJSON.thrusterSlots[i].array) {
+                startPosition = dataJSON.thrusterSlots[i].startPosition || _showMissingPropertyError(object, "thrusterSlot array startPosition");
+                translationVector = dataJSON.thrusterSlots[i].translationVector || _showMissingPropertyError(object, "thrusterSlot array translationVector");
+                size = dataJSON.thrusterSlots[i].size || _showMissingPropertyError(object, "thrusterSlot array size");
+                count = dataJSON.thrusterSlots[i].count || _showMissingPropertyError(object, "thrusterSlot array count");
+                for (j = 0; j < count; j++) {
+                    thrusterSlots.push(new ThrusterSlot({ //eslint-disable-line no-use-before-define
+                        position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),
+                        size: size,
+                        groupIndex: groupIndex,
+                        uses: uses
+                    }));
+                }
+            }
+            if (dataJSON.thrusterSlots[i].thrusters) {
+                for (j = 0; j < dataJSON.thrusterSlots[i].thrusters.length; j++) {
+                    jsonObject = Object.assign({}, dataJSON.thrusterSlots[i].thrusters[j]);
+                    jsonObject.groupIndex = groupIndex;
+                    jsonObject.uses = uses;
+                    thrusterSlots.push(new ThrusterSlot(jsonObject)); //eslint-disable-line no-use-before-define
+                }
+            }
+        }
     }
     // ##############################################################################
     /**
@@ -1569,6 +1643,408 @@ define([
     };
     // ##############################################################################
     /**
+     * @class Missiles such as rockets, homing missiles or torpedoes can belong 
+     * to different classes that can be described in classes.json. This class 
+     * represents such a missile class, defining the common properties of the 
+     * missiles belonging to the class.
+     * @augments TexturedModelClass
+     * @param {Object} [dataJSON]
+     */
+    function MissileClass(dataJSON) {
+        TexturedModelClass.call(this, dataJSON);
+    }
+    MissileClass.prototype = new TexturedModelClass();
+    MissileClass.prototype.constructor = MissileClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     * @returns {Boolean}
+     */
+    MissileClass.prototype._loadData = function (dataJSON) {
+        TexturedModelClass.prototype._loadData.call(this, dataJSON);
+        /**
+         * The full name of this class as displayed in the game.
+         * @type String
+         */
+        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
+        /**
+         * The amount of damage this missile causes when it hits a spacecraft.
+         * @type Number
+         */
+        this._damage = dataJSON ? (dataJSON.damage || 0) : 0;
+        /**
+         * The amount by which the model representing the missile will be scaled.
+         * @type Number
+         */
+        this._modelScale = dataJSON ? (dataJSON.modelScale || 1) : 0;
+        /**
+         * A missile can only be loaded in a launch tube that has the same size 
+         * (i.e. this represents the radius category of the missile)
+         * @type Number
+         */
+        this._size = dataJSON ? (dataJSON.size || _showMissingPropertyError(this, "size")) : 0;
+        /**
+         * How much capacity is taken up by one missile of this class, when put
+         * in a launch tube (i.e. this represents the length of the missile)
+         * @type Number
+         */
+        this._capacity = dataJSON ? (dataJSON.capacity || _showMissingPropertyError(this, "capacity")) : 0;
+        /**
+         * (enum MissileHomingMode) Determines the homing mechanism of the missile
+         * @type Number
+         */
+        this._homingMode = dataJSON ? utils.getSafeEnumValueForKey(MissileHomingMode, dataJSON.homingMode || _showMissingPropertyError(this, "homingMode"), null) : null;
+        if (dataJSON && (this._homingMode === null)) {
+            _showMissingPropertyError(this, "homingMode");
+        }
+        /**
+         * Mass of the missile in kilograms. Determines the forces / torques it
+         * exerts when launching and hitting targets and its acceleration.
+         * @type Number
+         */
+        this._mass = dataJSON ? (dataJSON.mass || _showMissingPropertyError(this, "mass")) : 0;
+        /**
+         * The velocity at which the missile is ejected from its launch tube, in m/s
+         * @type Number
+         */
+        this._launchVelocity = dataJSON ? (dataJSON.launchVelocity || _showMissingPropertyError(this, "launchVelocity")) : 0;
+        /**
+         * The thrusters of the missile are ignited this much time after launching, in milliseconds
+         * @type Number
+         */
+        this._ignitionTime = dataJSON ? (dataJSON.ignitionTime || _showMissingPropertyError(this, "ignitionTime")) : 0;
+        /**
+         * The thrust that the main thruster of the missile exerts for accelerating the missile towards
+         * the target, in newtons (kg*m/s^2)
+         * @type Number
+         */
+        this._thrust = dataJSON ? ((this._mass * dataJSON.acceleration) || _showMissingPropertyError(this, "acceleration")) : 0;
+        /**
+         * The maximum angular acceleration the maneuvering thrusters of the missile can achieve in their
+         * respective direction (yaw / pitch), in rad/s^2
+         * @type Number
+         */
+        this._angularAcceleration = dataJSON ? (Math.radians(dataJSON.angularAcceleration) || _showMissingPropertyError(this, "angularAcceleration")) : 0;
+        /**
+         * Determines the amount of torque the maneuvering thrusters can exert on the missile in their 
+         * respective direction (yaw / pitch), in kg*rad/s^2
+         * @type Number
+         */
+        this._angularThrust = dataJSON ? (this._mass * this._angularAcceleration) : 0;
+        /**
+         * If the missile is homing, the main thruster of the missile is fired whenever both the yaw 
+         * and pitch angles towards the target are within this threshold (radians)
+         * @type Number
+         */
+        this._mainBurnAngleThreshold = dataJSON ? (Math.radians(dataJSON.mainBurnAngleThreshold) || _showMissingPropertyError(this, "mainBurnAngleThreshold")) : 0;
+        /**
+         * The length of life of the missile in milliseconds, after which it will explode (harmlessly),
+         * counted right from the launch.
+         * @type Number
+         */
+        this._duration = dataJSON ? (dataJSON.duration || _showMissingPropertyError(this, "duration")) : 0;
+        /**
+         * The amount of waiting time needed between launching two missiles, in ms.
+         * @type Number
+         */
+        this._cooldown = dataJSON ? (dataJSON.cooldown || _showMissingPropertyError(this, "cooldown")) : 0;
+        /**
+         * The missile will explode and deal damage within this range of enemy ships, in meters.
+         * @type Number
+         */
+        this._proximityRange = dataJSON ? (dataJSON.proximityRange || _showMissingPropertyError(this, "proximityRange")) : 0;
+        /**
+         * The ratio of kinetic energy of the missile to transfer to the target upon exploding.
+         * (the force and torque exerted on the target will be based on the momentum/angular momentum 
+         * multiplied by this factor)
+         * @type Number
+         */
+        this._kineticFactor = dataJSON ? (dataJSON.kineticFactor || _showMissingPropertyError(this, "kineticFactor")) : 0;
+        /**
+         * The color of the light this missile emits as a light source.
+         * @type Number[3]
+         */
+        this._lightColor = dataJSON ? (dataJSON.lightColor || _showMissingPropertyError(this, "lightColor")) : null;
+        /**
+         * The intensity of the light this missile emits as a light source.
+         * @type Number
+         */
+        this._lightIntensity = dataJSON ? (dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity")) : 0;
+        /**
+         * The class of the explosion this missile creates when it hits the armor of a spacecraft or
+         * when it explodes harmlessly because of exceeding maximum duration.
+         * @type ExplosionClass
+         */
+        this._explosionClass = dataJSON ? (getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion")) || application.crash()) : null;
+        /**
+         * The class of the explosion this missile creates when it hits the shield of a spacecraft.
+         * @type ExplosionClass
+         */
+        this._shieldExplosionClass = dataJSON ? (getExplosionClass(dataJSON.shieldExplosion || _showMissingPropertyError(this, "shieldExplosion")) || application.crash()) : null;
+        /**
+         * The amount of score points to be added to the total score value of spacecrafts for each missile of this class equipped
+         * @type Number
+         */
+        this._scoreValue = dataJSON ? (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0) : 0;
+        /**
+         * The descriptor of the sound effect to be played when this missile launches.
+         * @type Object
+         */
+        this._launchSound = dataJSON ? (types.getVerifiedObject("missileClasses['" + this._name + "'].launchSound", dataJSON.launchSound, SOUND_EFFECT_3D)) : null;
+        /**
+         * The descriptor of the sound effect to be played when this missile first ignites its main engine.
+         * @type Object
+         */
+        this._startSound = dataJSON ? (types.getVerifiedObject("missileClasses['" + this._name + "'].startSound", dataJSON.startSound, SOUND_EFFECT_3D)) : null;
+        /**
+         * The propulsion class to use for initializing thruster visuals (the missile class has its own thrust values, the ones from the propulsion are ignored)
+         * @type PropulsionClass
+         */
+        this._propulsionClass = dataJSON ? (getPropulsionClass(dataJSON.propulsion || _showMissingPropertyError(this, "propulsion")) || application.crash()) : null;
+        /**
+         * The thruster slots for creating and managing thruster visuals
+         * @type ThrusterSlot[]
+         */
+        this._thrusterSlots = dataJSON ? [] : null;
+        if (dataJSON && dataJSON.thrusterSlots) {
+            _loadThrusterSlots(dataJSON, this, this._thrusterSlots);
+        } else if (dataJSON) {
+            _showMissingPropertyError(this, "thrusterSlots");
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Object} params
+     */
+    MissileClass.prototype.acquireResources = function (params) {
+        TexturedModelClass.prototype.acquireResources.call(this, params);
+        this._explosionClass.acquireResources();
+        this._shieldExplosionClass.acquireResources();
+        this._propulsionClass.acquireResources();
+        _loadSoundEffect(this._launchSound);
+        _loadSoundEffect(this._startSound);
+    };
+    /**
+     * @returns {String}
+     */
+    MissileClass.prototype.getDisplayName = function () {
+        return strings.get(
+                strings.MISSILE_CLASS.PREFIX, this.getName() + strings.MISSILE_CLASS.NAME_SUFFIX.name,
+                this._fullName);
+    };
+    /**
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    MissileClass.prototype.getDamage = function (armorRating) {
+        return Math.max(0, this._damage - armorRating);
+    };
+    /**
+     * In maximum theoretical damage / second
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    MissileClass.prototype.getFirepower = function (armorRating) {
+        return this.getDamage(armorRating) * 1000 / this._cooldown;
+    };
+    /**
+     * Launches / second
+     * @returns {Number}
+     */
+    MissileClass.prototype.getFireRate = function () {
+        return 1000 / this._cooldown;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getModelScale = function () {
+        return this._modelScale;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getSize = function () {
+        return this._size;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getCapacity = function () {
+        return this._capacity;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getHomingMode = function () {
+        return this._homingMode;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getMass = function () {
+        return this._mass;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getThrust = function () {
+        return this._thrust;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getAngularAcceleration = function () {
+        return this._angularAcceleration;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getAngularThrust = function () {
+        return this._angularThrust;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getMainBurnAngleThreshold = function () {
+        return this._mainBurnAngleThreshold;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getLaunchVelocity = function () {
+        return this._launchVelocity;
+    };
+    /**
+     * The force the launch of the missile exerts on the launching spacecraft
+     * @param {Number} duration In milliseconds
+     * @returns {Number} In newtons (kg*m/s^2)
+     */
+    MissileClass.prototype.getForceForDuration = function (duration) {
+        return this._launchVelocity * this._mass / (duration * 0.001); // ms -> s
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getIgnitionTime = function () {
+        return this._ignitionTime;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getDuration = function () {
+        return this._duration;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getCooldown = function () {
+        return this._cooldown;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getProximityRange = function () {
+        return this._proximityRange;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getKineticFactor = function () {
+        return this._kineticFactor;
+    };
+    /**
+     * @returns {Number[3]}
+     */
+    MissileClass.prototype.getLightColor = function () {
+        return this._lightColor;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getLightIntensity = function () {
+        return this._lightIntensity;
+    };
+    /**
+     * @returns {ExplosionClass}
+     */
+    MissileClass.prototype.getExplosionClass = function () {
+        return this._explosionClass;
+    };
+    /**
+     * @returns {ExplosionClass}
+     */
+    MissileClass.prototype.getShieldExplosionClass = function () {
+        return this._shieldExplosionClass;
+    };
+    /**
+     * @returns {PropulsionClass}
+     */
+    MissileClass.prototype.getPropulsionClass = function () {
+        return this._propulsionClass;
+    };
+    /**
+     * Returns the highest number of missiles that might be simultaneously used in one battle fired from one launcher
+     * @returns {Number}
+     */
+    MissileClass.prototype.getMaxCount = function () {
+        return Math.ceil(this._duration / this._cooldown);
+    };
+    /**
+     * The amount of partices needed to render a missile of this class
+     * @returns {Number}
+     */
+    MissileClass.prototype.getParticleCount = function () {
+        return this._thrusterSlots.length;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getScoreValue = function () {
+        return this._scoreValue;
+    };
+    /**
+     * Plays the sound effect corresponding to a missile of this class launching, at the given world position
+     * @param {Number[3]} [position] The camera-space position where to put the sound source, if the sound
+     * is not to be stacked to the sound source of the spacecraft (the spacecraft is close and the different
+     * weapons should have their own sound sources created)
+     * @param {SoundSource} [soundSource] The sound source belonging to the spacecraft it the launch sound effect
+     * is to be stacked to it (for spacecrafts that are farther away to simplify the sound graph)
+     * @param {Number} [stackTimeThreshold=0] The time threshold for stacking (maximum time difference, in seconds)
+     * @param {Number} [stackVolumeFactor=1] The factor to multiply the volume of stacked sound clips by
+     */
+    MissileClass.prototype.playLaunchSound = function (position, soundSource, stackTimeThreshold, stackVolumeFactor) {
+        if (position) {
+            _playSoundEffect(this._launchSound, position);
+        } else {
+            _createSoundClip(this._launchSound, false, soundSource, true, stackTimeThreshold, stackVolumeFactor).play();
+        }
+    };
+    /**
+     * Plays the sound effect corresponding to the missile igniting its main thruster for the first time
+     * @param {SoundSource} soundSource The sounds source belonging to the missile
+     * @returns {SoundClip}
+     */
+    MissileClass.prototype.playStartSound = function (soundSource) {
+        var clip = _createSoundClip(this._startSound, false, soundSource);
+        clip.play();
+        return clip;
+    };
+    /**
+     * @returns {ThrusterSlot[]}
+     */
+    MissileClass.prototype.getThrusterSlots = function () {
+        return this._thrusterSlots;
+    };
+    /**
+     * @override
+     * Updates the properties for the case when the graphics settings have been changed.
+     */
+    MissileClass.prototype.handleGraphicsSettingsChanged = function () {
+        TexturedModelClass.prototype.handleGraphicsSettingsChanged.call(this);
+    };
+    // ##############################################################################
+    /**
      * @class Every weapon can have multiple barrels, each of which shoot one 
      * projectile. Barrels are defined for each weapon class.
      * @param {Object} [dataJSON]
@@ -2591,7 +3067,7 @@ define([
     };
     // ##############################################################################
     /**
-     * @struct Every ship (class) can have several slots where it's weapons can be
+     * @struct Every ship (class) can have several slots where its weapons can be
      * equipped. The weapons are rendered and shot from these slots. This class 
      * represents such a slot.
      * @param {Object} [dataJSON]
@@ -2612,6 +3088,48 @@ define([
          * @type Number
          */
         this.maxGrade = dataJSON ? (dataJSON.maxGrade || _showMissingPropertyError(this, "maxGrade")) : 0;
+    }
+    // ##############################################################################
+    /**
+     * @struct Every ship (class) can have several launchers (with fixed launch 
+     * tubes) where its missiles can be equipped and launched from. This struct
+     * describes such a launcher.
+     * @param {Object} [dataJSON]
+     */
+    function MissileLauncherDescriptor(dataJSON) {
+        var i;
+        /**
+         * The translation vectors for the positions of the tubes of the launcher,
+         * relative to the ship.
+         * This determines where the currently loaded missile will spawn for 
+         * each tube (as well as the total capacity of the launcher, as each tube
+         * has the amount of capacity defined for the launcher)
+         * @type Array.<Number[3]>
+         */
+        this.tubePositions = dataJSON ? ((dataJSON.tubePositions && []) || _showMissingPropertyError(this, "tubePositions")) : null;
+        if (this.tubePositions) {
+            for (i = 0; i < dataJSON.tubePositions.length; i++) {
+                this.tubePositions.push(dataJSON.tubePositions[i].slice());
+            }
+        }
+        /**
+         * The rotation matrix describing the orientation of the missile 
+         * launcher's tubes (all of them) relative to the ship.
+         * @type Float32Array
+         */
+        this.orientationMatrix = dataJSON ? (mat.rotation4FromJSON(dataJSON.rotations || [])) : null;
+        /**
+         * The size (i.e. radius category) of missiles that can be loaded into this launcher.
+         * @type Number
+         */
+        this.size = dataJSON ? (dataJSON.size || _showMissingPropertyError(this, "size")) : 0;
+        /**
+         * Determines the maximum amout of missiles that can be loaded into a single tube of this launcher.
+         * (i.e. the length of a launching tube)
+         * Different missile classes can have different amounts of capacity used up by one missile.
+         * @type Number
+         */
+        this.capacity = dataJSON ? (dataJSON.capacity || _showMissingPropertyError(this, "capacity")) : 0;
     }
     // ##############################################################################
     /**
@@ -2670,6 +3188,30 @@ define([
          * @type Number
          */
         this.slotIndex = dataJSON ? dataJSON.slotIndex : -1;
+    }
+    // ##############################################################################
+    /**
+     * @struct A missile descriptor can be used to equip missiles on a spacecraft, by
+     * describing the parameters of the equipment. (such as amount)
+     * @param {Object} [dataJSON]
+     */
+    function MissileDescriptor(dataJSON) {
+        /**
+         * The name of the class of the missiles to be equipped.
+         * @type String
+         */
+        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
+        /**
+         * The index of the missile launcher the missiles should be equipped to.
+         * (not given or -1 means to equip into the next free and suitable launcher)
+         * @type Number
+         */
+        this.launcherIndex = dataJSON ? dataJSON.launcherIndex : -1;
+        /**
+         * The amount of missiles to be equipped
+         * @Number
+         */
+        this.amount = dataJSON ? (dataJSON.amount || _showMissingPropertyError(this, "amount")) : 0;
     }
     // ##############################################################################
     /**
@@ -2736,6 +3278,16 @@ define([
             }
         }
         /**
+         * The list of descriptors of the missiles in this profile to be equipped.
+         * @type MissileDescriptor[]
+         */
+        this._missileDescriptors = [];
+        if (dataJSON.missiles) {
+            for (i = 0; i < dataJSON.missiles.length; i++) {
+                this._missileDescriptors.push(new MissileDescriptor(dataJSON.missiles[i]));
+            }
+        }
+        /**
          * The descriptor of the propulsion system for this profile to be equipped.
          * @type PropulsionDescriptor
          */
@@ -2765,6 +3317,14 @@ define([
      */
     EquipmentProfile.prototype.getWeaponDescriptors = function () {
         return this._weaponDescriptors;
+    };
+    /**
+     * Returns the list of the descriptors for the missiles to be equipped with this
+     * profile.
+     * @returns {MissileDescriptor[]}
+     */
+    EquipmentProfile.prototype.getMissileDescriptors = function () {
+        return this._missileDescriptors;
     };
     /**
      * Returns the propulsion descriptor of this profile.
@@ -3573,7 +4133,7 @@ define([
      * @param {Object} dataJSON 
      */
     SpacecraftClass.prototype._overrideData = function (otherSpacecraftClass, dataJSON) {
-        var i, j, startPosition, translationVector, rotations, maxGrade, count, groupIndex, uses, size, jsonObject, angles;
+        var i, j, startPosition, translationVector, rotations, maxGrade, count, angles;
         TexturedModelClass.prototype._overrideData.call(this, otherSpacecraftClass, dataJSON);
         /**
          * The type of spacecraft this class belongs to.
@@ -3719,6 +4279,16 @@ define([
             }
         }
         /**
+         * The fixed tube missile launchers where missiles can be equipped on the ship.
+         * @type MissileLauncherDescriptor[]
+         */
+        this._missileLaunchers = (otherSpacecraftClass && !dataJSON.missileLaunchers) ? otherSpacecraftClass._missileLaunchers : [];
+        if (dataJSON.missileLaunchers) {
+            for (i = 0; i < dataJSON.missileLaunchers.length; i++) {
+                this._missileLaunchers.push(new MissileLauncherDescriptor(dataJSON.missileLaunchers[i]));
+            }
+        }
+        /**
          * @type Number
          */
         this._maxPropulsionGrade = otherSpacecraftClass ?
@@ -3730,32 +4300,7 @@ define([
          */
         this._thrusterSlots = (otherSpacecraftClass && !dataJSON.thrusterSlots) ? otherSpacecraftClass._thrusterSlots : [];
         if (dataJSON.thrusterSlots) {
-            for (i = 0; i < dataJSON.thrusterSlots.length; i++) {
-                groupIndex = dataJSON.thrusterSlots[i].group;
-                uses = dataJSON.thrusterSlots[i].uses;
-                if (dataJSON.thrusterSlots[i].array) {
-                    startPosition = dataJSON.thrusterSlots[i].startPosition || _showMissingPropertyError(this, "thrusterSlot array startPosition");
-                    translationVector = dataJSON.thrusterSlots[i].translationVector || _showMissingPropertyError(this, "thrusterSlot array translationVector");
-                    size = dataJSON.thrusterSlots[i].size || _showMissingPropertyError(this, "thrusterSlot array size");
-                    count = dataJSON.thrusterSlots[i].count || _showMissingPropertyError(this, "thrusterSlot array count");
-                    for (j = 0; j < count; j++) {
-                        this._thrusterSlots.push(new ThrusterSlot({
-                            position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),
-                            size: size,
-                            groupIndex: groupIndex,
-                            uses: uses
-                        }));
-                    }
-                }
-                if (dataJSON.thrusterSlots[i].thrusters) {
-                    for (j = 0; j < dataJSON.thrusterSlots[i].thrusters.length; j++) {
-                        jsonObject = dataJSON.thrusterSlots[i].thrusters[j];
-                        jsonObject.groupIndex = groupIndex;
-                        jsonObject.uses = uses;
-                        this._thrusterSlots.push(new ThrusterSlot(jsonObject));
-                    }
-                }
-            }
+            _loadThrusterSlots(dataJSON, this, this._thrusterSlots);
         }
         /**
          * The available views of the ship (e.g. front, cockpit) where cameras can
@@ -3978,6 +4523,12 @@ define([
         return this._weaponSlots;
     };
     /**
+     * @returns {MissileLauncherDescriptor[]}
+     */
+    SpacecraftClass.prototype.getMissileLaunchers = function () {
+        return this._missileLaunchers;
+    };
+    /**
      * @returns {ThrusterSlot[]}
      */
     SpacecraftClass.prototype.getThrusterSlots = function () {
@@ -4123,6 +4674,7 @@ define([
         classAssignment[PROJECTILE_CLASS_ARRAY_NAME] = ProjectileClass;
         classAssignment[WEAPON_CLASS_ARRAY_NAME] = WeaponClass;
         classAssignment[PROPULSION_CLASS_ARRAY_NAME] = PropulsionClass;
+        classAssignment[MISSILE_CLASS_ARRAY_NAME] = MissileClass;
         classAssignment[JUMP_ENGINE_CLASS_ARRAY_NAME] = JumpEngineClass;
         classAssignment[SHIELD_CLASS_ARRAY_NAME] = ShieldClass;
         classAssignment[SPACECRAFT_TYPE_ARRAY_NAME] = SpacecraftType;
@@ -4157,6 +4709,7 @@ define([
         ParticleEmitterType: ParticleEmitterType,
         ObjectViewLookAtMode: ObjectViewLookAtMode,
         SceneViewLookAtMode: SceneViewLookAtMode,
+        MissileHomingMode: MissileHomingMode,
         WeaponRotationStyle: WeaponRotationStyle,
         SpacecraftTurnStyle: SpacecraftTurnStyle,
         TexturedModelClass: TexturedModelClass,
@@ -4165,6 +4718,7 @@ define([
         getDustCloudClass: getDustCloudClass,
         getExplosionClass: getExplosionClass,
         getProjectileClass: getProjectileClass,
+        getMissileClass: getMissileClass,
         getWeaponClass: getWeaponClass,
         getPropulsionClass: getPropulsionClass,
         getJumpEngineClass: getJumpEngineClass,

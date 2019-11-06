@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -858,7 +858,7 @@ define(function () {
     /**
      * Scales the passed 3D vector to unit length.
      * @param {Number[3]} v A 3D vector
-     * @returns {Number[2]} v
+     * @returns {Number[3]} v
      */
     vec.normalize3 = function (v) {
         var
@@ -962,7 +962,7 @@ define(function () {
     /**
      * Returns the difference of a 3D vector and the translation component of a 4x4 transformation matrix
      * @param {Number[3]} v The 3D vector.
-     * @param {Number[3]} m The 4x4 transformation matrix.
+     * @param {Float32Array} m The 4x4 transformation matrix.
      * @returns {Number[3]} The difference of v and the translation component of m.
      */
     vec.diffVec3Mat4 = function (v, m) {
@@ -972,7 +972,7 @@ define(function () {
      * Returns the difference of a 3D vector and the translation component of a 4x4 transformation matrix
      * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
      * @param {Number[3]} v The 3D vector.
-     * @param {Number[3]} m The 4x4 transformation matrix.
+     * @param {Float32Array} m The 4x4 transformation matrix.
      * @returns {Number[3]} The difference of v and the translation component of m.
      */
     vec.diffVec3Mat4Aux = function (v, m) {

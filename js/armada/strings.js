@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018 Krisztián Nagy
+ * Copyright 2016-2019 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -339,6 +339,11 @@ define([
     };
     strings.WEAPON_CLASS = {
         PREFIX: {name: "weaponClass.", optional: true},
+        NAME_SUFFIX: {name: ".name", optional: true},
+        DESCRIPTION_SUFFIX: {name: ".description", optional: true}
+    };
+    strings.MISSILE_CLASS = {
+        PREFIX: {name: "missileClass.", optional: true},
         NAME_SUFFIX: {name: ".name", optional: true},
         DESCRIPTION_SUFFIX: {name: ".description", optional: true}
     };

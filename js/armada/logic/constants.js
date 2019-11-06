@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Provides some constants to be used in other game logic modules
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -7,7 +7,7 @@
  */
 
 /*jslint nomen: true, white: true, plusplus: true */
-/*global define, Element, Float32Array, performance */
+/*global define */
 
 define(function () {
     "use strict";
@@ -30,16 +30,22 @@ define(function () {
              */
             PROJECTILE_LIGHT_PRIORITY = 2,
             /**
+             * Lights sources for missiles will be added to their scenes with this priority
+             * @type Number
+             */
+            MISSILE_LIGHT_PRIORITY = 3,
+            /**
              * Lights sources for blinking lights on spacecrafts will be added to their scenes with this priority
              * @type Number
              */
-            BLINKER_LIGHT_PRIORITY = 3;
+            BLINKER_LIGHT_PRIORITY = 4;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         SPACECRAFT_LIGHT_PRIORITY: SPACECRAFT_LIGHT_PRIORITY,
         EXPLOSION_LIGHT_PRIORITY: EXPLOSION_LIGHT_PRIORITY,
         PROJECTILE_LIGHT_PRIORITY: PROJECTILE_LIGHT_PRIORITY,
+        MISSILE_LIGHT_PRIORITY: MISSILE_LIGHT_PRIORITY,
         BLINKER_LIGHT_PRIORITY: BLINKER_LIGHT_PRIORITY
     };
 });

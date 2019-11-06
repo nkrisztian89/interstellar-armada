@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Implementation of the Spacecraft game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -377,6 +377,18 @@ define([
          */
         this._weapons = null;
         /**
+         * The list of missile launchers (that are loaded with missiles) this spacecraft is equipped with.
+         * @type MissileLauncher[]
+         */
+        this._missileLaunchers = [];
+        /**
+         * The index currently active missile launcher (which launches a missile when the launchMissile()
+         * method is called)
+         * -1 means no active launcher (e.g. no missiles equipped)
+         * @type Number
+         */
+        this._activeMissileLauncherIndex = -1;
+        /**
          * The targeting computer equipped on this spacecraft.
          * @type TargetingComputer
          */
@@ -489,15 +501,25 @@ define([
          */
         this._damageDealt = 0;
         /**
-         * A counter for the shots fired during  the current mission (for hit ratio calculation)
+         * A counter for the (projectile weapon) shots fired during the current mission (for hit ratio calculation)
          * @type Number
          */
         this._shotsFired = 0;
         /**
-         * A counter for the shots that hit an enemry during the current mission (for hit ratio calculation)
+         * A counter for the (projectile weapon) shots that hit an enemy during the current mission (for hit ratio calculation)
          * @type Number
          */
         this._hitsOnEnemies = 0;
+        /**
+         * A counter for the missiles launched during the current mission (for hit ratio calculation)
+         * @type Number
+         */
+        this._missilesLaunched = 0;
+        /**
+         * A counter for the launched missiles that hit an enemy during the current mission (for hit ratio calculation)
+         * @type Number
+         */
+        this._missileHitsOnEnemies = 0;
         // ---------------------------------------
         // other
         /**
@@ -591,6 +613,8 @@ define([
             }
         }.bind(this));
         this._weapons = [];
+        this._missileLaunchers = [];
+        this._activeMissileLauncherIndex = -1;
         this._targetingComputer = new equipment.TargetingComputer(this, spacecraftArray);
         this._firingDisabled = false;
         this._maneuveringComputer = new equipment.ManeuveringComputer(this);
@@ -611,6 +635,8 @@ define([
         this._damageDealt = 0;
         this._shotsFired = 0;
         this._hitsOnEnemies = 0;
+        this._missilesLaunched = 0;
+        this._missileHitsOnEnemies = 0;
         this._hitSounds = {};
         this._hitSoundTimestamp = 0;
         this._updateIDAndName();
@@ -1579,6 +1605,7 @@ define([
      * @property {Boolean} weapons
      * @property {Boolean} thrusterParticles
      * @property {Boolean} projectileResources
+     * @property {Boolean} missileResources
      * @property {Boolean} explosion
      * @property {Boolean} cameraConfigurations
      * @property {Boolean} lightSources
@@ -1698,6 +1725,12 @@ define([
                 this._weapons[i].addProjectileResourcesToScene(scene);
             }
         }
+        // add missile resources
+        if (addSupplements.missileResources === true) {
+            for (i = 0; i < this._missileLaunchers.length; i++) {
+                this._missileLaunchers[i].addMissileResourcesToScene(scene);
+            }
+        }
         // add projectile resources
         if (addSupplements.explosion === true) {
             exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, vec.NULL3, true);
@@ -1773,6 +1806,11 @@ define([
                     this._weapons[i].acquireResources(lod, addSupplements.projectileResources);
                 }
             }
+            if (addSupplements.missileResources === true) {
+                for (i = 0; i < this._missileLaunchers.length; i++) {
+                    this._missileLaunchers[i].acquireResources();
+                }
+            }
             // add the thruster particles
             if (addSupplements.thrusterParticles === true) {
                 if (this._propulsion) {
@@ -1835,6 +1873,9 @@ define([
         for (i = 0; i < this._weapons.length; i++) {
             this._scoreValue += this._weapons[i].getScoreValue();
         }
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            this._scoreValue += this._missileLaunchers[i].getScoreValue();
+        }
         if (this._propulsion) {
             this._scoreValue += this._propulsion.getScoreValue();
         }
@@ -1844,7 +1885,7 @@ define([
     };
     /**
      * Equips a weapon of the given class on the ship.
-     * @param {WeaponClass} weaponClass the class of the weapon to equip.
+     * @param {WeaponClass} weaponClass The class of the weapon to equip.
      * @param {Number} [slotIndex] The index of the weapon slot to equip the weapon to. If not given (or negative), the weapon will be 
      * equipped to the next slot (based on the number of already equipped weapons)
      */
@@ -1856,6 +1897,27 @@ define([
         if (slotIndex < weaponSlots.length) {
             slot = weaponSlots[slotIndex];
             this._weapons.push(new equipment.Weapon(weaponClass, this, slot));
+        }
+    };
+    /**
+     * Equips a number of missiles of the given class into a launcher on the ship.
+     * @param {MissileClass} missileClass The class of the missiles to equip.
+     * @param {Number} amount The amount of missiles to equip. (this many missiles
+     * will be loaded into the launcher regardless of available capacity)
+     * @param {Number} [launcherIndex] The index of the missile launcher to load the
+     * missiles to. If not given (or negative), the first available launcher will be used.
+     */
+    Spacecraft.prototype._addMissiles = function (missileClass, amount, launcherIndex) {
+        var descriptor, launchers = this._class.getMissileLaunchers();
+        if ((launcherIndex === undefined) || (launcherIndex < 0)) {
+            launcherIndex = this._missileLaunchers.length;
+        }
+        if (launcherIndex < launchers.length) {
+            descriptor = launchers[launcherIndex];
+            this._missileLaunchers.push(new equipment.MissileLauncher(missileClass, this, descriptor, amount));
+            if (this._activeMissileLauncherIndex < 0) {
+                this._activeMissileLauncherIndex = 0;
+            }
         }
     };
     /**
@@ -1894,6 +1956,11 @@ define([
             this._weapons[i].destroy();
         }
         this._weapons = [];
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            this._missileLaunchers[i].destroy();
+        }
+        this._missileLaunchers = [];
+        this._activeMissileLauncherIndex = -1;
         if (this._propulsion) {
             this._propulsion.destroy();
         }
@@ -1908,11 +1975,15 @@ define([
      * @param {EquipmentProfile} [equipmentProfile]
      */
     Spacecraft.prototype.equipProfile = function (equipmentProfile) {
-        var i, weaponDescriptors;
+        var i, weaponDescriptors, missileDescriptors;
         if (equipmentProfile) {
             weaponDescriptors = equipmentProfile.getWeaponDescriptors();
             for (i = 0; i < weaponDescriptors.length; i++) {
                 this._addWeapon(classes.getWeaponClass(weaponDescriptors[i].className), weaponDescriptors[i].slotIndex);
+            }
+            missileDescriptors = equipmentProfile.getMissileDescriptors();
+            for (i = 0; i < missileDescriptors.length; i++) {
+                this._addMissiles(classes.getMissileClass(missileDescriptors[i].className), missileDescriptors[i].amount, missileDescriptors[i].launcherIndex);
             }
             if (equipmentProfile.getPropulsionDescriptor() !== null) {
                 this._addPropulsion(classes.getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
@@ -1964,11 +2035,47 @@ define([
             }
         }
     };
+    /**
+     * If the currently active missile launcher is ready, launches a missile from that launcher.
+     */
+    Spacecraft.prototype.launchMissile = function () {
+        var i, scaledOriMatrix, launched = false, missileCount, posInCameraSpace;
+        if (!this._firingDisabled && this._activeMissileLauncherIndex >= 0) {
+            scaledOriMatrix = this.getScaledOriMatrix();
+            posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
+            if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
+                    (Math.abs(posInCameraSpace[1]) <= _weaponFireSoundStackMinimumDistance) &&
+                    (Math.abs(posInCameraSpace[2]) <= _weaponFireSoundStackMinimumDistance)) {
+                posInCameraSpace = null;
+            }
+            missileCount = this._missileLaunchers[this._activeMissileLauncherIndex].launch(scaledOriMatrix, posInCameraSpace ? this.getSoundSource() : null);
+            launched = (missileCount > 0);
+            this._missilesLaunched += missileCount;
+            // executing callbacks
+            if (launched) {
+                for (i = 0; i < this._targetedBy.length; i++) {
+                    this._targetedBy[i].handleEvent(SpacecraftEvents.TARGET_FIRED);
+                }
+                this.handleEvent(SpacecraftEvents.FIRED);
+                if (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileCount() <= 0) {
+                    this._activeMissileLauncherIndex++;
+                    if (this._activeMissileLauncherIndex >= this._missileLaunchers.length) {
+                        this._activeMissileLauncherIndex = -1;
+                    }
+                }
+            }
+        }
+    };
     /*
      * Increases the number of hits on enemies registered for this spacecraft (for hit ratio calculation)
+     * @param {Boolean} byMissile Whether the hit was by a missile
      */
-    Spacecraft.prototype.increaseHitsOnEnemies = function () {
-        this._hitsOnEnemies++;
+    Spacecraft.prototype.increaseHitsOnEnemies = function (byMissile) {
+        if (byMissile) {
+            this._missileHitsOnEnemies++;
+        } else {
+            this._hitsOnEnemies++;
+        }
     };
     /**
      * Sets up this spacecraft as being targeted by the passed spacecraft. (updating target reference list and executing the related callback)
@@ -2122,8 +2229,9 @@ define([
      * @param {Number[3]} damageDir The relative direction whector indicating where the damage came from.
      * Also needs to take into consideration the orientation of the spacecraft.
      * @param {Spacecraft} hitBy The spacecraft that caused the damage (fired the hitting projectile)
+     * @param {Boolean} byMissile Whether the damage was caused by missile hit
      */
-    Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy) {
+    Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy, byMissile) {
         var i, damageIndicator, hitpointThreshold, exp, liveHit, scoreValue;
         // shield absorbs damage
         if (this._shield) {
@@ -2181,7 +2289,7 @@ define([
             });
         }
         if (this.isHostile(hitBy)) {
-            hitBy.increaseHitsOnEnemies();
+            hitBy.increaseHitsOnEnemies(byMissile);
         }
     };
     /**
@@ -2357,6 +2465,9 @@ define([
             for (i = 0; i < this._weapons.length; i++) {
                 this._weapons[i].simulate(dt);
             }
+            for (i = 0; i < this._missileLaunchers.length; i++) {
+                this._missileLaunchers[i].simulate(dt);
+            }
             if (this._propulsion) {
                 if (params.controlThrusters) {
                     this._maneuveringComputer.controlThrusters(dt);
@@ -2427,6 +2538,18 @@ define([
         return result;
     };
     /**
+     * Returns the highest number of missiles that might be used (flying, rendered) for the missile launchers of this 
+     * spacecraft simultaneously in one battle.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMaxMissileCount = function () {
+        var result = 0, i;
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            result += this._missileLaunchers[i].getMaxMissileCount();
+        }
+        return result;
+    };
+    /**
      * Returns the highest number of explosions that might be used for this spacecraft simultaneously in one battle.
      * @returns {Number}
      */
@@ -2436,6 +2559,9 @@ define([
         result += this._class.getDamageIndicators().length;
         for (i = 0; i < this._weapons.length; i++) {
             result += this._weapons[i].getMaxExplosionCount();
+        }
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            result += this._missileLaunchers[i].getMaxExplosionCount();
         }
         return result;
     };
@@ -2452,6 +2578,9 @@ define([
         }
         for (i = 0; i < this._weapons.length; i++) {
             result += this._weapons[i].getMaxParticleCount();
+        }
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            result += this._missileLaunchers[i].getMaxParticleCount();
         }
         return result;
     };
@@ -2475,6 +2604,15 @@ define([
             }
         }
         this._weapons = null;
+        if (this._missileLaunchers) {
+            for (i = 0; i < this._missileLaunchers.length; i++) {
+                if (this._missileLaunchers[i]) {
+                    this._missileLaunchers[i].destroy();
+                    this._missileLaunchers[i] = null;
+                }
+            }
+        }
+        this._missileLaunchers = null;
         if (this._propulsion) {
             this._propulsion.destroy();
             this._propulsion = null;
