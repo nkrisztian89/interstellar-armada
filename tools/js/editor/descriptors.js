@@ -947,6 +947,209 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            THRUSTER = {
+                baseType: BaseType.OBJECT,
+                name: "Thruster",
+                properties: {
+                    POSITION: {
+                        name: "position",
+                        type: BaseType.VECTOR3
+                    },
+                    SIZE: {
+                        name: "size",
+                        type: SCALE
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            THRUSTER_USES = {
+                baseType: BaseType.SET,
+                name: "ThrusterUses",
+                values: ThrusterUse
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            THRUSTER_SLOT = {
+                baseType: BaseType.OBJECT,
+                name: "ThrusterSlot",
+                properties: {
+                    GROUP: {
+                        name: "group",
+                        type: BaseType.NUMBER
+                    },
+                    USES: {
+                        name: "uses",
+                        type: THRUSTER_USES
+                    },
+                    THRUSTERS: {
+                        name: "thrusters",
+                        type: _createTypedArrayType(THRUSTER),
+                        optional: true
+                    },
+                    ARRAY: {
+                        name: "array",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
+                    },
+                    COUNT: {
+                        name: "count",
+                        type: BaseType.NUMBER,
+                        optional: true
+                    },
+                    START_POSITION: {
+                        name: "startPosition",
+                        type: BaseType.VECTOR3,
+                        optional: true
+                    },
+                    TRANSLATION_VECTOR: {
+                        name: "translationVector",
+                        type: BaseType.VECTOR3,
+                        optional: true
+                    },
+                    SIZE: {
+                        name: "size",
+                        type: SCALE,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            MISSILE_HOMING_MODE = {
+                baseType: BaseType.ENUM,
+                values: utils.getEnumObject(utils.getEnumKeys(classes.MissileHomingMode))
+            },
+            /**
+             * The descriptor object for missile classes, describing their properties
+             * @type Editor~ItemDescriptor
+             */
+            MISSILE_CLASS = {
+                NAME: {
+                    name: "name",
+                    type: BaseType.STRING
+                },
+                FULL_NAME: {
+                    name: "fullName",
+                    type: BaseType.STRING
+                },
+                MODEL: {
+                    name: "model",
+                    type: MODEL_REFERENCE
+                },
+                MODEL_SCALE: {
+                    name: "modelScale",
+                    type: SCALE,
+                    optional: true,
+                    defaultValue: 1
+                },
+                SHADER: {
+                    name: "shader",
+                    type: SHADER_REFERENCE
+                },
+                TEXTURE: {
+                    name: "texture",
+                    type: TEXTURE_REFERENCE
+                },
+                DAMAGE: {
+                    name: "damage",
+                    type: BaseType.NUMBER
+                },
+                SIZE: {
+                    name: "size",
+                    type: BaseType.NUMBER
+                },
+                CAPACITY: {
+                    name: "capacity",
+                    type: BaseType.NUMBER
+                },
+                HOMING_MODE: {
+                    name: "homingMode",
+                    type: MISSILE_HOMING_MODE
+                },
+                MASS: {
+                    name: "mass",
+                    type: KILOGRAMS
+                },
+                LAUNCH_VELOCITY: {
+                    name: "launchVelocity",
+                    type: METERS_PER_SECOND
+                },
+                IGNITION_TIME: {
+                    name: "ignitionTime",
+                    type: MILLISECONDS
+                },
+                ACCELERATION: {
+                    name: "acceleration",
+                    type: METERS_PER_SECOND_SQUARED
+                },
+                ANGULAR_ACCELERATION: {
+                    name: "angularAcceleration",
+                    type: DEGREES_PER_SECOND_SQUARED
+                },
+                MAIN_BURN_ANGLE_THRESHOLD: {
+                    name: "mainBurnAngleThreshold",
+                    type: DEGREES
+                },
+                DURATION: {
+                    name: "duration",
+                    type: MILLISECONDS
+                },
+                COOLDOWN: {
+                    name: "cooldown",
+                    type: MILLISECONDS
+                },
+                PROXIMITY_RANGE: {
+                    name: "proximityRange",
+                    type: METERS
+                },
+                KINETIC_FACTOR: {
+                    name: "kineticFactor",
+                    type: SCALE
+                },
+                LIGHT_COLOR: {
+                    name: "lightColor",
+                    type: BaseType.COLOR3
+                },
+                LIGHT_INTENSITY: {
+                    name: "lightIntensity",
+                    type: BaseType.NUMBER
+                },
+                EXPLOSION: {
+                    name: "explosion",
+                    type: EXPLOSION_CLASS_REFERENCE
+                },
+                SHIELD_EXPLOSION: {
+                    name: "shieldExplosion",
+                    type: EXPLOSION_CLASS_REFERENCE
+                },
+                SCORE_VALUE: {
+                    name: "scoreValue",
+                    type: BaseType.NUMBER
+                },
+                LAUNCH_SOUND: {
+                    name: "launchSound",
+                    type: SOUND_DESCRIPTOR
+                },
+                START_SOUND: {
+                    name: "startSound",
+                    type: SOUND_DESCRIPTOR
+                },
+                PROPULSION: {
+                    name: "propulsion",
+                    type: PROPULSION_CLASS_REFERENCE
+                },
+                THRUSTER_SLOTS: {
+                    name: "thrusterSlots",
+                    type: _createTypedArrayType(THRUSTER_SLOT)
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             BARREL = {
                 baseType: BaseType.OBJECT,
                 name: "Barrel",
@@ -1362,78 +1565,6 @@ define([
                         type: BaseType.NUMBER,
                         optional: false,
                         defaultValue: 1
-                    }
-                }
-            },
-            /**
-             * @type Editor~TypeDescriptor
-             */
-            THRUSTER = {
-                baseType: BaseType.OBJECT,
-                name: "Thruster",
-                properties: {
-                    POSITION: {
-                        name: "position",
-                        type: BaseType.VECTOR3
-                    },
-                    SIZE: {
-                        name: "size",
-                        type: SCALE
-                    }
-                }
-            },
-            /**
-             * @type Editor~TypeDescriptor
-             */
-            THRUSTER_USES = {
-                baseType: BaseType.SET,
-                name: "ThrusterUses",
-                values: ThrusterUse
-            },
-            /**
-             * @type Editor~TypeDescriptor
-             */
-            THRUSTER_SLOT = {
-                baseType: BaseType.OBJECT,
-                name: "ThrusterSlot",
-                properties: {
-                    GROUP: {
-                        name: "group",
-                        type: BaseType.NUMBER
-                    },
-                    USES: {
-                        name: "uses",
-                        type: THRUSTER_USES
-                    },
-                    THRUSTERS: {
-                        name: "thrusters",
-                        type: _createTypedArrayType(THRUSTER),
-                        optional: true
-                    },
-                    ARRAY: {
-                        name: "array",
-                        type: BaseType.BOOLEAN,
-                        defaultValue: false
-                    },
-                    COUNT: {
-                        name: "count",
-                        type: BaseType.NUMBER,
-                        optional: true
-                    },
-                    START_POSITION: {
-                        name: "startPosition",
-                        type: BaseType.VECTOR3,
-                        optional: true
-                    },
-                    TRANSLATION_VECTOR: {
-                        name: "translationVector",
-                        type: BaseType.VECTOR3,
-                        optional: true
-                    },
-                    SIZE: {
-                        name: "size",
-                        type: SCALE,
-                        optional: true
                     }
                 }
             },
@@ -3102,6 +3233,7 @@ define([
             "dustCloudClasses": DUST_CLOUD_CLASS,
             "explosionClasses": EXPLOSION_CLASS,
             "projectileClasses": PROJECTILE_CLASS,
+            "missileClasses": MISSILE_CLASS,
             "weaponClasses": WEAPON_CLASS,
             "propulsionClasses": PROPULSION_CLASS,
             "jumpEngineClasses": JUMP_ENGINE_CLASS,
