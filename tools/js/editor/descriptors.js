@@ -308,6 +308,13 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            MISSILE_CLASS_REFERENCE = {
+                baseType: BaseType.ENUM,
+                classReference: "missileClasses"
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             WEAPON_CLASS_REFERENCE = {
                 baseType: BaseType.ENUM,
                 classReference: "weaponClasses"
@@ -1571,6 +1578,27 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            MISSILE_LAUNCHER = {
+                baseType: BaseType.OBJECT,
+                name: "MissileLauncher",
+                properties: {
+                    TUBE_POSITIONS: {
+                        name: "tubePositions",
+                        type: _createTypedArrayType(BaseType.VECTOR3)
+                    },
+                    SIZE: {
+                        name: "size",
+                        type: BaseType.NUMBER
+                    },
+                    CAPACITY: {
+                        name: "capacity",
+                        type: BaseType.NUMBER
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             BASE_ORIENTATION = {
                 baseType: BaseType.ENUM,
                 values: camera.CameraOrientationConfiguration.BaseOrientation
@@ -1742,6 +1770,29 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            MISSILE = {
+                baseType: BaseType.OBJECT,
+                name: "Missile",
+                properties: {
+                    CLASS: {
+                        name: "class",
+                        type: MISSILE_CLASS_REFERENCE
+                    },
+                    AMOUNT: {
+                        name: "amount",
+                        type: BaseType.NUMBER
+                    },
+                    LAUNCHER_INDEX: {
+                        name: "launcherIndex",
+                        type: BaseType.NUMBER,
+                        optional: true,
+                        defaultDerived: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             PROPULSION = {
                 baseType: BaseType.OBJECT,
                 name: "Propulsion",
@@ -1793,6 +1844,11 @@ define([
                     WEAPONS: {
                         name: "weapons",
                         type: _createTypedArrayType(WEAPON),
+                        optional: true
+                    },
+                    MISSILES: {
+                        name: "missiles",
+                        type: _createTypedArrayType(MISSILE),
                         optional: true
                     },
                     PROPULSION: {
@@ -1987,6 +2043,11 @@ define([
                 WEAPON_SLOTS: {
                     name: "weaponSlots",
                     type: _createTypedArrayType(WEAPON_SLOT),
+                    optional: true
+                },
+                MISSILE_LAUNCHERS: {
+                    name: "missileLaunchers",
+                    type: _createTypedArrayType(MISSILE_LAUNCHER),
                     optional: true
                 },
                 MAX_PROPULSION_GRADE: {
