@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.5-dev:688 (2018.04.23.)",
-        "creationTime": "Mon Apr 23 2018 15:26:57 GMT+0200 (CEST)"
+        "version": "0.4.6-dev:762 (2019.11.23.)",
+        "creationTime": "Sat Nov 23 2019 03:04:14 GMT+0100 (közép-európai téli idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -2184,78 +2184,6 @@
             "explosion": "largeHitExplosion",
             "shieldExplosion": "largeShieldHitExplosion"
         }],
-    "missileClasses": [{
-            "name": "mediumMissile",
-            "fullName": "Medium missile",
-            "model": "mediumMissile",
-            "modelScale": 1,
-            "shader": "ship",
-            "texture": "libra",
-            "damage": 12,
-            "size": 3,
-            "capacity": 2,
-            "homingMode": "continuous",
-            "mass": 50,
-            "launchVelocity": 25,
-            "ignitionTime": 500,
-            "acceleration": 250,
-            "angularAcceleration": 720,
-            "mainBurnAngleThreshold": 2.5,
-            "duration": 5000,
-            "cooldown": 2000,
-            "proximityRange": 5,
-            "kineticFactor": 0.25,
-            "lightColor": [0, 0.5, 1],
-            "lightIntensity": 100,
-            "explosion": "mediumHitExplosion",
-            "shieldExplosion": "mediumHitExplosion",
-            "scoreValue": 5,
-            "launchSound": {
-                "name": "missileLaunch",
-                "volume": 0.5
-            },
-            "startSound": {
-                "name": "missileStart",
-                "volume": 0.5
-            },
-            "propulsion": "missile",
-            "thrusterSlots": [{
-                    "group": 1,
-                    "uses": ["forward"],
-                    "thrusters": [{
-                            "position": [0, -0.78, 0],
-                            "size": 0.8
-                        }]
-                }, {
-                    "group": 2,
-                    "uses": ["yawLeft"],
-                    "thrusters": [{
-                            "position": [-0.32, -0.435, 0],
-                            "size": 0.25
-                        }]
-                }, {
-                    "group": 3,
-                    "uses": ["yawRight"],
-                    "thrusters": [{
-                            "position": [0.32, -0.435, 0],
-                            "size": 0.25
-                        }]
-                }, {
-                    "group": 4,
-                    "uses": ["pitchUp"],
-                    "thrusters": [{
-                            "position": [0, -0.435, 0.32],
-                            "size": 0.25
-                        }]
-                }, {
-                    "group": 5,
-                    "uses": ["pitchDown"],
-                    "thrusters": [{
-                            "position": [0, -0.435, -0.32],
-                            "size": 0.25
-                        }]
-                }]
-        }],
     "weaponClasses": [{
             "name": "fixedTrainingGun",
             "fullName": "Fixed training gun",
@@ -2845,6 +2773,78 @@
             },
             "scoreValue": 10
         }],
+    "missileClasses": [{
+            "name": "mediumMissile",
+            "fullName": "Medium missile",
+            "model": "mediumMissile",
+            "modelScale": 1,
+            "shader": "ship",
+            "texture": "libra",
+            "damage": 12,
+            "size": 3,
+            "capacity": 2,
+            "homingMode": "continuous",
+            "mass": 50,
+            "launchVelocity": 25,
+            "ignitionTime": 500,
+            "acceleration": 250,
+            "angularAcceleration": 720,
+            "mainBurnAngleThreshold": 2.5,
+            "duration": 5000,
+            "cooldown": 2000,
+            "proximityRange": 5,
+            "kineticFactor": 0.25,
+            "lightColor": [0, 0.5, 1],
+            "lightIntensity": 100,
+            "explosion": "mediumHitExplosion",
+            "shieldExplosion": "mediumHitExplosion",
+            "scoreValue": 5,
+            "launchSound": {
+                "name": "missileLaunch",
+                "volume": 0.5
+            },
+            "startSound": {
+                "name": "missileStart",
+                "volume": 0.5
+            },
+            "propulsion": "missile",
+            "thrusterSlots": [{
+                    "group": 1,
+                    "uses": ["forward"],
+                    "thrusters": [{
+                            "position": [0, -0.78, 0],
+                            "size": 0.8
+                        }]
+                }, {
+                    "group": 2,
+                    "uses": ["yawLeft"],
+                    "thrusters": [{
+                            "position": [-0.32, -0.435, 0],
+                            "size": 0.25
+                        }]
+                }, {
+                    "group": 3,
+                    "uses": ["yawRight"],
+                    "thrusters": [{
+                            "position": [0.32, -0.435, 0],
+                            "size": 0.25
+                        }]
+                }, {
+                    "group": 4,
+                    "uses": ["pitchUp"],
+                    "thrusters": [{
+                            "position": [0, -0.435, 0.32],
+                            "size": 0.25
+                        }]
+                }, {
+                    "group": 5,
+                    "uses": ["pitchDown"],
+                    "thrusters": [{
+                            "position": [0, -0.435, -0.32],
+                            "size": 0.25
+                        }]
+                }]
+        }],
     "jumpEngineClasses": [{
             "name": "imperialFighterMk1",
             "engageSound": {
@@ -3064,7 +3064,7 @@
             "fullName": "Standard heavy fighter shield",
             "capacity": 20,
             "rechargeDelay": 100,
-            "rechargeRate": 2.0,
+            "rechargeRate": 2,
             "rechargeColor": [0.5, 0.85, 1],
             "rechargeAnimationDuration": 1000,
             "rechargeStartSound": {
@@ -3365,220 +3365,156 @@
                     "uses": ["lower", "pitchDown"],
                     "thrusters": [{
                             "position": [2.6, 10, 7],
-                            "size": 0.9,
-                            "groupIndex": 1,
-                            "uses": ["lower", "pitchDown"]
+                            "size": 0.9
                         }, {
                             "position": [-2.6, 10, 7],
-                            "size": 0.9,
-                            "groupIndex": 1,
-                            "uses": ["lower", "pitchDown"]
+                            "size": 0.9
                         }]
                 }, {
                     "group": 2,
                     "uses": ["raise", "pitchUp", "strafeLeft"],
                     "thrusters": [{
                             "position": [6.8, 23, -2.5],
-                            "size": 0.9,
-                            "groupIndex": 2,
-                            "uses": ["raise", "pitchUp", "strafeLeft"]
+                            "size": 0.9
                         }]
                 }, {
                     "group": 15,
                     "uses": ["raise", "pitchUp", "strafeRight"],
                     "thrusters": [{
                             "position": [-6.8, 23, -2.5],
-                            "size": 0.9,
-                            "groupIndex": 15,
-                            "uses": ["raise", "pitchUp", "strafeRight"]
+                            "size": 0.9
                         }]
                 }, {
                     "group": 3,
                     "uses": ["forward", "yawLeft"],
                     "thrusters": [{
                             "position": [14, -7, 2.5],
-                            "size": 1.8,
-                            "groupIndex": 3,
-                            "uses": ["forward", "yawLeft"]
+                            "size": 1.8
                         }, {
                             "position": [22, -7, 2.5],
-                            "size": 1.8,
-                            "groupIndex": 3,
-                            "uses": ["forward", "yawLeft"]
+                            "size": 1.8
                         }, {
                             "position": [21.75, -5.4, 9.15],
-                            "size": 1.8,
-                            "groupIndex": 3,
-                            "uses": ["forward", "yawLeft"]
+                            "size": 1.8
                         }, {
                             "position": [19.25, -5.4, 9.15],
-                            "size": 1.8,
-                            "groupIndex": 3,
-                            "uses": ["forward", "yawLeft"]
+                            "size": 1.8
                         }, {
                             "position": [16.75, -5.4, 9.15],
-                            "size": 1.8,
-                            "groupIndex": 3,
-                            "uses": ["forward", "yawLeft"]
+                            "size": 1.8
                         }, {
                             "position": [14.25, -5.4, 9.15],
-                            "size": 1.8,
-                            "groupIndex": 3,
-                            "uses": ["forward", "yawLeft"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 4,
                     "uses": ["forward", "yawRight"],
                     "thrusters": [{
                             "position": [-14, -7, 2.5],
-                            "size": 1.8,
-                            "groupIndex": 4,
-                            "uses": ["forward", "yawRight"]
+                            "size": 1.8
                         }, {
                             "position": [-22, -7, 2.5],
-                            "size": 1.8,
-                            "groupIndex": 4,
-                            "uses": ["forward", "yawRight"]
+                            "size": 1.8
                         }, {
                             "position": [-21.75, -5.4, 9.15],
-                            "size": 1.8,
-                            "groupIndex": 4,
-                            "uses": ["forward", "yawRight"]
+                            "size": 1.8
                         }, {
                             "position": [-19.25, -5.4, 9.15],
-                            "size": 1.8,
-                            "groupIndex": 4,
-                            "uses": ["forward", "yawRight"]
+                            "size": 1.8
                         }, {
                             "position": [-16.75, -5.4, 9.15],
-                            "size": 1.8,
-                            "groupIndex": 4,
-                            "uses": ["forward", "yawRight"]
+                            "size": 1.8
                         }, {
                             "position": [-14.25, -5.4, 9.15],
-                            "size": 1.8,
-                            "groupIndex": 4,
-                            "uses": ["forward", "yawRight"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 5,
                     "uses": ["strafeLeft"],
                     "thrusters": [{
                             "position": [27.4, 3.5, 2.5],
-                            "size": 0.9,
-                            "groupIndex": 5,
-                            "uses": ["strafeLeft"]
+                            "size": 0.9
                         }, {
                             "position": [27.4, 0.5, 2.5],
-                            "size": 0.9,
-                            "groupIndex": 5,
-                            "uses": ["strafeLeft"]
+                            "size": 0.9
                         }, {
                             "position": [25.6, -2.5, 9.3],
-                            "size": 0.9,
-                            "groupIndex": 5,
-                            "uses": ["strafeLeft"]
+                            "size": 0.9
                         }]
                 }, {
                     "group": 6,
                     "uses": ["strafeRight"],
                     "thrusters": [{
                             "position": [-27.4, 3.5, 2.5],
-                            "size": 0.9,
-                            "groupIndex": 6,
-                            "uses": ["strafeRight"]
+                            "size": 0.9
                         }, {
                             "position": [-27.4, 0.5, 2.5],
-                            "size": 0.9,
-                            "groupIndex": 6,
-                            "uses": ["strafeRight"]
+                            "size": 0.9
                         }, {
                             "position": [-25.6, -2.5, 9.3],
-                            "size": 0.9,
-                            "groupIndex": 6,
-                            "uses": ["strafeRight"]
+                            "size": 0.9
                         }]
                 }, {
                     "group": 7,
                     "uses": ["raise", "rollLeft"],
                     "thrusters": [{
                             "position": [14, 4.5, -2.5],
-                            "size": 0.9,
-                            "groupIndex": 7,
-                            "uses": ["raise", "rollLeft"]
+                            "size": 0.9
                         }]
                 }, {
                     "group": 8,
                     "uses": ["raise", "rollLeft", "pitchDown"],
                     "thrusters": [{
                             "position": [14, 0.5, -2.5],
-                            "size": 0.9,
-                            "groupIndex": 8,
-                            "uses": ["raise", "rollLeft", "pitchDown"]
+                            "size": 0.9
                         }]
                 }, {
                     "group": 9,
                     "uses": ["raise", "rollRight"],
                     "thrusters": [{
                             "position": [-14, 4.5, -2.5],
-                            "size": 0.9,
-                            "groupIndex": 9,
-                            "uses": ["raise", "rollRight"]
+                            "size": 0.9
                         }]
                 }, {
                     "group": 10,
                     "uses": ["raise", "rollRight", "pitchDown"],
                     "thrusters": [{
                             "position": [-14, 0.5, -2.5],
-                            "size": 0.9,
-                            "groupIndex": 10,
-                            "uses": ["raise", "rollRight", "pitchDown"]
+                            "size": 0.9
                         }]
                 }, {
                     "group": 11,
                     "uses": ["reverse", "yawRight"],
                     "thrusters": [{
                             "position": [18, 18.8, 6.5],
-                            "size": 1.8,
-                            "groupIndex": 11,
-                            "uses": ["reverse", "yawRight"]
+                            "size": 1.8
                         }, {
                             "position": [23, 15.9, 6.2],
-                            "size": 1.8,
-                            "groupIndex": 11,
-                            "uses": ["reverse", "yawRight"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 12,
                     "uses": ["reverse", "yawLeft"],
                     "thrusters": [{
                             "position": [-18, 18.8, 6.5],
-                            "size": 1.8,
-                            "groupIndex": 12,
-                            "uses": ["reverse", "yawLeft"]
+                            "size": 1.8
                         }, {
                             "position": [-23, 15.9, 6.2],
-                            "size": 1.8,
-                            "groupIndex": 12,
-                            "uses": ["reverse", "yawLeft"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 13,
                     "uses": ["lower", "rollRight", "pitchUp"],
                     "thrusters": [{
                             "position": [18, 4, 11.2],
-                            "size": 1.5,
-                            "groupIndex": 13,
-                            "uses": ["lower", "rollRight", "pitchUp"]
+                            "size": 1.5
                         }]
                 }, {
                     "group": 14,
                     "uses": ["lower", "rollLeft", "pitchUp"],
                     "thrusters": [{
                             "position": [-18, 4, 11.2],
-                            "size": 1.5,
-                            "groupIndex": 14,
-                            "uses": ["lower", "rollLeft", "pitchUp"]
+                            "size": 1.5
                         }]
                 }],
             "views": [{
@@ -4477,208 +4413,152 @@
                     "uses": ["forward", "pitchUp"],
                     "thrusters": [{
                             "position": [0, 9.4, -18],
-                            "size": 4,
-                            "groupIndex": 1,
-                            "uses": ["forward", "pitchUp"]
+                            "size": 4
                         }]
                 }, {
                     "group": 2,
                     "uses": ["forward", "yawLeft"],
                     "thrusters": [{
                             "position": [36, -25.4, 30],
-                            "size": 4,
-                            "groupIndex": 2,
-                            "uses": ["forward", "yawLeft"]
+                            "size": 4
                         }]
                 }, {
                     "group": 3,
                     "uses": ["forward", "yawRight"],
                     "thrusters": [{
                             "position": [-36, -25.4, 30],
-                            "size": 4,
-                            "groupIndex": 3,
-                            "uses": ["forward", "yawRight"]
+                            "size": 4
                         }]
                 }, {
                     "group": 4,
                     "uses": ["reverse", "pitchDown"],
                     "thrusters": [{
                             "position": [0, 51.5, -12],
-                            "size": 1.8,
-                            "groupIndex": 4,
-                            "uses": ["reverse", "pitchDown"]
+                            "size": 1.8
                         }, {
                             "position": [5.2, 51.5, -21],
-                            "size": 1.8,
-                            "groupIndex": 4,
-                            "uses": ["reverse", "pitchDown"]
+                            "size": 1.8
                         }, {
                             "position": [-5.2, 51.5, -21],
-                            "size": 1.8,
-                            "groupIndex": 4,
-                            "uses": ["reverse", "pitchDown"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 5,
                     "uses": ["reverse", "yawRight", "pitchUp"],
                     "thrusters": [{
                             "position": [36, 16.7, 36],
-                            "size": 1.8,
-                            "groupIndex": 5,
-                            "uses": ["reverse", "yawRight", "pitchUp"]
+                            "size": 1.8
                         }, {
                             "position": [41.2, 16.7, 27],
-                            "size": 1.8,
-                            "groupIndex": 5,
-                            "uses": ["reverse", "yawRight", "pitchUp"]
+                            "size": 1.8
                         }, {
                             "position": [30.8, 16.7, 27],
-                            "size": 1.8,
-                            "groupIndex": 5,
-                            "uses": ["reverse", "yawRight", "pitchUp"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 6,
                     "uses": ["reverse", "yawLeft", "pitchUp"],
                     "thrusters": [{
                             "position": [-36, 16.7, 36],
-                            "size": 1.8,
-                            "groupIndex": 6,
-                            "uses": ["reverse", "yawLeft", "pitchUp"]
+                            "size": 1.8
                         }, {
                             "position": [-41.2, 16.7, 27],
-                            "size": 1.8,
-                            "groupIndex": 6,
-                            "uses": ["reverse", "yawLeft", "pitchUp"]
+                            "size": 1.8
                         }, {
                             "position": [-30.8, 16.7, 27],
-                            "size": 1.8,
-                            "groupIndex": 6,
-                            "uses": ["reverse", "yawLeft", "pitchUp"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 7,
                     "uses": ["rollRight", "strafeLeft", "yawLeft"],
                     "thrusters": [{
                             "position": [11.9, 30.6, -18],
-                            "size": 1.8,
-                            "groupIndex": 7,
-                            "uses": ["rollRight", "strafeLeft", "yawLeft"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 8,
                     "uses": ["rollLeft", "strafeRight", "yawRight"],
                     "thrusters": [{
                             "position": [-11.9, 30.6, -18],
-                            "size": 1.8,
-                            "groupIndex": 8,
-                            "uses": ["rollLeft", "strafeRight", "yawRight"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 9,
                     "uses": ["rollRight", "strafeLeft"],
                     "thrusters": [{
                             "position": [11.9, 23.4, -18],
-                            "size": 1.8,
-                            "groupIndex": 9,
-                            "uses": ["rollRight", "strafeLeft"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 10,
                     "uses": ["rollLeft", "strafeRight"],
                     "thrusters": [{
                             "position": [-11.9, 23.4, -18],
-                            "size": 1.8,
-                            "groupIndex": 10,
-                            "uses": ["rollLeft", "strafeRight"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 11,
                     "uses": ["rollRight", "lower"],
                     "thrusters": [{
                             "position": [30.05, -4.2, 40.3],
-                            "size": 1.8,
-                            "groupIndex": 11,
-                            "uses": ["rollRight", "lower"]
+                            "size": 1.8
                         }, {
                             "position": [30.05, -11.4, 40.3],
-                            "size": 1.8,
-                            "groupIndex": 11,
-                            "uses": ["rollRight", "lower"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 12,
                     "uses": ["rollLeft", "raise", "strafeLeft", "pitchDown"],
                     "thrusters": [{
                             "position": [41.95, -4.2, 19.7],
-                            "size": 1.8,
-                            "groupIndex": 12,
-                            "uses": ["rollLeft", "raise", "strafeLeft", "pitchDown"]
+                            "size": 1.8
                         }, {
                             "position": [41.95, -11.4, 19.7],
-                            "size": 1.8,
-                            "groupIndex": 12,
-                            "uses": ["rollLeft", "raise", "strafeLeft", "pitchDown"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 13,
                     "uses": ["rollRight", "raise", "strafeRight", "pitchDown"],
                     "thrusters": [{
                             "position": [-41.95, -4.2, 19.7],
-                            "size": 1.8,
-                            "groupIndex": 13,
-                            "uses": ["rollRight", "raise", "strafeRight", "pitchDown"]
+                            "size": 1.8
                         }, {
                             "position": [-41.95, -11.4, 19.7],
-                            "size": 1.8,
-                            "groupIndex": 13,
-                            "uses": ["rollRight", "raise", "strafeRight", "pitchDown"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 14,
                     "uses": ["rollLeft", "lower"],
                     "thrusters": [{
                             "position": [-30.05, -4.2, 40.3],
-                            "size": 1.8,
-                            "groupIndex": 14,
-                            "uses": ["rollLeft", "lower"]
+                            "size": 1.8
                         }, {
                             "position": [-30.05, -11.4, 40.3],
-                            "size": 1.8,
-                            "groupIndex": 14,
-                            "uses": ["rollLeft", "lower"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 15,
                     "uses": ["pitchDown", "lower", "strafeLeft"],
                     "thrusters": [{
                             "position": [6.4, 33.6, 10.44],
-                            "size": 1.8,
-                            "groupIndex": 15,
-                            "uses": ["pitchDown", "lower", "strafeLeft"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 16,
                     "uses": ["pitchDown", "lower", "strafeRight"],
                     "thrusters": [{
                             "position": [-6.4, 33.6, 10.44],
-                            "size": 1.8,
-                            "groupIndex": 16,
-                            "uses": ["pitchDown", "lower", "strafeRight"]
+                            "size": 1.8
                         }]
                 }, {
                     "group": 17,
                     "uses": ["pitchUp", "raise"],
                     "thrusters": [{
                             "position": [8.05, 53.8, -4.7],
-                            "size": 1.8,
-                            "groupIndex": 17,
-                            "uses": ["pitchUp", "raise"]
+                            "size": 1.8
                         }, {
                             "position": [-8.05, 53.8, -4.7],
-                            "size": 1.8,
-                            "groupIndex": 17,
-                            "uses": ["pitchUp", "raise"]
+                            "size": 1.8
                         }]
                 }],
             "views": [{
@@ -5133,24 +5013,16 @@
                     "uses": ["forward"],
                     "thrusters": [{
                             "position": [0, -5.7, 4],
-                            "size": 3,
-                            "groupIndex": 2,
-                            "uses": ["forward"]
+                            "size": 3
                         }, {
                             "position": [0, -5.7, -4],
-                            "size": 3,
-                            "groupIndex": 2,
-                            "uses": ["forward"]
+                            "size": 3
                         }, {
                             "position": [10, -10.2, 0],
-                            "size": 3,
-                            "groupIndex": 2,
-                            "uses": ["forward"]
+                            "size": 3
                         }, {
                             "position": [-10, -10.2, 0],
-                            "size": 3,
-                            "groupIndex": 2,
-                            "uses": ["forward"]
+                            "size": 3
                         }],
                     "array": false
                 }, {
@@ -5158,24 +5030,16 @@
                     "uses": ["reverse"],
                     "thrusters": [{
                             "position": [0, -0.3, 4],
-                            "size": 3,
-                            "groupIndex": 1,
-                            "uses": ["reverse"]
+                            "size": 3
                         }, {
                             "position": [0, -0.3, -4],
-                            "size": 3,
-                            "groupIndex": 1,
-                            "uses": ["reverse"]
+                            "size": 3
                         }, {
                             "position": [10, -4.8, 0],
-                            "size": 3,
-                            "groupIndex": 1,
-                            "uses": ["reverse"]
+                            "size": 3
                         }, {
                             "position": [-10, -4.8, 0],
-                            "size": 3,
-                            "groupIndex": 1,
-                            "uses": ["reverse"]
+                            "size": 3
                         }],
                     "array": false
                 }, {
@@ -5183,14 +5047,10 @@
                     "uses": ["strafeLeft", "yawRight", "rollLeft"],
                     "thrusters": [{
                             "position": [1.6, -2.5, 4.2],
-                            "size": 1.2,
-                            "groupIndex": 3,
-                            "uses": ["strafeLeft", "yawRight", "rollLeft"]
+                            "size": 1.2
                         }, {
                             "position": [1.6, -3.5, 4.2],
-                            "size": 1.2,
-                            "groupIndex": 3,
-                            "uses": ["strafeLeft", "yawRight", "rollLeft"]
+                            "size": 1.2
                         }],
                     "array": false
                 }, {
@@ -5198,14 +5058,10 @@
                     "uses": ["strafeRight", "yawLeft", "rollRight"],
                     "thrusters": [{
                             "position": [-1.6, -2.5, 4.2],
-                            "size": 1.2,
-                            "groupIndex": 4,
-                            "uses": ["strafeRight", "yawLeft", "rollRight"]
+                            "size": 1.2
                         }, {
                             "position": [-1.6, -3.5, 4.2],
-                            "size": 1.2,
-                            "groupIndex": 4,
-                            "uses": ["strafeRight", "yawLeft", "rollRight"]
+                            "size": 1.2
                         }],
                     "array": false
                 }, {
@@ -5213,14 +5069,10 @@
                     "uses": ["strafeLeft", "yawRight", "rollRight"],
                     "thrusters": [{
                             "position": [1.6, -2.5, -4.2],
-                            "size": 1.2,
-                            "groupIndex": 5,
-                            "uses": ["strafeLeft", "yawRight", "rollRight"]
+                            "size": 1.2
                         }, {
                             "position": [1.6, -3.5, -4.2],
-                            "size": 1.2,
-                            "groupIndex": 5,
-                            "uses": ["strafeLeft", "yawRight", "rollRight"]
+                            "size": 1.2
                         }],
                     "array": false
                 }, {
@@ -5228,14 +5080,10 @@
                     "uses": ["strafeRight", "yawLeft", "rollLeft"],
                     "thrusters": [{
                             "position": [-1.6, -2.5, -4.2],
-                            "size": 1.2,
-                            "groupIndex": 6,
-                            "uses": ["strafeRight", "yawLeft", "rollLeft"]
+                            "size": 1.2
                         }, {
                             "position": [-1.6, -3.5, -4.2],
-                            "size": 1.2,
-                            "groupIndex": 6,
-                            "uses": ["strafeRight", "yawLeft", "rollLeft"]
+                            "size": 1.2
                         }],
                     "array": false
                 }, {
@@ -5243,14 +5091,10 @@
                     "uses": ["raise", "rollLeft", "pitchDown"],
                     "thrusters": [{
                             "position": [10, -8, -1.95],
-                            "size": 1.6,
-                            "groupIndex": 7,
-                            "uses": ["raise", "rollLeft", "pitchDown"]
+                            "size": 1.6
                         }, {
                             "position": [10, -7, -1.95],
-                            "size": 1.6,
-                            "groupIndex": 7,
-                            "uses": ["raise", "rollLeft", "pitchDown"]
+                            "size": 1.6
                         }],
                     "array": false
                 }, {
@@ -5258,14 +5102,10 @@
                     "uses": ["lower", "rollRight", "pitchUp"],
                     "thrusters": [{
                             "position": [10, -8, 1.65],
-                            "size": 1.6,
-                            "groupIndex": 8,
-                            "uses": ["lower", "rollRight", "pitchUp"]
+                            "size": 1.6
                         }, {
                             "position": [10, -7, 1.65],
-                            "size": 1.6,
-                            "groupIndex": 8,
-                            "uses": ["lower", "rollRight", "pitchUp"]
+                            "size": 1.6
                         }],
                     "array": false
                 }, {
@@ -5273,14 +5113,10 @@
                     "uses": ["raise", "rollRight", "pitchDown"],
                     "thrusters": [{
                             "position": [-10, -8, -1.95],
-                            "size": 1.6,
-                            "groupIndex": 9,
-                            "uses": ["raise", "rollRight", "pitchDown"]
+                            "size": 1.6
                         }, {
                             "position": [-10, -7, -1.95],
-                            "size": 1.6,
-                            "groupIndex": 9,
-                            "uses": ["raise", "rollRight", "pitchDown"]
+                            "size": 1.6
                         }],
                     "array": false
                 }, {
@@ -5288,14 +5124,10 @@
                     "uses": ["lower", "rollLeft", "pitchUp"],
                     "thrusters": [{
                             "position": [-10, -8, 1.65],
-                            "size": 1.6,
-                            "groupIndex": 10,
-                            "uses": ["lower", "rollLeft", "pitchUp"]
+                            "size": 1.6
                         }, {
                             "position": [-10, -7, 1.65],
-                            "size": 1.6,
-                            "groupIndex": 10,
-                            "uses": ["lower", "rollLeft", "pitchUp"]
+                            "size": 1.6
                         }],
                     "array": false
                 }, {
@@ -5303,24 +5135,16 @@
                     "uses": ["lower", "pitchDown"],
                     "thrusters": [{
                             "position": [2, 2, 1.5],
-                            "size": 1.5,
-                            "groupIndex": 11,
-                            "uses": ["lower", "pitchDown"]
+                            "size": 1.5
                         }, {
                             "position": [2, 4, 1.5],
-                            "size": 1.5,
-                            "groupIndex": 11,
-                            "uses": ["lower", "pitchDown"]
+                            "size": 1.5
                         }, {
                             "position": [-2, 2, 1.5],
-                            "size": 1.5,
-                            "groupIndex": 11,
-                            "uses": ["lower", "pitchDown"]
+                            "size": 1.5
                         }, {
                             "position": [-2, 4, 1.5],
-                            "size": 1.5,
-                            "groupIndex": 11,
-                            "uses": ["lower", "pitchDown"]
+                            "size": 1.5
                         }],
                     "array": false
                 }, {
@@ -5328,24 +5152,16 @@
                     "uses": ["raise", "pitchUp"],
                     "thrusters": [{
                             "position": [2, 2, -1.5],
-                            "size": 1.5,
-                            "groupIndex": 12,
-                            "uses": ["raise", "pitchUp"]
+                            "size": 1.5
                         }, {
                             "position": [2, 4, -1.5],
-                            "size": 1.5,
-                            "groupIndex": 12,
-                            "uses": ["raise", "pitchUp"]
+                            "size": 1.5
                         }, {
                             "position": [-2, 2, -1.5],
-                            "size": 1.5,
-                            "groupIndex": 12,
-                            "uses": ["raise", "pitchUp"]
+                            "size": 1.5
                         }, {
                             "position": [-2, 4, -1.5],
-                            "size": 1.5,
-                            "groupIndex": 12,
-                            "uses": ["raise", "pitchUp"]
+                            "size": 1.5
                         }],
                     "array": false
                 }, {
@@ -5353,9 +5169,7 @@
                     "uses": ["strafeLeft", "yawLeft"],
                     "thrusters": [{
                             "position": [5.75, 3.2, 0],
-                            "size": 2.2,
-                            "groupIndex": 13,
-                            "uses": ["strafeLeft", "yawLeft"]
+                            "size": 2.2
                         }],
                     "array": false
                 }, {
@@ -5363,9 +5177,7 @@
                     "uses": ["strafeRight", "yawRight"],
                     "thrusters": [{
                             "position": [-5.75, 3.2, 0],
-                            "size": 2.2,
-                            "groupIndex": 14,
-                            "uses": ["strafeRight", "yawRight"]
+                            "size": 2.2
                         }],
                     "array": false
                 }, {
@@ -5373,14 +5185,10 @@
                     "uses": ["lower", "pitchUp"],
                     "thrusters": [{
                             "position": [2, -6.2, 2.5],
-                            "size": 1.6,
-                            "groupIndex": 15,
-                            "uses": ["lower", "pitchUp"]
+                            "size": 1.6
                         }, {
                             "position": [-2, -6.2, 2.5],
-                            "size": 1.6,
-                            "groupIndex": 15,
-                            "uses": ["lower", "pitchUp"]
+                            "size": 1.6
                         }],
                     "array": false
                 }, {
@@ -5388,14 +5196,10 @@
                     "uses": ["raise", "pitchDown"],
                     "thrusters": [{
                             "position": [2, -6.2, -0.5],
-                            "size": 1.6,
-                            "groupIndex": 16,
-                            "uses": ["raise", "pitchDown"]
+                            "size": 1.6
                         }, {
                             "position": [-2, -6.2, -0.5],
-                            "size": 1.6,
-                            "groupIndex": 16,
-                            "uses": ["raise", "pitchDown"]
+                            "size": 1.6
                         }],
                     "array": false
                 }, {
@@ -5403,9 +5207,7 @@
                     "uses": ["strafeLeft"],
                     "thrusters": [{
                             "position": [12, -8, 0],
-                            "size": 1.8,
-                            "groupIndex": 17,
-                            "uses": ["strafeLeft"]
+                            "size": 1.8
                         }],
                     "array": false
                 }, {
@@ -5413,9 +5215,7 @@
                     "uses": ["strafeRight"],
                     "thrusters": [{
                             "position": [-12, -8, 0],
-                            "size": 1.8,
-                            "groupIndex": 18,
-                            "uses": ["strafeRight"]
+                            "size": 1.8
                         }],
                     "array": false
                 }],
@@ -5469,144 +5269,112 @@
                     "uses": ["reverse", "pitchUp"],
                     "thrusters": [{
                             "position": [0, 1.05, 4.8],
-                            "size": 3,
-                            "groupIndex": 1,
-                            "uses": ["reverse", "pitchUp"]
+                            "size": 3
                         }]
                 }, {
                     "group": 2,
                     "uses": ["forward", "pitchDown"],
                     "thrusters": [{
                             "position": [0, -2.55, 4.8],
-                            "size": 3,
-                            "groupIndex": 2,
-                            "uses": ["forward", "pitchDown"]
+                            "size": 3
                         }]
                 }, {
                     "group": 3,
                     "uses": ["strafeLeft", "rollLeft"],
                     "thrusters": [{
                             "position": [2.45, -0.75, 4.6],
-                            "size": 1,
-                            "groupIndex": 3,
-                            "uses": ["strafeLeft", "rollLeft"]
+                            "size": 1
                         }]
                 }, {
                     "group": 4,
                     "uses": ["strafeRight", "rollRight"],
                     "thrusters": [{
                             "position": [-2.45, -0.75, 4.6],
-                            "size": 1,
-                            "groupIndex": 4,
-                            "uses": ["strafeRight", "rollRight"]
+                            "size": 1
                         }]
                 }, {
                     "group": 5,
                     "uses": ["reverse", "yawRight"],
                     "thrusters": [{
                             "position": [4.8, 1.05, 0],
-                            "size": 3,
-                            "groupIndex": 5,
-                            "uses": ["reverse", "yawRight"]
+                            "size": 3
                         }]
                 }, {
                     "group": 6,
                     "uses": ["forward", "yawLeft"],
                     "thrusters": [{
                             "position": [4.8, -2.55, 0],
-                            "size": 3,
-                            "groupIndex": 6,
-                            "uses": ["forward", "yawLeft"]
+                            "size": 3
                         }]
                 }, {
                     "group": 7,
                     "uses": ["raise", "rollLeft"],
                     "thrusters": [{
                             "position": [4.6, -0.75, -2.45],
-                            "size": 1,
-                            "groupIndex": 7,
-                            "uses": ["raise", "rollLeft"]
+                            "size": 1
                         }]
                 }, {
                     "group": 8,
                     "uses": ["lower", "rollRight"],
                     "thrusters": [{
                             "position": [4.6, -0.75, 2.45],
-                            "size": 1,
-                            "groupIndex": 8,
-                            "uses": ["lower", "rollRight"]
+                            "size": 1
                         }]
                 }, {
                     "group": 9,
                     "uses": ["reverse", "pitchDown"],
                     "thrusters": [{
                             "position": [0, 1.05, -4.8],
-                            "size": 3,
-                            "groupIndex": 9,
-                            "uses": ["reverse", "pitchDown"]
+                            "size": 3
                         }]
                 }, {
                     "group": 10,
                     "uses": ["forward", "pitchUp"],
                     "thrusters": [{
                             "position": [0, -2.55, -4.8],
-                            "size": 3,
-                            "groupIndex": 10,
-                            "uses": ["forward", "pitchUp"]
+                            "size": 3
                         }]
                 }, {
                     "group": 11,
                     "uses": ["strafeRight", "rollLeft"],
                     "thrusters": [{
                             "position": [-2.45, -0.75, -4.6],
-                            "size": 1,
-                            "groupIndex": 11,
-                            "uses": ["strafeRight", "rollLeft"]
+                            "size": 1
                         }]
                 }, {
                     "group": 12,
                     "uses": ["strafeLeft", "rollRight"],
                     "thrusters": [{
                             "position": [2.45, -0.75, -4.6],
-                            "size": 1,
-                            "groupIndex": 12,
-                            "uses": ["strafeLeft", "rollRight"]
+                            "size": 1
                         }]
                 }, {
                     "group": 13,
                     "uses": ["reverse", "yawLeft"],
                     "thrusters": [{
                             "position": [-4.8, 1.05, 0],
-                            "size": 3,
-                            "groupIndex": 13,
-                            "uses": ["reverse", "yawLeft"]
+                            "size": 3
                         }]
                 }, {
                     "group": 14,
                     "uses": ["forward", "yawRight"],
                     "thrusters": [{
                             "position": [-4.8, -2.55, 0],
-                            "size": 3,
-                            "groupIndex": 14,
-                            "uses": ["forward", "yawRight"]
+                            "size": 3
                         }]
                 }, {
                     "group": 15,
                     "uses": ["lower", "rollLeft"],
                     "thrusters": [{
                             "position": [-4.6, -0.75, 2.45],
-                            "size": 1,
-                            "groupIndex": 15,
-                            "uses": ["lower", "rollLeft"]
+                            "size": 1
                         }]
                 }, {
                     "group": 16,
                     "uses": ["raise", "rollRight"],
                     "thrusters": [{
                             "position": [-4.6, -0.75, -2.45],
-                            "size": 1,
-                            "groupIndex": 16,
-                            "uses": ["raise", "rollRight"]
+                            "size": 1
                         }]
                 }],
             "views": [{
@@ -5864,146 +5632,110 @@
                     "uses": ["yawLeft", "strafeLeft"],
                     "thrusters": [{
                             "position": [56, 285, 0],
-                            "size": 5,
-                            "groupIndex": 1,
-                            "uses": ["yawLeft", "strafeLeft"]
+                            "size": 5
                         }]
                 }, {
                     "group": 2,
                     "uses": ["yawRight", "strafeRight"],
                     "thrusters": [{
                             "position": [-56, 285, 0],
-                            "size": 5,
-                            "groupIndex": 2,
-                            "uses": ["yawRight", "strafeRight"]
+                            "size": 5
                         }]
                 }, {
                     "group": 3,
                     "uses": ["pitchUp", "rollLeft", "raise"],
                     "thrusters": [{
                             "position": [14, 285, -28],
-                            "size": 5.5,
-                            "groupIndex": 3,
-                            "uses": ["pitchUp", "rollLeft", "raise"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 4,
                     "uses": ["pitchUp", "rollRight", "raise"],
                     "thrusters": [{
                             "position": [-14, 285, -28],
-                            "size": 5.5,
-                            "groupIndex": 4,
-                            "uses": ["pitchUp", "rollRight", "raise"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 5,
                     "uses": ["pitchDown", "rollRight", "lower"],
                     "thrusters": [{
                             "position": [14, 285, 28],
-                            "size": 5.5,
-                            "groupIndex": 5,
-                            "uses": ["pitchDown", "rollRight", "lower"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 6,
                     "uses": ["pitchDown", "rollLeft", "lower"],
                     "thrusters": [{
                             "position": [-14, 285, 28],
-                            "size": 5.5,
-                            "groupIndex": 6,
-                            "uses": ["pitchDown", "rollLeft", "lower"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 7,
                     "uses": ["reverse"],
                     "thrusters": [{
                             "position": [75, 53, 20],
-                            "size": 8.5,
-                            "groupIndex": 7,
-                            "uses": ["reverse"]
+                            "size": 8.5
                         }, {
                             "position": [-75, 53, 20],
-                            "size": 8.5,
-                            "groupIndex": 7,
-                            "uses": ["reverse"]
+                            "size": 8.5
                         }, {
                             "position": [75, 53, -20],
-                            "size": 8.5,
-                            "groupIndex": 7,
-                            "uses": ["reverse"]
+                            "size": 8.5
                         }, {
                             "position": [-75, 53, -20],
-                            "size": 8.5,
-                            "groupIndex": 7,
-                            "uses": ["reverse"]
+                            "size": 8.5
                         }]
                 }, {
                     "group": 8,
                     "uses": ["forward"],
                     "thrusters": [{
                             "position": [77.5, -311, 0],
-                            "size": 13.4,
-                            "groupIndex": 8,
-                            "uses": ["forward"]
+                            "size": 13.4
                         }, {
                             "position": [-77.5, -311, 0],
-                            "size": 13.4,
-                            "groupIndex": 8,
-                            "uses": ["forward"]
+                            "size": 13.4
                         }]
                 }, {
                     "group": 9,
                     "uses": ["yawRight", "strafeLeft"],
                     "thrusters": [{
                             "position": [109, -273, 0],
-                            "size": 5,
-                            "groupIndex": 9,
-                            "uses": ["yawRight", "strafeLeft"]
+                            "size": 5
                         }]
                 }, {
                     "group": 10,
                     "uses": ["pitchDown", "rollLeft", "raise"],
                     "thrusters": [{
                             "position": [77.5, -273, -31.5],
-                            "size": 5,
-                            "groupIndex": 10,
-                            "uses": ["pitchDown", "rollLeft", "raise"]
+                            "size": 5
                         }]
                 }, {
                     "group": 11,
                     "uses": ["pitchUp", "rollRight", "lower"],
                     "thrusters": [{
                             "position": [77.5, -273, 31.5],
-                            "size": 5,
-                            "groupIndex": 11,
-                            "uses": ["pitchUp", "rollRight", "lower"]
+                            "size": 5
                         }]
                 }, {
                     "group": 12,
                     "uses": ["yawLeft", "strafeRight"],
                     "thrusters": [{
                             "position": [-109, -273, 0],
-                            "size": 5,
-                            "groupIndex": 12,
-                            "uses": ["yawLeft", "strafeRight"]
+                            "size": 5
                         }]
                 }, {
                     "group": 13,
                     "uses": ["pitchDown", "rollRight", "raise"],
                     "thrusters": [{
                             "position": [-77.5, -273, -31.5],
-                            "size": 5,
-                            "groupIndex": 13,
-                            "uses": ["pitchDown", "rollRight", "raise"]
+                            "size": 5
                         }]
                 }, {
                     "group": 14,
                     "uses": ["pitchUp", "rollLeft", "lower"],
                     "thrusters": [{
                             "position": [-77.5, -273, 31.5],
-                            "size": 5,
-                            "groupIndex": 14,
-                            "uses": ["pitchUp", "rollLeft", "lower"]
+                            "size": 5
                         }]
                 }],
             "views": [{
@@ -6313,246 +6045,170 @@
                     "uses": ["forward"],
                     "thrusters": [{
                             "position": [23, -296, -165],
-                            "size": 13.4,
-                            "groupIndex": 1,
-                            "uses": ["forward"]
+                            "size": 13.4
                         }, {
                             "position": [-23, -296, -165],
-                            "size": 13.4,
-                            "groupIndex": 1,
-                            "uses": ["forward"]
+                            "size": 13.4
                         }, {
                             "position": [131.5, -296, 102.4],
-                            "size": 13.4,
-                            "groupIndex": 1,
-                            "uses": ["forward"]
+                            "size": 13.4
                         }, {
                             "position": [154.5, -296, 62.6],
-                            "size": 13.4,
-                            "groupIndex": 1,
-                            "uses": ["forward"]
+                            "size": 13.4
                         }, {
                             "position": [-131.5, -296, 102.4],
-                            "size": 13.4,
-                            "groupIndex": 1,
-                            "uses": ["forward"]
+                            "size": 13.4
                         }, {
                             "position": [-154.5, -296, 62.6],
-                            "size": 13.4,
-                            "groupIndex": 1,
-                            "uses": ["forward"]
+                            "size": 13.4
                         }]
                 }, {
                     "group": 2,
                     "uses": ["reverse"],
                     "thrusters": [{
                             "position": [23, -154, -165],
-                            "size": 13.4,
-                            "groupIndex": 2,
-                            "uses": ["reverse"]
+                            "size": 13.4
                         }, {
                             "position": [-23, -154, -165],
-                            "size": 13.4,
-                            "groupIndex": 2,
-                            "uses": ["reverse"]
+                            "size": 13.4
                         }, {
                             "position": [131.5, -154, 102.4],
-                            "size": 13.4,
-                            "groupIndex": 2,
-                            "uses": ["reverse"]
+                            "size": 13.4
                         }, {
                             "position": [154.5, -154, 62.6],
-                            "size": 13.4,
-                            "groupIndex": 2,
-                            "uses": ["reverse"]
+                            "size": 13.4
                         }, {
                             "position": [-131.5, -154, 102.4],
-                            "size": 13.4,
-                            "groupIndex": 2,
-                            "uses": ["reverse"]
+                            "size": 13.4
                         }, {
                             "position": [-154.5, -154, 62.6],
-                            "size": 13.4,
-                            "groupIndex": 2,
-                            "uses": ["reverse"]
+                            "size": 13.4
                         }, {
                             "position": [-38, 69, -10],
-                            "size": 7.3,
-                            "groupIndex": 2,
-                            "uses": ["reverse"]
+                            "size": 7.3
                         }, {
                             "position": [0, 69, -10],
-                            "size": 7.3,
-                            "groupIndex": 2,
-                            "uses": ["reverse"]
+                            "size": 7.3
                         }, {
                             "position": [38, 69, -10],
-                            "size": 7.3,
-                            "groupIndex": 2,
-                            "uses": ["reverse"]
+                            "size": 7.3
                         }]
                 }, {
                     "group": 3,
                     "uses": ["rollRight", "strafeLeft", "yawRight"],
                     "thrusters": [{
                             "position": [56, -211, -165],
-                            "size": 5.5,
-                            "groupIndex": 3,
-                            "uses": ["rollRight", "strafeLeft", "yawRight"]
+                            "size": 5.5
                         }, {
                             "position": [56, -239, -165],
-                            "size": 5.5,
-                            "groupIndex": 3,
-                            "uses": ["rollRight", "strafeLeft", "yawRight"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 4,
                     "uses": ["rollLeft", "strafeRight", "yawLeft"],
                     "thrusters": [{
                             "position": [-56, -211, -165],
-                            "size": 5.5,
-                            "groupIndex": 4,
-                            "uses": ["rollLeft", "strafeRight", "yawLeft"]
+                            "size": 5.5
                         }, {
                             "position": [-56, -239, -165],
-                            "size": 5.5,
-                            "groupIndex": 4,
-                            "uses": ["rollLeft", "strafeRight", "yawLeft"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 5,
                     "uses": ["rollRight", "raise", "yawLeft", "pitchDown"],
                     "thrusters": [{
                             "position": [-170.5, -211, 34.9],
-                            "size": 5.5,
-                            "groupIndex": 5,
-                            "uses": ["rollRight", "raise", "yawLeft", "pitchDown"]
+                            "size": 5.5
                         }, {
                             "position": [-170.5, -239, 34.9],
-                            "size": 5.5,
-                            "groupIndex": 5,
-                            "uses": ["rollRight", "raise", "yawLeft", "pitchDown"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 6,
                     "uses": ["rollLeft", "lower", "yawRight", "pitchUp"],
                     "thrusters": [{
                             "position": [-115.5, -211, 130.1],
-                            "size": 5.5,
-                            "groupIndex": 6,
-                            "uses": ["rollLeft", "lower", "yawRight", "pitchUp"]
+                            "size": 5.5
                         }, {
                             "position": [-115.5, -239, 130.1],
-                            "size": 5.5,
-                            "groupIndex": 6,
-                            "uses": ["rollLeft", "lower", "yawRight", "pitchUp"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 7,
                     "uses": ["rollRight", "lower", "yawLeft", "pitchUp"],
                     "thrusters": [{
                             "position": [115.5, -211, 130.1],
-                            "size": 5.5,
-                            "groupIndex": 7,
-                            "uses": ["rollRight", "lower", "yawLeft", "pitchUp"]
+                            "size": 5.5
                         }, {
                             "position": [115.5, -239, 130.1],
-                            "size": 5.5,
-                            "groupIndex": 7,
-                            "uses": ["rollRight", "lower", "yawLeft", "pitchUp"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 8,
                     "uses": ["rollLeft", "raise", "yawRight", "pitchDown"],
                     "thrusters": [{
                             "position": [170.5, -211, 34.9],
-                            "size": 5.5,
-                            "groupIndex": 8,
-                            "uses": ["rollLeft", "raise", "yawRight", "pitchDown"]
+                            "size": 5.5
                         }, {
                             "position": [170.5, -239, 34.9],
-                            "size": 5.5,
-                            "groupIndex": 8,
-                            "uses": ["rollLeft", "raise", "yawRight", "pitchDown"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 9,
                     "uses": ["yawLeft", "strafeLeft"],
                     "thrusters": [{
                             "position": [58, 215, 54.15],
-                            "size": 4.5,
-                            "groupIndex": 9,
-                            "uses": ["yawLeft", "strafeLeft"]
+                            "size": 4.5
                         }]
                 }, {
                     "group": 10,
                     "uses": ["yawRight", "strafeRight"],
                     "thrusters": [{
                             "position": [-58, 215, 54.15],
-                            "size": 4.5,
-                            "groupIndex": 10,
-                            "uses": ["yawRight", "strafeRight"]
+                            "size": 4.5
                         }]
                 }, {
                     "group": 11,
                     "uses": ["pitchDown", "lower"],
                     "thrusters": [{
                             "position": [14, 215, 76],
-                            "size": 5.5,
-                            "groupIndex": 11,
-                            "uses": ["pitchDown", "lower"]
+                            "size": 5.5
                         }, {
                             "position": [-14, 215, 76],
-                            "size": 5.5,
-                            "groupIndex": 11,
-                            "uses": ["pitchDown", "lower"]
+                            "size": 5.5
                         }]
                 }, {
                     "group": 12,
                     "uses": ["pitchUp", "raise"],
                     "thrusters": [{
                             "position": [0, 220, -110],
-                            "size": 8,
-                            "groupIndex": 12,
-                            "uses": ["pitchUp", "raise"]
+                            "size": 8
                         }, {
                             "position": [0, 255, -110],
-                            "size": 8,
-                            "groupIndex": 12,
-                            "uses": ["pitchUp", "raise"]
+                            "size": 8
                         }, {
                             "position": [0, 290, -110],
-                            "size": 8,
-                            "groupIndex": 12,
-                            "uses": ["pitchUp", "raise"]
+                            "size": 8
                         }]
                 }, {
                     "group": 13,
                     "uses": ["strafeLeft"],
                     "thrusters": [{
                             "position": [158, -40, 20],
-                            "size": 8,
-                            "groupIndex": 13,
-                            "uses": ["strafeLeft"]
+                            "size": 8
                         }, {
                             "position": [216, 20, -80],
-                            "size": 8,
-                            "groupIndex": 13,
-                            "uses": ["strafeLeft"]
+                            "size": 8
                         }]
                 }, {
                     "group": 14,
                     "uses": ["strafeRight"],
                     "thrusters": [{
                             "position": [-158, -40, 20],
-                            "size": 8,
-                            "groupIndex": 14,
-                            "uses": ["strafeRight"]
+                            "size": 8
                         }, {
                             "position": [-216, 20, -80],
-                            "size": 8,
-                            "groupIndex": 14,
-                            "uses": ["strafeRight"]
+                            "size": 8
                         }]
                 }],
             "views": [{
@@ -7839,14 +7495,10 @@
                     "uses": ["yawRight"],
                     "thrusters": [{
                             "position": [46.47, 8.2, -6.08],
-                            "size": 2,
-                            "groupIndex": 1,
-                            "uses": ["yawRight"]
+                            "size": 2
                         }, {
                             "position": [-46.47, -10.2, -6.08],
-                            "size": 2,
-                            "groupIndex": 1,
-                            "uses": ["yawRight"]
+                            "size": 2
                         }],
                     "array": false,
                     "size": 1
@@ -7855,14 +7507,10 @@
                     "uses": ["yawLeft"],
                     "thrusters": [{
                             "position": [46.47, -10.2, -6.08],
-                            "size": 2,
-                            "groupIndex": 2,
-                            "uses": ["yawLeft"]
+                            "size": 2
                         }, {
                             "position": [-46.47, 8.2, -6.08],
-                            "size": 2,
-                            "groupIndex": 2,
-                            "uses": ["yawLeft"]
+                            "size": 2
                         }],
                     "array": false
                 }, {
@@ -7870,24 +7518,16 @@
                     "uses": ["rollRight"],
                     "thrusters": [{
                             "position": [46.94, 1.3, -3.42],
-                            "size": 1.6,
-                            "groupIndex": 3,
-                            "uses": ["rollRight"]
+                            "size": 1.6
                         }, {
                             "position": [46.94, -3.3, -3.42],
-                            "size": 1.6,
-                            "groupIndex": 3,
-                            "uses": ["rollRight"]
+                            "size": 1.6
                         }, {
                             "position": [-46, 1.3, -8.74],
-                            "size": 1.6,
-                            "groupIndex": 3,
-                            "uses": ["rollRight"]
+                            "size": 1.6
                         }, {
                             "position": [-46, -3.3, -8.74],
-                            "size": 1.6,
-                            "groupIndex": 3,
-                            "uses": ["rollRight"]
+                            "size": 1.6
                         }],
                     "array": false
                 }, {
@@ -7895,24 +7535,16 @@
                     "uses": ["rollLeft"],
                     "thrusters": [{
                             "position": [46, 1.3, -8.74],
-                            "size": 1.6,
-                            "groupIndex": 4,
-                            "uses": ["rollLeft"]
+                            "size": 1.6
                         }, {
                             "position": [46, -3.3, -8.74],
-                            "size": 1.6,
-                            "groupIndex": 4,
-                            "uses": ["rollLeft"]
+                            "size": 1.6
                         }, {
                             "position": [-46.94, 1.3, -3.42],
-                            "size": 1.6,
-                            "groupIndex": 4,
-                            "uses": ["rollLeft"]
+                            "size": 1.6
                         }, {
                             "position": [-46.94, -3.3, -3.42],
-                            "size": 1.6,
-                            "groupIndex": 4,
-                            "uses": ["rollLeft"]
+                            "size": 1.6
                         }],
                     "array": false
                 }, {
@@ -7920,14 +7552,10 @@
                     "uses": ["pitchDown", "lower"],
                     "thrusters": [{
                             "position": [5, 45.5, 1.2],
-                            "size": 1.5,
-                            "groupIndex": 5,
-                            "uses": ["pitchDown", "lower"]
+                            "size": 1.5
                         }, {
                             "position": [-5, 45.5, 1.2],
-                            "size": 1.5,
-                            "groupIndex": 5,
-                            "uses": ["pitchDown", "lower"]
+                            "size": 1.5
                         }],
                     "array": false
                 }, {
@@ -7935,14 +7563,10 @@
                     "uses": ["pitchUp", "raise"],
                     "thrusters": [{
                             "position": [5, 45.5, -1.2],
-                            "size": 1.5,
-                            "groupIndex": 6,
-                            "uses": ["pitchUp", "raise"]
+                            "size": 1.5
                         }, {
                             "position": [-5, 45.5, -1.2],
-                            "size": 1.5,
-                            "groupIndex": 6,
-                            "uses": ["pitchUp", "raise"]
+                            "size": 1.5
                         }],
                     "array": false
                 }, {
@@ -7950,24 +7574,16 @@
                     "uses": ["reverse"],
                     "thrusters": [{
                             "position": [4.07, 11, -23.52],
-                            "size": 1.5,
-                            "groupIndex": 7,
-                            "uses": ["reverse"]
+                            "size": 1.5
                         }, {
                             "position": [-4.07, 11, -23.52],
-                            "size": 1.5,
-                            "groupIndex": 7,
-                            "uses": ["reverse"]
+                            "size": 1.5
                         }, {
                             "position": [3, -5.8, 12],
-                            "size": 1.8,
-                            "groupIndex": 7,
-                            "uses": ["reverse"]
+                            "size": 1.8
                         }, {
                             "position": [-3, -5.8, 12],
-                            "size": 1.8,
-                            "groupIndex": 7,
-                            "uses": ["reverse"]
+                            "size": 1.8
                         }],
                     "array": false
                 }, {
@@ -7975,19 +7591,13 @@
                     "uses": ["forward"],
                     "thrusters": [{
                             "position": [4.07, -11, -23.52],
-                            "size": 1.5,
-                            "groupIndex": 8,
-                            "uses": ["forward"]
+                            "size": 1.5
                         }, {
                             "position": [-4.07, -11, -23.52],
-                            "size": 1.5,
-                            "groupIndex": 8,
-                            "uses": ["forward"]
+                            "size": 1.5
                         }, {
                             "position": [0, -40.5, 0],
-                            "size": 2.75,
-                            "groupIndex": 8,
-                            "uses": ["forward"]
+                            "size": 2.75
                         }],
                     "array": false
                 }, {
@@ -7995,24 +7605,16 @@
                     "uses": ["strafeLeft"],
                     "thrusters": [{
                             "position": [7.25, -5, -25.5],
-                            "size": 1.1,
-                            "groupIndex": 9,
-                            "uses": ["strafeLeft"]
+                            "size": 1.1
                         }, {
                             "position": [7.25, -8.5, -25.5],
-                            "size": 1.1,
-                            "groupIndex": 9,
-                            "uses": ["strafeLeft"]
+                            "size": 1.1
                         }, {
                             "position": [6.25, -12, 12],
-                            "size": 1.1,
-                            "groupIndex": 9,
-                            "uses": ["strafeLeft"]
+                            "size": 1.1
                         }, {
                             "position": [6.25, -15.5, 12],
-                            "size": 1.1,
-                            "groupIndex": 9,
-                            "uses": ["strafeLeft"]
+                            "size": 1.1
                         }],
                     "array": false
                 }, {
@@ -8020,24 +7622,16 @@
                     "uses": ["strafeRight"],
                     "thrusters": [{
                             "position": [-7.25, -5, -25.5],
-                            "size": 1.1,
-                            "groupIndex": 10,
-                            "uses": ["strafeRight"]
+                            "size": 1.1
                         }, {
                             "position": [-7.25, -8.5, -25.5],
-                            "size": 1.1,
-                            "groupIndex": 10,
-                            "uses": ["strafeRight"]
+                            "size": 1.1
                         }, {
                             "position": [-6.25, -12, 12],
-                            "size": 1.1,
-                            "groupIndex": 10,
-                            "uses": ["strafeRight"]
+                            "size": 1.1
                         }, {
                             "position": [-6.25, -15.5, 12],
-                            "size": 1.1,
-                            "groupIndex": 10,
-                            "uses": ["strafeRight"]
+                            "size": 1.1
                         }],
                     "array": false
                 }, {
@@ -8045,9 +7639,7 @@
                     "uses": ["pitchUp", "lower"],
                     "thrusters": [{
                             "position": [0, -30, 8.75],
-                            "size": 1.7,
-                            "groupIndex": 11,
-                            "uses": ["pitchUp", "lower"]
+                            "size": 1.7
                         }],
                     "array": false
                 }, {
@@ -8055,9 +7647,7 @@
                     "uses": ["raise", "pitchDown"],
                     "thrusters": [{
                             "position": [0, -30, -8.75],
-                            "size": 1.7,
-                            "groupIndex": 12,
-                            "uses": ["raise", "pitchDown"]
+                            "size": 1.7
                         }],
                     "array": false
                 }],
