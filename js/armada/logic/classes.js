@@ -1841,12 +1841,15 @@ define([
         return Math.max(0, this._damage - armorRating);
     };
     /**
-     * In maximum theoretical damage / second
-     * @param {Number} [armorRating=0]
+     * Returns the range of the missile fired from a still fighter if it flies
+     * straight forward. (actual effective range will depend on the relative 
+     * velocity of the fighter and the maneuvering of the missile if homing)
+     * In meters.
      * @returns {Number}
      */
-    MissileClass.prototype.getFirepower = function (armorRating) {
-        return this.getDamage(armorRating) * 1000 / this._cooldown;
+    MissileClass.prototype.getNominalRange = function () {
+        var t = 0.001 * (this._duration - this._ignitionTime);
+        return (0.001  * this._duration * this._launchVelocity) + (this._thrust / this._mass * 0.5 * t * t) // s = v0 * t + a/2 * t^2
     };
     /**
      * Launches / second

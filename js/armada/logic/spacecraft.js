@@ -1001,6 +1001,72 @@ define([
         return result;
     };
     /**
+     * Returns the whether the spacecraft has any missiles equipped.
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.hasMissiles = function () {
+        var i;
+        if (this._missileLaunchers) {
+            for (i = 0; i < this._missileLaunchers.length; i++) {
+                if (this._missileLaunchers[i].getMissileCount() > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    /**
+     * Returns a text listing the missiles of the spacecraft in a way that can be displayed to the user (translated)
+     * @param {String} [separator=DEFAULT_EQUIPMENT_STRING_SEPARATOR]
+     * @returns {String}
+     */
+    Spacecraft.prototype.getMissilesDisplayText = function (separator) {
+        var i, result = "", missileCounts = {}, missileName, missileNames;
+        separator = separator || DEFAULT_EQUIPMENT_STRING_SEPARATOR;
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            missileName = this._missileLaunchers[i].getDisplayName();
+            if (!missileCounts[missileName]) {
+                missileCounts[missileName] = [this._missileLaunchers[i].getMissileCount()];
+            } else {
+                missileCounts[missileName].push(this._missileLaunchers[i].getMissileCount());
+            }
+        }
+        missileNames = Object.keys(missileCounts);
+        for (i = 0; i < missileNames.length; i++) {
+            result += ((i > 0) ? separator : "") + missileCounts[missileName].join("+") + " × " + missileNames[i];
+        }
+        return result;
+    };
+    /**
+     * Returns a text listing the ranges of the missile of the spacecraft in a way that can be displayed to the user
+     * @param {String} [separator=DEFAULT_WEAPON_RANGE_STRING_SEPARATOR]
+     * @returns {String}
+     */
+    Spacecraft.prototype.getMissileRangesDisplayText = function (separator) {
+        separator = separator || DEFAULT_WEAPON_RANGE_STRING_SEPARATOR;
+        var i, range, ranges = [];
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            range = this._missileLaunchers[i].getNominalRange().toFixed(0);
+            if (ranges.indexOf(range) < 0) {
+                ranges.push(range);
+            }
+        }
+        return ranges.join(separator);
+    };
+    /**
+     * Returns the sum of the firepower the missiles on this spacecraft have, that is, the total damage 
+     * they could do to a target with the passed armor rating.
+     * @param {Number} [armorRating=0]
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMissileFirepower = function (armorRating) {
+        var result = 0, i;
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            result += this._missileLaunchers[i].getFirepower(armorRating || 0);
+        }
+        return result;
+    };
+    /**
      * Returns whether this spacecraft object can be reused to represent a new
      * spacecraft.
      * @returns {Boolean}

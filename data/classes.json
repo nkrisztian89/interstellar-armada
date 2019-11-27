@@ -2775,7 +2775,7 @@
         }],
     "missileClasses": [{
             "name": "mediumMissile",
-            "fullName": "Medium missile",
+            "fullName": "MH-7 Medium homing missile",
             "model": "mediumMissile",
             "modelScale": 1,
             "shader": "ship",

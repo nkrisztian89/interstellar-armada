@@ -89,6 +89,7 @@
         "playerSpacecraftTitle": "Űrhajó:",
         "playerSpacecraftData": "<strong>Osztály:</strong> {class}",
         "playerSpacecraftWeapons": "<strong>Fegyverzet:</strong> {weapons}<br/><strong>Tűzerő:</strong> {firepower}, <strong>lőtávolság:</strong> {range}",
+        "playerSpacecraftMissiles": "<strong>Rakéták:</strong> {missiles}<br/><strong>Összes tűzerő:</strong> {firepower}, <strong>névleges hatótávolság:</strong> {range}",
         "playerSpacecraftShield": "<strong>Pajzs:</strong> {shield}<br/><strong>Kapacitás:</strong> {shieldCapacity}, <strong>újratöltés:</strong> {shieldRechargeRate}",
         "playerSpacecraftPropulsion": "<strong>Meghajtás:</strong> {propulsion}<br/><strong>Harci sebesség:</strong> {speed}, <strong>fordulékonyság:</strong> {turnRate}",
         "objectiveSubjects": {
@@ -724,6 +725,11 @@
         },
         "largeIonCannon": {
             "name": "Ionágyú"
+        }
+    },
+    "missileClass": {
+        "mediumMissile": {
+            "name": "MH-7 Közepes célkövető rakéta"
         }
     },
     "propulsionClass": {

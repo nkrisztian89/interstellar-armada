@@ -64,6 +64,7 @@ define([
         SPACECRAFT_TITLE: {name: "missions.playerSpacecraftTitle"},
         SPACECRAFT_DATA: {name: "missions.playerSpacecraftData"},
         SPACECRAFT_WEAPONS: {name: "missions.playerSpacecraftWeapons"},
+        SPACECRAFT_MISSILES: {name: "missions.playerSpacecraftMissiles"},
         SPACECRAFT_SHIELD: {name: "missions.playerSpacecraftShield"},
         SPACECRAFT_PROPULSION: {name: "missions.playerSpacecraftPropulsion"},
         OBJECTIVE_SUBJECTS_SQUAD: {name: "missions.objectiveSubjects.squad"},

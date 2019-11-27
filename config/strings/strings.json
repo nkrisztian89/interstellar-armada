@@ -75,6 +75,7 @@
         "playerSpacecraftTitle": "Spacecraft:",
         "playerSpacecraftData": "<strong>Class:</strong> {class}",
         "playerSpacecraftWeapons": "<strong>Weapons:</strong> {weapons}<br/><strong>Firepower:</strong> {firepower}, <strong>range:</strong> {range}",
+        "playerSpacecraftMissiles": "<strong>Missiles:</strong> {missiles}<br/><strong>Total firepower:</strong> {firepower}, <strong>nominal range:</strong> {range}",
         "playerSpacecraftShield": "<strong>Shield:</strong> {shield}<br/><strong>Capacity:</strong> {shieldCapacity}, <strong>recharge rate:</strong> {shieldRechargeRate}",
         "playerSpacecraftPropulsion": "<strong>Propulsion:</strong> {propulsion}<br/><strong>Combat speed:</strong> {speed}, <strong>turn rate:</strong> {turnRate}",
         "objectiveSubjects": {

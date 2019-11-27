@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2019 Krisztián Nagy
  * @file This module manages and provides the Missions screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -109,6 +109,8 @@ define([
         /** @type SimpleComponent */
         this._playerSpacecraftWeapons = this.registerSimpleComponent("playerSpacecraftWeapons");
         /** @type SimpleComponent */
+        this._playerSpacecraftMissiles = this.registerSimpleComponent("playerSpacecraftMissiles");
+        /** @type SimpleComponent */
         this._playerSpacecraftShield = this.registerSimpleComponent("playerSpacecraftShield");
         /** @type SimpleComponent */
         this._playerSpacecraftPropulsion = this.registerSimpleComponent("playerSpacecraftPropulsion");
@@ -195,6 +197,7 @@ define([
             this._playerSpacecraftTitle.hide();
             this._playerSpacecraftData.hide();
             this._playerSpacecraftWeapons.hide();
+            this._playerSpacecraftMissiles.hide();
             this._playerSpacecraftShield.hide();
             this._playerSpacecraftPropulsion.hide();
             missions.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
@@ -231,6 +234,17 @@ define([
                         } else {
                             this._playerSpacecraftWeapons.setContent("");
                             this._playerSpacecraftWeapons.hide();
+                        }
+                        if (_spacecraft.hasMissiles()) {
+                            this._playerSpacecraftMissiles.setContent(strings.get(strings.MISSIONS.SPACECRAFT_MISSILES), {
+                                missiles: _spacecraft.getMissilesDisplayText() || "-",
+                                firepower: _spacecraft.getMissileFirepower(),
+                                range: _spacecraft.getMissileRangesDisplayText() + " m"
+                            });
+                            this._playerSpacecraftMissiles.show();
+                        } else {
+                            this._playerSpacecraftMissiles.setContent("");
+                            this._playerSpacecraftMissiles.hide();
                         }
                         if (_spacecraft.hasShield()) {
                             this._playerSpacecraftShield.setContent(strings.get(strings.MISSIONS.SPACECRAFT_SHIELD), {
@@ -274,6 +288,7 @@ define([
             this._playerSpacecraftTitle.hide();
             this._playerSpacecraftData.hide();
             this._playerSpacecraftWeapons.hide();
+            this._playerSpacecraftMissiles.hide();
             this._playerSpacecraftShield.hide();
             this._playerSpacecraftPropulsion.hide();
             this._launchButton.disable();

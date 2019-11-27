@@ -2108,11 +2108,12 @@ define([
         this._cooldown = 0;
     }
     /**
-     * Returns the name of the weapon in a way that can be displayed to the user (translated)
+     * Returns the name of the missile loaded into this launcher  in a way that 
+     * can be displayed to the user (translated)
      * @returns {String}
      */
     MissileLauncher.prototype.getDisplayName = function () {
-        return this._missileCount + " × " + this._class.getDisplayName();
+        return this._class.getDisplayName();
     };
     /**
      * Returns the damage one missile from this launcher deals to a target with 
@@ -2124,14 +2125,22 @@ define([
         return this._class.getDamage(armorRating);
     };
     /**
-     * Returns the damage per second dealt by missiles from this launcher to a
-     * target with the passed armor rating, assuming continuous launches and
-     * that every missile hits.
+     * Returns the total damage dealt by all missiles from this launcher to a
+     * target with the passed armor rating.
      * @param {Number} [armorRating=0]
      * @returns {Number}
      */
     MissileLauncher.prototype.getFirepower = function (armorRating) {
-        return this._class.getFirepower(armorRating);
+        return this._missileCount * this._class.getDamage(armorRating);
+    };
+    /**
+     * Returns the range of the missile fired from a still fighter if it flies
+     * straight forward. (actual effective range will depend on the relative 
+     * velocity of the fighter and the maneuvering of the missile if homing)
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getNominalRange = function () {
+        return this._class.getNominalRange();
     };
     /**
      * Returns the rate of fire of this launcher, in shots per second
