@@ -1849,7 +1849,7 @@ define([
      */
     MissileClass.prototype.getNominalRange = function () {
         var t = 0.001 * (this._duration - this._ignitionTime);
-        return (0.001  * this._duration * this._launchVelocity) + (this._thrust / this._mass * 0.5 * t * t) // s = v0 * t + a/2 * t^2
+        return (0.001  * this._duration * this._launchVelocity) + (this._thrust / this._mass * 0.5 * t * t); // s = v0 * t + a/2 * t^2
     };
     /**
      * Launches / second
@@ -3100,7 +3100,7 @@ define([
      * @param {Object} [dataJSON]
      */
     function MissileLauncherDescriptor(dataJSON) {
-        var i;
+        var i, j, tubeArray;
         /**
          * The translation vectors for the positions of the tubes of the launcher,
          * relative to the ship.
@@ -3113,6 +3113,14 @@ define([
         if (this.tubePositions) {
             for (i = 0; i < dataJSON.tubePositions.length; i++) {
                 this.tubePositions.push(dataJSON.tubePositions[i].slice());
+            }
+            if (dataJSON.tubeArrays) {
+                for (i = 0; i < dataJSON.tubeArrays.length; i++) {
+                    tubeArray = dataJSON.tubeArrays[i];
+                    for (j = 0; j < tubeArray.count; j++) {
+                        this.tubePositions.push(vec.sum3(tubeArray.startPosition, vec.scaled3Aux(tubeArray.translationVector, j)));
+                    }
+                }
             }
         }
         /**

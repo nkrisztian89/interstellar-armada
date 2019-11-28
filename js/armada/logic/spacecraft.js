@@ -1026,14 +1026,14 @@ define([
         for (i = 0; i < this._missileLaunchers.length; i++) {
             missileName = this._missileLaunchers[i].getDisplayName();
             if (!missileCounts[missileName]) {
-                missileCounts[missileName] = [this._missileLaunchers[i].getMissileCount()];
+                missileCounts[missileName] = this._missileLaunchers[i].getMissileCount();
             } else {
-                missileCounts[missileName].push(this._missileLaunchers[i].getMissileCount());
+                missileCounts[missileName] += this._missileLaunchers[i].getMissileCount();
             }
         }
         missileNames = Object.keys(missileCounts);
         for (i = 0; i < missileNames.length; i++) {
-            result += ((i > 0) ? separator : "") + missileCounts[missileName].join("+") + " × " + missileNames[i];
+            result += ((i > 0) ? separator : "") + missileCounts[missileNames[i]] + " × " + missileNames[i];
         }
         return result;
     };

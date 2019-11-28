@@ -728,8 +728,14 @@
         }
     },
     "missileClass": {
+        "smallMissile": {
+            "name": "SM-4 Könnyű rakéta"
+        },
         "mediumMissile": {
             "name": "MH-7 Közepes célkövető rakéta"
+        },
+        "lightTorpedo": {
+            "name": "LT-3b Könnyű torpedó"
         }
     },
     "propulsionClass": {

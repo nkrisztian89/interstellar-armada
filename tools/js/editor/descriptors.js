@@ -1578,6 +1578,27 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            MISSILE_TUBE_ARRAY = {
+                baseType: BaseType.OBJECT,
+                name: "MissileTubeArray",
+                properties: {
+                    START_POSITION: {
+                        name: "startPosition",
+                        type: BaseType.VECTOR3
+                    },
+                    TRANSLATION_VECTOR: {
+                        name: "translationVector",
+                        type: BaseType.VECTOR3
+                    },
+                    COUNT: {
+                        name: "count",
+                        type: BaseType.NUMBER
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             MISSILE_LAUNCHER = {
                 baseType: BaseType.OBJECT,
                 name: "MissileLauncher",
@@ -1585,6 +1606,11 @@ define([
                     TUBE_POSITIONS: {
                         name: "tubePositions",
                         type: _createTypedArrayType(BaseType.VECTOR3)
+                    },
+                    TUBE_ARRAYS: {
+                        name: "tubeArrays",
+                        type: _createTypedArrayType(MISSILE_TUBE_ARRAY),
+                        optional: true
                     },
                     SIZE: {
                         name: "size",

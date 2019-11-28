@@ -1370,7 +1370,9 @@ define([
             this._targetHitPositionValid = false;
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
-            _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, this._getHitOffset, this._hitCallback);
+            if ((hitCheckDT > 0) && (this._timeLeftForIgnition <= 0)) {
+                _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, this._getHitOffset, this._hitCallback);
+            }
         } else {
             // self-destruct if the time has run out
             this._timeLeft = 0;
@@ -2106,6 +2108,11 @@ define([
          * @type Number
          */
         this._cooldown = 0;
+        /**
+         * The index of the missile tube that will launch next
+         * @type Number
+         */
+        this._activeTubeIndex = 0;
     }
     /**
      * Returns the name of the missile loaded into this launcher  in a way that 
@@ -2213,7 +2220,7 @@ define([
         if ((this._missileCount > 0) && (this._cooldown <= 0)) {
             this._cooldown = this._class.getCooldown();
             this._missileCount--;
-            tubePosVector = vec.prodVec3Mat4Aux(this._descriptor.tubePositions[0], shipScaledOriMatrix);
+            tubePosVector = vec.prodVec3Mat4Aux(this._descriptor.tubePositions[this._activeTubeIndex], shipScaledOriMatrix);
             mat.setTranslatedByVector(MissileLauncher._tubePosMatrix, this._spacecraft.getPhysicalPositionMatrix(), tubePosVector);
             missileOriMatrix = this.getMissileOrientationMatrix();
             result = 0;
@@ -2240,6 +2247,7 @@ define([
                 soundPosition = mat.translationVector3(m.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera()));
             }
             this._class.playLaunchSound(soundPosition, shipSoundSource, _fireSoundStackingTimeThreshold, _fireSoundStackingVolumeFactor);
+            this._activeTubeIndex = (this._activeTubeIndex + 1) % this._descriptor.tubePositions.length;
             return result;
         }
         return 0;

@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.6-dev:762 (2019.11.23.)",
-        "creationTime": "Sat Nov 23 2019 03:04:14 GMT+0100 (közép-európai téli idő)"
+        "version": "0.4.6-dev:766 (2019.11.27.)",
+        "creationTime": "Thu Nov 28 2019 00:34:40 GMT+0100 (közép-európai téli idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -2592,7 +2592,7 @@
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
-            "referenceMass": 35000,
+            "referenceMass": 45000,
             "thrust": 45,
             "angularThrust": 225,
             "maxMoveBurnLevel": 0.5,
@@ -2609,7 +2609,7 @@
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
-            "referenceMass": 35000,
+            "referenceMass": 45000,
             "thrust": 50,
             "angularThrust": 250,
             "maxMoveBurnLevel": 0.5,
@@ -2626,7 +2626,7 @@
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
-            "referenceMass": 35000,
+            "referenceMass": 45000,
             "thrust": 55,
             "angularThrust": 275,
             "maxMoveBurnLevel": 0.5,
@@ -2762,7 +2762,7 @@
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
             "grade": 1,
-            "referenceMass": 35000,
+            "referenceMass": 45000,
             "thrust": 40,
             "angularThrust": 200,
             "maxMoveBurnLevel": 0.5,
@@ -2774,6 +2774,77 @@
             "scoreValue": 10
         }],
     "missileClasses": [{
+            "name": "smallMissile",
+            "fullName": "SM-4 Small missile",
+            "model": "smallMissile",
+            "modelScale": 1,
+            "shader": "ship",
+            "texture": "libra",
+            "damage": 2,
+            "size": 1,
+            "capacity": 2,
+            "homingMode": "continuous",
+            "mass": 10,
+            "launchVelocity": 10,
+            "ignitionTime": 50,
+            "acceleration": 400,
+            "angularAcceleration": 540,
+            "mainBurnAngleThreshold": 360,
+            "duration": 3000,
+            "cooldown": 500,
+            "proximityRange": 1,
+            "kineticFactor": 0.6,
+            "lightColor": [0, 0.5, 1],
+            "lightIntensity": 9,
+            "explosion": "smallHitExplosion",
+            "shieldExplosion": "smallHitExplosion",
+            "scoreValue": 1,
+            "launchSound": {
+                "name": "missileLaunch",
+                "volume": 0.5
+            },
+            "startSound": {
+                "name": "missileStart",
+                "volume": 0.5
+            },
+            "propulsion": "missile",
+            "thrusterSlots": [{
+                    "group": 1,
+                    "uses": ["forward"],
+                    "thrusters": [{
+                            "position": [0, -0.43, 0],
+                            "size": 0.4
+                        }]
+                }, {
+                    "group": 2,
+                    "uses": ["yawLeft"],
+                    "thrusters": [{
+                            "position": [-0.15, -0.336, 0],
+                            "size": 0.15
+                        }]
+                }, {
+                    "group": 3,
+                    "uses": ["yawRight"],
+                    "thrusters": [{
+                            "position": [0.15, -0.336, 0],
+                            "size": 0.15
+                        }]
+                }, {
+                    "group": 4,
+                    "uses": ["pitchUp"],
+                    "thrusters": [{
+                            "position": [0, -0.336, 0.15],
+                            "size": 0.15
+                        }]
+                }, {
+                    "group": 5,
+                    "uses": ["pitchDown"],
+                    "thrusters": [{
+                            "position": [0, -0.336, -0.15],
+                            "size": 0.15
+                        }]
+                }]
+        }, {
             "name": "mediumMissile",
             "fullName": "MH-7 Medium homing missile",
             "model": "mediumMissile",
@@ -2842,6 +2913,89 @@
                     "thrusters": [{
                             "position": [0, -0.435, -0.32],
                             "size": 0.25
+                        }]
+                }]
+        }, {
+            "name": "lightTorpedo",
+            "fullName": "LT-3b Light torpedo",
+            "model": "lightTorpedo",
+            "modelScale": 1,
+            "shader": "ship",
+            "texture": "libra",
+            "damage": 100,
+            "size": 3,
+            "capacity": 2,
+            "homingMode": "initial",
+            "mass": 150,
+            "launchVelocity": 35,
+            "ignitionTime": 750,
+            "acceleration": 150,
+            "angularAcceleration": 360,
+            "mainBurnAngleThreshold": 1.5,
+            "duration": 8000,
+            "cooldown": 4000,
+            "proximityRange": 5,
+            "kineticFactor": 0.25,
+            "lightColor": [0, 0.5, 1],
+            "lightIntensity": 400,
+            "explosion": "containerExplosion",
+            "shieldExplosion": "containerExplosion",
+            "scoreValue": 25,
+            "launchSound": {
+                "name": "missileLaunch",
+                "volume": 0.5
+            },
+            "startSound": {
+                "name": "missileStart",
+                "volume": 0.5
+            },
+            "propulsion": "missile",
+            "thrusterSlots": [{
+                    "group": 1,
+                    "uses": ["forward"],
+                    "thrusters": [{
+                            "position": [0, -1.4, 0],
+                            "size": 1.4
+                        }]
+                }, {
+                    "group": 2,
+                    "uses": ["yawLeft"],
+                    "thrusters": [{
+                            "position": [-0.57, -0.692, 0],
+                            "size": 0.35
+                        }, {
+                            "position": [0.57, 0.488, 0],
+                            "size": 0.35
+                        }]
+                }, {
+                    "group": 3,
+                    "uses": ["yawRight"],
+                    "thrusters": [{
+                            "position": [0.57, -0.692, 0],
+                            "size": 0.35
+                        }, {
+                            "position": [-0.57, 0.488, 0],
+                            "size": 0.35
+                        }]
+                }, {
+                    "group": 4,
+                    "uses": ["pitchUp"],
+                    "thrusters": [{
+                            "position": [0, -0.692, 0.57],
+                            "size": 0.35
+                        }, {
+                            "position": [0, 0.488, -0.57],
+                            "size": 0.35
+                        }]
+                }, {
+                    "group": 5,
+                    "uses": ["pitchDown"],
+                    "thrusters": [{
+                            "position": [0, -0.692, -0.57],
+                            "size": 0.35
+                        }, {
+                            "position": [0, 0.488, 0.57],
+                            "size": 0.35
                         }]
                 }]
         }],
@@ -4352,7 +4506,7 @@
             "texture": "viper",
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [18, 1]],
-            "mass": 35000,
+            "mass": 45000,
             "bodies": [{
                     "position": [0, 30, 5],
                     "size": [25, 70, 10]
@@ -4683,7 +4837,32 @@
                     },
                     "shield": {
                         "class": "imperialBomberMk1"
-                    }
+                    },
+                    "missiles": [{
+                            "class": "lightTorpedo",
+                            "amount": 1
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 1
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 1
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 1
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 12
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 12
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 12
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 12
+                        }]
                 }, {
                     "name": "player-tier2",
                     "weapons": [{
@@ -4699,7 +4878,32 @@
                     },
                     "shield": {
                         "class": "imperialBomberMk2"
-                    }
+                    },
+                    "missiles": [{
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 24
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 24
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 24
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 24
+                        }]
                 }, {
                     "name": "imperial-tier1",
                     "weapons": [{
@@ -4785,7 +4989,76 @@
                     "spotFullIntensityAngle": 5
                 }],
             "blinkers": [],
-            "scoreValue": 80
+            "scoreValue": 80,
+            "missileLaunchers": [{
+                    "tubePositions": [[20.4, 30, 0]],
+                    "size": 3,
+                    "capacity": 4
+                }, {
+                    "tubePositions": [[-20.4, 30, 0]],
+                    "size": 3,
+                    "capacity": 4
+                }, {
+                    "tubePositions": [[12, 18, 12]],
+                    "size": 3,
+                    "capacity": 4
+                }, {
+                    "tubePositions": [[-12, 18, 12]],
+                    "size": 3,
+                    "capacity": 4
+                }, {
+                    "tubePositions": [],
+                    "tubeArrays": [{
+                            "startPosition": [16.658, 18.4, 17.4979],
+                            "translationVector": [1.6180, -1.6, 1.17557],
+                            "count": 6
+                        }, {
+                            "startPosition": [15.3531, 16, 19.2939],
+                            "translationVector": [1.6180, -1.6, 1.17557],
+                            "count": 6
+                        }],
+                    "size": 1,
+                    "capacity": 6
+                }, {
+                    "tubePositions": [],
+                    "tubeArrays": [{
+                            "startPosition": [-16.658, 18.4, 17.4979],
+                            "translationVector": [-1.6180, -1.6, 1.17557],
+                            "count": 6
+                        }, {
+                            "startPosition": [-15.3531, 16, 19.2939],
+                            "translationVector": [-1.6180, -1.6, 1.17557],
+                            "count": 6
+                        }],
+                    "size": 1,
+                    "capacity": 6
+                }, {
+                    "tubePositions": [],
+                    "tubeArrays": [{
+                            "startPosition": [18.66823, 18.4, 14.73108],
+                            "translationVector": [1.6180, -1.6, 1.17557],
+                            "count": 6
+                        }, {
+                            "startPosition": [19.973115, 16, 12.93506],
+                            "translationVector": [1.6180, -1.6, 1.17557],
+                            "count": 6
+                        }],
+                    "size": 1,
+                    "capacity": 6
+                }, {
+                    "tubePositions": [],
+                    "tubeArrays": [{
+                            "startPosition": [-18.66823, 18.4, 14.73108],
+                            "translationVector": [-1.6180, -1.6, 1.17557],
+                            "count": 6
+                        }, {
+                            "startPosition": [-19.973115, 16, 12.93506],
+                            "translationVector": [-1.6180, -1.6, 1.17557],
+                            "count": 6
+                        }],
+                    "size": 1,
+                    "capacity": 6
+                }]
         }, {
             "name": "rhino",
             "type": "heavyFighter",
