@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.6-dev:766 (2019.11.27.)",
-        "creationTime": "Thu Nov 28 2019 00:34:40 GMT+0100 (közép-európai téli idő)"
+        "version": "0.4.6-dev:767 (2019.11.28.)",
+        "creationTime": "Thu Nov 28 2019 09:44:22 GMT+0100 (közép-európai téli idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -2788,7 +2788,7 @@
             "launchVelocity": 10,
             "ignitionTime": 50,
             "acceleration": 400,
-            "angularAcceleration": 540,
+            "angularAcceleration": 450,
             "mainBurnAngleThreshold": 360,
             "duration": 3000,
             "cooldown": 500,
@@ -5010,11 +5010,11 @@
                     "tubePositions": [],
                     "tubeArrays": [{
                             "startPosition": [16.658, 18.4, 17.4979],
-                            "translationVector": [1.6180, -1.6, 1.17557],
+                            "translationVector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }, {
                             "startPosition": [15.3531, 16, 19.2939],
-                            "translationVector": [1.6180, -1.6, 1.17557],
+                            "translationVector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }],
                     "size": 1,
@@ -5023,11 +5023,11 @@
                     "tubePositions": [],
                     "tubeArrays": [{
                             "startPosition": [-16.658, 18.4, 17.4979],
-                            "translationVector": [-1.6180, -1.6, 1.17557],
+                            "translationVector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }, {
                             "startPosition": [-15.3531, 16, 19.2939],
-                            "translationVector": [-1.6180, -1.6, 1.17557],
+                            "translationVector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }],
                     "size": 1,
@@ -5036,11 +5036,11 @@
                     "tubePositions": [],
                     "tubeArrays": [{
                             "startPosition": [18.66823, 18.4, 14.73108],
-                            "translationVector": [1.6180, -1.6, 1.17557],
+                            "translationVector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }, {
                             "startPosition": [19.973115, 16, 12.93506],
-                            "translationVector": [1.6180, -1.6, 1.17557],
+                            "translationVector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }],
                     "size": 1,
@@ -5049,11 +5049,11 @@
                     "tubePositions": [],
                     "tubeArrays": [{
                             "startPosition": [-18.66823, 18.4, 14.73108],
-                            "translationVector": [-1.6180, -1.6, 1.17557],
+                            "translationVector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }, {
                             "startPosition": [-19.973115, 16, 12.93506],
-                            "translationVector": [-1.6180, -1.6, 1.17557],
+                            "translationVector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }],
                     "size": 1,
@@ -5256,6 +5256,33 @@
                             "degrees": 180
                         }]
                 }],
+            "missileLaunchers": [{
+                    "tubePositions": [],
+                    "tubeArrays": [{
+                            "startPosition": [2.81, 6.175, 0.325],
+                            "translationVector": [0.486, -0.4, 0],
+                            "count": 5
+                        }, {
+                            "startPosition": [2.81, 6.175, -0.325],
+                            "translationVector": [0.486, -0.4, 0],
+                            "count": 5
+                        }],
+                    "size": 1,
+                    "capacity": 6
+                }, {
+                    "tubePositions": [],
+                    "tubeArrays": [{
+                            "startPosition": [-2.81, 6.175, 0.325],
+                            "translationVector": [-0.486, -0.4, 0],
+                            "count": 5
+                        }, {
+                            "startPosition": [-2.81, 6.175, -0.325],
+                            "translationVector": [-0.486, -0.4, 0],
+                            "count": 5
+                        }],
+                    "size": 1,
+                    "capacity": 6
+                }],
             "equipmentProfiles": [{
                     "name": "imperial-tier1",
                     "weapons": [{
@@ -5270,6 +5297,13 @@
                             "class": "plasmaGun"
                         }, {
                             "class": "plasmaGun"
+                        }],
+                    "missiles": [{
+                            "class": "smallMissile",
+                            "amount": 10
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 10
                         }],
                     "propulsion": {
                         "class": "imperialHeavyFighterMk1"
