@@ -1661,6 +1661,7 @@ define([
      * @returns {Boolean}
      */
     MissileClass.prototype._loadData = function (dataJSON) {
+        var t;
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * The full name of this class as displayed in the game.
@@ -1672,6 +1673,11 @@ define([
          * @type String
          */
         this._shortName = dataJSON ? (dataJSON.shortName || _showMissingPropertyError(this, "shortName")) : null;
+        /**
+         * Whether this missile is supposed to be used against ships (and not fighters)
+         * @type Boolean
+         */
+        this._antiShip = dataJSON ? (dataJSON.antiShip || false) : false;
         /**
          * The amount of damage this missile causes when it hits a spacecraft.
          * @type Number
@@ -1821,6 +1827,12 @@ define([
         } else if (dataJSON) {
             _showMissingPropertyError(this, "thrusterSlots");
         }
+        t = 0.001 * (this._duration - this._ignitionTime);
+        /**
+         * Cached calculated value of the missile's nominal range
+         * @type Number
+         */
+        this._nominalRange = (0.001  * this._duration * this._launchVelocity) + (this._thrust / this._mass * 0.5 * t * t); // s = v0 * t + a/2 * t^2
         return true;
     };
     /**
@@ -1850,6 +1862,12 @@ define([
         return this._shortName;
     };
     /**
+     * @returns {Boolean}
+     */
+    MissileClass.prototype.isAntiShip = function () {
+        return this._antiShip;
+    };
+    /**
      * @param {Number} [armorRating=0]
      * @returns {Number}
      */
@@ -1864,8 +1882,7 @@ define([
      * @returns {Number}
      */
     MissileClass.prototype.getNominalRange = function () {
-        var t = 0.001 * (this._duration - this._ignitionTime);
-        return (0.001  * this._duration * this._launchVelocity) + (this._thrust / this._mass * 0.5 * t * t); // s = v0 * t + a/2 * t^2
+        return this._nominalRange;
     };
     /**
      * Launches / second

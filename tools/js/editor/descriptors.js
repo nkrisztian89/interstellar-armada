@@ -1065,6 +1065,11 @@ define([
                     name: "texture",
                     type: TEXTURE_REFERENCE
                 },
+                ANTI_SHIP: {
+                    name: "antiShip",
+                    type: BaseType.BOOLEAN,
+                    defaultValue: false
+                },
                 DAMAGE: {
                     name: "damage",
                     type: BaseType.NUMBER

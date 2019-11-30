@@ -2926,6 +2926,7 @@
             "modelScale": 1,
             "shader": "ship",
             "texture": "libra",
+            "antiShip": true,
             "damage": 100,
             "size": 3,
             "capacity": 2,
@@ -4914,6 +4915,13 @@
                             "class": "heavyPlasmaGun"
                         }, {
                             "class": "heavyPlasmaGun"
+                        }],
+                    "missiles": [{
+                            "class": "lightTorpedo",
+                            "amount": 1
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 1
                         }],
                     "propulsion": {
                         "class": "imperialBomberMk1"

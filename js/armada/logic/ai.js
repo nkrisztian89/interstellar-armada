@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018 Krisztián Nagy
+ * Copyright 2016-2019 Krisztián Nagy
  * @file A stateful module providing a collection to which AIs of different types (at the moment only one type, an AI for fighters) can be
  * added which control their respective spacecraft when the control function of the module is called.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -1134,6 +1134,10 @@ define([
                                 this._fireDelayLeft -= dt;
                             } else {
                                 this._spacecraft.fire();
+                                if (this._spacecraft.getActiveMissileLauncher() && (this._targetDistance <= this._spacecraft.getActiveMissileLauncher().getMissileClass().getNominalRange()) &&
+                                        this._spacecraft.getActiveMissileLauncher().getMissileClass().isAntiShip() !== target.isFighter()) {
+                                    this._spacecraft.launchMissile();
+                                }
                                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                 // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
                                 if (!this._isBlockedBy) {
