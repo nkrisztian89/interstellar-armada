@@ -326,6 +326,7 @@
             "teamUnknown": "-",
             "wingmenHeader": "Wingmen:",
             "flightMode": "Flight mode:",
+            "missiles": "Missiles:",
             "objectives": "Objectives:",
             "escortedShipsHeader": "Protect:"
         },
@@ -556,6 +557,8 @@
         "toggleAutoTargeting": "Toggle automatic targeting of hostiles",
         "fire": "Fire primary weapons",
         "launchMissile": "Launch missile",
+        "changeMissile": "Change active missile",
+        "toggleSalvo": "Toggle salvo mode for active missiles",
         "forward": "Forward thrust / increase speed",
         "reverse": "Reverse thrust / decrease speed",
         "strafeLeft": "Strafe left",

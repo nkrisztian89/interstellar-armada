@@ -1668,6 +1668,11 @@ define([
          */
         this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
         /**
+         * The short name of this class to be displayed on the HUD showing the missile info
+         * @type String
+         */
+        this._shortName = dataJSON ? (dataJSON.shortName || _showMissingPropertyError(this, "shortName")) : null;
+        /**
          * The amount of damage this missile causes when it hits a spacecraft.
          * @type Number
          */
@@ -1748,6 +1753,11 @@ define([
          * @type Number
          */
         this._cooldown = dataJSON ? (dataJSON.cooldown || _showMissingPropertyError(this, "cooldown")) : 0;
+        /**
+         * The amount of waiting time needed between launching two missiles in the same salvo, in ms.
+         * @type Number
+         */
+        this._salvoCooldown = dataJSON ? (dataJSON.salvoCooldown || this._cooldown) : 0;
         /**
          * The missile will explode and deal damage within this range of enemy ships, in meters.
          * @type Number
@@ -1832,6 +1842,12 @@ define([
         return strings.get(
                 strings.MISSILE_CLASS.PREFIX, this.getName() + strings.MISSILE_CLASS.NAME_SUFFIX.name,
                 this._fullName);
+    };
+    /**
+     * @returns {String}
+     */
+    MissileClass.prototype.getShortName = function () {
+        return this._shortName;
     };
     /**
      * @param {Number} [armorRating=0]
@@ -1943,6 +1959,12 @@ define([
      */
     MissileClass.prototype.getCooldown = function () {
         return this._cooldown;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getSalvoCooldown = function () {
+        return this._salvoCooldown;
     };
     /**
      * @returns {Number}
@@ -3141,6 +3163,11 @@ define([
          * @type Number
          */
         this.capacity = dataJSON ? (dataJSON.capacity || _showMissingPropertyError(this, "capacity")) : 0;
+        /**
+         * The amount of missiles to launch on one salvo
+         * @type Number
+         */
+        this.salvo = dataJSON ? (dataJSON.salvo || 1) : 0;
     }
     // ##############################################################################
     /**

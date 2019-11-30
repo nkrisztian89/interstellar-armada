@@ -2113,7 +2113,31 @@ define([
          * @type Number
          */
         this._activeTubeIndex = 0;
+        /**
+         * Whether salvo launching mode is turned on
+         * @type Number
+         */
+        this._salvo = false;
+        /**
+         * The amount of missiles left to launch in the current salvo
+         * @type Number
+         */
+        this._salvoLeft = 0;
+        /**
+         * The target of the current salvo (missiles launched in this salvo will
+         * target this spacecraft, regardless of the current target of the
+         * spacecraft the missile launcher is on)
+         * @type Spacecraft
+         */
+        this._salvoTarget = null;
     }
+    /**
+     * Returns the class of missiles loaded into this launcher
+     * @returns {MissileClass}
+     */
+    MissileLauncher.prototype.getMissileClass = function () {
+        return this._class;
+    };
     /**
      * Returns the name of the missile loaded into this launcher  in a way that 
      * can be displayed to the user (translated)
@@ -2164,6 +2188,45 @@ define([
         return this._class.getCooldown();
     };
     /**
+     * Whether the launcher is currently in salvo mode
+     * @returns {Boolean}
+     */
+    MissileLauncher.prototype.isInSalvoMode = function () {
+        return this._salvo;
+    };
+    /**
+     * Turn salvo mode on or off
+     * @param {Booelan} value
+     */
+    MissileLauncher.prototype.setSalvoMode = function (value) {
+        this._salvo = value;
+    };
+    /**
+     * Toggle salvo mode
+     * @returns {Boolean} Whether the salvo mode has been changed
+     */
+    MissileLauncher.prototype.toggleSalvoMode = function () {
+        if (this._descriptor.salvo > 1) {
+            this._salvo = !this._salvo;
+            return true;
+        }
+        return false;
+    };
+    /**
+     * The amount of missiles left to launch in the current salvo
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getSalvoLeft = function () {
+        return this._salvoLeft;
+    };
+    /**
+     * The total amount of missiles launched in one salvo
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getSalvo = function () {
+        return this._descriptor.salvo;
+    };
+    /**
      * Returns a 4x4 rotation matrix describing the orientation of missiles launched by this launcher in world space.
      * Uses an auxiliary matrix common to all MissileLaunchers.
      * @returns {Float32Array}
@@ -2199,6 +2262,18 @@ define([
      */
     MissileLauncher.prototype.simulate = function (dt) {
         this._cooldown = Math.max(this._cooldown - dt, 0);
+        // launch the next missile in the salvo, if we are in one
+        if (this._salvoLeft > 0) {
+            if (this._cooldown <= 0) {
+                if ((this._missileCount > 0) && this._salvoTarget && this._salvoTarget.isAlive()) {
+                    this.launch(this._spacecraft.getScaledOriMatrix(), this._spacecraft.getSoundSourceForFireSound(), true);
+                } else {
+                    // cancel the salvo if we are out of missiles or the salvo target has been destroyed
+                    this._salvoLeft = 0;
+                    this._salvoTarget = null;
+                }
+            }
+        }
     };
     // static auxiliary matrices to be used in the luanch() method (to avoid created new matrices during each execution of the method)
     MissileLauncher._tubePosMatrix = mat.identity4();
@@ -2208,18 +2283,30 @@ define([
      * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this launcher - it
      * is more effective to calculate it once for a spacecraft and pass it to all launchers as a parameter.
      * @param {SoundSource} shipSoundSource The sound source belonging to the spacecraft this launcher is on
+     * @param {Boolean} salvo Whether this is an automatic launch as part of a salvo (the first launch in a salvo is manual)
      * @returns {Number} How many missiles did the launcher launch.
      */
-    MissileLauncher.prototype.launch = function (shipScaledOriMatrix, shipSoundSource) {
+    MissileLauncher.prototype.launch = function (shipScaledOriMatrix, shipSoundSource, salvo) {
         var m, result,
                 tubePosVector,
                 missileOriMatrix,
                 soundPosition,
                 scene = this._spacecraft.getVisualModel().getNode().getScene();
         // check missile count and cooldown
-        if ((this._missileCount > 0) && (this._cooldown <= 0)) {
-            this._cooldown = this._class.getCooldown();
+        if ((this._missileCount > 0) && (this._cooldown <= 0) && (salvo || (this._salvoLeft <= 0))) {
+            if (!salvo) {
+                // start a new salvo
+                if (this._salvo && this._spacecraft.getTarget()) {
+                    this._salvoLeft = this._descriptor.salvo;
+                    this._salvoTarget = this._spacecraft.getTarget();
+                } else {
+                    // if not starting a salvo, set salvoLeft to one so after the launch it will be zero
+                    this._salvoLeft = 1;
+                }
+            }
             this._missileCount--;
+            this._salvoLeft--;
+            this._cooldown = (this._salvoLeft > 0) ? this._class.getSalvoCooldown() : this._class.getCooldown();
             tubePosVector = vec.prodVec3Mat4Aux(this._descriptor.tubePositions[this._activeTubeIndex], shipScaledOriMatrix);
             mat.setTranslatedByVector(MissileLauncher._tubePosMatrix, this._spacecraft.getPhysicalPositionMatrix(), tubePosVector);
             missileOriMatrix = this.getMissileOrientationMatrix();
@@ -2233,7 +2320,7 @@ define([
                     missileOriMatrix,
                     this._spacecraft,
                     this._class.getLaunchVelocity(),
-                    this._spacecraft.getTarget());
+                    salvo ? this._salvoTarget : this._spacecraft.getTarget());
             m.addToSceneNow(scene);
             // create the counter-force affecting the firing ship
             this._spacecraft.getPhysicalModel().applyForceAndTorque(
@@ -2251,6 +2338,13 @@ define([
             return result;
         }
         return 0;
+    };
+    /**
+     * Whether the missile launcher is ready to launch the next missile
+     * @returns {Boolean}
+     */
+    MissileLauncher.prototype.isReady = function () {
+        return (this._cooldown <= 0) && (this._salvoLeft <= 0);
     };
     /**
      * Returns the amount of score points to be added to the total score value of spacecrafts that have this launcher
@@ -2297,6 +2391,7 @@ define([
         this._class = null;
         this._spacecraft = null;
         this._descriptor = null;
+        this._salvoTarget = null;
     };
     // #########################################################################
     /**

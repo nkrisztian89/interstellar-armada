@@ -74,6 +74,21 @@ define([
              */
             _flightModeSwitchSound,
             /**
+             * Sound clip for the missile change sound.
+             * @type SoundClip
+             */
+            _missileChangeSound,
+            /**
+             * Sound clip for the missile change denied sound.
+             * @type SoundClip
+             */
+            _missileChangeDeniedSound,
+            /**
+             * Sound clip for toggling missile salvo mode.
+             * @type SoundClip
+             */
+            _missileSalvoSound,
+            /**
              * The context storing the current control settings (controllers, input interpreters) that can be accessed through the interface of this module
              * @type ArmadaControlContext
              */
@@ -234,6 +249,30 @@ define([
             this._controlledSpacecraft.launchMissile(i);
             if (source === _mouseInputInterpreter) {
                 _context.enableMouseTurning();
+            }
+        }.bind(this));
+        // change to a missile launcher with a different missile equipped
+        this.setActionFunction("changeMissile", true, function (i) {
+            if (this._controlledSpacecraft.changeMissile(i)) {
+                if (_missileChangeSound) {
+                    _missileChangeSound.play();
+                }
+            } else {
+                if (_missileChangeDeniedSound) {
+                    _missileChangeDeniedSound.play();
+                }
+            }
+        }.bind(this));
+        // toggle salvo launching mode of missiles
+        this.setActionFunction("toggleSalvo", true, function (i) {
+            if (this._controlledSpacecraft.toggleSalvo(i)) {
+                if (_missileSalvoSound) {
+                    _missileSalvoSound.play();
+                }
+            } else {
+                if (_missileChangeDeniedSound) {
+                    _missileChangeDeniedSound.play();
+                }
             }
         }.bind(this));
         // changing flight mode (free / combat / cruise)
@@ -477,6 +516,9 @@ define([
         _targetSwitchSound = _initSound(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND);
         _targetSwitchDeniedSound = _initSound(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND);
         _flightModeSwitchSound = _initSound(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_SWITCH_SOUND);
+        _missileChangeSound = _initSound(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_SOUND);
+        _missileChangeDeniedSound = _initSound(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_DENIED_SOUND);
+        _missileSalvoSound = _initSound(config.BATTLE_SETTINGS.HUD.MISSILE_SALVO_SOUND);
         this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(pilotedSpacecraft);
         this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(
                 pilotedSpacecraft.getVisualModel(),

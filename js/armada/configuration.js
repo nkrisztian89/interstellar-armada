@@ -1250,6 +1250,26 @@ define([
                 name: "flightModeText",
                 type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["free", "combat", "cruise"]})
             },
+            MISSILE_INFO_BACKGROUND: {
+                name: "missileInfoBackground",
+                type: _customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR
+            },
+            MISSILE_INFO_HEADER_TEXT: {
+                name: "missileInfoHeaderText",
+                type: _customTypes.TEXT_DESCRIPTOR
+            },
+            MISSILE_INFO_TEXT: {
+                name: "missileInfoText",
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["readySelected", "ready", "loadingSelected", "empty"], POSITION: ["name", "count"]})
+            },
+            MISSILE_INFO_TEXT_OFFSET: {
+                name: "missileInfoTextOffset",
+                type: "number"
+            },
+            MAX_MISSILE_INFO_DISPLAYED: {
+                name: "maxMissileInfoDisplayed",
+                type: "number"
+            },
             DRIFT_ARROW: {
                 name: "driftArrow",
                 type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["minSpeed", "maxSpeed"]})
@@ -1364,6 +1384,18 @@ define([
             },
             FLIGHT_MODE_SWITCH_SOUND: {
                 name: "flightModeSwitchSound",
+                type: classes.SOUND_EFFECT
+            },
+            MISSILE_CHANGE_SOUND: {
+                name: "missileChangeSound",
+                type: classes.SOUND_EFFECT
+            },
+            MISSILE_CHANGE_DENIED_SOUND: {
+                name: "missileChangeDeniedSound",
+                type: classes.SOUND_EFFECT
+            },
+            MISSILE_SALVO_SOUND: {
+                name: "missileSalvoSound",
                 type: classes.SOUND_EFFECT
             },
             MESSAGE_SOUND: {

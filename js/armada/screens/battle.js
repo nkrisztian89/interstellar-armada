@@ -252,6 +252,11 @@ define([
              */
             _squads,
             /**
+             * A cached reference to the missile classes equipped on the followed spacecraft, for quicker update of missile info indicator on the HUD
+             * @type Array
+             */
+            _missileClasses,
+            /**
              * A cached reference to the spacecrafts that need to be escorted (protected) by the player
              * @type Array
              */
@@ -663,6 +668,29 @@ define([
              */
             _flightModeText,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            // missile info indicator
+            /**
+             * A rectangle displayed as the background for the missile info indicator panel.
+             * @type HUDElement
+             */
+            _missileInfoBackground,
+            /**
+             * Houses the texts of the missile info indicator panel.
+             * @type TextLayer
+             */
+            _missileInfoTextLayer,
+            /**
+             * Displays the header text (i.e. "Missiles:") on the missile info indicator panel.
+             * @type CanvasText
+             */
+            _missileInfoHeaderText,
+            /**
+             * Displays the class name and count about missiles on the missile info indicator panel.
+             * @type CanvasText[]
+             */
+            _missileInfoNameTexts,
+            _missileInfoCountTexts,
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // headers
             /**
              * Houses the header texts.
@@ -830,6 +858,11 @@ define([
              * @type ClipSpaceLayout
              */
             _flightModeIndicatorBackgroundLayout,
+            /**
+             * Stores a reference to the layout used for the missile info indicator background HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _missileInfoBackgroundLayout,
             /**
              * Stores a reference to the layout used for the target hull integrity quick view bar HUD element for quicker access.
              * @type ClipSpaceLayout
@@ -1810,6 +1843,16 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).mapping));
         _flightModeIndicatorBackground.addToScene(_battleScene);
+        _missileInfoBackground = _missileInfoBackground || _addHUDElement(new HUDElement(
+                UI_2D_MIX_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_BACKGROUND).texture,
+                _missileInfoBackgroundLayout.getClipSpacePosition(),
+                _missileInfoBackgroundLayout.getClipSpaceSize(),
+                _missileInfoBackgroundLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_BACKGROUND).color,
+                undefined,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_BACKGROUND).mapping));
+        _missileInfoBackground.addToScene(_battleScene);
         _objectivesBackground = _objectivesBackground || _addHUDElement(new HUDElement(
                 UI_2D_MIX_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).texture,
@@ -2004,6 +2047,9 @@ define([
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SWITCH_DENIED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_SWITCH_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_DENIED_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_SALVO_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name);
@@ -2305,6 +2351,29 @@ define([
                             _speedBarLayout.getScaleMode(),
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
                 },
+                getMissileInfoNameText = function (index) {
+                    var position = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).positions.name;
+                    position = [position[0], position[1] + index * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT_OFFSET)];
+                    return new screens.CanvasText(
+                            position,
+                            "",
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).fontName,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).fontSize,
+                            _missileInfoBackgroundLayout.getScaleMode(),
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).colors.ready);
+                },
+                getMissileInfoCountText = function (index) {
+                    var position = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).positions.count;
+                    position = [position[0], position[1] + index * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT_OFFSET)];
+                    return new screens.CanvasText(
+                            position,
+                            "",
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).fontName,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).fontSize,
+                            _missileInfoBackgroundLayout.getScaleMode(),
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).colors.ready,
+                            "right");
+                },
                 getObjectiveText = function (index) {
                     var position = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).position;
                     position = [position[0], position[1] + index * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT_OFFSET)];
@@ -2406,6 +2475,28 @@ define([
                     _flightModeIndicatorBackgroundLayout.getScaleMode(),
                     config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors.combat);
             _flightModeIndicatorTextLayer.addText(_flightModeText);
+        }
+        // ..............................................................................
+        // missile info
+        if (!_missileInfoTextLayer) {
+            _missileInfoTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_BACKGROUND).layout);
+            screenCanvas.addTextLayer(_missileInfoTextLayer);
+        }
+        _missileInfoHeaderText = _missileInfoHeaderText || initText(
+                config.BATTLE_SETTINGS.HUD.MISSILE_INFO_HEADER_TEXT,
+                _missileInfoBackgroundLayout,
+                _missileInfoTextLayer);
+        _missileInfoHeaderText.setText(strings.get(strings.BATTLE.HUD_MISSILES));
+        if (!_missileInfoNameTexts) {
+            _missileInfoNameTexts = [];
+            _missileInfoCountTexts = [];
+            n = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MAX_MISSILE_INFO_DISPLAYED);
+            for (i = 0; i < n; i++) {
+                _missileInfoNameTexts.push(getMissileInfoNameText(i));
+                _missileInfoTextLayer.addText(_missileInfoNameTexts[i]);
+                _missileInfoCountTexts.push(getMissileInfoCountText(i));
+                _missileInfoTextLayer.addText(_missileInfoCountTexts[i]);
+            }
         }
         // ..............................................................................
         // headers
@@ -2633,6 +2724,8 @@ define([
                 /** @type Spacecraft */
                 craft = _mission ? _mission.getFollowedSpacecraftForScene(_battleScene) : null,
                 target, wingman,
+                /** @type MissileLauncher */
+                missileLauncher,
                 /** @type Number */
                 distance, aspect, i, j, count, scale, futureDistance, animationProgress, animation2Progress, aimAssistAppearAnimationProgress, targetSwitchAnimationProgress, shipWidth,
                 hullIntegrity, shieldIntegrity,
@@ -2657,6 +2750,8 @@ define([
                 isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent, skip, away, transmissionSource,
                 /** @type MouseInputIntepreter */
                 mouseInputInterpreter,
+                /** @type String */
+                text,
                 /** @type String[] */
                 objectivesState, statusIndicators,
                 /** @type HUDElement */
@@ -2816,6 +2911,7 @@ define([
                 _spacecraft = craft;
                 _squads = craft.getTeam() ? craft.getTeam().getSquads() : [];
                 _wingmenStatusCraftLayouts = []; // drop the previous array so new layouts are generated for potentially new squads
+                _missileClasses = craft.getMissileClasses();
                 _spacecraftHullIntegrity = hullIntegrity;
                 _spacecraftShieldIntegrity = shieldIntegrity;
                 animationProgress = 0;
@@ -2884,16 +2980,53 @@ define([
                     application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
             }
             _flightModeIndicatorTextLayer.show();
+            // .....................................................................................................
+            // missile info indicator
+            if (_missileClasses.length > 0) {
+                _missileInfoBackground.applyLayout(_missileInfoBackgroundLayout, canvas.width, canvas.height);
+                _missileInfoBackground.show();
+                colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).colors;
+                missileLauncher = craft.getActiveMissileLauncher();
+                for (i = 0; i < _missileInfoNameTexts.length; i++) {
+                    if (i < _missileClasses.length) {
+                        text = _missileClasses[i].getShortName();
+                        count = craft.getMissileCount(_missileClasses[i]);
+                        _missileInfoCountTexts[i].setText(count.toString());
+                        if (count <= 0) {
+                            color = colors.empty;
+                        } else if (missileLauncher && (missileLauncher.getMissileClass() === _missileClasses[i])) {
+                            color = missileLauncher.isReady() ? colors.readySelected : colors.loadingSelected;
+                            if (missileLauncher.isInSalvoMode()) {
+                                text += " (×" + missileLauncher.getSalvo() + ")";
+                            }
+                        } else {
+                            color = colors.ready;
+                        }
+                        _missileInfoNameTexts[i].setText(text);
+                        _missileInfoNameTexts[i].setColor(color);
+                        _missileInfoCountTexts[i].setColor(color);
+                        _missileInfoNameTexts[i].show();
+                        _missileInfoCountTexts[i].show();
+                    } else {
+                        _missileInfoNameTexts[i].hide();
+                        _missileInfoCountTexts[i].hide();
+                    }
+                }
+                _missileInfoTextLayer.show();
+            } else {
+                _missileInfoBackground.hide();
+                _missileInfoTextLayer.hide();
+            }
             if (!_demoMode && control.isInPilotMode()) {
                 // .....................................................................................................
                 // objectives
                 _objectivesBackground.applyLayout(_objectivesBackgroundLayout, canvas.width, canvas.height);
                 _objectivesBackground.show();
                 objectivesState = _mission.getObjectivesState();
+                colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors;
                 for (i = 0; i < _objectivesTexts.length; i++) {
                     if (i < objectivesState.length) {
                         _objectivesTexts[i].setText(objectivesState[i].text);
-                        colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors;
                         switch (objectivesState[i].state) {
                             case missions.ObjectiveState.IN_PROGRESS:
                                 _objectivesTexts[i].setColor(colors.inProgress);
@@ -3652,6 +3785,7 @@ define([
             _targetInfoTextLayer.hide();
             _speedTextLayer.hide();
             _flightModeIndicatorTextLayer.hide();
+            _missileInfoTextLayer.hide();
             _objectivesTextLayer.hide();
             _escortsTextLayer.hide();
             _messageTextLayer.hide();
@@ -4074,6 +4208,7 @@ define([
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).layout);
         _shieldBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).layout);
         _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).layout);
+        _missileInfoBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_BACKGROUND).layout);
         _objectivesBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_BACKGROUND).layout);
         _escortsBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ESCORTS_BACKGROUND).layout);
         _messageBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_BACKGROUND).layout);

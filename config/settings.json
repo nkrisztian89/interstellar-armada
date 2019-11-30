@@ -606,6 +606,42 @@
                     "fontName": "hudFont",
                     "position": [-0.9, -0.5]
                 },
+                "missileInfoBackground": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.35375, 0.01], [0.39625, 0.0525]],
+                    "layout": {
+                        "right": 0.98,
+                        "top": -0.255,
+                        "width": 0.36,
+                        "height": 0.25,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
+                    },
+                    "color": [0, 0, 0, 0.5]
+                },
+                "missileInfoHeaderText": {
+                    "color": [0, 1, 0, 1],
+                    "fontSize": 0.15,
+                    "fontName": "hudFont",
+                    "position": [-0.9, 0.65]
+                },
+                "missileInfoText": {
+                    "colors": {
+                        "readySelected": [0, 1, 0, 1],
+                        "ready": [0, 1, 0, 0.5],
+                        "loadingSelected": [1, 1, 0, 1],
+                        "empty": [0.5, 0.5, 0.5, 0.5]
+                    },
+                    "fontSize": 0.15,
+                    "fontName": "hudFont",
+                    "positions": {
+                        "name": [-0.9, 0.3],
+                        "count": [0.9, 0.3]
+                    }
+                },
+                "missileInfoTextOffset": -0.3,
+                "maxMissileInfoDisplayed": 2,
                 "driftArrow": {
                     "texture": "hud-atlas",
                     "mapping": [[0.0125, 0.2625], [0.2375, 0.4875]],
@@ -836,6 +872,18 @@
                     "name": "flight_mode_switch",
                     "volume": 0.5
                 },
+                "missileChangeSound": {
+                    "name": "missile_change",
+                    "volume": 0.5
+                },
+                "missileChangeDeniedSound": {
+                    "name": "missile_change_denied",
+                    "volume": 0.75
+                },
+                "missileSalvoSound": {
+                    "name": "missile_salvo",
+                    "volume": 0.5
+                },
                 "messageSound": {
                     "name": "blip_message",
                     "volume": 0.5
@@ -901,6 +949,12 @@
                     }, {
                         "action": "launchMissile",
                         "key": "ctrl"
+                    }, {
+                        "action": "changeMissile",
+                        "key": "alt"
+                    }, {
+                        "action": "toggleSalvo",
+                        "key": "2"
                     }, {
                         "action": "nextNearestHostileTarget",
                         "key": "T"
@@ -1147,6 +1201,12 @@
                         "action": "launchMissile",
                         "button": 1
                     }, {
+                        "action": "changeMissile",
+                        "button": 3
+                    }, {
+                        "action": "toggleSalvo",
+                        "button": 5
+                    }, {
                         "action": "nextNearestHostileTarget",
                         "button": 2
                     }, {
@@ -1199,16 +1259,16 @@
                         "axis": "+1"
                     }, {
                         "action": "nextView",
-                        "button": 3
-                    }, {
-                        "action": "resetView",
                         "button": 6
                     }, {
-                        "action": "resetSpeed",
-                        "button": 4
+                        "action": "previousView",
+                        "button": 7
+                    }, {
+                        "action": "resetView",
+                        "button": 8
                     }, {
                         "action": "toggleCruise",
-                        "button": 5
+                        "button": 4
                     }
                 ]
             },

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Provides wrapper classes that can be used to manage (loading, assemblin, displaying, hiding, translating...) HTML based screens for
  * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -1336,7 +1336,7 @@ define([
                     for (k = first; k < sections.length; k++) {
                         switch (align) {
                             case "right":
-                                sections[k].xOffset = -sections[k].xOffset;
+                                sections[k].xOffset -= lineWidth;
                                 break;
                             case "center":
                                 sections[k].xOffset -= 0.5 * lineWidth;

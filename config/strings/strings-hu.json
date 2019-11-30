@@ -361,6 +361,7 @@
             "teamUnknown": "-",
             "wingmenHeader": "Kötelékek:",
             "flightMode": "Repülési mód:",
+            "missiles": "Rakéták:",
             "objectives": "Feladatok:",
             "escortedShipsHeader": "Megvédendő:"
         },
@@ -591,6 +592,8 @@
         "toggleAutoTargeting": "Ellenséges célpontok automatikus kijelölésének ki-/bekapcsolása",
         "fire": "Tüzelés az elsődleges fegyverekkel",
         "launchMissile": "Rakéta kilövése",
+        "changeMissile": "Váltás rakéták között",
+        "toggleSalvo": "Sortűz mód ki-/bekapcsolása az aktív rakétákhoz",
         "forward": "Gyorsítás előre / kívánt sebesség növelése",
         "reverse": "Gyorsítás hátrafelé / kívánt sebesség csökkentése",
         "strafeLeft": "Gyorsítás balra",

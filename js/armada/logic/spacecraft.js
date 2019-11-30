@@ -389,6 +389,11 @@ define([
          */
         this._activeMissileLauncherIndex = -1;
         /**
+         * An array of all the missile classes of currently equipped missiles on this ship
+         * @type MissileClass
+         */
+        this._missileClasses = [];
+        /**
          * The targeting computer equipped on this spacecraft.
          * @type TargetingComputer
          */
@@ -614,6 +619,7 @@ define([
         }.bind(this));
         this._weapons = [];
         this._missileLaunchers = [];
+        this._missileClasses = [];
         this._activeMissileLauncherIndex = -1;
         this._targetingComputer = new equipment.TargetingComputer(this, spacecraftArray);
         this._firingDisabled = false;
@@ -1984,6 +1990,9 @@ define([
             if (this._activeMissileLauncherIndex < 0) {
                 this._activeMissileLauncherIndex = 0;
             }
+            if (this._missileClasses.indexOf(missileClass) < 0) {
+                this._missileClasses.push(missileClass);
+            }
         }
     };
     /**
@@ -2026,6 +2035,7 @@ define([
             this._missileLaunchers[i].destroy();
         }
         this._missileLaunchers = [];
+        this._missileClasses = [];
         this._activeMissileLauncherIndex = -1;
         if (this._propulsion) {
             this._propulsion.destroy();
@@ -2073,22 +2083,31 @@ define([
         return this._class.getEquipmentProfileNames();
     };
     /**
+     * Returns the sound source of the ship if it is far away enough from the camera that fire/launch sound effects should
+     * be stacked on it, otherwise returns null
+     * @returns {SoundSource}
+     */
+    Spacecraft.prototype.getSoundSourceForFireSound = function () {
+        var posInCameraSpace;
+        posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
+        if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
+                (Math.abs(posInCameraSpace[1]) <= _weaponFireSoundStackMinimumDistance) &&
+                (Math.abs(posInCameraSpace[2]) <= _weaponFireSoundStackMinimumDistance)) {
+            return null;
+        }
+        return this.getSoundSource();
+    };
+    /**
      * Fires all of the ship's weapons.
      * @param {Boolean} onlyIfAimedOrFixed Only those weapons are fired which are fixed (cannot be rotated) and those that can be rotated
      * and are currently aimed at their target.
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
-        var i, scaledOriMatrix, fired = false, projectileCount, posInCameraSpace;
+        var i, scaledOriMatrix, fired = false, projectileCount;
         if (!this._firingDisabled) {
             scaledOriMatrix = this.getScaledOriMatrix();
-            posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
-            if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
-                    (Math.abs(posInCameraSpace[1]) <= _weaponFireSoundStackMinimumDistance) &&
-                    (Math.abs(posInCameraSpace[2]) <= _weaponFireSoundStackMinimumDistance)) {
-                posInCameraSpace = null;
-            }
             for (i = 0; i < this._weapons.length; i++) {
-                projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, posInCameraSpace ? this.getSoundSource() : null);
+                projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, this.getSoundSourceForFireSound());
                 fired = (projectileCount > 0) || fired;
                 this._shotsFired += projectileCount;
             }
@@ -2102,19 +2121,13 @@ define([
         }
     };
     /**
-     * If the currently active missile launcher is ready, launches a missile from that launcher.
+     * If the currently active missile launcher is ready, launches a missile / starts a salvo from that launcher.
      */
     Spacecraft.prototype.launchMissile = function () {
-        var i, scaledOriMatrix, launched = false, missileCount, posInCameraSpace;
+        var i, scaledOriMatrix, launched = false, missileCount, originalIndex, missileClass, salvo, outOfMissiles;
         if (!this._firingDisabled && this._activeMissileLauncherIndex >= 0) {
             scaledOriMatrix = this.getScaledOriMatrix();
-            posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
-            if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
-                    (Math.abs(posInCameraSpace[1]) <= _weaponFireSoundStackMinimumDistance) &&
-                    (Math.abs(posInCameraSpace[2]) <= _weaponFireSoundStackMinimumDistance)) {
-                posInCameraSpace = null;
-            }
-            missileCount = this._missileLaunchers[this._activeMissileLauncherIndex].launch(scaledOriMatrix, posInCameraSpace ? this.getSoundSource() : null);
+            missileCount = this._missileLaunchers[this._activeMissileLauncherIndex].launch(scaledOriMatrix, this.getSoundSourceForFireSound(), false);
             launched = (missileCount > 0);
             this._missilesLaunched += missileCount;
             // executing callbacks
@@ -2123,14 +2136,83 @@ define([
                     this._targetedBy[i].handleEvent(SpacecraftEvents.TARGET_FIRED);
                 }
                 this.handleEvent(SpacecraftEvents.FIRED);
-                if (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileCount() <= 0) {
-                    this._activeMissileLauncherIndex++;
-                    if (this._activeMissileLauncherIndex >= this._missileLaunchers.length) {
+                // automatically switch to the next launcher with the same missile class or to the first non-empty launcher if the current one is empty
+                originalIndex = this._activeMissileLauncherIndex;
+                missileClass = this._missileLaunchers[originalIndex].getMissileClass();
+                salvo = this._missileLaunchers[originalIndex].isInSalvoMode();
+                outOfMissiles = this._missileLaunchers[originalIndex].getMissileCount() <= this._missileLaunchers[originalIndex].getSalvoLeft();
+                do {
+                    this._activeMissileLauncherIndex = (this._activeMissileLauncherIndex + 1) % this._missileLaunchers.length;
+                } while ((this._activeMissileLauncherIndex !== originalIndex) &&
+                        ((this._missileLaunchers[this._activeMissileLauncherIndex].getMissileCount() <= 0) ||
+                                (!outOfMissiles && (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() !== missileClass))));
+                if (this._activeMissileLauncherIndex === originalIndex) {
+                    if (outOfMissiles) {
                         this._activeMissileLauncherIndex = -1;
+                    }
+                } else {
+                    if (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass) {
+                        this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(salvo);
                     }
                 }
             }
         }
+    };
+    /**
+     * Change to a missile launcher with a different missile equipped
+     * @returns {Boolean} Whether the active missile launcher has been changed
+     */
+    Spacecraft.prototype.changeMissile = function () {
+        var originalIndex, missileClass;
+        if (this._activeMissileLauncherIndex >= 0) {
+            originalIndex = this._activeMissileLauncherIndex;
+            missileClass = this._missileLaunchers[originalIndex].getMissileClass();
+            do {
+                this._activeMissileLauncherIndex = (this._activeMissileLauncherIndex + 1) % this._missileLaunchers.length;
+            } while ((this._activeMissileLauncherIndex !== originalIndex) &&
+                    ((this._missileLaunchers[this._activeMissileLauncherIndex].getMissileCount() <= 0) ||
+                            (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass)));
+            return (this._activeMissileLauncherIndex !== originalIndex);
+        }
+        return false;
+    };
+    /**
+     * Toggle salvo launch mode for the current active missile launcher
+     * @returns {Boolean} Whether the salvo mode has been changed
+     */
+    Spacecraft.prototype.toggleSalvo = function () {
+        if (this._activeMissileLauncherIndex >= 0) {
+            return this._missileLaunchers[this._activeMissileLauncherIndex].toggleSalvoMode();
+        }
+        return false;
+    };
+    /**
+     * An array of all the missile classes of currently equipped missiles on this ship
+     * @returns {MissileClass[]}
+     */
+    Spacecraft.prototype.getMissileClasses = function () {
+        return this._missileClasses;
+    };
+    /**
+     * The currently active missile launcher of the spacecraft
+     * @returns {MissileLauncher}
+     */
+    Spacecraft.prototype.getActiveMissileLauncher = function () {
+        return (this._activeMissileLauncherIndex >= 0) ? this._missileLaunchers[this._activeMissileLauncherIndex] : null;
+    };
+    /**
+     * The amount of missiles of the passed class currently equipped on this spacecraft
+     * @param {MissileClass} missileClass
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMissileCount = function (missileClass) {
+        var i, result = 0;
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            if (this._missileLaunchers[i].getMissileClass() === missileClass) {
+                result += this._missileLaunchers[i].getMissileCount();
+            }
+        }
+        return result;
     };
     /*
      * Increases the number of hits on enemies registered for this spacecraft (for hit ratio calculation)
@@ -2679,6 +2761,7 @@ define([
             }
         }
         this._missileLaunchers = null;
+        this._missileClasses = null;
         if (this._propulsion) {
             this._propulsion.destroy();
             this._propulsion = null;

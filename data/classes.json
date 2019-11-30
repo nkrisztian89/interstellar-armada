@@ -2776,6 +2776,7 @@
     "missileClasses": [{
             "name": "smallMissile",
             "fullName": "SM-4 Small missile",
+            "shortName": "SM-4",
             "model": "smallMissile",
             "modelScale": 1,
             "shader": "ship",
@@ -2792,6 +2793,7 @@
             "mainBurnAngleThreshold": 360,
             "duration": 3000,
             "cooldown": 500,
+            "salvoCooldown": 250,
             "proximityRange": 1,
             "kineticFactor": 0.6,
             "lightColor": [0, 0.5, 1],
@@ -2847,6 +2849,7 @@
         }, {
             "name": "mediumMissile",
             "fullName": "MH-7 Medium homing missile",
+            "shortName": "MH-7",
             "model": "mediumMissile",
             "modelScale": 1,
             "shader": "ship",
@@ -2918,6 +2921,7 @@
         }, {
             "name": "lightTorpedo",
             "fullName": "LT-3b Light torpedo",
+            "shortName": "LT-3b",
             "model": "lightTorpedo",
             "modelScale": 1,
             "shader": "ship",
@@ -4840,16 +4844,16 @@
                     },
                     "missiles": [{
                             "class": "lightTorpedo",
-                            "amount": 1
+                            "amount": 2
                         }, {
                             "class": "lightTorpedo",
-                            "amount": 1
+                            "amount": 2
                         }, {
                             "class": "lightTorpedo",
-                            "amount": 1
+                            "amount": 2
                         }, {
                             "class": "lightTorpedo",
-                            "amount": 1
+                            "amount": 2
                         }, {
                             "class": "smallMissile",
                             "amount": 12
@@ -5018,7 +5022,8 @@
                             "count": 6
                         }],
                     "size": 1,
-                    "capacity": 6
+                    "capacity": 6,
+                    "salvo": 6
                 }, {
                     "tubePositions": [],
                     "tubeArrays": [{
@@ -5031,7 +5036,8 @@
                             "count": 6
                         }],
                     "size": 1,
-                    "capacity": 6
+                    "capacity": 6,
+                    "salvo": 6
                 }, {
                     "tubePositions": [],
                     "tubeArrays": [{
@@ -5044,7 +5050,8 @@
                             "count": 6
                         }],
                     "size": 1,
-                    "capacity": 6
+                    "capacity": 6,
+                    "salvo": 6
                 }, {
                     "tubePositions": [],
                     "tubeArrays": [{
@@ -5057,7 +5064,8 @@
                             "count": 6
                         }],
                     "size": 1,
-                    "capacity": 6
+                    "capacity": 6,
+                    "salvo": 6
                 }]
         }, {
             "name": "rhino",
@@ -5268,7 +5276,8 @@
                             "count": 5
                         }],
                     "size": 1,
-                    "capacity": 6
+                    "capacity": 6,
+                    "salvo": 5
                 }, {
                     "tubePositions": [],
                     "tubeArrays": [{
@@ -5281,7 +5290,8 @@
                             "count": 5
                         }],
                     "size": 1,
-                    "capacity": 6
+                    "capacity": 6,
+                    "salvo": 5
                 }],
             "equipmentProfiles": [{
                     "name": "imperial-tier1",

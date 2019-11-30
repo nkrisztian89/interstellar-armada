@@ -1491,6 +1491,15 @@
             "name": "flight_mode_switch",
             "samples": ["computer/flight_mode_switch.ogg"]
         }, {
+            "name": "missile_change",
+            "samples": ["computer/missile_change.wav"]
+        }, {
+            "name": "missile_change_denied",
+            "samples": ["computer/missile_change_denied.wav"]
+        }, {
+            "name": "missile_salvo",
+            "samples": ["computer/missile_salvo.wav"]
+        }, {
             "name": "blip_message",
             "samples": ["computer/blip_message.wav"]
         }, {

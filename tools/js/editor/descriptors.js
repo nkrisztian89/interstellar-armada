@@ -1043,6 +1043,10 @@ define([
                     name: "fullName",
                     type: BaseType.STRING
                 },
+                SHORT_NAME: {
+                    name: "shortName",
+                    type: BaseType.STRING
+                },
                 MODEL: {
                     name: "model",
                     type: MODEL_REFERENCE
@@ -1108,6 +1112,11 @@ define([
                 COOLDOWN: {
                     name: "cooldown",
                     type: MILLISECONDS
+                },
+                SALVO_COOLDOWN: {
+                    name: "salvoCooldown",
+                    type: MILLISECONDS,
+                    defaultDerived: true
                 },
                 PROXIMITY_RANGE: {
                     name: "proximityRange",
@@ -1619,6 +1628,11 @@ define([
                     CAPACITY: {
                         name: "capacity",
                         type: BaseType.NUMBER
+                    },
+                    SALVO: {
+                        name: "salvo",
+                        type: BaseType.NUMBER,
+                        defaultValue: 1
                     }
                 }
             },
