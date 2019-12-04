@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018 Krisztián Nagy
+ * Copyright 2016-2019 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for spacecraft classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -61,7 +61,7 @@ define([
                 "model", "shader", "texture",
                 "factionColor", "defaultLuminosityFactors",
                 "bodies",
-                "weaponSlots", "thrusterSlots",
+                "weaponSlots", "missileLaunchers", "thrusterSlots",
                 "equipmentProfiles",
                 "humSound",
                 "explosion",
@@ -292,7 +292,7 @@ define([
         }
         _spacecraft.addToScene(preview.getScene(), undefined, false,
                 (environmentChanged || shouldReload) ?
-                {weapons: true, lightSources: true, blinkers: true, hitboxes: true, thrusterParticles: true, explosion: true, shield: true} :
+                {weapons: true, missilesInLaunchers: true, allMissilesInLaunchers: true, lightSources: true, blinkers: true, hitboxes: true, thrusterParticles: true, explosion: true, shield: true, sound: true} :
                 {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
@@ -305,7 +305,7 @@ define([
                 null);
         _wireframeSpacecraft.addToScene(preview.getScene(), undefined, true,
                 (environmentChanged || shouldReload) ?
-                {weapons: true} :
+                {weapons: true, missilesInLaunchers: true, allMissilesInLaunchers: true} :
                 {self: false, weapons: true},
                 {
                     replaceVisualModel: true,
@@ -326,7 +326,7 @@ define([
         _updateEngineStateEditor();
     }
     /**
-     * Resets the preview settings (those handled through the optionns, not the ones connected to the canvas) to their default values.
+     * Resets the preview settings (those handled through the options, not the ones connected to the canvas) to their default values.
      * The settings that persist across different items are not reset.
      */
     function _clearSettingsForNewItem() {

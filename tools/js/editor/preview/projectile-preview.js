@@ -1,6 +1,6 @@
 /**
  * Copyright 2016 Krisztián Nagy
- * @file Provides the setup and event-handling for the preview window used for spacecraft classes within the Interstellar Armada editor.
+ * @file Provides the setup and event-handling for the preview window used for projectile classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -50,12 +50,12 @@ define([
              */
             _projectile,
             /**
-             * A reference to the displayed weapon class
+             * A reference to the displayed projectile class
              * @type ProjectileClass
              */
             _projectileClass,
             /**
-             * Stores the WebGL preview context information for spacecraft class previews
+             * Stores the WebGL preview context information for projectile class previews
              * @type WebGLPreviewContext
              */
             _previewContext;
@@ -63,7 +63,7 @@ define([
     // Private Functions
     /**
      * For the WebGL preview context.
-     * Clears the object references of the currently stored weapon (if any)
+     * Clears the object references of the currently stored projectile (if any)
      */
     function _clear() {
         if (_projectile) {
@@ -98,7 +98,7 @@ define([
     }
     /**
      * For the WebGL preview context.
-     * Resets the preview settings (those handled through the optionns, not the ones connected to the canvas) to their default values.
+     * Resets the preview settings (those handled through the options, not the ones connected to the canvas) to their default values.
      * The settings that persist across different items are not reset.
      */
     function _clearSettingsForNewItem() {
@@ -107,7 +107,7 @@ define([
     /**
      * For the WebGL preview context.
      * Creates the controls that form the content of the preview options and adds them to the page.
-     * Currently does nothing, no preview options are yet implemented for weapon previews.
+     * Currently does nothing, no preview options are yet implemented for projectile previews.
      */
     function _createOptions() {
         return true;
@@ -123,9 +123,9 @@ define([
     // Public Functions
     /**
      * The main function that sets up the preview window (both options and the preview canvas) for the editor to show the selected 
-     * weapon class.
+     * projectile class.
      * @param {Editor~RefreshElements} elements References to the HTML elements that can be used for the preview.
-     * @param {ProjectileClass} projectileClass The spacecraft class to preview
+     * @param {ProjectileClass} projectileClass The projectile class to preview
      * @param {Editor~SpacecraftClassRefreshParams} params Additional parameters 
      */
     function refresh(elements, projectileClass, params) {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2019 Krisztián Nagy
  * @file Provides the general structure to preview windows of the Interstellar Armada editor that use a WebGL scene 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -249,7 +249,10 @@ define([
                 infoSections.push(
                         "Model: " +
                         "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
-                        ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD()));
+                        ", lines: " + _model.getModel().getNumLines(_model.getCurrentLOD()) +
+                        ", dimensions: " + _model.getModel().getWidth(_model.getCurrentLOD()).toFixed(3) + " × " +
+                        _model.getModel().getHeight(_model.getCurrentLOD()).toFixed(3) + " × " +
+                        _model.getModel().getDepth(_model.getCurrentLOD()).toFixed(3));
             }
             if (_currentContext.functions.getInfo) {
                 info = _currentContext.functions.getInfo();
@@ -639,59 +642,67 @@ define([
             _updateInfo();
             _updateCanvasSize();
             _context.clear();
-            _scene.addToContext(_context);
-            _context.setup();
-            if (shouldReload) {
-                if (_model) {
-                    if (!params.preserve) {
-                        _currentContext.cameraDistance = (_currentContext.params.defaultDistanceFactor || DEFAULT_DISTANCE_FACTOR) * _model.getScaledSize();
+            resources.executeWhenReady(function () {
+                _scene.addToContext(_context);
+                _context.setup();
+                if (shouldReload) {
+                    if (_model) {
+                        if (!params.preserve) {
+                            _currentContext.cameraDistance = (_currentContext.params.defaultDistanceFactor || DEFAULT_DISTANCE_FACTOR) * _model.getScaledSize();
+                        }
+                        view = new classes.ObjectView({
+                            name: OBJECT_VIEW_NAME,
+                            isAimingView: false,
+                            fps: false,
+                            fov: FOV,
+                            fovRange: [FOV, FOV],
+                            followsPosition: true,
+                            followsOrientation: false,
+                            movable: true,
+                            turnable: true,
+                            rotationCenterIsObject: true,
+                            distanceRange: [0, MAX_DISTANCE_FACTOR * _model.getScaledSize()],
+                            position: vec.scaled3(_currentContext.params.cameraDirection || DEFAULT_CAMERA_DIRECTION, _currentContext.cameraDistance)
+                        });
+                        _scene.getCamera().setConfiguration(view.createCameraConfiguration(_model,
+                                config.getDefaultCameraBaseOrientation(),
+                                config.getDefaultCameraPointToFallback(),
+                                config.getDefaultCameraFOV(),
+                                config.getDefaultCameraFOVRange(),
+                                config.getDefaultCameraSpan(),
+                                config.getDefaultCameraSpanRange()));
+                    } else {
+                        _scene.getCamera().moveToPosition([0, 0, 0], 0);
+                        _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.identity4(), true);
                     }
-                    view = new classes.ObjectView({
-                        name: OBJECT_VIEW_NAME,
-                        isAimingView: false,
-                        fps: false,
-                        fov: FOV,
-                        fovRange: [FOV, FOV],
-                        followsPosition: true,
-                        followsOrientation: false,
-                        movable: true,
-                        turnable: true,
-                        rotationCenterIsObject: true,
-                        distanceRange: [0, MAX_DISTANCE_FACTOR * _model.getScaledSize()],
-                        position: vec.scaled3(_currentContext.params.cameraDirection || DEFAULT_CAMERA_DIRECTION, _currentContext.cameraDistance)
-                    });
-                    _scene.getCamera().setConfiguration(view.createCameraConfiguration(_model,
-                            config.getDefaultCameraBaseOrientation(),
-                            config.getDefaultCameraPointToFallback(),
-                            config.getDefaultCameraFOV(),
-                            config.getDefaultCameraFOVRange(),
-                            config.getDefaultCameraSpan(),
-                            config.getDefaultCameraSpanRange()));
-                } else {
-                    _scene.getCamera().moveToPosition([0, 0, 0], 0);
-                    _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.identity4(), true);
+                    if (params.preserve) {
+                        _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.matrix4(_currentContext.cameraOrientationMatrix), true);
+                    }
                 }
-                if (params.preserve) {
-                    _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.matrix4(_currentContext.cameraOrientationMatrix), true);
-                }
-            }
-            _elements.canvas.onmousedown = _handleMouseDown;
-            _elements.canvas.onwheel = _handleWheel;
-            _context.executeWhenReady(function () {
-                _updateForRenderMode();
-                _updateForLOD();
-                _currentContext.functions.updateForRefresh();
-                if (_currentContext.params.animateOnRefresh || (wasAnimating && (_currentContext.params.animateOnRefresh !== false))) {
-                    startAnimating();
-                } else {
-                    requestRender();
-                }
+                _elements.canvas.onmousedown = _handleMouseDown;
+                _elements.canvas.onwheel = _handleWheel;
+                _context.executeWhenReady(function () {
+                    _updateForRenderMode();
+                    _updateForLOD();
+                    _currentContext.functions.updateForRefresh();
+                        if (_currentContext.params.animateOnRefresh || (wasAnimating && (_currentContext.params.animateOnRefresh !== false))) {
+                            startAnimating();
+                        } else {
+                            requestRender();
+                        }
+                });
             });
+            // cannot directly call a new load request inside executeWhenReady() as it would change the ready state
+            // back to not ready and commence an infinite loop, with the setTimeout() it is executed after all 
+            // onReady handlers are cleared
+            setTimeout(function() {
+                resources.requestResourceLoad();
+            }, 0);
         });
         resources.requestResourceLoad();
     }
     /**
-     * Resets the preview settings (those handled through the optionns, not the ones connected to the canvas) to their default values.
+     * Resets the preview settings (those handled through the options, not the ones connected to the canvas) to their default values.
      * The settings that persist across different items are not reset.
      */
     function clearSettingsForNewItem() {

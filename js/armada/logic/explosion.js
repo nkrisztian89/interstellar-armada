@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Implementation of the Explosion game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -352,7 +352,7 @@ define([
      */
     Explosion.prototype.addResourcesToScene = function (scene) {
         var resourceID = RESOURCE_ID_PREFIX + this._class.getName();
-        this._class.acquireResources();
+        this._class.acquireResources({sound: true});
         resources.executeWhenReady(function () {
             if (!scene.hasResourcesOfObject(resourceID)) {
                 this._initVisualModel();

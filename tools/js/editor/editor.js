@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018 Krisztián Nagy
+ * Copyright 2016-2019 Krisztián Nagy
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -29,6 +29,7 @@
  * @param explosionPreview Used to create previews for explosion classes
  * @param projectilePreview Used to create previews for projectile classes
  * @param weaponPreview Used to create previews for weapon classes
+ * @param missilePreview Used to create previews for missile classes
  * @param spacecraftPreview Used to create previews for spacecraft classes
  * @param environmentPreview Used to create previews for environments
  */
@@ -52,6 +53,7 @@ define([
     "editor/preview/explosion-preview",
     "editor/preview/projectile-preview",
     "editor/preview/weapon-preview",
+    "editor/preview/missile-preview",
     "editor/preview/spacecraft-preview",
     "editor/preview/environment-preview"
 ], function (
@@ -62,7 +64,7 @@ define([
         control,
         common, descriptors, properties,
         shaderPreview,
-        skyboxPreview, explosionPreview, projectilePreview, weaponPreview, spacecraftPreview, environmentPreview) {
+        skyboxPreview, explosionPreview, projectilePreview, weaponPreview, missilePreview, spacecraftPreview, environmentPreview) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -124,6 +126,7 @@ define([
                 "explosionClasses": explosionPreview,
                 "projectileClasses": projectilePreview,
                 "weaponClasses": weaponPreview,
+                "missileClasses": missilePreview,
                 "spacecraftClasses": spacecraftPreview,
                 "environments": environmentPreview
             },

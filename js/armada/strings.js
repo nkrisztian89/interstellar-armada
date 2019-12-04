@@ -205,6 +205,7 @@ define([
         LENGTH: {name: "database.length"},
         MASS: {name: "database.mass"},
         WEAPON_SLOTS: {name: "database.weaponSlots"},
+        MISSILE_LAUNCHERS: {name: "database.missileLaunchers"},
         THRUSTERS: {name: "database.thrusters"},
         MISSING_SPACECRAFT_TYPE_DESCRIPTION: {name: "database.missingSpacecraftTypeDescription"},
         MISSING_SPACECRAFT_CLASS_DESCRIPTION: {name: "database.missingSpacecraftClassDescription"}
@@ -358,6 +359,9 @@ define([
         PREFIX: {name: "shieldClass.", optional: true},
         NAME_SUFFIX: {name: ".name", optional: true},
         DESCRIPTION_SUFFIX: {name: ".description", optional: true}
+    };
+    strings.MISSILE_SIZE = {
+        PREFIX: {name: "missileSize.", optional: true}
     };
     strings.OBJECT_VIEW = {
         PREFIX: {name: "objectView.", optional: true}

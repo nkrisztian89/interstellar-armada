@@ -611,12 +611,6 @@ define([
                 mat.identity4(),
                 mat.identity4(),
                 this._class.getBodies());
-        this._class.acquireResources();
-        resources.executeWhenReady(function () {
-            if (this.isAlive()) {
-                this._physicalModel.setScalingMatrix(mat.scaling4(this._class.getModel().getScale()));
-            }
-        }.bind(this));
         this._weapons = [];
         this._missileLaunchers = [];
         this._missileClasses = [];
@@ -1656,34 +1650,42 @@ define([
         return this._hitbox;
     };
     /**
-     * 
-     * @param {Number} lod
      * @param {Boolean} hitbox
-     * @param {Boolean} customShader
+     * @param {SpacecraftClass~ResourceParams} params
      */
-    Spacecraft.prototype.acquireResources = function (lod, hitbox, customShader) {
+    Spacecraft.prototype.acquireResources = function (hitbox, params) {
         application.log_DEBUG("Requesting resources for spacecraft (" + this._class.getName() + ")...", 2);
-        var params = (lod === undefined) ? {maxLOD: graphics.getMaxLoadedLOD()} : {lod: lod};
         if (hitbox) {
             graphics.getShader(config.getSetting(config.BATTLE_SETTINGS.HITBOX_SHADER_NAME));
             graphics.getTexture(config.getSetting(config.BATTLE_SETTINGS.HITBOX_TEXTURE_NAME));
         }
-        params.omitShader = customShader;
         this._class.acquireResources(params);
+        resources.executeWhenReady(function () {
+            if (this.isAlive()) {
+                this._physicalModel.setScalingMatrix(mat.scaling4(this._class.getModel().getScale()));
+            }
+        }.bind(this));
     };
     /**
      * @typedef {Object} Spacecraft~Supplements
      * @property {Boolean} hitboxes
      * @property {Boolean} weapons
+     * @property {Boolean} missilesInLaunchers Whether to add the loaded missiles
+     * into the launch tubes (at least the first one for each tube)
+     * @property {Boolean} allMissilesInLaunchers Whether to add the additional
+     * loaded missiles behind the first one into the launch tubes (for displaying
+     * missile loadout in wireframe)
      * @property {Boolean} thrusterParticles
      * @property {Boolean} projectileResources
      * @property {Boolean} missileResources
      * @property {Boolean} explosion
+     * @property {Boolean} damageIndicators
      * @property {Boolean} cameraConfigurations
      * @property {Boolean} lightSources
      * @property {Boolean} blinkers
      * @property {Boolean} jumpEngine
      * @property {Boolean} shield
+     * @property {Boolean} sound
      * @property {Boolean} [self=true]
      */
     /**
@@ -1711,19 +1713,21 @@ define([
      * @param {Spacecraft~AddToSceneParams} params See addToScene()
      * @param {logic~addToSceneCallback} [callback] See addToScene()
      * @param {logic~addToSceneCallback} [weaponCallback] See addToScene()
+     * @param {logic~addToSceneCallback} [missileCallback] See addToScene()
      */
-    Spacecraft.prototype.addToSceneNow = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback) {
-        var i, node, exp, lightSources, originalFactionColor, replacementFactionColor, visualModel, animationTime, weaponParams;
+    Spacecraft.prototype.addToSceneNow = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback, missileCallback) {
+        var i, shader, node, exp, lightSources, originalFactionColor, replacementFactionColor, visualModel, animationTime, weaponParams, missileParams;
         if (!this._class) {
             application.log("WARNING! Cannot add spacecraft to scene because it has already been destroyed!");
             return;
         }
         application.log_DEBUG("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
         if (addSupplements.self !== false) {
+            shader = params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader();
             visualModel = new renderableObjects.ParameterizedMesh(
                     this._class.getModel(),
-                    params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
-                    this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                    shader,
+                    this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                     params.positionMatrix || this._physicalModel.getPositionMatrix(),
                     params.orientationMatrix || this._physicalModel.getOrientationMatrix(),
                     params.scalingMatrix || mat.scaling4(this._class.getModel().getScale()),
@@ -1766,9 +1770,10 @@ define([
         }
         // visualize physical model (hitboxes)
         if (addSupplements.hitboxes === true) {
+            shader = shader || (params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader());
             // add the parent objects for the hitboxes
             this._hitbox = new sceneGraph.RenderableNode(new renderableObjects.RenderableObject3D(
-                    this._class.getShader(),
+                    shader,
                     false,
                     false), false);
             // add the models for the hitboxes themselves
@@ -1785,6 +1790,13 @@ define([
                 this._weapons[i].addToSceneNow(node, lod, wireframe, weaponParams, weaponCallback);
             }
         }
+        // add missiles into the launchers
+        if (addSupplements.missilesInLaunchers === true) {
+            missileParams = {shaderName: params.shaderName, allMissiles: addSupplements.allMissilesInLaunchers};
+            for (i = 0; i < this._missileLaunchers.length; i++) {
+                this._missileLaunchers[i].addToSceneNow(node, lod, wireframe, missileParams, missileCallback);
+            }
+        } 
         // add the thruster particles
         if (addSupplements.thrusterParticles === true) {
             if (this._propulsion) {
@@ -1862,46 +1874,60 @@ define([
      * @param {Spacecraft~AddToSceneParams} [params]
      * @param {logic~addToSceneCallback} [callback]
      * @param {logic~addToSceneCallback} [weaponCallback]
+     * @param {logic~addToSceneCallback} [missileCallback]
      */
-    Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback) {
-        var i, blinkerDescriptors;
+    Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback, missileCallback) {
+        var i, blinkerDescriptors, weaponParams, missileParams;
         addSupplements = addSupplements || utils.EMPTY_OBJECT;
         params = params || utils.EMPTY_OBJECT;
         // getting resources
         if (!params.skipResources) {
-            this.acquireResources(lod, addSupplements && (addSupplements.hitboxes === true), !!params.shaderName);
+            this.acquireResources((addSupplements.hitboxes === true), {
+                omitShader: !!params.shaderName,
+                explosion: addSupplements.explosion,
+                damageIndicators: addSupplements.damageIndicators,
+                blinkers: addSupplements.blinkers,
+                sound: addSupplements.sound
+            });
             if (params.shaderName) {
                 graphics.getShader(params.shaderName);
             }
             if (addSupplements.weapons === true) {
+                weaponParams = {omitShader: !!params.shaderName, projectileResources: addSupplements.projectileResources, sound: addSupplements.sound};
                 for (i = 0; i < this._weapons.length; i++) {
-                    this._weapons[i].acquireResources(lod, addSupplements.projectileResources);
+                    this._weapons[i].acquireResources(weaponParams);
                 }
             }
             if (addSupplements.missileResources === true) {
+                missileParams = {omitShader: !!params.shaderName, missileOnly: false, sound: addSupplements.sound};
                 for (i = 0; i < this._missileLaunchers.length; i++) {
-                    this._missileLaunchers[i].acquireResources();
+                    this._missileLaunchers[i].acquireResources(missileParams);
+                }
+            } else if (addSupplements.missilesInLaunchers === true) {
+                missileParams = {omitShader: !!params.shaderName, missileOnly: true, sound: addSupplements.sound};
+                for (i = 0; i < this._missileLaunchers.length; i++) {
+                    this._missileLaunchers[i].acquireResources(missileParams);
                 }
             }
             // add the thruster particles
             if (addSupplements.thrusterParticles === true) {
                 if (this._propulsion) {
                     this._propulsion.addThrusters(this._class.getThrusterSlots());
-                    this._propulsion.acquireResources();
+                    this._propulsion.acquireResources({sound: addSupplements.sound});
                 }
             }
             if (addSupplements.jumpEngine === true) {
                 if (this._jumpEngine) {
-                    this._jumpEngine.acquireResources();
+                    this._jumpEngine.acquireResources({sound: addSupplements.sound});
                 }
             }
             if (addSupplements.shield === true) {
                 if (this._shield) {
-                    this._shield.acquireResources();
+                    this._shield.acquireResources({sound: addSupplements.sound});
                 }
             }
             if (addSupplements.explosion === true) {
-                this._class.getExplosionClass().acquireResources();
+                this._class.getExplosionClass().acquireResources({sound: addSupplements.sound});
             }
             if (addSupplements.blinkers === true) {
                 blinkerDescriptors = this._class.getBlinkerDescriptors();
@@ -1910,7 +1936,7 @@ define([
                 }
             }
         }
-        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, lod, wireframe, addSupplements, params, callback, weaponCallback));
+        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, lod, wireframe, addSupplements, params, callback, weaponCallback, missileCallback));
     };
     /**
      * Creates and returns a camera configuration set up for following the spacecraft according to the view's parameters.

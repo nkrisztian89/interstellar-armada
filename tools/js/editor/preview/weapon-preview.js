@@ -1,6 +1,6 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
- * @file Provides the setup and event-handling for the preview window used for spacecraft classes within the Interstellar Armada editor.
+ * Copyright 2016-2019 Krisztián Nagy
+ * @file Provides the setup and event-handling for the preview window used for weapon classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -56,7 +56,7 @@ define([
              */
             _weaponClass,
             /**
-             * Stores the WebGL preview context information for spacecraft class previews
+             * Stores the WebGL preview context information for weapon class previews
              * @type WebGLPreviewContext
              */
             _previewContext;
@@ -96,6 +96,8 @@ define([
             }
             _weapon.addToScene(preview.getScene().getRootNode(), undefined, false,
                     {
+                        projectileResources: false,
+                        sound: false,
                         orientationMatrix: orientationMatrix
                     },
                     shouldReload ?
@@ -106,6 +108,8 @@ define([
             _wireframeWeapon.addToScene(preview.getScene().getRootNode(), undefined, true,
                     {
                         shaderName: preview.getWireframeShaderName(),
+                        projectileResources: false,
+                        sound: false,
                         orientationMatrix: orientationMatrix
                     },
                     shouldReload ?
@@ -117,7 +121,7 @@ define([
     }
     /**
      * For the WebGL preview context.
-     * Resets the preview settings (those handled through the optionns, not the ones connected to the canvas) to their default values.
+     * Resets the preview settings (those handled through the options, not the ones connected to the canvas) to their default values.
      * The settings that persist across different items are not reset.
      */
     function _clearSettingsForNewItem() {
@@ -166,15 +170,15 @@ define([
      * The main function that sets up the preview window (both options and the preview canvas) for the editor to show the selected 
      * weapon class.
      * @param {Editor~RefreshElements} elements References to the HTML elements that can be used for the preview.
-     * @param {SpacecraftClass} spacecraftClass The spacecraft class to preview
+     * @param {WeaponClass} weaponClass The weapon class to preview
      * @param {Editor~SpacecraftClassRefreshParams} params Additional parameters 
      */
-    function refresh(elements, spacecraftClass, params) {
-        var sameClass = (_weaponClass === spacecraftClass);
+    function refresh(elements, weaponClass, params) {
+        var sameClass = (_weaponClass === weaponClass);
 
         preview.setContext(_previewContext);
 
-        _weaponClass = spacecraftClass;
+        _weaponClass = weaponClass;
         if (sameClass) {
             if (!params) {
                 params = {

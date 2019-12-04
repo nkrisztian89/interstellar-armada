@@ -1,13 +1,18 @@
 /* -------------------------------------------------------------------- */
 /* general */
 
+@font-face {
+    font-family: gameFont;
+    src: url(../fonts/Sansation_Regular.ttf);
+}
+
 body,html {
     width: 100%;
     height: 100%;
 }
 
 body {
-    font-family: Verdana, Geneva, sans-serif;
+    font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     position: static;
     margin: 0;
     padding: 0;
@@ -18,6 +23,7 @@ body {
 }
 
 button {
+    font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     font-size: 0.8vw;
     height: 1.6em;
 }

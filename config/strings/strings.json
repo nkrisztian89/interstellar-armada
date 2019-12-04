@@ -413,6 +413,7 @@
         "length": "Length",
         "mass": "Mass",
         "weaponSlots": "Weapon slots",
+        "missileLaunchers": "Missile launchers",
         "thrusters": "Thrusters",
         "missingSpacecraftTypeDescription": "{originalDescription}",
         "missingSpacecraftClassDescription": "{originalDescription}"
@@ -594,6 +595,11 @@
         "nextView": "Change to the next view of the currently followed spacecraft or the scene",
         "previousView": "Change to the previous view of the currently followed spacecraft or the scene",
         "resetView": "Reset the current view to its original state"
+    },
+    "missileSize": {
+        "small": "small",
+        "medium": "medium",
+        "large": "large"
     },
     "objectView": {
         "near": "near",

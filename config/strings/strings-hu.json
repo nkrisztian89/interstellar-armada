@@ -448,6 +448,7 @@
         "length": "Hosszúság",
         "mass": "Tömeg",
         "weaponSlots": "Fegyverek",
+        "missileLaunchers": "Rakétavetők",
         "thrusters": "Hajtóműfúvókák",
         "missingSpacecraftTypeDescription": "A leírás nem érhető el ehhez a hajótípushoz ({spacecraftType}) magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
         "missingSpacecraftClassDescription": "A leírás nem érhető el ehhez a hajóosztályhoz ({spacecraftClass}) magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}"
@@ -729,6 +730,11 @@
         "largeIonCannon": {
             "name": "Ionágyú"
         }
+    },
+    "missileSize": {
+        "small": "kicsi",
+        "medium": "közepes",
+        "large": "nagy"
     },
     "missileClass": {
         "smallMissile": {

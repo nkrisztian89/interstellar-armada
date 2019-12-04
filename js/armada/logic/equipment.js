@@ -564,7 +564,7 @@ define([
      */
     Projectile.prototype.addResourcesToScene = function (scene, wireframe) {
         var exp, resourceID = PROJECTILE_RESOURCE_ID_PREFIX + this._class.getName();
-        this._class.acquireResources();
+        this._class.acquireResources({projectileOnly: false, sound: true});
         resources.executeWhenReady(function () {
             if (!scene.hasResourcesOfObject(resourceID)) {
                 this._initVisualModel(wireframe);
@@ -882,15 +882,17 @@ define([
      * Sets up the renderable object that can be used to represent this missile in a visual scene.
      * @param {Boolean} [wireframe=false] Whether to set up the model in wireframe mode
      * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
+     * @param {String} [shaderName] Optional shader to use for the visual model instead of the one provided by the missile class
      */
-    Missile.prototype._initVisualModel = function (wireframe, lod) {
+    Missile.prototype._initVisualModel = function (wireframe, lod, shaderName) {
+        var shader = shaderName ? graphics.getManagedShader(shaderName) : this._class.getShader();
         if (!this._visualModel) {
             this.createVisualModel();
         }
         this._visualModel.init(
                 this._class.getModel(),
-                this._class.getShader(),
-                this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                shader,
+                this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                 this._physicalModel.getPositionMatrix(),
                 this._physicalModel.getOrientationMatrix(),
                 this._physicalModel.getScalingMatrix(),
@@ -919,15 +921,16 @@ define([
      * @param {Scene} scene The scene to which to add the renderable object presenting the missile.
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
      * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
+     * @param {String} [shaderName] Optional shader to use for the visual model instead of the one provided by the missile class
      * @param {Function} [callback] If given, this function will be executed right after the missile is addded to the scene, with the 
      * visual model of the missile passed to it as its only argument
      */
-    Missile.prototype.addToSceneNow = function (scene, wireframe, lod, callback) {
+    Missile.prototype.addToSceneNow = function (scene, wireframe, lod, shaderName, callback) {
         var i;
-        this._initVisualModel(wireframe, lod);
+        this._initVisualModel(wireframe, lod, shaderName);
         scene.addObject(this._visualModel, true);
         for (i = 0; i < this._thrusters.length; i++) {
-            this._thrusters[i].addToScene(this._visualModel.getNode());
+            this._thrusters[i].addToScene(this._visualModel.getNode(), true);
         }
         if (_dynamicLights) {
             if (!this._lightSource) {
@@ -944,11 +947,12 @@ define([
      * @param {Scene} scene The scene to which to add the renderable object presenting the missile.
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
      * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
+     * @param {String} [shaderName] Optional shader to use for the visual model instead of the one provided by the missile class
      * @param {Function} [callback] If given, this function will be executed right after the missile is addded to the scene, with the 
      * visual model of the missile passed to it as its only argument
      */
-    Missile.prototype.addToScene = function (scene, wireframe, lod, callback) {
-        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, wireframe, lod, callback));
+    Missile.prototype.addToScene = function (scene, wireframe, lod, shaderName, callback) {
+        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, wireframe, lod, shaderName, callback));
     };
     /**
      * Adds the resources required to render this missile to the passed scene,
@@ -957,13 +961,14 @@ define([
      * @param {Scene} scene
      * @param {Boolean} [wireframe=false] Whether to add the model resource for wireframe rendering
      * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
+     * @param {String} [shaderName] Optional shader to use for the visual model instead of the one provided by the missile class
      */
-    Missile.prototype.addResourcesToScene = function (scene, wireframe, lod) {
+    Missile.prototype.addResourcesToScene = function (scene, wireframe, lod, shaderName) {
         var exp, resourceID = MISSILE_RESOURCE_ID_PREFIX + this._class.getName();
-        this._class.acquireResources();
+        this._class.acquireResources({missileOnly: false, sound: true});
         resources.executeWhenReady(function () {
             if (!scene.hasResourcesOfObject(resourceID)) {
-                this._initVisualModel(wireframe, lod);
+                this._initVisualModel(wireframe, lod, shaderName);
                 scene.addResourcesOfObject(this._visualModel, resourceID);
                 exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
                 exp.addResourcesToScene(scene);
@@ -1388,15 +1393,29 @@ define([
         }
     };
     /**
+     * Updates the thruster particle sizes and luminosity factors to reflect the
+     * current thruster burn levels.
+     */
+    Missile.prototype.updateThrusterVisuals = function () {
+        var i;
+        for (i = 0; i < this._thrusters.length; i++) {
+            this._thrusters[i].updateVisuals();
+        }
+    };
+    /**
      * Removes all references from the missile.
      */
     Missile.prototype.destroy = function () {
+        var i;
         this._timeLeft = 0;
         this._class = null;
         this._origin = null;
         this._turningMatrix = null;
         this._target = null;
         this._targetHitPosition = null;
+        for (i = 0; i < this._thrusters.length; i++) {
+            this._thrusters[i].destroy();
+        }
         this._thrusters = null;
         this._forward = null;
         this._yawLeft = null;
@@ -1626,7 +1645,7 @@ define([
     };
     /**
      * Marks the resources necessary to render this weapon for loading.
-     * @param {Object} params
+     * @param {WeaponClass~ResourceParams} params
      */
     Weapon.prototype.acquireResources = function (params) {
         this._class.acquireResources(params);
@@ -1636,6 +1655,8 @@ define([
      * @property {Boolean} [skipResources=false] If true, resources will not be acquired
      * @property {String} [shaderName] If given, the original shader of this weapon will be substituted by the shader with this name.
      * @property {Float32Array} [orientationMatrix]
+     * @property {Boolean} [projectileResources=false] Whether to acquire resources for firing projectiles
+     * @property {Boolean} [sound=false] Whether to acquire resources for sound effects
      */
     /**
      * @typedef {Function} logic~addToSceneCallback
@@ -1651,13 +1672,14 @@ define([
      * @param {logic~addToSceneCallback} [callback] See addToScene()
      */
     Weapon.prototype.addToSceneNow = function (parentNode, lod, wireframe, params, callback) {
-        var visualModel, scale;
+        var visualModel, scale, shader;
         application.log_DEBUG("Adding weapon (" + this._class.getName() + ") to scene...", 2);
+        shader = params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader();
         scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
         visualModel = new renderableObjects.ParameterizedMesh(
                 this._class.getModel(),
-                params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader(),
-                this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                shader,
+                this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                 this._slot ? this.getOrigoPositionMatrix() : mat.identity4(),
                 params.orientationMatrix || (this._slot ? this._slot.orientationMatrix : mat.identity4()),
                 mat.scaling4(scale),
@@ -1696,7 +1718,7 @@ define([
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe, params, callback) {
         if (!params.skipResources) {
-            this.acquireResources({omitShader: !!params.shaderName});
+            this.acquireResources({omitShader: !!params.shaderName, projectileResources: params.projectileResources, sound: params.sound});
             if (params.shaderName) {
                 graphics.getShader(params.shaderName);
             }
@@ -2130,6 +2152,12 @@ define([
          * @type Spacecraft
          */
         this._salvoTarget = null;
+        /**
+         * The array of meshes representing the missiles loaded into the launch tubes
+         * of this missile launcher
+         * @type ParameterizedMesh[]
+         */
+        this._visualModels = null;
     }
     /**
      * Returns the class of missiles loaded into this launcher
@@ -2237,7 +2265,7 @@ define([
     };
     /**
      * Marks the resources necessary to render missiles from this launcher for loading.
-     * @param {Object} params
+     * @param {MissileClass~ResourceParams} params
      */
     MissileLauncher.prototype.acquireResources = function (params) {
         this._class.acquireResources(params);
@@ -2257,6 +2285,66 @@ define([
         });
     };
     /**
+     * @typedef {Object} MissileLauncher~AddToSceneParams
+     * @property {String} [shaderName]
+     * @property {Boolean} [allMissiles] Whether to add all the loaded missiles, not
+     * just the first ones for each tube - use all missiles to display them in wireframe
+     * inside the spacecraft, use the first missile only for displaying in solid mode
+     * (updating visuals during simulation only works properly with the first missiles
+     * added)
+     */
+    /**
+     * Adds renderable nodes representing the missiles loaded into this launcher to 
+     * the scene under the passed parent node, assuming its resources have already been loaded.
+     * @param {ParameterizedMesh} parentNode
+     * @param {Number} [lod]
+     * @param {Boolean} wireframe
+     * @param {MissileLauncher~AddToSceneParams} params 
+     * @param {logic~addToSceneCallback} [callback]
+     */
+    MissileLauncher.prototype.addToSceneNow = function (parentNode, lod, wireframe, params, callback) {
+        var visualModel, scale, shader, textures, i, j, count, newVisualModel = false;
+        application.log_DEBUG("Adding missile launcher (" + this._class.getName() + ") to scene...", 2);
+        scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
+        shader = params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader();
+        textures = this._class.getTexturesOfTypes(shader.getTextureTypes(), graphics.getTextureQualityPreferenceList());
+        if (!this._visualModels) {
+            this._visualModels = [];
+            newVisualModel = true;
+        }
+        for (i = 0; i < this._descriptor.tubePositions.length; i++) {
+            count = params.allMissiles ? Math.floor(this._missileCount / this._descriptor.tubePositions.length) + ((this._missileCount % this._descriptor.tubePositions.length > i) ? 1 : 0) : 1;
+            for (j = 0; j < count; j++) {
+                visualModel = new renderableObjects.ParameterizedMesh(
+                        this._class.getModel(),
+                        shader,
+                        textures,
+                        mat.translation4v(vec.sum3(this._descriptor.tubePositions[i], [0, -j * scale * this._class.getLength(), 0])),
+                        mat.identity4(),
+                        mat.scaling4(scale),
+                        (wireframe === true),
+                        lod,
+                        _parameterArrays);
+                parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel));
+                // setting the starting values of the parameter arrays
+                // setting an identity transformation for all transform groups
+                if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
+                    visualModel.setParameterArray(_groupTransformsArrayName, _groupTransformIdentityArray);
+                }
+                // setting the default luminosity for all luminosity groups
+                if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
+                    visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+                }
+                if (newVisualModel) {
+                    this._visualModels.push(visualModel);
+                }
+                if (callback) {
+                    callback(visualModel);
+                }
+            }
+        }
+    };
+    /**
      * Does all the needed updates to the missile launcher's state for one simulation step.
      * @param {Number} dt The time elapsed since the last simulation step, in milliseconds
      */
@@ -2272,6 +2360,15 @@ define([
                     this._salvoLeft = 0;
                     this._salvoTarget = null;
                 }
+            }
+        }
+        // if we have the loaded missiles displayed, remove the ones from empty tubes
+        // note: this only works properly if only the first missiles were added to the
+        // scene, not all! (use all missiles to display loadout in wireframe and first
+        // missiles to display the loaded missiles in combat)
+        if (this._visualModels !== null) {
+            while (this._visualModels.length > this._missileCount) {
+                this._visualModels.shift().markAsReusable(true);
             }
         }
     };
@@ -2388,10 +2485,17 @@ define([
      * Removes all references stored by this object
      */
     MissileLauncher.prototype.destroy = function () {
+        var i;
         this._class = null;
         this._spacecraft = null;
         this._descriptor = null;
         this._salvoTarget = null;
+        if (this._visualModels !== null) {
+            for (i = 0; i < this._visualModels.length; i++) {
+                this._visualModels[i].markAsReusable(true);
+            }
+            this._visualModels = null;
+        }
     };
     // #########################################################################
     /**
@@ -2836,15 +2940,22 @@ define([
         this._maxMoveBurnLevel = this._propulsionClass.getMaxMoveBurnLevel();
     }
     /**
+     * @type PropulsionClass~ResourceParams
+     */
+    Thruster.PROPULSION_RESOURCE_PARAMS = {sound: true};
+    /**
      * Adds a renderable node representing the particle that is rendered to show
      * the burn level of this thruster to the scene under the passed parent node.
      * @param {ParameterizedMesh} parentNode The parent node to which to attach the
      * particle in the scene. (normally the renderable node of the spacecraft
      * that has this thruster)
+     * @param {Boolean} [replaceVisualModel=false] Whether to set the newly created
+     * renderable node as the visual model of the thruster even if one already
+     * existed before
      */
-    Thruster.prototype.addToScene = function (parentNode) {
+    Thruster.prototype.addToScene = function (parentNode, replaceVisualModel) {
         var visualModel;
-        this._propulsionClass.acquireResources();
+        this._propulsionClass.acquireResources(Thruster.PROPULSION_RESOURCE_PARAMS);
         resources.executeWhenReady(function () {
             visualModel = renderableObjects.staticParticle(
                     this._propulsionClass.getThrusterBurnParticle().getModel(),
@@ -2856,7 +2967,10 @@ define([
                     this._propulsionClass.getThrusterBurnParticle().getInstancedShader());
             visualModel.setRelativeSize(0);
             parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel, false, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
-            if (!this._visualModel) {
+            if (!this._visualModel || replaceVisualModel) {
+                if (this._visualModel) {
+                    this._visualModel.markAsReusable(true);
+                }
                 this._visualModel = visualModel;
                 this._shipModel = parentNode.getRenderableObject();
             }
@@ -2985,10 +3099,10 @@ define([
         this._rollTorque = null;
     };
     /**
-     * 
+     * @param {PropulsionClass~ResourceParams} params 
      */
-    Propulsion.prototype.acquireResources = function () {
-        this._class.acquireResources();
+    Propulsion.prototype.acquireResources = function (params) {
+        this._class.acquireResources(params);
     };
     /**
      * Returns the name of the propulsion system in a way that can be displayed to the user (translated)
@@ -3089,7 +3203,7 @@ define([
     Propulsion.prototype.addToScene = function (parentNode) {
         var i;
         for (i = 0; i < this._thrusters.length; i++) {
-            this._thrusters[i].addToScene(parentNode);
+            this._thrusters[i].addToScene(parentNode, false);
         }
     };
     /**
@@ -4074,9 +4188,10 @@ define([
     Object.freeze(JumpEngine.JumpOutState);
     /**
      * Call to make sure all needed resources are going to be loaded
+     * @param {JumpEngineClass~ResourceParams} params 
      */
-    JumpEngine.prototype.acquireResources = function () {
-        this._class.acquireResources();
+    JumpEngine.prototype.acquireResources = function (params) {
+        this._class.acquireResources(params);
     };
     /**
      * Initiates the jump out sequence
@@ -4327,9 +4442,10 @@ define([
     }
     /**
      * Call to make sure all needed resources are going to be loaded
+     * @param {ShieldClass~ResourceParams} params 
      */
-    Shield.prototype.acquireResources = function () {
-        this._class.acquireResources();
+    Shield.prototype.acquireResources = function (params) {
+        this._class.acquireResources(params);
     };
     /**
      * Returns the name of the shield in a way that can be displayed to the user (translated)

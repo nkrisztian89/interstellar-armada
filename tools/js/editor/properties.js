@@ -11,20 +11,16 @@
 
 /**
  * @param utils Used for enum handling
- * @param resources Used to obtain the list of available resources for resource reference property selectors
  * @param config Used to obtain configuration settings
- * @param classes Used to obtain the list of available classes for class reference property selectors
  * @param descriptors Used to obtain the appropriate properties description object
  * @param common Used to create selectors
  */
 define([
     "utils/utils",
-    "modules/media-resources",
     "armada/configuration",
-    "armada/logic/classes",
     "editor/descriptors",
     "editor/common"
-], function (utils, resources, config, classes, descriptors, common) {
+], function (utils, config, descriptors, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -55,9 +51,9 @@ define([
             ADD_BUTTON_TOOLTIP = "Add a new element with default values",
             DUPLICATE_BUTTON_CAPTION = "#",
             DUPLICATE_BUTTON_TOOLTIP = "Duplicate this element",
-            MOVE_UP_BUTTON_CAPTION = "🡑",
+            MOVE_UP_BUTTON_CAPTION = "↑",
             MOVE_UP_BUTTON_TOOLTIP = "Move this element up in the list",
-            MOVE_DOWN_BUTTON_CAPTION = "🡓",
+            MOVE_DOWN_BUTTON_CAPTION = "↓",
             MOVE_DOWN_BUTTON_TOOLTIP = "Move this element down in the list",
             REMOVE_BUTTON_CAPTION = "x",
             REMOVE_BUTTON_TOOLTIP = "Remove this element",

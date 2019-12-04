@@ -123,7 +123,7 @@ define([
     }
     /**
      * For the WebGL preview context.
-     * Resets the preview settings (those handled through the optionns, not the ones connected to the canvas) to their default values.
+     * Resets the preview settings (those handled through the options, not the ones connected to the canvas) to their default values.
      * The settings that persist across different items are not reset.
      */
     function _clearSettingsForNewItem() {

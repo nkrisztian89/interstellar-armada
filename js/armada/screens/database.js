@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file This module manages and provides the in-game database screen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -336,7 +336,7 @@ define([
         graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME));
         if (_getSetting(SETTINGS.SHOW_SOLID_MODEL)) {
             // add the ship to the scene in triangle drawing mode
-            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true, lightSources: true, blinkers: true}, {
+            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), false, {weapons: true, missilesInLaunchers: true, lightSources: true, blinkers: true}, {
                 // set the shader to reveal, so that we have a nice reveal animation when a new ship is selected
                 shaderName: _getSetting(SETTINGS.SOLID_SHADER_NAME)
             }, function (model) {
@@ -345,19 +345,23 @@ define([
                 _setSolidRevealUniformFunctions(_solidModel);
             }, function (model) {
                 _setSolidRevealUniformFunctions(model);
+            }, function (model) {
+                _setSolidRevealUniformFunctions(model);
             });
         } else {
             _solidModel = null;
         }
         if (_showWireframeModel()) {
             // add the ship to the scene in line drawing mode as well
-            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), true, {weapons: true}, {
+            _currentItem.addToScene(_itemViewScene, graphics.getMaxLoadedLOD(), true, {weapons: true, missilesInLaunchers: true}, {
                 // set the shader to one colored reveal, so that we have a nice reveal animation when a new ship is selected
                 shaderName: _getSetting(SETTINGS.WIREFRAME_SHADER_NAME)
             }, function (model) {
                 _wireframeModel = model;
                 // set the necessary uniform functions for the one colored reveal shader
                 _setWireframeRevealUniformFunctions(_wireframeModel);
+            }, function (model) {
+                _setWireframeRevealUniformFunctions(model);
             }, function (model) {
                 _setWireframeRevealUniformFunctions(model);
             });
@@ -447,6 +451,7 @@ define([
                 strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": {armor} (" +
                 strings.get(strings.SPACECRAFT_STATS.ARMOR_RATING) + ")<br/>" +
                 strings.get(strings.DATABASE.WEAPON_SLOTS) + ": {weaponSlots}<br/>" +
+                strings.get(strings.DATABASE.MISSILE_LAUNCHERS) + ": {missileLaunchers}<br/>" +
                 strings.get(strings.DATABASE.THRUSTERS) + ": {thrusters}";
     }
     /**
@@ -558,18 +563,31 @@ define([
      * Updates the name, stat and description headers/paragraphs with the info about the currently selected spacecraft class
      */
     DatabaseScreen.prototype._updateItemInfo = function () {
-        var shipClass = classes.getSpacecraftClassesInArray(true)[_currentItemIndex];
+        var i, shipClass = classes.getSpacecraftClassesInArray(true)[_currentItemIndex],
+                missileLaunchers, missileLauncherSizes, missileLaunchersText;
         _currentItemLengthInMeters = (_currentItem && _currentItem.getVisualModel()) ? _currentItem.getVisualModel().getHeightInMeters() : 0;
         // full names can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise the stock value is displayed
         this._itemNameHeader.setContent(shipClass.getDisplayName());
         this._itemTypeHeader.setContent(shipClass.getSpacecraftType().getDisplayName());
+        if (shipClass.getMissileLaunchers().length > 0) {
+            missileLaunchersText = "";
+            missileLaunchers = shipClass.getMissileLaunchersBySize();
+            missileLauncherSizes = Object.keys(missileLaunchers);
+            for (i = 0; i < missileLauncherSizes.length; i++) {
+                if (i > 0) {
+                    missileLaunchersText += ", ";
+                }
+                missileLaunchersText += missileLaunchers[missileLauncherSizes[i]].length + " " + strings.get(strings.MISSILE_SIZE.PREFIX, missileLauncherSizes[i], missileLauncherSizes[i]);
+            }
+        }
         this._itemStatsParagraph.setContent(getStatsFormatString(), {
             length: (_currentItemLengthInMeters && utils.getLengthString(_currentItemLengthInMeters)) || "-",
             mass: utils.getMassString(shipClass.getMass()) || "-",
             armor: shipClass.getHitpoints() || "-",
             rating: shipClass.getArmor() || "0",
             weaponSlots: shipClass.getWeaponSlots().length || "-",
+            missileLaunchers: (shipClass.getMissileLaunchers().length > 0) ? missileLaunchersText : "-",
             thrusters: shipClass.getThrusterSlots().length || "-"
         });
         // descriptions can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,

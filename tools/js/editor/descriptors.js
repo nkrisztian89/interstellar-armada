@@ -64,7 +64,7 @@ define([
                 CONFINES: "confines" // [[minX, maxX], [minY, maxY], [minZ, maxZ]]
             },
             Unit = {
-                TIMES: "🞩",
+                TIMES: "×",
                 METERS: "m",
                 METERS_PER_SECOND: "m/s",
                 METERS_PER_SECOND_SQUARED: "m/s²",
@@ -1026,6 +1026,13 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            MISSILE_SIZE = {
+                baseType: BaseType.ENUM,
+                values: utils.getEnumObject(utils.getEnumKeys(classes.MissileSize))
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             MISSILE_HOMING_MODE = {
                 baseType: BaseType.ENUM,
                 values: utils.getEnumObject(utils.getEnumKeys(classes.MissileHomingMode))
@@ -1076,11 +1083,15 @@ define([
                 },
                 SIZE: {
                     name: "size",
-                    type: BaseType.NUMBER
+                    type: MISSILE_SIZE
                 },
                 CAPACITY: {
                     name: "capacity",
                     type: BaseType.NUMBER
+                },
+                LENGTH: {
+                    name: "length",
+                    type: METERS
                 },
                 HOMING_MODE: {
                     name: "homingMode",
@@ -1399,7 +1410,7 @@ define([
                 },
                 JUMP_OUT_SCALING: {
                     name: "jumpOutScaling",
-                    type: BaseType.NUMBER
+                    type: SCALE
                 },
                 JUMP_OUT_SOUND: {
                     name: "jumpOutSound",
@@ -1423,7 +1434,7 @@ define([
                 },
                 JUMP_IN_SCALING: {
                     name: "jumpInScaling",
-                    type: BaseType.NUMBER
+                    type: SCALE
                 },
                 JUMP_IN_SOUND: {
                     name: "jumpInSound",
@@ -1628,7 +1639,7 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: BaseType.NUMBER
+                        type: MISSILE_SIZE
                     },
                     CAPACITY: {
                         name: "capacity",
@@ -3020,6 +3031,11 @@ define([
                 ENVIRONMENT: { //TODO: can be an object as well
                     name: "environment",
                     type: ENVIRONMENT_REFERENCE
+                },
+                ANTICIPATION_THEME: {
+                    name: "anticipationTheme",
+                    type: MUSIC_REFERENCE,
+                    optional: true
                 },
                 COMBAT_THEME: {
                     name: "combatTheme",

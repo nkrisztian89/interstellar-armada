@@ -63,6 +63,17 @@ define([
                 ALL: "all"
             },
             /**
+             * @enum {String}
+             * Determines whether a missile can be equipped in a launcher (size of the missile
+             * has to be the same as size of the launcher)
+             * @type Object
+             */
+            MissileSize = {
+                SMALL: "small",
+                MEDIUM: "medium",
+                LARGE: "large"
+            },
+            /**
              * @enum {Number}
              * Determines the way the missile homes in on its target
              * @type Object
@@ -597,10 +608,14 @@ define([
         return true;
     };
     /**
-     * @param {Object} params
+     * @typedef {Object} ShadedClass~ResourceParams
+     * @property {Boolean} [omitShader=false]
+     */
+    /**
+     * @param {ShadedClass~ResourceParams} params
      */
     ShadedClass.prototype.acquireResources = function (params) {
-        params = params || {};
+        params = params || utils.EMPTY_OBJECT;
         if (!params.omitShader) {
             this._shader = graphics.getShader(this._shaderName);
             this._instancedShaderName = resources.getShader(this._shaderName).getVariantShaderName(SHADER_VARIANT_INSTANCED_NAME);
@@ -685,8 +700,12 @@ define([
         return true;
     };
     /**
+     * @typedef {ShadedClass~ResourceParams} ShadedModelClass~ResourceParams
+     * @property {Model} [model]
+     */
+    /**
      * @override
-     * @param {Object} params
+     * @param {ShadedModelClass~ResourceParams} params
      */
     ShadedModelClass.prototype.acquireResources = function (params) {
         ShadedClass.prototype.acquireResources.call(this, params);
@@ -834,7 +853,7 @@ define([
     };
     /**
      * @override
-     * @param {Object} params
+     * @param {ShadedModelClass~ResourceParams} params
      */
     TexturedModelClass.prototype.acquireResources = function (params) {
         ShadedModelClass.prototype.acquireResources.call(this, params);
@@ -1378,15 +1397,22 @@ define([
         return true;
     };
     /**
-     * Sets up the references to all required resource objects and marks them for loading.
+     * @typedef {Object} ExplosionClass~ResourceParams
+     * @property {Boolean} [sound=false] Whether to load resources for sound effects
      */
-    ExplosionClass.prototype.acquireResources = function () {
+    /**
+     * Sets up the references to all required resource objects and marks them for loading.
+     * @param {ExplosionClass~ResourceParams} params
+     */
+    ExplosionClass.prototype.acquireResources = function (params) {
         var i;
         for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
             this._particleEmitterDescriptors[i].acquireResources();
         }
-        if (this._soundEffect) {
-            _loadSoundEffect(this._soundEffect);
+        if (params.sound) {
+            if (this._soundEffect) {
+                _loadSoundEffect(this._soundEffect);
+            }
         }
     };
     /**
@@ -1568,16 +1594,25 @@ define([
         return true;
     };
     /**
-     * @override
+     * @typedef {Object} ProjectileClass~ResourceParams
+     * @property {Boolean} [projectileOnly=false] Whether to load resources for
+     * displaying the projectile itself only (not it hitting things or being fired)
+     * @property {Boolean} [sound=false] Whether to load resources for sound effects
      */
-    ProjectileClass.prototype.acquireResources = function () {
+    /**
+     * @override
+     * @param {ProjectileClass~ResourceParams} params 
+     */
+    ProjectileClass.prototype.acquireResources = function (params) {
         TexturedModelClass.prototype.acquireResources.call(this, {
             model: egomModel.turningBillboardModel(
                     PROJECTILE_MODEL_NAME_PREFIX + this._intersectionPositions.join(MODEL_NAME_SEPARATOR) + PROJECTILE_MODEL_NAME_INFIX + this._width,
                     this._intersectionPositions, this._width)});
-        this._muzzleFlash.acquireResources();
-        this._explosionClass.acquireResources();
-        this._shieldExplosionClass.acquireResources();
+        if (!params.projectileOnly) {
+            this._muzzleFlash.acquireResources();
+            this._explosionClass.acquireResources({sound: params.sound});
+            this._shieldExplosionClass.acquireResources({sound: params.sound});
+        }
     };
     /**
      * @returns {Number}
@@ -1689,17 +1724,23 @@ define([
          */
         this._modelScale = dataJSON ? (dataJSON.modelScale || 1) : 0;
         /**
-         * A missile can only be loaded in a launch tube that has the same size 
-         * (i.e. this represents the radius category of the missile)
-         * @type Number
+         * (enum MissileSize) A missile can only be loaded in a launch tube that 
+         * has the same size (i.e. this represents the radius category of the missile)
+         * @type String
          */
-        this._size = dataJSON ? (dataJSON.size || _showMissingPropertyError(this, "size")) : 0;
+        this._size = dataJSON ? utils.getSafeEnumValue(MissileSize, dataJSON.size, null) || _showMissingPropertyError(this, "size") : null;
         /**
          * How much capacity is taken up by one missile of this class, when put
          * in a launch tube (i.e. this represents the length of the missile)
          * @type Number
          */
         this._capacity = dataJSON ? (dataJSON.capacity || _showMissingPropertyError(this, "capacity")) : 0;
+        /**
+         * The actual length of a missile, i.e. the offset between two missiles behind each other
+         * in the same launch tube, in meters.
+         * @type Number
+         */
+        this._length = dataJSON ? (dataJSON.length || _showMissingPropertyError(this, "length")) : 0;
         /**
          * (enum MissileHomingMode) Determines the homing mechanism of the missile
          * @type Number
@@ -1836,16 +1877,27 @@ define([
         return true;
     };
     /**
+     * @typedef {ShadedModelClass~ResourceParams} MissileClass~ResourceParams
+     * @property {Boolean} [missileOnly=false] Whether to load resources for
+     * displaying the missile itself only (not its thrusters or it hitting things 
+     * or being launched)
+     * @property {Boolean} [sound=false] Whether to load resources for sound effects
+     */
+    /**
      * @override
-     * @param {Object} params
+     * @param {MissileClass~ResourceParams} params
      */
     MissileClass.prototype.acquireResources = function (params) {
         TexturedModelClass.prototype.acquireResources.call(this, params);
-        this._explosionClass.acquireResources();
-        this._shieldExplosionClass.acquireResources();
-        this._propulsionClass.acquireResources();
-        _loadSoundEffect(this._launchSound);
-        _loadSoundEffect(this._startSound);
+        if (!params.missileOnly) {
+            this._explosionClass.acquireResources({sound: params.sound});
+            this._shieldExplosionClass.acquireResources({sound: params.sound});
+            this._propulsionClass.acquireResources({sound: false});
+            if (params.sound) {
+                _loadSoundEffect(this._launchSound);
+                _loadSoundEffect(this._startSound);
+            }
+        }
     };
     /**
      * @returns {String}
@@ -1908,6 +1960,12 @@ define([
      */
     MissileClass.prototype.getCapacity = function () {
         return this._capacity;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getLength = function () {
+        return this._length;
     };
     /**
      * @returns {Number}
@@ -2139,10 +2197,10 @@ define([
         return this._positionVector;
     };
     /**
-     *
+     * @param {ProjectileClass~ResourceParams} params 
      */
-    Barrel.prototype.acquireResources = function () {
-        this._projectileClass.acquireResources();
+    Barrel.prototype.acquireResources = function (params) {
+        this._projectileClass.acquireResources(params);
     };
     /**
      * Returns the highest number of projectiles that might be used for this barrel simultaneously in one battle, given the passed cooldown.
@@ -2320,16 +2378,27 @@ define([
         return true;
     };
     /**
+     * @typedef {ShadedModelClass~ResourceParams} WeaponClass~ResourceParams
+     * @property {Boolean} [projectileResources=false] Whether to load resources
+     * for this weapon firing its projectiles (and them hitting things) as well
+     * @property {Boolean} [sound=false] Whether to load resources for sound effects
+     */
+    /**
      * @override
-     * @param {Object} params
+     * @param {WeaponClass~ResourceParams} params
      */
     WeaponClass.prototype.acquireResources = function (params) {
-        var i;
+        var i, projectileParams;
         TexturedModelClass.prototype.acquireResources.call(this, params);
-        for (i = 0; i < this._barrels.length; i++) {
-            this._barrels[i].acquireResources();
+        if (params.projectileResources) {
+            projectileParams = {projectileOnly: false, sound: params.sound};
+            for (i = 0; i < this._barrels.length; i++) {
+                this._barrels[i].acquireResources(projectileParams);
+            }
         }
-        _loadSoundEffect(this._fireSound);
+        if (params.sound) {
+            _loadSoundEffect(this._fireSound);
+        }
     };
     /**
      * @returns {String}
@@ -2566,11 +2635,17 @@ define([
         return true;
     };
     /**
-     * 
+     * @typedef {Object} PropulsionClass~ResourceParams
+     * @property {Boolean} [sound=false] Whether to load resources for sound effects
      */
-    PropulsionClass.prototype.acquireResources = function () {
+    /**
+     * @param {PropulsionClass~ResourceParams} params 
+     */
+    PropulsionClass.prototype.acquireResources = function (params) {
         this._thrusterBurnParticle.acquireResources();
-        _loadSoundEffect(this._thrusterSound);
+        if (params.sound) {
+            _loadSoundEffect(this._thrusterSound);
+        }
     };
     /**
      * @returns {String}
@@ -2757,17 +2832,24 @@ define([
         return true;
     };
     /**
-     * Call before resource loading to ensure all resources required for jump engines of this class will be loaded
+     * @typedef {Object} JumpEngineClass~ResourceParams
+     * @property {Boolean} [sound=false] Whether to load resources for sound effects
      */
-    JumpEngineClass.prototype.acquireResources = function () {
-        _loadSoundEffect(this._engageSound);
-        _loadSoundEffect(this._disengageSound);
-        _loadSoundEffect(this._prepareSound);
-        _loadSoundEffect(this._cancelSound);
-        _loadSoundEffect(this._jumpOutSound);
-        _loadSoundEffect(this._jumpInSound);
-        this._jumpOutExplosionClass.acquireResources();
-        this._jumpInExplosionClass.acquireResources();
+    /**
+     * Call before resource loading to ensure all resources required for jump engines of this class will be loaded
+     * @param {JumpEngineClass~ResourceParams} params 
+     */
+    JumpEngineClass.prototype.acquireResources = function (params) {
+        if (params.sound) {
+            _loadSoundEffect(this._engageSound);
+            _loadSoundEffect(this._disengageSound);
+            _loadSoundEffect(this._prepareSound);
+            _loadSoundEffect(this._cancelSound);
+            _loadSoundEffect(this._jumpOutSound);
+            _loadSoundEffect(this._jumpInSound);
+        }
+        this._jumpOutExplosionClass.acquireResources({sound: params.sound});
+        this._jumpInExplosionClass.acquireResources({sound: params.sound});
     };
     /**
      * Creates a sound clip for the engage sound effect and returns a reference to it.
@@ -2946,10 +3028,17 @@ define([
         return true;
     };
     /**
-     * Call before resource loading to ensure all resources required for shields of this class will be loaded
+     * @typedef {Object} ShieldClass~ResourceParams
+     * @property {Boolean} [sound=false] Whether to load resources for sound effects
      */
-    ShieldClass.prototype.acquireResources = function () {
-        _loadSoundEffect(this._rechargeStartSound);
+    /**
+     * Call before resource loading to ensure all resources required for shields of this class will be loaded
+     * @param {ShieldClass~ResourceParams} params
+     */
+    ShieldClass.prototype.acquireResources = function (params) {
+        if (params.sound) {
+            _loadSoundEffect(this._rechargeStartSound);
+        }
     };
     /**
      * @returns {String}
@@ -3169,10 +3258,11 @@ define([
          */
         this.orientationMatrix = dataJSON ? (mat.rotation4FromJSON(dataJSON.rotations || [])) : null;
         /**
-         * The size (i.e. radius category) of missiles that can be loaded into this launcher.
-         * @type Number
+         * (enum MissileSize) The size (i.e. radius category) of missiles that can 
+         * be loaded into this launcher.
+         * @type String
          */
-        this.size = dataJSON ? (dataJSON.size || _showMissingPropertyError(this, "size")) : 0;
+        this.size = dataJSON ? utils.getSafeEnumValue(MissileSize, dataJSON.size, null) || _showMissingPropertyError(this, "size") : null;
         /**
          * Determines the maximum amout of missiles that can be loaded into a single tube of this launcher.
          * (i.e. the length of a launching tube)
@@ -4584,6 +4674,22 @@ define([
         return this._missileLaunchers;
     };
     /**
+     * Returns an associative object where the keys are the size IDs and the 
+     * values are arrays of the missile launcher with that size
+     * @returns {Object}
+     */
+    SpacecraftClass.prototype.getMissileLaunchersBySize = function () {
+        var result = {}, i;
+        for (i = 0; i < this._missileLaunchers.length; i++) {
+            if (!result[this._missileLaunchers[i].size]) {
+                result[this._missileLaunchers[i].size] = [this._missileLaunchers[i]];
+            } else {
+                result[this._missileLaunchers[i].size].push(this._missileLaunchers[i]);
+            }
+        }
+        return result;
+    };
+    /**
      * @returns {ThrusterSlot[]}
      */
     SpacecraftClass.prototype.getThrusterSlots = function () {
@@ -4657,21 +4763,36 @@ define([
         return this._blinkerDescriptors;
     };
     /**
+     * @typedef {ShadedModelClass~ResourceParams} SpacecraftClass~ResourceParams
+     * @property {Boolean} [explosion=false]
+     * @property {Boolean} [damageIndicators=false]
+     * @property {Boolean} [blinkers=false]
+     * @property {Boolean} [sound=false]
+     */
+    /**
      * @override
-     * @param {Object} params
+     * @param {SpacecraftClass~ResourceParams} params
      */
     SpacecraftClass.prototype.acquireResources = function (params) {
         var i;
         TexturedModelClass.prototype.acquireResources.call(this, params);
-        this._explosionClass.acquireResources();
-        for (i = 0; i < this._damageIndicators.length; i++) {
-            this._damageIndicators[i].explosionClass.acquireResources();
+        if (params.explosion) {
+            this._explosionClass.acquireResources({sound: params.sound});
         }
-        for (i = 0; i < this._blinkerDescriptors.length; i++) {
-            this._blinkerDescriptors[i].acquireResources();
+        if (params.damageIndicators) {
+            for (i = 0; i < this._damageIndicators.length; i++) {
+                this._damageIndicators[i].explosionClass.acquireResources({sound: params.sound});
+            }
         }
-        if (this._humSound) {
-            _loadSoundEffect(this._humSound);
+        if (params.blinkers) {
+            for (i = 0; i < this._blinkerDescriptors.length; i++) {
+                this._blinkerDescriptors[i].acquireResources();
+            }
+        }
+        if (params.sound) {
+            if (this._humSound) {
+                _loadSoundEffect(this._humSound);
+            }
         }
     };
     /**
@@ -4764,6 +4885,7 @@ define([
         ParticleEmitterType: ParticleEmitterType,
         ObjectViewLookAtMode: ObjectViewLookAtMode,
         SceneViewLookAtMode: SceneViewLookAtMode,
+        MissileSize: MissileSize,
         MissileHomingMode: MissileHomingMode,
         WeaponRotationStyle: WeaponRotationStyle,
         SpacecraftTurnStyle: SpacecraftTurnStyle,

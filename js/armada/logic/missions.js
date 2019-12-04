@@ -2399,6 +2399,7 @@ define([
         application.log("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         this.loadEnvironment(dataJSON);
+        this._anticipationTheme = dataJSON.anticipationTheme;
         this._combatTheme = dataJSON.combatTheme;
         this._teams = [];
         if (dataJSON.teams) {
@@ -2778,15 +2779,18 @@ define([
             this._spacecrafts[i].addToScene(battleScene, undefined, false, {
                 hitboxes: application.isDebugVersion(),
                 weapons: true,
+                missilesInLaunchers: false,
                 thrusterParticles: true,
                 projectileResources: true,
                 missileResources: true,
                 explosion: true,
+                damageIndicators: true,
                 cameraConfigurations: true,
                 lightSources: true,
                 blinkers: true,
                 jumpEngine: true,
-                shield: true
+                shield: true,
+                sound: true
             }, {
                 randomAnimationTime: true
             });

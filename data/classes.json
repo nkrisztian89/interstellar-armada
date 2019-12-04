@@ -2782,8 +2782,9 @@
             "shader": "ship",
             "texture": "libra",
             "damage": 2,
-            "size": 1,
+            "size": "small",
             "capacity": 2,
+            "length": 0.7,
             "homingMode": "continuous",
             "mass": 10,
             "launchVelocity": 10,
@@ -2855,8 +2856,9 @@
             "shader": "ship",
             "texture": "libra",
             "damage": 12,
-            "size": 3,
+            "size": "medium",
             "capacity": 2,
+            "length": 1,
             "homingMode": "continuous",
             "mass": 50,
             "launchVelocity": 25,
@@ -2928,8 +2930,9 @@
             "texture": "libra",
             "antiShip": true,
             "damage": 100,
-            "size": 3,
+            "size": "large",
             "capacity": 2,
+            "length": 3,
             "homingMode": "initial",
             "mass": 150,
             "launchVelocity": 35,
@@ -3510,12 +3513,12 @@
                     "maxGrade": 3
                 }],
             "missileLaunchers": [{
-                    "tubePositions": [[11, 18, 6.5]],
-                    "size": 3,
+                    "tubePositions": [[11, 18, 6]],
+                    "size": "medium",
                     "capacity": 10
                 }, {
-                    "tubePositions": [[-11, 18, 6.5]],
-                    "size": 3,
+                    "tubePositions": [[-11, 18, 6]],
+                    "size": "medium",
                     "capacity": 10
                 }],
             "maxPropulsionGrade": 3,
@@ -5004,19 +5007,19 @@
             "scoreValue": 80,
             "missileLaunchers": [{
                     "tubePositions": [[20.4, 30, 0]],
-                    "size": 3,
+                    "size": "large",
                     "capacity": 4
                 }, {
                     "tubePositions": [[-20.4, 30, 0]],
-                    "size": 3,
+                    "size": "large",
                     "capacity": 4
                 }, {
                     "tubePositions": [[12, 18, 12]],
-                    "size": 3,
+                    "size": "large",
                     "capacity": 4
                 }, {
                     "tubePositions": [[-12, 18, 12]],
-                    "size": 3,
+                    "size": "large",
                     "capacity": 4
                 }, {
                     "tubePositions": [],
@@ -5029,8 +5032,8 @@
                             "translationVector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }],
-                    "size": 1,
-                    "capacity": 6,
+                    "size": "small",
+                    "capacity": 8,
                     "salvo": 6
                 }, {
                     "tubePositions": [],
@@ -5043,8 +5046,8 @@
                             "translationVector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }],
-                    "size": 1,
-                    "capacity": 6,
+                    "size": "small",
+                    "capacity": 8,
                     "salvo": 6
                 }, {
                     "tubePositions": [],
@@ -5057,8 +5060,8 @@
                             "translationVector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }],
-                    "size": 1,
-                    "capacity": 6,
+                    "size": "small",
+                    "capacity": 8,
                     "salvo": 6
                 }, {
                     "tubePositions": [],
@@ -5071,8 +5074,8 @@
                             "translationVector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }],
-                    "size": 1,
-                    "capacity": 6,
+                    "size": "small",
+                    "capacity": 8,
                     "salvo": 6
                 }]
         }, {
@@ -5283,8 +5286,8 @@
                             "translationVector": [0.486, -0.4, 0],
                             "count": 5
                         }],
-                    "size": 1,
-                    "capacity": 6,
+                    "size": "small",
+                    "capacity": 8,
                     "salvo": 5
                 }, {
                     "tubePositions": [],
@@ -5297,8 +5300,8 @@
                             "translationVector": [-0.486, -0.4, 0],
                             "count": 5
                         }],
-                    "size": 1,
-                    "capacity": 6,
+                    "size": "small",
+                    "capacity": 8,
                     "salvo": 5
                 }],
             "equipmentProfiles": [{
@@ -7702,6 +7705,15 @@
                             "degrees": -80
                         }],
                     "maxGrade": 1
+                }],
+            "missileLaunchers": [{
+                    "tubePositions": [[0, 5, -9]],
+                    "size": "medium",
+                    "capacity": 10
+                }, {
+                    "tubePositions": [[2.9, 5, -9], [-2.9, 5, -9]],
+                    "size": "small",
+                    "capacity": 14
                 }],
             "equipmentProfiles": [{
                     "name": "pirate-full",
