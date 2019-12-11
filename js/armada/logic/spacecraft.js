@@ -506,6 +506,11 @@ define([
          */
         this._damageDealt = 0;
         /**
+         * The amount of damage dealt to enemies by this spacecraft using missiles during the current mission
+         * @type Number
+         */
+        this._missileDamageDealt = 0;
+        /**
          * A counter for the (projectile weapon) shots fired during the current mission (for hit ratio calculation)
          * @type Number
          */
@@ -633,6 +638,7 @@ define([
         this._kills = 0;
         this._score = 0;
         this._damageDealt = 0;
+        this._missileDamageDealt = 0;
         this._shotsFired = 0;
         this._hitsOnEnemies = 0;
         this._missilesLaunched = 0;
@@ -1117,11 +1123,36 @@ define([
         return this._damageDealt;
     };
     /**
+     * Returns the amount of damage dealt to enemies by this spacecraft using missiles during the current mission
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMissileDamageDealt = function () {
+        return this._missileDamageDealt;
+    };
+    /**
      * Call if this spacecrafts deals damage to an enemy to update the stored total of damage dealt
      * @param {Number} damage The amount of damage dealt to the enemy
+     * @param {Boolean} [byMissile=false] Whether the damage was dealt using a missile
      */
-    Spacecraft.prototype.gainDamageDealt = function (damage) {
+    Spacecraft.prototype.gainDamageDealt = function (damage, byMissile) {
         this._damageDealt += damage;
+        if (byMissile) {
+            this._missileDamageDealt += damage;
+        }
+    };
+    /**
+     * Number of missiles launched during the current mission
+     * @returns Number
+     */
+    Spacecraft.prototype.getMissilesLaunched = function () {
+        return this._missilesLaunched;
+    };
+    /**
+     * Number of launched missiles that hit an enemy during the current mission
+     * @returns Number
+     */
+    Spacecraft.prototype.getMissileHitsOnEnemies = function () {
+        return this._missileHitsOnEnemies;
     };
     /**
      * Returns how much score destroying this spacecraft should grant (completely, including dealing damage and scoring the final hit)
@@ -2185,6 +2216,13 @@ define([
         }
     };
     /**
+     * To be called when a missile launcher launches a missile automatically as part of a salvo
+     * @param {Number} count The number of missiles launched
+     */
+    Spacecraft.prototype.handleSalvoMissileLaunched = function (count) {
+        this._missilesLaunched += count;
+    };
+    /**
      * Change to a missile launcher with a different missile equipped
      * @returns {Boolean} Whether the active missile launcher has been changed
      */
@@ -2421,7 +2459,7 @@ define([
             if (liveHit && hitBy && this.isHostile(hitBy)) {
                 scoreValue = this.getScoreValue();
                 damage += this._hitpoints; // this subtracts the overkill hitpoints
-                hitBy.gainDamageDealt(damage);
+                hitBy.gainDamageDealt(damage, byMissile);
                 // gain score for dealing the damage
                 hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._maxHitpoints * scoreValue);
                 // gain score and kill for delivering the final hit
@@ -2448,7 +2486,7 @@ define([
             }
             // granting score to the spacecraft that hit this one for the damage
             if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
-                hitBy.gainDamageDealt(damage);
+                hitBy.gainDamageDealt(damage, byMissile);
                 hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._maxHitpoints * this.getScoreValue());
             }
         }

@@ -2354,7 +2354,7 @@ define([
         if (this._salvoLeft > 0) {
             if (this._cooldown <= 0) {
                 if ((this._missileCount > 0) && this._salvoTarget && this._salvoTarget.isAlive()) {
-                    this.launch(this._spacecraft.getScaledOriMatrix(), this._spacecraft.getSoundSourceForFireSound(), true);
+                    this._spacecraft.handleSalvoMissileLaunched(this.launch(this._spacecraft.getScaledOriMatrix(), this._spacecraft.getSoundSourceForFireSound(), true));
                 } else {
                     // cancel the salvo if we are out of missiles or the salvo target has been destroyed
                     this._salvoLeft = 0;

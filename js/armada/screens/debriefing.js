@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2019 Krisztián Nagy
  * @file This module manages and provides the Mission debriefing screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -48,6 +48,8 @@ define([
             KILLS_CELL_ID = "killsCell",
             DAMAGE_CELL_ID = "damageCell",
             HIT_RATIO_CELL_ID = "hitRatioCell",
+            MISSILE_DAMAGE_CELL_ID = "missileDamageCell",
+            MISSILE_HIT_RATIO_CELL_ID = "missileHitRatioCell",
             HULL_INTEGRITY_CELL_ID = "hullIntegrityCell",
             TEAM_SURVIVAL_CELL_ID = "teamSurvivalCell",
             // score breakdown cells
@@ -115,6 +117,10 @@ define([
         /** @type SimpleComponent */
         this._hitRatioCell = this.registerSimpleComponent(HIT_RATIO_CELL_ID);
         /** @type SimpleComponent */
+        this._missileDamageCell = this.registerSimpleComponent(MISSILE_DAMAGE_CELL_ID);
+        /** @type SimpleComponent */
+        this._missileHitRatioCell = this.registerSimpleComponent(MISSILE_HIT_RATIO_CELL_ID);
+        /** @type SimpleComponent */
         this._hullIntegrityCell = this.registerSimpleComponent(HULL_INTEGRITY_CELL_ID);
         /** @type SimpleComponent */
         this._teamSurvivalCell = this.registerSimpleComponent(TEAM_SURVIVAL_CELL_ID);
@@ -166,6 +172,9 @@ define([
      * @property {Number} kills
      * @property {Number} damageDealt
      * @property {Number} hitRatio
+     * @property {Number} missileDamageDealt
+     * @property {Number} missilesLaunched
+     * @property {Number} missilesHit
      * @property {Number} hullIntegrity
      * @property {Number} teamSurvival
      * @property {Number} baseScore
@@ -225,7 +234,9 @@ define([
         this._timeCell.setContent(utils.formatTimeToMinutes(data.elapsedTime));
         this._killsCell.setContent(data.kills.toString());
         this._damageCell.setContent(data.damageDealt.toString());
-        this._hitRatioCell.setContent(Math.round(100 * data.hitRatio) + "%");
+        this._hitRatioCell.setContent((data.hitRatio > 0) ? Math.round(100 * data.hitRatio) + "%" : "-");
+        this._missileDamageCell.setContent(data.missileDamageDealt.toString());
+        this._missileHitRatioCell.setContent(data.missilesHit.toString() + " / " + data.missilesLaunched.toString());
         this._hullIntegrityCell.setContent(Math.round(100 * data.hullIntegrity) + "%");
         this._teamSurvivalCell.setContent((data.teamSurvival !== undefined) ? (Math.round(100 * data.teamSurvival) + "%") : "-");
         this._scoreBreakdownContainer.setVisible(hasScore);
