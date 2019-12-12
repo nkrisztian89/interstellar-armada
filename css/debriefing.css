@@ -1,5 +1,40 @@
+.debriefing.pageContainer {
+    width: 90%;
+    height: 90%;
+}
+
+.debriefing.innerContainer {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.debriefing.infoContainer {
+    box-sizing: border-box;
+    width: 100%;
+    height: calc(100% - 17em - 72px);
+    margin-top: 1em;
+    position: relative;
+    overflow-y: scroll;
+}
+
+.debriefing.infoContainer::-webkit-scrollbar {
+    width: 0.2vw;
+    min-width: 2px;
+    background: transparent;
+}
+
+.debriefing.infoContainer::-webkit-scrollbar-thumb {
+    background: #00aa00;
+}
+
 h1.debriefing {
     margin-bottom: 0.2em;
+}
+
+table.debriefing {
+    display: inline-table;
 }
 
 .scoreContainer {

@@ -1,6 +1,6 @@
 <div class="pageGhost">
-    <div class="anyHeightCentered outerContainer pageContainer">
-        <div class="horizontallyCentered contentWide innerContainer">
+    <div class="debriefing anyHeightCentered outerContainer pageContainer">
+        <div class="debriefing horizontallyCentered contentWide innerContainer">
             <div class="fullWide separatorBar">
                 <a id="backButton" class="horizontallyCentered separate button translatable" href="#">
                     Back to menu
@@ -15,7 +15,7 @@
                 <div id="newRecord" class="newRecord translatable">New record!</div>
             </div>
             <p id="description" class="debriefingDescription"></p>
-            <div id="infoContainer" class="infoContainer">
+            <div id="infoContainer" class="debriefing infoContainer">
                 <div id="statisticsContainer" class="statisticsContainer">
                     <h2 id="statisticsHeader" class="translatable">
                         Statistics
@@ -29,6 +29,16 @@
                             <td class="statLabelCell translatable" id="killsLabelCell">Kills:</td>
                             <td class="statValueCell" id="killsCell"></td>
                         </tr>
+                        <tr>
+                            <td class="statLabelCell translatable" id="hullIntegrityLabelCell">Hull integrity left:</td>
+                            <td class="statValueCell" id="hullIntegrityCell"></td>
+                        </tr>
+                        <tr>
+                            <td class="statLabelCell translatable" id="teamSurvivalLabelCell">Team survival:</td>
+                            <td class="statValueCell" id="teamSurvivalCell"></td>
+                        </tr>
+                    </table>
+                    <table class="debriefing">
                         <tr>
                             <td class="statLabelCell translatable" id="damageLabelCell">Total damage dealt:</td>
                             <td class="statValueCell" id="damageCell"></td>
@@ -44,14 +54,6 @@
                         <tr>
                             <td class="statLabelCell translatable" id="missileHitRatioLabelCell">Missile hits:</td>
                             <td class="statValueCell" id="missileHitRatioCell"></td>
-                        </tr>
-                        <tr>
-                            <td class="statLabelCell translatable" id="hullIntegrityLabelCell">Hull integrity left:</td>
-                            <td class="statValueCell" id="hullIntegrityCell"></td>
-                        </tr>
-                        <tr>
-                            <td class="statLabelCell translatable" id="teamSurvivalLabelCell">Team survival:</td>
-                            <td class="statValueCell" id="teamSurvivalCell"></td>
                         </tr>
                     </table>
                 </div>
@@ -79,7 +81,7 @@
                     </table>
                 </div>
             </div>
-            <div class="fullWide separatorBar">
+            <div class="footer fullWide separatorBar">
                 <a id="restartButton" class="horizontallyCentered separate button translatable" href="#">
                     Restart mission
                 </a>
