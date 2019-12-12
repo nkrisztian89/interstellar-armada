@@ -95,6 +95,8 @@ Copyright: freesound user cydon, license: CC0 1.0
 
 missile/missile-launch.ogg
 missile/missile-start.ogg
+missile/missile-start-small.ogg
+missile/missile-start-torpedo.ogg
 
 Edited by Krisztián Nagy with Audacity
 License: CC BY 4.0
@@ -105,6 +107,9 @@ Copyright: freesound user RSilveira_88, license: CC BY 3.0
 
 https://freesound.org/people/mensageirocs/sounds/232680/
 Copyright: freesound user mensageirocs, license: CC BY 3.0
+
+https://freesound.org/people/qubodup/sounds/184274/
+Copyright: freesound user qubodup, license: CC0 1.0
 
 ---
 

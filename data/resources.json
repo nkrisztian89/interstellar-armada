@@ -1464,6 +1464,12 @@
             "name": "missileStart",
             "samples": ["missile/missile-start.ogg"]
         }, {
+            "name": "missileStartSmall",
+            "samples": ["missile/missile-start-small.ogg"]
+        }, {
+            "name": "missileStartTorpedo",
+            "samples": ["missile/missile-start-torpedo.ogg"]
+        }, {
             "name": "hit",
             "samples": ["explosion/hit.ogg"]
         }, {

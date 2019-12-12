@@ -2804,11 +2804,11 @@
             "scoreValue": 1,
             "launchSound": {
                 "name": "missileLaunch",
-                "volume": 0.5
+                "volume": 0.2
             },
             "startSound": {
-                "name": "missileStart",
-                "volume": 0.5
+                "name": "missileStartSmall",
+                "volume": 0.15
             },
             "propulsion": "missile",
             "thrusterSlots": [{
@@ -2951,11 +2951,11 @@
             "scoreValue": 25,
             "launchSound": {
                 "name": "missileLaunch",
-                "volume": 0.5
+                "volume": 0.85
             },
             "startSound": {
-                "name": "missileStart",
-                "volume": 0.5
+                "name": "missileStartTorpedo",
+                "volume": 0.65
             },
             "propulsion": "missile",
             "thrusterSlots": [{
