@@ -63,6 +63,10 @@ table.debriefing {
     min-width: 300px;
 }
 
+h2.statisticsHeader {
+    margin-top: 0;
+}
+
 .statisticsContainer {
     display: inline-block;
     margin-left: auto;
