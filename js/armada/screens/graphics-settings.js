@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file This module manages and provides the Graphics settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -170,6 +170,7 @@ define([
             TEXTURE_QUALITY_SELECTOR_ID = "textureQualitySelector",
             CUBEMAP_QUALITY_SELECTOR_ID = "cubemapQualitySelector",
             LOD_SELECTOR_ID = "lodSelector",
+            MISSILES_IN_LAUNCHERS_SELECTOR_ID = "missilesInLaunchersSelector",
             SHADER_COMPLEXITY_SELECTOR_ID = "shaderComplexitySelector",
             SHADOW_MAPPING_SELECTOR_ID = "shadowMappingSelector",
             SHADOW_QUALITY_SELECTOR_ID = "shadowQualitySelector",
@@ -236,6 +237,10 @@ define([
         /**
          * @type Selector
          */
+        this._missilesInLaunchersSelector = null;
+        /**
+         * @type Selector
+         */
         this._shaderComplexitySelector = null;
         /**
          * @type Selector
@@ -277,6 +282,9 @@ define([
             this._lodSelector = this._registerSelector(LOD_SELECTOR_ID,
                     strings.GRAPHICS.MODEL_DETAILS.name,
                     _getLODSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
+            this._missilesInLaunchersSelector = this._registerSelector(MISSILES_IN_LAUNCHERS_SELECTOR_ID,
+                    strings.GRAPHICS.MISSILES_IN_LAUNCHERS.name,
+                    _getOnOffSettingValues(), LEFT_OPTION_PARENT_ID);
             this._shaderComplexitySelector = this._registerSelector(SHADER_COMPLEXITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADERS.name,
                     _getShaderComplexitySettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
@@ -328,6 +336,7 @@ define([
         graphics.setTextureQuality(_getTextureQualitySettingValues()[this._textureQualitySelector.getSelectedIndex()][1]);
         graphics.setCubemapQuality(_getCubemapQualitySettingValues()[this._cubemapQualitySelector.getSelectedIndex()][1]);
         graphics.setLODLevel(_getLODSettingValues()[this._lodSelector.getSelectedIndex()][1]);
+        graphics.setMissilesInLaunchersVisible((this._missilesInLaunchersSelector.getSelectedIndex() === SETTING_ON_INDEX));
         graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
         graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
         classes.handleGraphicsSettingsChanged();
@@ -390,6 +399,7 @@ define([
         this._textureQualitySelector.setValueList(_getTextureQualitySettingValues().map(_mapCaption));
         this._cubemapQualitySelector.setValueList(_getCubemapQualitySettingValues().map(_mapCaption));
         this._lodSelector.setValueList(_getLODSettingValues().map(_mapCaption));
+        this._missilesInLaunchersSelector.setValueList(_getOnOffSettingValues());
         this._shaderComplexitySelector.setValueList(_getShaderComplexitySettingValues().map(_mapCaption));
         this._shadowMappingSelector.setValueList(_getOnOffSettingValues());
         this._shadowQualitySelector.setValueList(_getShadowQualitySettingValues().map(_mapCaption));
@@ -462,6 +472,7 @@ define([
             this._textureQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getTextureQuality(), _getTextureQualitySettingValues()));
             this._cubemapQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getCubemapQuality(), _getCubemapQualitySettingValues()));
             this._lodSelector.selectValueWithIndex(_findIndexOf(graphics.getLODLevel(), _getLODSettingValues()));
+            this._missilesInLaunchersSelector.selectValueWithIndex((graphics.areMissilesInLaunchersVisible() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._shaderComplexitySelector.selectValueWithIndex(_findIndexOf(graphics.getShaderComplexity(), _getShaderComplexitySettingValues()));
             this._updateShadowMappingSelector();
             this._updateShadowQualitySelector();

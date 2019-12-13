@@ -2779,7 +2779,7 @@ define([
             this._spacecrafts[i].addToScene(battleScene, undefined, false, {
                 hitboxes: application.isDebugVersion(),
                 weapons: true,
-                missilesInLaunchers: false,
+                missilesInLaunchers: graphics.areMissilesInLaunchersVisible(),
                 thrusterParticles: true,
                 projectileResources: true,
                 missileResources: true,

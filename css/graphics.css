@@ -12,6 +12,12 @@
     width: 25em;
 }
 
+@media screen and (orientation: landscape) {
+    .settingsDivRight {
+        float: right;
+    }
+}
+
 p.settings {
     box-sizing: border-box;
     width: 28em;

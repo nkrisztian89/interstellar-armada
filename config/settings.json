@@ -52,6 +52,7 @@
                 }
             ]
         },
+        "showMissilesInLaunchers": false, 
         "particleAmount": {
             "amount": "maximum",
             "autoLimitByScreenSize": true,

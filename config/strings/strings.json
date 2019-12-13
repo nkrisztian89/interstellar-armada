@@ -485,6 +485,7 @@
         "textureQuality": "Texture quality:",
         "backgroundQuality": "Background details:",
         "modelDetails": "Model details:",
+        "missilesInLaunchers": "Show missiles in launchers:",
         "shaders": "Shader details:",
         "shadows": "Shadows:",
         "shadowQuality": "Shadow resolution:",

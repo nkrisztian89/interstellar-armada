@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2019 Krisztián Nagy
  * @file Provides functionality to parse and load the graphics settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -692,6 +692,13 @@ define([
              */
             MAX_LOD_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "maxLOD",
             // ............................................................................................
+            // Show missiles in launchers
+            /**
+             * The key identifying the location where the visibility of loaded missiles in launchers setting is stored in local storage.
+             * @type String
+             */
+            MISSILES_IN_LAUNCHERS_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "missilesInLaunchers",
+            // ............................................................................................
             // Shader complexity
             /**
              * The key identifying the location where the shader complexity level setting is stored in local storage.
@@ -1128,6 +1135,11 @@ define([
          */
         this._lodContext = null;
         /**
+         * Whether loaded missiles should be visible in their launch tubes.
+         * @type Boolean
+         */
+        this._missilesInLaunchers = false;
+        /**
          * The currently set and available texture qualities.
          * @type TextureQuality
          */
@@ -1412,6 +1424,8 @@ define([
         this.setLODLevel(dataJSON.levelOfDetail.maxLevel, false);
         // if the maximum loaded LOD is limited by screen size, check the current size and apply the limit
         this._limitSettingByScreenSize(dataJSON.levelOfDetail, this._lodLevel, this.getMaxLoadedLOD.bind(this), this.setLODLevel.bind(this), "level");
+        // whether to show loaded missiles in their launchers (during missions)
+        this.setMissilesInLaunchersVisible(types.getBooleanValue(dataJSON.showMissilesInLaunchers, {name: "settings.graphics.showMissilesInLaunchers"}), false);
         // load the particle amount settings
         this.setParticleAmount(dataJSON.particleAmount.amount, false);
         // if the particle amount is limited by screen size, check the current size and apply the limit
@@ -1463,6 +1477,7 @@ define([
         loadSetting(TEXTURE_QUALITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getTextureQualities())}, this.getTextureQuality(), this.setTextureQuality.bind(this));
         loadSetting(CUBEMAP_QUALITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getCubemapQualities())}, this.getCubemapQuality(), this.setCubemapQuality.bind(this));
         loadSetting(MAX_LOD_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getLODLevels())}, this.getLODLevel(), this.setLODLevel.bind(this));
+        loadSetting(MISSILES_IN_LAUNCHERS_LOCAL_STORAGE_ID, "boolean", this.areMissilesInLaunchersVisible(), this.setMissilesInLaunchersVisible.bind(this));
         loadSetting(SHADER_COMPLEXITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getShaderComplexities())}, this.getShaderComplexity(), this.setShaderComplexity.bind(this));
         loadSetting(SHADOW_MAPPING_LOCAL_STORAGE_ID, "boolean", this.isShadowMappingEnabled(), this.setShadowMapping.bind(this));
         loadSetting(SHADOW_MAP_QUALITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getShadowMapQualities())}, this.getShadowMapQuality(), this.setShadowMapQuality.bind(this));
@@ -1485,11 +1500,14 @@ define([
         localStorage.removeItem(TEXTURE_QUALITY_LOCAL_STORAGE_ID);
         localStorage.removeItem(CUBEMAP_QUALITY_LOCAL_STORAGE_ID);
         localStorage.removeItem(MAX_LOD_LOCAL_STORAGE_ID);
+        localStorage.removeItem(MISSILES_IN_LAUNCHERS_LOCAL_STORAGE_ID);
         localStorage.removeItem(SHADER_COMPLEXITY_LOCAL_STORAGE_ID);
         localStorage.removeItem(SHADOW_MAPPING_LOCAL_STORAGE_ID);
         localStorage.removeItem(SHADOW_MAP_QUALITY_LOCAL_STORAGE_ID);
         localStorage.removeItem(SHADOW_DISTANCE_LOCAL_STORAGE_ID);
         localStorage.removeItem(POINT_LIGHT_AMOUNT_LOCAL_STORAGE_ID);
+        localStorage.removeItem(PARTICLE_AMOUNT_LOCAL_STORAGE_ID);
+        localStorage.removeItem(DUST_PARTICLE_AMOUNT_LOCAL_STORAGE_ID);
     };
     /**
      * Returns the current antialiasing setting.
@@ -1687,6 +1705,27 @@ define([
      */
     GraphicsSettingsContext.prototype.getLODContext = function () {
         return this._lodContext;
+    };
+    /**
+     * Sets whether the loaded missiles should be visible in their launch tubes on ships during missions.
+     * @param {Boolean} [value]
+     * @param {Boolean} [saveToLocalStorage=true]
+     */
+    GraphicsSettingsContext.prototype.setMissilesInLaunchersVisible = function (value, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        this._missilesInLaunchers = value;
+        if (saveToLocalStorage) {
+            localStorage[MISSILES_IN_LAUNCHERS_LOCAL_STORAGE_ID] = value.toString();
+        }
+    };
+    /**
+     * Returns whether the loaded missiles should be visible in their launch tubes on ships during missions.
+     * @returns {Boolean}
+     */
+    GraphicsSettingsContext.prototype.areMissilesInLaunchersVisible = function () {
+        return this._missilesInLaunchers;
     };
     /**
      * Returns the string identifying the current shader complexity level setting.
@@ -2393,6 +2432,8 @@ define([
         setLODLevel: _context.setLODLevel.bind(_context),
         getMaxLoadedLOD: _context.getMaxLoadedLOD.bind(_context),
         getLODContext: _context.getLODContext.bind(_context),
+        setMissilesInLaunchersVisible: _context.setMissilesInLaunchersVisible.bind(_context),
+        areMissilesInLaunchersVisible: _context.areMissilesInLaunchersVisible.bind(_context),
         getShaderComplexity: _context.getShaderComplexity.bind(_context),
         setShaderComplexity: _context.setShaderComplexity.bind(_context),
         getShaderComplexities: _context.getShaderComplexities.bind(_context),
