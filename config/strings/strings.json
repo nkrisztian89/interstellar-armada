@@ -528,12 +528,14 @@
         "touch": "Touchscreen"
     },
     "touchArea": {
-        "default": "an",
-        "FULL": "any",
-        "top-left": "the top left",
-        "top-right": "the top right",
-        "bottom-right": "the bottom right",
-        "bottom-left": "the bottom left"
+        "default": "an area",
+        "FULL": "any area",
+        "top-left": "the top left quarter",
+        "top-right": "the top right quarter",
+        "bottom-right": "the bottom right quarter",
+        "bottom-left": "the bottom left quarter",
+        "left": "the left half",
+        "right": "the right half"
     },
     "controls": {
         "back": "Back to menu",

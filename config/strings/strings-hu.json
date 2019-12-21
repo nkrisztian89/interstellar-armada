@@ -36,14 +36,14 @@
         "rightDirection": "jobbra",
         "upDirection": "felfelé",
         "downDirection": "lefelé",
-        "tap": "koppintás (a képernyő {area} részén)",
-        "longTap": "hosszú koppintás (a képernyő {area} részén)",
-        "twoPointTap": "koppintás két ujjal (a képernyő {area} részén)",
-        "threePointTap": "koppintás három ujjal (a képernyő {area} részén)",
-        "swipe": "elhúzás {direction} (a képernyő {area} részén)",
-        "hold": "koppintás és tartás (a képernyő {area} részén)",
-        "holdDirection": "elhúzás {direction} és tartás (a képernyő {area} részén)",
-        "slide": "csúsztatás {direction} (a képernyő {area} részén)"
+        "tap": "koppintás (a képernyő {area})",
+        "longTap": "hosszú koppintás (a képernyő {area})",
+        "twoPointTap": "koppintás két ujjal (a képernyő {area})",
+        "threePointTap": "koppintás három ujjal (a képernyő {area})",
+        "swipe": "elhúzás {direction} (a képernyő {area})",
+        "hold": "koppintás és tartás (a képernyő {area})",
+        "holdDirection": "elhúzás {direction} és tartás (a képernyő {area})",
+        "slide": "csúsztatás {direction} (a képernyő {area})"
     },
     "firstRunNote": {
         "header": "Üdvözöllek!",
@@ -563,12 +563,14 @@
         "touch": "Érintőképernyő"
     },
     "touchArea": {
-        "default": "egy",
-        "FULL": "bármelyik",
-        "top-left": "bal felső",
-        "top-right": "jobb felső",
-        "bottom-right": "jobb alsó",
-        "bottom-left": "bal alsó"
+        "default": "egy részén",
+        "FULL": "bármelyik részén",
+        "top-left": "bal felső negyedében",
+        "top-right": "jobb felső negyedében",
+        "bottom-right": "jobb alsó negyedében",
+        "bottom-left": "bal alsó negyedében",
+        "left": "bal felén",
+        "right": "jobb felén"
     },
     "controls": {
         "back": "Vissza a menübe",

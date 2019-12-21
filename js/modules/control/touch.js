@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Krisztián Nagy
+ * Copyright 2018-2019 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
  * catch and process input from a touchscreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -66,7 +66,9 @@ define([
                 "top-left": {x: [0, 0.5], y: [0, 0.5]},
                 "top-right": {x: [0.5, 1], y: [0, 0.5]},
                 "bottom-left": {x: [0, 0.5], y: [0.5, 1]},
-                "bottom-right": {x: [0.5, 1], y: [0.5, 1]}
+                "bottom-right": {x: [0.5, 1], y: [0.5, 1]},
+                "left": {x: [0, 0.5], y: [0, 1]},
+                "right": {x: [0.5, 1], y: [0, 1]}
             },
             DIRECTION_LEFT = "left",
             DIRECTION_RIGHT = "right",
@@ -81,35 +83,35 @@ define([
             // string definitions for translation of control strings
             TAP_STRING = {
                 name: "touch" + strings.CATEGORY_SEPARATOR + "tap",
-                defaultValue: "tap {area} area of the screen"
+                defaultValue: "tap {area} of the screen"
             },
             LONG_TAP_STRING = {
                 name: "touch" + strings.CATEGORY_SEPARATOR + "longTap",
-                defaultValue: "long tap {area} area of the screen"
+                defaultValue: "long tap {area} of the screen"
             },
             TWO_POINT_TAP_STRING = {
                 name: "touch" + strings.CATEGORY_SEPARATOR + "twoPointTap",
-                defaultValue: "tap {area} area of the screen with two fingers"
+                defaultValue: "tap {area} of the screen with two fingers"
             },
             THREE_POINT_TAP_STRING = {
                 name: "touch" + strings.CATEGORY_SEPARATOR + "threePointTap",
-                defaultValue: "tap {area} area of the screen with three fingers"
+                defaultValue: "tap {area} of the screen with three fingers"
             },
             SWIPE_STRING = {
                 name: "touch" + strings.CATEGORY_SEPARATOR + "swipe",
-                defaultValue: "swipe {direction} on {area} area of the screen"
+                defaultValue: "swipe {direction} on {area} of the screen"
             },
             HOLD_STRING_NO_DIRECTION = {
                 name: "touch" + strings.CATEGORY_SEPARATOR + "hold",
-                defaultValue: "tap and hold on {area} area of the screen"
+                defaultValue: "tap and hold on {area} of the screen"
             },
             HOLD_STRING_WITH_DIRECTION = {
                 name: "touch" + strings.CATEGORY_SEPARATOR + "holdDirection",
-                defaultValue: "swipe {direction} and hold on {area} area of the screen"
+                defaultValue: "swipe {direction} and hold on {area} of the screen"
             },
             SLIDE_STRING = {
                 name: "touch" + strings.CATEGORY_SEPARATOR + "slide",
-                defaultValue: "slide {direction} on {area} area of the screen"
+                defaultValue: "slide {direction} on {area} of the screen"
             },
             TOUCH_DIRECTION_LEFT = {
                 name: "touch" + strings.CATEGORY_SEPARATOR + "leftDirection",

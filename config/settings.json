@@ -1282,13 +1282,17 @@
                         "action": "quit",
                         "type": "three-point-tap"
                     }, {
+                        "action": "launchMissile",
+                        "type": "two-point-tap",
+                        "area": "bottom-right"
+                    }, {
                         "action": "fire",
                         "type": "hold",
                         "area": "bottom-right"
                     }, {
-                        "action": "launchMissile",
+                        "action": "changeMissile",
                         "type": "two-point-tap",
-                        "area": "bottom-right"
+                        "area": "top-right"
                     }, {
                         "action": "nextNearestHostileTarget",
                         "type": "tap",
