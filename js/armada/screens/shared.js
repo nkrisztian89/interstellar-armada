@@ -92,6 +92,7 @@ define([
                 CONTROLS_SCREEN_CSS: "controls.css",
                 GAMEPLAY_SETTINGS_SCREEN_NAME: "gameplaySettings",
                 GAMEPLAY_SETTINGS_SCREEN_SOURCE: "gameplay-settings.html",
+                GAMEPLAY_SETTINGS_SCREEN_CSS: "gameplay-settings.css",
                 ABOUT_SCREEN_NAME: "about",
                 ABOUT_SCREEN_SOURCE: "about.html",
                 ABOUT_SCREEN_CSS: "about.css",

@@ -925,7 +925,8 @@
             "scoreFractionForKill": 0.5,
             "scoreBonusForHullIntegrity": 200,
             "scoreBonusForHullIntegrityTeam": 100,
-            "scoreBonusForTeamSurvival": 100
+            "scoreBonusForTeamSurvival": 100,
+            "defaultSalvoMode": false
         },
         "camera": {
             "defaultFOV": 40,

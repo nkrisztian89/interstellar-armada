@@ -2227,7 +2227,7 @@ define([
      * @param {Booelan} value
      */
     MissileLauncher.prototype.setSalvoMode = function (value) {
-        this._salvo = value;
+        this._salvo = value && (this._descriptor.salvo > 1);
     };
     /**
      * Toggle salvo mode

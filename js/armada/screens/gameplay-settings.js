@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Krisztián Nagy
+ * Copyright 2017-2019 Krisztián Nagy
  * @file This module manages and provides the gameplay settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -63,6 +63,7 @@ define([
             TITLE_HEADING_ID = "title",
             HUD_TITLE_HEADING_ID = "hudTitle",
             CAMERA_TITLE_HEADING_ID = "cameraTitle",
+            CONTROLS_TITLE_HEADING_ID = "controlsTitle",
             DEFAULTS_BUTTON_ID = "defaultsButton",
             TARGET_HULL_AT_CENTER_SELECTOR_ID = "targetHullAtCenterSelector",
             OFFSET_IMPACT_INDICATORS_SELECTOR_ID = "offsetImpactIndicatorsSelector",
@@ -70,8 +71,10 @@ define([
             PREFERRED_FIGHTER_VIEW_SELECTOR_ID = "preferredFighterViewSelector",
             PREFERRED_SHIP_VIEW_SELECTOR_ID = "preferredShipViewSelector",
             DEMO_VIEW_SWITCHING_SELECTOR_ID = "demoViewSwitchSelector",
+            DEFAULT_SALVO_MODE_SELECTOR_ID = "defaultSalvoModeSelector",
             HUD_OPTION_PARENT_ID = "hudSettingsDiv",
             CAMERA_OPTION_PARENT_ID = "cameraSettingsDiv",
+            CONTROLS_OPTION_PARENT_ID = "controlsSettingsDiv",
             SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
             SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
     // ##############################################################################
@@ -83,6 +86,7 @@ define([
         screens.HTMLScreen.call(this,
                 armadaScreens.GAMEPLAY_SETTINGS_SCREEN_NAME,
                 armadaScreens.GAMEPLAY_SETTINGS_SCREEN_SOURCE, {
+                    cssFilename: armadaScreens.GAMEPLAY_SETTINGS_SCREEN_CSS,
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 }, undefined, {
@@ -97,6 +101,8 @@ define([
         /** @type SimpleComponent */
         this._cameraTitleHeading = this.registerSimpleComponent(CAMERA_TITLE_HEADING_ID);
         /** @type SimpleComponent */
+        this._controlsTitleHeading = this.registerSimpleComponent(CONTROLS_TITLE_HEADING_ID);
+        /** @type SimpleComponent */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
         /** @type Selector */
         this._targetHullAtCenterSelector = null;
@@ -110,6 +116,8 @@ define([
         this._preferredShipViewSelector = null;
         /** @type Selector */
         this._demoViewSwitchingSelector = null;
+        /** @type Selector */
+        this._defaultSalvoModeSelector = null;
         config.executeWhenReady(function () {
             this._targetHullAtCenterSelector = this._registerSelector(TARGET_HULL_AT_CENTER_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.TARGET_HEALTH_AT_CENTER.name,
@@ -129,6 +137,9 @@ define([
             this._demoViewSwitchingSelector = this._registerSelector(DEMO_VIEW_SWITCHING_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEMO_VIEW_SWITCHING.name,
                     _getOnOffSettingValues(), CAMERA_OPTION_PARENT_ID);
+            this._defaultSalvoModeSelector = this._registerSelector(DEFAULT_SALVO_MODE_SELECTOR_ID,
+                    strings.GAMEPLAY_SETTINGS.DEFAULT_SALVO_MODE.name,
+                    _getOnOffSettingValues(), CONTROLS_OPTION_PARENT_ID);
         }.bind(this));
     }
     GameplaySettingsScreen.prototype = new screens.HTMLScreen();
@@ -160,6 +171,7 @@ define([
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME, _fighterViewOptions[this._preferredFighterViewSelector.getSelectedIndex()]);
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME, _shipViewOptions[this._preferredShipViewSelector.getSelectedIndex()]);
         config.setBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING, (this._demoViewSwitchingSelector.getSelectedIndex() === SETTING_ON_INDEX));
+        config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE, (this._defaultSalvoModeSelector.getSelectedIndex() === SETTING_ON_INDEX));
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };
     /**
@@ -190,6 +202,7 @@ define([
         this._preferredFighterViewSelector.setValueList(_getFighterViewSettingValues());
         this._preferredShipViewSelector.setValueList(_getShipViewSettingValues());
         this._demoViewSwitchingSelector.setValueList(_getOnOffSettingValues());
+        this._defaultSalvoModeSelector.setValueList(_getOnOffSettingValues());
         this._updateValues();
     };
     /**
@@ -203,6 +216,7 @@ define([
             this._preferredFighterViewSelector.selectValueWithIndex(_fighterViewOptions.indexOf(config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME)));
             this._preferredShipViewSelector.selectValueWithIndex(_shipViewOptions.indexOf(config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME)));
             this._demoViewSwitchingSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
+            this._defaultSalvoModeSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
         }.bind(this));
     };
     /**

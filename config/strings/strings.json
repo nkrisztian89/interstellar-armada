@@ -507,12 +507,14 @@
         "title": "Gameplay settings",
         "hudTitle": "HUD",
         "cameraTitle": "Camera",
+        "controlsTitle": "Controls",
         "targetHealthAtCenter": "Target integrity bar always at center:",
         "offsetImpactIndicators": "Offset impact indicators:",
         "relativeTargetOrientation": "Show target in relative orientation:",
         "preferredFighterView": "Preferred fighter view:",
         "preferredShipView": "Preferred ship view:",
-        "demoViewSwitching": "Automatic view switching in demo mode:"
+        "demoViewSwitching": "Automatic view switching in demo mode:",
+        "defaultSalvoMode": "Missile salvo mode by default:"
     },
     "controller": {
         "general": "General",

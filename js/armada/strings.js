@@ -288,12 +288,14 @@ define([
         TITLE: {name: "gameplaySettings.title"},
         HUD_TITLE: {name: "gameplaySettings.hudTitle"},
         CAMERA_TITLE: {name: "gameplaySettings.cameraTitle"},
+        CONTROLS_TITLE: {name: "gameplaySettings.controlsTitle"},
         TARGET_HEALTH_AT_CENTER: {name: "gameplaySettings.targetHealthAtCenter"},
         OFFSET_IMPACT_INDICATORS: {name: "gameplaySettings.offsetImpactIndicators"},
         RELATIVE_TARGET_ORIENTATION: {name: "gameplaySettings.relativeTargetOrientation"},
         PREFERRED_FIGHTER_VIEW: {name: "gameplaySettings.preferredFighterView"},
         PREFERRED_SHIP_VIEW: {name: "gameplaySettings.preferredShipView"},
-        DEMO_VIEW_SWITCHING: {name: "gameplaySettings.demoViewSwitching"}
+        DEMO_VIEW_SWITCHING: {name: "gameplaySettings.demoViewSwitching"},
+        DEFAULT_SALVO_MODE: {name: "gameplaySettings.defaultSalvoMode"}
     };
     strings.AUDIO = {
         PREFIX: {name: "audio.", optional: true},

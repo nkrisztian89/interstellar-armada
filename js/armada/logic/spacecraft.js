@@ -2210,6 +2210,8 @@ define([
                 } else {
                     if (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass) {
                         this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(salvo);
+                    } else if (config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE)) {
+                        this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(true);
                     }
                 }
             }
@@ -2227,7 +2229,7 @@ define([
      * @returns {Boolean} Whether the active missile launcher has been changed
      */
     Spacecraft.prototype.changeMissile = function () {
-        var originalIndex, missileClass;
+        var originalIndex, missileClass, changed;
         if (this._activeMissileLauncherIndex >= 0) {
             originalIndex = this._activeMissileLauncherIndex;
             missileClass = this._missileLaunchers[originalIndex].getMissileClass();
@@ -2236,7 +2238,13 @@ define([
             } while ((this._activeMissileLauncherIndex !== originalIndex) &&
                     ((this._missileLaunchers[this._activeMissileLauncherIndex].getMissileCount() <= 0) ||
                             (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass)));
-            return (this._activeMissileLauncherIndex !== originalIndex);
+            changed = this._activeMissileLauncherIndex !== originalIndex;
+            if (changed) {
+                if (config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE)) {
+                    this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(true);
+                }
+            }
+            return changed;
         }
         return false;
     };

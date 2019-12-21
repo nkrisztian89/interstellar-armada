@@ -1601,6 +1601,13 @@ define([
         SCORE_BONUS_FOR_TEAM_SURVIVAL: {
             name: "scoreBonusForTeamSurvival",
             type: "number"
+        },
+        /**
+         * Whether missile launchers should be set to salvo mode by default (when available)
+         */
+        DEFAULT_SALVO_MODE: {
+            name: "defaultSalvoMode",
+            type: "boolean"
         }
     };
     CAMERA_SETTINGS = {

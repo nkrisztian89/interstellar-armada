@@ -540,14 +540,16 @@
     "gameplaySettings": {
         "backButton": "Vissza a menübe",
         "title": "Játékmenet beállítások",
-         "hudTitle": "HUD",
+        "hudTitle": "HUD",
         "cameraTitle": "Kamera",
+        "controlsTitle": "Irányítás",
         "targetHealthAtCenter": "Célpont állapota mindig középen:",
         "offsetImpactIndicators": "Célzás eltolt becsapódásjelzőkkel:",
         "relativeTargetOrientation": "Célpont mutatása relatív helyzetben:",
         "preferredFighterView": "Alapértelmezett vadászgép nézet:",
         "preferredShipView": "Alapértelmezett hadihajó nézet:",
-        "demoViewSwitching": "Automatikus nézetváltogatás demo módban:"
+        "demoViewSwitching": "Automatikus nézetváltogatás demo módban:",
+        "defaultSalvoMode": "Alapértelmezett sortűz mód rakétákhoz:"
     },
     "controller": {
         "general": "Általános",
