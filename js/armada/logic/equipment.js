@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Implementations of the various classes that represent all the different types of equipment to be added to spacecrafts
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1166,24 +1166,12 @@ define([
         var
                 position, targetPosition,
                 relativeTargetVelocity,
-                acceleration,
-                a, c, d, e, i, hitTime;
+                hitTime;
         if (!this._targetHitPositionValid) {
             targetPosition = this._target.getPhysicalPositionVector();
             position = mat.translationVector3(this._physicalModel.getPositionMatrix());
             relativeTargetVelocity = vec.diffTranslation3(this._target.getVelocityMatrix(), this._physicalModel.getVelocityMatrix());
-            acceleration = this._class.getThrust() / this._class.getMass();
-            a = acceleration * acceleration * 0.25;
-            c = -(relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
-            d = 0;
-            for (i = 0; i < 3; i++) {
-                d += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
-            }
-            e = 0;
-            for (i = 0; i < 3; i++) {
-                e += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
-            }
-            hitTime = utils.getSmallestPositiveSolutionOf4thDegreeEquationWithoutDegree3(a, c, d, e);
+            hitTime = this._class.getTargetHitTime(position, targetPosition, relativeTargetVelocity);
             this._targetHitPosition[0] = targetPosition[0] + hitTime * relativeTargetVelocity[0];
             this._targetHitPosition[1] = targetPosition[1] + hitTime * relativeTargetVelocity[1];
             this._targetHitPosition[2] = targetPosition[2] + hitTime * relativeTargetVelocity[2];
@@ -2442,6 +2430,45 @@ define([
      */
     MissileLauncher.prototype.isReady = function () {
         return (this._cooldown <= 0) && (this._salvoLeft <= 0);
+    };
+    /**
+     * Returns whether the passed spacecraft is within range of the missiles from this launcher.
+     * Considers the current velocity of the spacecraft and the target, the launch velocity of the missile, the estimated time
+     * it would take for homing missiles to turn towards the target before firing the main engine (based on angular acceleration
+     * and main engine burn start threshold angle). Works with the center of the spacecraft and the target, does not consider
+     * exact missile start position and target size for simplicity's sake (and to increase margin for error) as well as possible
+     * range lost due to maneuvering on a curve instead of a straight line if the main burn start threshold angle is significant.
+     * @param {Spacecraft} target
+     * @returns {Boolean}
+     */
+    MissileLauncher.prototype.isInRange = function (target) {
+        var driftTime, burnTime, position, targetPosition, orientationMatrix, turnAngles, maxTurnAngle, turnTime, velocityVector, relativeTargetVelocity, angularAcceleration;
+        orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
+        // velocity vector for the original drifting of the missile after it is launched, before igniting main engine
+        velocityVector = vec.sum3(mat.translationVector3(this._spacecraft.getVelocityMatrix()), vec.scaled3Aux(mat.getRowB43(orientationMatrix), this._class.getLaunchVelocity()));
+        relativeTargetVelocity = vec.diff3(mat.translationVector3(target.getVelocityMatrix()), velocityVector);
+        driftTime = 0.001 * this._class.getIgnitionTime();
+        // first, consider drifting after launch
+        position = this._spacecraft.getPhysicalPositionVector();
+        targetPosition = vec.sum3(target.getPhysicalPositionVector(), vec.scaled3Aux(relativeTargetVelocity, driftTime));
+        // consider turning before firing main engine
+        if (this._class.getHomingMode() === classes.MissileHomingMode.NONE) {
+            turnTime = 0;
+        } else {
+            turnAngles = vec.getYawAndPitch(vec.normalize3(vec.prodVec3Mat4Aux(
+                            vec.diff3(targetPosition, position),
+                            mat.inverseOfRotation4Aux(orientationMatrix))));
+            maxTurnAngle = Math.max(0, Math.max(turnAngles.yaw, turnAngles.pitch) - this._class.getMainBurnAngleThreshold());
+            angularAcceleration = this._class.getAngularAcceleration();
+            turnTime = (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S * MISSILE_TURN_ACCELERATION_DURATION_S + maxTurnAngle) / (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S);
+            if (turnTime < 2 * MISSILE_TURN_ACCELERATION_DURATION_S) {
+                turnTime = Math.sqrt(4 * maxTurnAngle / angularAcceleration);
+            }
+            targetPosition = vec.sum3(targetPosition, vec.scaled3Aux(relativeTargetVelocity, turnTime));
+        }
+        // consider the phase accelerating towards the target (assuming straight line for simplicity)
+        burnTime = 0.001 * this._class.getDuration() - driftTime - turnTime;
+        return this._class.getTargetHitTime(position, targetPosition, relativeTargetVelocity) < burnTime;
     };
     /**
      * Returns the amount of score points to be added to the total score value of spacecrafts that have this launcher

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1260,7 +1260,7 @@ define([
             },
             MISSILE_INFO_TEXT: {
                 name: "missileInfoText",
-                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["readySelected", "ready", "loadingSelected", "empty"], POSITION: ["name", "count"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["readySelected", "lockingSelected", "loadingSelected", "notSelected", "empty"], POSITION: ["name", "count"]})
             },
             MISSILE_INFO_TEXT_OFFSET: {
                 name: "missileInfoTextOffset",

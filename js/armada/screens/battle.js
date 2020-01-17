@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2360,7 +2360,7 @@ define([
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).fontName,
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).fontSize,
                             _missileInfoBackgroundLayout.getScaleMode(),
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).colors.ready);
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).colors.notSelected);
                 },
                 getMissileInfoCountText = function (index) {
                     var position = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).positions.count;
@@ -2371,7 +2371,7 @@ define([
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).fontName,
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).fontSize,
                             _missileInfoBackgroundLayout.getScaleMode(),
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).colors.ready,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).colors.notSelected,
                             "right");
                 },
                 getObjectiveText = function (index) {
@@ -2995,12 +2995,12 @@ define([
                         if (count <= 0) {
                             color = colors.empty;
                         } else if (missileLauncher && (missileLauncher.getMissileClass() === _missileClasses[i])) {
-                            color = missileLauncher.isReady() ? colors.readySelected : colors.loadingSelected;
+                            color = missileLauncher.isReady() ? ((!craft.getTarget() || missileLauncher.isInRange(craft.getTarget())) ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
                             if (missileLauncher.isInSalvoMode()) {
                                 text += " (×" + missileLauncher.getSalvo() + ")";
                             }
                         } else {
-                            color = colors.ready;
+                            color = colors.notSelected;
                         }
                         _missileInfoNameTexts[i].setText(text);
                         _missileInfoNameTexts[i].setColor(color);

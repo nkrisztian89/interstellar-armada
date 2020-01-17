@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
  * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -1766,6 +1766,11 @@ define([
          */
         this._ignitionTime = dataJSON ? (dataJSON.ignitionTime || _showMissingPropertyError(this, "ignitionTime")) : 0;
         /**
+         * The forward acceleration of the missile when the main thruster is firing, in m/s^2
+         * @type Number
+         */
+        this._acceleration = dataJSON ? (dataJSON.acceleration || _showMissingPropertyError(this, "acceleration")) : 0;
+        /**
          * The thrust that the main thruster of the missile exerts for accelerating the missile towards
          * the target, in newtons (kg*m/s^2)
          * @type Number
@@ -1873,7 +1878,7 @@ define([
          * Cached calculated value of the missile's nominal range
          * @type Number
          */
-        this._nominalRange = (0.001  * this._duration * this._launchVelocity) + (this._thrust / this._mass * 0.5 * t * t); // s = v0 * t + a/2 * t^2
+        this._nominalRange = (0.001  * this._duration * this._launchVelocity) + (this._acceleration * 0.5 * t * t); // s = v0 * t + a/2 * t^2
         return true;
     };
     /**
@@ -1978,6 +1983,12 @@ define([
      */
     MissileClass.prototype.getMass = function () {
         return this._mass;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getAcceleration = function () {
+        return this._acceleration;
     };
     /**
      * @returns {Number}
@@ -2135,6 +2146,29 @@ define([
      */
     MissileClass.prototype.getThrusterSlots = function () {
         return this._thrusterSlots;
+    };
+    /**
+     * Returns the estimated time it would take for a missile of this class to reach
+     * a target at targetPosition from position, assuming the passed initial relative 
+     * velocity of the target, accelerating in a straight line towards it. In seconds.
+     * @param {Number[3]} position
+     * @param {Number[3]} targetPosition
+     * @param {Number[3]} relativeTargetVelocity
+     * @returns {Number}
+     */
+    MissileClass.prototype.getTargetHitTime = function (position, targetPosition, relativeTargetVelocity) {
+        var a, c, d, e, i;
+        a = this._acceleration * this._acceleration * 0.25;
+        c = -(relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
+        d = 0;
+        for (i = 0; i < 3; i++) {
+            d += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
+        }
+        e = 0;
+        for (i = 0; i < 3; i++) {
+            e += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
+        }
+        return utils.getSmallestPositiveSolutionOf4thDegreeEquationWithoutDegree3(a, c, d, e);
     };
     /**
      * @override
