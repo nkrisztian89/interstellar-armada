@@ -610,6 +610,21 @@ define([
              */
             _speedTargetIndicator,
             /**
+             * Indicates the current missile firing mode (single / salvo) and status (loading / out of range / locking / ready to fire) with icon and color
+             * @type HUDElement
+             */
+            _missileIndicator,
+            /**
+             * Houses the missile indicator text
+             * @type TextLayer
+             */
+            _missileIndicatorTextLayer,
+            /**
+             * Displays the count for the currently selected missile class
+             * @type CanvasText
+             */
+            _missileIndicatorText,
+            /**
              * Houses the texts displaying the current and reference speed values.
              * @type TextLayer
              */
@@ -843,6 +858,11 @@ define([
              * @type Number[2]
              */
             _speedTargetIndicatorSize,
+            /**
+             * Stores a reference to the layout used for the missile indicator HUD element for quicker access.
+             * @type ClipSpaceLayout
+             */
+            _missileIndicatorLayout,
             /**
              * Stores a reference to the layout used for the hull integrity bar HUD element for quicker access.
              * @type ClipSpaceLayout
@@ -1747,7 +1767,7 @@ define([
      * they are. If they are not loaded, sets callbacks to add them after the loading has finished.
      */
     function _addHUDToScene() {
-        var i, n, layout, mappings, indicator, layoutDescriptor;
+        var i, n, layout, mappings, indicator, layoutDescriptor, element;
         // keep the ons with the same shader together for faster rendering
         // ---------------------------------------------------------
         // UI 2D SHADER
@@ -1938,6 +1958,27 @@ define([
                 undefined,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TARGET_INDICATOR).mapping));
         _speedTargetIndicator.addToScene(_battleScene);
+        _missileIndicator = _missileIndicator || _addHUDElement(new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).texture,
+                _missileIndicatorLayout.getClipSpacePosition(),
+                _missileIndicatorLayout.getClipSpaceSize(),
+                _missileIndicatorLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).colors.loading,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).colors.loading,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).mappings.single));
+        _missileIndicator.addToScene(_battleScene);
+        // just to make sure model with salvo texture coordinates is added to context:
+        element = new HUDElement(
+                UI_2D_CLIP_VIEWPORT_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).texture,
+                _missileIndicatorLayout.getClipSpacePosition(),
+                _missileIndicatorLayout.getClipSpaceSize(),
+                _missileIndicatorLayout.getScaleMode(),
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).colors.loading,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).colors.loading,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).mappings.salvo);
+        element.addResourcesToScene(_battleScene);
         _hullIntegrityBar = _hullIntegrityBar || _addHUDElement(new HUDElement(
                 UI_2D_CLIP_VIEWPORT_SHADER_NAME,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).texture,
@@ -2454,6 +2495,23 @@ define([
         if (!_currentSpeedText) {
             _currentSpeedText = getSpeedText(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxReverse);
             _speedTextLayer.addText(_currentSpeedText);
+        }
+        // ..............................................................................
+        // missile indicator text
+        if (!_missileIndicatorTextLayer) {
+            _missileIndicatorTextLayer = new screens.TextLayer(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR_TEXT_LAYOUT));
+            screenCanvas.addTextLayer(_missileIndicatorTextLayer);
+        }
+        if (!_missileIndicatorText) {
+            _missileIndicatorText = new screens.CanvasText(
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR_TEXT).position,
+                    "",
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR_TEXT).fontName,
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR_TEXT).fontSize,
+                    _missileIndicatorLayout.getScaleMode(),
+                    config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR_TEXT).colors.ready,
+                    "right");
+            _missileIndicatorTextLayer.addText(_missileIndicatorText);
         }
         // ..............................................................................
         // flight mode
@@ -2987,6 +3045,7 @@ define([
                 _missileInfoBackground.show();
                 colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).colors;
                 missileLauncher = craft.getActiveMissileLauncher();
+                craftCount = 0; // used for saving count of equipped missiles
                 for (i = 0; i < _missileInfoNameTexts.length; i++) {
                     if (i < _missileClasses.length) {
                         text = _missileClasses[i].getShortName();
@@ -2995,10 +3054,16 @@ define([
                         if (count <= 0) {
                             color = colors.empty;
                         } else if (missileLauncher && (missileLauncher.getMissileClass() === _missileClasses[i])) {
-                            color = missileLauncher.isReady() ? ((!craft.getTarget() || missileLauncher.isInRange(craft.getTarget())) ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
+                            if (craft.getTarget()) {
+                                targetInRange = missileLauncher.isInRange(craft.getTarget());
+                            } else {
+                                targetInRange = true;
+                            }
+                            color = missileLauncher.isReady() ? (targetInRange ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
                             if (missileLauncher.isInSalvoMode()) {
                                 text += " (×" + missileLauncher.getSalvo() + ")";
                             }
+                            craftCount = count;
                         } else {
                             color = colors.notSelected;
                         }
@@ -3013,9 +3078,29 @@ define([
                     }
                 }
                 _missileInfoTextLayer.show();
+                // .....................................................................................................
+                // missile indicator
+                if (craftCount > 0) {
+                    _missileIndicator.setTextureCoordinates(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).mappings[missileLauncher.isInSalvoMode() ? "salvo" : "single"]);
+                    colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).colors;
+                    speedRatio = missileLauncher.getLoadRatio();
+                    _missileIndicator.setColor((targetInRange && (speedRatio >= 1)) ? colors.ready : colors.locking);
+                    _missileIndicator.clipY(0, speedRatio);
+                    _missileIndicator.applyLayout(_missileIndicatorLayout, canvas.width, canvas.height);
+                    _missileIndicator.show();
+                    _missileIndicatorText.setText(craftCount.toString());
+                    colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR_TEXT).colors;
+                    _missileIndicatorText.setColor((speedRatio >= 1) ? (targetInRange ? colors.ready : colors.locking) : colors.loading);
+                    _missileIndicatorTextLayer.show();
+                } else {
+                    _missileIndicator.hide();
+                    _missileIndicatorTextLayer.hide();
+                }
             } else {
                 _missileInfoBackground.hide();
                 _missileInfoTextLayer.hide();
+                _missileIndicator.hide();
+                _missileIndicatorTextLayer.hide();
             }
             if (!_demoMode && control.isInPilotMode()) {
                 // .....................................................................................................
@@ -3786,6 +3871,7 @@ define([
             _speedTextLayer.hide();
             _flightModeIndicatorTextLayer.hide();
             _missileInfoTextLayer.hide();
+            _missileIndicatorTextLayer.hide();
             _objectivesTextLayer.hide();
             _escortsTextLayer.hide();
             _messageTextLayer.hide();
@@ -4208,6 +4294,7 @@ define([
         _targetHullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_HULL_INTEGRITY_BAR).layout);
         _targetShieldBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_SHIELD_BAR).layout);
         _speedBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).layout);
+        _missileIndicatorLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).layout);
         _hullIntegrityBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).layout);
         _shieldBarLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).layout);
         _flightModeIndicatorBackgroundLayout = new screens.ClipSpaceLayout(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_INDICATOR_BACKGROUND).layout);

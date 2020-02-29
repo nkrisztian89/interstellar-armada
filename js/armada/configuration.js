@@ -1230,6 +1230,18 @@ define([
                 name: "speedTargetIndicator",
                 type: _customTypes.UI_IMAGE_DESCRIPTOR
             },
+            MISSILE_INDICATOR: {
+                name: "missileIndicator",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {MAPPING: ["single", "salvo"], COLOR: ["ready", "locking", "loading"]})
+            },
+            MISSILE_INDICATOR_TEXT_LAYOUT: {
+                name: "missileIndicatorTextLayout",
+                type: _customTypes.LAYOUT_DESCRIPTOR
+            },
+            MISSILE_INDICATOR_TEXT: {
+                name: "missileIndicatorText",
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["ready", "locking", "loading"]})
+            },
             HULL_INTEGRITY_BAR: {
                 name: "hullIntegrityBar",
                 type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty", "filledWhenDecreasing", "emptyWhenDecreasing"]})

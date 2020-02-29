@@ -541,6 +541,45 @@
                     "size": [1.0, 0.015],
                     "scaleMode": "minimum"
                 },
+                "missileIndicator": {
+                    "texture": "hud-atlas",
+                    "mappings": {
+                        "single": [[0.4375, 0.8125], [0.5, 0.875]],
+                        "salvo": [[0.4375, 0.9375], [0.5, 1.0]]
+                    },
+                    "layout": {
+                        "centerX": 0.48,
+                        "bottom": -0.25,
+                        "width": 0.1,
+                        "height": 0.1,
+                        "scaleMode": "minimum",
+                        "xScaleMode": "minimum"
+                    },
+                    "colors": {
+                        "ready": [0, 1, 0, 1],
+                        "locking": [1, 1, 0, 1],
+                        "loading": [1, 0.7, 0, 0.7]
+                    }
+                },
+                "missileIndicatorTextLayout": {
+                    "centerX": 0.38,
+                    "bottom": -0.25,
+                    "width": 0.1,
+                    "height": 0.04,
+                    "scaleMode": "minimum",
+                    "xScaleMode": "minimum",
+                    "yScaleMode": "minimum"
+                },
+                "missileIndicatorText": {
+                    "colors": {
+                        "ready": [0, 1, 0, 1],
+                        "locking": [1, 1, 0, 1],
+                        "loading": [1, 0.7, 0, 1]
+                    },
+                    "fontSize": 1.0,
+                    "fontName": "hudFont",
+                    "position": [0.95, -0.9]
+                },
                 "hullIntegrityBar": {
                     "texture": "hud-atlas",
                     "mapping": [[0.125, 0.5], [0.0, 1.0]],

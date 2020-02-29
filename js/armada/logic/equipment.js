@@ -2204,6 +2204,15 @@ define([
         return this._class.getCooldown();
     };
     /**
+     * Returns how close is the launcher to being ready for the next manual launch (from 0 to 1)
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getLoadRatio = function () {
+        return this._salvo ?
+                1 - (this._salvoLeft + this._cooldown / this._class.getCooldown()) / this._descriptor.salvo :
+                1 - this._cooldown / this._class.getCooldown();
+    };
+    /**
      * Whether the launcher is currently in salvo mode
      * @returns {Boolean}
      */
@@ -2456,8 +2465,8 @@ define([
             turnTime = 0;
         } else {
             turnAngles = vec.getYawAndPitch(vec.normalize3(vec.prodVec3Mat4Aux(
-                            vec.diff3(targetPosition, position),
-                            mat.inverseOfRotation4Aux(orientationMatrix))));
+                    vec.diff3(targetPosition, position),
+                    mat.inverseOfRotation4Aux(orientationMatrix))));
             maxTurnAngle = Math.max(0, Math.max(turnAngles.yaw, turnAngles.pitch) - this._class.getMainBurnAngleThreshold());
             angularAcceleration = this._class.getAngularAcceleration();
             turnTime = (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S * MISSILE_TURN_ACCELERATION_DURATION_S + maxTurnAngle) / (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S);
