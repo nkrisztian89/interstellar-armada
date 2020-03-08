@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Implementation of the Spacecraft game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -25,6 +25,7 @@
  * @param audio Used for creating sound sources for spacecrafts
  * @param config Used to access game settings/configuration
  * @param strings Used for translation support
+ * @param control Used to access control sound effects
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param constants Used for light priority values
  * @param SpacecraftEvents Used for event handling
@@ -48,6 +49,7 @@ define([
     "armada/logic/classes",
     "armada/configuration",
     "armada/strings",
+    "armada/control",
     "armada/logic/constants",
     "armada/logic/SpacecraftEvents",
     "armada/logic/equipment",
@@ -57,7 +59,7 @@ define([
         utils, vec, mat,
         application, managedGL, egomModel, physics, resources,
         renderableObjects, lights, sceneGraph,
-        graphics, audio, classes, config, strings,
+        graphics, audio, classes, config, strings, control,
         constants, SpacecraftEvents, equipment, explosion) {
     "use strict";
     var
@@ -2210,8 +2212,12 @@ define([
                 } else {
                     if (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass) {
                         this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(salvo);
-                    } else if (config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE)) {
-                        this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(true);
+                    } else {
+                        this._missileLaunchers[this._activeMissileLauncherIndex].setMinimumCooldown(config.getBattleSetting(config.BATTLE_SETTINGS.MISSILE_AUTO_CHANGE_COOLDOWN));
+                        if (config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE)) {
+                            this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(true);
+                        }
+                        control.playMissileChangeSound();
                     }
                 }
             }

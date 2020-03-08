@@ -2252,6 +2252,15 @@ define([
         return this._descriptor.salvo;
     };
     /**
+     * Sets the cooldown to the passed value, if it is larger than the currently remaining cooldown
+     * @param {Number} value In milliseconds
+     */
+    MissileLauncher.prototype.setMinimumCooldown = function (value) {
+        if (this._cooldown < value) {
+            this._cooldown = value;
+        }
+    };
+    /**
      * Returns a 4x4 rotation matrix describing the orientation of missiles launched by this launcher in world space.
      * Uses an auxiliary matrix common to all MissileLaunchers.
      * @returns {Float32Array}

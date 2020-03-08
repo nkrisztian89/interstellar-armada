@@ -1410,6 +1410,10 @@ define([
                 name: "missileSalvoSound",
                 type: classes.SOUND_EFFECT
             },
+            MISSILE_LOCKED_SOUND: {
+                name: "missileLockedSound",
+                type: classes.SOUND_EFFECT
+            },
             MESSAGE_SOUND: {
                 name: "messageSound",
                 type: classes.SOUND_EFFECT
@@ -1620,6 +1624,14 @@ define([
         DEFAULT_SALVO_MODE: {
             name: "defaultSalvoMode",
             type: "boolean"
+        },
+        /**
+         * When the missiles of the selected class run out and the spacecraft automatically switches to the next missile class, the
+         * newly selected launcher is set to this cooldown (minimum)
+         */
+        MISSILE_AUTO_CHANGE_COOLDOWN: {
+            name: "missileAutoChangeCooldown",
+            type: "number"
         }
     };
     CAMERA_SETTINGS = {

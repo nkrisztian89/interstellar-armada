@@ -925,6 +925,10 @@
                     "name": "missile_salvo",
                     "volume": 0.5
                 },
+                "missileLockedSound": {
+                    "name": "missile_locked",
+                    "volume": 0.5
+                },
                 "messageSound": {
                     "name": "blip_message",
                     "volume": 0.5
@@ -966,7 +970,8 @@
             "scoreBonusForHullIntegrity": 200,
             "scoreBonusForHullIntegrityTeam": 100,
             "scoreBonusForTeamSurvival": 100,
-            "defaultSalvoMode": false
+            "defaultSalvoMode": false,
+            "missileAutoChangeCooldown": 500
         },
         "camera": {
             "defaultFOV": 40,

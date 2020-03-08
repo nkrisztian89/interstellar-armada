@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Provides functionality to load and access control configuration and settings for Interstellar Armada.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -97,7 +97,14 @@ define([
              * A shortcut reference to the input interpreter that handles mouse input stored in the context
              * @type MouseInputInterpreter
              */
-            _mouseInputInterpreter;
+            _mouseInputInterpreter,
+            // ------------------------------------------------------------------------------
+            // public functions
+            playMissileChangeSound = function () {
+                if (_missileChangeSound) {
+                    _missileChangeSound.play();
+                }
+            };
     keyboard.setModulePrefix("interstellarArmada_control_");
     mouse.setModulePrefix("interstellarArmada_control_");
     gamepad.setModulePrefix("interstellarArmada_control_");
@@ -634,6 +641,7 @@ define([
         isInPilotMode: _context.isInPilotMode.bind(_context),
         switchToPilotMode: _context.switchToPilotMode.bind(_context),
         switchToSpectatorMode: _context.switchToSpectatorMode.bind(_context),
-        isMouseTurningDisabled: _context.isMouseTurningDisabled.bind(_context)
+        isMouseTurningDisabled: _context.isMouseTurningDisabled.bind(_context),
+        playMissileChangeSound: playMissileChangeSound
     };
 });

@@ -380,6 +380,16 @@ define([
              */
             _messageTypeSound,
             /**
+             * The sound played when the selected missile gets locked on target.
+             * @type SoundClip
+             */
+            _missileLockedSound,
+            /**
+             * Whether the selected missile is locked on target during the current frame
+             * @type Boolean
+             */
+            _missileLocked,
+            /**
              * The message that is displayed informing the player about engaged jump engines.
              * @type Battle~HUDMessage
              */
@@ -2091,6 +2101,7 @@ define([
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_DENIED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_SALVO_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name);
@@ -3057,13 +3068,21 @@ define([
                             if (craft.getTarget()) {
                                 targetInRange = missileLauncher.isInRange(craft.getTarget());
                             } else {
-                                targetInRange = true;
+                                targetInRange = false;
                             }
                             color = missileLauncher.isReady() ? (targetInRange ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
                             if (missileLauncher.isInSalvoMode()) {
                                 text += " (×" + missileLauncher.getSalvo() + ")";
                             }
                             craftCount = count;
+                            if (targetInRange) {
+                                if (!_missileLocked) {
+                                    _missileLockedSound.play();
+                                }
+                                _missileLocked = true;
+                            } else {
+                                _missileLocked = false;
+                            }
                         } else {
                             color = colors.notSelected;
                         }
@@ -4256,6 +4275,10 @@ define([
                             spacecraft.addEventHandler(SpacecraftEvents.ARRIVED, _handleSpacecraftArrived.bind(spacecraft));
                         }
                     });
+                    _missileLockedSound = resources.getSoundEffect(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).name).createSoundClip(
+                            resources.SoundCategory.SOUND_EFFECT,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).volume);
                     _messageSound = resources.getSoundEffect(
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
                             resources.SoundCategory.SOUND_EFFECT,
@@ -4274,6 +4297,7 @@ define([
                     this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
                     _elapsedTime = 0;
                     _timeSinceLastFire = 0;
+                    _missileLocked = false;
                     audio.playMusic(_mission.noHostilesPresent() ? AMBIENT_THEME : _anticipationTheme);
                 }.bind(this));
             }.bind(this));
