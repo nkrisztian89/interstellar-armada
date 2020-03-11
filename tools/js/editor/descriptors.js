@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2020 Krisztián Nagy
  * @file Provides the descriptor objects that outline the structure of properties for the various resource / class categories of 
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -1125,6 +1125,14 @@ define([
                     name: "duration",
                     type: MILLISECONDS
                 },
+                LOCKING_TIME: {
+                    name: "lockingTime",
+                    type: MILLISECONDS
+                },
+                LOCKING_ANGLE: {
+                    name: "lockingAngle",
+                    type: DEGREES
+                },
                 COOLDOWN: {
                     name: "cooldown",
                     type: MILLISECONDS
@@ -2090,6 +2098,11 @@ define([
                 MASS: {
                     name: "mass",
                     type: KILOGRAMS,
+                    newValue: 1
+                },
+                LOCKING_TIME_FACTOR: {
+                    name: "lockingTimeFactor",
+                    type: SCALE,
                     newValue: 1
                 },
                 BODIES: {

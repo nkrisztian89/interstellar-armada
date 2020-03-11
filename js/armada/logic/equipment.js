@@ -2197,6 +2197,13 @@ define([
         return this._class.getFireRate();
     };
     /**
+     * Returns the time it takes for this launcher to lock on to a target, in milliseconds
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.getLockingTime = function () {
+        return this._class.getLockingTime();
+    };
+    /**
      * Return the duration this launcher needs between launches, in milliseconds.
      * @returns {Number}
      */
@@ -2456,6 +2463,8 @@ define([
      * and main engine burn start threshold angle). Works with the center of the spacecraft and the target, does not consider
      * exact missile start position and target size for simplicity's sake (and to increase margin for error) as well as possible
      * range lost due to maneuvering on a curve instead of a straight line if the main burn start threshold angle is significant.
+     * Also considers locking angle for homing missiles - is the target is outside of the allowed angle, it is considered out of
+     * range
      * @param {Spacecraft} target
      * @returns {Boolean}
      */
@@ -2476,6 +2485,13 @@ define([
             turnAngles = vec.getYawAndPitch(vec.normalize3(vec.prodVec3Mat4Aux(
                     vec.diff3(targetPosition, position),
                     mat.inverseOfRotation4Aux(orientationMatrix))));
+            turnAngles.yaw = Math.abs(turnAngles.yaw);
+            turnAngles.pitch = Math.abs(turnAngles.pitch);
+            if (this._class.getLockingAngle() > 0) {
+                if (Math.max(turnAngles.yaw, turnAngles.pitch) > this._class.getLockingAngle()) {
+                    return false;
+                }
+            }        
             maxTurnAngle = Math.max(0, Math.max(turnAngles.yaw, turnAngles.pitch) - this._class.getMainBurnAngleThreshold());
             angularAcceleration = this._class.getAngularAcceleration();
             turnTime = (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S * MISSILE_TURN_ACCELERATION_DURATION_S + maxTurnAngle) / (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S);
@@ -2590,7 +2606,48 @@ define([
          * @type Number
          */
         this._timeUntilNonHostileOrderReset = 0;
+        /**
+         * The missile launcher for which the computer is locking the current target
+         * @type MissileLauncher
+         */
+        this._missileLauncher = null;
+        /**
+         * The total amount of time needed until the current target is locked for missile launch, in milliseconds
+         * @type Number
+         */
+        this._lockTime = 1;
+        /**
+         * The amount of time remaining until the current target is locked for missile launch, in milliseconds
+         * @type Number
+         */
+        this._lockTimeLeft = 1;
     }
+    /**
+     * Reset locking time and time remaining according to missile launcher and target characteristics
+     */
+    TargetingComputer.prototype._resetMissileLock = function () {
+        this._lockTime = (this._target && this._missileLauncher) ? (this._target.getLockingTimeFactor() * this._missileLauncher.getLockingTime()) : 1;
+        this._lockTimeLeft = this._lockTime;
+    };
+    /**
+     * Returns the progress ratio of the current missile locking process (0: not locked, 1: missile locked)
+     * @returns {Number}
+     */
+    TargetingComputer.prototype.getMissileLockRatio = function () {
+        return 1 - (this._lockTimeLeft / this._lockTime);
+    };
+    /**
+     * Set a new missile launcher to use for locking on to the target with missiles
+     * @param {MissileLauncher} missileLauncher 
+     */
+    TargetingComputer.prototype.setMissileLauncher = function (missileLauncher) {
+        if (!this._missileLauncher || !missileLauncher || (missileLauncher.getMissileClass() !== this._missileLauncher.getMissileClass())) {
+            this._missileLauncher = missileLauncher;
+            this._resetMissileLock();
+        } else {
+            this._missileLauncher = missileLauncher;
+        }
+    };
     /**
      * Targets the given spacecraft and executes related operations, such as changing target views. 
      * @param {Spacecraft|null} target If null is given, the current target will be canceled.
@@ -2620,6 +2677,7 @@ define([
             if (this._target) {
                 this._target.setBeingTargeted(this._spacecraft);
             }
+            this._resetMissileLock();
         }
     };
     /**
@@ -2934,6 +2992,11 @@ define([
         if (this._timeUntilNonHostileOrderReset > 0) {
             this._timeUntilNonHostileOrderReset -= dt;
         }
+        if (this._target && this._missileLauncher && (this._missileLauncher.getMissileCount() > 0) && (this._missileLauncher.isInRange(this._target))) {
+            this._lockTimeLeft = Math.max(0, this._lockTimeLeft - dt);
+        } else {
+            this._resetMissileLock();
+        }
     };
     /**
      * Removes all references from this object
@@ -2945,6 +3008,7 @@ define([
         this._targetHitPosition = null;
         this._orderedHostileTargets = null;
         this._orderedNonHostileTargets = null;
+        this._missileLauncher = null;
     };
     // #########################################################################
     /**

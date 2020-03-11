@@ -2799,7 +2799,7 @@ define([
                 distance, aspect, i, j, count, scale, futureDistance, animationProgress, animation2Progress, aimAssistAppearAnimationProgress, targetSwitchAnimationProgress, shipWidth,
                 hullIntegrity, shieldIntegrity,
                 acceleration, speed, absSpeed, maxSpeed, stepFactor, stepBuffer, speedRatio, speedTarget, driftSpeed, driftArrowMaxSpeed, arrowPositionRadius,
-                armor, craftCount, height, statusCount, angle,
+                armor, craftCount, height, statusCount, angle, lockRatio,
                 /** @type Weapon[] */
                 weapons,
                 /** @type Number[2] */
@@ -3066,10 +3066,11 @@ define([
                             color = colors.empty;
                         } else if (missileLauncher && (missileLauncher.getMissileClass() === _missileClasses[i])) {
                             if (craft.getTarget()) {
-                                targetInRange = missileLauncher.isInRange(craft.getTarget());
+                                lockRatio = craft.getMissileLockRatio();
                             } else {
-                                targetInRange = false;
+                                lockRatio = 0;
                             }
+                            targetInRange = lockRatio >= 1;
                             color = missileLauncher.isReady() ? (targetInRange ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
                             if (missileLauncher.isInSalvoMode()) {
                                 text += " (×" + missileLauncher.getSalvo() + ")";
@@ -3103,8 +3104,15 @@ define([
                     _missileIndicator.setTextureCoordinates(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).mappings[missileLauncher.isInSalvoMode() ? "salvo" : "single"]);
                     colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).colors;
                     speedRatio = missileLauncher.getLoadRatio();
-                    _missileIndicator.setColor((targetInRange && (speedRatio >= 1)) ? colors.ready : colors.locking);
-                    _missileIndicator.clipY(0, speedRatio);
+                    if (speedRatio < 1) {
+                        _missileIndicator.setColor(colors.locking);
+                        _missileIndicator.setClipColor(colors.loading);
+                        _missileIndicator.clipY(0, speedRatio);
+                    } else {
+                        _missileIndicator.setColor(colors.ready);
+                        _missileIndicator.setClipColor(colors.locking);
+                        _missileIndicator.clipY(0, lockRatio);
+                    }
                     _missileIndicator.applyLayout(_missileIndicatorLayout, canvas.width, canvas.height);
                     _missileIndicator.show();
                     _missileIndicatorText.setText(craftCount.toString());

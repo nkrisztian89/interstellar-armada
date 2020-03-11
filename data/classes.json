@@ -2793,6 +2793,8 @@
             "angularAcceleration": 450,
             "mainBurnAngleThreshold": 360,
             "duration": 3000,
+            "lockingTime": 500,
+            "lockingAngle": 30,
             "cooldown": 500,
             "salvoCooldown": 250,
             "proximityRange": 1,
@@ -2867,6 +2869,8 @@
             "angularAcceleration": 720,
             "mainBurnAngleThreshold": 2.5,
             "duration": 5000,
+            "lockingTime": 1000,
+            "lockingAngle": 0,
             "cooldown": 2000,
             "proximityRange": 5,
             "kineticFactor": 0.25,
@@ -2941,6 +2945,8 @@
             "angularAcceleration": 360,
             "mainBurnAngleThreshold": 1.5,
             "duration": 8000,
+            "lockingTime": 5000,
+            "lockingAngle": 0,
             "cooldown": 4000,
             "proximityRange": 5,
             "kineticFactor": 0.25,
@@ -3444,6 +3450,7 @@
             "texture": "libra",
             "factionColor": [0.8, 0.2, 0.2, 1],
             "mass": 500,
+            "lockingTimeFactor": 1,
             "bodies": [{
                     "position": [0, 0, 0],
                     "size": [4, 4, 4]
@@ -3489,6 +3496,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [16, 1]],
             "mass": 10000,
+            "lockingTimeFactor": 1.2,
             "bodies": [{
                     "position": [0, 0, 5],
                     "size": [80, 20, 10]
@@ -4515,6 +4523,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [18, 1]],
             "mass": 45000,
+            "lockingTimeFactor": 0.9,
             "bodies": [{
                     "position": [0, 30, 5],
                     "size": [25, 70, 10]
@@ -5091,6 +5100,7 @@
             "texture": "rhino",
             "factionColor": [0.8, 0.2, 0.2, 1],
             "mass": 50000,
+            "lockingTimeFactor": 0.85,
             "bodies": [{
                     "position": [0, 1, 0],
                     "size": [6, 16, 2]
@@ -5562,6 +5572,7 @@
             "texture": "libra",
             "factionColor": [0.8, 0.2, 0.2, 1],
             "mass": 2000,
+            "lockingTimeFactor": 1,
             "bodies": [{
                     "position": [0, 2, 0.3],
                     "size": [2, 10, 2.8]
@@ -5917,6 +5928,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
             "mass": 9000000,
+            "lockingTimeFactor": 0.5,
             "bodies": [{
                     "position": [0, 70, 0],
                     "size": [130, 300, 80]
@@ -6309,6 +6321,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
             "mass": 20000000,
+            "lockingTimeFactor": 0.5,
             "bodies": [{
                     "position": [0, 65, 55],
                     "size": [140, 160, 75]
@@ -6834,6 +6847,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
             "mass": 250000000,
+            "lockingTimeFactor": 0.5,
             "bodies": [{
                     "position": [0, 250, 0],
                     "size": [700, 1700, 800]
@@ -7531,6 +7545,7 @@
             "texture": "wolf",
             "factionColor": [0, 0, 0, 1],
             "mass": 25000,
+            "lockingTimeFactor": 1,
             "bodies": [{
                     "position": [0, 10, 0],
                     "size": [15, 100, 10]

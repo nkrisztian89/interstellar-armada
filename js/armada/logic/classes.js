@@ -1801,6 +1801,17 @@ define([
          */
         this._duration = dataJSON ? (dataJSON.duration || _showMissingPropertyError(this, "duration")) : 0;
         /**
+         * The amount of waiting time needed before being locked to the target while in range and within locking angle, in ms.
+         * @type Number
+         */
+        this._lockingTime = dataJSON ? (dataJSON.lockingTime || _showMissingPropertyError(this, "lockingTime")) : 0;
+        /**
+         * The targeting computer can only lock on to the target (for homing missiles) while its bearing, both yaw and pitch is within this angle, 
+         * measured from the estimated position of the missile when it will ignite, in radians.
+         * @type Number
+         */
+        this._lockingAngle = dataJSON ? ((dataJSON.lockingAngle !== undefined) ? Math.radians(dataJSON.lockingAngle) : _showMissingPropertyError(this, "lockingAngle")) : 0;
+        /**
          * The amount of waiting time needed between launching two missiles, in ms.
          * @type Number
          */
@@ -1947,6 +1958,18 @@ define([
      */
     MissileClass.prototype.getFireRate = function () {
         return 1000 / this._cooldown;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getLockingTime = function () {
+        return this._lockingTime;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getLockingAngle = function () {
+        return this._lockingAngle;
     };
     /**
      * @returns {Number}
@@ -4577,6 +4600,14 @@ define([
             _showMissingPropertyError(this, "blinkers");
         }
         /**
+         * When locking on to this spacecraft with a missile, the time it takes to achieve lock is multiplied by this factor
+         * (smaller for larger ships, larger for more stealthy ships)
+         * @type Number
+         */
+        this._lockingTimeFactor = otherSpacecraftClass ?
+                (dataJSON.lockingTimeFactor || otherSpacecraftClass._lockingTimeFactor) :
+                (dataJSON.lockingTimeFactor || _showMissingPropertyError(this, "lockingTimeFactor") || 0);
+        /**
          * The basic (without any equipment) amount of score points destroying a spacecraft of this type is worth 
          * @type Number
          */
@@ -4795,6 +4826,12 @@ define([
      */
     SpacecraftClass.prototype.getBlinkerDescriptors = function () {
         return this._blinkerDescriptors;
+    };
+    /**
+     * @returns {Number}
+     */
+    SpacecraftClass.prototype.getLockingTimeFactor = function () {
+        return this._lockingTimeFactor;
     };
     /**
      * @typedef {ShadedModelClass~ResourceParams} SpacecraftClass~ResourceParams

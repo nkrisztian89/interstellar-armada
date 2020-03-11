@@ -392,7 +392,7 @@ define([
         this._activeMissileLauncherIndex = -1;
         /**
          * An array of all the missile classes of currently equipped missiles on this ship
-         * @type MissileClass
+         * @type MissileClass[]
          */
         this._missileClasses = [];
         /**
@@ -2031,6 +2031,14 @@ define([
         }
     };
     /**
+     * Set the current active missile launcher to the one with the passed index (also updating targeting computer state for missile locking)
+     * @param {Number} index
+     */
+    Spacecraft.prototype._setActiveMissileLauncherIndex = function (index) {
+        this._activeMissileLauncherIndex = index;
+        this._targetingComputer.setMissileLauncher((this._activeMissileLauncherIndex >= 0) ? this._missileLaunchers[this._activeMissileLauncherIndex] : null);
+    };
+    /**
      * Equips a number of missiles of the given class into a launcher on the ship.
      * @param {MissileClass} missileClass The class of the missiles to equip.
      * @param {Number} amount The amount of missiles to equip. (this many missiles
@@ -2047,7 +2055,7 @@ define([
             descriptor = launchers[launcherIndex];
             this._missileLaunchers.push(new equipment.MissileLauncher(missileClass, this, descriptor, amount));
             if (this._activeMissileLauncherIndex < 0) {
-                this._activeMissileLauncherIndex = 0;
+                this._setActiveMissileLauncherIndex(0);
             }
             if (this._missileClasses.indexOf(missileClass) < 0) {
                 this._missileClasses.push(missileClass);
@@ -2095,7 +2103,7 @@ define([
         }
         this._missileLaunchers = [];
         this._missileClasses = [];
-        this._activeMissileLauncherIndex = -1;
+        this._setActiveMissileLauncherIndex(-1);
         if (this._propulsion) {
             this._propulsion.destroy();
         }
@@ -2207,9 +2215,10 @@ define([
                                 (!outOfMissiles && (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() !== missileClass))));
                 if (this._activeMissileLauncherIndex === originalIndex) {
                     if (outOfMissiles) {
-                        this._activeMissileLauncherIndex = -1;
+                        this._setActiveMissileLauncherIndex(-1);
                     }
                 } else {
+                    this._setActiveMissileLauncherIndex(this._activeMissileLauncherIndex);
                     if (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass) {
                         this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(salvo);
                     } else {
@@ -2246,6 +2255,7 @@ define([
                             (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass)));
             changed = this._activeMissileLauncherIndex !== originalIndex;
             if (changed) {
+                this._setActiveMissileLauncherIndex(this._activeMissileLauncherIndex);
                 if (config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE)) {
                     this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(true);
                 }
@@ -2384,6 +2394,13 @@ define([
      */
     Spacecraft.prototype.getTargetHitPosition = function () {
         return this._targetingComputer.getTargetHitPosition();
+    };
+    /**
+     * Returns the progress ratio of the process of the currently active missile launcher locking on to the current target (0: not locked, 1: missile locked)
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMissileLockRatio = function () {
+        return this._targetingComputer.getMissileLockRatio();
     };
     /**
      * 
@@ -2809,6 +2826,14 @@ define([
             result += this._missileLaunchers[i].getMaxParticleCount();
         }
         return result;
+    };
+    /**
+     * When locking on to this spacecraft with a missile, the time it takes to achieve lock is multiplied by this factor
+     * (smaller for larger ships, larger for more stealthy ships)
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getLockingTimeFactor = function () {
+        return this._class.getLockingTimeFactor();
     };
     /**
      * Cancels the held references and marks the renderable object, its node and its subtree as reusable.
