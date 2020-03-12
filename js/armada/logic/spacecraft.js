@@ -2189,10 +2189,11 @@ define([
     };
     /**
      * If the currently active missile launcher is ready, launches a missile / starts a salvo from that launcher.
+     * @returns {Number} The number of missiles launched
      */
     Spacecraft.prototype.launchMissile = function () {
         var i, scaledOriMatrix, launched = false, missileCount, originalIndex, missileClass, salvo, outOfMissiles;
-        if (!this._firingDisabled && this._activeMissileLauncherIndex >= 0) {
+        if (!this._firingDisabled && (this._activeMissileLauncherIndex >= 0) && this._targetingComputer.isMissileLocked()) {
             scaledOriMatrix = this.getScaledOriMatrix();
             missileCount = this._missileLaunchers[this._activeMissileLauncherIndex].launch(scaledOriMatrix, this.getSoundSourceForFireSound(), false);
             launched = (missileCount > 0);
@@ -2230,7 +2231,9 @@ define([
                     }
                 }
             }
+            return missileCount;
         }
+        return 0;
     };
     /**
      * To be called when a missile launcher launches a missile automatically as part of a salvo

@@ -2468,7 +2468,7 @@ define([
      * @param {Spacecraft} target
      * @returns {Boolean}
      */
-    MissileLauncher.prototype.isInRange = function (target) {
+    MissileLauncher.prototype.isInLockingRange = function (target) {
         var driftTime, burnTime, position, targetPosition, orientationMatrix, turnAngles, maxTurnAngle, turnTime, velocityVector, relativeTargetVelocity, angularAcceleration;
         orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
         // velocity vector for the original drifting of the missile after it is launched, before igniting main engine
@@ -2628,6 +2628,13 @@ define([
     TargetingComputer.prototype._resetMissileLock = function () {
         this._lockTime = (this._target && this._missileLauncher) ? (this._target.getLockingTimeFactor() * this._missileLauncher.getLockingTime()) : 1;
         this._lockTimeLeft = this._lockTime;
+    };
+    /**
+     * Whether the current target is locked for missile launch
+     * @returns {Boolean}
+     */
+    TargetingComputer.prototype.isMissileLocked = function () {
+        return this._lockTimeLeft <= 0;
     };
     /**
      * Returns the progress ratio of the current missile locking process (0: not locked, 1: missile locked)
@@ -2992,7 +2999,7 @@ define([
         if (this._timeUntilNonHostileOrderReset > 0) {
             this._timeUntilNonHostileOrderReset -= dt;
         }
-        if (this._target && this._missileLauncher && (this._missileLauncher.getMissileCount() > 0) && (this._missileLauncher.isInRange(this._target))) {
+        if (this._target && this._missileLauncher && (this._missileLauncher.getMissileCount() > 0) && (this._missileLauncher.isInLockingRange(this._target))) {
             this._lockTimeLeft = Math.max(0, this._lockTimeLeft - dt);
         } else {
             this._resetMissileLock();
