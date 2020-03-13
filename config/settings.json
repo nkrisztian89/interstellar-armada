@@ -925,6 +925,11 @@
                     "name": "missile_salvo",
                     "volume": 0.5
                 },
+                "missileLockingSound": {
+                    "name": "missile_locking",
+                    "volume": 0.5
+                },
+                "missileLockingSoundCount": 5,
                 "missileLockedSound": {
                     "name": "missile_locked",
                     "volume": 0.5

@@ -1410,6 +1410,14 @@ define([
                 name: "missileSalvoSound",
                 type: classes.SOUND_EFFECT
             },
+            MISSILE_LOCKING_SOUND: {
+                name: "missileLockingSound",
+                type: classes.SOUND_EFFECT
+            },
+            MISSILE_LOCKING_SOUND_COUNT: {
+                name: "missileLockingSoundCount",
+                type: "number"
+            },
             MISSILE_LOCKED_SOUND: {
                 name: "missileLockedSound",
                 type: classes.SOUND_EFFECT

@@ -380,6 +380,21 @@ define([
              */
             _messageTypeSound,
             /**
+             * The sound played as the missile is being locked (several time during the locking process)
+             * @type SoundClip
+             */
+            _missileLockingSound,
+            /**
+             * How many times should the locking sound play while locking before full missile lock is achieved (e.g. 3 means the sound plays at 0%, 33% and 67% lock)
+             * @type Number
+             */
+            _missileLockingSoundCount,
+            /**
+             * The number of times the missile locking sound has been already played during the locking process
+             * @type Number
+             */
+            _missileLockingSoundsPlayed,
+            /**
              * The sound played when the selected missile gets locked on target.
              * @type SoundClip
              */
@@ -2101,6 +2116,7 @@ define([
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_DENIED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_SALVO_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name);
@@ -3082,6 +3098,18 @@ define([
                                 }
                                 _missileLocked = true;
                             } else {
+                                speedRatio = lockRatio * _missileLockingSoundCount;
+                                if (speedRatio <= 0) {
+                                    _missileLockingSoundsPlayed = 0;
+                                } else {
+                                    speedRatio = Math.floor(speedRatio) + 1;
+                                    if (speedRatio > _missileLockingSoundsPlayed) {
+                                        _missileLockingSoundsPlayed++;
+                                        _missileLockingSound.play();
+                                    } else if (speedRatio < _missileLockingSoundsPlayed) {
+                                        _missileLockingSoundsPlayed = 0;
+                                    }
+                                }
                                 _missileLocked = false;
                             }
                         } else {
@@ -4283,6 +4311,11 @@ define([
                             spacecraft.addEventHandler(SpacecraftEvents.ARRIVED, _handleSpacecraftArrived.bind(spacecraft));
                         }
                     });
+                    _missileLockingSoundsPlayed = 0;
+                    _missileLockingSound = resources.getSoundEffect(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).name).createSoundClip(
+                            resources.SoundCategory.SOUND_EFFECT,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).volume);
                     _missileLockedSound = resources.getSoundEffect(
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).name).createSoundClip(
                             resources.SoundCategory.SOUND_EFFECT,
@@ -4358,6 +4391,7 @@ define([
         _wingmenStatusCraftIndicatorSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_INDICATOR);
         _wingmenStatusMaxSquadMemberCount = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.WINGMEN_STATUS_CRAFT_POSITIONS).length;
         _messageTextSettings = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TEXT);
+        _missileLockingSoundCount = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND_COUNT);
         _targetViewParams = {
             shaderName: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_SHADER),
             positionMatrix: mat.IDENTITY4,
