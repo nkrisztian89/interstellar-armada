@@ -267,6 +267,21 @@
                 },
                 "shipIndicatorSizeFactor": 2,
                 "targetIndicatorSwitchScale": 1.5,
+                "missileLockIndicator": {
+                    "texture": "hud-atlas",
+                    "mapping": [[0.4375, 0.0625], [0.5, 0.125]],
+                    "scaleMode": "maximum",
+                    "colors": {
+                        "hostileTarget": [1, 0, 0, 0.8],
+                        "friendlyTarget": [0, 1, 0, 0.8]
+                    }
+                },
+                "missileLockIndicatorCount": 4,
+                "missileLockIndicatorRadius": 0.8,
+                "missileLockIndicatorSize": 0.14,
+                "missileLockIndicatorAngle": 45,
+                "missileLockIndicatorRotationSpeed": -0.0032,
+                "missileLockIndicatorBlinkInterval": 500,
                 "distanceTextLayerLayout": {
                     "centerX": 0.0,
                     "centerY": 0.0,

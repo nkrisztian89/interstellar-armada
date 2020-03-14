@@ -283,9 +283,10 @@ define([
      * @param {Object.<String, String[]>} customProperties Changes the given simple property descriptors e.g. passing 
      * {COLOR: ["active", "passive"]} will make the COLOR property descriptor in such way that if it expected "color": [r,g,b,a] properties,
      * now it will expect "colors": {"active": [r,g,b,a], "passive": [r,g,b,a]} properties instead
+     * @param {String[]} [missingProperties] These properties will be deleted from the descriptor
      * @returns {Object}
      */
-    _customTypes.getCustomDescriptor = function (baseDescriptor, customProperties) {
+    _customTypes.getCustomDescriptor = function (baseDescriptor, customProperties, missingProperties) {
         var i, j, result = utils.deepCopy(baseDescriptor), customPropDescNames, propertyDescriptor;
         customPropDescNames = Object.keys(customProperties);
         for (i = 0; i < customPropDescNames.length; i++) {
@@ -304,6 +305,11 @@ define([
                 };
             }
             delete result.properties[customPropDescNames[i]];
+        }
+        if (missingProperties) {
+            for (i = 0; i < missingProperties.length; i++) {
+                delete result.properties[missingProperties[i]];
+            }
         }
         return result;
     };
@@ -1080,6 +1086,34 @@ define([
             },
             TARGET_INDICATOR_SWITCH_SCALE: {
                 name: "targetIndicatorSwitchScale",
+                type: "number"
+            },
+            MISSILE_LOCK_INDICATOR: {
+                name: "missileLockIndicator",
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_IMAGE_DESCRIPTOR, {COLOR: ["hostileTarget", "friendlyTarget"]}, ["SIZE"])
+            },
+            MISSILE_LOCK_INDICATOR_COUNT: {
+                name: "missileLockIndicatorCount",
+                type: "number"
+            },
+            MISSILE_LOCK_INDICATOR_RADIUS: {
+                name: "missileLockIndicatorRadius",
+                type: "number"
+            },
+            MISSILE_LOCK_INDICATOR_SIZE: {
+                name: "missileLockIndicatorSize",
+                type: "number"
+            },
+            MISSILE_LOCK_INDICATOR_ANGLE: {
+                name: "missileLockIndicatorAngle",
+                type: "number"
+            },
+            MISSILE_LOCK_INDICATOR_ROTATION_SPEED: {
+                name: "missileLockIndicatorRotationSpeed",
+                type: "number"
+            },
+            MISSILE_LOCK_INDICATOR_BLINK_INTERVAL: {
+                name: "missileLockIndicatorBlinkInterval",
                 type: "number"
             },
             DISTANCE_TEXT_LAYER_LAYOUT: {

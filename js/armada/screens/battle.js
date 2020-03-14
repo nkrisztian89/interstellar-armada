@@ -503,6 +503,21 @@ define([
              */
             _shipArrows,
             /**
+             * Indicators shown around the current target that indicate the state of missile lock state
+             * @type HUDElement[]
+             */
+            _missileLockIndicators,
+            /**
+             * The angle of the first missile lock indicator (to track them rotating around the target while locking), in radians
+             * @type Number
+             */
+            _missileLockIndicatorAngle,
+            /**
+             * For tracking the time for the blinking of missile lock indicators while locked
+             * @type Number
+             */
+            _missileLockIndicatorBlinkTime,
+            /**
              * Houses the texts displaying the distance from the target at its indicator reticle
              * @type TextLayer
              */
@@ -1705,6 +1720,21 @@ define([
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).mapping));
     }
     /**
+     * Creates and returns a new HUD element that can be used as a missile lock indicator.
+     * @returns {HUDElement}
+     */
+    function _createMissileLockIndicator() {
+        return _addHUDElement(new HUDElement(
+                UI_2D_SHADER_NAME,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR).texture,
+                [0, 0],
+                [1, 1],
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR).scaleMode,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW).colors.hostile,
+                undefined,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR).mapping));
+    }
+    /**
      * Creates and returns a new HUD element that can be used as a weapon impact indicator.
      * @returns {HUDElement}
      */
@@ -1831,6 +1861,15 @@ define([
         }
         for (i = 0; i < _shipStatusIndicators.length; i++) {
             _shipStatusIndicators[i].addToScene(_battleScene);
+        }
+        if (!_missileLockIndicators) {
+            _missileLockIndicators = [];
+            for (i = 0; i < config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_COUNT); i++) {
+                _missileLockIndicators.push(_createMissileLockIndicator());
+            }
+        }
+        for (i = 0; i < config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_COUNT); i++) {
+            _missileLockIndicators[i].addToScene(_battleScene);
         }
         // ---------------------------------------------------------
         // UI 3D SHADER
@@ -2832,7 +2871,7 @@ define([
                 /** @type HTMLCanvasElement */
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
                 /** @type Boolean */
-                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent, skip, away, transmissionSource,
+                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent, skip, away, transmissionSource, missileLockIndicatorsUpdated,
                 /** @type MouseInputIntepreter */
                 mouseInputInterpreter,
                 /** @type String */
@@ -2844,7 +2883,8 @@ define([
                 /** @type Spacecraft[] */
                 ships, highlightedShips,
                 /** @type Battle~HUDMessage[] */
-                messageQueue;
+                messageQueue;                
+        missileLockIndicatorsUpdated = false;
         if (craft && _isHUDVisible) {
             isInAimingView = craft.getView(_battleScene.getCamera().getConfiguration().getName()).isAimingView();
             // .....................................................................................................
@@ -3067,6 +3107,7 @@ define([
             _flightModeIndicatorTextLayer.show();
             // .....................................................................................................
             // missile info indicator
+            lockRatio = 0;
             if (_missileClasses.length > 0) {
                 _missileInfoBackground.applyLayout(_missileInfoBackgroundLayout, canvas.width, canvas.height);
                 _missileInfoBackground.show();
@@ -3083,8 +3124,6 @@ define([
                         } else if (missileLauncher && (missileLauncher.getMissileClass() === _missileClasses[i])) {
                             if (craft.getTarget()) {
                                 lockRatio = craft.getMissileLockRatio();
-                            } else {
-                                lockRatio = 0;
                             }
                             targetInRange = lockRatio >= 1;
                             color = missileLauncher.isReady() ? (targetInRange ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
@@ -3835,6 +3874,37 @@ define([
                                 (0.5 - 0.5 * (position2D[1] + _targetHullIntegrityQuickViewBarLayout.getClipSpaceHeight() * 1.75 + _targetShieldQuickViewBarLayout.getClipSpaceHeight())) * canvas.height
                             ]);
                         }
+                        // display missile lock indicators
+                        if (lockRatio > 0) {
+                            arrowPositionRadius = 0.5 * shipIndicatorSize[1] * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_RADIUS) * (utils.yScalesWithHeight(_shipIndicators[i].getScaleMode(), canvas.width, canvas.height) ? (1 / aspect) : 1);
+                            if (lockRatio < 1) {
+                                // indicators rotate and stay visible while locking
+                                _missileLockIndicatorAngle += dt * config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_ROTATION_SPEED);
+                                _missileLockIndicatorBlinkTime = 0;
+                            } else {
+                                // indicators stay in place and blink while locked
+                                _missileLockIndicatorAngle = Math.radians(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_ANGLE));
+                                _missileLockIndicatorBlinkTime = (_missileLockIndicatorBlinkTime + dt / config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_BLINK_INTERVAL)) % 1;
+                            }
+                            angle = _missileLockIndicatorAngle;
+                            colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR).colors;
+                            color = (targetIsHostile ? colors.hostileTarget : colors.friendlyTarget);
+                            size2D = vec.scaled2(shipIndicatorSize, config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_SIZE));
+                            for (j = 0; j < _missileLockIndicators.length; j++) {
+                                indicator = _missileLockIndicators[j];
+                                if ((lockRatio < 1) || ((_missileLockIndicatorBlinkTime > 0.25) && (_missileLockIndicatorBlinkTime < 0.75))) {
+                                    indicator.setPosition([direction[0] + Math.cos(angle) * arrowPositionRadius, direction[1] + Math.sin(angle) * aspect * arrowPositionRadius]);
+                                    indicator.setSize(size2D);
+                                    indicator.setAngle(-0.5 * Math.PI - angle);
+                                    indicator.setColor(color);
+                                    indicator.show();
+                                    angle += 2 * Math.PI / config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_COUNT);
+                                } else {
+                                    indicator.hide();
+                                }
+                            }
+                            missileLockIndicatorsUpdated = true;
+                        }
                     }
                 }
                 // .....................................................................................................
@@ -3860,9 +3930,9 @@ define([
                 if (statusIndicators.length > 0) {
                     if (!_shipArrows[i].isVisible()) {
                         // if the ship is on screen, all status indicators are displayed below its indicator reticle
-                        height = 0.5 * shipIndicatorSize[1] * (utils.scalesWithWidth(_shipIndicators[i].getScaleMode(), aspect, 1) ? aspect : 1);
-                        position2D = [direction[0], direction[1] - height];
                         scalesWithWidth = utils.scalesWithWidth(_shipIndicators[i].getScaleMode(), aspect, 1);
+                        height = 0.5 * shipIndicatorSize[1] * (scalesWithWidth ? aspect : 1);
+                        position2D = [direction[0], direction[1] - height];
                         size2D = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_STATUS_INDICATOR).sizes.reticle;
                         size2D = [size2D[0] * 0.5 / (scalesWithWidth ? 1 : aspect), size2D[1] * 0.5 * (scalesWithWidth ? aspect : 1)];
                         for (j = 0; j < statusIndicators.length; j++) {
@@ -3935,6 +4005,13 @@ define([
             _wingmenStatusTextLayer.hide();
         }
         _shipIndicatorHighlightTime = (_shipIndicatorHighlightTime + dt) % _shipIndicatorHighlightAnimationInterval;
+        if (!missileLockIndicatorsUpdated) {
+            _missileLockIndicatorAngle = Math.radians(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCK_INDICATOR_ANGLE));
+            _missileLockIndicatorBlinkTime = 0;
+            for (i = 0; i < _missileLockIndicators.length; i++) {
+                _missileLockIndicators[i].hide();
+            }
+        }
     };
     /**
      * Sets up and navigates to the debriefing screen according to the current state of the mission.
