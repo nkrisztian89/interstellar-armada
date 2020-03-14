@@ -380,6 +380,16 @@ define([
              */
             _messageTypeSound,
             /**
+             * The sound played when the current missile finishes loading while being already locked
+             * @type SoundClip
+             */
+            _missileLoadedSound,
+            /**
+             * Whether the selected missile is loaded and ready for launch during the current frame (independently from being locked on target)
+             * @type Boolean
+             */
+            _missileLoaded,
+            /**
              * The sound played as the missile is being locked (several time during the locking process)
              * @type SoundClip
              */
@@ -2155,6 +2165,7 @@ define([
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_CHANGE_DENIED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_SALVO_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOADED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
@@ -2871,7 +2882,7 @@ define([
                 /** @type HTMLCanvasElement */
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
                 /** @type Boolean */
-                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent, skip, away, transmissionSource, missileLockIndicatorsUpdated,
+                isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent, skip, away, transmissionSource, missileLockIndicatorsUpdated, missileLoaded,
                 /** @type MouseInputIntepreter */
                 mouseInputInterpreter,
                 /** @type String */
@@ -3126,7 +3137,8 @@ define([
                                 lockRatio = craft.getMissileLockRatio();
                             }
                             targetInRange = lockRatio >= 1;
-                            color = missileLauncher.isReady() ? (targetInRange ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
+                            missileLoaded = missileLauncher.isReady();
+                            color = missileLoaded ? (targetInRange ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
                             if (missileLauncher.isInSalvoMode()) {
                                 text += " (×" + missileLauncher.getSalvo() + ")";
                             }
@@ -3134,6 +3146,8 @@ define([
                             if (targetInRange) {
                                 if (!_missileLocked) {
                                     _missileLockedSound.play();
+                                } else if (missileLoaded && !_missileLoaded) {
+                                    _missileLoadedSound.play();
                                 }
                                 _missileLocked = true;
                             } else {
@@ -3151,6 +3165,7 @@ define([
                                 }
                                 _missileLocked = false;
                             }
+                            _missileLoaded = missileLoaded;
                         } else {
                             color = colors.notSelected;
                         }
@@ -4388,6 +4403,10 @@ define([
                             spacecraft.addEventHandler(SpacecraftEvents.ARRIVED, _handleSpacecraftArrived.bind(spacecraft));
                         }
                     });
+                    _missileLoadedSound = resources.getSoundEffect(
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOADED_SOUND).name).createSoundClip(
+                            resources.SoundCategory.SOUND_EFFECT,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOADED_SOUND).volume);
                     _missileLockingSoundsPlayed = 0;
                     _missileLockingSound = resources.getSoundEffect(
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).name).createSoundClip(

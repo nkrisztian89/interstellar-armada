@@ -27,6 +27,7 @@ computer/missile_change_denied.wav
 computer/missile_salvo.wav
 computer/missile_locked.ogg
 computer/missile_locking.ogg
+computer/missile_loaded.ogg
 
 Copyright 2016-2020 Krisztián Nagy
 Created using Bfxr, Audacity

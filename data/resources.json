@@ -1506,6 +1506,9 @@
             "name": "missile_salvo",
             "samples": ["computer/missile_salvo.wav"]
         }, {
+            "name": "missile_loaded",
+            "samples": ["computer/missile_loaded.ogg"]
+        }, {
             "name": "missile_locking",
             "samples": ["computer/missile_locking.ogg"]
         }, {

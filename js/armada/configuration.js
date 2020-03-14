@@ -1444,6 +1444,10 @@ define([
                 name: "missileSalvoSound",
                 type: classes.SOUND_EFFECT
             },
+            MISSILE_LOADED_SOUND: {
+                name: "missileLoadedSound",
+                type: classes.SOUND_EFFECT
+            },
             MISSILE_LOCKING_SOUND: {
                 name: "missileLockingSound",
                 type: classes.SOUND_EFFECT
