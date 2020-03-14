@@ -3,7 +3,7 @@ div.selector {
     box-sizing: border-box;
     width: 24.5em;
     padding-left: 11px;
-    padding-right: 11px;
+    padding-right: 1.3em;
     margin-top: 4px;
     margin-bottom: 4px;
     margin-left: 8px;
@@ -35,7 +35,7 @@ div.smallSelector {
 }
 
 div.smallSelectorPropertyContainer {
-    font-size: 75%;
+    font-size: 85%;
     display: table-cell;
     text-align: left;
     vertical-align: middle;

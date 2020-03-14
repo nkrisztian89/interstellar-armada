@@ -20,7 +20,7 @@ div.itemDataSheet {
     padding: 0.6em;
     width: 40vh;
     min-width: 12em;
-    height: calc(100% - 40vh - 0.3em);
+    height: calc(100% - 40vh - 0.8em);
     box-sizing: border-box;
     background-color: #111111;
 }
@@ -34,7 +34,7 @@ div.itemDescriptionContainer {
     position: absolute;
     left: 1em;
     width: calc(100% - 40vh - 2.5em);
-    height: calc(100% - 13em);
+    height: calc(100% - 13.5em);
     text-align: left;
     margin: 0;
     padding: 0.5em;
@@ -120,6 +120,6 @@ canvas.databaseViewScreen {
     
     div.itemDataSheet {
         font-size: 90%;
-        height: 7.9em;
+        height: 7.4em;
     }
 }

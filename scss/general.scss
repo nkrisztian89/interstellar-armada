@@ -301,7 +301,7 @@ a.horizontalMenu {
 a.button {
     @include shadowed;
     min-width: 8em;
-    font-size: 0.9em;
+    font-size: 1.0em;
     text-align: center;
     padding: 0.5em;
     background-color: $panel-color;

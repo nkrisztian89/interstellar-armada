@@ -113,11 +113,11 @@
         "system": "{systemName} rendszer"  
     },
     "settings": {
-        "general": "Általános beállítások",
-        "graphics": "Grafikai beállítások",
-        "audio": "Hang beállítások",
-        "gameplay": "Játékmenet beállítások",
-        "controls": "Irányítás beállításai",
+        "general": "Általános",
+        "graphics": "Grafika",
+        "audio": "Hang",
+        "gameplay": "Játékmenet",
+        "controls": "Irányítás",
         "defaults": "Alapértelmezések visszaállítása"
     },
     "ingameMenu": {

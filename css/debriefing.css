@@ -35,6 +35,8 @@ h1.debriefing {
 
 table.debriefing {
     display: inline-table;
+    margin-left: -2px;
+    margin-right: -2px;
 }
 
 .scoreContainer {
