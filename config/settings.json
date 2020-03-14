@@ -563,8 +563,8 @@
                         "salvo": [[0.4375, 0.9375], [0.5, 1.0]]
                     },
                     "layout": {
-                        "centerX": 0.48,
-                        "bottom": -0.25,
+                        "centerX": 0.585,
+                        "bottom": -0.41,
                         "width": 0.1,
                         "height": 0.1,
                         "scaleMode": "minimum",
@@ -577,8 +577,8 @@
                     }
                 },
                 "missileIndicatorTextLayout": {
-                    "centerX": 0.38,
-                    "bottom": -0.25,
+                    "centerX": 0.485,
+                    "bottom": -0.41,
                     "width": 0.1,
                     "height": 0.04,
                     "scaleMode": "minimum",
@@ -593,7 +593,7 @@
                     },
                     "fontSize": 1.0,
                     "fontName": "hudFont",
-                    "position": [0.95, -0.9]
+                    "position": [0.9, -0.9]
                 },
                 "hullIntegrityBar": {
                     "texture": "hud-atlas",
