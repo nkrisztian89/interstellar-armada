@@ -564,11 +564,12 @@
                     },
                     "layout": {
                         "centerX": 0.585,
-                        "bottom": -0.41,
+                        "centerY": -0.36,
                         "width": 0.1,
                         "height": 0.1,
                         "scaleMode": "minimum",
-                        "xScaleMode": "minimum"
+                        "xScaleMode": "minimum",
+                        "yScaleMode": "minimum"
                     },
                     "colors": {
                         "ready": [0, 1, 0, 1],
@@ -578,7 +579,7 @@
                 },
                 "missileIndicatorTextLayout": {
                     "centerX": 0.485,
-                    "bottom": -0.41,
+                    "centerY": -0.39,
                     "width": 0.1,
                     "height": 0.04,
                     "scaleMode": "minimum",
