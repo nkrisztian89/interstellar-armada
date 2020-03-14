@@ -1,6 +1,7 @@
 {
     "description": "Our sensors detected an Aries corvette with damaged equipment, accompanied by two squads of fighters. They are heading towards other rebel ships, so we need to intercept and destroy them before they can join forces. Your fighter squad (<strong>Alpha</strong>) needs to clear the way for our bombers (<strong>Delta</strong>) by destroying any fighter escorts, and keep the bombers protected while they are engaging the corvette. Be careful and keep moving to evade fire from the corvette's weapons, as though they are damaged, they are still a threat to fighters.",
     "environment": "mera",
+    "anticipationTheme": "anticipation2",
     "combatTheme": "combat",
     "tips": [
         "prioritizeTargets",

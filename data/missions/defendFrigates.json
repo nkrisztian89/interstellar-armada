@@ -1,6 +1,8 @@
 {
     "description": "An imperial fleet of frigates is approaching the flagship of the rebels, a Libra cruiser. In a last ditch effort, the rebels sent waves of heavily armed bombers to take out the frigates. You must draw the attention of the enemy bombers to make sure enough of the frigates reach the enemy cruiser to destroy it. If the fleet falls, the rebels can make their escape. Do not approach the enemy cruiser, your weapons cannot penetrate its heavy armor and you will be easy target for its many turrets.",
     "environment": "blovell",
+    "anticipationTheme": "anticipation2",
+    "combatTheme": "combat3",
     "tips": [
         "prioritizeTargets",
         "think",

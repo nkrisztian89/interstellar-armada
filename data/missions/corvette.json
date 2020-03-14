@@ -1,6 +1,8 @@
 {
     "description": "This is a simulation designed to test warship operating skills. Beware, this is different than dogfighting with an interceptor! A corvette is much slower, but its turrets automatically track the targeted enemies, so you do not need to aim towards them. Instead, use you maneuverability to avoid incoming fire, as though you are armored, there are many fighters and bombers closing in to destroy you! Use smart targeting to take down the most dangerous or easiest threats first.",
     "environment": "luxilian",
+    "anticipationTheme": "anticipation",
+    "combatTheme": "combat",
     "tips": [
         "tryControls",
         "changeControls",

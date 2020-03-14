@@ -1,6 +1,7 @@
 {
     "description": "Practice simulation against a single enemy fighter with typical rebel equipment.",
     "environment": "reddim",
+    "anticipationTheme": "anticipation",
     "combatTheme": "combat",
     "tips": [
         "tryControls",

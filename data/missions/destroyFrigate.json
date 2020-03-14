@@ -1,6 +1,8 @@
 {
     "description": "One of our frigate captains has deserted to the rebels and is threatening one of our patrols in the Varanock system. We are dispatching a squad of Viper bombers (<strong>Delta</strong>) to engage and destroy the frigate. We need you to lead the squad. Intercept and destroy the frigate before it reaches our patrol, and help in cleaning up any remaining escorts afterwards.",
     "environment": "varanock",
+    "anticipationTheme": "anticipation2",
+    "combatTheme": "combat3",
     "tips": [
         "prioritizeTargets",
         "cruiseMode",

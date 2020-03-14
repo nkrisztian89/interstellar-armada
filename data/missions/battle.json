@@ -1,7 +1,8 @@
 {
     "description": "The rebels have allied themselves with the pirates and are massing a fleet of fighters and small ships. We have located their meeting point and we're sending in a strike group to deal with them. You will lead <strong>Alpha</strong> squad. Concentrate on destroying enemy bombers and interceptors to help keep our ships and bombers alive. Watch out for enemy turret fire!",
     "environment": "luxilian",
-    "combatTheme": "combat2",
+    "anticipationTheme": "anticipation2",
+    "combatTheme": "combat3",
     "tips": [
         "prioritizeTargets",
         "think",

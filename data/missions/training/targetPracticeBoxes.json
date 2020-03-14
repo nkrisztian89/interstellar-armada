@@ -1,6 +1,7 @@
 {
     "description": "This tutorial explains the basic flight and combat controls and lets you practice with stationary target containers and unarmed practice drones.",
     "environment": "blovell",
+    "anticipationTheme": "anticipation",
     "combatTheme": "combat",
     "tips": [
         "tryControls",

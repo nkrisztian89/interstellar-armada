@@ -1,6 +1,7 @@
 {
     "description": "Time to try your combat skills against some real enemies! You need to assist in the hunting down of pirates scattered after a failed attack on a merchant convoy that proved to be better defended than they had thought. The Empire is taking piracy seriously and retaliates with the necessary force, including the deployment of military interceptors such as the Falcon you have trained with. Now comes your part, show what you have learned! Beware that the pirates sport more powerful weapons than the ones you have faced before, but luckily they are used to hitting much bigger targets than your small fighter.",
     "environment": "sheenuba",
+    "anticipationTheme": "anticipation2",
     "combatTheme": "combat2",
     "tips": [
         "tryControls",

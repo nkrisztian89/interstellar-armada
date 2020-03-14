@@ -1,6 +1,7 @@
 {
     "description": "<p>A local pirate lord, <strong>Hector Yccra</strong> has been causing more and more trouble recently across various imperial star systems. Our operatives managed to track him down and laid a trap for him in the Blovell system. Collecting large ransoms is his most preferred income source, so based upon false information he is led to believe that a poorly escorted ship is carrying high profile passengers in the area.</p><p>We have placed a beacon emitting fake signals to lure him to a specific place. Having large ships or many fighters at the site would allow him to discover the trap before time. Therefore <strong>only two interceptors will participate in this mission.</strong></p><p>Our long range scanners have shown that he indeed is on his way with his heavily armed guards who also serve as his main attack force during raids. He is also sending a smaller group of scouts ahead. Clear the scouts, and when the main force arrives, look for Hector's fighter, the <strong>Ruby Blade</strong>. It is reported to feature a battle painting imitating bloodstains on the spacecraft's armor. <strong>DO NOT attempt to clear out all of his forces</strong>, the two of you will be no match for them! Get out of there as soon as you have destroyed the Ruby Blade.</p>",
     "environment": "blovell",
+    "anticipationTheme": "anticipation2",
     "combatTheme": "combat2",
     "tips": [
         "tryControls",

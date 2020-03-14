@@ -1,6 +1,8 @@
 {
     "description": "A rebel corvette has been identified in the sector. A Taurus frigate has been dispatched to deal with this threat, and you are one of its escorts to make sure it reaches and destroys the target. The enemy has sent waves of fighters and bombers you need to neutralize in time, as frigates are not very effective at dealing with fast enemies. Should the frigate fall, you will not stand much of a chance against the corvette on your own.",
     "environment": "varanock",
+    "anticipationTheme": "anticipation",
+    "combatTheme": "combat",
     "tips": [
         "prioritizeTargets",
         "think",

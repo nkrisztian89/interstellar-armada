@@ -1,6 +1,7 @@
 {
     "description": "Practice aiming at moving targets and evading incoming projectiles by destroying the unarmed and armed training drones in this mission. The drones are less armored and slower than you, but they can overwhelm you if you are not careful. Your are equipped with training weapons.",
     "environment": "blovell",
+    "anticipationTheme": "anticipation",
     "combatTheme": "combat",
     "tips": [
         "tryControls",

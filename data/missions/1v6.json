@@ -1,7 +1,8 @@
 {
     "description": "Practice simulation for elite pilots against six rebel fighters and bombers.",
     "environment": "cathagan",
-    "combatTheme": "combat2",
+    "anticipationTheme": "anticipation",
+    "combatTheme": "combat",
     "tips": [
         "tryControls",
         "changeControls",
