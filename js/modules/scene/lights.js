@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2018, 2020 Krisztián Nagy
  * @file Provides different types of light source classes to add to scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -350,12 +350,18 @@ define([
          * Stores the calculated value of whether this light has exactly one emitting object set, because some calculations can be simpler if so.
          * @type Boolean
          */
-        this._singleEmittingObject = (emittingObjects && (emittingObjects.length === 1));
+        this._singleEmittingObject = (!!emittingObjects && (emittingObjects.length === 1));
         /**
          * Storing the calculated total intensity of this light source emitted by all of its emitting objects.
          * @type Number
          */
         this._totalIntensity = intensity * (emittingObjects ? emittingObjects.length : 1);
+        /**
+         * While set to false, isVisible() and shouldBeRendered() returns false, intensity is set to 0 and position is not updated, but state
+         * intensity / color still is
+         * @type Boolean
+         */
+        this._visible = true;
         /**
          * The calculated position vector of this light source in world-space.
          * @type Number[3]
@@ -414,6 +420,9 @@ define([
      */
     PointLightSource.prototype.isVisible = function () {
         var i;
+        if (!this._visible) {
+            return false;
+        }
         if (!this._emittingObjects) {
             return true;
         }
@@ -463,31 +472,35 @@ define([
     PointLightSource.prototype.update = function (dt) {
         var i, count, previousIntensity = this._totalIntensity;
         this.updateState(dt);
-        // calculate attributes that depend on the emitting objects
-        if (!this._emittingObjects) {
-            this._totalIntensity = this._objectIntensity;
-            vec.setVector3(this._positionVector, this._relativePositionVector);
-        } else if (this._singleEmittingObject) {
-            this._totalIntensity = this._objectIntensity;
-            this._emittingObjects[0].copyPositionToVector(this._positionVector);
-            if (this._hasRelativePosition) {
-                vec.add3(this._positionVector, vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
-            }
+        if (!this._visible) {
+            this._totalIntensity = 0;
         } else {
-            vec.setNull3(this._positionVector);
-            count = 0;
-            for (i = 0; i < this._emittingObjects.length; i++) {
-                if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused() && this._emittingObjects[i].isVisible()) {
-                    this._emittingObjects[i].addPositionToVector(this._positionVector);
-                    count++;
+            // calculate attributes that depend on the emitting objects
+            if (!this._emittingObjects) {
+                this._totalIntensity = this._objectIntensity;
+                vec.setVector3(this._positionVector, this._relativePositionVector);
+            } else if (this._singleEmittingObject) {
+                this._totalIntensity = this._objectIntensity;
+                this._emittingObjects[0].copyPositionToVector(this._positionVector);
+                if (this._hasRelativePosition) {
+                    vec.add3(this._positionVector, vec.prodVec3Mat4Aux(this._relativePositionVector, mat.prod3x3SubOf4Aux(this._emittingObjects[0].getCascadeScalingMatrix(), this._emittingObjects[0].getOrientationMatrix())));
                 }
+            } else {
+                vec.setNull3(this._positionVector);
+                count = 0;
+                for (i = 0; i < this._emittingObjects.length; i++) {
+                    if (this._emittingObjects[i] && !this._emittingObjects[i].canBeReused() && this._emittingObjects[i].isVisible()) {
+                        this._emittingObjects[i].addPositionToVector(this._positionVector);
+                        count++;
+                    }
+                }
+                if (count > 0) {
+                    this._positionVector[0] /= count;
+                    this._positionVector[1] /= count;
+                    this._positionVector[2] /= count;
+                }
+                this._totalIntensity = this._objectIntensity * count;
             }
-            if (count > 0) {
-                this._positionVector[0] /= count;
-                this._positionVector[1] /= count;
-                this._positionVector[2] /= count;
-            }
-            this._totalIntensity = this._objectIntensity * count;
         }
         if (this._totalIntensity !== previousIntensity) {
             this._uniformColor[3] = this._totalIntensity;
@@ -561,6 +574,18 @@ define([
         this._timeSinceLastTransition = 0;
         this._currentStateIndex = 0;
         this.updateState(elapsedTime);
+    };
+    /**
+     * Causes the light source to not be rendered (isVisible() and shouldBeRendered() to be false) and its position not be updated
+     */
+    PointLightSource.prototype.hide = function () {
+        this._visible = false;
+    };
+    /**
+     * Restores the default visibility state of the light source (where rendering depends on camera frustum and current intensity)
+     */
+    PointLightSource.prototype.show = function () {
+        this._visible = true;
     };
     // #########################################################################
     /**
@@ -639,11 +664,13 @@ define([
      */
     SpotLightSource.prototype.update = function (dt) {
         PointLightSource.prototype.update.call(this, dt);
-        // calculate attributes that depend on the emitting objects
-        if (!this._emittingObjects || (this._emittingObjects.length !== 1)) {
-            vec.setVector3(this._spotDirection, this._relativeSpotDirection);
-        } else {
-            vec.setProdVec3Mat4(this._spotDirection, this._relativeSpotDirection, this._emittingObjects[0].getOrientationMatrix());
+        if (this._visible) {
+            // calculate attributes that depend on the emitting objects
+            if (!this._emittingObjects || (this._emittingObjects.length !== 1)) {
+                vec.setVector3(this._spotDirection, this._relativeSpotDirection);
+            } else {
+                vec.setProdVec3Mat4(this._spotDirection, this._relativeSpotDirection, this._emittingObjects[0].getOrientationMatrix());
+            }
         }
     };
     /**

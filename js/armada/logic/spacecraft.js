@@ -329,6 +329,11 @@ define([
          * @type Blinker[]
          */
         this._blinkers = null;
+        /**
+         * The point and spot lights attached to the visual model of this spacecraft
+         * @type PointLightSource[]
+         */
+        this._lights = null;
         // ---------------------------------------
         // physics
         /**
@@ -630,6 +635,7 @@ define([
         for (i = 0; i < blinkerDescriptors.length; i++) {
             this._blinkers.push(new Blinker(blinkerDescriptors[i]));
         }
+        this._lights = [];
         // equipping the craft if a profile name was given
         if (equipmentProfileName) {
             this.equipProfile(this._class.getEquipmentProfile(equipmentProfileName));
@@ -690,12 +696,18 @@ define([
      * @param {Boolean} value 
      */
     Spacecraft.prototype.setAway = function (value) {
+        var i;
         if (this._away !== value) {
             this._away = value;
             if (this._away) {
                 this.setTarget(null);
                 if (this._visualModel) {
                     this._visualModel.getNode().hide();
+                }
+                if (this._lights) {
+                    for (i = 0; i < this._lights.length; i++) {
+                        this._lights[i].hide();
+                    }
                 }
                 if (this._physicalModel) {
                     this._physicalModel.reset();
@@ -711,6 +723,11 @@ define([
             } else {
                 if (this._visualModel) {
                     this._visualModel.getNode().show();
+                }
+                if (this._lights) {
+                    for (i = 0; i < this._lights.length; i++) {
+                        this._lights[i].show();
+                    }
                 }
             }
         }
@@ -1749,7 +1766,7 @@ define([
      * @param {logic~addToSceneCallback} [missileCallback] See addToScene()
      */
     Spacecraft.prototype.addToSceneNow = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback, missileCallback) {
-        var i, shader, node, exp, lightSources, originalFactionColor, replacementFactionColor, visualModel, animationTime, weaponParams, missileParams;
+        var i, shader, node, exp, lightSources, originalFactionColor, replacementFactionColor, visualModel, light, emittingObjects, animationTime, weaponParams, missileParams;
         if (!this._class) {
             application.log("WARNING! Cannot add spacecraft to scene because it has already been destroyed!");
             return;
@@ -1860,13 +1877,17 @@ define([
         // add light sources
         if (_dynamicLights && addSupplements.lightSources === true) {
             lightSources = this._class.getLightSources();
+            this._lights.length = 0;
+            emittingObjects = [visualModel];
             for (i = 0; i < lightSources.length; i++) {
                 if (lightSources[i].spotDirection) {
-                    scene.addSpotLightSource(new lights.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, [visualModel]));
+                    light = new lights.SpotLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, lightSources[i].spotDirection, lightSources[i].spotCutoffAngle, lightSources[i].spotFullIntensityAngle, emittingObjects);
+                    this._lights.push(light);
+                    scene.addSpotLightSource(light);
                 } else {
-                    scene.addPointLightSource(
-                            new lights.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, [visualModel]),
-                            constants.SPACECRAFT_LIGHT_PRIORITY);
+                    light = new lights.PointLightSource(lightSources[i].color, lightSources[i].intensity, lightSources[i].position, emittingObjects);
+                    scene.addPointLightSource(light, constants.SPACECRAFT_LIGHT_PRIORITY);
+                    this._lights.push(light);
                 }
             }
         }
@@ -1885,7 +1906,8 @@ define([
         }
         // if the spacecraft is away, hide the visuals
         if (this._away) {
-            node.hide();
+            this._away = false;
+            this.setAway(true);
         }
         if (callback) {
             callback(visualModel);
@@ -2899,6 +2921,7 @@ define([
             this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
+        this._lights = null;
         this._physicalModel = null;
         if (this._activeDamageIndicators) {
             // damage indicators are pooled objects (Explosions), so we do not destroy them (properties and reusability state need to be 
