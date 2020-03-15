@@ -878,14 +878,6 @@ define([
     };
     // methods
     /**
-     * Translates the position of the object by the given vector.
-     * @param {Number[3]} v A 3D vector.
-     */
-    PhysicalObject.prototype.moveByVector = function (v) {
-        mat.translateByVector(this._positionMatrix, v);
-        this._modelMatrixInverseValid = false;
-    };
-    /**
      * If a (continuous) force is passed, renews its properties, if not, adds a new force with the given parameters.
      * Warning! Does not readd the force when renewing if it has been removed with PhysicalObject.reset()! Delete cached
      * forces after calling that.

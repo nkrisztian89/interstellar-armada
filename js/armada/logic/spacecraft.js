@@ -1417,13 +1417,6 @@ define([
         }
     };
     /**
-     * Translates the position of the spacecraft by the given vector.
-     * @param {Number[3]} v A 3D vector.
-     */
-    Spacecraft.prototype.moveByVector = function (v) {
-        this._physicalModel.moveByVector(v);
-    };
-    /**
      * Function to reset state before starting to execute the control actions triggered in the current simulation step.
      */
     Spacecraft.prototype.prepareForControl = function () {

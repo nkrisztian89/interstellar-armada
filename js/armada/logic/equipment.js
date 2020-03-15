@@ -525,13 +525,6 @@ define([
         return this._visualModel;
     };
     /**
-     * Translates the position of the projectile by the given vector.
-     * @param {Number[3]} v A 3D vector.
-     */
-    Projectile.prototype.moveByVector = function (v) {
-        this._physicalModel.moveByVector(v);
-    };
-    /**
      * Adds the projectile to a scene immediately, assuming its resources have already been loaded.
      * @param {Scene} scene The scene to which to add the renderable object presenting the projectile.
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
