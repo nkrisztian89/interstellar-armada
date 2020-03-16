@@ -519,10 +519,18 @@
                         "xScaleMode": "minimum"
                     },
                     "colors": {
-                        "filled": [0, 1, 1, 0.75],
-                        "empty": [0, 1, 1, 0.2],
-                        "reverseFilled": [1, 0.75, 0, 0.75],
-                        "reverseEmpty": [1, 0.75, 0, 0.2]
+                        "combatFilled": [0, 1, 1, 0.75],
+                        "combatEmpty": [0, 1, 1, 0.2],
+                        "combatReverseFilled": [1, 0.75, 0, 0.75],
+                        "combatReverseEmpty": [1, 0.75, 0, 0.2],
+                        "cruiseFilled": [0.85, 0.35, 1, 0.75],
+                        "cruiseEmpty": [0.85, 0.35, 1, 0.2],
+                        "cruiseReverseFilled": [1, 0.1, 0.5, 0.75],
+                        "cruiseReverseEmpty": [1, 0.1, 0.5, 0.2],
+                        "freeFilled": [1, 0.85, 0.1, 0.75],
+                        "freeEmpty": [1, 0.85, 0.1, 0.2],
+                        "freeReverseFilled": [1, 0.65, 0.1, 0.75],
+                        "freeReverseEmpty": [1, 0.65, 0.1, 0.2]
                     }
                 },
                 "speedBarBaseMaxSpeedFactor": 3,
@@ -539,8 +547,12 @@
                 },
                 "speedText": {
                     "colors": {
-                        "forward": [0, 1, 1, 0.75],
-                        "reverse": [1, 0.75, 0, 0.75]
+                        "combatForward": [0, 1, 1, 0.75],
+                        "combatReverse": [1, 0.75, 0, 0.75],
+                        "cruiseForward": [0.85, 0.35, 1, 0.75],
+                        "cruiseReverse": [1, 0.1, 0.5, 0.75],
+                        "freeForward": [1, 0.85, 0.1, 0.75],
+                        "freeReverse": [1, 0.65, 0.1, 0.75]
                     },
                     "fontSize": 0.35,
                     "fontName": "hudFont",

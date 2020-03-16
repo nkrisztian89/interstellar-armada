@@ -2018,8 +2018,8 @@ define([
                 _speedBarLayout.getClipSpacePosition(),
                 _speedBarLayout.getClipSpaceSize(),
                 _speedBarLayout.getScaleMode(),
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.filled,
-                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.empty,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.combatFilled,
+                config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.combatEmpty,
                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).mapping));
         _speedBar.addToScene(_battleScene);
         _speedTargetIndicator = _speedTargetIndicator || _addHUDElement(new HUDElement(
@@ -2467,7 +2467,7 @@ define([
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).fontName,
                             config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).fontSize,
                             _speedBarLayout.getScaleMode(),
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.combatForward);
                 },
                 getMissileInfoNameText = function (index) {
                     var position = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).positions.name;
@@ -2975,15 +2975,17 @@ define([
             speedRatio = Math.min(absSpeed / maxSpeed, 1.0);
             maxSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxForward;
             maxReverseSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxReverse;
+            colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors;
+            text = craft.getFlightMode();
             if (speed >= 0) {
-                _speedBar.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.filled);
-                _speedBar.setClipColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.empty);
+                _speedBar.setColor(colors[text + "Filled"]);
+                _speedBar.setClipColor(colors[text + "Empty"]);
                 _speedBar.clipY(0, speedRatio);
                 _maxSpeedText.setPosition(maxSpeedTextPosition);
-                _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
+                _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Forward"]);
                 _maxSpeedText.setText(Math.max(maxSpeed, speed).toFixed());
                 _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxReverseSpeedTextPosition[1] + (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
-                _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.forward);
+                _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Forward"]);
                 _currentSpeedText.setText(absSpeed.toFixed());
                 _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
                 if (craft.hasSpeedTarget()) {
@@ -2993,14 +2995,14 @@ define([
                     _speedTargetIndicator.hide();
                 }
             } else {
-                _speedBar.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.reverseFilled);
-                _speedBar.setClipColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors.reverseEmpty);
+                _speedBar.setColor(colors[text + "ReverseFilled"]);
+                _speedBar.setClipColor(colors[text + "ReverseEmpty"]);
                 _speedBar.clipY(1 - speedRatio, 1);
                 _maxSpeedText.setPosition(maxReverseSpeedTextPosition);
-                _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.reverse);
+                _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Reverse"]);
                 _maxSpeedText.setText(Math.min(-maxSpeed, speed).toFixed());
                 _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxSpeedTextPosition[1] - (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
-                _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors.reverse);
+                _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Reverse"]);
                 _currentSpeedText.setText("-" + absSpeed.toFixed());
                 _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
                 if (craft.hasSpeedTarget()) {

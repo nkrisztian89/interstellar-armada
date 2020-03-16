@@ -1234,7 +1234,7 @@ define([
             },
             SPEED_BAR: {
                 name: "speedBar",
-                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["filled", "empty", "reverseFilled", "reverseEmpty"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.UI_LAID_OUT_IMAGE_DESCRIPTOR, {COLOR: ["combatFilled", "combatEmpty", "combatReverseFilled", "combatReverseEmpty", "cruiseFilled", "cruiseEmpty", "cruiseReverseFilled", "cruiseReverseEmpty", "freeFilled", "freeEmpty", "freeReverseFilled", "freeReverseEmpty"]})
             },
             SPEED_BAR_BASE_MAX_SPEED_FACTOR: {
                 name: "speedBarBaseMaxSpeedFactor",
@@ -1258,7 +1258,7 @@ define([
             },
             SPEED_TEXT: {
                 name: "speedText",
-                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["forward", "reverse"], POSITION: ["maxForward", "maxReverse"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["combatForward", "combatReverse", "cruiseForward", "cruiseReverse", "freeForward", "freeReverse"], POSITION: ["maxForward", "maxReverse"]})
             },
             SPEED_TARGET_INDICATOR: {
                 name: "speedTargetIndicator",
