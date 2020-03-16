@@ -17,6 +17,8 @@
         }, {
             "source": "destroyCorvette.json"
         }, {
+            "source": "training/targetPracticeMissile.json"    
+        }, {
             "source": "destroyFrigate.json"
         }, {
             "source": "defendCorvette.json"

@@ -1,0 +1,198 @@
+{
+    "description": "Practice using different types of missiles for different purposes.",
+    "environment": "blovell",
+    "anticipationTheme": "anticipation",
+    "combatTheme": "combat",
+    "tips": [
+        "tryControls",
+        "changeControls",
+        "tryViews",
+        "curve",
+        "strafe",
+        "scoreDestroy",
+        "interceptors",
+        "bombers",
+        "corvettes",
+        "frigates"
+    ],
+    "teams": [
+        "empire",
+        "practiceTargets"
+    ],
+    "views": [
+        {
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, 50, 10],
+            "rotations": ["x-75"]
+        }
+    ],
+    "events": [{
+            "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true,
+                "delay": 500
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorialWelcome",
+                        "urgent": true
+                    }
+                }, {
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorialSwitchMissile",
+                        "permanent": true,
+                        "urgent": false
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["drone 1"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "clearMessages"
+                }, {
+                    "type": "command",
+                    "delay": 1500,
+                    "subjects": {
+                        "spacecrafts": ["Tisza"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "position": [1000, 650, -75],
+                            "rotations": ["z-90"]
+                        }
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 2500,
+                    "params": {
+                        "textID": "tutorialTorpedo",
+                        "permanent": true,
+                        "urgent": false
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["Tisza"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "clearMessages"
+                }, {
+                    "type": "message",
+                    "delay": 1000,
+                    "params": {
+                        "textID": "tutorialSalvo",
+                        "permanent": true,
+                        "urgent": false
+                    }
+                }, {
+                    "type": "command",
+                    "delay": 5000,
+                    "subjects": {
+                        "squads": ["theta"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "position": [-400, 3500, 100],
+                            "rotations": ["z+120"],
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [150, -75, -50]
+                            }
+                        }
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "squads": ["theta"]
+                        },
+                        "params": {
+                            "relation": "below",
+                            "count": 6
+                        }
+                    }],
+                "oneShot": true,
+                "delay": 1000
+            },
+            "actions": [{
+                    "type": "clearMessages"
+                }, {
+                    "type": "message",
+                    "params": {
+                        "textID": "tutorialSalvo2",
+                        "permanent": true,
+                        "urgent": false
+                    }
+                }]
+        }
+    ],
+    "spacecrafts": [
+        {
+            "team": "empire",
+            "class": "viper",
+            "name": "Rookie",
+            "piloted": true,
+            "position": [0, 0, 0],
+            "equipment": "training"
+        },
+        {
+            "team": "practiceTargets",
+            "class": "drone",
+            "squad": "drone 1",
+            "ai": "fighter",
+            "position": [0, 150, 0],
+            "rotations": ["z+180"],
+            "equipment": "unarmed"
+        },
+        {
+            "team": "practiceTargets",
+            "class": "aries",
+            "name": "Tisza",
+            "ai": "ship",
+            "away": true,
+            "equipment": "unarmed"
+        },
+        {
+            "team": "practiceTargets",
+            "class": "drone",
+            "squad": "theta",
+            "count": 7,
+            "ai": "fighter",
+            "away": true
+        }
+    ]
+}

@@ -190,6 +190,16 @@
                 "hostileFightersArrived": "A new group of hostile fighters! Alpha squad, cover us!"
             }
         },
+        "targetPracticeMissile": {
+            "name": "Missile target practice",
+            "messages": {
+                "tutorialWelcome": "Welcome to the missile tutorial!",
+                "tutorialSwitchMissile": "Switch to SM-4 small missiles ({controlStrings/keyboard/changeMissile} or joystick: {controlStrings/joystick/changeMissile}).\nWait for target lock and detroy the drone!\n(press {controlStrings/keyboard/launchMissile} / mouse: {controlStrings/mouse/launchMissile} / joystick: {controlStrings/joystick/launchMissile} to launch)",
+                "tutorialTorpedo": "Switch back to your torpedoes (LT-3b) to take down the corvette.\nTorpedoes are less accurate and more limited in numbers, but do massive damage.",
+                "tutorialSalvo": "Small missiles can be launched quickly in salvos.\n(press {controlStrings/keyboard/toggleSalvo} or joystick: {controlStrings/joystick/toggleSalvo} to toggle)\nUse this to take down more armored or numerous fighters.",
+                "tutorialSalvo2": "Missiles in one salvo always home in on the same target, but you can lock on to the next one in the meantime."
+            }
+        },
         "destroyFrigate": {
             "name": "Bomber run",
             "messages": {

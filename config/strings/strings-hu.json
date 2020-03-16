@@ -239,6 +239,17 @@
                 "hostileFightersArrived": "Újabb ellenséges vadászok! Alfa csapat, fedezzetek!"
             }
         },
+        "targetPracticeMissile": {
+            "name": "Rakéta lőgyakorlat",
+            "description": "Ezen a lőgyakorlaton a különböző típusú rakéták használatát lehet gyakorolni.",
+            "messages": {
+                "tutorialWelcome": "Üdvözöllek a rakéta lőgyakorlaton!",
+                "tutorialSwitchMissile": "Válts SM-4 könnyű rakétákra ({controlStrings/keyboard/changeMissile} vagy joystick: {controlStrings/joystick/changeMissile}).\nVárd meg a cél befogását, majd lődd ki a drónt!\n(rakéta kilövés: {controlStrings/keyboard/launchMissile} / egér: {controlStrings/mouse/launchMissile} / joystick: {controlStrings/joystick/launchMissile})",
+                "tutorialTorpedo": "Válts vissza torpedókra (LT-3b) a korvett megsemmisítéséhez.\nA torpedók nem olyan pontosak, és kevesebbet szállíthatsz belőlük, de hatalmas pusztítást tudnak végezni.",
+                "tutorialSalvo": "A könnyű rakétákat sortűzben is kilőheted.\n(sortűzre váltás: {controlStrings/keyboard/toggleSalvo} vagy joystick: {controlStrings/joystick/toggleSalvo})\nHasználd ezt a módot, ha szívósabb, vagy nagyobb számú vadászgéppel nézel szembe.",
+                "tutorialSalvo2": "Egy sortűz összes rakétája mindig ugyanazt a célt követi, de te eközben már bemérheted a következőt."
+            }
+        },
         "destroyFrigate": {
             "name": "Bombázó bevetés",
             "description": "Egy fregattkapitányunk átállt a lázadók oldalára, és most hajójával az egyik őrjáratunkat fenyegeti a Varanock rendszerben. Egy csapat Vipera bombázót (<strong>Delta</strong>) küldünk a semlegesítésére. Őn fogja vezetni a csapatot. Fogja el és semmisítse meg a hajót, mielőtt elérné az őrjáratunkat, utána pedig segítsen az esetlegesen megmaradó kisérő vadászgépek eltakarításában.",

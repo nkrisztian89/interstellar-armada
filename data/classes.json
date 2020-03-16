@@ -4840,6 +4840,42 @@
                     "distanceRange": [33, 90]
                 }],
             "equipmentProfiles": [{
+                    "name": "training",
+                    "propulsion": {
+                        "class": "imperialBomberMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialBomberMk1"
+                    },
+                    "missiles": [{
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 2
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 24
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 24
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 24
+                        }, {
+                            "class": "smallMissile",
+                            "amount": 24
+                        }]
+                }, {
                     "name": "player-tier1",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
@@ -6199,6 +6235,14 @@
                     },
                     "shield": {
                         "class": "imperialCorvetteMk1"
+                    }
+                }, {
+                    "name": "unarmed",
+                    "propulsion": {
+                        "class": "imperialCorvetteMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialSmallShipMk1"
                     }
                 }, {
                     "name": "rebel",
