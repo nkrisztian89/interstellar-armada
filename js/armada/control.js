@@ -23,6 +23,7 @@
  * @param armadaScreens Used for navigation
  * @param strings Used for translation support
  * @param config Used to access settings
+ * @param equipment Used to access enums
  */
 define([
     "utils/utils",
@@ -37,8 +38,9 @@ define([
     "modules/media-resources",
     "armada/screens/shared",
     "armada/strings",
-    "armada/configuration"
-], function (utils, application, control, keyboard, mouse, gamepad, touch, cameraController, game, resources, armadaScreens, strings, config) {
+    "armada/configuration",
+    "armada/logic/equipment"
+], function (utils, application, control, keyboard, mouse, gamepad, touch, cameraController, game, resources, armadaScreens, strings, config, equipment) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -352,22 +354,50 @@ define([
         }.bind(this));
         // strafing to left and right
         this.setActionFunctions("strafeLeft", function (i) {
+            if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
+                if (this._controlledSpacecraft.toggleCruise()) {
+                    if (_flightModeSwitchSound) {
+                        _flightModeSwitchSound.play();
+                    }
+                }
+            }
             this._controlledSpacecraft.strafeLeft(((i !== undefined) ? i : 1) * this._strafeSpeed);
         }.bind(this), function () {
             this._controlledSpacecraft.stopLeftStrafe();
         }.bind(this));
         this.setActionFunctions("strafeRight", function (i) {
+            if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
+                if (this._controlledSpacecraft.toggleCruise()) {
+                    if (_flightModeSwitchSound) {
+                        _flightModeSwitchSound.play();
+                    }
+                }
+            }
             this._controlledSpacecraft.strafeRight(((i !== undefined) ? i : 1) * this._strafeSpeed);
         }.bind(this), function () {
             this._controlledSpacecraft.stopRightStrafe();
         }.bind(this));
         // strafing up and down
         this.setActionFunctions("raise", function (i) {
+            if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
+                if (this._controlledSpacecraft.toggleCruise()) {
+                    if (_flightModeSwitchSound) {
+                        _flightModeSwitchSound.play();
+                    }
+                }
+            }
             this._controlledSpacecraft.raise(((i !== undefined) ? i : 1) * this._strafeSpeed);
         }.bind(this), function () {
             this._controlledSpacecraft.stopRaise();
         }.bind(this));
         this.setActionFunctions("lower", function (i) {
+            if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
+                if (this._controlledSpacecraft.toggleCruise()) {
+                    if (_flightModeSwitchSound) {
+                        _flightModeSwitchSound.play();
+                    }
+                }
+            }
             this._controlledSpacecraft.lower(((i !== undefined) ? i : 1) * this._strafeSpeed);
         }.bind(this), function () {
             this._controlledSpacecraft.stopLower();
