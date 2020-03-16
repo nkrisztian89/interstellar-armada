@@ -1,5 +1,5 @@
 {
-    "version": "0.4.6-dev:794 (2020.03.15.)",
+    "version": "0.4.6-dev:795 (2020.03.16.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4", "0.4.5"],
@@ -400,17 +400,26 @@
                 "name": "easy",
                 "playerHitpointsFactor": 2,
                 "friendlyHitpointsFactor": 1.25,
-                "enemyReactionTimeFactor": 2
+                "enemyReactionTimeFactor": 2,
+                "playerSelfDamage": false,
+                "playerFriendlyFireDamage": false,
+                "hitboxOffset": 2
             }, {
                 "name": "medium",
                 "playerHitpointsFactor": 1.5,
                 "friendlyHitpointsFactor": 1.1,
-                "enemyReactionTimeFactor": 1.5
+                "enemyReactionTimeFactor": 1.5,
+                "playerSelfDamage": false,
+                "playerFriendlyFireDamage": true,
+                "hitboxOffset": 1
             }, {
                 "name": "hard",
                 "playerHitpointsFactor": 1,
                 "friendlyHitpointsFactor": 1,
-                "enemyReactionTimeFactor": 1
+                "enemyReactionTimeFactor": 1,
+                "playerSelfDamage": true,
+                "playerFriendlyFireDamage": true,
+                "hitboxOffset": 0
             }],
         "missionPerformanceLevels": [
             {

@@ -217,6 +217,21 @@ define([
              */
             _isSelfFireEnabled = false,
             /**
+             * Cached value of the setting for the current difficulty whether the player ship can damage itself
+             * @type Boolean
+             */
+            _isPlayerSelfDamageEnabled = false,
+            /**
+             * Cached value of the setting for the current difficulty whether the player ship can be damaged by friendly fire
+             * @type Boolean
+             */
+            _isPlayerFriendlyFireDamageEnabled = false,
+            /**
+             * Cached value of the setting for the current difficulty of how big of an offset should be applied for hitboxes when the player ship is shooting hostiles
+             * @type Number
+             */
+            _hitboxOffset = 0,
+            /**
              * Cached value of the configuration setting of how long does a momentary action (e.g. firing a projectile) take in terms of 
              * physics simulation, in milliseconds.
              * @type Number
@@ -327,6 +342,15 @@ define([
         }
         _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
     }
+    /**
+     * Needs to be called when the difficulty level is set / changed (i.e. when a mission is started)
+     * @param {DifficultyLevel} difficulty
+     */
+    function handleDifficultySet(difficulty) {
+        _isPlayerSelfDamageEnabled = difficulty.getPlayerSelfDamage();
+        _isPlayerFriendlyFireDamageEnabled = difficulty.getPlayerFriendlyFireDamage();
+        _hitboxOffset = difficulty.getHitboxOffset();
+    }
     // ------------------------------------------------------------------------------
     // private functions
     /**
@@ -346,10 +370,12 @@ define([
      * Get the offset to be used for hit checks for projectiles (the sides of the hitboxes
      * are offset towards the outside (i.e. the hitbox is enlarged in all directions) by this
      * much, in meters)
+     * @param {Spacecraft} hitObject The spacecraft getting hit
+     * @param {Boolean} pilotedToHostile Whether this is for a projectile fired by the player ship hit checking a hostile
      * @returns {Number}
      */
-    function _getDefaultOffset() {
-        return 0;
+    function _getDefaultOffset(hitObject, pilotedToHostile) {
+        return pilotedToHostile ? _hitboxOffset : 0;
     }
     /**
      * @callback HitCallback
@@ -368,12 +394,13 @@ define([
      * @param {Octree} hitObjectOctree The octree containing the objects that our projectile/missile can hit
      * @param {Number} hitCheckDT The elapsed time to consider for the hit check (since last hitcheck, in ms)
      * @param {Spacecraft} origin The spacecraft that fired our projectile / missile (for self hit checks)
+     * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      * @param {Function} offsetCallback The function to return the offset to be used for the hitchecks (modifying
      * the hitbox sizes so that e.g. missiles can already hit the object from farther away)
      * @param {HitCallback} hitCallback The function to call if an object is hit, passing the parameters of the hit to it
      */
-    function _checkHit(object, hitObjectOctree, hitCheckDT, origin, offsetCallback, hitCallback) {
-        var i, hitObjects,
+    function _checkHit(object, hitObjectOctree, hitCheckDT, origin, pilotedCraft, offsetCallback, hitCallback) {
+        var i, hitObjects, isHostile, isPiloted,
                 positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace,
                 relativeVelocity, relativeVelocityDirectionInWorldSpace,
                 physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace;
@@ -391,10 +418,14 @@ define([
                 hitObjects[i].showHitbox();
             }
         }
+        isHostile = !pilotedCraft || pilotedCraft.isHostile(origin);
+        isPiloted = (origin === pilotedCraft);
         for (i = 0; i < hitObjects.length; i++) {
             physicalHitObject = hitObjects[i].getPhysicalModel();
-            if (physicalHitObject && (_isSelfFireEnabled || (hitObjects[i] !== origin))) {
-                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT, offsetCallback(hitObjects[i]));
+            if (physicalHitObject && (
+                    ((hitObjects[i] === origin) && _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !isPiloted)) || 
+                    ((hitObjects[i] !== origin) && (_isPlayerFriendlyFireDamageEnabled || (hitObjects[i] !== pilotedCraft) || isHostile)))) {
+                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT, offsetCallback(hitObjects[i], isPiloted && pilotedCraft.isHostile(hitObjects[i])));
                 if (hitPositionVectorInObjectSpace) {
                     relativeVelocityDirectionInWorldSpace = vec.diffVec3Mat4(velocityVectorInWorldSpace, physicalHitObject.getVelocityMatrix());
                     relativeVelocity = vec.extractLength3(relativeVelocityDirectionInWorldSpace);
@@ -595,8 +626,9 @@ define([
      * @param {Number} dt The passed time since the last simulation in milliseconds.
      * @param {Octree} hitObjectOctree The root node of the octree that is used to spatially partition the spacecrafts this projectile can
      * hit.
+     * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      */
-    Projectile.prototype.simulate = function (dt, hitObjectOctree) {
+    Projectile.prototype.simulate = function (dt, hitObjectOctree, pilotedCraft) {
         var hitCheckDT;
         if (this.canBeReused()) {
             return;
@@ -607,7 +639,7 @@ define([
         if (this._timeLeft > 0) {
             this._physicalModel.simulate(dt);
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
-            _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, _getDefaultOffset, this._hitCallback);
+            _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, _getDefaultOffset, this._hitCallback);
         } else {
             this._visualModel.markAsReusable(true);
         }
@@ -1286,8 +1318,9 @@ define([
      * @param {Number} dt The passed time since the last simulation in milliseconds.
      * @param {Octree} hitObjectOctree The root node of the octree that is used to spatially partition the spacecrafts this missile can
      * hit.
+     * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      */
-    Missile.prototype.simulate = function (dt, hitObjectOctree) {
+    Missile.prototype.simulate = function (dt, hitObjectOctree, pilotedCraft) {
         var i, p, oriMatrix, targetYawAndPitch, threshold, hitCheckDT;
         if (this.canBeReused()) {
             return;
@@ -1357,7 +1390,7 @@ define([
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
             if ((hitCheckDT > 0) && (this._timeLeftForIgnition <= 0)) {
-                _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, this._getHitOffset, this._hitCallback);
+                _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, this._getHitOffset, this._hitCallback);
             }
         } else {
             // self-destruct if the time has run out
@@ -4684,6 +4717,7 @@ define([
         FlightMode: FlightMode,
         ThrusterUse: ThrusterUse,
         handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
+        handleDifficultySet: handleDifficultySet,
         Projectile: Projectile,
         Missile: Missile,
         Weapon: Weapon,

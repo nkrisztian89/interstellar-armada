@@ -2398,6 +2398,7 @@ define([
         var i, j, craft, teamID, team, aiType, actions, count, factor, squad, names, equipments, pilotedIndex, positions, formation, orientation, spacecrafts, spacecraftDataTemplate, spacecraftData;
         application.log("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
+        equipment.handleDifficultySet(this._difficultyLevel);
         this.loadEnvironment(dataJSON);
         this._anticipationTheme = dataJSON.anticipationTheme;
         this._combatTheme = dataJSON.combatTheme;
@@ -2845,7 +2846,7 @@ define([
      * @param {Number} indexInPool The index of the projectile within the projectile pool
      */
     Mission._handleProjectile = function (dt, octree, projectile, indexInPool) {
-        projectile.simulate(dt, octree);
+        projectile.simulate(dt, octree, this._pilotedCraft);
         if (projectile.canBeReused()) {
             _projectilePool.markAsFree(indexInPool);
         }
@@ -2858,7 +2859,7 @@ define([
      * @param {Number} indexInPool The index of the missile within the missile pool
      */
     Mission._handleMissile = function (dt, octree, missile, indexInPool) {
-        missile.simulate(dt, octree);
+        missile.simulate(dt, octree, this._pilotedCraft);
         if (missile.canBeReused()) {
             _missilePool.markAsFree(indexInPool);
         }
@@ -3267,6 +3268,24 @@ define([
          * @type Number
          */
         this._enemyReactionTimeFactor = dataJSON.enemyReactionTimeFactor;
+        /**
+         * Whether the player ship can damage itself (e.g. by flying into its own launched missile)
+         * (when playing on the corresponding difficulty level)
+         * @type Boolean
+         */
+        this._playerSelfDamage = dataJSON.playerSelfDamage;
+        /**
+         * Whether friendly fire can damage the player ship
+         * (when playing on the corresponding difficulty level)
+         * @type Boolean
+         */
+        this._playerFriendlyFireDamage = dataJSON.playerFriendlyFireDamage;
+        /**
+         * The offset (i.e. enlargement) to apply to hitboxes when the player is shooting hostiles, in meters
+         * (when playing on the corresponding difficulty level)
+         * @type Number
+         */
+        this._hitboxOffset = dataJSON.hitboxOffset;
     }
     /**
      * Returns the string ID for this difficulty level
@@ -3295,6 +3314,27 @@ define([
      */
     DifficultyLevel.prototype.getEnemyReactionTimeFactor = function () {
         return this._enemyReactionTimeFactor;
+    };
+    /**
+     * Whether the player ship can damage itself (e.g. by flying into its own launched missile)
+     * @returns {Boolean}
+     */
+    DifficultyLevel.prototype.getPlayerSelfDamage = function () {
+        return this._playerSelfDamage;
+    };
+    /**
+     * Whether friendly fire can damage the player ship
+     * @returns {Boolean}
+     */
+    DifficultyLevel.prototype.getPlayerFriendlyFireDamage = function () {
+        return this._playerFriendlyFireDamage;
+    };
+    /**
+     * The offset (i.e. enlargement) to apply to hitboxes when the player is shooting hostiles, in meters
+     * @returns {Number}
+     */
+    DifficultyLevel.prototype.getHitboxOffset = function () {
+        return this._hitboxOffset;
     };
     // #########################################################################
     /**
