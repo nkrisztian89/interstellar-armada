@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Implementation of loading and managing missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2626,14 +2626,15 @@ define([
      * @param {Number} hitRatio Number of hits / fired projectiles
      * @param {Number} hullIntegrity Current / full hitpoints
      * @param {Number} teamSurvival Surviving / initial teammates
+     * @param {Number} missileHitRatio Number of missile hits / launched missiles
      * @returns {Object}
      */
-    Mission.prototype.getScoreStatistics = function (baseScore, hitRatio, hullIntegrity, teamSurvival) {
+    Mission.prototype.getScoreStatistics = function (baseScore, hitRatio, hullIntegrity, teamSurvival, missileHitRatio) {
         var
                 isTeamMission = this.isTeamMission(),
                 hitRatioBonus, hullIntegrityBonus, teamSurvivalBonus, score;
         baseScore = Math.round(baseScore);
-        hitRatioBonus = Math.round((baseScore || 0) * hitRatio);
+        hitRatioBonus = Math.round((baseScore || 0) * (hitRatio || ((missileHitRatio || 0) * config.getSetting(config.BATTLE_SETTINGS.MISSILE_HIT_RATIO_FACTOR))));
         hullIntegrityBonus = Math.round(hullIntegrity * (isTeamMission ?
                 config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY_TEAM) :
                 config.getSetting(config.BATTLE_SETTINGS.SCORE_BONUS_FOR_HULL_INTEGRITY)));
@@ -2659,7 +2660,7 @@ define([
                 /**@type Spacecraft */craft = this.getPilotedSpacecraft(),
                 /**@type Boolean */isTeamMission = this.isTeamMission(),
                 /**@type Number */teamSurvival = isTeamMission ? (this.getSpacecraftCountForTeam(craft.getTeam()) - (craft.isAlive() ? 1 : 0)) / (craft.getTeam().getInitialCount() - 1) : 0,
-                /**@type Object */scoreStats = this.getScoreStatistics(craft.getScore(), craft.getHitRatio(), craft.getHullIntegrity(), teamSurvival),
+                /**@type Object */scoreStats = this.getScoreStatistics(craft.getScore(), craft.getHitRatio(), craft.getHullIntegrity(), teamSurvival, craft.getMissileHitRatio()),
                 /**@type Object */perfInfo = _context.getPerformanceInfo(this, scoreStats.score);
         return {
             baseScore: scoreStats.baseScore,

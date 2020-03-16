@@ -1006,6 +1006,7 @@
             "scoreFractionForKill": 0.5,
             "scoreBonusForHullIntegrity": 200,
             "scoreBonusForHullIntegrityTeam": 100,
+            "missileHitRatioFactor": 0.5,
             "scoreBonusForTeamSurvival": 100,
             "defaultSalvoMode": false,
             "missileAutoChangeCooldown": 500

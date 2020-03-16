@@ -1174,6 +1174,13 @@ define([
         return this._missileHitsOnEnemies;
     };
     /**
+     * Returns the ratio of missiles that hit an enemy out of all launched missiles during the current mission
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getMissileHitRatio = function () {
+        return this._missileHitsOnEnemies / this._missilesLaunched;
+    };
+    /**
      * Returns how much score destroying this spacecraft should grant (completely, including dealing damage and scoring the final hit)
      * @returns {Number}
      */

@@ -1657,6 +1657,14 @@ define([
             type: "number"
         },
         /**
+         * If the player hasn't used primary weapons (hit ratio is 0) during the mission, the hit ratio of missiles is used for
+         * hit ratio bonus calculation instead, multiplied by this factor
+         */
+        MISSILE_HIT_RATIO_FACTOR: {
+            name: "missileHitRatioFactor",
+            type: "number"
+        },
+        /**
          * The amount of score points awarded for the player if a team mission (the player has teammates) is completed with all teammates
          * surviving. If some teammates fall, the bonus is proportional to the ratio of surviving teammates.
          */
