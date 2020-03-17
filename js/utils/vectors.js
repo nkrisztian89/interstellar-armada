@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -63,6 +63,12 @@ define(function () {
      */
     vec.NULL4 = [0, 0, 0, 0];
     Object.freeze(vec.NULL4);
+    /**
+     * A constant 4D null position vector (W is 1)
+     * @type Number[4]
+     */
+    vec.NULL4W1 = [0, 0, 0, 1];
+    Object.freeze(vec.NULL4W1);
     /**
      * A constant 2D unit vector pointing towards the positive X direction.
      * @type Number[3]

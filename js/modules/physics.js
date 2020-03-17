@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2018, 2020 Krisztián Nagy
  * @file Provides a basic physics engine with Newtonian mechanics
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1006,16 +1006,32 @@ define([
         relativePos = vec.prodVec4Mat4Aux(vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
         relativeVelocityVector = vec.diffVec3Mat4(velocityVector, this.getVelocityMatrix());
-        i = vec.length3(relativeVelocityVector);
+        i = vec.extractLength3(relativeVelocityVector);
         range = i * dt * 0.001 * this._inverseScalingFactor;
         // first, preliminary check based on position relative to the whole object
-        if ((Math.abs(relativePos[0]) - range < this._bodySize) && (Math.abs(relativePos[1]) - range < this._bodySize) && (Math.abs(relativePos[2]) - range < this._bodySize)) {
+        if ((Math.abs(relativePos[0]) - range < this._bodySize + offset) && (Math.abs(relativePos[1]) - range < this._bodySize + offset) && (Math.abs(relativePos[2]) - range < this._bodySize + offset)) {
             // if it is close enough to be hitting one of the bodies, check them
             vec.mulVec3Mat3(relativeVelocityVector, mat.matrix3from4Aux(this.getRotationMatrixInverse()));
-            vec.scale3(relativeVelocityVector, 1 / i);
             for (i = 0; (result === null) && (i < this._bodies.length); i++) {
                 result = this._bodies[i].checkHit(relativePos, relativeVelocityVector, range, offset);
             }
+        }
+        return result;
+    };
+    /**
+     * Checks whether a point-like object travelling along a straight path with a given speed has hit this pyhical object recently and
+     * if so, returns the intersection point where it did.
+     * @param {Number[4]} relativePosition A 4D vector describing current the position of the point in model space. (in meters)
+     * @param {Number[3]} relativeDirection The direction the object is travelling in (the hitcheck will be performed backwards!)
+     * @param {Number} range The distance the object has traversed recently when it could have hit the body
+     * @param {Number} [offset=0] If given, the bounderies of (all the bodies of) the object are offset (the size increased) by this amount
+     * (meters in world space)
+     * @returns {Number[4]|null} If the object has hit, the intersection point where the hit happened in object space, otherwise null.
+     */
+    PhysicalObject.prototype.checkHitRelative = function (relativePosition, relativeDirection, range, offset) {
+        var i, result = null;
+        for (i = 0; (result === null) && (i < this._bodies.length); i++) {
+            result = this._bodies[i].checkHit(relativePosition, relativeDirection, range, offset);
         }
         return result;
     };

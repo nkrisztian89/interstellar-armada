@@ -114,6 +114,16 @@ define([
              * @type String
              */
             DEFAULT_WEAPON_RANGE_STRING_SEPARATOR = "/",
+            /**
+             * The damage indicators will be positioned using a second hitcheck towards the ship center if its hit position is
+             * farther from the original hit position that the square root of this value. (i.e. if there was a large enough
+             * offset given for the original hitcheck, e.g. when a missile explodes with a proximity fuse several meters away from the
+             * ship, the damage indicator should not be positioned where the missile exploded, but on the ship surface, and in this
+             * case the ship surface is far away enough from the original hit position that it will be used as the damage indicator
+             * position)
+             * @type Number
+             */
+            MINIMUM_DISTANCE_FOR_DAMAGE_INDICATOR_HITCHECK_SQUARED = 0.01,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -2492,7 +2502,7 @@ define([
      * Simulates what happens when a given amount of damage is dealt to the spacecraft at a specific
      * point, coming from source coming from a specific direction.
      * @param {Number} damage The amount of damage done to the spacecraft (hitpoints)
-     * @param {Number[3]} damagePosition The relative position vector of where the damage occured.
+     * @param {Number[4]} damagePosition The relative position vector of where the damage occured.
      * Needs to take into consideration the position, orientation and scaling of the spacecraft.
      * @param {Number[3]} damageDir The relative direction whector indicating where the damage came from.
      * Also needs to take into consideration the orientation of the spacecraft.
@@ -2500,7 +2510,7 @@ define([
      * @param {Boolean} byMissile Whether the damage was caused by missile hit
      */
     Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy, byMissile) {
-        var i, damageIndicator, hitpointThreshold, exp, liveHit, scoreValue;
+        var i, damageIndicator, hitpointThreshold, exp, liveHit, scoreValue, damageIndicatorPosition, dirToCenter, distToCenter;
         // shield absorbs damage
         if (this._shield) {
             damage = this._shield.damage(damage);
@@ -2529,10 +2539,22 @@ define([
                 damageIndicator = this._class.getDamageIndicators()[i];
                 hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._maxHitpoints;
                 if ((this._hitpoints <= hitpointThreshold) && (this._hitpoints + damage > hitpointThreshold)) {
+                    // the original hitcheck might have had a large offset and so the hit position could be away from the ship, do a second
+                    // hitcheck towards the ship center with 0 offset and compare this new point on the ship surface, if far away enough, 
+                    // use it for damage indicator position instead of the original hit position
+                    dirToCenter = vec.scaled3(damagePosition, -1);
+                    distToCenter = vec.extractLength3(dirToCenter);
+                    damageIndicatorPosition = this._physicalModel.checkHitRelative(vec.NULL4W1, dirToCenter, distToCenter, 0);
+                    if (damageIndicatorPosition && vec.length3Squared(damageIndicatorPosition, damagePosition) < MINIMUM_DISTANCE_FOR_DAMAGE_INDICATOR_HITCHECK_SQUARED) {
+                        // the new position is close to the original one, just use the original one for the damage indicator
+                        damageIndicatorPosition = damagePosition;
+                    } else {
+                        damageDir = vec.scaled3(dirToCenter, -1);
+                    }
                     exp = explosion.getExplosion();
                     exp.init(
                             damageIndicator.explosionClass,
-                            mat.translation4vAux(damagePosition),
+                            mat.translation4vAux(damageIndicatorPosition),
                             mat.IDENTITY4,
                             damageDir,
                             true);
