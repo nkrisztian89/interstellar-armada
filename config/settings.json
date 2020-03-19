@@ -943,7 +943,7 @@
                 },
                 "missileChangeSound": {
                     "name": "missile_change",
-                    "volume": 0.5
+                    "volume": 0.4
                 },
                 "missileChangeDeniedSound": {
                     "name": "missile_change_denied",
@@ -951,20 +951,20 @@
                 },
                 "missileSalvoSound": {
                     "name": "missile_salvo",
-                    "volume": 0.5
+                    "volume": 0.4
                 },
                 "missileLoadedSound": {
                     "name": "missile_loaded",
-                    "volume": 0.5
+                    "volume": 0.4
                 },
                 "missileLockingSound": {
                     "name": "missile_locking",
-                    "volume": 0.5
+                    "volume": 0.3
                 },
                 "missileLockingSoundCount": 5,
                 "missileLockedSound": {
                     "name": "missile_locked",
-                    "volume": 0.5
+                    "volume": 0.4
                 },
                 "messageSound": {
                     "name": "blip_message",
