@@ -2,6 +2,25 @@
 /*global module*/
 module.exports = function (grunt) {
     "use strict";
+    var scssMappings = {
+        "css/general.css": 'scss/general.scss',
+        "css/about.css": 'scss/screens/about.scss',
+        "css/battle.css": 'scss/screens/battle.scss',
+        "css/controls.css": 'scss/screens/controls.scss',
+        "css/database.css": 'scss/screens/database.scss',
+        "css/debriefing.css": 'scss/screens/debriefing.scss',
+        "css/gameplay-settings.css": 'scss/screens/gameplay-settings.scss',
+        "css/graphics.css": 'scss/screens/graphics.scss',
+        "css/ingame-menu.css": 'scss/screens/ingame-menu.scss',
+        "css/missions.css": 'scss/screens/missions.scss',
+        "css/dialog.css": 'scss/components/dialog.scss',
+        "css/infobox.css": 'scss/components/infobox.scss',
+        "css/listcomponent.css": 'scss/components/listcomponent.scss',
+        "css/loadingbox.css": 'scss/components/loadingbox.scss',
+        "css/selector.css": 'scss/components/selector.scss',
+        "css/slider.css": 'scss/components/slider.scss',
+        "css/editor.css": 'tools/scss/editor.scss'
+    };
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -22,7 +41,7 @@ module.exports = function (grunt) {
             }
         },
         _clean: {
-            dev: ["js/main-optimized.js", "css/*.map", "css/general.css"]
+            dev: ["js/main-optimized.js", "css/*"]
         },
         _eslint: {
             options: {
@@ -35,18 +54,14 @@ module.exports = function (grunt) {
                 options: {
                     style: "expanded"
                 },
-                files: {
-                    "css/general.css": 'scss/general.scss'
-                }
+                files: scssMappings
             },
             dist: {
                 options: {
                     noSourceMap: true,
                     style: "compressed"
                 },
-                files: {
-                    "css/general.css": 'scss/general.scss'
-                }
+                files: scssMappings
             }
         },
         _replace: {
