@@ -26,6 +26,7 @@
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param config Used to access game settings/configuration
  * @param strings Used for translation support
+ * @param logicConstants Used for accessing pool names
  * @param environments Used for creating environments
  * @param SpacecraftEvents Used to trigger spacecraft events
  * @param spacecraft Used for creating spacecrafts
@@ -50,6 +51,7 @@ define([
     "armada/logic/classes",
     "armada/configuration",
     "armada/strings",
+    "armada/logic/constants",
     "armada/logic/environments",
     "armada/logic/SpacecraftEvents",
     "armada/logic/spacecraft",
@@ -61,7 +63,8 @@ define([
         utils, types, mat,
         application, game, asyncResource, resourceManager, resources, pools,
         camera, renderableObjects,
-        constants, graphics, classes, config, strings, environments, SpacecraftEvents, spacecraft, equipment, explosion, ai) {
+        constants, graphics, classes, config, strings, 
+        logicConstants, environments, SpacecraftEvents, spacecraft, equipment, explosion, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -3637,10 +3640,10 @@ define([
     };
     // initializazion
     // obtaining pool references
-    _particlePool = pools.getPool(renderableObjects.Particle);
-    _projectilePool = pools.getPool(equipment.Projectile);
-    _missilePool = pools.getPool(equipment.Missile);
-    _explosionPool = pools.getPool(explosion.Explosion);
+    _particlePool = pools.getPool(logicConstants.PARTICLE_POOL_NAME, renderableObjects.Particle);
+    _projectilePool = pools.getPool(logicConstants.PROJECTILE_POOL_NAME, equipment.Projectile);
+    _missilePool = pools.getPool(logicConstants.MISSILE_POOL_NAME, equipment.Missile);
+    _explosionPool = pools.getPool(logicConstants.EXPLOSION_POOL_NAME, explosion.Explosion);
     // creating the default context
     _context = new MissionContext();
     // associating condition constructors

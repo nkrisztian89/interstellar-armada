@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2017, 2020 Krisztián Nagy
  * @file Provides a pool class that can be used to minimize the creation of object from which many are created and destroyed.
  * Also provides a way to create and access common pools for different types of objects.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -206,14 +206,14 @@ define(function () {
     // -------------------------------------------------------------------------
     // Public functions
     /**
-     * Returns a common pool for the object type passed (identified by the constructor). Creates a new pool if necessary. For the same
-     * constructor, always returns the same pool
+     * Returns the common pool for the string id passed. Creates a new pool if necessary. 
+     * @param {String} name The string to identify this pool
      * @param {Function} objectConstructor The constructor function of the type of objects to store in the pool
      * @returns {Pool}
      */
-    function getPool(objectConstructor) {
-        var result = _pools[objectConstructor.name] || new Pool(objectConstructor);
-        _pools[objectConstructor.name] = result;
+    function getPool(name, objectConstructor) {
+        var result = _pools[name] || new Pool(objectConstructor);
+        _pools[name] = result;
         return result;
     }
     // -------------------------------------------------------------------------

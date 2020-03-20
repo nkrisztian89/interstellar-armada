@@ -32,7 +32,7 @@ module.exports = function (grunt) {
                     optimize: "uglify2",
                     uglify2: {
                         mangle: {
-                            keep_fnames: true // we rely on Function.prototype.name at some points (e.g. common Pools)
+                            keep_fnames: false // turn on to keep minification but make error messages using constructor.name readable
                         }
                     },
                     out: "js/main-optimized.js",
@@ -230,6 +230,20 @@ module.exports = function (grunt) {
                 files: [
                     {expand: true, flatten: true, src: ['index.html'], dest: './'}
                 ]
+            },
+            sass: {
+                options: {
+                    patterns: [
+                        {
+                            match: 'sourceMappingURL=css/',
+                            replacement: 'sourceMappingURL='
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, flatten: true, src: ['css/*.css'], dest: './css'}
+                ]
             }
         }
     });
@@ -252,6 +266,6 @@ module.exports = function (grunt) {
     grunt.registerTask('build', ['_sass:dist', '_minify:dist', '_replace:preOptimize', '_requirejs', '_replace:dist', '_replace:optimize', '_replace:postOptimize']);
     grunt.registerTask('clean', ['_clean:dev', '_replace:dev']);
     grunt.registerTask('lint', ['_eslint']);
-    grunt.registerTask('dev-build', ['_sass:dev']);
+    grunt.registerTask('dev-build', ['_sass:dev', '_replace:sass']);
     grunt.registerTask('css-build', ['_sass:dist']);
 };

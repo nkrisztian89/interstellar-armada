@@ -4686,9 +4686,9 @@ define([
     // ##############################################################################
     // initialization
     // obtaining pool references
-    _particlePool = pools.getPool(renderableObjects.Particle);
-    _projectilePool = pools.getPool(Projectile);
-    _missilePool = pools.getPool(Missile);
+    _particlePool = pools.getPool(constants.PARTICLE_POOL_NAME, renderableObjects.Particle);
+    _projectilePool = pools.getPool(constants.PROJECTILE_POOL_NAME, Projectile);
+    _missilePool = pools.getPool(constants.MISSILE_POOL_NAME, Missile);
     // caching configuration settings
     config.executeWhenReady(function () {
         var i;

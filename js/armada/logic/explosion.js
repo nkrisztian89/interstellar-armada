@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Implementation of the Explosion game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -22,7 +22,7 @@
  * @param graphics Used to access graphics settings
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param config Used to access game settings/configuration
- * @param constants Used to access the light priority of explosions
+ * @param constants Used to access the light priority of explosions and pool names
  */
 define([
     "utils/vectors",
@@ -381,8 +381,8 @@ define([
     };
     // initialization
     // obtaining pool references
-    _particlePool = pools.getPool(renderableObjects.Particle);
-    _explosionPool = pools.getPool(Explosion);
+    _particlePool = pools.getPool(constants.PARTICLE_POOL_NAME, renderableObjects.Particle);
+    _explosionPool = pools.getPool(constants.EXPLOSION_POOL_NAME, Explosion);
     // caching configuration settings
     config.executeWhenReady(function () {
         _hitSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_TIME_THRESHOLD);
