@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Krisztián Nagy
+ * Copyright 2014-2016, 2020 Krisztián Nagy
  * @file This module manages and provides the general settings screen of the application (where e.g. the language of the game can be changed)
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -47,7 +47,7 @@ define([
              * Stores the possible language setting options
              * @type String[]
              */
-            SETTING_LANGUAGE_VALUES = game.getLanguages(),
+            _settingLanguageValues,
             SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
             SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
     // ##############################################################################
@@ -81,7 +81,7 @@ define([
          */
         this._languageSelector = this._registerSelector(LANGUAGE_SELECTOR_ID,
                 strings.GENERAL_SETTINGS.LANGUAGE.name,
-                SETTING_LANGUAGE_VALUES);
+                _settingLanguageValues);
         /**
          * @type ExternalComponent
          */
@@ -174,6 +174,9 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        generalSettingsScreen: new GeneralSettingsScreen()
+        getGeneralSettingsScreen: function () {
+            _settingLanguageValues = game.getLanguages();
+            return new GeneralSettingsScreen();
+        }
     };
 });

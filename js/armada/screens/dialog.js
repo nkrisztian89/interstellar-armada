@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Krisztián Nagy
+ * Copyright 2017, 2020 Krisztián Nagy
  * @file This module manages and provides the Dialog screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -187,6 +187,8 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        dialogScreen: new DialogScreen()
+        getDialogScreen: function () {
+            return new DialogScreen();
+        }
     };
 });

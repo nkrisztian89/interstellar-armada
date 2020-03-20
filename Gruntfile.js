@@ -153,8 +153,8 @@ module.exports = function (grunt) {
                             match: '.getCamera()',
                             replacement: '._camera'
                         }, {
-                            match: '.getLODContext()',
-                            replacement: '._lodContext'
+                            match: '_scene.getLODContext()',
+                            replacement: '_scene._lodContext'
                         }, {
                             match: '.getStates()',
                             replacement: '._states'

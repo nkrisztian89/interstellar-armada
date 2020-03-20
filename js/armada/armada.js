@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2018, 2020 Krisztián Nagy
  * @file Augments the template provided by the game module to define the basic structure and initialization process of the Interstellar
  * Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -8,7 +8,7 @@
  */
 
 /*jslint nomen: true, white: true */
-/*global define, requirejs, location, document, JSON, localStorage */
+/*global define, location, document, JSON, localStorage */
 
 /**
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada
@@ -23,6 +23,19 @@
  * @param missions Used to load the missions
  * @param control Used to load the control configuration and setings of the game and access main functionality
  * @param strings Used to load the game translation strings
+ * @param armadaScreens Used for screen constants
+ * @param menus Used to create menu screens
+ * @param missionsScreen Used to create the mission chooser screen
+ * @param battle Used to create the battle screen
+ * @param debriefing Used to create the debriefing screen
+ * @param database Used to create the database screen
+ * @param generalSettings Used to create the general settings screen
+ * @param graphicsScreen Used to create the graphics settings screen
+ * @param audioScreen Used to create the audio settings screen
+ * @param gameplaySettingsScreen Used to create the gameplay settings screen
+ * @param controlsScreen Used to create the control settings screen
+ * @param aboutScreen Used to create the about screen
+ * @param dialogScreen Used to create the dialog screen
  */
 define([
     "modules/game",
@@ -36,8 +49,24 @@ define([
     "armada/logic/environments",
     "armada/logic/missions",
     "armada/control",
-    "armada/strings"
-], function (game, components, analytics, lights, constants, graphics, audio, config, environments, missions, control, strings) {
+    "armada/strings",
+    "armada/screens/shared",
+    "armada/screens/menus",
+    "armada/screens/missions",
+    "armada/screens/battle",
+    "armada/screens/debriefing",
+    "armada/screens/database",
+    "armada/screens/general-settings",
+    "armada/screens/graphics-settings",
+    "armada/screens/audio-settings",
+    "armada/screens/gameplay-settings",
+    "armada/screens/control-settings",
+    "armada/screens/about",
+    "armada/screens/dialog"
+], function (
+        game, components, analytics, lights,
+        constants, graphics, audio, config, environments, missions, control, strings,
+        armadaScreens, menus, missionsScreen, battle, debriefing, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -96,44 +125,28 @@ define([
         callback();
     };
     game._buildScreensAndExecuteCallback = function (callback) {
-        requirejs([
-            "armada/screens/shared",
-            "armada/screens/menus",
-            "armada/screens/missions",
-            "armada/screens/battle",
-            "armada/screens/debriefing",
-            "armada/screens/database",
-            "armada/screens/general-settings",
-            "armada/screens/graphics-settings",
-            "armada/screens/audio-settings",
-            "armada/screens/gameplay-settings",
-            "armada/screens/control-settings",
-            "armada/screens/about",
-            "armada/screens/dialog"
-        ], function (armadaScreens, menus, missionsScreen, battle, debriefing, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen) {
-            game.addScreen(menus.mainMenuScreen);
-            game.addScreen(missionsScreen.missionsScreen);
-            game.addScreen(battle.battleScreen);
-            game.addScreen(debriefing.debriefingScreen);
-            game.addScreen(database.databaseScreen);
-            game.addScreen(menus.settingsMenuScreen);
-            game.addScreen(generalSettings.generalSettingsScreen);
-            game.addScreen(graphicsScreen.graphicsScreen);
-            game.addScreen(audioScreen.audioScreen);
-            game.addScreen(gameplaySettingsScreen.gameplaySettingsScreen);
-            game.addScreen(controlsScreen.controlsScreen);
-            game.addScreen(aboutScreen.aboutScreen);
-            game.addScreen(menus.ingameMenuScreen);
-            game.addScreen(dialogScreen.dialogScreen);
-            _progressBar.value = 4;
-            game.executeWhenAllScreensReady(function () {
-                _progressBar.value = 5;
-                game.requestLanguageChange(localStorage.getItem(constants.LANGUAGE_LOCAL_STORAGE_ID) || game.getDefaultLanguage(), strings, function () {
-                    _progressBar.value = 6;
-                    components.clearStoredDOMModels();
-                    localStorage[constants.VERSION_LOCAL_STORAGE_ID] = game.getVersion();
-                    armadaScreens.initAudio(callback);
-                });
+        game.addScreen(menus.getMainMenuScreen());
+        game.addScreen(missionsScreen.getMissionsScreen());
+        game.addScreen(battle.getBattleScreen());
+        game.addScreen(debriefing.getDebriefingScreen());
+        game.addScreen(database.getDatabaseScreen());
+        game.addScreen(menus.getSettingsMenuScreen());
+        game.addScreen(generalSettings.getGeneralSettingsScreen());
+        game.addScreen(graphicsScreen.getGraphicsScreen());
+        game.addScreen(audioScreen.getAudioScreen());
+        game.addScreen(gameplaySettingsScreen.getGameplaySettingsScreen());
+        game.addScreen(controlsScreen.getControlsScreen());
+        game.addScreen(aboutScreen.getAboutScreen());
+        game.addScreen(menus.getIngameMenuScreen());
+        game.addScreen(dialogScreen.getDialogScreen());
+        _progressBar.value = 4;
+        game.executeWhenAllScreensReady(function () {
+            _progressBar.value = 5;
+            game.requestLanguageChange(localStorage.getItem(constants.LANGUAGE_LOCAL_STORAGE_ID) || game.getDefaultLanguage(), strings, function () {
+                _progressBar.value = 6;
+                components.clearStoredDOMModels();
+                localStorage[constants.VERSION_LOCAL_STORAGE_ID] = game.getVersion();
+                armadaScreens.initAudio(callback);
             });
         });
     };

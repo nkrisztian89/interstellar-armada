@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016, 2020 Krisztián Nagy
  * @file This module manages and provides the audio settings screen of the application
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -174,6 +174,8 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        audioScreen: new AudioScreen()
+        getAudioScreen: function () {
+            return new AudioScreen();
+        }
     };
 });

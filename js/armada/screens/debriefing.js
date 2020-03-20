@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2019 Krisztián Nagy
+ * Copyright 2016-2020 Krisztián Nagy
  * @file This module manages and provides the Mission debriefing screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -250,6 +250,8 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        debriefingScreen: new DebriefingScreen()
+        getDebriefingScreen: function () {
+            return new DebriefingScreen();
+        }
     };
 });

@@ -177,6 +177,11 @@ define([
              */
             _analyticsState,
             /**
+             * A reference to the created battle screen instance
+             * @type BattleScreen
+             */
+            _battleScreen,
+            /**
              * The object that will be returned as this module
              * @type Battle
              */
@@ -1251,7 +1256,7 @@ define([
             permanent: true,
             silent: true
         };
-        _battle.battleScreen.queueHUDMessage(_jumpMessage, true);
+        _battleScreen.queueHUDMessage(_jumpMessage, true);
         _originalCameraConfig = _battleScene.getCamera().getConfiguration();
         return true;
     }
@@ -1261,7 +1266,7 @@ define([
      * effect)
      */
     function _handlePilotedSpacecraftJumpCancelled() {
-        _battle.battleScreen.clearHUDMessages(JUMP_QUEUE);
+        _battleScreen.clearHUDMessages(JUMP_QUEUE);
         _battleScene.getCamera().startTransitionToConfiguration(_originalCameraConfig);
         return true;
     }
@@ -1298,7 +1303,7 @@ define([
             }
         } else {
             // during preparation
-            _battle.battleScreen.queueHUDMessage({
+            _battleScreen.queueHUDMessage({
                 text: utils.formatString(strings.get(strings.BATTLE.MESSAGE_JUMP_PREPARING), {
                     timeLeft: utils.formatTimeToSeconds(data.timeLeft)
                 }),
@@ -1340,7 +1345,7 @@ define([
                     silent: true,
                     queue: HOSTILE_ALERT_QUEUE
                 };
-                _battle.battleScreen.queueHUDMessage(_newHostilesMessage, true);
+                _battleScreen.queueHUDMessage(_newHostilesMessage, true);
                 _newHostiles = [this];
                 _newHostilesAlertSound.play();
             } else {
@@ -4507,12 +4512,17 @@ define([
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
-    _battle.battleScreen = new BattleScreen();
+    _battle.getBattleScreen = function () {
+        if (!_battleScreen) {
+            _battleScreen = new BattleScreen();
+            _battle.pauseBattle = _battleScreen.pauseBattle.bind(_battleScreen);
+            _battle.resumeBattle = _battleScreen.resumeBattle.bind(_battleScreen);
+        }
+        return _battleScreen;
+    };
     _battle.stopTime = stopTime;
     _battle.resumeTime = resumeTime;
     _battle.toggleTime = toggleTime;
-    _battle.pauseBattle = _battle.battleScreen.pauseBattle.bind(_battle.battleScreen);
-    _battle.resumeBattle = _battle.battleScreen.resumeBattle.bind(_battle.battleScreen);
     _battle.showHUD = showHUD;
     _battle.hideHUD = hideHUD;
     _battle.toggleHUDVisibility = toggleHUDVisibility;

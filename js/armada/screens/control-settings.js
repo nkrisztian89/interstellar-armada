@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019, Krisztián Nagy
+ * Copyright 2014-2020, Krisztián Nagy
  * @file This module manages and provides the Control settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -343,6 +343,8 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        controlsScreen: new ControlsScreen()
+        getControlsScreen: function () {
+            return new ControlsScreen();
+        }
     };
 });
