@@ -64,6 +64,11 @@ module.exports = function (grunt) {
                 files: scssMappings
             }
         },
+        _minify: {
+            dist: {
+                files: 'data/**/*.json'
+            }
+        },
         _replace: {
             dist: {
                 options: {
@@ -234,15 +239,17 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-sass');
     grunt.loadNpmTasks('grunt-replace');
     grunt.loadNpmTasks('grunt-eslint');
+    grunt.loadNpmTasks('grunt-json-minify');
     // "Private" tasks (meant only to be used to construct the pulbic tasks, not to be run directly)
     grunt.renameTask('clean', '_clean');
     grunt.renameTask('eslint', '_eslint');
     grunt.renameTask('replace', '_replace');
     grunt.renameTask('sass', '_sass');
     grunt.renameTask('requirejs', '_requirejs');
+    grunt.renameTask('json-minify', '_minify');
     // "Public" tasks (meant to be run directly)
     grunt.registerTask('default', ['build']);
-    grunt.registerTask('build', ['_sass:dist', '_replace:preOptimize', '_requirejs', '_replace:dist', '_replace:optimize', '_replace:postOptimize']);
+    grunt.registerTask('build', ['_sass:dist', '_minify:dist', '_replace:preOptimize', '_requirejs', '_replace:dist', '_replace:optimize', '_replace:postOptimize']);
     grunt.registerTask('clean', ['_clean:dev', '_replace:dev']);
     grunt.registerTask('lint', ['_eslint']);
     grunt.registerTask('dev-build', ['_sass:dev']);
