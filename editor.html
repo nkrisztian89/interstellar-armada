@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html lang='en'>
+
+    <head>
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+        <meta name="author" content="Krisztián Nagy"/>
+
+        <title>Interstellar Armada editor</title>
+
+        <link href="css/editor.css" rel="stylesheet" type="text/css"/>
+        <link href="assets/images/favicon.ico" type="image/x-icon" rel="shortcut icon"/>
+    </head>
+
+    <body>
+        <div id="items" class="window">
+            <div class="windowTitle">Items</div>
+            <div class="windowToolbar">
+                <button type="button" id="backButton" class="toolbarButton" disabled>&lt;</button>
+                <button type="button" id="forwardButton" class="toolbarButton" disabled>&gt;</button>
+                <button type="button" id="newItemButton" class="toolbarButton">New</button>
+                <button type="button" id="exportButton" class="toolbarButton">Export</button>
+            </div>
+            <div class="windowContent">
+                <div class="windowLabel">loading...</div>
+            </div>
+        </div>
+
+        <div id="preview" class="window">
+            <div class="windowTitle">Preview</div>
+            <div class="windowContent">
+                <div id="previewOptions" hidden></div>
+                <div id="previewDiv" hidden>
+                    <canvas id="previewCanvas" hidden>
+                    </canvas>
+                </div>
+                <div id="previewInfo" hidden></div>
+                <div class="windowLabel">loading...</div>
+            </div>
+        </div>
+
+        <div id="properties" class="window">
+            <div class="windowTitle">Properties</div>
+            <div class="windowContent">
+                <div class="windowLabel">loading...</div>
+            </div>
+        </div>
+
+        <div id="newItemDialog" class="dialog" hidden>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Item type:</span>
+                <select id="newItemType"></select>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Category:</span>
+                <select id="newItemCategory"></select>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Copy from:</span>
+                <select id="newItemBase"></select>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Name:</span>
+                <input type="text" id="newItemName" value=""/>
+            </div>
+            <div class="dialogButtonRow">
+                <button type="button" id="newItemCreate">Create</button>
+                <button type="button" id="newItemCancel">Cancel</button>
+            </div>
+        </div>
+
+        <div id="exportDialog" class="dialog" hidden>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Item type:</span>
+                <select id="exportType"></select>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Name:</span>
+                <input type="text" id="exportName" value="classes"/>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Author:</span>
+                <input type="text" id="exportAuthor" value="Krisztián Nagy"/>
+            </div>
+            <div class="dialogButtonRow">
+                <button type="button" id="exportExport">Export</button>
+                <button type="button" id="exportCancel">Cancel</button>
+            </div>
+        </div>
+
+        <script data-main="js/editor-main.js" src="assets/libs/require.js"></script>
+    </body>
+
+</html>

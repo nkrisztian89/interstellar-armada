@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-Copyright (C) 2014-2018 Krisztián Nagy
+Copyright (C) 2014-2018, 2020 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="author" content="Krisztián Nagy"/>
 
-        <link rel="icon" href="images/favicon.ico"/>
+        <link rel="icon" href="assets/images/favicon.ico"/>
 
         <!-- Open Graph properties -->
         <meta property="og:title" content="Interstellar Armada"/>
         <meta property="og:type" content="website"/>
         <meta property="og:url" content="http://nkrisztian89.github.io/interstellar-armada/"/>
-        <meta property="og:image" content="http://nkrisztian89.github.io/interstellar-armada/images/splash/1.png"/>
+        <meta property="og:image" content="http://nkrisztian89.github.io/interstellar-armada/assets/images/splash/1.png"/>
         <meta property="og:image:width" content="400"/>
         <meta property="og:image:height" content="270"/>
         <meta property="og:description" content="A JavaScript/WebGL space combat game by Krisztián Nagy, currently in development."/>
@@ -43,13 +43,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     var splashImage = new Image();
                     splashImage.id = "splashImage";
                     splashImage.class = "horizontallyCentered";
-                    splashImage.src = "images/splash/" + (Math.floor(Math.random() * 4.9999) + 1).toString() + ".png";
+                    splashImage.src = "assets/images/splash/" + (Math.floor(Math.random() * 4.9999) + 1).toString() + ".png";
                     document.getElementById("splashContainer").appendChild(splashImage);
                     splashImage = undefined;
                 </script>
                 <progress id="splashProgress" class="horizontallyCentered" value="0" max="100"></progress>
             </div>
         </div>
-        <script data-main="js/main.js" src="js/libs/require.js"></script>
+        <script data-main="js/main.js" src="assets/libs/require.min.js"></script>
     </body>
 </html>

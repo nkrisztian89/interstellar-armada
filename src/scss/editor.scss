@@ -1,0 +1,523 @@
+/* -------------------------------------------------------------------- */
+/* general */
+
+@font-face {
+    font-family: gameFont;
+    src: url(../assets/fonts/Sansation_Regular.ttf);
+}
+
+body,html {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
+    position: static;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    color: #cccccc;
+
+    font-size: 0.9vw; /* for em units */ 
+}
+
+button {
+    font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
+    font-size: 0.8vw;
+    height: 1.6em;
+}
+
+input {
+    font-size: 0.8vw;
+}
+
+input[type="text"] {
+    height: 1.2em;
+}
+
+textarea {
+    resize: none;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+select {
+    font-size: 0.8vw;
+
+    max-width: 12.6em;
+    height: 1.6em;
+}
+
+select.withJumpButton, select.withUnsetButton {
+    max-width: 10.6em;
+}
+
+select.withJumpButton.withUnsetButton {
+    max-width: 8.6em;
+}
+
+input.withUnsetButton {
+    max-width: 10.4em;
+}
+
+/* -------------------------------------------------------------------- */
+/* general: common */
+
+.label {
+    font-size: 0.8vw;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.numericInput {
+    width: 4em;
+}
+
+.colorComponent, .vectorComponent {
+    margin-right: 0.28em;
+    margin-top: 0;
+}
+
+.colorComponent {
+    width: 1.8em;
+}
+
+.vectorComponent {
+    width: 2.2em;
+}
+
+.colorPicker {
+    display: inline-block;
+}
+
+.colorPreview {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.4em;
+    margin-bottom: 0;
+    margin-right: 0.28em;
+}
+
+.rangeCheckbox {
+    vertical-align: middle;
+}
+
+.rangeNumericInput {
+    width: 2.4em;
+}
+
+.popup {
+    position: absolute;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+
+.popup, .dialog {
+    border: 2px solid #666666;
+    background-color: #444444;
+    box-shadow: 0 0 1em 0 #222222;
+}
+
+.dialog {
+    position: absolute;
+    width: 20em;
+    left: calc(50% - 10em);
+    top: calc(40% - 4.5em);
+    padding: 1em;
+}
+
+#newItemDialog {
+    height: 11em;
+}
+
+#exportDialog {
+    height: 9em;
+}
+
+.dialogLabel {
+    display: inline-block;
+    width: 6em;
+    text-align: left;
+}
+
+/* -------------------------------------------------------------------- */
+/* window */
+
+div.window {
+    position: fixed;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+}
+
+div.windowTitle {
+    position: relative;
+    background-color: #aaaaaa;
+
+    background-image:
+        -webkit-linear-gradient(
+        top, 
+        #dddddd,
+        #aaaaaa
+        );
+
+    padding: 0.2em;
+    text-align: center;
+    vertical-align: middle;
+    color: #222222;
+
+    font-weight: bold;
+    font-size: 1.2vw;
+
+    height: 1.5vw;
+}
+
+div.windowToolbar {
+    position: relative;
+    height: 1.5vw;
+
+    vertical-align: middle;
+
+    padding: 0.3em;
+
+    background-color: #505050;
+}
+
+div.windowContent {
+    position: relative;
+    width: 100%; 
+    height: calc(100% - 1.5vw - 0.4em); /* subtract title (height + padding) */
+    margin: 0;
+    padding: 0;
+
+    background-color: #444444;
+}
+
+div.windowLabel {
+    position: relative;
+    padding: 40% 0;
+    text-align: center;
+}
+
+.toolbarButton {
+    height: 1.5vw;
+}
+
+/* -------------------------------------------------------------------- */
+/* window layout */
+
+div#items {
+    left: 0;
+    width: 20%;
+    height: 100%;
+    top: 0;
+}
+
+div#preview {
+    left: 20%;
+    top: 0;
+    width: 60%;
+    height: 100%;
+}
+
+div#properties {
+    right: 0;
+    top: 0;
+    width: 20%;
+    height: 100%;
+}
+
+div#items > div.windowContent {
+    height: calc(100% - 3vw - 1em); /* subtract title + toolbar */
+}
+
+div#preview > div.windowContent {
+    background-color: #3d3d3d;
+}
+
+div#items > div.windowContent, div#properties > div.windowContent {
+    width: calc(100% + 17px); /* hiding scrollbar */
+
+    padding-bottom: 4em;
+
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+/* -------------------------------------------------------------------- */
+/* dialogs */
+
+#classesExportDialog {
+    width: 20em;
+    height: 7em;
+    left: calc(50% - 10em);
+    top: calc(50% - 3.5em);
+
+    padding-top: 0.9em;
+}
+
+div.dialogEntry {
+    text-align: left;
+    margin-bottom: 0.9em;
+}
+
+div.dialogEntry > input {
+    font-size: 1em;
+}
+
+div.dialogButtonRow {
+    text-align: center;
+}
+
+div.dialogButtonRow > button {
+    font-size: 1em;
+}
+
+/* -------------------------------------------------------------------- */
+/* items */
+
+ul {
+    margin-top: 0;
+    padding-left: 1em;
+    padding-top: 0.2em;
+    padding-bottom: 0.4em;
+
+    list-style-type: none;
+
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none
+}
+
+ul.elementList {
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 1em;
+}
+
+li.category {
+}
+
+.itemType {
+    border-top: 3px solid #3d3d3d;
+
+    padding-left: 0.5em;
+
+    font-size: 1.2vw;
+    font-weight: bold;
+    color: #aaaaaa;
+}
+
+span.category {
+    font-size: 1.1vw;
+    font-weight: bold;
+}
+
+span.category:hover, span.element:hover {
+    cursor: pointer;
+
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none
+}
+
+span.category:hover, span.element:hover {
+    color: #44aaff;
+}
+
+span.element {
+    font-size: 1.0vw;
+}
+
+span.element.selected {
+    font-weight: bold;
+}
+
+li.element {
+    transition: padding 0.1s;
+}
+
+li.element.inserting {
+    opacity: 0.3;
+}
+
+li.element.dragover {
+    padding-bottom: 1.0em;
+}
+
+/* -------------------------------------------------------------------- */
+/* preview */
+
+#previewOptions {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding-top: 0.6em;
+    padding-left: 0.6em;
+    padding-right: 0.6em;
+    padding-bottom: 0;
+}
+
+#previewCanvas {
+    position: relative;
+    width: 100%;
+
+    padding: 0;
+    border: 0;
+}
+
+#previewDiv {
+    position: relative;
+    max-height: 100%;
+    width: calc(100% + 17px); /* hiding scrollbar */
+    
+    padding: 0;
+    border: 0;
+
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+#previewInfo {
+    position: relative;
+    bottom: 0.3em;
+    left: 0;
+    margin: 0;
+    padding-top: 0.6em;
+    padding-bottom: 0.6em;
+    padding-left: 0.4em;
+    padding-right: 0.4em;
+}
+
+#previewInfo > span.label {
+    padding: 0;
+}
+
+.setting {
+    display: inline-block;
+    padding-left: 0.5em;
+    margin-bottom: 0.6em;
+}
+
+span.settingLabel {
+    font-size: 0.8vw;
+    padding-right: 0.5em;
+}
+
+.setting > input[type="checkbox"] {
+    margin-top: auto;
+    margin-bottom: 0;
+}
+
+/* -------------------------------------------------------------------- */
+/* properties */
+
+.propertiesTable {
+    position: relative;
+    width: 100%;
+    border: 0;
+    margin-top: 0;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10em;
+    padding: 0;
+
+    background-color: #444444;
+}
+
+.popup > .propertiesTable {
+    margin-bottom: 0;
+}
+
+td {
+    background-color: #4d4d4d;
+}
+
+.propertyName {
+    font-size: 0.8vw;
+    padding-left: 0.5em;
+
+    max-width: 11em;
+    overflow-x: hidden;
+}
+
+span.propertyControl {
+    font-size: 0.8vw;
+    margin-right: 0.5em;
+}
+
+.propertyControl {
+    position: relative;
+
+    text-align: left;
+}
+
+div.propertyControl {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+div.propertyEditorHeader {
+    background-color: #545454;
+    border: 2px solid #444444;
+}
+
+button.propertyEditorHeaderButton {
+    margin-left: 0.5em;
+}
+
+button.unsetProperty {
+    margin-left: 0;
+}
+
+button.jumpReference {
+    margin: 0;
+}
+
+/* -------------------------------------------------------------------- */
+/* GLSL preview */
+
+h1.glsl-header {
+    margin-top: 0;
+    padding-left: 0.2em;
+    padding-top: 0.5em;
+    padding-bottom: 0.3em;
+    font-size: 20px;
+    background-color: #444444;
+}
+
+.glsl-code {
+    font-family: monospace;
+    font-size: 0.75vw;
+    margin-left: 1em;
+}
+
+*:not(.glsl-comment) > .glsl-keyword {
+    font-weight: bold;
+}
+
+*:not(.glsl-comment) > .glsl-type {
+    color: #44aaff;
+}
+
+*:not(.glsl-comment) > .glsl-directive {
+    color: #f0ad4e;
+}
+
+.glsl-comment {
+    color: #888888;
+}
+
+*:not(.glsl-comment) > .glsl-variable {
+    color: #00aa00;
+}
+
+*:not(.glsl-comment) > .glsl-function, *:not(.glsl-comment) > .glsl-operator {
+    color: #ffff00;
+}

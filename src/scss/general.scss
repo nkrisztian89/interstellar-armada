@@ -1,0 +1,618 @@
+/*
+Copyright (C) 2017-2018 Krisztián Nagy
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// -----------------------------------------------------------------------------
+// imports
+
+@import "_common.scss";
+
+// -----------------------------------------------------------------------------
+// fonts
+
+@font-face {
+    font-family: gameFont;
+    src: url(../assets/fonts/Sansation_Light.ttf);
+}
+
+@font-face {
+    font-family: gameFont;
+    src: url(../assets/fonts/Sansation_Regular.ttf);
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: hudFont;
+    src: url(../assets/fonts/Aldrich_Regular.ttf);
+}
+
+// -----------------------------------------------------------------------------
+// classes
+
+/* In order to size elements according to screen size relatively, all
+   their parents' size must be explicit, so give them explicit auto. This
+   will mean 100% together with padding, border and margin. (instead of explicit
+   100%, which would make it 100% without padding, border and margin, meaning
+   added padding would make it more than 100%, resulting in unnecessary scroll
+   bar) */
+body,html {
+    width: auto;
+    height: auto;
+    cursor: $cursor, auto;
+}
+
+body {
+    color: $text-color;
+    background-color: $body-color;
+    font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
+    font-size: 2vmin;
+    margin: 0;
+    padding: 0;
+    border: 5px transparent;
+}
+
+@media screen and (orientation: portrait) {
+    body {
+        font-size: 3vmin;
+    }
+}
+
+@media screen and (min-aspect-ratio: 2/1) {
+    body {
+        font-size: 2.5vmin;
+    }
+}
+
+/* Adding this class to the body of the document will ensure the cursor will show wait above all elements */
+body.wait, body.wait * {
+    cursor: $cursor, wait;
+}
+
+canvas {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+/* Put a wrapper div of this class around an element to be centered that has no fixed height */
+.pageGhost {
+    text-align: center;
+    height: 100%;
+    white-space: nowrap;
+    &:before {
+        content: '';
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+        margin-right: -0.25em; /* Adjusts spacing to avoid horizontal scrollbar */
+    }
+}
+
+.outerContainer {
+    @include glowing;
+    background-color: rgba($panel-back-color,$panel-opacity);
+    border: 2px solid $panel-front-color;
+}
+
+.innerContainer {
+    @include shadowed;
+    background-color: rgba($panel-color,$panel-opacity);
+    border: none;
+}
+
+/* To use with the outermost container div which houses the page content */
+.pageContainer {
+    padding: 1em;
+    margin-bottom: 1em;
+    margin-top: 1em;
+    white-space: normal;
+}
+
+.withSmallBackgroundSign {
+    background-image: url(../assets/images/empire_back_dark200.png);
+    background-position: center top;
+    background-repeat: no-repeat;
+}
+
+.horizontallyCentered {
+    display: table;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* This centering works on elements of any height, but requires a wrapper with the pageGhost class around the element */
+.anyHeightCentered {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+
+/* This centering works only on fixed-height elements */
+.centered {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+    margin: auto;
+}
+
+/* A full screen element that stays at the same place regardless of scrolling,
+ * as does all of its children. Ideal for (non-moving) background. */
+.fullScreenFix {
+    position: fixed;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+/* A full screen element that can be used to overlay (scrollable) content on
+ * top of the existing page, by appending it and putting the new content 
+ * inside. */
+.fullScreenContainer {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.wideFluid {
+    width: calc(100% - 4em);
+    padding-left: 2em;
+    padding-right: 2em;
+}
+
+/* To be used with outer containers (page containers) that must have a fluid
+ * almost all screen wide width
+ */
+.outerWideFluid {
+    width: calc(100% - 5em);
+}
+
+.fullWide {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.narrowFix {
+    width: 350px;
+}
+
+@media screen and (max-width: 420px) {
+    .narrowFix {
+        width: 80%;
+    }
+}
+
+.contentWide {
+    display: table;
+    padding: 1em;
+}
+
+.transparentContainer {
+    padding: 0;
+    border: none;
+    background-color: rgba(0,0,0,0);
+}
+
+.separatorBar {
+    display: block;
+    padding: 0.4em;
+    background: 
+        url(../assets/images/empire_white_50.png) left center,
+        url(../assets/images/empire_white_50.png) right center;
+    background-color: $separator-color;
+    background-repeat: no-repeat;
+    box-sizing: border-box; 
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: none;
+    border-bottom: none;
+}
+
+.footer {
+    position: absolute;
+    bottom: 1em;
+    width: calc(100% - 2em);
+}
+
+table {
+    margin-bottom: 1em;
+}
+
+ul {
+    display: table;
+    padding: 1.0em;
+}
+
+th, td {
+    padding: 0.5em;
+}
+
+th {
+    text-align: left;
+    color: $light-text-color;
+}
+
+td {
+    @include shadowed;
+    border: none;
+    background-color: $panel-color;
+    font-size: 0.9em;
+}
+
+li {
+    list-style-type: none;
+}
+
+a {
+    color: $light-text-color;
+    text-decoration: none;
+    font-weight: bold;
+    font-variant: small-caps;
+}
+
+a:not(.button) {
+    font-size: 1.1em;
+    color: $link-color;
+}
+
+a.separate {
+    display: table;
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+}
+
+a.menu {
+    display: block;
+    margin: 0.2em;
+}
+
+div.horizontalMenu {
+    border-spacing: 0.4em;
+}
+
+a.horizontalMenu {
+    display: table-cell;
+    vertical-align: middle;
+    margin: 0.4em;
+}
+
+a.button {
+    @include shadowed;
+    min-width: 8em;
+    font-size: 1.0em;
+    text-align: center;
+    padding: 0.5em;
+    background-color: $panel-color;
+
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+a:hover:not(.disabled):not(.menu):not(.listElement), a.button.selected {
+    color: $light-text-color;
+    text-shadow:
+        $highlight-color 0 0 0.2em,
+        $highlight-color 0 0 0.2em;
+    transition: all 0s;
+}
+
+a.button:hover:not(.disabled):not(.menu), a.button.selected {
+    background-color: $panel-front-color;
+    transition: all 0s;
+}
+
+a {
+    transition: all 0.2s;
+}
+
+a.button.disabled {
+    color: $text-disabled-color;
+    background-color: $panel-disabled-color;
+
+    cursor: $cursor, default;
+}
+
+a, a:hover, a:active {
+    cursor: $cursor-light, pointer;
+}
+
+.clickable:hover {
+    color: $light-text-color;
+    background-color: $panel-front-color;
+    cursor: $cursor-light, pointer;
+}
+
+.highlightedItem {
+    @include inner-glowing;
+    color: $light-text-color;
+    background-color: $panel-front-color;
+    @include glowing-text;
+}
+
+.highlightedText {
+    color: $light-highlight-color;
+    font-weight: bold;
+}
+
+.fadedText {
+    color: #909090;
+}
+
+img {
+    margin: 0.5em;
+}
+
+img.menuHeaderImage {
+    margin: 0.5em 0 0.5em 0;
+}
+
+div#splashBackground {
+    position: absolute;
+
+    padding: 0;
+    margin: 0;
+    border: 0;
+
+    width: 100%;
+    height: 100%;
+}
+
+div#splashContainer {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -60%);
+}
+
+@media screen and (max-width: 600px) {
+    img#splashImage {
+        width: 90%;
+    }
+}
+
+progress#splashProgress {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 90%;
+    text-align: left;
+}
+
+p.sub {
+    margin: 0.5em 0 0 0;
+    text-align: center;
+}
+
+h1 {
+    @include glowing-text;
+    text-align: center;
+    font-variant: small-caps;
+    margin: 0.2em 0 0.5em 0;
+}
+
+h2 {
+    @include glowing-text;
+    text-align: center;
+    font-variant: small-caps;
+}
+
+h3 {
+    text-shadow: #000000 0.0em 0.0em 0.4em;
+    text-align: center;
+    font-variant: small-caps;
+    margin: 10px;
+    padding: 10px;
+}
+
+.clear:after {
+    clear: both;
+    content: "";
+    display: table;
+}
+
+.releaseNotes { 
+    h2 {
+        margin: 0;
+    }
+    ul {
+        margin-top: 0;
+        text-align: left;
+    }
+    li {
+        list-style-type: square;
+        margin-bottom: 0.3em;
+    }
+}
+
+/******************************************************************************************/
+/* Styling of determinate progress bars */
+progress[value] {
+    $inset-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
+
+    // Reset the default appearance 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    // Get rid of default border in Firefox. 
+    border: none;
+
+    // Styling of the container in Firefox 
+    background-color: #444444;
+    box-shadow: $inset-shadow;
+    width: 220px;
+    height: 6px;
+
+    // Styling of the container in Webkit browsers
+    &::-webkit-progress-bar {
+        background-color: #444444;
+        box-shadow: $inset-shadow;
+    }
+    // Styling of the value bar in Webkit browsers
+    &::-webkit-progress-value {
+        background-image:
+            -webkit-linear-gradient(
+            top, 
+            #00ee00,
+            #00aa00
+            );
+        box-shadow: $faint-glow;
+    }
+    // Styling of the value bar in Firefox
+    &::-moz-progress-bar { 
+        background-image:
+            -moz-linear-gradient(
+            top, 
+            #00ee00,
+            #00aa00
+            );
+        box-shadow: $faint-glow;
+    }
+}
+
+/******************************************************************************************/
+/* Styling of sliders */
+
+input[type=range] {
+    -webkit-appearance: none; 
+    width: 100%; /* Specific width is required for Firefox. */
+    background: transparent; /* Otherwise white in Chrome */
+    height: 30px;
+
+    margin: 4px 0 0 4px;
+    padding: 0;
+    cursor: $cursor, pointer;
+
+    &:hover {
+        cursor: $cursor-light, pointer;
+    }
+    &:focus {
+        outline: none; /* Removes the blue border. */
+    }
+
+    /* Styling of sliders - thumb */
+    &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+
+        height: 24px;
+        width: 11px;
+        /*cursor: pointer;*/
+        margin-top: -9px; /* needed for Chrome, but in Firefox and IE it is automatic 
+                           * depends on height */
+
+        /* gray appearance similar to buttons - for consistent look */
+        background-color: $panel-front-color;
+        border: 2px solid #555555;
+        @include shadowed;
+        /* glowing green appearance for better contrast */
+        /*    background-color: #00cc00;
+            border: 2px solid #008800;
+            box-shadow: 0em 0em 0.5em #00cc00;*/
+
+        &:hover {
+            /* gray appearance similar to buttons - for consistent look */
+            background-color: #555555;
+            border: 2px solid #777777;
+            /* glowing green appearance for better contrast */
+            /*    background-color: #44ff44;
+                border: 2px solid #00aa00;
+                box-shadow: 0em 0em 0.5em #44ff44;*/
+        }
+    }
+
+    &::-moz-range-thumb {
+        height: 20px;
+        width: 7px;
+
+        border-radius: 0;
+
+        background-color: $panel-front-color;
+        border: 2px solid #555555;
+        @include shadowed;
+
+        &:hover {
+            background-color: #555555;
+            border: 2px solid #777777;
+        }
+    }
+
+    &::-ms-thumb {
+        height: 24px;
+        width: 11px;
+
+        border-radius: 0;
+
+        background-color: $panel-front-color;
+        border: 2px solid #555555;
+        @include shadowed;
+
+        &:hover {
+            background-color: #555555;
+            border: 2px solid #777777;
+        }
+    }
+
+    /* Styling of sliders - track */
+
+    &::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 10px;
+        @include inset-bordered-panel;
+    }
+
+    &::-moz-range-track {
+        width: 100%;
+        height: 6px;
+        @include inset-bordered-panel;
+    }
+    
+    &::-ms-track {
+        width: 100%;
+        height: 10px;
+        @include inset-bordered-panel;
+    }
+    
+    /* having different tracks to the left and right are only supported in IE and Firefox, not using for now */
+
+    /* IE pseudo elements: -ms-fill-lower, -ms-fill-upper
+       Firefox preudo element: -moz-range-progress 
+    */
+}
+
+a.fullscreenButton {
+    position: fixed;
+    right: 0.5em;
+    bottom: 0.5em;
+    width: 4em;
+    height: 4em;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background-image: url(../assets/images/fullscreen.png);
+    background-size: cover;
+}

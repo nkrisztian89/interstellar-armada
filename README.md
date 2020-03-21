@@ -1,4 +1,4 @@
-![Logo](http://nkrisztian89.github.io/interstellar-armada/images/splash/1.png)
+![Logo](http://nkrisztian89.github.io/interstellar-armada/assets/images/splash/1.png)
 
 Interstellar Armada: Galactic Ace is a free, Open Source browser-based 3D space 
 combat simulator developed in JavaScript-WebGL by Krisztián Nagy (<nkrisztian89@gmail.com>).
@@ -26,25 +26,36 @@ I use [NetBeans](https://netbeans.org/) (8.2) with its web development (+
 [ESLint](http://plugins.netbeans.org/plugin/63486/eslint),
 [GLSL](http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter) and 
 [Markdown](http://plugins.netbeans.org/plugin/50964/markdown-support)) plugins 
-to develop this game. For the (very rudimentary) build process, you will need
+to develop this game. To build the game, you will need
 [npm](https://www.npmjs.com/), [Grunt](https://gruntjs.com/) and 
-[Sass](http://sass-lang.com/). After installing the dev dependencies with 
-`npm install`, running `grunt build` creates a concatenated, minified (and 
-somewhat optimized) source and changes the reference to it in `index.html`. Use 
-`grunt clean` to remove the built file and change back the reference to the 
-regular source. Run `grunt dev-build` to create a build suitable for 
-development/testing (no minification or concatenation, but Sass files are 
-compiled).
+[Sass](http://sass-lang.com/).
+
+After cloning the repository, in its main folder run
+```
+npm install
+grunt build
+```
+to build the production version of the game. Then serve the game folder with
+your favorite server of choice and open `index.html` in the root folder to run
+locally. (the game uses XMLHttpRequests, so the file cannot be opened directly
+without a server)
+
+Run `grunt clean` to remove the build files.
+
+Run `grunt dev-build` to create a build for development / testing.
+
+Run `grunt watch` while developing to automatically update dev-build files as you modify the sources.
 
 Editor
 ------
 
 The game includes an editor (also written in JS, in fact it uses modules from the
-game itself to load / display game data). It can be found in the `tools` folder.
+game itself to load / display game data). You can open it by serving and opening
+`editor.html` after making a dev-build (see the previous section).
 Please note that the editor is even less complete than the game, there are
 things that cannot be edited with it (most notably game configuration / settings and
 missions), and it has limitations for even the things it can edit (such as not being
-able to delete optional properties or delete items themselves). It is also fairly buggy.
+able to delete items). It is also fairly buggy.
 However, it can still be useful and more comfortable than dealing with the JSON files manually, 
 and can be great for understanding how the game data is structured. **To apply the changes
 you make** in the editor, you need to **download the game files** to your computer and put them 
@@ -56,8 +67,8 @@ Electron
 --------
 
 The game can be run using [Electron](https://electron.atom.io/). To do this, 
-pass `electron: true` to the `initialize` method in `js/main.js` (and if you
-want to set up the editor for Electron, in `tools/js/editor-main.js`) in the
+pass `electron: true` to the `initialize` method in `src/js/main.js` (and if you
+want to set up the editor for Electron, in `src/js/editor-main.js`) in the
 version you package. For non-development versions (which don't have "-dev" in 
 the version number), you will also need to run
 ```
@@ -89,4 +100,4 @@ details and attributions please do check LICENSE.txt.
 
 Krisztián Nagy
 
-01.05.2018.
+21.03.2020.
