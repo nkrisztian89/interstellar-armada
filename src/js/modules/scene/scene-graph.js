@@ -2605,7 +2605,8 @@ define([
                 bufferHeight = gl.drawingBufferHeight,
                 widthInPixels = bufferWidth * this._width,
                 heightInPixels = bufferHeight * this._height,
-                anaglyph, leftShader, rightShader;
+                anaglyph, leftShader, rightShader,
+                lightsUpdated;
         application.log_DEBUG("Rendering scene...", 3);
         egomModel.resetDebugStats();
         this._camera.setAspect(widthInPixels / heightInPixels);
@@ -2618,10 +2619,13 @@ define([
         // scene uniforms will need to be updated for this frame
         this._uniformsUpdated.clear();
         this._cameraUniformsUpdated.clear();
+        lightsUpdated = false;
         // if only one shader is used in rendering the whole scene, we will need to update its uniforms (as they are normally updated 
         // every time a new shader is set)
         if ((this._uniformsUpdatedForFrame === false) && context.getCurrentShader()) {
+            this._updateStaticLightUniformData();
             this.assignUniforms(context, context.getCurrentShader());
+            lightsUpdated = true;
         }
         this._uniformsUpdatedForFrame = false;
         // animating all the needed nodes and preparing them for rendering by organizing them to render queues
@@ -2638,13 +2642,18 @@ define([
         // rendering shadow maps
         if (frontQueuesNotEmpty) {
             this._renderShadowMaps(context, widthInPixels, heightInPixels);
+            if (this._shadowMappingEnabled) {
+                lightsUpdated = false;
+            }
         }
         if (application.isDebugVersion()) {
             this._shadowMapDebugStats = utils.shallowCopy(egomModel.getDebugStats());
             egomModel.resetDebugStats();
         }
-        // updating the light matrices to be consistent with the shadow maps
-        this._updateStaticLightUniformData();
+        if (!lightsUpdated) {
+            // updating the light matrices to be consistent with the shadow maps
+            this._updateStaticLightUniformData();
+        }
         // viewport preparation
         gl.viewport(this._left * bufferWidth, this._bottom * bufferHeight, widthInPixels, heightInPixels);
 

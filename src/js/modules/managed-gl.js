@@ -2031,6 +2031,11 @@ define([
          */
         this._frameBuffers = {};
         /**
+         * Whether a specific (non-null) framebuffer is currently bound
+         * @type Boolean
+         */
+        this._hasBoundFrameBuffer = false;
+        /**
          * A reference to the currently used shader in order to quickly dismiss 
          * calls that aim to set the same again.
          * @type ManagedShader
@@ -2646,8 +2651,10 @@ define([
     ManagedGLContext.prototype.setCurrentFrameBuffer = function (name) {
         if (name) {
             this._frameBuffers[name].bind(this);
-        } else {
+            this._hasBoundFrameBuffer = true;
+        } else if (this._hasBoundFrameBuffer) {
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+            this._hasBoundFrameBuffer = false;
         }
     };
     /**
