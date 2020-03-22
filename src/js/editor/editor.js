@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2019 Krisztián Nagy
+ * Copyright 2016-2020 Krisztián Nagy
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -7,7 +7,6 @@
  */
 
 /*global define, document, localStorage, requirejs, Blob, window */
-/*jslint white: true, nomen: true, plusplus: true */
 
 /**
  * @param utils Used for deep copying 
@@ -729,7 +728,6 @@ define([
      * @returns {Element}
      */
     function _createCategoryList(itemType) {
-        /* jshint validthis: true */
         var result = document.createElement("div"),
                 itemTypeLabel,
                 categories, categoryList, categoryElement, categorySpan,

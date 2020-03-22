@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2017, 2020 Krisztián Nagy
  * @file Provides type checking functionality for simple types (booleans, number, strings) as well as enums (with values defined in an object),
  * arrays and typed arrays, and custom objects through the usage of an object definition (i.e. schema) format. Types can be combined this
  * way and constraints can be set on types (such as a range for a number of an array's length, presence of certain properties, or passing
@@ -9,7 +9,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define, localStorage */
 
 /**

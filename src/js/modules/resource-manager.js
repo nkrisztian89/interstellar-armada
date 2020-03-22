@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015,2017 Krisztián Nagy
+ * Copyright 2014-2015, 2017, 2020 Krisztián Nagy
  * @file Provides a class that can hold and manage asynchronously loaded resources.
  * Usage:
  * - subclass GenericResource to implement a kind of resource you want to manage e.g. TextFileResource (see the class description for details)
@@ -16,7 +16,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, plusplus: true, white: true */
 /*global define, Image */
 
 /**

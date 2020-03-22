@@ -7,7 +7,6 @@
  */
 
 /*global define, document, window */
-/*jslint white: true, nomen: true, plusplus: true */
 
 /**
  * @param utils Used for enum value listing, async execution.

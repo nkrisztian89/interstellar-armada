@@ -1,12 +1,11 @@
 /**
- * Copyright 2017 Krisztián Nagy
+ * Copyright 2017, 2020 Krisztián Nagy
  * @file Event identifiers for spacecraft related events
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
 define(function () {

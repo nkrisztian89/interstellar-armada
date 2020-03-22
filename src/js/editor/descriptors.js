@@ -8,7 +8,6 @@
  */
 
 /*global define, document */
-/*jslint white: true, plusplus: true, nomen: true */
 
 /**
  * @param utils Used to handle enums

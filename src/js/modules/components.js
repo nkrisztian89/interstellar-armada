@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2018, 2020 Krisztián Nagy
  * @file Provides various classes that can be used integrated with the Screen module as components on screens. Also manages a shader cache
  * for storing the downloaded source (HTML and CSS) files of the created components.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -7,7 +7,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define, document */
 
 /**

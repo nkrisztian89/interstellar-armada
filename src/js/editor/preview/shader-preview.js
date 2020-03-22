@@ -7,7 +7,6 @@
  */
 
 /*global define, document, window */
-/*jslint white: true, nomen: true, plusplus: true */
 
 /**
  * @param resources Used to request the loading of the shader

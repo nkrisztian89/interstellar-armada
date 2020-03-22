@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015 Krisztián Nagy
+ * Copyright 2014-2015, 2020 Krisztián Nagy
  * @file A low level module with no dependencies.
  * Provides a class that represents asynchronously loaded resources to 
  * help transparently manage them. Provides an execution queue for the resource,
@@ -14,7 +14,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, plusplus: true */
 /*global define, setTimeout */
 
 define(function () {

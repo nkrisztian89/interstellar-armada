@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2019 Krisztián Nagy
+ * Copyright 2016-2020 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -7,7 +7,6 @@
  * @version 0.1
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
 /**

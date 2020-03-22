@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2017, 2020 Krisztián Nagy
  * @file This module builds on Application to provide a template for creating games.
  * To use, just augment this module, calling
  * - setGameName()
@@ -17,7 +17,6 @@
  * @version 2.0
  */
 
-/*jslint nomen: true, white: true */
 /*global define, requirejs, location, document, JSON */
 
 /**

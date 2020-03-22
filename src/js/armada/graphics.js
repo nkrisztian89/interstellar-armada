@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Provides functionality to parse and load the graphics settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -7,7 +7,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, plusplus: true, white: true */
 /*global define, parseFloat, window, localStorage, screen */
 
 /**

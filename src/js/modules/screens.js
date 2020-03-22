@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Provides wrapper classes that can be used to manage (loading, assemblin, displaying, hiding, translating...) HTML based screens for
  * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -7,7 +7,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define, document, alert, window, setInterval, clearInterval, performance, parseFloat */
 
 /**

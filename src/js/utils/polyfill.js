@@ -5,7 +5,7 @@
  */
 
 /**********************************************************************
- Copyright 2014-2016 Krisztián Nagy
+ Copyright 2014-2016, 2020 Krisztián Nagy
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@
  You should have received a copy of the GNU General Public License
  along with this file.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
-/*jslint plusplus: true */
 
 (function polyfill() {
     "use strict";

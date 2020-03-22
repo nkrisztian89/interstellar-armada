@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2018, 2020 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
  * catch and process input from the keyboard.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -7,7 +7,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define, localStorage, document */
 
 /**

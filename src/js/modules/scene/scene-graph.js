@@ -8,7 +8,6 @@
  * @version 2.0
  */
 
-/*jslint nomen: true, plusplus: true, bitwise: true, white: true */
 /*global define, Float32Array, Int32Array */
 
 /**

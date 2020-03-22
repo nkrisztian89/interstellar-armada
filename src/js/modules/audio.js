@@ -1,12 +1,11 @@
 /**
- * Copyright 2016-2018 Krisztián Nagy
+ * Copyright 2016-2018, 2020 Krisztián Nagy
  * @file This module provides some wrappers for Web Audio API functions for easier use.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 0.1
  */
 
-/*jslint nomen: true, white: true */
 /*global define, AudioContext */
 
 // some type hints for the current version of the web Audio API

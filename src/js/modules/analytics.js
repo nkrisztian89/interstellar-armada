@@ -1,12 +1,11 @@
 /**
- * Copyright 2017-2018 Krisztián Nagy
+ * Copyright 2017-2018, 2020 Krisztián Nagy
  * @file This is a simple analytics module that sends requests to an analytics backend
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true */
 /*global define, location, document, JSON */
 
 /**

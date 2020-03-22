@@ -7,7 +7,6 @@
  * @version 2.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define, Element, Float32Array, performance */
 
 define(function () {

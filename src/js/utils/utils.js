@@ -1,12 +1,11 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Provides various simple, general usage utility methods.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define, setTimeout, NaN */
 
 define(function () {

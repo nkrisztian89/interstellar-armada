@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2019 Krisztián Nagy
+ * Copyright 2016-2020 Krisztián Nagy
  * @file A stateful module providing a collection to which AIs of different types (at the moment only one type, an AI for fighters) can be
  * added which control their respective spacecraft when the control function of the module is called.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -7,7 +7,6 @@
  * @version 0.1
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
 /**

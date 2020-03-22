@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Krisztián Nagy
+ * Copyright 2016-2017, 2020 Krisztián Nagy
  * @file Provides some common functions to be used for the Interstellar Armada editor.
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -8,7 +8,6 @@
  */
 
 /*global define, document, window */
-/*jslint plusplus: true, white: true, nomen: true */
 
 /**
  * @param utils Used for converting between float / hex colors

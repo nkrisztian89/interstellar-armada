@@ -1,12 +1,11 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2018, 2020 Krisztián Nagy
  * @file Provides a particle system class that can be added to scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 2.0
  */
 
-/*jslint nomen: true, plusplus: true, bitwise: true, white: true */
 /*global define, Float32Array, Int32Array */
 
 /**

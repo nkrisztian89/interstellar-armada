@@ -6,7 +6,6 @@
  * @version 2.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true*/
 /*global define, document, setInterval, clearInterval, window, performance */
 
 /**
@@ -66,7 +65,6 @@ define([
         analytics,
         strings, armadaScreens, graphics, audio, classes, config, control,
         SpacecraftEvents, missions, equipment, ai) {
-    /* jshint validthis: true */
     "use strict";
     var
             // ------------------------------------------------------------------------------

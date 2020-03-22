@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Krisztián Nagy
+ * Copyright 2016, 2020 Krisztián Nagy
  * @file A stateful module that stores translation strings for different languages for the application and provides functions to load these
  * strings from an object 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -7,7 +7,6 @@
  * @version 0.1
  */
 
-/*jslint nomen: true, white: true*/
 /*global define */
 
 /**

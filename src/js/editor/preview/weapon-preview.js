@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2019 Krisztián Nagy
+ * Copyright 2016-2020 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for weapon classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -7,7 +7,6 @@
  */
 
 /*global define, document, window */
-/*jslint white: true, nomen: true, plusplus: true */
 
 /**
  * @param lights Used for creating the light sources for the preview scene

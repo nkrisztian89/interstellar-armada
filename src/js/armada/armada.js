@@ -7,7 +7,6 @@
  * @version 2.0
  */
 
-/*jslint nomen: true, white: true */
 /*global define, location, document, JSON, localStorage */
 
 /**

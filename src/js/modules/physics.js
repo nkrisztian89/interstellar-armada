@@ -6,7 +6,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
 /**

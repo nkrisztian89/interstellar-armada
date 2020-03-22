@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017 Krisztián Nagy
+ * Copyright 2014-2017, 2020 Krisztián Nagy
  * @file A low level module with no dependencies that offers general functionality useful for managing basic application functions such
  * as accessing files from a directory structure using AJAX.
  * Usage:
@@ -15,7 +15,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, plusplus: true, white: true */
 /*global define, requirejs, alert, console, XMLHttpRequest, DOMParser, document, performance */
 
 /**

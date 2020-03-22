@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2018, 2020 Krisztián Nagy
  * @file Provides general functionality to handle various types of user input.
  * Provides a base input interpreter class which can be subclassed for each needed input device to catch and process its inputs, 
  * translating it to actions using a list of bindings added to the interpreter.
@@ -15,7 +15,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, white: true, plusplus: true */
 /*global define */
 
 /**

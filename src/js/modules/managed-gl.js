@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Provides an interface to interact with WebGL in a managed way. Offers
  * rather low level functionality, but using it is still much more transparent 
  * than accessing WebGL directly.
@@ -16,7 +16,6 @@
  * @version 1.0
  */
 
-/*jslint nomen: true, plusplus: true, white: true */
 /*global define, Image, Float32Array, parseInt, document */
 
 /**
