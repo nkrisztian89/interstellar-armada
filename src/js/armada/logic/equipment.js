@@ -386,6 +386,7 @@ define([
      * @param {Number[3]} relativeVelocityDirectionInObjectSpace
      * @param {Number[3]} relativeVelocityDirectionInWorldSpace
      * @param {Number} relativeVelocity
+     * @param {Number} offset
      */
     /**
      * The common code to use for both projectile and missile hitchecks.
@@ -402,7 +403,7 @@ define([
         var i, hitObjects, isHostile, isPiloted,
                 positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace,
                 relativeVelocity, relativeVelocityDirectionInWorldSpace,
-                physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace;
+                physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, offset;
         positionVectorInWorldSpace = mat.translationVector3(object.getPositionMatrix());
         velocityVectorInWorldSpace = mat.translationVector3(object.getVelocityMatrix());
         hitObjects = hitObjectOctree.getObjects(
@@ -424,14 +425,15 @@ define([
             if (physicalHitObject && (
                     ((hitObjects[i] === origin) && _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !isPiloted)) || 
                     ((hitObjects[i] !== origin) && (_isPlayerFriendlyFireDamageEnabled || (hitObjects[i] !== pilotedCraft) || isHostile)))) {
-                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT, offsetCallback(hitObjects[i], isPiloted && pilotedCraft.isHostile(hitObjects[i])));
+                offset = offsetCallback(hitObjects[i], isPiloted && pilotedCraft.isHostile(hitObjects[i]));
+                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT, offset);
                 if (hitPositionVectorInObjectSpace) {
                     relativeVelocityDirectionInWorldSpace = vec.diffVec3Mat4(velocityVectorInWorldSpace, physicalHitObject.getVelocityMatrix());
                     relativeVelocity = vec.extractLength3(relativeVelocityDirectionInWorldSpace);
                     relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4Aux(hitObjects[i].getVisualModel().getOrientationMatrix()));
                     hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
                     relativeHitPositionVectorInWorldSpace = vec.diffVec3Mat4Aux(hitPositionVectorInWorldSpace, physicalHitObject.getPositionMatrix());
-                    hitCallback(hitObjects[i], physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity);
+                    hitCallback(hitObjects[i], physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset);
                     return;
                 }
             }
@@ -609,14 +611,15 @@ define([
      * @param {Number[3]} relativeVelocityDirectionInObjectSpace
      * @param {Number[3]} relativeVelocityDirectionInWorldSpace
      * @param {Number} relativeVelocity
+     * @param {Number} offset
      */
-    Projectile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity) {
+    Projectile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
         var exp;
         physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
         exp = explosion.getExplosion();
         exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObject.getSoundSource(), true);
-        hitObject.damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, false);
+        hitObject.damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, false, offset);
         this._timeLeft = 0;
         this._visualModel.markAsReusable(true);
     };
@@ -1299,8 +1302,9 @@ define([
      * @param {Number[3]} relativeVelocityDirectionInObjectSpace
      * @param {Number[3]} relativeVelocityDirectionInWorldSpace
      * @param {Number} relativeVelocity
+     * @param {Number} offset
      */
-    Missile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity) {
+    Missile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
         physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
         this._destruct(
                 ((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()),
@@ -1309,7 +1313,7 @@ define([
                 physicalHitObject.getVelocityMatrix(),
                 hitObject.getSoundSource(),
                 true);
-        hitObject.damage(this._class.getDamage(0), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, true);
+        hitObject.damage(this._class.getDamage(0), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, true, offset);
         this._timeLeft = 0;
     };
     /**

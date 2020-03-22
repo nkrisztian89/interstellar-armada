@@ -1848,7 +1848,7 @@ define([
             for (i = 0; i < this._missileLaunchers.length; i++) {
                 this._missileLaunchers[i].addToSceneNow(node, lod, wireframe, missileParams, missileCallback);
             }
-        } 
+        }
         // add the thruster particles
         if (addSupplements.thrusterParticles === true) {
             if (this._propulsion) {
@@ -2500,8 +2500,10 @@ define([
      * Also needs to take into consideration the orientation of the spacecraft.
      * @param {Spacecraft} hitBy The spacecraft that caused the damage (fired the hitting projectile)
      * @param {Boolean} byMissile Whether the damage was caused by missile hit
+     * @param {Number} offset The offset value that was used during the hitcheck (the distance by which
+     * the hitbox sides have been extended outward)
      */
-    Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy, byMissile) {
+    Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy, byMissile, offset) {
         var i, damageIndicator, hitpointThreshold, exp, liveHit, scoreValue, damageIndicatorPosition, dirToCenter, distToCenter;
         // shield absorbs damage
         if (this._shield) {
@@ -2531,17 +2533,32 @@ define([
                 damageIndicator = this._class.getDamageIndicators()[i];
                 hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._maxHitpoints;
                 if ((this._hitpoints <= hitpointThreshold) && (this._hitpoints + damage > hitpointThreshold)) {
-                    // the original hitcheck might have had a large offset and so the hit position could be away from the ship, do a second
-                    // hitcheck towards the ship center with 0 offset and compare this new point on the ship surface, if far away enough, 
-                    // use it for damage indicator position instead of the original hit position
-                    dirToCenter = vec.scaled3(damagePosition, -1);
-                    distToCenter = vec.extractLength3(dirToCenter);
-                    damageIndicatorPosition = this._physicalModel.checkHitRelative(vec.NULL4W1, dirToCenter, distToCenter, 0);
-                    if (damageIndicatorPosition && vec.length3Squared(damageIndicatorPosition, damagePosition) < MINIMUM_DISTANCE_FOR_DAMAGE_INDICATOR_HITCHECK_SQUARED) {
-                        // the new position is close to the original one, just use the original one for the damage indicator
-                        damageIndicatorPosition = damagePosition;
+                    // the original hitcheck might have had a large offset and so the hit position could be away from the ship
+                    // putting the damage indicator there would look weird, so let's try to find a point that is on the ship (hitbox) surface
+                    if (offset > 0) {
+                        // first, try to elongate the path of the projectile that hit
+                        damageIndicatorPosition = [0, 0, 0, 1];
+                        distToCenter = this._physicalModel.getBodySize();
+                        vec.setSum3(damageIndicatorPosition, damagePosition, vec.scaled3(damageDir, -distToCenter));
+                        damageIndicatorPosition = this._physicalModel.checkHitRelative(damageIndicatorPosition, vec.scaled3(damageDir, -1), distToCenter, 0);
+                        if (!damageIndicatorPosition) {
+                            // if that doesn't work, do a second hitcheck towards the ship center with 0 offset and compare this new point on the ship surface, if far away enough, 
+                            // use it for damage indicator position instead of the original hit position
+                            dirToCenter = vec.scaled3(damagePosition, -1);
+                            distToCenter = vec.extractLength3(dirToCenter);
+                            damageIndicatorPosition = this._physicalModel.checkHitRelative(vec.NULL4W1, dirToCenter, distToCenter, 0);
+                        }
+                        if (!damageIndicatorPosition || (vec.length3Squared(damageIndicatorPosition, damagePosition) < MINIMUM_DISTANCE_FOR_DAMAGE_INDICATOR_HITCHECK_SQUARED)) {
+                            // the new position is close to the original one, just use the original one for the damage indicator
+                            damageIndicatorPosition = damagePosition;
+                        } else {
+                            // if we got the new indicator position from the second hitcheck towards the center, change damage direction accordingly
+                            if (dirToCenter) {
+                                damageDir = vec.scaled3(dirToCenter, -1);
+                            }
+                        }
                     } else {
-                        damageDir = vec.scaled3(dirToCenter, -1);
+                        damageIndicatorPosition = damagePosition;
                     }
                     exp = explosion.getExplosion();
                     exp.init(
