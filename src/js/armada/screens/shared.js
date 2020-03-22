@@ -145,7 +145,7 @@ define([
     };
     /**
      * Plays the button select sound, if it is loaded.
-     * @param {Boolean} [enabled=false] If true, does not play the sound
+     * @param {Boolean} [enabled=false] If false, does not play the sound
      */
     exports.playButtonSelectSound = function (enabled) {
         if (_buttonSelectSound && enabled) {
@@ -154,7 +154,7 @@ define([
     };
     /**
      * Plays the button click sound, if it is loaded.
-     * @param {Boolean} [enabled=false] If true, does not play the sound
+     * @param {Boolean} [enabled=false] If false, does not play the sound
      */
     exports.playButtonClickSound = function (enabled) {
         if (_buttonClickSound && enabled) {

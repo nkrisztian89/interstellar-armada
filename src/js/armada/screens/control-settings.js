@@ -269,6 +269,10 @@ define([
                     tableToggleFunction = function (id) {
                         var element = this.getElement(id);
                         element.style.display = (element.style.display === "none") ? "table" : "none";
+                        armadaScreens.playButtonClickSound(true);
+                    },
+                    tableSelectFunction = function () {
+                        armadaScreens.playButtonSelectSound(true);
                     },
                     keySetterFunction = function () {
                         startKeySetting(this);
@@ -282,6 +286,7 @@ define([
                         {controllerType: strings.get(strings.CONTOLLER.PREFIX, gameControllers[i].getType())});
                 h2Element.className = TABLE_TITLE_CLASS_NAME;
                 h2Element.onclick = tableToggleFunction.bind(this, tableId);
+                h2Element.onmouseenter = tableSelectFunction;
                 tablesContainer.appendChild(h2Element);
                 tableElement = document.createElement("table");
                 tableElement.id = this._getElementID(tableId);
