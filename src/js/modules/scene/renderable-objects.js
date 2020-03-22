@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Provides various basic renderable object classes that can be added to scenes inside renderable nodes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -724,7 +724,7 @@ define([
         var visibleSize, relativeFactor;
         if (RenderableObject.prototype.shouldBeRendered.call(this, renderParameters)) {
             if (this.isInsideParent() === true) {
-                visibleSize = renderParameters.parent.getVisibleSize(renderParameters);
+                visibleSize = renderParameters.parent.getVisibleSize();
                 if (visibleSize.width > 0) {
                     relativeFactor = Math.max(this.getSize() / renderParameters.parent.getSize(), renderParameters.lodContext.minimumRelativeSize);
                     this._visibleSize.width = visibleSize.width * relativeFactor;
@@ -1660,25 +1660,12 @@ define([
         this._updateShouldAnimate();
     };
     /**
-     * @returns {number} The value of the currently set relative size.
-     */
-    Particle.prototype.getRelativeSize = function () {
-        return this._relativeSize;
-    };
-    /**
      * Updates the visibility as well based on the new size.
      * @param {number} value The new value of the relative size.
      */
     Particle.prototype.setRelativeSize = function (value) {
         this._relativeSize = value;
         this._calculateSize();
-    };
-    /**
-     * Get the current velocity of the particle (m/s)
-     * @returns {number[3]} 
-     */
-    Particle.prototype.getVelocityVector = function () {
-        return this._velocityVector;
     };
     /**
      * Set the velocity of the particle (m/s)
@@ -1727,13 +1714,6 @@ define([
      */
     Particle.prototype.invalidateWorldVelocityDirectionVector = function () {
         this._worldVelocityDirectionVectorValid = false;
-    };
-    /**
-     * Returns the list of particle states this particle goes through during its lifespan.
-     * @returns {ParticleState[]}
-     */
-    Particle.prototype.getStates = function () {
-        return this._states;
     };
     /**
      * Sets the animation state of the particle to be the one occuring after the passed amount of time from the start

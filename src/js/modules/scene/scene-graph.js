@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2018, 2020 Krisztián Nagy
  * @file A general purpose WebGL scene engine building on the functionality of ManagedGL.
  * Create a Scene, add background and main scene objects and light sources, then add it to a ManagedGLContext (or several ones), and it can
  * be rendered on them.
@@ -562,13 +562,6 @@ define([
                 }
             }
         }
-    };
-    /**
-     * Returns the parent node of this node.
-     * @returns {RenderableNode}
-     */
-    RenderableNode.prototype.getParent = function () {
-        return this._parent;
     };
     /**
      * Sets up the node to have a new parent.

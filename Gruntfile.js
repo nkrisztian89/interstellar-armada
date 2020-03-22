@@ -1,26 +1,174 @@
+/**
+ * Copyright 2016-2018, 2020 Krisztián Nagy
+ * @file Grunt configuration file for the Interstellar Armada game
+ * @author Krisztián Nagy [nkrisztian89@gmail.com]
+ * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
+ */
 /*jslint white: true*/
 /*global module*/
+/**
+ * @param grunt
+ */
 module.exports = function (grunt) {
     "use strict";
-    var scssMappings = {
-        "css/general.css": 'src/scss/general.scss',
-        "css/about.css": 'src/scss/screens/about.scss',
-        "css/battle.css": 'src/scss/screens/battle.scss',
-        "css/controls.css": 'src/scss/screens/controls.scss',
-        "css/database.css": 'src/scss/screens/database.scss',
-        "css/debriefing.css": 'src/scss/screens/debriefing.scss',
-        "css/gameplay-settings.css": 'src/scss/screens/gameplay-settings.scss',
-        "css/graphics.css": 'src/scss/screens/graphics.scss',
-        "css/ingame-menu.css": 'src/scss/screens/ingame-menu.scss',
-        "css/missions.css": 'src/scss/screens/missions.scss',
-        "css/dialog.css": 'src/scss/components/dialog.scss',
-        "css/infobox.css": 'src/scss/components/infobox.scss',
-        "css/listcomponent.css": 'src/scss/components/listcomponent.scss',
-        "css/loadingbox.css": 'src/scss/components/loadingbox.scss',
-        "css/selector.css": 'src/scss/components/selector.scss',
-        "css/slider.css": 'src/scss/components/slider.scss',
-        "css/editor.css": 'src/scss/editor.scss'
-    };
+    var
+            scssMappings = {
+                "css/general.css": 'src/scss/general.scss',
+                "css/about.css": 'src/scss/screens/about.scss',
+                "css/battle.css": 'src/scss/screens/battle.scss',
+                "css/controls.css": 'src/scss/screens/controls.scss',
+                "css/database.css": 'src/scss/screens/database.scss',
+                "css/debriefing.css": 'src/scss/screens/debriefing.scss',
+                "css/gameplay-settings.css": 'src/scss/screens/gameplay-settings.scss',
+                "css/graphics.css": 'src/scss/screens/graphics.scss',
+                "css/ingame-menu.css": 'src/scss/screens/ingame-menu.scss',
+                "css/missions.css": 'src/scss/screens/missions.scss',
+                "css/dialog.css": 'src/scss/components/dialog.scss',
+                "css/infobox.css": 'src/scss/components/infobox.scss',
+                "css/listcomponent.css": 'src/scss/components/listcomponent.scss',
+                "css/loadingbox.css": 'src/scss/components/loadingbox.scss',
+                "css/selector.css": 'src/scss/components/selector.scss',
+                "css/slider.css": 'src/scss/components/slider.scss',
+                "css/editor.css": 'src/scss/editor.scss'
+            },
+            // the getters for the properties with these names simply return the "private" property of the object,
+            // which is useful for development (as functions crash if there is a typo in the name instead of just
+            // silently returning undefined, and they provide another hooking point for debug code), but for
+            // optimization purposes, it is better to refer to the property directly in the release builds, so
+            // here we build an array of replacements which replace the getters with direct property access and
+            // remove their definitions from the code
+            getterReplacements = [
+                ["positionMatrix"],
+                ["orientationMatrix"],
+                ["scalingMatrix"],
+                ["scene"],
+                ["renderableObject"],
+                ["subnodes"],
+                ["minimumCountForInstancing"],
+                ["rootNode"],
+                ["camera"],
+                ["duration"],
+                ["visualModel"],
+                ["physicalModel"],
+                ["childrenAlwaysInside", ""],
+                ["ignoreTransform", "should"],
+                ["color"],
+                ["lightColor"],
+                ["layers"],
+                ["dimensions"],
+                ["directionSpread"],
+                ["velocity"],
+                ["velocitySpread"],
+                ["initialNumber"],
+                ["spawnNumber"],
+                ["spawnTime"],
+                ["delay"],
+                ["particleEmitterDescriptors"],
+                ["mass"],
+                ["muzzleFlash"],
+                ["lightIntensity"],
+                ["explosionClass"],
+                ["shieldExplosionClass"],
+                ["shortName"],
+                ["antiShip", "is"],
+                ["lockingAngle"],
+                ["modelScale"],
+                ["capacity"],
+                ["length"],
+                ["homingMode"],
+                ["angularAcceleration"],
+                ["mainBurnAngleThreshold"],
+                ["launchVelocity"],
+                ["ignitionTime"],
+                ["salvoCooldown"],
+                ["proximityRange"],
+                ["kineticFactor"],
+                ["thrusterSlots"],
+                ["barrels"],
+                ["attachmentPoint"],
+                ["rotationStyle"],
+                ["fixed", "is"],
+                ["basePoint"],
+                ["rotators"],
+                ["thrusterBurnParticle"],
+                ["prepareVelocity"],
+                ["prepareDuration"],
+                ["jumpOutDuration"],
+                ["jumpOutAcceleration"],
+                ["jumpOutScaling"],
+                ["jumpOutExplosionClass"],
+                ["jumpInDuration"],
+                ["jumpInDeceleration"],
+                ["jumpInVelocity"],
+                ["jumpInScaling"],
+                ["jumpInExplosionClass"],
+                ["rechargeColor"],
+                ["rechargeAnimationDuration"],
+                ["isFighterType", ""],
+                ["name"],
+                ["particle"],
+                ["position"],
+                ["period"],
+                ["intensity"],
+                ["spacecraftType"],
+                ["hitpoints"],
+                ["armor"],
+                ["factionColor"],
+                ["turnStyle"],
+                ["attackVectorAngles"],
+                ["attackThresholdAngle"],
+                ["bodies"],
+                ["weaponSlots"],
+                ["missileLaunchers"],
+                ["defaultEquipmentProfileName"],
+                ["views"],
+                ["showTimeRatioDuringExplosion"],
+                ["damageIndicators"],
+                ["lightSources"],
+                ["blinkerDescriptors"],
+                ["missileClass", "get", "class"],
+                ["salvoLeft"],
+                ["state"],
+                ["squads"],
+                ["trigger"],
+                ["pilotedSpacecraft", "get", "pilotedCraft"],
+                ["squad"],
+                ["weapons"],
+                ["physicalPositionMatrix", "get", "physicalModel._positionMatrix"],
+                ["physicalOrientationMatrix", "get", "physicalModel._orientationMatrix"],
+                ["physicalScalingMatrix", "get", "physicalModel._scalingMatrix"],
+                ["missileClasses"],
+                ["targetingSpacecrafts", "get", "targetedBy"],
+                ["propulsion"],
+                ["scale"],
+                ["scaleMode"],
+                ["visibleSize"],
+                ["velocityVector"],
+                ["boxLayout"],
+                ["element"]
+            ].map(function (replacement) {
+        // create the replacements for each simple getter
+        var
+                functionName = ((replacement.length > 1) ? replacement[1] : "get") + ((replacement[1] === "") ? replacement[0] : replacement[0][0].toUpperCase() + replacement[0].substring(1)),
+                fieldName = "_" + ((replacement.length > 2) ? replacement[2] : replacement[0]);
+        return [{
+                // replace calls to this getter with a simple reference to the property
+                match: "." + functionName + '()',
+                replacement: "." + fieldName
+            }, {
+                // remove the getter definition from the prototype
+                match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = function \\(\\) {\\s+return this." + fieldName + ";\\s+};", "g"),
+                replacement: ""
+            }, {
+                // remove the getter definition from the prototype if it was added by reference
+                match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = \\w+;", "g"),
+                replacement: ""
+            }];
+    });
+    // flatten the getterReplacements array
+    getterReplacements.reduce(function (acc, val) {
+        return acc.concat(val);
+    }, []);
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -42,6 +190,7 @@ module.exports = function (grunt) {
         },
         _clean: {
             full: ["config/", "css/", "data/", "js/"],
+            editor: ["js/editor", "js/editor*"],
             dist: ["js/*", "!js/main.js"]
         },
         _copy: {
@@ -116,84 +265,80 @@ module.exports = function (grunt) {
                     usePrefix: false
                 },
                 files: [
-                    {expand: true, flatten: true, src: ['js/utils/matrices.js'], dest: 'js/utils/'},
-                    {expand: true, flatten: true, src: ['js/modules/egom-model.js'], dest: 'js/modules/'},
-                    {expand: true, flatten: true, src: ['js/modules/scene/scene-graph.js'], dest: 'js/modules/scene/'},
-                    {expand: true, flatten: true, src: ['js/modules/scene/renderable-objects.js'], dest: 'js/modules/scene/'},
-                    {expand: true, flatten: true, src: ['js/modules/managed-gl.js'], dest: 'js/modules/'},
-                    {expand: true, flatten: true, src: ['js/modules/resource-manager.js'], dest: 'js/modules/'},
-                    {expand: true, flatten: true, src: ['js/modules/media-resources.js'], dest: 'js/modules/'},
-                    {expand: true, flatten: true, src: ['js/modules/control.js'], dest: 'js/modules/'},
-                    {expand: true, flatten: true, src: ['js/armada/graphics.js'], dest: 'js/armada/'},
-                    {expand: true, flatten: true, src: ['js/armada/logic/equipment.js'], dest: 'js/armada/logic/'},
-                    {expand: true, flatten: true, src: ['js/armada/logic/spacecraft.js'], dest: 'js/armada/logic/'}
+                    {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
                 ]
             },
             // replacing some widely and frequently used one-line getter calls with the direct access of their respective properties to
             // avoid the overhead of calling the getter functions
             optimize: {
                 options: {
-                    patterns: [
+                    patterns: getterReplacements.concat([
                         {
-                            match: '.getPositionMatrix()',
-                            replacement: '._positionMatrix'
-                        }, {
-                            match: '.getOrientationMatrix()',
-                            replacement: '._orientationMatrix'
-                        }, {
-                            match: '.getScalingMatrix()',
-                            replacement: '._scalingMatrix'
-                        }, {
-                            match: '.getParent()',
-                            replacement: '._parent'
-                        }, {
-                            match: '.getScene()',
-                            replacement: '._scene'
-                        }, {
-                            match: '.getRenderableObject()',
-                            replacement: '._renderableObject'
-                        }, {
-                            match: '.getSubnodes()',
-                            replacement: '._subnodes'
-                        }, {
-                            match: '.getMinimumCountForInstancing()',
-                            replacement: '._minimumCountForInstancing'
-                        }, {
-                            match: '.getRootNode()',
-                            replacement: '._rootNode'
-                        }, {
-                            match: '.getCamera()',
-                            replacement: '._camera'
-                        }, {
                             match: '_scene.getLODContext()',
                             replacement: '_scene._lodContext'
                         }, {
-                            match: '.getStates()',
-                            replacement: '._states'
+                            match: '.getDefaultGroupLuminosityFactors()',
+                            replacement: '._defaultLuminosityFactors'
                         }, {
-                            match: '.getDuration()',
-                            replacement: '._duration'
+                            match: 'setFileCacheBypassEnabled(true)',
+                            replacement: 'setFileCacheBypassEnabled(false)'
+                        }
+                    ]),
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
+                ]
+            },
+            postOptimize: {
+                options: {
+                    // shorten some commonly used long property/method names to make the build file smaller
+                    patterns: [
+                        {
+                            match: '_positionMatrixInCameraSpaceValid',
+                            replacement: 'pMCV'
                         }, {
-                            match: '.getVisualModel()',
-                            replacement: '._visualModel'
+                            match: '_positionMatrixInCameraSpace',
+                            replacement: 'pMC'
                         }, {
-                            match: '.getPhysicalModel()',
-                            replacement: '._physicalModel'
+                            match: '_positionMatrix',
+                            replacement: 'pM'
                         }, {
-                            match: '.childrenAlwaysInside()',
-                            replacement: '._childrenAlwaysInside'
+                            match: '_orientationMatrix',
+                            replacement: 'oM'
                         }, {
-                            match: '.shouldIgnoreTransform()',
-                            replacement: '._ignoreTransform'
+                            match: '_scalingMatrix',
+                            replacement: 'sM'
                         }, {
-                            match: 'setFileCacheBypassEnabled(!0)',
-                            replacement: 'setFileCacheBypassEnabled(0)'
+                            match: '_cascadeScalingMatrix',
+                            replacement: 'csM'
+                        }, {
+                            match: '_modelMatrixInverseValid',
+                            replacement: 'mMIV'
+                        }, {
+                            match: '_modelMatrixInverse',
+                            replacement: 'mMI'
+                        }, {
+                            match: '_modelMatrix',
+                            replacement: 'mM'
+                        }, {
+                            match: '_visualModel',
+                            replacement: 'vMo'
+                        }, {
+                            match: '_physicalModel',
+                            replacement: 'pMo'
+                        }, {
+                            match: 'BATTLE_SETTINGS',
+                            replacement: 'BS'
+                        }, {
+                            match: 'getHUDSetting',
+                            replacement: 'gHS'
                         }
                     ],
                     usePrefix: false
                 },
                 files: [
-                    {expand: true, flatten: true, src: ['js/main.js'], dest: 'js/'}
+                    {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
                 ]
             },
             sass: {
@@ -230,7 +375,7 @@ module.exports = function (grunt) {
         _concurrent: {
             watch: ['_watch:dev', '_watch:sass'],
             dev: [['_sass:dev', '_replace:sass'], '_copy:data', '_copy:js'],
-            build: ['_sass:dist', ['_copy:data', '_minify:config', '_minify:data'], ['_copy:js', '_replace:preOptimize', '_requirejs', '_replace:optimize', '_clean:dist']]
+            build: ['_sass:dist', ['_copy:data', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimize', '_replace:optimize', '_requirejs', '_clean:dist', '_replace:postOptimize']]
         }
     });
     // Plugins

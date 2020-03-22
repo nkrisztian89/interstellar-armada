@@ -1277,10 +1277,6 @@ define([
                     name: "defaultLuminosityFactors",
                     type: LUMINOSITY_FACTOR_PAIRS
                 },
-                GRADE: {
-                    name: "grade",
-                    type: BaseType.NUMBER
-                },
                 COOLDOWN: {
                     name: "cooldown",
                     type: MILLISECONDS
@@ -1341,10 +1337,6 @@ define([
                 COLOR: {
                     name: "color",
                     type: BaseType.COLOR4
-                },
-                GRADE: {
-                    name: "grade",
-                    type: BaseType.NUMBER
                 },
                 REFERENCE_MASS: {
                     name: "referenceMass",
@@ -1599,12 +1591,6 @@ define([
                         name: "rotations",
                         type: BaseType.ROTATIONS,
                         optional: true
-                    },
-                    MAX_GRADE: {
-                        name: "maxGrade",
-                        type: BaseType.NUMBER,
-                        optional: false,
-                        defaultValue: 1
                     }
                 }
             },
@@ -2118,11 +2104,6 @@ define([
                     name: "missileLaunchers",
                     type: _createTypedArrayType(MISSILE_LAUNCHER),
                     optional: true
-                },
-                MAX_PROPULSION_GRADE: {
-                    name: "maxPropulsionGrade",
-                    type: BaseType.NUMBER,
-                    newValue: 1
                 },
                 THRUSTER_SLOTS: {
                     name: "thrusterSlots",

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2019 Krisztián Nagy
+ * Copyright 2014-2020 Krisztián Nagy
  * @file Provides a basic class to use as a mixin or base class for 3 dimensional objects.
  * be rendered on them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -208,13 +208,6 @@ define([
             this._positionMatrixInCameraSpaceValid = false;
             this._modelMatrixForFrameValid = false;
             this._modelMatrixInverseForFrameValid = false;
-        }
-        /**
-         * Return the parent (might be null).
-         * @returns {Object3D}
-         */
-        function getParent() {
-            return this._parent;
         }
         /**
          * Sets a new parent.
@@ -698,7 +691,6 @@ define([
         return function () {
             this.prototype.init = init;
             this.prototype.resetCachedValues = resetCachedValues;
-            this.prototype.getParent = getParent;
             this.prototype.setParent = setParent;
             this.prototype.getPositionMatrix = getPositionMatrix;
             this.prototype.setPositionMatrix = setPositionMatrix;

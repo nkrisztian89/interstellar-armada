@@ -1483,13 +1483,6 @@ define([
         }
     };
     /**
-     * Returns the current 2D/3D position set for this element.
-     * @returns {Number[2]|Number[3]}
-     */
-    HUDElement.prototype.getPosition = function () {
-        return this._position;
-    };
-    /**
      * Returns the current scale factor used (on the X and Y axes) for the element.
      * @returns {Number[2]}
      */

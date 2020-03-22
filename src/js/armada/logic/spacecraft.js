@@ -825,13 +825,6 @@ define([
         return this._hitpoints;
     };
     /**
-     * Returns the amount of hit points this spacecraft has at full hull integrity.
-     * @returns {Number}
-     */
-    Spacecraft.prototype.getFullIntegrityHitpoints = function () {
-        return this._maxHitpoints;
-    };
-    /**
      * Returns the current hull integrity ratio of the spacecraft - a number between 0.0 (indicating zero
      * integrity at which the spacecraft is destroyed) and 1.0 (indicating full hull integrity).
      * @returns {Number}

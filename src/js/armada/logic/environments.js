@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018 Krisztián Nagy
+ * Copyright 2014-2018, 2020 Krisztián Nagy
  * @file Implementation of loading and managing environments
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -285,13 +285,6 @@ define([
      */
     DustCloud.prototype.getClass = function () {
         return this._class;
-    };
-    /**
-     * Return the color of particles of this cloud. 
-     * @returns {Number[4]}
-     */
-    DustCloud.prototype.getColor = function () {
-        return this._class.getColor().concat(1.0);
     };
     /**
      * Returns the range this cloud spans. (the maximum distance of particles

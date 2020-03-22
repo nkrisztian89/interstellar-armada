@@ -2191,7 +2191,6 @@
             "model": "trainingGun",
             "texture": "libra",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 750,
             "barrels": [{
                     "projectile": "training",
@@ -2211,7 +2210,6 @@
             "model": "trainingGun",
             "texture": "libra",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 400,
             "barrels": [{
                     "projectile": "training",
@@ -2248,7 +2246,6 @@
             "model": "plasma",
             "texture": "falcon",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 250,
             "barrels": [{
                     "projectile": "plasma",
@@ -2285,7 +2282,6 @@
             "model": "plasma",
             "texture": "falcon",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 250,
             "barrels": [{
                     "projectile": "plasma",
@@ -2305,7 +2301,6 @@
             "model": "pirateGun",
             "texture": "libra",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 500,
             "barrels": [{
                     "projectile": "redPlasma",
@@ -2325,7 +2320,6 @@
             "model": "heavyPlasmaGun",
             "texture": "libra",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 500,
             "barrels": [{
                     "projectile": "heavyPlasma",
@@ -2345,7 +2339,6 @@
             "model": "turret",
             "texture": "falcon",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 250,
             "barrels": [{
                     "projectile": "plasma",
@@ -2393,7 +2386,6 @@
             "model": "turret",
             "texture": "falcon",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 250,
             "barrels": [{
                     "projectile": "plasma",
@@ -2433,7 +2425,6 @@
             "model": "cannon",
             "texture": "falcon",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 1500,
             "barrels": [{
                     "projectile": "proton",
@@ -2470,7 +2461,6 @@
             "model": "ion_cannon",
             "texture": "libra",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "grade": 1,
             "cooldown": 3000,
             "barrels": [{
                     "projectile": "ion",
@@ -2506,7 +2496,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 1,
             "thrust": 1,
             "angularThrust": 1,
@@ -2523,7 +2512,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 2000,
             "thrust": 30,
             "angularThrust": 150,
@@ -2540,7 +2528,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 10000,
             "thrust": 60,
             "angularThrust": 375,
@@ -2557,7 +2544,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 10000,
             "thrust": 70,
             "angularThrust": 375,
@@ -2574,7 +2560,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 10000,
             "thrust": 75,
             "angularThrust": 400,
@@ -2591,7 +2576,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 45000,
             "thrust": 45,
             "angularThrust": 225,
@@ -2608,7 +2592,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 45000,
             "thrust": 50,
             "angularThrust": 250,
@@ -2625,7 +2608,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 45000,
             "thrust": 55,
             "angularThrust": 275,
@@ -2642,7 +2624,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 50000,
             "thrust": 35,
             "angularThrust": 200,
@@ -2659,7 +2640,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 9000000,
             "thrust": 25,
             "angularThrust": 120,
@@ -2676,7 +2656,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 20000000,
             "thrust": 15,
             "angularThrust": 60,
@@ -2693,7 +2672,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 250000000,
             "thrust": 12,
             "angularThrust": 24,
@@ -2710,7 +2688,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [1, 0.38823529411764707, 0.38823529411764707, 1],
-            "grade": 1,
             "referenceMass": 25000,
             "thrust": 50,
             "angularThrust": 225,
@@ -2727,7 +2704,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [1, 0.38823529411764707, 0.38823529411764707, 1],
-            "grade": 1,
             "referenceMass": 25000,
             "thrust": 60,
             "angularThrust": 325,
@@ -2744,7 +2720,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 10000,
             "thrust": 50,
             "angularThrust": 300,
@@ -2761,7 +2736,6 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "grade": 1,
             "referenceMass": 45000,
             "thrust": 40,
             "angularThrust": 200,
@@ -3456,7 +3430,6 @@
                     "size": [4, 4, 4]
                 }],
             "weaponSlots": [],
-            "maxPropulsionGrade": 1,
             "thrusterSlots": [],
             "views": [{
                     "name": "free",
@@ -3508,17 +3481,13 @@
                     "size": [20, 40, 10]
                 }],
             "weaponSlots": [{
-                    "position": [14, 13, 1.85],
-                    "maxGrade": 3
+                    "position": [14, 13, 1.85]
                 }, {
-                    "position": [-14, 13, 1.85],
-                    "maxGrade": 3
+                    "position": [-14, 13, 1.85]
                 }, {
-                    "position": [22, 9, 1.85],
-                    "maxGrade": 3
+                    "position": [22, 9, 1.85]
                 }, {
-                    "position": [-22, 9, 1.85],
-                    "maxGrade": 3
+                    "position": [-22, 9, 1.85]
                 }],
             "missileLaunchers": [{
                     "tubePositions": [[11, 18, 6]],
@@ -3529,7 +3498,6 @@
                     "size": "medium",
                     "capacity": 10
                 }],
-            "maxPropulsionGrade": 3,
             "thrusterSlots": [{
                     "group": 1,
                     "uses": ["lower", "pitchDown"],
@@ -4572,13 +4540,10 @@
                     "size": [23, 35, 17]
                 }],
             "weaponSlots": [{
-                    "position": [20.4, 19.2, -7.2],
-                    "maxGrade": 3
+                    "position": [20.4, 19.2, -7.2]
                 }, {
-                    "position": [-20.4, 19.2, -7.2],
-                    "maxGrade": 3
+                    "position": [-20.4, 19.2, -7.2]
                 }],
-            "maxPropulsionGrade": 3,
             "thrusterSlots": [{
                     "group": 1,
                     "uses": ["forward", "pitchUp"],
@@ -5150,7 +5115,6 @@
                     "position": [0, 4, 0],
                     "size": [10, 4, 2]
                 }],
-            "maxPropulsionGrade": 1,
             "views": [{
                     "name": "near",
                     "isAimingView": true,
@@ -5290,24 +5254,19 @@
             "scoreValue": 100,
             "weaponSlots": [{
                     "position": [7, -6, 0.7],
-                    "array": false,
-                    "maxGrade": 1
+                    "array": false
                 }, {
                     "position": [-7, -6, 0.7],
-                    "array": false,
-                    "maxGrade": 1
+                    "array": false
                 }, {
                     "position": [4, 3, -1],
-                    "array": false,
-                    "maxGrade": 1
+                    "array": false
                 }, {
                     "position": [-4, 3, -1],
-                    "array": false,
-                    "maxGrade": 1
+                    "array": false
                 }, {
                     "position": [4, 3, 1],
                     "array": false,
-                    "maxGrade": 1,
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
@@ -5315,7 +5274,6 @@
                 }, {
                     "position": [-4, 3, 1],
                     "array": false,
-                    "maxGrade": 1,
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
@@ -5635,10 +5593,8 @@
                     "size": [1.5, 3.5, 4.8]
                 }],
             "weaponSlots": [{
-                    "position": [0, 4.5, -1.1],
-                    "maxGrade": 1
+                    "position": [0, 4.5, -1.1]
                 }],
-            "maxPropulsionGrade": 1,
             "thrusterSlots": [{
                     "group": 1,
                     "uses": ["reverse", "pitchUp"],
@@ -5996,13 +5952,10 @@
                     "size": [135, 30, 5]
                 }],
             "weaponSlots": [{
-                    "position": [56, -10, 45],
-                    "maxGrade": 3
+                    "position": [56, -10, 45]
                 }, {
-                    "position": [-56, -10, 45],
-                    "maxGrade": 3
+                    "position": [-56, -10, 45]
                 }],
-            "maxPropulsionGrade": 3,
             "thrusterSlots": [{
                     "group": 1,
                     "uses": ["yawLeft", "strafeLeft"],
@@ -6412,19 +6365,14 @@
                     "size": [100, 120, 50]
                 }],
             "weaponSlots": [{
-                    "position": [175, 290, -80],
-                    "maxGrade": 3
+                    "position": [175, 290, -80]
                 }, {
-                    "position": [-175, 290, -80],
-                    "maxGrade": 3
+                    "position": [-175, 290, -80]
                 }, {
-                    "position": [117, 230, 20],
-                    "maxGrade": 3
+                    "position": [117, 230, 20]
                 }, {
-                    "position": [-117, 230, 20],
-                    "maxGrade": 3
+                    "position": [-117, 230, 20]
                 }],
-            "maxPropulsionGrade": 3,
             "thrusterSlots": [{
                     "group": 1,
                     "uses": ["forward"],
@@ -6931,8 +6879,7 @@
                     "rotations": [{
                             "axis": "Z",
                             "degrees": 90
-                        }],
-                    "maxGrade": 3
+                        }]
                 }, {
                     "array": true,
                     "count": 3,
@@ -6941,20 +6888,17 @@
                     "rotations": [{
                             "axis": "Z",
                             "degrees": -90
-                        }],
-                    "maxGrade": 3
+                        }]
                 }, {
                     "array": true,
                     "count": 3,
                     "startPosition": [60, -150, 410],
-                    "translationVector": [0, 400, 0],
-                    "maxGrade": 3
+                    "translationVector": [0, 400, 0]
                 }, {
                     "array": true,
                     "count": 3,
                     "startPosition": [-60, -150, 410],
-                    "translationVector": [0, 400, 0],
-                    "maxGrade": 3
+                    "translationVector": [0, 400, 0]
                 }, {
                     "array": true,
                     "count": 3,
@@ -6963,8 +6907,7 @@
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
-                        }],
-                    "maxGrade": 3
+                        }]
                 }, {
                     "array": true,
                     "count": 3,
@@ -6973,10 +6916,8 @@
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
-                        }],
-                    "maxGrade": 3
+                        }]
                 }],
-            "maxPropulsionGrade": 3,
             "thrusterSlots": [{
                     "group": 1,
                     "uses": ["yawRight", "strafeLeft", "rollLeft"],
@@ -7606,7 +7547,6 @@
                     "position": [0, -10, 0],
                     "size": [25, 50, 20]
                 }],
-            "maxPropulsionGrade": 1,
             "views": [{
                     "name": "near",
                     "isAimingView": true,
@@ -7746,24 +7686,21 @@
             "scoreValue": 40,
             "weaponSlots": [{
                     "position": [0, 5, -26],
-                    "array": false,
-                    "maxGrade": 1
+                    "array": false
                 }, {
                     "position": [48.44, -1, -6.42],
                     "array": false,
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 80
-                        }],
-                    "maxGrade": 1
+                        }]
                 }, {
                     "position": [-48.44, -1, -6.42],
                     "array": false,
                     "rotations": [{
                             "axis": "Y",
                             "degrees": -80
-                        }],
-                    "maxGrade": 1
+                        }]
                 }],
             "missileLaunchers": [{
                     "tubePositions": [[0, 5, -9]],

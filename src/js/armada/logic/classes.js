@@ -2010,12 +2010,6 @@ define([
     /**
      * @returns {Number}
      */
-    MissileClass.prototype.getAcceleration = function () {
-        return this._acceleration;
-    };
-    /**
-     * @returns {Number}
-     */
     MissileClass.prototype.getThrust = function () {
         return this._thrust;
     };
@@ -2360,10 +2354,6 @@ define([
          */
         this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
         /**
-         * @type Number
-         */
-        this._grade = dataJSON ? (dataJSON.grade || _showMissingPropertyError(this, "grade")) : 0;
-        /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @type Number
          */
@@ -2464,12 +2454,6 @@ define([
         return strings.get(
                 strings.WEAPON_CLASS.PREFIX, this.getName() + strings.WEAPON_CLASS.NAME_SUFFIX.name,
                 this._fullName);
-    };
-    /**
-     * @returns {Number}
-     */
-    WeaponClass.prototype.getGrade = function () {
-        return this._grade;
     };
     /**
      * @returns {Number}
@@ -2653,10 +2637,6 @@ define([
          */
         this._thrusterBurnParticle = new ParticleDescriptor(dataJSON);
         /**
-         * @type Number
-         */
-        this._grade = dataJSON ? (dataJSON.grade || _showMissingPropertyError(this, "grade")) : 0;
-        /**
          * The strength of the force applied to the ship when the thrusters are 
          * fired in one direction, measured in newtons.
          * @type Number
@@ -2717,12 +2697,6 @@ define([
      */
     PropulsionClass.prototype.getThrusterBurnParticle = function () {
         return this._thrusterBurnParticle;
-    };
-    /**
-     * @returns {Number}
-     */
-    PropulsionClass.prototype.getGrade = function () {
-        return this._grade;
     };
     /**
      * @returns {Number}
@@ -3272,10 +3246,6 @@ define([
          * @type Float32Array
          */
         this.orientationMatrix = dataJSON ? (mat.rotation4FromJSON(dataJSON.rotations || [])) : null;
-        /**
-         * @type Number
-         */
-        this.maxGrade = dataJSON ? (dataJSON.maxGrade || _showMissingPropertyError(this, "maxGrade")) : 0;
     }
     // ##############################################################################
     /**
@@ -4191,6 +4161,15 @@ define([
          * @type Number
          */
         this._intensity = dataJSON ? (dataJSON.intensity || _showMissingPropertyError(this, "intensity")) : 0;
+        /**
+         * The particle color needs an alpha component but the light color does not
+         * @type Number[3]
+         */
+        this._lightColor = this._particle ? [
+            this._particle.getColor()[0],
+            this._particle.getColor()[1],
+            this._particle.getColor()[2]
+        ] : null;
     }
     /**
      * Marks the resources needed to render this blinking light for loading.
@@ -4211,12 +4190,6 @@ define([
         return this._position;
     };
     /**
-     * @returns {Number[]}
-     */
-    BlinkerDescriptor.prototype.getBlinks = function () {
-        return this._blinks;
-    };
-    /**
      * @returns {Number}
      */
     BlinkerDescriptor.prototype.getPeriod = function () {
@@ -4233,12 +4206,7 @@ define([
      * @returns {Number[3]}
      */
     BlinkerDescriptor.prototype.getLightColor = function () {
-        // the particle color needs an alpha component but the light color does not
-        return [
-            this._particle.getColor()[0],
-            this._particle.getColor()[1],
-            this._particle.getColor()[2]
-        ];
+        return this._lightColor;
     };
     /**
      * Calculated and returns the particle state list to be applied for particles representing this blinking light.
@@ -4335,7 +4303,7 @@ define([
      * @param {Object} dataJSON 
      */
     SpacecraftClass.prototype._overrideData = function (otherSpacecraftClass, dataJSON) {
-        var i, j, startPosition, translationVector, rotations, maxGrade, count, angles;
+        var i, j, startPosition, translationVector, rotations, count, angles;
         TexturedModelClass.prototype._overrideData.call(this, otherSpacecraftClass, dataJSON);
         /**
          * The type of spacecraft this class belongs to.
@@ -4466,13 +4434,11 @@ define([
                     startPosition = dataJSON.weaponSlots[i].startPosition || _showMissingPropertyError(this, "weaponSlot array startPosition");
                     translationVector = dataJSON.weaponSlots[i].translationVector || _showMissingPropertyError(this, "weaponSlot array translationVector");
                     rotations = dataJSON.weaponSlots[i].rotations;
-                    maxGrade = dataJSON.weaponSlots[i].maxGrade || _showMissingPropertyError(this, "weaponSlot array maxGrade");
                     count = dataJSON.weaponSlots[i].count || _showMissingPropertyError(this, "weaponSlot array count");
                     for (j = 0; j < count; j++) {
                         this._weaponSlots.push(new WeaponSlot({
                             position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),
-                            rotations: rotations,
-                            maxGrade: maxGrade
+                            rotations: rotations
                         }));
                     }
                 } else {
@@ -4490,12 +4456,6 @@ define([
                 this._missileLaunchers.push(new MissileLauncherDescriptor(dataJSON.missileLaunchers[i]));
             }
         }
-        /**
-         * @type Number
-         */
-        this._maxPropulsionGrade = otherSpacecraftClass ?
-                (dataJSON.maxPropulsionGrade || otherSpacecraftClass._maxPropulsionGrade) :
-                (dataJSON.maxPropulsionGrade || _showMissingPropertyError(this, "maxPropulsionGrade"));
         /**
          * The slots where the thrusters are located on the ship.
          * @type ThrusterSlot[]
@@ -4695,12 +4655,6 @@ define([
      */
     SpacecraftClass.prototype.getTurnStyle = function () {
         return this._turnStyle;
-    };
-    /**
-     * @returns {Number[3]}
-     */
-    SpacecraftClass.prototype.getAttackVector = function () {
-        return this._attackVector;
     };
     /**
      * @returns {Number[2]}
@@ -4964,8 +4918,6 @@ define([
         getSkyboxClass: getSkyboxClass,
         getBackgroundObjectClass: getBackgroundObjectClass,
         getDustCloudClass: getDustCloudClass,
-        getExplosionClass: getExplosionClass,
-        getProjectileClass: getProjectileClass,
         getMissileClass: getMissileClass,
         getWeaponClass: getWeaponClass,
         getPropulsionClass: getPropulsionClass,

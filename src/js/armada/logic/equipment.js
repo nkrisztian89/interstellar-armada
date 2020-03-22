@@ -1541,13 +1541,6 @@ define([
         return this._class.getDisplayName();
     };
     /**
-     * Returns the weapon slot this weapon is equipped to.
-     * @returns {WeaponSlot}
-     */
-    Weapon.prototype.getSlot = function () {
-        return this._slot;
-    };
-    /**
      * Returns the class of the projectiles the first barrel of this weapon fires.
      * @returns {ProjectileClass}
      */
