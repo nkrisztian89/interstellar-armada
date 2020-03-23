@@ -275,7 +275,7 @@ define([
         this._particles = null;
         /**
          * The renderable object representing this cloud in the scene.
-         * @type PointCloud
+         * @type RenderableObject
          */
         this._visualModel = null;
     }

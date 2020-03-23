@@ -54,6 +54,11 @@ define(function () {
              */
             MISSILE_POOL_NAME = "Missile",
             /**
+             * Name of the pool for reusable TrailSegment instances
+             * @type String
+             */
+            TRAIL_SEGMENT_POOL_NAME = "TrailSegment",
+            /**
              * Name of the pool for reusable Explosion instances
              * @type String
              */
@@ -69,6 +74,7 @@ define(function () {
         PARTICLE_POOL_NAME: PARTICLE_POOL_NAME,
         PROJECTILE_POOL_NAME: PROJECTILE_POOL_NAME,
         MISSILE_POOL_NAME: MISSILE_POOL_NAME,
+        TRAIL_SEGMENT_POOL_NAME: TRAIL_SEGMENT_POOL_NAME,
         EXPLOSION_POOL_NAME: EXPLOSION_POOL_NAME
     };
 });

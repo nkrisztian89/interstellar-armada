@@ -52,6 +52,10 @@ define([
             UNIFORM_POSITION_NAME = "position",
             UNIFORM_DIRECTION_NAME = "direction",
             UNIFORM_SIZE_NAME = "size",
+            UNIFORM_START_POSITION_NAME = "startPosition",
+            UNIFORM_END_POSITION_NAME = "endPosition",
+            UNIFORM_START_DIRECTION_NAME = "startDirection",
+            UNIFORM_END_DIRECTION_NAME = "endDirection",
             UNIFORM_SCALE_MODE_NAME = "scaleMode",
             UNIFORM_ROTATION_MATRIX_NAME = "rotationMatrix",
             UNIFORM_CLIP_COORDINATES_NAME = "clipCoords",
@@ -1373,6 +1377,258 @@ define([
     };
     // #########################################################################
     /**
+     * @class Visual object that renders a segment of a trail, which is a 2D billboard transformed in 3D space, with separate
+     * properties for its two ends, to make sure its ends are matching the propertes of the segment coming before / after it
+     * @extends RenderableObject3D
+     * @constructor
+     * @param {Model} model The model to store the simple billboard data.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
+     * array, with the roles as keys.
+     * @param {Number} size The thickness of the trail (scaling perpendicular to the trail path)
+     * @param {Boolean} wireframe whether this billboard should be rendered in wireframe mode
+     * @param {Number[3]} startPosition The coordinates where this segment starts
+     * @param {Number[3]} startDirection The direction of the trail path at the position where this segment starts
+     * @param {Number[3]} endPosition The coordinates where this segment ends
+     * @param {Number[3]} endDirection The direction of the trail path at the position where this segment ends
+     * @param {Number[4]} color The RGBA color of this segment
+     * @param {Number} duration The total duration of this segment (either ends), in milliseconds
+     * @param {Number} startTimeLeft The time left of the total duration at the position where this segment starts, at the time when this segment is created.
+     * When the start position expires (time left is zero), it will be moved toward the end position and reach it when it expires, too. In milliseconds.
+     * @param {Number} endTimeLeft The time left of the total duration at the position where this segment ends, at the time when this segment is created.
+     * When this time expires, the segment is removed. In milliseconds.
+     * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
+     */
+    function TrailSegment(model, shader, textures, size, wireframe, startPosition, startDirection, endPosition, endDirection, color, duration, startTimeLeft, endTimeLeft, instancedShader) {
+        RenderableObject3D.call(this);
+        /**
+         * The model to store the simple billboard data.
+         * @type Model
+         */
+        this._model = null;
+        /**
+         * Whether or not the rendering mode of this billboard is wireframe.
+         * @type Boolean
+         */
+        this._wireframe = false;
+        /**
+         * Stores the size (thickness) of the trail, as well as the time left ratios at the start
+         * and end positions of this segment, to be passed as a shader uniform.
+         * @type Number[3]
+         */
+        this._sizeVector = [0, 0, 0];
+        /**
+         * The vector to be reused for storing the start position for rendering
+         * @type Number[3]
+         */
+        this._startPosition = [0, 0, 0];
+        /**
+         * The vector to be reused for storing the end position for rendering
+         * @type Number[3]
+         */
+        this._endPosition = [0, 0, 0];
+        /**
+         * The vector to be reused for storing the start direction for rendering
+         * @type Number[3]
+         */
+        this._startDirection = [0, 0, 0];
+        /**
+         * The vector to be reused for storing the end direction for rendering
+         * @type Number[3]
+         */
+        this._endDirection = [0, 0, 0];
+        /**
+         * The vector to be reused for storing the calculated direction  (from start to end positon)
+         * @type Number[3]
+         */
+        this._direction = [0, 0, 0];
+        /**
+         * The RGBA color of this segment
+         * @type Number[4]
+         */
+        this._color = [0, 0, 0, 0];
+        /**
+         * The total duration of this segment (either ends), in milliseconds
+         * @type Number
+         */
+        this._duration = 0;
+        /**
+         * The time left of the total duration at the position where this segment starts.
+         * When the start position expires (time left is zero), it will be moved toward the end position and reach it when it expires, too
+         * In milliseconds.
+         * @type Number
+         */
+        this._startTimeLeft = 0;
+        /**
+         * The time left of the total duration at the position where this segment ends.
+         * When this time expires, the segment is removed. In milliseconds.
+         * @type Number
+         */
+        this._endTimeLeft = 0;
+        if (model) {
+            this.init(model, shader, textures, size, wireframe, startPosition, startDirection, endPosition, endDirection, color, duration, startTimeLeft, endTimeLeft, instancedShader);
+        }
+        this.setUniformValueFunction(UNIFORM_START_POSITION_NAME, function () {
+            return this._startPosition;
+        });
+        this.setUniformValueFunction(UNIFORM_END_POSITION_NAME, function () {
+            return this._endPosition;
+        });
+        this.setUniformValueFunction(UNIFORM_START_DIRECTION_NAME, function () {
+            return this._startDirection;
+        });
+        this.setUniformValueFunction(UNIFORM_END_DIRECTION_NAME, function () {
+            return this._endDirection;
+        });
+        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function () {
+            return this._sizeVector;
+        });
+        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
+            return this._color;
+        });
+    }
+    TrailSegment.prototype = new RenderableObject3D();
+    TrailSegment.prototype.constructor = TrailSegment;
+    /**
+     * @param {Model} model The model to store the simple billboard data.
+     * @param {ManagedShader} shader The shader that should be active while rendering this object.
+     * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
+     * array, with the roles as keys.
+     * @param {Number} size The thickness of the trail (scaling perpendicular to the trail path)
+     * @param {Boolean} wireframe whether this billboard should be rendered in wireframe mode
+     * @param {Number[3]} startPosition The coordinates where this segment starts
+     * @param {Number[3]} startDirection The direction of the trail path at the position where this segment starts
+     * @param {Number[3]} endPosition The coordinates where this segment ends
+     * @param {Number[3]} endDirection The direction of the trail path at the position where this segment ends
+     * @param {Number[4]} color The RGBA color of this segment
+     * @param {Number} duration The total duration of this segment (either ends), in milliseconds
+     * @param {Number} startTimeLeft The time left of the total duration at the position where this segment starts, at the time when this segment is created.
+     * When the start position expires (time left is zero), it will be moved toward the end position and reach it when it expires, too. In milliseconds.
+     * @param {Number} endTimeLeft The time left of the total duration at the position where this segment ends, at the time when this segment is created.
+     * When this time expires, the segment is removed. In milliseconds.
+     * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
+     */
+    TrailSegment.prototype.init = function (model, shader, textures, size, wireframe, startPosition, startDirection, endPosition, endDirection, color, duration, startTimeLeft, endTimeLeft, instancedShader) {
+        RenderableObject3D.prototype.init.call(this, shader, false, true, mat.translation4vAux(startPosition), mat.IDENTITY4, mat.scaling4Aux(size), instancedShader);
+        this.setTextures(textures);
+        vec.setVector3(this._startPosition, startPosition);
+        vec.setVector3(this._endPosition, endPosition);
+        vec.setVector3(this._startDirection, startDirection);
+        vec.setVector3(this._endDirection, endDirection);
+        vec.setVector4(this._color, color);
+        this._duration = duration;
+        this._startTimeLeft = startTimeLeft;
+        this._endTimeLeft = endTimeLeft;
+        this._sizeVector[0] = size;
+        this._model = model;
+        this._wireframe = (wireframe === true);
+        if (this._wireframe) {
+            this._isRenderedWithDepthMask = false;
+        }
+    };
+    /**
+     * @override
+     * Omit 3D checks, as those will be handled by the parent node housing the whole trail
+     * @param {RenderParameters} renderParameters
+     */
+    TrailSegment.prototype.shouldBeRendered = function (renderParameters) {
+        return RenderableObject.prototype.shouldBeRendered.call(this, renderParameters);
+    };
+    /**
+     * Returns the model used to render the billboard.
+     * @returns {Model}
+     */
+    TrailSegment.prototype.getModel = function () {
+        return this._model;
+    };
+    /**
+     * Returns the level of detail this billboard should be considered at. (always 0)
+     * @returns {Number}
+     */
+    TrailSegment.prototype.getCurrentLOD = function () {
+        return 0;
+    };
+    /**
+     * The direction of the trail path at the position where this segment ends
+     * @returns {Number[3]}
+     */
+    TrailSegment.prototype.getEndDirection = function () {
+        return this._endDirection;
+    };
+    /**
+     * The time left of the total duration at the position where this segment ends, in milliseconds.
+     * @returns {Number}
+     */
+    TrailSegment.prototype.getEndTimeLeft = function () {
+        return this._endTimeLeft;
+    };
+    /** 
+     * @override
+     * @param {ManagedGLContext} context
+     */
+    TrailSegment.prototype.addToContext = function (context) {
+        RenderableObject3D.prototype.addToContext.call(this, context);
+        this._model.addToContext(context, this._wireframe);
+    };
+    /**
+     * @override
+     * Performs one animation step
+     * @param {Number} dt The time passed since the last animation step in milliseconds
+     */
+    TrailSegment.prototype.performAnimate = function (dt) {
+        var length;
+        this._startTimeLeft -= dt;
+        this._endTimeLeft -= dt;
+        if (this._endTimeLeft <= 0) {
+            this._startTimeLeft = 0;
+            this._endTimeLeft = 0;
+            this.markAsReusable(true);
+            return;
+        }
+        if (this._startTimeLeft < 0) {
+            // move the start position towards the end position if it has expired
+            vec.setDiff3(this._direction, this._endPosition, this._startPosition);
+            length = vec.extractLength3(this._direction);
+            vec.add3(this._startPosition, vec.scaled3Aux(this._direction, length * (1 - this._endTimeLeft / (this._endTimeLeft - this._startTimeLeft))));
+            this._startTimeLeft = 0;
+        }
+        this._sizeVector[1] = this._startTimeLeft / this._duration;
+        this._sizeVector[2] = this._endTimeLeft / this._duration;
+    };
+    /**
+     * @override
+     * @param {RenderParameters} renderParameters
+     */
+    TrailSegment.prototype.performRender = function (renderParameters) {
+        this._model.render(renderParameters.context, this._wireframe);
+    };
+    /**
+     * @override
+     * @param {ManagedGLContext} context
+     * @param {Number} instanceCount
+     */
+    TrailSegment.prototype._peformRenderInstances = function (context, instanceCount) {
+        this._model.renderInstances(context, this._wireframe, undefined, undefined, instanceCount);
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    TrailSegment.prototype.mightBeRenderedToShadowMap = function () {
+        return false;
+    };
+    /**
+     * @override
+     * @param {TrailSegment} otherRenderableObject
+     * @returns {Boolean}
+     */
+    TrailSegment.prototype.shouldGoInSameRenderQueueInstanced = function (otherRenderableObject) {
+        return (RenderableObject3D.prototype.shouldGoInSameRenderQueueInstanced.call(this, otherRenderableObject)) &&
+                (this._textures === otherRenderableObject._textures) &&
+                (this._model === otherRenderableObject._model);
+    };
+    // #########################################################################
+    /**
      * @struct Stores the attributes of a particle for a given state
      * @param {Number[4]} color
      * @param {Number} size
@@ -2288,6 +2544,7 @@ define([
         ShadedLODMesh: ShadedLODMesh,
         ParameterizedMesh: ParameterizedMesh,
         Billboard: Billboard,
+        TrailSegment: TrailSegment,
         ParticleState: ParticleState,
         Particle: Particle,
         staticParticle: staticParticle,

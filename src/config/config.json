@@ -1,5 +1,5 @@
 {
-    "version": "0.4.6-dev:813 (2020.03.22.)",
+    "version": "0.4.6-dev:814 (2020.03.23.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4", "0.4.5"],
@@ -215,7 +215,7 @@
                         "requiredVertexUniformVectorsPer": {
                             "groupTransform": 4
                         },
-                        "requiredAttributeVectors": 6,
+                        "requiredAttributeVectors": 7,
                         "requiredVaryingVectors": 3,
                         "requiredTextureUnits": 1,
                         "requiredFragmentUniformVectors": 3,
@@ -237,7 +237,7 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 6,
+                        "requiredAttributeVectors": 7,
                         "requiredVaryingVectors": 4,
                         "requiredTextureUnits": 2,
                         "requiredFragmentUniformVectors": 3,
@@ -261,7 +261,7 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 6,
+                        "requiredAttributeVectors": 7,
                         "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
                         "requiredFragmentUniformVectors": 5,
@@ -285,7 +285,7 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 6,
+                        "requiredAttributeVectors": 7,
                         "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
                         "requiredFragmentUniformVectors": 5,
@@ -309,7 +309,7 @@
                             "luminosityFactor": 1,
                             "dirLight": 2
                         },
-                        "requiredAttributeVectors": 6,
+                        "requiredAttributeVectors": 7,
                         "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
                         "requiredFragmentUniformVectors": 5,

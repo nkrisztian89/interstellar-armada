@@ -247,6 +247,11 @@ define([
              */
             _minimumProjectileCountForInstancing = 0,
             /**
+             * Cached value of the configuration setting of minimum number of trail segments that should trigger their instanced rendering.
+             * @type Number
+             */
+            _minimumTrailSegmentCountForInstancing = 0,
+            /**
              * Cached value of the configuration setting for maximum combat forward speed factor.
              * @type Number
              */
@@ -323,7 +328,12 @@ define([
              * A pool containing missiles for reuse, so that creation of new missile objects can be decreased for optimization.
              * @type Pool
              */
-            _missilePool;
+            _missilePool,
+            /**
+             * A pool containing trail segments for reuse, so that creation of objects while creating trails can be decreased for optimization.
+             * @type Pool
+             */
+            _trailSegmentPool;
     Object.freeze(FlightMode);
     Object.freeze(WeaponAimStatus);
     Object.freeze(ThrusterUse);
@@ -423,7 +433,7 @@ define([
         for (i = 0; i < hitObjects.length; i++) {
             physicalHitObject = hitObjects[i].getPhysicalModel();
             if (physicalHitObject && (
-                    ((hitObjects[i] === origin) && _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !isPiloted)) || 
+                    ((hitObjects[i] === origin) && _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !isPiloted)) ||
                     ((hitObjects[i] !== origin) && (_isPlayerFriendlyFireDamageEnabled || (hitObjects[i] !== pilotedCraft) || isHostile)))) {
                 offset = offsetCallback(hitObjects[i], isPiloted && pilotedCraft.isHostile(hitObjects[i]));
                 hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT, offset);
@@ -662,6 +672,166 @@ define([
     };
     // ##############################################################################
     /**
+     * @class Represents a trail that an object leaves behind as it moves, and which
+     * consists of a list of connected segments.
+     * @param {TrailDescriptor} descriptor The descriptor storing the trail's
+     * general properties.
+     */
+    function Trail(descriptor) {
+        /**
+         * The descriptor storing the general characteristics of this trail.
+         * @type TrailDescriptor
+         */
+        this._descriptor = descriptor;
+        /**
+         * The list of points in 3D space that make up this trail (its currently
+         * active / growing section). Each two consecutive points are connected
+         * by a segment.
+         * @type Number[3][]
+         */
+        this._points = null;
+        /**
+         * The array of segments that can be rendered to visualize the currently
+         * active / growing section of this trail. (references to previous,
+         * finished section of this trail are not stored, they simply expire
+         * and are removed from the scene as they animate)
+         * @type TrailSegment[]
+         */
+        this._segments = null;
+        /**
+         * The renderable object that houses the current active section of the
+         * trail (has its segments as its children)
+         * @type RenderableObject
+         */
+        this._visualModel = null;
+    }
+    /**
+     * @returns {TrailDescriptor}
+     */
+    Trail.prototype.getDescriptor = function () {
+        return this._descriptor;
+    };
+    /**
+     * Whether there is a currently active / growing section of this trail to
+     * which new points / segments can be added.
+     * @returns {Boolean}
+     */
+    Trail.prototype.isActive = function () {
+        return !!this._points;
+    };
+    /**
+     * Call this before loading resources to make sure the trail can be rendered
+     * onto this scene.
+     * @param {Scene} scene
+     */
+    Trail.prototype.addResourcesToScene = function (scene) {
+        this._descriptor.acquireResources();
+        resources.executeWhenReady(function () {
+            scene.addResourcesOfObject(new renderableObjects.TrailSegment(
+                    this._descriptor.getModel(),
+                    this._descriptor.getShader(),
+                    this._descriptor.getTexturesOfTypes(this._descriptor.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                    this._descriptor.getSize(),
+                    false,
+                    vec.NULL3,
+                    vec.NULL3,
+                    vec.NULL3,
+                    vec.NULL3,
+                    vec.NULL4,
+                    0, 0, 0,
+                    this._descriptor.getInstancedShader()));
+        }.bind(this));
+    };
+    /**
+     * Start a new active section for the trail (abandoning the current one if
+     * there was already one), with a new parent node and a new list of segments
+     * and points.
+     * @param {sceneGraph} scene
+     */
+    Trail.prototype.startNew = function (scene) {
+        this._points = [];
+        this._segments = [];
+        this._visualModel = new renderableObjects.RenderableObject3D(null, false, false, mat.identity4(), mat.identity4(), mat.identity4(), null, this._descriptor.getSize(), true, true);
+        scene.addNode(new sceneGraph.RenderableNode(this._visualModel, false, true));
+    };
+    /**
+     * Adds a new 3D point to the currently active section of the trail (there
+     * needs to be one when calling this method), growing the section with a
+     * new segment if needed.
+     * @param {Number[3]} point The point to add.
+     * @param {Number} dt The time elapsed since the last simulation step. This
+     * is used when growing a new section to its maximum duration, to make sure
+     * that process stays consistent across framerates
+     */
+    Trail.prototype.addPoint = function (point, dt) {
+        var prevPoint, segment, prevSegment, prevTime, direction;
+        this._points.push(point);
+        this._visualModel.setPositionv(point);
+        if (this._points.length > this._segments.length + 1) {
+            prevPoint = this._points[this._points.length - 2];
+            direction = vec.normalize3(vec.diff3(point, prevPoint));
+            prevSegment = (this._segments.length > 0) ? this._segments[this._segments.length - 1] : null;
+            prevTime = prevSegment ? prevSegment.getEndTimeLeft() : 0;
+            segment = _trailSegmentPool.getObject();
+            segment.init(
+                    this._descriptor.getModel(),
+                    this._descriptor.getShader(),
+                    this._descriptor.getTexturesOfTypes(this._descriptor.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                    this._descriptor.getSize(),
+                    false,
+                    prevPoint,
+                    prevSegment ? prevSegment.getEndDirection() : direction,
+                    point,
+                    direction,
+                    this._descriptor.getColor(),
+                    this._descriptor.getDuration(),
+                    prevTime,
+                    Math.min(this._descriptor.getDuration(), prevTime + this._descriptor.getGrowthRate() * dt),
+                    this._descriptor.getInstancedShader());
+            this._segments.push(segment);
+            this._visualModel.getNode().addSubnode(new sceneGraph.RenderableNode(segment, false, false, _minimumTrailSegmentCountForInstancing));
+        }
+        // remove obsolete, expired segments and their points to make sure the
+        // arrays don't grow too large
+        while ((this._segments.length > 0) && (this._segments[0].canBeReused())) {
+            this._segments.shift();
+            this._points.shift();
+        }
+        this._visualModel.setSize((this._points.length > 1) ? vec.length3(vec.diff3Aux(this._points[0], this._points[this._points.length - 1])) : this._descriptor.getSize());
+    };
+    /**
+     * Finishes the current active / growing section fo the trail by removing
+     * any references to it. No new points can be added to it after this point,
+     * it simply expires through the default animation of the segments.
+     */
+    Trail.prototype.detach = function () {
+        this._points = null;
+        this._segments = null;
+        this._visualModel = null;
+    };
+    /**
+     * Removes all references to other objects for proper cleanup of memory.
+     * Calling this destroys all the segments of the current active / growing
+     * section of the trail.
+     */
+    Trail.prototype.destroy = function () {
+        var i;
+        this._descriptor = null;
+        this._points = null;
+        if (this._segments) {
+            for (i = 0; i < this._segments.length; i++) {
+                this._segments[i].markAsReusable(true);
+                this._segments[i] = null;
+            }
+            this._segments = null;
+        }
+        if (this._visualModel) {
+            this._visualModel.getNode().markAsReusable(true);
+            this._visualModel = null;
+        }
+    };
+    // ##############################################################################
+    /**
      * @class Represents a missile launched from a missile launcher.
      * @param {MissileClass} missileClass The class of the missile defining its general properties.
      * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the missile.
@@ -681,6 +851,11 @@ define([
          * @type RenderableObject
          */
         this._visualModel = null;
+        /**
+         * The trail a launched missile leaves behind when using its engine.
+         * @type Trail
+         */
+        this._trail = null;
         /**
          * The object that represents and simulates the physical behaviour of
          * this missile.
@@ -910,8 +1085,9 @@ define([
      * @param {Boolean} [wireframe=false] Whether to set up the model in wireframe mode
      * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
      * @param {String} [shaderName] Optional shader to use for the visual model instead of the one provided by the missile class
+     * @param {Boolean} [trail=false] Whether to also initialize the trail for the missile
      */
-    Missile.prototype._initVisualModel = function (wireframe, lod, shaderName) {
+    Missile.prototype._initVisualModel = function (wireframe, lod, shaderName, trail) {
         var shader = shaderName ? graphics.getManagedShader(shaderName) : this._class.getShader();
         if (!this._visualModel) {
             this.createVisualModel();
@@ -935,6 +1111,9 @@ define([
         if (graphics.areLuminosityTexturesAvailable() && this._visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
             this._visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
         }
+        if (trail) {
+            this._trail = new Trail(this._class.getTrailDescriptor());
+        }
     };
     /**
      * Returns the visual model of the missile.
@@ -949,12 +1128,13 @@ define([
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
      * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
      * @param {String} [shaderName] Optional shader to use for the visual model instead of the one provided by the missile class
+     * @param {Boolean} [trail=false] Whether to add a trail for the missile
      * @param {Function} [callback] If given, this function will be executed right after the missile is addded to the scene, with the 
      * visual model of the missile passed to it as its only argument
      */
-    Missile.prototype.addToSceneNow = function (scene, wireframe, lod, shaderName, callback) {
+    Missile.prototype.addToSceneNow = function (scene, wireframe, lod, shaderName, trail, callback) {
         var i;
-        this._initVisualModel(wireframe, lod, shaderName);
+        this._initVisualModel(wireframe, lod, shaderName, trail);
         scene.addObject(this._visualModel, true);
         for (i = 0; i < this._thrusters.length; i++) {
             this._thrusters[i].addToScene(this._visualModel.getNode(), true);
@@ -975,11 +1155,12 @@ define([
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
      * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
      * @param {String} [shaderName] Optional shader to use for the visual model instead of the one provided by the missile class
+     * @param {Boolean} [trail=false] Whether to add a trail for the missile
      * @param {Function} [callback] If given, this function will be executed right after the missile is addded to the scene, with the 
      * visual model of the missile passed to it as its only argument
      */
-    Missile.prototype.addToScene = function (scene, wireframe, lod, shaderName, callback) {
-        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, wireframe, lod, shaderName, callback));
+    Missile.prototype.addToScene = function (scene, wireframe, lod, shaderName, trail, callback) {
+        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, wireframe, lod, shaderName, trail, callback));
     };
     /**
      * Adds the resources required to render this missile to the passed scene,
@@ -989,14 +1170,18 @@ define([
      * @param {Boolean} [wireframe=false] Whether to add the model resource for wireframe rendering
      * @param {Number} [lod] Optional static LOD to use instead of automatic dynamic one
      * @param {String} [shaderName] Optional shader to use for the visual model instead of the one provided by the missile class
+     * @param {Boolean} [trail=false] Whether to add the resources for rendering the trail for the missile
      */
-    Missile.prototype.addResourcesToScene = function (scene, wireframe, lod, shaderName) {
+    Missile.prototype.addResourcesToScene = function (scene, wireframe, lod, shaderName, trail) {
         var exp, resourceID = MISSILE_RESOURCE_ID_PREFIX + this._class.getName();
-        this._class.acquireResources({missileOnly: false, sound: true});
+        this._class.acquireResources({missileOnly: false, sound: true, trail: trail});
         resources.executeWhenReady(function () {
             if (!scene.hasResourcesOfObject(resourceID)) {
-                this._initVisualModel(wireframe, lod, shaderName);
+                this._initVisualModel(wireframe, lod, shaderName, trail);
                 scene.addResourcesOfObject(this._visualModel, resourceID);
+                if (trail) {
+                    this._trail.addResourcesToScene(scene);
+                }
                 exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
                 exp.addResourcesToScene(scene);
                 exp = new explosion.Explosion(this._class.getShieldExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
@@ -1281,6 +1466,9 @@ define([
             this._startSound.stopPlaying(audio.SOUND_RAMP_DURATION);
             this._startSound = null;
         }
+        if (this._trail) {
+            this._trail.detach();
+        }
     };
     /**
      * The callback to get the offset to be used for hit checks for this missile
@@ -1324,7 +1512,7 @@ define([
      * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      */
     Missile.prototype.simulate = function (dt, hitObjectOctree, pilotedCraft) {
-        var i, p, oriMatrix, targetYawAndPitch, threshold, hitCheckDT;
+        var i, p, oriMatrix, targetYawAndPitch, threshold, hitCheckDT, enginePosition;
         if (this.canBeReused()) {
             return;
         }
@@ -1392,6 +1580,21 @@ define([
             this._targetHitPositionValid = false;
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
+            // update the trail that the missile leaves behind
+            if (this._trail) {
+                if (this._mainBurn) {
+                    if (!this._trail.isActive()) {
+                        this._trail.startNew(this._visualModel.getNode().getScene());
+                    }
+                    enginePosition = this._visualModel.getPositionVector();
+                    vec.add3(enginePosition, vec.prodVec3Mat3Aux(this._class.getEnginePosition(), mat.prodScalingRotation3Aux(this._visualModel.getScalingMatrix(), this._visualModel.getOrientationMatrix())));
+                    this._trail.addPoint(enginePosition, dt);
+                } else {
+                    if (this._trail.isActive()) {
+                        this._trail.detach();
+                    }
+                }
+            }
             if ((hitCheckDT > 0) && (this._timeLeftForIgnition <= 0)) {
                 _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, this._getHitOffset, this._hitCallback);
             }
@@ -1445,6 +1648,10 @@ define([
             this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
+        if (this._trail) {
+            this._trail.destroy();
+            this._trail = null;
+        }
         this._physicalModel = null;
         if (this._startSound) {
             this._startSound.stopPlaying(audio.SOUND_RAMP_DURATION);
@@ -1615,7 +1822,7 @@ define([
      * @returns {Float32Array}
      */
     Weapon.prototype.getScaledOriMatrix = function () {
-        this._scaledOriMatrix = this._scaledOriMatrix || mat.prod3x3SubOf4(this._visualModel.getScalingMatrix(), this._slot.orientationMatrix);
+        this._scaledOriMatrix = this._scaledOriMatrix || mat.prodScalingRotation(this._visualModel.getScalingMatrix(), this._slot.orientationMatrix);
         return this._scaledOriMatrix;
     };
     /**
@@ -2314,7 +2521,7 @@ define([
     MissileLauncher.prototype.addMissileResourcesToScene = function (scene) {
         var missile, resourceID = MISSILE_LAUNCHER_RESOURCE_ID_PREFIX + this._class.getName();
         missile = new Missile(this._class);
-        missile.addResourcesToScene(scene);
+        missile.addResourcesToScene(scene, false, undefined, undefined, true);
         resources.executeWhenReady(function () {
             scene.addResourcesOfObject(null, resourceID);
         });
@@ -2444,7 +2651,6 @@ define([
             missileOriMatrix = this.getMissileOrientationMatrix();
             result = 0;
             // generate the missile
-            // add the projectile of this barrel
             m = _missilePool.getObject();
             m.init(
                     this._class,
@@ -2453,7 +2659,7 @@ define([
                     this._spacecraft,
                     this._class.getLaunchVelocity(),
                     salvo ? this._salvoTarget : this._spacecraft.getTarget());
-            m.addToSceneNow(scene);
+            m.addToSceneNow(scene, false, undefined, undefined, true);
             // create the counter-force affecting the firing ship
             this._spacecraft.getPhysicalModel().applyForceAndTorque(
                     tubePosVector,
@@ -2513,7 +2719,7 @@ define([
                 if (Math.max(turnAngles.yaw, turnAngles.pitch) > this._class.getLockingAngle()) {
                     return false;
                 }
-            }        
+            }
             maxTurnAngle = Math.max(0, Math.max(turnAngles.yaw, turnAngles.pitch) - this._class.getMainBurnAngleThreshold());
             angularAcceleration = this._class.getAngularAcceleration();
             turnTime = (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S * MISSILE_TURN_ACCELERATION_DURATION_S + maxTurnAngle) / (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S);
@@ -4685,6 +4891,7 @@ define([
     _particlePool = pools.getPool(constants.PARTICLE_POOL_NAME, renderableObjects.Particle);
     _projectilePool = pools.getPool(constants.PROJECTILE_POOL_NAME, Projectile);
     _missilePool = pools.getPool(constants.MISSILE_POOL_NAME, Missile);
+    _trailSegmentPool = pools.getPool(constants.TRAIL_SEGMENT_POOL_NAME, renderableObjects.TrailSegment);
     // caching configuration settings
     config.executeWhenReady(function () {
         var i;
@@ -4692,6 +4899,7 @@ define([
         _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
         _minimumMuzzleFlashParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING);
         _minimumProjectileCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_PROJECTILE_COUNT_FOR_INSTANCING);
+        _minimumTrailSegmentCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_TRAIL_SEGMENT_COUNT_FOR_INSTANCING);
         _maxCombatForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_FORWARD_SPEED_FACTOR);
         _maxCombatReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_REVERSE_SPEED_FACTOR);
         _maxCruiseForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_CRUISE_FORWARD_SPEED_FACTOR);

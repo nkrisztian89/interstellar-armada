@@ -212,6 +212,11 @@ define([
              */
             PARTICLE_MODEL_NAME = "squareModel",
             /**
+             * When a model is created for trail segments, this ID will be given to it, so that all trail segments can refer to the same model
+             * @type String
+             */
+            TRAIL_SEGMENT_MODEL_NAME = "squareModel",
+            /**
              * When a model is created for dust particles, this ID will be given to it, so that all dust particles can refer to the same model
              * @type String
              */
@@ -971,6 +976,79 @@ define([
      */
     ParticleDescriptor.prototype.getDuration = function () {
         return this._duration;
+    };
+    // ##############################################################################
+    /**
+     * @class A simple class capable of loading the descriptor of a trail (storing the
+     * common properties of a trail made up of connected segments)
+     * @augments TexturedModelClass
+     * @param {Object} [dataJSON] 
+     */
+    function TrailDescriptor(dataJSON) {
+        TexturedModelClass.call(this, dataJSON, true);
+    }
+    TrailDescriptor.prototype = new TexturedModelClass();
+    TrailDescriptor.prototype.constructor = TrailDescriptor;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     * @returns {Boolean}
+     */
+    TrailDescriptor.prototype._loadData = function (dataJSON) {
+        TexturedModelClass.prototype._loadData.call(this, dataJSON);
+        /**
+         * The thickness of the trail (scaling perpendicular to the scale path)
+         * @type Number
+         */
+        this._size = dataJSON ? (dataJSON.size || _showMissingPropertyError(this, "size")) : 0;
+        /**
+         * The color that can be passed to the shader to modulate the texture with
+         * while rendering. [red,green,blue, alpha]
+         * @type Number[4]
+         */
+        this._color = dataJSON ? (dataJSON.color || _showMissingPropertyError(this, "color")) : null;
+        /**
+         * The duration of any given point of the trail (the trail will end where the object leaving
+         * it passed this much time ago), in milliseconds
+         * @type Number
+         */
+        this._duration = dataJSON ? (dataJSON.duration || _showMissingPropertyError(this, "duration")) : null;
+        /**
+         * Determines how fast does a newly created trail section grow to full duration / length
+         * @type Number
+         */
+        this._growthRate = dataJSON ? (dataJSON.growthRate || _showMissingPropertyError(this, "growthRate")) : null;
+        return true;
+    };
+    /**
+     * @override
+     */
+    TrailDescriptor.prototype.acquireResources = function () {
+        TexturedModelClass.prototype.acquireResources.call(this, {model: egomModel.turningBillboardModel(TRAIL_SEGMENT_MODEL_NAME, utils.EMPTY_ARRAY, 1)});
+    };
+    /**
+     * @returns {Number}
+     */
+    TrailDescriptor.prototype.getSize = function () {
+        return this._size;
+    };
+    /**
+     * @returns {Number[3]}
+     */
+    TrailDescriptor.prototype.getColor = function () {
+        return this._color;
+    };
+    /**
+     * @returns {Number}
+     */
+    TrailDescriptor.prototype.getDuration = function () {
+        return this._duration;
+    };
+    /**
+     * @returns {Number}
+     */
+    TrailDescriptor.prototype.getGrowthRate = function () {
+        return this._growthRate;
     };
     // ##############################################################################
     /**
@@ -1843,6 +1921,11 @@ define([
          */
         this._lightIntensity = dataJSON ? (dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity")) : 0;
         /**
+         * The characteristics of the trail the missile leaves behind when using its main engine
+         * @type TrailDescriptor
+         */
+        this._trailDescriptor = dataJSON ? (dataJSON.trail ? new TrailDescriptor(dataJSON.trail) : _showMissingPropertyError(this, "trail")) : null;
+        /**
          * The class of the explosion this missile creates when it hits the armor of a spacecraft or
          * when it explodes harmlessly because of exceeding maximum duration.
          * @type ExplosionClass
@@ -1897,6 +1980,8 @@ define([
      * displaying the missile itself only (not its thrusters or it hitting things 
      * or being launched)
      * @property {Boolean} [sound=false] Whether to load resources for sound effects
+     * @property {Boolean} [trail=false] Whether to load resources for the trail the 
+     * missile leaves behind when its main engine is on
      */
     /**
      * @override
@@ -1911,6 +1996,9 @@ define([
             if (params.sound) {
                 _loadSoundEffect(this._launchSound);
                 _loadSoundEffect(this._startSound);
+            }
+            if (params.trail) {
+                this._trailDescriptor.acquireResources();
             }
         }
     };
@@ -2093,6 +2181,12 @@ define([
         return this._lightIntensity;
     };
     /**
+     * @returns {TrailDescriptor}
+     */
+    MissileClass.prototype.getTrailDescriptor = function () {
+        return this._trailDescriptor;
+    };
+    /**
      * @returns {ExplosionClass}
      */
     MissileClass.prototype.getExplosionClass = function () {
@@ -2162,6 +2256,13 @@ define([
      */
     MissileClass.prototype.getThrusterSlots = function () {
         return this._thrusterSlots;
+    };
+    /**
+     * 4D position of the main thruster, in model space.
+     * @returns {Number[4]}
+     */
+    MissileClass.prototype.getEnginePosition = function () {
+        return this._thrusterSlots[0].positionVector;
     };
     /**
      * Returns the estimated time it would take for a missile of this class to reach

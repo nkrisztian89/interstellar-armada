@@ -2761,7 +2761,7 @@
             "length": 0.7,
             "homingMode": "continuous",
             "mass": 10,
-            "launchVelocity": 10,
+            "launchVelocity": 60,
             "ignitionTime": 50,
             "acceleration": 400,
             "angularAcceleration": 450,
@@ -2775,6 +2775,14 @@
             "kineticFactor": 0.6,
             "lightColor": [0, 0.5, 1],
             "lightIntensity": 9,
+            "trail": {
+                "shader": "trail",
+                "texture": "trail",
+                "color": [0, 0.8, 1, 1],
+                "size": 0.15,
+                "duration": 300,
+                "growthRate": 2
+            },
             "explosion": "smallHitExplosion",
             "shieldExplosion": "smallHitExplosion",
             "scoreValue": 1,
@@ -2792,7 +2800,7 @@
                     "uses": ["forward"],
                     "thrusters": [{
                             "position": [0, -0.43, 0],
-                            "size": 0.4
+                            "size": 0.5
                         }]
                 }, {
                     "group": 2,
@@ -2850,6 +2858,14 @@
             "kineticFactor": 0.25,
             "lightColor": [0, 0.5, 1],
             "lightIntensity": 100,
+            "trail": {
+                "shader": "trail",
+                "texture": "trail",
+                "color": [0, 0.8, 1, 1],
+                "size": 0.25,
+                "duration": 600,
+                "growthRate": 3
+            },
             "explosion": "mediumHitExplosion",
             "shieldExplosion": "mediumHitExplosion",
             "scoreValue": 5,
@@ -2926,6 +2942,14 @@
             "kineticFactor": 0.25,
             "lightColor": [0, 0.5, 1],
             "lightIntensity": 400,
+            "trail": {
+                "shader": "trail",
+                "texture": "trail",
+                "color": [0, 0.8, 1, 1],
+                "size": 0.5,
+                "duration": 750,
+                "growthRate": 2
+            },
             "explosion": "containerExplosion",
             "shieldExplosion": "containerExplosion",
             "scoreValue": 25,

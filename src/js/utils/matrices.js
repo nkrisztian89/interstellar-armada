@@ -1773,7 +1773,31 @@ define([
         return aux;
     };
     /**
-     * Multiplies the a 4x4 scaling matrix with a 4x4 rotation matrix.
+     * Multiplies a 4x4 scaling matrix with a 4x4 rotation matrix.
+     * @param {Float32Array} sm The 4x4 scaling matrix on the left of the multiplicaton.
+     * @param {Float32Array} rm The 4x4 rotation matrix on the right of the multiplicaton.
+     * @returns {Float32Array} A 4x4 matrix.
+     */
+    mat.prodScalingRotation = function (sm, rm) {
+        _matrixCount++;
+        return new Float32Array([
+            sm[0] * rm[0],
+            sm[0] * rm[1],
+            sm[0] * rm[2],
+            0,
+            sm[5] * rm[4],
+            sm[5] * rm[5],
+            sm[5] * rm[6],
+            0,
+            sm[10] * rm[8],
+            sm[10] * rm[9],
+            sm[10] * rm[10],
+            0,
+            0, 0, 0, 1
+        ]);
+    };
+    /**
+     * Multiplies a 4x4 scaling matrix with a 4x4 rotation matrix.
      * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
      * @param {Float32Array} sm The 4x4 scaling matrix on the left of the multiplicaton.
      * @param {Float32Array} rm The 4x4 rotation matrix on the right of the multiplicaton.
@@ -1798,6 +1822,27 @@ define([
         aux[14] = 0;
         aux[15] = 1;
         _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
+     * Multiplies a 4x4 scaling matrix with a 4x4 rotation matrix and returns the upper left 3x3 submatrix of the result.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} sm The 4x4 scaling matrix on the left of the multiplicaton.
+     * @param {Float32Array} rm The 4x4 rotation matrix on the right of the multiplicaton.
+     * @returns {Float32Array} A 3x3 matrix. (one of the auxiliary matrices!)
+     */
+    mat.prodScalingRotation3Aux = function (sm, rm) {
+        var aux = _auxMatrices3[_auxMatrix3Index];
+        aux[0] = sm[0] * rm[0];
+        aux[1] = sm[0] * rm[1];
+        aux[2] = sm[0] * rm[2];
+        aux[3] = sm[5] * rm[4];
+        aux[4] = sm[5] * rm[5];
+        aux[5] = sm[5] * rm[6];
+        aux[6] = sm[10] * rm[8];
+        aux[7] = sm[10] * rm[9];
+        aux[8] = sm[10] * rm[10];
+        _auxMatrix3Index = (_auxMatrix3Index + 1) % AUX_MATRIX_COUNT;
         return aux;
     };
     /**
@@ -2731,7 +2776,7 @@ define([
         m[14] = 0;
         m[15] = 1;
     };
-     /**
+    /**
      * Modifies a 4x4 matrix in-place to be equal to the product of two 4x4 sacling matrices.
      * @param {Float32Array} m The 4x4 matrix to modify
      * @param {Float32Array} m1 The 4x4 scaling matrix on the left of the multiplicaton.

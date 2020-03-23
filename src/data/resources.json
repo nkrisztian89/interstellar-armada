@@ -38,6 +38,21 @@
                 "high": "_1024"
             }
         }, {
+            "name": "trail",
+            "basepath": "effect/trail",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "",
+                "emissive": ""
+            },
+            "qualitySuffixes": {
+                "low": "",
+                "medium": "",
+                "high": ""
+            }
+        }, {
             "name": "brownPlanet",
             "basepath": "planet/brownPlanet",
             "format": "png",
@@ -839,6 +854,33 @@
             "vertexAttributeRoles": {
                 "a_position": "position",
                 "a_texCoord": "texCoord"
+            }
+        }, {
+            "name": "trail-instanced",
+            "vertexShaderSource": "billboard/trail-instanced.vert",
+            "fragmentShaderSource": "billboard/billboard-instanced.frag",
+            "blendMode": "add",
+            "instanceAttributeRoles": {
+                "i_startPosition": "u_startPosition",
+                "i_endPosition": "u_endPosition",
+                "i_startDirection": "u_startDirection",
+                "i_endDirection": "u_endDirection",
+                "i_size": "u_size",
+                "i_color": "u_color"
+            },
+            "vertexAttributeRoles": {
+                "a_position": "position"
+            }
+        }, {
+            "name": "trail",
+            "variants": {
+                "instanced": "trail-instanced"
+            },
+            "vertexShaderSource": "billboard/trail.vert",
+            "fragmentShaderSource": "billboard/billboard.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position"
             }
         }, {
             "name": "particle-instanced",

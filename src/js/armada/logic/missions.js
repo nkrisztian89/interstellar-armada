@@ -206,6 +206,11 @@ define([
              */
             _missilePool,
             /**
+             * A pool containing trail segments for reuse, so that creation of objects while creating trails can be decreased for optimization.
+             * @type Pool
+             */
+            _trailSegmentPool,
+            /**
              * A pool containing explosions for reuse, so that creation of new explosion objects can be decreased for optimization.
              * @type Pool
              */
@@ -2830,6 +2835,7 @@ define([
             _explosionPool.prefill(Math.ceil(this.getMaxExplosionCount() * config.getSetting(config.BATTLE_SETTINGS.EXPLOSION_POOL_PREFILL_FACTOR)), function (exp) {
                 exp.createVisualModel();
             });
+            _trailSegmentPool.prefill(Math.ceil(this.getMaxMissileCount() * config.getSetting(config.BATTLE_SETTINGS.MISSILE_POOL_PREFILL_FACTOR) * config.getSetting(config.BATTLE_SETTINGS.TRAIL_SEGMENT_POOL_PREFILL_FACTOR)));
         }.bind(this));
     };
     /**
@@ -2865,6 +2871,16 @@ define([
         missile.simulate(dt, octree, this._pilotedCraft);
         if (missile.canBeReused()) {
             _missilePool.markAsFree(indexInPool);
+        }
+    };
+    /**
+     * Function to execute during every simulation step on trail segments taken from the pool
+     * @param {TrailSegment} segment The trail segment to handle
+     * @param {Number} indexInPool The index of the segment within the pool
+     */
+    Mission._handleTrailSegment = function (segment, indexInPool) {
+        if (segment.canBeReused()) {
+            _trailSegmentPool.markAsFree(indexInPool);
         }
     };
     /**
@@ -2947,6 +2963,9 @@ define([
         if (_particlePool.hasLockedObjects()) {
             _particlePool.executeForLockedObjects(Mission._handleParticle);
         }
+        if (_trailSegmentPool.hasLockedObjects()) {
+            _trailSegmentPool.executeForLockedObjects(Mission._handleTrailSegment);
+        }
         // moving the scene back to the origo if the camera is too far away to avoid floating point errors becoming visible
         if (mainScene) {
             v = mainScene.moveCameraToOrigoIfNeeded(config.getSetting(config.BATTLE_SETTINGS.MOVE_TO_ORIGO_DISTANCE));
@@ -2960,7 +2979,8 @@ define([
                     "Part: " + _particlePool.getLockedObjectCount() + " / " + _particlePool._objects.length + "<br/>" +
                     "Proj: " + _projectilePool.getLockedObjectCount() + " / " + _projectilePool._objects.length + "<br/>" +
                     "Miss: " + _missilePool.getLockedObjectCount() + " / " + _missilePool._objects.length + "<br/>" +
-                    "Expl: " + _explosionPool.getLockedObjectCount() + " / " + _explosionPool._objects.length;
+                    "Expl: " + _explosionPool.getLockedObjectCount() + " / " + _explosionPool._objects.length + "<br/>" +
+                    "Trai: " + _trailSegmentPool.getLockedObjectCount() + " / " + _trailSegmentPool._objects.length;
         }
     };
     /**
@@ -3000,6 +3020,7 @@ define([
         _projectilePool.clear();
         _missilePool.clear();
         _explosionPool.clear();
+        _trailSegmentPool.clear();
     };
     // #########################################################################
     /**
@@ -3642,6 +3663,7 @@ define([
     _particlePool = pools.getPool(logicConstants.PARTICLE_POOL_NAME, renderableObjects.Particle);
     _projectilePool = pools.getPool(logicConstants.PROJECTILE_POOL_NAME, equipment.Projectile);
     _missilePool = pools.getPool(logicConstants.MISSILE_POOL_NAME, equipment.Missile);
+    _trailSegmentPool = pools.getPool(logicConstants.TRAIL_SEGMENT_POOL_NAME, renderableObjects.TrailSegment);
     _explosionPool = pools.getPool(logicConstants.EXPLOSION_POOL_NAME, explosion.Explosion);
     // creating the default context
     _context = new MissionContext();

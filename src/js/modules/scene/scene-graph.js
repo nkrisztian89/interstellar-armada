@@ -530,32 +530,35 @@ define([
                     }
                 }
                 subnode = this._subnodes.getFirst();
-                transparent = subnode.getRenderableObject().isRenderedWithoutDepthMask();
-                opaque = subnode.getRenderableObject().isRenderedWithDepthMask();
-                if (transparent || opaque) {
-                    queueBits = subnode.getRenderableObject().getRenderQueueBits(camera, queueBits);
-                    if (queueBits & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
-                        if (transparent) {
-                            renderQueueIndex = subnode.addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
-                            renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
-                            this._subnodes.appendToArray(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex]);
+                // the animation might have removed all the subnodes
+                if (subnode) {
+                    transparent = subnode.getRenderableObject().isRenderedWithoutDepthMask();
+                    opaque = subnode.getRenderableObject().isRenderedWithDepthMask();
+                    if (transparent || opaque) {
+                        queueBits = subnode.getRenderableObject().getRenderQueueBits(camera, queueBits);
+                        if (queueBits & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
+                            if (transparent) {
+                                renderQueueIndex = subnode.addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                                renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
+                                this._subnodes.appendToArray(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex]);
+                            }
+                            if (opaque) {
+                                renderQueueIndex = subnode.addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
+                                renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
+                                this._subnodes.appendToArray(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex]);
+                            }
                         }
-                        if (opaque) {
-                            renderQueueIndex = subnode.addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
-                            renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
-                            this._subnodes.appendToArray(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex]);
-                        }
-                    }
-                    if (queueBits & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
-                        if (transparent) {
-                            renderQueueIndex = subnode.addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
-                            renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
-                            this._subnodes.appendToArray(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex]);
-                        }
-                        if (opaque) {
-                            renderQueueIndex = subnode.addToRenderQueue(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX]);
-                            renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
-                            this._subnodes.appendToArray(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex]);
+                        if (queueBits & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
+                            if (transparent) {
+                                renderQueueIndex = subnode.addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
+                                renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
+                                this._subnodes.appendToArray(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex]);
+                            }
+                            if (opaque) {
+                                renderQueueIndex = subnode.addToRenderQueue(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX]);
+                                renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
+                                this._subnodes.appendToArray(renderQueues[DISTANCE_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex]);
+                            }
                         }
                     }
                 }

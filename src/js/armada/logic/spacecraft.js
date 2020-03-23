@@ -1956,7 +1956,7 @@ define([
                 }
             }
             if (addSupplements.missileResources === true) {
-                missileParams = {omitShader: !!params.shaderName, missileOnly: false, sound: addSupplements.sound};
+                missileParams = {omitShader: !!params.shaderName, missileOnly: false, sound: addSupplements.sound, trail: true};
                 for (i = 0; i < this._missileLaunchers.length; i++) {
                     this._missileLaunchers[i].acquireResources(missileParams);
                 }

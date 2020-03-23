@@ -711,6 +711,14 @@ define([
             type: "number"
         },
         /**
+         * When prefilling the trail segment pool at the start of a battle, the size of the pool will be set to the maximum possible amount of 
+         * missiles multiplied by the missile prefill factor multipled by this factor.
+         */
+        TRAIL_SEGMENT_POOL_PREFILL_FACTOR: {
+            name: "trailSegmentPoolPrefillFactor",
+            type: "number"
+        },
+        /**
          * When prefilling the explosion pool at the start of a battle, the size of the pool will be set to the maximum possible amount of 
          * explosions multiplied by this factor.
          */
@@ -735,6 +743,11 @@ define([
         },
         MINIMUM_PROJECTILE_COUNT_FOR_INSTANCING: {
             name: "minimumProjectileCountForInstancing",
+            type: "number",
+            defaultValue: 1
+        },
+        MINIMUM_TRAIL_SEGMENT_COUNT_FOR_INSTANCING: {
+            name: "minimumTrailSegmentCountForInstancing",
             type: "number",
             defaultValue: 1
         },

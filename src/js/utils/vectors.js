@@ -919,6 +919,17 @@ define(function () {
         v1[2] += v2[2];
     };
     /**
+     * Modifies the pased 3D vector, setting it to be the difference of the other two passed vectors
+     * @param {Number[3]} v The 3D vector to modify
+     * @param {Number[3]} v1
+     * @param {Number[3]} v2
+     */
+    vec.setDiff3 = function (v, v1, v2) {
+        v[0] = v1[0] - v2[0];
+        v[1] = v1[1] - v2[1];
+        v[2] = v1[2] - v2[2];
+    };
+    /**
      * Subtracts the 3D vector v2 to the 3D vector v1, modifying v1 in-place.
      * @param {Number[3]} v1
      * @param {Number[3]} v2
