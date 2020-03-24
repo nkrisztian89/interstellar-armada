@@ -179,9 +179,10 @@ define([
          * @param {Float32Array} [scalingMatrix] Initial scaling.
          * @param {Number} [size=1]
          * @param {Boolean} [childrenAlwaysInside=false]
+         * @param {Boolean} [ignoreTransform=false]
          * @returns {Object3D}
          */
-        function init(positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside) {
+        function init(positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside, ignoreTransform) {
             this._parent = null;
             mat.copyTranslation4(this._positionMatrix, positionMatrix || mat.IDENTITY4);
             mat.setMatrix4(this._orientationMatrix, orientationMatrix || mat.IDENTITY4);
@@ -196,6 +197,7 @@ define([
             this._size = (size !== undefined) ? size : 1;
             this._insideParent = null;
             this._childrenAlwaysInside = childrenAlwaysInside || false;
+            this._ignoreTransform = ignoreTransform || false;
             this._lastSizeInsideViewFrustum = {width: -1, height: -1};
             this._positionMatrixInCameraSpaceValid = false;
         }

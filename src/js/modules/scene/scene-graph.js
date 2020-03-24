@@ -1117,6 +1117,11 @@ define([
          */
         this._rootUINode = null;
         /**
+         * An array for any special objects that need to be moved when the scene is moved to follow the camera (with a translatev() method)
+         * @type Object[]
+         */
+        this._objectsToMove = null;
+        /**
          * The list of directional light sources that are available to all objects in the scene.
          * @type DirectionalLightSource[]
          */
@@ -1992,6 +1997,13 @@ define([
         }
     };
     /**
+     * Adds the passed object to the list of objects that moved (by calling translatev() on them) when the scene is moved to follow the camera
+     * @param {Object} object
+     */
+    Scene.prototype.addObjectToMove = function (object) {
+        this._objectsToMove.push(object);
+    };
+    /**
      * Clears all nodes and lights from the scene.
      * @param {Boolean} [hard=false] If true, also removes the list references from the nodes.
      */
@@ -2016,6 +2028,7 @@ define([
         this._resourceObjectIDs = {};
         this._rootUINode = new RenderableNode(new renderableObjects.RenderableObject3D(null, false, false, mat.IDENTITY4, mat.IDENTITY4, mat.IDENTITY4, undefined, 0, false, true), false);
         this._rootUINode.setScene(this);
+        this._objectsToMove = [];
     };
     /**
      * Clears all added nodes from this scene.
@@ -2035,6 +2048,7 @@ define([
         if (this._rootUINode) {
             this._rootUINode.removeSubnodes(hard);
         }
+        this._objectsToMove.length = 0;
     };
     /**
      * Removes all the previously added directional light sources from the scene.
@@ -2089,12 +2103,15 @@ define([
      * @param {Number[3]} v A 3D vector.
      */
     Scene.prototype.moveAllObjectsByVector = function (v) {
-        var o, subnode, subnodes = this._rootNode.getSubnodes();
+        var i, o, subnode, subnodes = this._rootNode.getSubnodes();
         for (subnode = subnodes.getFirst(); subnode; subnode = subnode.next) {
             o = subnode.getRenderableObject();
             if (o.translatev) {
                 o.translatev(v);
             }
+        }
+        for (i = 0; i < this._objectsToMove.length; i++) {
+            this._objectsToMove[i].translatev(v);
         }
     };
     /**

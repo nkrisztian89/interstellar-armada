@@ -643,11 +643,13 @@ define([
      * @param {Float32Array} [orientationMatrix] Initial orientation.
      * @param {Float32Array} [scalingMatrix] Initial scaling.
      * @param {ManagedShader} [instancedShader]
+     * @param {Boolean} [childrenAlwaysInside=false]
+     * @param {Boolean} [ignoreTransform=false]
      * @param {Number} [size=1]
      */
-    RenderableObject3D.prototype.init = function (shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader, size) {
+    RenderableObject3D.prototype.init = function (shader, renderedWithDepthMask, renderedWithoutDepthMask, positionMatrix, orientationMatrix, scalingMatrix, instancedShader, size, childrenAlwaysInside, ignoreTransform) {
         RenderableObject.prototype.init.call(this, shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader);
-        object3D.Object3D.prototype.init.call(this, positionMatrix, orientationMatrix, scalingMatrix, size);
+        object3D.Object3D.prototype.init.call(this, positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside, ignoreTransform);
         this._visibleSize = {width: -1, height: -1};
         this._smallestSizeWhenDrawn = 0;
     };
@@ -1377,6 +1379,38 @@ define([
     };
     // #########################################################################
     /**
+     * @class A container object to be used for the parent node housing trail segments
+     * that visualize a trail that an object leaves behind as it moves.
+     * @extends RenderableObject3D
+     * @param {Number} size Initial size to be set for the trail
+     */
+    function Trail(size) {
+        RenderableObject3D.call(this);
+        if (size) {
+            this.init(null, false, false, null, null, null, null, size, true, true);
+        }
+        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
+            return this.getModelMatrix();
+        });
+    }
+    Trail.prototype = new RenderableObject3D();
+    Trail.prototype.constructor = Trail;
+    /**
+     * @override
+     * TrailSegments don't use the traditional matrix hierarchy just position vectors 
+     * for performance, so if we want to move the whole trail, we need to call translate
+     * on all the segments
+     * @param {Number[3]} v [x,y,z]
+     */
+    Trail.prototype.translatev = function (v) {
+        var node;
+        object3D.Object3D.prototype.translatev.call(this, v);
+        for (node = this.getNode().getSubnodes().getFirst(); node; node = node.next) {
+            node.getRenderableObject().translatev(v);
+        }
+    };
+    // #########################################################################
+    /**
      * @class Visual object that renders a segment of a trail, which is a 2D billboard transformed in 3D space, with separate
      * properties for its two ends, to make sure its ends are matching the propertes of the segment coming before / after it
      * @extends RenderableObject3D
@@ -1533,6 +1567,16 @@ define([
      */
     TrailSegment.prototype.shouldBeRendered = function (renderParameters) {
         return RenderableObject.prototype.shouldBeRendered.call(this, renderParameters);
+    };
+    /**
+     * @override
+     * We don't use the classic position and model matrices for trail segments, so we need 
+     * to modify the position vectors instead
+     * @param {Number[3]} v [x,y,z]
+     */
+    TrailSegment.prototype.translatev = function (v) {
+        vec.add3(this._startPosition, v);
+        vec.add3(this._endPosition, v);
     };
     /**
      * Returns the model used to render the billboard.
@@ -2544,6 +2588,7 @@ define([
         ShadedLODMesh: ShadedLODMesh,
         ParameterizedMesh: ParameterizedMesh,
         Billboard: Billboard,
+        Trail: Trail,
         TrailSegment: TrailSegment,
         ParticleState: ParticleState,
         Particle: Particle,

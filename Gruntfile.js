@@ -147,7 +147,8 @@ module.exports = function (grunt) {
                 ["visibleSize"],
                 ["velocityVector"],
                 ["boxLayout"],
-                ["element"]
+                ["element"],
+                ["emitting", "is"]
             ].map(function (replacement) {
         // create the replacements for each simple getter
         var

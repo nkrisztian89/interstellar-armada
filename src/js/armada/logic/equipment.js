@@ -672,43 +672,52 @@ define([
     };
     // ##############################################################################
     /**
-     * @class Represents a trail that an object leaves behind as it moves, and which
-     * consists of a list of connected segments.
+     * @class Creates the trail that the missile leaves behind as it moves.
      * @param {TrailDescriptor} descriptor The descriptor storing the trail's
      * general properties.
      */
-    function Trail(descriptor) {
+    function TrailEmitter(descriptor) {
         /**
          * The descriptor storing the general characteristics of this trail.
          * @type TrailDescriptor
          */
         this._descriptor = descriptor;
         /**
-         * The list of points in 3D space that make up this trail (its currently
-         * active / growing section). Each two consecutive points are connected
-         * by a segment.
-         * @type Number[3][]
+         * The world position of where this trail starts (first point emitted)
+         * @type Number[3]
          */
-        this._points = null;
+        this._firstPoint = [0, 0, 0];
         /**
-         * The array of segments that can be rendered to visualize the currently
-         * active / growing section of this trail. (references to previous,
-         * finished section of this trail are not stored, they simply expire
-         * and are removed from the scene as they animate)
-         * @type TrailSegment[]
+         * The last point where the trail was emitted (world coordinates)
+         * @type Number[3]
          */
-        this._segments = null;
+        this._lastPoint = [0, 0, 0];
+        /**
+         * Whether there is a trail currently being emitted
+         * @type Boolean
+         */
+        this._emitting = false;
+        /**
+         * The last trail segment that was emitted
+         * @type TrailSegment
+         */
+        this._lastSegment = null;
         /**
          * The renderable object that houses the current active section of the
          * trail (has its segments as its children)
-         * @type RenderableObject
+         * @type Trail
          */
         this._visualModel = null;
+        /**
+         * The last scene where a trail was/is emitted by this emitter
+         * @type Scene
+         */
+        this._lastScene = null;
     }
     /**
      * @returns {TrailDescriptor}
      */
-    Trail.prototype.getDescriptor = function () {
+    TrailEmitter.prototype.getDescriptor = function () {
         return this._descriptor;
     };
     /**
@@ -716,15 +725,15 @@ define([
      * which new points / segments can be added.
      * @returns {Boolean}
      */
-    Trail.prototype.isActive = function () {
-        return !!this._points;
+    TrailEmitter.prototype.isEmitting = function () {
+        return this._emitting;
     };
     /**
      * Call this before loading resources to make sure the trail can be rendered
      * onto this scene.
      * @param {Scene} scene
      */
-    Trail.prototype.addResourcesToScene = function (scene) {
+    TrailEmitter.prototype.addResourcesToScene = function (scene) {
         this._descriptor.acquireResources();
         resources.executeWhenReady(function () {
             scene.addResourcesOfObject(new renderableObjects.TrailSegment(
@@ -744,18 +753,26 @@ define([
     };
     /**
      * Start a new active section for the trail (abandoning the current one if
-     * there was already one), with a new parent node and a new list of segments
-     * and points.
-     * @param {sceneGraph} scene
+     * there was already one), with a new parent node
+     * @param {Scene} scene
+     * @param {Number[3]} point The world coordinates of where this trail starts.
+     * When calling addPoint() the first time after this call, the first segment
+     * will connect this point with the one passed there
      */
-    Trail.prototype.startNew = function (scene) {
-        this._points = [];
-        this._segments = [];
-        this._visualModel = new renderableObjects.RenderableObject3D(null, false, false, mat.identity4(), mat.identity4(), mat.identity4(), null, this._descriptor.getSize(), true, true);
+    TrailEmitter.prototype.startNew = function (scene, point) {
+        vec.setVector3(this._firstPoint, point);
+        vec.setVector3(this._lastPoint, point);
+        this._emitting = true;
+        this._lastSegment = null;
+        this._visualModel = new renderableObjects.Trail(this._descriptor.getSize());
         scene.addNode(new sceneGraph.RenderableNode(this._visualModel, false, true));
+        if (this._lastScene !== scene) {
+            scene.addObjectToMove(this);
+            this._lastScene = scene;
+        }
     };
     /**
-     * Adds a new 3D point to the currently active section of the trail (there
+     * Adds a new 3D point to the currently emitted section of the trail (there
      * needs to be one when calling this method), growing the section with a
      * new segment if needed.
      * @param {Number[3]} point The point to add.
@@ -763,68 +780,60 @@ define([
      * is used when growing a new section to its maximum duration, to make sure
      * that process stays consistent across framerates
      */
-    Trail.prototype.addPoint = function (point, dt) {
-        var prevPoint, segment, prevSegment, prevTime, direction;
-        this._points.push(point);
+    TrailEmitter.prototype.addPoint = function (point, dt) {
+        var segment, prevTime, direction;
         this._visualModel.setPositionv(point);
-        if (this._points.length > this._segments.length + 1) {
-            prevPoint = this._points[this._points.length - 2];
-            direction = vec.normalize3(vec.diff3(point, prevPoint));
-            prevSegment = (this._segments.length > 0) ? this._segments[this._segments.length - 1] : null;
-            prevTime = prevSegment ? prevSegment.getEndTimeLeft() : 0;
-            segment = _trailSegmentPool.getObject();
-            segment.init(
-                    this._descriptor.getModel(),
-                    this._descriptor.getShader(),
-                    this._descriptor.getTexturesOfTypes(this._descriptor.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                    this._descriptor.getSize(),
-                    false,
-                    prevPoint,
-                    prevSegment ? prevSegment.getEndDirection() : direction,
-                    point,
-                    direction,
-                    this._descriptor.getColor(),
-                    this._descriptor.getDuration(),
-                    prevTime,
-                    Math.min(this._descriptor.getDuration(), prevTime + this._descriptor.getGrowthRate() * dt),
-                    this._descriptor.getInstancedShader());
-            this._segments.push(segment);
-            this._visualModel.getNode().addSubnode(new sceneGraph.RenderableNode(segment, false, false, _minimumTrailSegmentCountForInstancing));
-        }
-        // remove obsolete, expired segments and their points to make sure the
-        // arrays don't grow too large
-        while ((this._segments.length > 0) && (this._segments[0].canBeReused())) {
-            this._segments.shift();
-            this._points.shift();
-        }
-        this._visualModel.setSize((this._points.length > 1) ? vec.length3(vec.diff3Aux(this._points[0], this._points[this._points.length - 1])) : this._descriptor.getSize());
+        direction = vec.normalize3(vec.diff3(point, this._lastPoint));
+        prevTime = this._lastSegment ? this._lastSegment.getEndTimeLeft() : 0;
+        segment = _trailSegmentPool.getObject();
+        segment.init(
+                this._descriptor.getModel(),
+                this._descriptor.getShader(),
+                this._descriptor.getTexturesOfTypes(this._descriptor.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                this._descriptor.getSize(),
+                false,
+                this._lastPoint,
+                this._lastSegment ? this._lastSegment.getEndDirection() : direction,
+                point,
+                direction,
+                this._descriptor.getColor(),
+                this._descriptor.getDuration(),
+                prevTime,
+                Math.min(this._descriptor.getDuration(), prevTime + this._descriptor.getGrowthRate() * dt),
+                this._descriptor.getInstancedShader());
+        this._visualModel.getNode().addSubnode(new sceneGraph.RenderableNode(segment, false, false, _minimumTrailSegmentCountForInstancing));
+        this._visualModel.setSize(vec.length3(vec.diff3Aux(this._firstPoint, point)));
+        vec.setVector3(this._lastPoint, point);
+        this._lastSegment = segment;
     };
     /**
-     * Finishes the current active / growing section fo the trail by removing
+     * Call this when the whole scene is moved, to make sure the next trail
+     * segment is emitted at the right position
+     * @param {Number[3]} v [x,y,z]
+     */
+    TrailEmitter.prototype.translatev = function (v) {
+        vec.add3(this._lastPoint, v);
+    };
+    /**
+     * Finishes the current emitted section fo the trail by removing
      * any references to it. No new points can be added to it after this point,
      * it simply expires through the default animation of the segments.
      */
-    Trail.prototype.detach = function () {
-        this._points = null;
-        this._segments = null;
+    TrailEmitter.prototype.detach = function () {
+        this._emitting = false;
+        this._lastSegment = null;
         this._visualModel = null;
     };
     /**
      * Removes all references to other objects for proper cleanup of memory.
-     * Calling this destroys all the segments of the current active / growing
-     * section of the trail.
+     * Segments already emitted by this emitter are not affected.
      */
-    Trail.prototype.destroy = function () {
-        var i;
+    TrailEmitter.prototype.destroy = function () {
         this._descriptor = null;
-        this._points = null;
-        if (this._segments) {
-            for (i = 0; i < this._segments.length; i++) {
-                this._segments[i].markAsReusable(true);
-                this._segments[i] = null;
-            }
-            this._segments = null;
-        }
+        this._emitting = false;
+        this._firstPoint = null;
+        this._lastPoint = null;
+        this._lastSegment = null;
         if (this._visualModel) {
             this._visualModel.getNode().markAsReusable(true);
             this._visualModel = null;
@@ -852,10 +861,10 @@ define([
          */
         this._visualModel = null;
         /**
-         * The trail a launched missile leaves behind when using its engine.
-         * @type Trail
+         * Used to emit the trail a launched missile leaves behind when using its engine.
+         * @type TrailEmitter
          */
-        this._trail = null;
+        this._trailEmitter = null;
         /**
          * The object that represents and simulates the physical behaviour of
          * this missile.
@@ -1112,7 +1121,7 @@ define([
             this._visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
         }
         if (trail) {
-            this._trail = new Trail(this._class.getTrailDescriptor());
+            this._trailEmitter = new TrailEmitter(this._class.getTrailDescriptor());
         }
     };
     /**
@@ -1180,7 +1189,7 @@ define([
                 this._initVisualModel(wireframe, lod, shaderName, trail);
                 scene.addResourcesOfObject(this._visualModel, resourceID);
                 if (trail) {
-                    this._trail.addResourcesToScene(scene);
+                    this._trailEmitter.addResourcesToScene(scene);
                 }
                 exp = new explosion.Explosion(this._class.getExplosionClass(), mat.IDENTITY4, mat.IDENTITY4, [0, 0, 0], true);
                 exp.addResourcesToScene(scene);
@@ -1466,8 +1475,8 @@ define([
             this._startSound.stopPlaying(audio.SOUND_RAMP_DURATION);
             this._startSound = null;
         }
-        if (this._trail) {
-            this._trail.detach();
+        if (this._trailEmitter) {
+            this._trailEmitter.detach();
         }
     };
     /**
@@ -1581,17 +1590,18 @@ define([
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
             this._visualModel.setOrientationMatrix(this._physicalModel.getOrientationMatrix());
             // update the trail that the missile leaves behind
-            if (this._trail) {
+            if (this._trailEmitter) {
                 if (this._mainBurn) {
-                    if (!this._trail.isActive()) {
-                        this._trail.startNew(this._visualModel.getNode().getScene());
-                    }
                     enginePosition = this._visualModel.getPositionVector();
                     vec.add3(enginePosition, vec.prodVec3Mat3Aux(this._class.getEnginePosition(), mat.prodScalingRotation3Aux(this._visualModel.getScalingMatrix(), this._visualModel.getOrientationMatrix())));
-                    this._trail.addPoint(enginePosition, dt);
+                    if (!this._trailEmitter.isEmitting()) {
+                        this._trailEmitter.startNew(this._visualModel.getNode().getScene(), enginePosition);
+                    } else {
+                        this._trailEmitter.addPoint(enginePosition, dt);
+                    }
                 } else {
-                    if (this._trail.isActive()) {
-                        this._trail.detach();
+                    if (this._trailEmitter.isEmitting()) {
+                        this._trailEmitter.detach();
                     }
                 }
             }
@@ -1648,9 +1658,9 @@ define([
             this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
-        if (this._trail) {
-            this._trail.destroy();
-            this._trail = null;
+        if (this._trailEmitter) {
+            this._trailEmitter.destroy();
+            this._trailEmitter = null;
         }
         this._physicalModel = null;
         if (this._startSound) {
