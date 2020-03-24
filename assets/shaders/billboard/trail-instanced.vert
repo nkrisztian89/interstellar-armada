@@ -32,6 +32,6 @@ void main() {
 	
 	gl_Position = mvpMatrix * vec4(a_position, 1.0);	
 	
-        v_texCoord = vec2((a_position.x * 0.5) + 0.5, 1.0 - mix(i_size.y, i_size.z, ratio));
+        v_texCoord = vec2((a_position.x * 0.5) + 0.5, mix(i_size.y, i_size.z, ratio));
         v_color = i_color;
 }

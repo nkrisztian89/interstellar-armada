@@ -163,7 +163,7 @@
             "minimumExplosionParticleCountForInstancing": 1,
             "minimumMuzzleFlashParticleCountForInstancing": 1,
             "minimumProjectileCountForInstancing": 1,
-            "minimumTrailSegmentCountForInstancing": 50,
+            "minimumTrailSegmentCountForInstancing": 1,
             "minimumThrusterParticleCountForInstancing": 1,
             "minimumBlinkerParticleCountForInstancing": 1,
             "viewDistance": 5000,
@@ -1022,7 +1022,8 @@
             "defaultPointToFallback": "positionFollowedObjectOrWorld"
         },
         "editor": {
-            "defaultParticleShader": "particle"
+            "defaultParticleShader": "particle",
+            "defaultTrailShader": "trail"
         }
     },
     "control": {

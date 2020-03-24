@@ -2293,6 +2293,7 @@ define([
      */
     MissileClass.prototype.handleGraphicsSettingsChanged = function () {
         TexturedModelClass.prototype.handleGraphicsSettingsChanged.call(this);
+        this._trailDescriptor.handleGraphicsSettingsChanged();
     };
     // ##############################################################################
     /**

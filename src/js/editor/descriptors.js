@@ -889,6 +889,41 @@ define([
                 }
             },
             /**
+             * @type Editor~TypeDescriptor
+             */
+            TRAIL_DESCRIPTOR = {
+                baseType: BaseType.OBJECT,
+                name: "TrailDescriptor",
+                properties: {
+                    SHADER: {
+                        name: "shader",
+                        type: SHADER_REFERENCE,
+                        globalDefault: true,
+                        settingName: config.EDITOR_SETTINGS.DEFAULT_TRAIL_SHADER
+                    },
+                    TEXTURE: {
+                        name: "texture",
+                        type: TEXTURE_REFERENCE
+                    },
+                    COLOR: {
+                        name: "color",
+                        type: BaseType.COLOR4
+                    },
+                    SIZE: {
+                        name: "size",
+                        type: SCALE
+                    },
+                    DURATION: {
+                        name: "duration",
+                        type: MILLISECONDS
+                    },
+                    GROWTH_RATE: {
+                        name: "growthRate",
+                        type: SCALE
+                    }
+                }
+            },
+            /**
              * The descriptor object for projectile classes, describing their properties
              * @type Editor~ItemDescriptor
              */
@@ -1156,6 +1191,10 @@ define([
                 LIGHT_INTENSITY: {
                     name: "lightIntensity",
                     type: BaseType.NUMBER
+                },
+                TRAIL: {
+                    name: "trail",
+                    type: TRAIL_DESCRIPTOR
                 },
                 EXPLOSION: {
                     name: "explosion",

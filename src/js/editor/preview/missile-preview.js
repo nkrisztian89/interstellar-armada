@@ -9,6 +9,8 @@
 /*global define, document, window */
 
 /**
+ * @param vec Used for vector operations
+ * @param mat Used for matrix operations
  * @param lights Used for creating the light sources for the preview scene
  * @param graphics Used to acquire wireframe shader
  * @param environments Used to access the environments
@@ -18,6 +20,8 @@
  * @param preview This module is based on the common WebGL preview module
  */
 define([
+    "utils/vectors",
+    "utils/matrices",
     "modules/scene/lights",
     "armada/graphics",
     "armada/logic/environments",
@@ -25,7 +29,7 @@ define([
     "editor/common",
     "editor/descriptors",
     "editor/preview/webgl-preview"
-], function (lights, graphics, environments, equipment, common, descriptors, preview) {
+], function (vec, mat, lights, graphics, environments, equipment, common, descriptors, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -43,7 +47,7 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "model", "shader", "texture",
-                "thrusterSlots",
+                "trail", "thrusterSlots",
                 // to refresh info
                 "launchVelocity", "ignitionTime", "acceleration", "duration"
             ],
@@ -88,6 +92,7 @@ define([
              * @type Object
              */
             _optionElements = {
+                addTrailButton: null,
                 environmentSelector: null,
                 engineStateEditor: null,
                 engineStatePopup: null
@@ -130,6 +135,29 @@ define([
                 ENGINE_STATE_OFF;
     }
     /**
+     * Adds a trail based on the current orientation of the missile to show how it would look
+     */
+    function _addTrail() {
+        var 
+            trail = _missile._trail,
+            growthRate = trail._descriptor.getGrowthRate(),
+            duration = trail._descriptor.getDuration(),
+            model = _missile.getVisualModel(),
+            enginePosition, direction, length, count, segmentLength, dt, i;
+        enginePosition = model.getPositionVector();
+        vec.add3(enginePosition, vec.prodVec3Mat3Aux(_missileClass.getEnginePosition(), mat.prodScalingRotation3Aux(model.getScalingMatrix(), model.getOrientationMatrix())));    
+        direction = vec.normal3(enginePosition);
+        length = _missileClass.getLength() * 5;
+        count = 3;
+        segmentLength = length / count;
+        dt = duration / (count * growthRate);
+        trail.startNew(preview.getScene());
+        for (i = 0; i <= count; i++) {
+            trail.addPoint(vec.sum3(enginePosition, vec.scaled3(direction, (count - i) * segmentLength)), dt);
+        }
+        preview.requestRender();
+    }
+    /**
      * For the WebGL preview context.
      * Clears the object references of the currently stored missile (if any)
      */
@@ -170,20 +198,23 @@ define([
             _wireframeMissile = new equipment.Missile(_missileClass);
         }
         if (params.clearScene || shouldReload) {
-            _missileClass.acquireResources({missileOnly: false, sound: true});
+            _missileClass.acquireResources({missileOnly: false, sound: true, trail: true});
             graphics.getShader(preview.getWireframeShaderName());
             _missile.addToScene(preview.getScene(), false, undefined, 
                     undefined,
+                    true,
                     shouldReload ?
                     function (model) {
                         preview.setModel(model);
                         if (orientationMatrix) {
                             model.setOrientationMatrix(orientationMatrix);
                         }
+                        _missile._trail.addResourcesToScene(preview.getScene());
                     } :
                     null);
             _wireframeMissile.addToScene(preview.getScene(), true, undefined,
                     preview.getWireframeShaderName(),
+                    false,
                     shouldReload ?
                     function (model) {
                         preview.setWireframeModel(model);
@@ -267,6 +298,11 @@ define([
      * Creates the controls that form the content of the preview options and adds them to the page.
      */
     function _createOptions() {
+        // add trail button
+        _optionElements.addTrailButton = common.createButton("Add trail", function () {
+            _addTrail();
+        });
+        _elements.options.appendChild(preview.createSetting(_optionElements.addTrailButton));
         // environment selector
         _optionElements.environmentSelector = common.createSelector(environments.getEnvironmentNames(), _environmentName, true, function () {
             preview.updateCanvas({
@@ -348,6 +384,7 @@ define([
     _previewContext = new preview.WebGLPreviewContext({
         renderModeSetting: true,
         lodSetting: true,
+        animateButton: true,
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
         optionRefreshProperties: OPTION_REFRESH_PROPERIES
     }, {

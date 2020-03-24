@@ -1732,6 +1732,10 @@ define([
         DEFAULT_PARTICLE_SHADER: {
             name: "defaultParticleShader",
             type: "string"
+        },
+        DEFAULT_TRAIL_SHADER: {
+            name: "defaultTrailShader",
+            type: "string"
         }
     };
     LOCAL_STORAGE_HUD_PREFIX = MODULE_LOCAL_STORAGE_PREFIX + BATTLE_SETTINGS.HUD.name + LOCAL_STORAGE_SEPARATOR;

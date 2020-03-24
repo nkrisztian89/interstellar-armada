@@ -48,9 +48,9 @@
                 "emissive": ""
             },
             "qualitySuffixes": {
-                "low": "",
-                "medium": "",
-                "high": ""
+                "low": "_128",
+                "medium": "_256",
+                "high": "_512"
             }
         }, {
             "name": "brownPlanet",
