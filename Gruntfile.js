@@ -148,7 +148,19 @@ module.exports = function (grunt) {
                 ["velocityVector"],
                 ["boxLayout"],
                 ["element"],
-                ["emitting", "is"]
+                ["emitting", "is"],
+                ["isFighterType", ""],
+                ["isAimingView", ""],
+                ["inSalvoMode", "is", "salvo"],
+                ["locked", "is"],
+                ["alive", "is"],
+                ["away", "is"],
+                ["readyToUse", "is"],
+                ["playing", "is"],
+                ["measuredFromCenter", "is"],
+                ["mousePosition"],
+                ["isRenderedWithoutDepthMask", ""],
+                ["isRenderedWithDepthMask", ""]
             ].map(function (replacement) {
         // create the replacements for each simple getter
         var
