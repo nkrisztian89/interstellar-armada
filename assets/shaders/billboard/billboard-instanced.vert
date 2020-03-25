@@ -12,11 +12,9 @@ attribute mediump vec2 a_texCoord;
 attribute vec3 i_position;
 attribute vec3 i_direction;
 attribute float i_size;
-attribute lowp vec4 i_color;
 
 // varyings
 varying mediump vec2 v_texCoord;
-varying lowp vec4 v_color;
 
 void main() {
 	vec3 eyeToModel = i_position - u_eyePos;
@@ -30,5 +28,4 @@ void main() {
 	gl_Position = mvpMatrix * vec4(a_position, 1.0);	
 	
 	v_texCoord = a_texCoord;
-        v_color = i_color;
 }

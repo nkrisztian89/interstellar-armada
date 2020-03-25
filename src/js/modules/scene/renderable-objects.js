@@ -75,12 +75,7 @@ define([
              * Using these as clip coordinates specifies a clip zone that includes the whole element.
              * @type Number[4]
              */
-            CLIP_COORDINATES_NO_CLIP = [0, 1, 0, 1],
-            /**
-             * Constant opaque white RGBA color
-             * @type Number[4]
-             */
-            WHITE_COLOR = [1, 1, 1, 1];
+            CLIP_COORDINATES_NO_CLIP = [0, 1, 0, 1];
     // -------------------------------------------------------------------------
     // Private functions
     /**
@@ -1240,8 +1235,8 @@ define([
     // #########################################################################
     /**
      * @class Visual object that renders a 2D billboard transformed in 3D space.
+     * The orientation of the billboard is currently fixed at init() time.
      * @extends RenderableObject3D
-     * @constructor
      * @param {Model} model The model to store the simple billboard data.
      * @param {ManagedShader} shader The shader that should be active while rendering this object.
      * @param {Object.<String, Texture|Cubemap>} textures The textures that should be bound while rendering this object in an associative 
@@ -1249,7 +1244,8 @@ define([
      * @param {Number} size The size of the billboard
      * @param {Boolean} wireframe whether this billboard should be rendered in wireframe mode
      * @param {Float32Array} positionMatrix The 4x4 translation matrix representing the initial position of the object.
-     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object.
+     * @param {Float32Array} orientationMatrix The 4x4 rotation matrix representing the initial orientation of the object. This will be fixed until
+     * the billboard is reused with a new init() call.
      * @param {ManagedShader} instancedShader The shader that should be active while rendering this object using instancing.
      */
     function Billboard(model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader) {
@@ -1282,22 +1278,15 @@ define([
         if (model) {
             this.init(model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader);
         }
-        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
-            return this.getModelMatrix();
-        });
         this.setUniformValueFunction(UNIFORM_POSITION_NAME, function () {
             this.copyPositionToVector(this._renderPosition);
             return this._renderPosition;
         });
         this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
-            vec.setRowB43(this._renderDirection, this.getOrientationMatrix());
             return this._renderDirection;
         });
         this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (contextName) {
             return (contextName === utils.EMPTY_STRING) ? this._sizeVector : this._sizeVector[0];
-        });
-        this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
-            return WHITE_COLOR;
         });
     }
     Billboard.prototype = new RenderableObject3D();
@@ -1316,6 +1305,7 @@ define([
     Billboard.prototype.init = function (model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader) {
         RenderableObject3D.prototype.init.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4Aux(size), instancedShader);
         this.setTextures(textures);
+        vec.setRowB43(this._renderDirection, this.getOrientationMatrix());
         this._sizeVector[0] = size;
         this._model = model;
         this._wireframe = (wireframe === true);
