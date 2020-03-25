@@ -81,7 +81,12 @@ define([
              * A pool containing explosions for reuse, so that creation of new explosion objects can be decreased for optimization.
              * @type Pool
              */
-            _explosionPool;
+            _explosionPool,
+            /**
+             * Cached value of the configuration setting of minimum number of particles that should trigger their instanced rendering.
+             * @type Number
+             */
+            _minimumParticleCountForInstancing = 0;
     // ------------------------------------------------------------------------------
     // public functions
     /**
@@ -186,7 +191,7 @@ define([
                 this._class ? this._class.getTotalDuration() : 0,
                 this._class ? this._class.isContinuous() : false,
                 this._carriesParticles,
-                config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING),
+                _minimumParticleCountForInstancing,
                 graphics.getParticleCountFactor());
     };
     /**
@@ -304,7 +309,7 @@ define([
                     this._class.getTotalDuration(),
                     this._class.isContinuous(),
                     this._carriesParticles,
-                    config.getSetting(config.BATTLE_SETTINGS.MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING),
+                    _minimumParticleCountForInstancing,
                     graphics.getParticleCountFactor());
         }
     };
@@ -318,7 +323,7 @@ define([
     Explosion.prototype.addToSceneNow = function (parentNode, soundSource, isHit, callback) {
         var lightStates, scene = parentNode.getScene();
         this._initVisualModel(1 / parentNode.getRenderableObject().getCascadeScalingMatrix()[0]);
-        parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false));
+        parentNode.addSubnode(this._visualModel.getNode() || new sceneGraph.RenderableNode(this._visualModel, false));
         if (_dynamicLights) {
             lightStates = this._class.getLightStates();
             if (lightStates) {
@@ -386,6 +391,7 @@ define([
     config.executeWhenReady(function () {
         _hitSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_TIME_THRESHOLD);
         _hitSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_VOLUME_FACTOR);
+        _minimumParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_PARTICLE_COUNT_FOR_INSTANCING);
         graphics.executeWhenReady(handleGraphicsSettingsChanged);
     });
     // -------------------------------------------------------------------------

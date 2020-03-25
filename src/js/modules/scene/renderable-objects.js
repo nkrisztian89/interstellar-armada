@@ -184,7 +184,8 @@ define([
         this._name = null;
     }
     /**
-     * Reinitializes the renderable object with new properties. Does not clear uniform value functions.
+     * Reinitializes the renderable object with new properties. Does not clear uniform value functions and node reference (so the same node
+     * can be reused with the object)
      * @param {ManagedShader} shader The shader that should be active while rendering this object
      * @param {Boolean} [renderedWithDepthMask=true] Tells whether this object should be rendered when the depth mask is on (= it contains 
      * non-transparent triangles)
@@ -194,7 +195,6 @@ define([
      * @param {Boolean} [castsShadows=true] If true, this object will be rendered to shadow maps.
      */
     RenderableObject.prototype.init = function (shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader, castsShadows) {
-        this._node = null;
         this._shader = shader;
         this._textures = {};
         this._textureRoles = [];

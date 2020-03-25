@@ -731,13 +731,8 @@ define([
             type: "number",
             defaultValue: 1
         },
-        MINIMUM_EXPLOSION_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumExplosionParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_MUZZLE_FLASH_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumMuzzleFlashParticleCountForInstancing",
+        MINIMUM_PARTICLE_COUNT_FOR_INSTANCING: {
+            name: "minimumParticleCountForInstancing",
             type: "number",
             defaultValue: 1
         },
