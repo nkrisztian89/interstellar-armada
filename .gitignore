@@ -2,4 +2,7 @@
 /doc/
 /node_modules/
 /.sass-cache/
-/css/*.map
+/config
+/data
+/css
+/js
