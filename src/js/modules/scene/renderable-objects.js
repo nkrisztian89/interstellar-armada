@@ -1327,6 +1327,12 @@ define([
     Billboard.prototype.getCurrentLOD = function () {
         return 0;
     };
+    /**
+     * Call this after changing the orientation of the billboard, to make sure it is correctly rendered
+     */
+    Billboard.prototype.updateDirection = function () {
+        vec.setRowB43(this._renderDirection, this.getOrientationMatrix());
+    };
     /** 
      * @override
      * @param {ManagedGLContext} context

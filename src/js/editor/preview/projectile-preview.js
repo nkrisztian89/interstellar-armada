@@ -118,6 +118,12 @@ define([
     function _updateForRefresh() {
         return true;
     }
+    /**
+     * The handler for when the model is rotated by the user
+     */
+    function _onModelRotate() {
+        _projectile.getVisualModel().updateDirection();
+    }
     // ----------------------------------------------------------------------
     // Public Functions
     /**
@@ -170,7 +176,8 @@ define([
         load: _load,
         updateForRefresh: _updateForRefresh,
         clearSettingsForNewItem: _clearSettingsForNewItem,
-        createOptions: _createOptions
+        createOptions: _createOptions,
+        onModelRotate: _onModelRotate
     });
     // ----------------------------------------------------------------------
     // The public interface of the module
