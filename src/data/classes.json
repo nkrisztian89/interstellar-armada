@@ -240,7 +240,7 @@
                     "spawnNumber": 0,
                     "spawnTime": 1,
                     "duration": 1,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 0.5, 0, 1],
@@ -329,7 +329,7 @@
                     "spawnNumber": 2,
                     "spawnTime": 100,
                     "duration": 200,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 0.5, 0, 1],
@@ -443,7 +443,7 @@
                     "spawnNumber": 6,
                     "spawnTime": 100,
                     "duration": 400,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 0.5, 0, 1],
@@ -587,7 +587,7 @@
                     "spawnTime": 25,
                     "duration": 125,
                     "delay": 20,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0, 1],
@@ -723,7 +723,7 @@
                     "spawnNumber": 3,
                     "spawnTime": 70,
                     "duration": 280,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0, 1],
@@ -891,7 +891,7 @@
                     "spawnNumber": 4,
                     "spawnTime": 70,
                     "duration": 280,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0, 1],
@@ -1048,7 +1048,7 @@
                     "spawnNumber": 6,
                     "spawnTime": 50,
                     "duration": 300,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0, 1],
@@ -1192,7 +1192,7 @@
                     "spawnNumber": 15,
                     "spawnTime": 250,
                     "duration": 500,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 1, 1],
@@ -1265,7 +1265,7 @@
                     "velocity": 150,
                     "velocitySpread": 50,
                     "initialNumber": 20,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 1, 1],
@@ -1410,7 +1410,7 @@
                     "spawnNumber": 45,
                     "spawnTime": 500,
                     "duration": 1000,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0.7, 1],
@@ -1531,7 +1531,7 @@
                     "velocitySpread": 10,
                     "initialNumber": 14,
                     "spawnNumber": 0,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0.6, 1],
@@ -1600,7 +1600,7 @@
                     "spawnNumber": 1,
                     "spawnTime": 125,
                     "duration": 0,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0.6, 1],
@@ -1681,7 +1681,7 @@
                     "velocity": 65,
                     "velocitySpread": 15,
                     "initialNumber": 10,
-                    "shader": "billboard",
+                    "shader": "coloredBillboard",
                     "texture": "spark",
                     "particleStates": [{
                             "color": [1, 1, 0.8, 1],

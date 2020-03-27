@@ -855,6 +855,33 @@
                 "a_texCoord": "texCoord"
             }
         }, {
+            "name": "coloredBillboard-instanced",
+            "vertexShaderSource": "billboard/billboard-colored-instanced.vert",
+            "fragmentShaderSource": "billboard/trail-instanced.frag",
+            "blendMode": "add",
+            "instanceAttributeRoles": {
+                "i_position": "u_position",
+                "i_direction": "u_direction",
+                "i_size": "u_size",
+                "i_color": "u_color"
+            },
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        }, {
+            "name": "coloredBillboard",
+            "variants": {
+                "instanced": "coloredBillboard-instanced"
+            },
+            "vertexShaderSource": "billboard/billboard.vert",
+            "fragmentShaderSource": "billboard/trail.frag",
+            "blendMode": "add",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        }, {
             "name": "trail-instanced",
             "vertexShaderSource": "billboard/trail-instanced.vert",
             "fragmentShaderSource": "billboard/trail-instanced.frag",
