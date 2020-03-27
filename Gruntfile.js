@@ -209,10 +209,16 @@ module.exports = function (grunt) {
             dist: ["js/*", "!js/main.js"]
         },
         _copy: {
-            data: {
+            devData: {
                 files: [
                     {expand: true, cwd: 'src/config/', src: ['**'], dest: 'config/'},
                     {expand: true, cwd: 'src/data/', src: ['**'], dest: 'data/'}
+                ]
+            },
+            distData: {
+                files: [
+                    {expand: true, cwd: 'src/config/', src: ['**'], dest: 'config/'},
+                    {expand: true, cwd: 'src/data/', src: ['**', '!test/**', '!missions/tests**'], dest: 'data/'}
                 ]
             },
             js: {
@@ -260,6 +266,21 @@ module.exports = function (grunt) {
             }
         },
         _replace: {
+            distData: {
+                // removes test mission entries from missions.json
+                options: {
+                    patterns: [
+                        {
+                            match: /,\s*{\s*"source":\s*"[^"]*",\s*"test":\s*true\s*}/g,
+                            replacement: ''
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, cwd: 'data/', src: ['missions.json'], dest: 'data/'}
+                ]
+            },
             preOptimize: {
                 options: {
                     patterns: [
@@ -389,8 +410,8 @@ module.exports = function (grunt) {
         },
         _concurrent: {
             watch: ['_watch:dev', '_watch:sass'],
-            dev: [['_sass:dev', '_replace:sass'], '_copy:data', '_copy:js'],
-            build: ['_sass:dist', ['_copy:data', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimize', '_replace:optimize', '_requirejs', '_clean:dist', '_replace:postOptimize']]
+            dev: [['_sass:dev', '_replace:sass'], '_copy:devData', '_copy:js'],
+            build: ['_sass:dist', ['_copy:distData', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimize', '_replace:optimize', '_requirejs', '_clean:dist', '_replace:postOptimize']]
         }
     });
     // Plugins
