@@ -160,7 +160,8 @@ module.exports = function (grunt) {
                 ["measuredFromCenter", "is"],
                 ["mousePosition"],
                 ["isRenderedWithoutDepthMask", ""],
-                ["isRenderedWithDepthMask", ""]
+                ["isRenderedWithDepthMask", ""],
+                ["dissipationDuration"]
             ].map(function (replacement) {
         // create the replacements for each simple getter
         var

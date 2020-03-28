@@ -835,8 +835,7 @@
             "blendMode": "add",
             "instanceAttributeRoles": {
                 "i_position": "u_position",
-                "i_direction": "u_direction",
-                "i_size": "u_size"
+                "i_direction": "u_direction"
             },
             "vertexAttributeRoles": {
                 "a_position": "position",
@@ -862,7 +861,6 @@
             "instanceAttributeRoles": {
                 "i_position": "u_position",
                 "i_direction": "u_direction",
-                "i_size": "u_size",
                 "i_color": "u_color"
             },
             "vertexAttributeRoles": {
@@ -874,7 +872,7 @@
             "variants": {
                 "instanced": "coloredBillboard-instanced"
             },
-            "vertexShaderSource": "billboard/billboard.vert",
+            "vertexShaderSource": "billboard/billboard-colored.vert",
             "fragmentShaderSource": "billboard/trail.frag",
             "blendMode": "add",
             "vertexAttributeRoles": {
@@ -915,7 +913,6 @@
             "blendMode": "add",
             "instanceAttributeRoles": {
                 "i_position": "u_position",
-                "i_billboardSize": "u_billboardSize",
                 "i_color": "u_color"
             },
             "vertexAttributeRoles": {

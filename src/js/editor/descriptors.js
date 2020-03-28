@@ -956,6 +956,10 @@ define([
                     name: "duration",
                     type: MILLISECONDS
                 },
+                DISSIPATION_DURATION: {
+                    name: "dissipationDuration",
+                    type: MILLISECONDS
+                },
                 INTERSECTION_POSITIONS: {
                     name: "intersectionPositions",
                     type: NUMBER_ARRAY

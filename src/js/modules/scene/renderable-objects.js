@@ -1261,20 +1261,15 @@ define([
          */
         this._wireframe = false;
         /**
-         * Stores the size to be passed as a shader uniform (needed both in array and singular format)
-         * @type Number[1]
-         */
-        this._sizeVector = [0];
-        /**
-         * The vector to be reused for storing the calculated position for rendering
+         * The vector to be reused for storing the calculated position for rendering. The 4th coordinate stores the size.
          * @type Number[3]
          */
-        this._renderPosition = [0, 0, 0];
+        this._renderPosition = [0, 0, 0, 0];
         /**
-         * The vector to be reused for storing the calculated direction for rendering
+         * The vector to be reused for storing the calculated direction for rendering. The 4th coordinate stores the opacity.
          * @type Number[3]
          */
-        this._renderDirection = [0, 0, 0];
+        this._renderDirection = [0, 0, 0, 0];
         if (model) {
             this.init(model, shader, textures, size, wireframe, positionMatrix, orientationMatrix, instancedShader);
         }
@@ -1284,9 +1279,6 @@ define([
         });
         this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
             return this._renderDirection;
-        });
-        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (contextName) {
-            return (contextName === utils.EMPTY_STRING) ? this._sizeVector : this._sizeVector[0];
         });
     }
     Billboard.prototype = new RenderableObject3D();
@@ -1306,7 +1298,8 @@ define([
         RenderableObject3D.prototype.init.call(this, shader, false, true, positionMatrix, orientationMatrix, mat.scaling4Aux(size), instancedShader);
         this.setTextures(textures);
         vec.setRowB43(this._renderDirection, this.getOrientationMatrix());
-        this._sizeVector[0] = size;
+        this._renderDirection[3] = 1;
+        this._renderPosition[3] = size;
         this._model = model;
         this._wireframe = (wireframe === true);
         if (this._wireframe) {
@@ -1332,6 +1325,13 @@ define([
      */
     Billboard.prototype.updateDirection = function () {
         vec.setRowB43(this._renderDirection, this.getOrientationMatrix());
+    };
+    /**
+     * Sets the 4th coordinate of the direction vector passed to the shader for rendering (stores the opacity)
+     * @param {Number} value
+     */
+    Billboard.prototype.setDirectionW = function (value) {
+        this._renderDirection[3] = value;
     };
     /** 
      * @override
@@ -1737,15 +1737,10 @@ define([
          */
         this._relativeSize = 0;
         /**
-         * Cached value of the calculated size (considering both size animation and the deliberately set relative size).
-         * @type Number
-         */
-        this._calculatedSize = [0];
-        /**
          * An array storing the calculated world position vector to be passed to the shader uniform.
          * @type Number
          */
-        this._positionVector = [0, 0, 0];
+        this._positionVector = [0, 0, 0, 0];
         /**
          * The list of states this particle goes through during its lifespan. If only one state is stored,
          * the particle statically stays in that state. If multiple states are stored, the _looping
@@ -1811,20 +1806,11 @@ define([
             this._positionVector[2] = modelMatrix[14];
             return this._positionVector;
         });
-        this.setUniformValueFunction(UNIFORM_BILLBOARD_SIZE_NAME, function (contextName) {
-            return (contextName === utils.EMPTY_STRING) ? this._calculatedSize : this._calculatedSize[0];
-        });
         this.setUniformValueFunction(UNIFORM_COLOR_NAME, function () {
             return this._color;
         });
-        this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
-            return this.getModelMatrix();
-        });
         this.setUniformValueFunction(UNIFORM_DIRECTION_NAME, function () {
             return vec.floatVector3Aux(this.getWorldVelocityDirectionVector());
-        });
-        this.setUniformValueFunction(UNIFORM_SIZE_NAME, function (contextName) {
-            return (contextName === utils.EMPTY_STRING) ? this._calculatedSize : this._calculatedSize[0];
         });
     }
     Particle.prototype = new RenderableObject3D();
@@ -1890,8 +1876,8 @@ define([
      * visibility based on the size as well.
      */
     Particle.prototype._calculateSize = function () {
-        this._calculatedSize[0] = this._size * this._relativeSize;
-        this._visible = this._calculatedSize[0] >= PARTICLE_MINIMUM_VISIBLE_SIZE;
+        this._positionVector[3] = this._size * this._relativeSize;
+        this._visible = this._positionVector[3] >= PARTICLE_MINIMUM_VISIBLE_SIZE;
     };
     /**
      * Returns the total duration this particle takes to animate from its first state to the last (in milliseconds)
@@ -1905,7 +1891,7 @@ define([
      * @returns {Number}
      */
     Particle.prototype.getSize = function () {
-        return this._calculatedSize[0];
+        return this._positionVector[3];
     };
     /**
      * 
@@ -2202,12 +2188,29 @@ define([
         vec.rotate2(v, directionYawAndPitch.yaw);
         up = [v[0], v[1], up[2]];
         this.setOrientationMatrix(mat.lookTowards4(vec.scaled3(direction, -1), up));
+        this._positionVector.length = 3;
+        /**
+         * Cached value of the size to use for rendering, needed for in number (for uniform) and array (instance attribute) format
+         * @type Number
+         */
+        this._calculatedSize = [size];
+        this.setUniformValueFunction(UNIFORM_BILLBOARD_SIZE_NAME, function (contextName) {
+            return (contextName === utils.EMPTY_STRING) ? this._calculatedSize : this._calculatedSize[0];
+        });
         this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
         });
     }
     BackgroundBillboard.prototype = new Particle();
     BackgroundBillboard.prototype.constructor = BackgroundBillboard;
+    /**
+     * @override
+     * The size is fix for this type of object, we don't need to do anything
+     * @returns {Boolean}
+     */
+    BackgroundBillboard.prototype._calculateSize = function () {
+        return true;
+    };
     /**
      * @override
      * Will only do the same basic check as for a general RenderableObject

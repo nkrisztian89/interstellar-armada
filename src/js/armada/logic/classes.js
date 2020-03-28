@@ -1631,10 +1631,15 @@ define([
         this._mass = dataJSON ? (dataJSON.mass || _showMissingPropertyError(this, "mass")) : 0;
         /**
          * The length of life of the projectile in milliseconds, after which it will 
-         * disappear.
+         * disappear. In milliseconds.
          * @type Number
          */
         this._duration = dataJSON ? (dataJSON.duration || _showMissingPropertyError(this, "duration")) : 0;
+        /**
+         * The length of time while the projetile dissipates at the end of its duration, bringing down its power linearly to zero, in milliseconds.
+         * @type Number
+         */
+        this._dissipationDuration = dataJSON ? (dataJSON.dissipationDuration || _showMissingPropertyError(this, "dissipationDuration")) : 0;
         /**
          * A descriptor for the properties of the muzzle flash particle which is 
          * created when this projectile is shot from a weapon. 
@@ -1714,6 +1719,12 @@ define([
      */
     ProjectileClass.prototype.getDuration = function () {
         return this._duration;
+    };
+    /**
+     * @returns {Number}
+     */
+    ProjectileClass.prototype.getDissipationDuration = function () {
+        return this._dissipationDuration;
     };
     /**
      * @returns {ParticleDescriptor}

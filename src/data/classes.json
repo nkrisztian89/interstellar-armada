@@ -2065,6 +2065,7 @@
             "size": 3,
             "mass": 1,
             "duration": 4000,
+            "dissipationDuration": 1000,
             "intersectionPositions": [0],
             "width": 0.35,
             "muzzleFlash": {
@@ -2086,6 +2087,7 @@
             "size": 2.5,
             "mass": 2,
             "duration": 3000,
+            "dissipationDuration": 750,
             "intersectionPositions": [0],
             "width": 0.3,
             "muzzleFlash": {
@@ -2107,6 +2109,7 @@
             "size": 4,
             "mass": 3,
             "duration": 4000,
+            "dissipationDuration": 1000,
             "intersectionPositions": [0.2],
             "width": 0.22,
             "muzzleFlash": {
@@ -2128,6 +2131,7 @@
             "size": 2.5,
             "mass": 2.5,
             "duration": 4000,
+            "dissipationDuration": 1000,
             "intersectionPositions": [0],
             "width": 0.3,
             "muzzleFlash": {
@@ -2149,6 +2153,7 @@
             "size": 8,
             "mass": 10,
             "duration": 4000,
+            "dissipationDuration": 1000,
             "intersectionPositions": [0.35],
             "width": 0.65,
             "muzzleFlash": {
@@ -2170,6 +2175,7 @@
             "size": 18,
             "mass": 16,
             "duration": 4000,
+            "dissipationDuration": 1000,
             "intersectionPositions": [0],
             "width": 0.2,
             "muzzleFlash": {

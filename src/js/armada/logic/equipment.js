@@ -488,6 +488,11 @@ define([
          */
         this._origin = null;
         /**
+         * A reference to the light source associated with this projectile.
+         * @type PointLightSource
+         */
+        this._lightSource = null;
+        /**
          * The callback function to use when the projectile hits a spacecraft, bound to this instance
          * @type HitCallback
          */
@@ -567,6 +572,13 @@ define([
         return this._visualModel;
     };
     /**
+     * Sets the associated light source for this projectile, so its intensity can be updated as the projectile dissipates (fades)
+     * @param {PointLightSource} lightSource
+     */
+    Projectile.prototype.setLightSource = function (lightSource) {
+        this._lightSource = lightSource;
+    };
+    /**
      * Adds the projectile to a scene immediately, assuming its resources have already been loaded.
      * @param {Scene} scene The scene to which to add the renderable object presenting the projectile.
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
@@ -624,12 +636,13 @@ define([
      * @param {Number} offset
      */
     Projectile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
-        var exp;
-        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
+        var exp, power;
+        power = Math.min(this._timeLeft / this._class.getDissipationDuration(), 1);
+        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
         exp = explosion.getExplosion();
         exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObject.getSoundSource(), true);
-        hitObject.damage(this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, false, offset);
+        hitObject.damage(power * this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, false, offset);
         this._timeLeft = 0;
         this._visualModel.markAsReusable(true);
     };
@@ -641,7 +654,7 @@ define([
      * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      */
     Projectile.prototype.simulate = function (dt, hitObjectOctree, pilotedCraft) {
-        var hitCheckDT;
+        var hitCheckDT, power;
         if (this.canBeReused()) {
             return;
         }
@@ -651,6 +664,13 @@ define([
         if (this._timeLeft > 0) {
             this._physicalModel.simulate(dt);
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
+            if (this._timeLeft < this._class.getDissipationDuration()) {
+                power = this._timeLeft / this._class.getDissipationDuration();
+                this._visualModel.setDirectionW(power);
+                if (this._lightSource) {
+                    this._lightSource.setObjectIntensity(power * this._class.getLightIntensity());
+                }
+            }
             _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, _getDefaultOffset, this._hitCallback);
         } else {
             this._visualModel.markAsReusable(true);
@@ -2054,7 +2074,7 @@ define([
                 weaponSlotPosVector,
                 projectileOriMatrix,
                 projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
-                soundPosition,
+                soundPosition, lighSource,
                 scene = this._visualModel.getNode().getScene();
         if (onlyIfAimedOrFixed && (this._lastAimStatus !== WeaponAimStatus.FIXED) && (this._lastAimStatus !== WeaponAimStatus.AIMED_IN_RANGE)) {
             return 0;
@@ -2097,7 +2117,9 @@ define([
                     // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
                     // been created, so that projectiles from the same weapon and of the same class only use one light source object
                     if (!projectileLights[projectileClass.getName()]) {
-                        projectileLights[projectileClass.getName()] = new lights.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), vec.NULL3, [p.getVisualModel()]);
+                        lighSource = new lights.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), vec.NULL3, [p.getVisualModel()]);
+                        projectileLights[projectileClass.getName()] = lighSource;
+                        p.setLightSource(lighSource);
                     } else {
                         projectileLights[projectileClass.getName()].addEmittingObject(p.getVisualModel());
                     }
