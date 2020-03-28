@@ -1,3 +1,5 @@
+@import "../_common.scss";
+
 .missions.pageContainer {
     width: 90%;
     height: 90%;
@@ -10,11 +12,15 @@
     height: 100%;
 }
 
+$horizontal-margin: 1em;
+$list-width: 12em;
+$header-height: 3em;
+
 .missions.pageContent {
     position: relative;
     box-sizing: border-box;
-    width: calc(100% - 1em);
-    height: calc(100% - 12em);
+    width: calc(100% - #{$horizontal-margin});
+    height: calc(100% - #{2*$separator-height+$title-height+$page-padding});
 }
 
 .missionListContainer {
@@ -22,7 +28,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 12em;
+    width: $list-width;
     height: 100%;
 }
 
@@ -30,7 +36,7 @@
     position: absolute;
     top: 0;
     right: 0;
-    width: calc(100% - 13em);
+    width: calc(100% - #{$list-width + $horizontal-margin});
     height: 100%;
     
     text-align: left;
@@ -38,7 +44,7 @@
 
 .missionInfoHeader {
     width: 29em;
-    height: 3em;
+    height: $header-height;
 }
 
 .missionTitle {
@@ -60,12 +66,14 @@
     padding-right: 1em;
 }
 
+$info-top-margin: 0.5em;
+
 .missionInfoBody {
     box-sizing: border-box;
-    margin-top: 10px;
+    margin-top: $info-top-margin;
     border-top: 2px solid #333333;
     padding-top: 0.5em;
-    height: calc(100% - 3.5em);
+    height: calc(100% - #{$header-height + $info-top-margin});
     overflow-y: scroll;
 }
 

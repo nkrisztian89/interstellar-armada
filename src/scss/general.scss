@@ -177,16 +177,10 @@ canvas {
 }
 
 .wideFluid {
-    width: calc(100% - 4em);
+    box-sizing: border-box;
+    width: 100%;
     padding-left: 2em;
     padding-right: 2em;
-}
-
-/* To be used with outer containers (page containers) that must have a fluid
- * almost all screen wide width
- */
-.outerWideFluid {
-    width: calc(100% - 5em);
 }
 
 .fullWide {
@@ -206,7 +200,7 @@ canvas {
 
 .contentWide {
     display: table;
-    padding: 1em;
+    padding: $page-padding;
 }
 
 .transparentContainer {
@@ -230,10 +224,12 @@ canvas {
     border-bottom: none;
 }
 
+$footer-margin: 1em;
+
 .footer {
     position: absolute;
-    bottom: 1em;
-    width: calc(100% - 2em);
+    bottom: $footer-margin;
+    width: calc(100% - #{2*$footer-margin});
 }
 
 table {
@@ -279,8 +275,8 @@ a:not(.button) {
 
 a.separate {
     display: table;
-    margin-top: 0.4em;
-    margin-bottom: 0.4em;
+    margin-top: $horizontal-menu-margin;
+    margin-bottom: $horizontal-menu-margin;
 }
 
 a.menu {
@@ -295,15 +291,15 @@ div.horizontalMenu {
 a.horizontalMenu {
     display: table-cell;
     vertical-align: middle;
-    margin: 0.4em;
+    margin: $horizontal-menu-margin;
 }
 
 a.button {
     @include shadowed;
     min-width: 8em;
-    font-size: 1.0em;
+    font-size: $button-font-size;
     text-align: center;
-    padding: 0.5em;
+    padding: $button-padding;
     background-color: $panel-color;
 
     -moz-user-select: none;
@@ -412,7 +408,9 @@ h1 {
     @include glowing-text;
     text-align: center;
     font-variant: small-caps;
-    margin: 0.2em 0 0.5em 0;
+    font-size: $title-font-size;
+    height: 1em;
+    margin: #{$title-top-margin} 0 #{$title-bottom-margin} 0;
 }
 
 h2 {

@@ -123,10 +123,12 @@ input.withUnsetButton {
     box-shadow: 0 0 1em 0 #222222;
 }
 
+$dialog-width: 20em;
+
 .dialog {
     position: absolute;
-    width: 20em;
-    left: calc(50% - 10em);
+    width: $dialog-width;
+    left: calc(50% - #{$dialog-width/2});
     top: calc(40% - 4.5em);
     padding: 1em;
 }
@@ -155,8 +157,12 @@ div.window {
     text-align: left;
 }
 
+$title-height: 2.0vw;
+$title-padding: 0.2em;
+
 div.windowTitle {
     position: relative;
+    box-sizing: border-box;
     background-color: #aaaaaa;
 
     background-image:
@@ -166,7 +172,7 @@ div.windowTitle {
         #aaaaaa
         );
 
-    padding: 0.2em;
+    padding: $title-padding;
     text-align: center;
     vertical-align: middle;
     color: #222222;
@@ -174,24 +180,29 @@ div.windowTitle {
     font-weight: bold;
     font-size: 1.2vw;
 
-    height: 1.5vw;
+    height: $title-height;
 }
+
+$toolbar-height: 2.0vw;
+$toolbar-padding: 0.3em;
 
 div.windowToolbar {
     position: relative;
-    height: 1.5vw;
+    box-sizing: border-box;
+    height: $toolbar-height;
 
     vertical-align: middle;
 
-    padding: 0.3em;
+    padding: $toolbar-padding;
 
     background-color: #505050;
 }
 
 div.windowContent {
     position: relative;
+    box-sizing: border-box;
     width: 100%; 
-    height: calc(100% - 1.5vw - 0.4em); /* subtract title (height + padding) */
+    height: calc(100% - #{$title-height});
     margin: 0;
     padding: 0;
 
@@ -233,15 +244,17 @@ div#properties {
 }
 
 div#items > div.windowContent {
-    height: calc(100% - 3vw - 1em); /* subtract title + toolbar */
+    height: calc(100% - #{$title-height + $toolbar-height});
 }
 
 div#preview > div.windowContent {
     background-color: #3d3d3d;
 }
 
+$scrollbar-width: 17px;
+
 div#items > div.windowContent, div#properties > div.windowContent {
-    width: calc(100% + 17px); /* hiding scrollbar */
+    width: calc(100% + #{$scrollbar-width}); /* hiding scrollbar */
 
     padding-bottom: 4em;
 
@@ -252,11 +265,14 @@ div#items > div.windowContent, div#properties > div.windowContent {
 /* -------------------------------------------------------------------- */
 /* dialogs */
 
+$classes-dialog-width: 20em;
+$classes-dialog-height: 7em;
+
 #classesExportDialog {
-    width: 20em;
-    height: 7em;
-    left: calc(50% - 10em);
-    top: calc(50% - 3.5em);
+    width: $classes-dialog-width;
+    height: $classes-dialog-height;
+    left: calc(50% - #{$classes-dialog-width/2});
+    top: calc(50% - #{$classes-dialog-height/2});
 
     padding-top: 0.9em;
 }
@@ -375,7 +391,7 @@ li.element.dragover {
 #previewDiv {
     position: relative;
     max-height: 100%;
-    width: calc(100% + 17px); /* hiding scrollbar */
+    width: calc(100% + #{$scrollbar-width}); /* hiding scrollbar */
     
     padding: 0;
     border: 0;

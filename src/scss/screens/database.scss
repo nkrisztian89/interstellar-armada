@@ -1,3 +1,5 @@
+@import "../_common.scss";
+
 .database.pageContainer {
     width: 90%;
     height: 90%;
@@ -14,13 +16,16 @@ div.databaseContainer {
     padding: 0;
 }
 
+$data-preview-size: 40vh;
+$gap: 0.5em;
+
 div.itemDataSheet {
     text-align: left;
     border: 2px solid #333333;
     padding: 0.6em;
-    width: 40vh;
+    width: $data-preview-size;
     min-width: 12em;
-    height: calc(100% - 40vh - 0.8em);
+    height: calc(100% - #{$data-preview-size} - #{$gap});
     box-sizing: border-box;
     background-color: #111111;
 }
@@ -33,8 +38,8 @@ div.itemDescriptionContainer {
     display: inline-block;
     position: absolute;
     left: 1em;
-    width: calc(100% - 40vh - 2.5em);
-    height: calc(100% - 13.5em);
+    width: calc(100% - #{$data-preview-size} - #{2*$page-padding} - #{$gap});
+    height: calc(100% - #{2*$separator-height+$title-height+3*$page-padding});
     text-align: left;
     margin: 0;
     padding: 0.5em;
@@ -57,7 +62,7 @@ div.itemView {
     display: inline-block;
     position: absolute;
     right: 0;
-    height: calc(100% - 13em);
+    height: calc(100% - #{2*$separator-height+$title-height+3*$page-padding});
     padding: 0 1em 1em 1em;
 }
 
@@ -78,13 +83,13 @@ div.itemView {
 
 canvas.databaseViewScreen {
     box-sizing: border-box;
-    width: 40vh;
-    height: 40vh;
+    width: $data-preview-size;
+    height: $data-preview-size;
     border: 2px solid #333333;
     display: block;
     margin-left: auto; 
     margin-right: auto; 
-    margin-bottom: 0.3em; 
+    margin-bottom: $gap;
 }
 
 @media screen and (orientation: portrait) {
@@ -114,12 +119,15 @@ canvas.databaseViewScreen {
 }
 
 @media screen and (min-aspect-ratio: 2/1) {
+    $data-sheet-height: 7.4em;
+    $data-sheet-font-size: 90%;
+
     canvas.databaseViewScreen {
-        height: calc(100% - 7.5em);
+        height: calc(100% - #{mulpercent($data-sheet-font-size, $data-sheet-height)+$gap});
     }
     
     div.itemDataSheet {
-        font-size: 90%;
-        height: 7.4em;
+        font-size: $data-sheet-font-size;
+        height: $data-sheet-height;
     }
 }

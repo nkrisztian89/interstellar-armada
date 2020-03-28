@@ -30,6 +30,35 @@ $text-glow: $text-glow-color 0.1em 0.1em 0.5em;
 $cursor: url(../assets/images/cursor.png) 6 6;
 $cursor-light: url(../assets/images/cursor-light.png) 6 6;
 
+
+@function mulpercent($percent, $value) {
+  @return $percent / 100% * $value;
+}
+
+@function mulem($em, $value) {
+  @return $em / 1em * $value;
+}
+
+$button-font-size: 100%;
+$button-padding: 0.5em;
+
+$button-height: mulpercent($button-font-size, 1.09em + 2*$button-padding);
+
+$horizontal-menu-margin: 0.4em;
+
+$separator-padding: 0.4em;
+
+$separator-height: $button-height + 2*$horizontal-menu-margin + 2*$separator-padding;
+
+$page-padding: 1em;
+
+$title-font-size: 200%;
+$title-top-margin: 0.2em;
+$title-bottom-margin: 0.5em;
+
+$title-height: mulpercent($title-font-size, 1em + $title-top-margin + $title-bottom-margin);
+
+
 @mixin glowing {
     box-shadow: $glow;
 }

@@ -1,3 +1,5 @@
+@import "../_common.scss";
+
 .controls.pageContainer {
     display: block;
     width: 90%;
@@ -15,7 +17,7 @@
 .controls.pageContent {
     box-sizing: border-box;
     width: 100%;
-    height: calc(100% - 12em);
+    height: calc(100% - #{2*$separator-height+$title-height+$page-padding});
     position: relative;
     overflow-y: scroll;
 }
