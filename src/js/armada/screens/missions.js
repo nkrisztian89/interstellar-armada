@@ -435,6 +435,15 @@ define([
         }
         return false;
     };
+    /**
+     * Requests the data of the selected mission and displays its information once it has been loaded
+     * @param {String} missionName Same as the mission file name
+     */
+    MissionsScreen.prototype.selectMission = function (missionName) {
+        var index = missions.getMissionNames().indexOf(missionName);
+        this._listComponent.selectIndex(index, true);
+        this._selectMission(index);
+    };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

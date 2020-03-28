@@ -1869,6 +1869,11 @@ define([
          */
         this._name = name;
         /**
+         * The name of the mission that should be played after completing this one (typically same as the filename e.g. someMission.json)
+         * @type String
+         */
+        this._nextMissionName = null;
+        /**
          * Stores the attributes of the environment where this mission is situated.
          * @type Environment
          */
@@ -1998,6 +2003,13 @@ define([
      */
     Mission.prototype.getName = function () {
         return this._name;
+    };
+    /**
+     * Returns the name of the mission that should be played after completing this one (typically same as the filename e.g. someMission.json)
+     * @returns {String}
+     */
+    Mission.prototype.getNextMissionName = function () {
+        return this._nextMissionName;
     };
     /**
      * Returns the ID (resource name) of the music that should play during anticipation phase within this mission (if it is specified)
@@ -2406,6 +2418,7 @@ define([
         application.log("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
+        this._nextMissionName = dataJSON.nextMission || null;
         this.loadEnvironment(dataJSON);
         this._anticipationTheme = dataJSON.anticipationTheme;
         this._combatTheme = dataJSON.combatTheme;

@@ -1,5 +1,6 @@
 {
     "description": "Practice simulation for elite pilots against six rebel fighters and bombers.",
+    "nextMission": "defendFrigates.json",
     "environment": "cathagan",
     "anticipationTheme": "anticipation",
     "combatTheme": "combat",

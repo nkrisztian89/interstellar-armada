@@ -4068,7 +4068,8 @@ define([
             hullIntegrity: craft ? craft.getHullIntegrity() : 0,
             hullIntegrityBonus: perfStats.hullIntegrityBonus,
             teamSurvival: perfStats.teamSurvival,
-            teamSurvivalBonus: perfStats.teamSurvivalBonus
+            teamSurvivalBonus: perfStats.teamSurvivalBonus,
+            nextMissionName: victory ? _mission.getNextMissionName() : null
         });
         game.setScreen(armadaScreens.DEBRIEFING_SCREEN_NAME);
     }

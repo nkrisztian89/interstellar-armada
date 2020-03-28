@@ -1,5 +1,6 @@
 {
     "description": "Sensors indicate waves of enemy fighters and bombers closing in on our patrol. Intercept them before they can do too much damage so that the corvette can survive! Beware of bombers armed with heavier weapons!",
+    "nextMission": "defendFrigate.json",
     "environment": "sheenuba",
     "anticipationTheme": "anticipation",
     "combatTheme": "combat",

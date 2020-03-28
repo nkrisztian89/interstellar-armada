@@ -58,6 +58,7 @@ define([
             TEAM_SURVIVAL_BONUS_CELL_ID = "teamSurvivalBonusCell",
             // bottom buttons
             RESTART_BUTTON_ID = "restartButton",
+            NEXT_BUTTON_ID = "nextButton",
             // ------------------------------------------------------------------------------
             // private variables
             _shouldPlayVictoryMusic;
@@ -91,6 +92,8 @@ define([
                     }
                 },
                 armadaScreens.BUTTON_EVENT_HANDLERS);
+        /** @type String */
+        this._nextMissionName = null;
         /** @type SimpleComponent */
         this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
         /** @type SimpleComponent */
@@ -133,6 +136,8 @@ define([
         this._teamSurvivalBonusCell = this.registerSimpleComponent(TEAM_SURVIVAL_BONUS_CELL_ID);
         /** @type SimpleComponent */
         this._restartButton = this.registerSimpleComponent(RESTART_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._nextButton = this.registerSimpleComponent(NEXT_BUTTON_ID);
     }
     DebriefingScreen.prototype = new screens.HTMLScreen();
     DebriefingScreen.prototype.constructor = DebriefingScreen;
@@ -150,6 +155,11 @@ define([
             game.getScreen().startNewBattle({
                 restart: true
             });
+            return false;
+        }.bind(this);
+        this._nextButton.getElement().onclick = function () {
+            game.closeOrNavigateTo(armadaScreens.MISSIONS_SCREEN_NAME);
+            game.getScreen().selectMission(this._nextMissionName);
             return false;
         }.bind(this);
     };
@@ -180,6 +190,7 @@ define([
      * @property {Number} hitRatioBonus
      * @property {Number} hullIntegrityBonus
      * @property {Number} teamSurvivalBonus
+     * @property {String} [nextMissionName]
      */
     /**
      * Sets the contents of the screen's HTML element to show the passed data (score, statistics...) of the mission
@@ -244,6 +255,12 @@ define([
             this._hitRatioBonusCell.setContent(data.hitRatioBonus.toString());
             this._hullIntegrityBonusCell.setContent(data.hullIntegrityBonus.toString());
             this._teamSurvivalBonusCell.setContent(data.teamSurvivalBonus ? data.teamSurvivalBonus.toString() : "-");
+        }
+        this._nextMissionName = data.nextMissionName;
+        if (this._nextMissionName) {
+            this._nextButton.show();
+        } else {
+            this._nextButton.hide();
         }
     };
     // -------------------------------------------------------------------------

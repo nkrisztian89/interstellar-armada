@@ -412,7 +412,8 @@
         "hullIntegrityBonusLabelCell": "Hull integrity bonus:",
         "teamSurvivalBonusLabelCell": "Team survival bonus:",
         "scoreBreakdownHeader": "Score breakdown",
-        "restartButton": "Restart mission"
+        "restartButton": "Restart mission",
+        "nextButton": "Next mission"
     },
     "database": {
         "backButton": "Back to menu",

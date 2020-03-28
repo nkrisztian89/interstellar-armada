@@ -1261,13 +1261,25 @@ define([
         }
     };
     /**
+     * Make sure the element with the passed index is visible by scrolling if necessary 
+     * @param {Number} index
+     */
+    ListComponent.prototype._scrollToIndex = function (index) {
+        var listElement;
+        listElement = this._listElements[index].element;
+        if (listElement.offsetTop < this._rootElement.scrollTop) {
+            this._rootElement.scrollTop = listElement.offsetTop;
+        } else if (listElement.offsetTop + listElement.offsetHeight > this._rootElement.scrollTop + this._rootElement.clientHeight) {
+            this._rootElement.scrollTop = listElement.offsetTop + listElement.offsetHeight - this._rootElement.clientHeight;
+        }
+    };
+    /**
      * Highlights the element with the passed index (distinguishes the highlighted option with the set CSS class)
      * @param {Number} index Index of the element (-1 to cancel current highlight)
      * @param {Boolean} [scroll=false] Whether to make sure the highlighted element is visible by scrolling if necessary (to be used with 
      * keyboard controls)
      */
     ListComponent.prototype._highlightIndex = function (index, scroll) {
-        var listElement;
         if (index !== this._highlightedIndex) {
             if (this._highlightedIndex >= 0) {
                 this._listElements[this._highlightedIndex].element.classList.remove(this._style.highlightedElementClassName);
@@ -1277,12 +1289,7 @@ define([
                 if (this._listElements[this._highlightedIndex].enabled) {
                     this._listElements[this._highlightedIndex].element.classList.add(this._style.highlightedElementClassName);
                     if (scroll) {
-                        listElement = this._listElements[this._highlightedIndex].element;
-                        if (listElement.offsetTop < this._rootElement.scrollTop) {
-                            this._rootElement.scrollTop = listElement.offsetTop;
-                        } else if (listElement.offsetTop + listElement.offsetHeight > this._rootElement.scrollTop + this._rootElement.clientHeight) {
-                            this._rootElement.scrollTop = listElement.offsetTop + listElement.offsetHeight - this._rootElement.clientHeight;
-                        }
+                        this._scrollToIndex(index);
                     }
                     if (this._onElementHighlight) {
                         this._onElementHighlight(index, true); // always enabled - disabled list elements cannot be highlighted
@@ -1294,8 +1301,12 @@ define([
     /**
      * Selects the element with the passed index (distinguishes the selected option with the set CSS class)
      * @param {Number} index Index of the element (-1 to cancel selection)
+     * @param {Boolean} [scroll=false] Whether to make sure the selected element is visible by scrolling if necessary
      */
-    ListComponent.prototype._selectIndex = function (index) {
+    ListComponent.prototype.selectIndex = function (index, scroll) {
+        if (scroll && (index >= 0)) {
+            this._scrollToIndex(index);
+        }
         if (index !== this._selectedIndex) {
             if ((index < 0) || ((index >= 0) && this._listElements[index].enabled)) {
                 if (this._selectedIndex >= 0) {
@@ -1335,8 +1346,7 @@ define([
     ListComponent.prototype._getElementClickHandler = function (index) {
         return function () {
             if (this._listElements[index].enabled) {
-                this._highlightIndex(index);
-                this._selectIndex(index);
+                this.selectIndex(index);
             }
             return false;
         }.bind(this);
@@ -1416,7 +1426,7 @@ define([
      * Cancels the selection of the currently selected list element (if any)
      */
     ListComponent.prototype.unselect = function () {
-        this._selectIndex(-1);
+        this.selectIndex(-1);
     };
     /**
      * Cancels the highlight and selection and scrolls to the top of the list

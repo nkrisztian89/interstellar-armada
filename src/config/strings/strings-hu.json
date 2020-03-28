@@ -448,7 +448,8 @@
         "hullIntegrityBonusLabelCell": "Páncélzat épsége bónusz:",
         "teamSurvivalBonusLabelCell": "Csapat túlélési bónusz:",
         "scoreBreakdownHeader": "Pontok lebontása",
-        "restartButton": "Küldetés újraindítása"
+        "restartButton": "Küldetés újraindítása",
+        "nextButton": "Következő küldetés"
     },
     "database": {
         "backButton": "Vissza a menübe",
