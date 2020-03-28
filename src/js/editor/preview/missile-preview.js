@@ -139,9 +139,9 @@ define([
      */
     function _addTrail() {
         var 
-            trail = _missile._trail,
-            growthRate = trail._descriptor.getGrowthRate(),
-            duration = trail._descriptor.getDuration(),
+            trailEmitter = _missile._trailEmitter,
+            growthRate = trailEmitter._descriptor.getGrowthRate(),
+            duration = trailEmitter._descriptor.getDuration(),
             model = _missile.getVisualModel(),
             enginePosition, direction, length, count, segmentLength, dt, i;
         enginePosition = model.getPositionVector();
@@ -151,9 +151,9 @@ define([
         count = 3;
         segmentLength = length / count;
         dt = duration / (count * growthRate);
-        trail.startNew(preview.getScene());
-        for (i = 0; i <= count; i++) {
-            trail.addPoint(vec.sum3(enginePosition, vec.scaled3(direction, (count - i) * segmentLength)), dt);
+        trailEmitter.startNew(preview.getScene(), vec.sum3(enginePosition, vec.scaled3(direction, count * segmentLength)));
+        for (i = 1; i <= count; i++) {
+            trailEmitter.addPoint(vec.sum3(enginePosition, vec.scaled3(direction, (count - i) * segmentLength)), dt);
         }
         preview.requestRender();
     }
@@ -209,7 +209,7 @@ define([
                         if (orientationMatrix) {
                             model.setOrientationMatrix(orientationMatrix);
                         }
-                        _missile._trail.addResourcesToScene(preview.getScene());
+                        _missile._trailEmitter.addResourcesToScene(preview.getScene());
                     } :
                     null);
             _wireframeMissile.addToScene(preview.getScene(), true, undefined,
