@@ -46,6 +46,10 @@ define([
     "use strict";
     var
             // ------------------------------------------------------------------------------
+            // constants
+            CUSTOM_SETTING_NAME = "custom",
+            CUSTOM_SETTING_ARRAY = [CUSTOM_SETTING_NAME],
+            // ------------------------------------------------------------------------------
             // private functions
             _getMapToCaptionAndValueFunction = function (stringCategory) {
                 return function (element) {
@@ -81,6 +85,13 @@ define([
              * of the setting value in the current language and the second is the setting value
              * it corresponds to
              * @returns String[][2]
+             */
+            _getGeneralLevelSettingValues = function () {
+                return graphics.getGeneralLevelNames().concat(CUSTOM_SETTING_ARRAY).map(_getMapToCaptionAndValueFunction(strings.SETTING));
+            },
+            /**
+             * In the same format as the other value arrays
+             * @type String[][2]
              */
             _getFilteringSettingValues = function () {
                 return utils.getEnumValues(managedGL.TextureFiltering).filter(_filterTextureFilteringValue).map(_getMapToCaptionAndValueFunction(strings.GRAPHICS));
@@ -164,6 +175,9 @@ define([
             BACK_BUTTON_ID = "backButton",
             TITLE_HEADING_ID = "title",
             DEFAULTS_BUTTON_ID = "defaultsButton",
+            GENERAL_LEVEL_SELECTOR_ID = "generalLevelSelector",
+            GENERAL_LEVEL_SELECTOR_CLASS_NAME = "separateSelector",
+            GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME = "smallSelectorPropertyContainer",
             AA_SELECTOR_ID = "aaSelector",
             FILTERING_SELECTOR_ID = "filteringSelector",
             TEXTURE_QUALITY_SELECTOR_ID = "textureQualitySelector",
@@ -177,6 +191,7 @@ define([
             MAX_DYNAMIC_LIGHTS_SELECTOR_ID = "maxDynamicLightSelector",
             PARTICLE_AMOUNT_SELECTOR_ID = "particleAmountSelector",
             DUST_PARTICLE_AMOUNT_SELECTOR_ID = "dustParticleAmountSelector",
+            GENERAL_LEVEL_PARENT_ID = "generalLevelDiv",
             OPTION_PARENT_ID = "settingsDiv",
             LEFT_OPTION_PARENT_ID = "settingsDivLeft",
             RIGHT_OPTION_PARENT_ID = "settingsDivRight",
@@ -213,6 +228,10 @@ define([
          * @type SimpleComponent
          */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
+        /**
+         * @type Selector
+         */
+        this._generalLevelSelector = null;
         /**
          * @type Selector
          */
@@ -266,6 +285,10 @@ define([
          */
         this._dustParticleAmountSelector = null;
         graphics.executeWhenReady(function () {
+            this._generalLevelSelector = this._registerSelector(GENERAL_LEVEL_SELECTOR_ID,
+                    strings.GRAPHICS.GENERAL_LEVEL.name,
+                    _getGeneralLevelSettingValues().map(_mapCaption), GENERAL_LEVEL_PARENT_ID,
+                    GENERAL_LEVEL_SELECTOR_CLASS_NAME, GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME);
             this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID,
                     strings.GRAPHICS.ANTIALIASING.name,
                     _getOnOffSettingValues(), LEFT_OPTION_PARENT_ID);
@@ -314,14 +337,20 @@ define([
      * @param {String} propertyLabelID
      * @param {String[]} valueList
      * @param {String} [parentID=OPTION_PARENT_ID]
+     * @param {String} [selectorClassName]
+     * @param {String} [propertyContainerClassName]
      * @returns {Selector}
      */
-    GraphicsScreen.prototype._registerSelector = function (name, propertyLabelID, valueList, parentID) {
+    GraphicsScreen.prototype._registerSelector = function (name, propertyLabelID, valueList, parentID, selectorClassName, propertyContainerClassName) {
         return this.registerExternalComponent(
                 new components.Selector(
                         name,
                         armadaScreens.SELECTOR_SOURCE,
-                        {cssFilename: armadaScreens.SELECTOR_CSS},
+                        {
+                            cssFilename: armadaScreens.SELECTOR_CSS,
+                            selectorClassName: selectorClassName,
+                            propertyContainerClassName: propertyContainerClassName
+                        },
                         {id: propertyLabelID},
                         valueList),
                 parentID || OPTION_PARENT_ID);
@@ -349,40 +378,76 @@ define([
      * @override
      */
     GraphicsScreen.prototype._initializeComponents = function () {
+        var setCustomLevel;
         screens.HTMLScreen.prototype._initializeComponents.call(this);
+        setCustomLevel = function (stepping) {
+            if (stepping !== 0) {
+                this._generalLevelSelector.selectValueWithIndex(_getGeneralLevelSettingValues().length - 1, 0);
+            }
+        }.bind(this);
         this._backButton.getElement().onclick = function () {
             this._applyAndClose();
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {
             graphics.restoreDefaults();
+            setCustomLevel();
             this._updateValues();
             return false;
         }.bind(this);
-        this._shaderComplexitySelector.onChange = function () {
+        this._generalLevelSelector.onChange = function (stepping) {
+            if ((stepping !== 0) && (this._generalLevelSelector.getSelectedIndex() === (_getGeneralLevelSettingValues().length - 1))) {
+                if (stepping > 0) {
+                    this._generalLevelSelector.selectNextValue();
+                } else {
+                    this._generalLevelSelector.selectPreviousValue();
+                }
+                return;
+            }
+            if (this._generalLevelSelector.getSelectedIndex() !== (_getGeneralLevelSettingValues().length - 1)) {
+                graphics.setGeneralLevel(graphics.getGeneralLevelNames()[this._generalLevelSelector.getSelectedIndex()]);
+                this._updateComponents();
+            } else {
+                graphics.setGeneralLevel(null);
+            }
+        }.bind(this);
+        this._antialiasingSelector.onChange = setCustomLevel;
+        this._filteringSelector.onChange = setCustomLevel;
+        this._textureQualitySelector.onChange = setCustomLevel;
+        this._cubemapQualitySelector.onChange = setCustomLevel;
+        this._lodSelector.onChange = setCustomLevel;
+        this._missilesInLaunchersSelector.onChange = setCustomLevel;
+        this._particleAmountSelector.onChange = setCustomLevel;
+        this._dustParticleAmountSelector.onChange = setCustomLevel;
+        this._shaderComplexitySelector.onChange = function (stepping) {
             graphics.setShaderComplexity(_getShaderComplexitySettingValues()[this._shaderComplexitySelector.getSelectedIndex()][1]);
             this._updateShadowMappingSelector();
             this._updateShadowQualitySelector();
             this._updateShadowDistanceSelector();
             this._updateMaxDynamicLightsSelector();
+            setCustomLevel(stepping);
         }.bind(this);
-        this._shadowMappingSelector.onChange = function () {
+        this._shadowMappingSelector.onChange = function (stepping) {
             graphics.setShadowMapping((this._shadowMappingSelector.getSelectedIndex() === SETTING_ON_INDEX));
             this._updateShadowQualitySelector();
             this._updateShadowDistanceSelector();
             this._updateMaxDynamicLightsSelector();
+            setCustomLevel(stepping);
         }.bind(this);
-        this._shadowQualitySelector.onChange = function () {
+        this._shadowQualitySelector.onChange = function (stepping) {
             graphics.setShadowMapQuality(_getShadowQualitySettingValues()[this._shadowQualitySelector.getSelectedIndex()][1]);
+            setCustomLevel(stepping);
         }.bind(this);
-        this._shadowDistanceSelector.onChange = function () {
+        this._shadowDistanceSelector.onChange = function (stepping) {
             graphics.setShadowDistance(_getShadowDistanceSettingValues()[this._shadowDistanceSelector.getSelectedIndex()][1]);
             this._updateMaxDynamicLightsSelector();
+            setCustomLevel(stepping);
         }.bind(this);
-        this._maxDynamicLightsSelector.onChange = function () {
+        this._maxDynamicLightsSelector.onChange = function (stepping) {
             graphics.setPointLightAmount(_getMaxDynamicLightsSettingValues()[this._maxDynamicLightsSelector.getSelectedIndex()][1]);
             this._updateShadowMappingSelector();
             this._updateShadowDistanceSelector();
+            setCustomLevel(stepping);
         }.bind(this);
     };
     /**
@@ -393,6 +458,7 @@ define([
         this._backButton.setContent(strings.get(strings.GRAPHICS.BACK));
         this._titleHeading.setContent(strings.get(strings.GRAPHICS.TITLE));
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
+        this._generalLevelSelector.setValueList(_getGeneralLevelSettingValues().map(_mapCaption));
         this._antialiasingSelector.setValueList(managedGL.isAntialiasingAvailable() ? _getOnOffSettingValues() : _getOffSettingValue());
         this._filteringSelector.setValueList(_getFilteringSettingValues().map(_mapCaption));
         this._textureQualitySelector.setValueList(_getTextureQualitySettingValues().map(_mapCaption));
@@ -466,6 +532,8 @@ define([
      */
     GraphicsScreen.prototype._updateValues = function () {
         graphics.executeWhenReady(function () {
+            var generalLevel = graphics.getGeneralLevel();
+            this._generalLevelSelector.selectValueWithIndex(generalLevel ? _findIndexOf(generalLevel, _getGeneralLevelSettingValues()) : _getGeneralLevelSettingValues().length - 1);
             this._antialiasingSelector.selectValueWithIndex((graphics.getAntialiasing() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._filteringSelector.selectValueWithIndex(_findIndexOf(graphics.getFiltering(), _getFilteringSettingValues()));
             this._textureQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getTextureQuality(), _getTextureQualitySettingValues()));

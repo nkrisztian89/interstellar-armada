@@ -251,7 +251,8 @@ define([
         FEW: {name: "setting.few"},
         MANY: {name: "setting.many"},
         EASY: {name: "setting.easy"},
-        HARD: {name: "setting.hard"}
+        HARD: {name: "setting.hard"},
+        CUSTOM: {name: "setting.custom"}
     };
     strings.GENERAL_SETTINGS = {
         BACK: {name: "generalSettings.backButton"},
@@ -264,6 +265,7 @@ define([
         PREFIX: {name: "graphics.", optional: true},
         BACK: {name: "graphics.back"},
         TITLE: {name: "graphics.title"},
+        GENERAL_LEVEL: {name: "graphics.generalLevel"},
         ANTIALIASING: {name: "graphics.antialiasing"},
         FILTERING: {name: "graphics.filtering"},
         BILINEAR: {name: "graphics.bilinear"},

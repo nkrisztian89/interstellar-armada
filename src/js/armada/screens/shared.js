@@ -189,7 +189,7 @@ define([
             mouseenter: function () {
                 exports.playButtonSelectSound(!this.classList.contains(components.DISABLED_CLASS_NAME));
             },
-            click: function () {
+            mouseup: function () {
                 exports.playButtonClickSound(!this.classList.contains(components.DISABLED_CLASS_NAME));
             }
         }

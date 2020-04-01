@@ -649,6 +649,11 @@ define([
             PARTICLE_AMOUNT_DESCRIPTOR_TYPE = types.getNameAndValueDefinitionObject("particleCountFactor"),
             // ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
             // Settings
+            /**
+             * The key identifying the location where the general level setting is stored in local storage.
+             * @type String
+             */
+            GENERAL_LEVEL_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "generalLevel",
             // ............................................................................................
             // Antialiasing
             /**
@@ -1206,6 +1211,18 @@ define([
          * @type Boolean
          */
         this._luminosityTextureAreAvailable = false;
+        /**
+         * An object storing the general graphics quality levels, the names of the properties are the level string IDs (e.g. "low", "medium"...),
+         * the values are objects storing all the graphics settings the same way the default settings are stored
+         * @type Object
+         */
+        this._generalLevels = null;
+        /**
+         * The string ID of the general graphics quality level that has been last set (with all its corresponding settings), if any.
+         * Not updated automatically as specific settings are changed, needs to be changed separately.
+         * @type String
+         */
+        this._currentGeneralLevel = null;
     }
     GraphicsSettingsContext.prototype = new asyncResource.AsyncResource();
     GraphicsSettingsContext.prototype.constructor = GraphicsSettingsContext;
@@ -1365,6 +1382,7 @@ define([
                 dataJSON.levelOfDetailSettings.lodDisplayProfile.compensateForObjectSize,
                 dataJSON.levelOfDetailSettings.lodDisplayProfile.referenceSize,
                 dataJSON.levelOfDetailSettings.lodDisplayProfile.minimumRelativeSize);
+        this._generalLevels = dataJSON.generalLevels;
     };
     /**
      * Based on the passed limiting settings, if necessary, lowers the value of the passed setting to the appropriate level
@@ -1447,7 +1465,7 @@ define([
                 this._dustParticleAmount.decrease();
             }
         }
-        // now that all default settings are loaded, disable the features and descrease the shader complexity until the requirements are 
+        // now that all default settings are loaded, disable the features and decrease the shader complexity until the requirements are 
         // satisfied
         this._setFallbackShaderComplexity(true);
     };
@@ -1471,6 +1489,9 @@ define([
                 }
             }
         };
+        loadSetting(GENERAL_LEVEL_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getGeneralLevelNames())}, this.getGeneralLevel(), function (value) {
+            this._currentGeneralLevel = value;
+        }.bind(this));
         loadSetting(ANTIALIASING_LOCAL_STORAGE_ID, "boolean", this.getAntialiasing(), this.setAntialiasing.bind(this));
         loadSetting(FILTERING_LOCAL_STORAGE_ID, {baseType: "enum", values: managedGL.TextureFiltering}, this.getFiltering(), this.setFiltering.bind(this));
         loadSetting(TEXTURE_QUALITY_LOCAL_STORAGE_ID, {baseType: "enum", values: types.getEnumObjectForArray(this.getTextureQualities())}, this.getTextureQuality(), this.setTextureQuality.bind(this));
@@ -1494,6 +1515,7 @@ define([
      */
     GraphicsSettingsContext.prototype.restoreDefaults = function () {
         this.loadSettingsFromJSON(this._dataJSON, true);
+        localStorage.removeItem(GENERAL_LEVEL_LOCAL_STORAGE_ID);
         localStorage.removeItem(ANTIALIASING_LOCAL_STORAGE_ID);
         localStorage.removeItem(FILTERING_LOCAL_STORAGE_ID);
         localStorage.removeItem(TEXTURE_QUALITY_LOCAL_STORAGE_ID);
@@ -2299,6 +2321,44 @@ define([
     GraphicsSettingsContext.prototype.getModel = function (modelName) {
         return resources.getModel(modelName, {maxLOD: this.getMaxLoadedLOD()});
     };
+    /**
+     * Returns the list of string IDs identifying the available general graphics settings levels (to each level corresponds a full set of 
+     * graphics settings)
+     * @returns {String[]}
+     */
+    GraphicsSettingsContext.prototype.getGeneralLevelNames = function () {
+        return Object.keys(this._generalLevels);
+    };
+    /**
+     * Set all settings to the ones corresponding to the general graphics quality level identified by the passed string.
+     * Also save to local storage that this general graphics quality level has been applied.
+     * Pass null as levelName to indicate that a custom graphics quality is set (i.e. some setting is changed independently)
+     * @param {String} levelName
+     * @param {Boolean} [saveToLocalStorage=true]
+     */
+    GraphicsSettingsContext.prototype.setGeneralLevel = function (levelName, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        if (levelName) {
+            this.loadSettingsFromJSON(this._generalLevels[levelName], true);
+            if (saveToLocalStorage) {
+                localStorage[GENERAL_LEVEL_LOCAL_STORAGE_ID] = levelName;
+            }
+        } else {
+            if (saveToLocalStorage) {
+                localStorage.removeItem(GENERAL_LEVEL_LOCAL_STORAGE_ID);
+            }
+        }
+        this._currentGeneralLevel = levelName;
+    };
+    /**
+     * Returns the string ID corresponding to the general graphics quality level that was last set.
+     * @returns {String}
+     */
+    GraphicsSettingsContext.prototype.getGeneralLevel = function () {
+        return this._currentGeneralLevel;
+    };
     // -------------------------------------------------------------------------
     // Public functions
     /**
@@ -2476,6 +2536,9 @@ define([
         getShader: _context.getShader.bind(_context),
         getManagedShader: _context.getManagedShader.bind(_context),
         getModel: _context.getModel.bind(_context),
+        getGeneralLevelNames: _context.getGeneralLevelNames.bind(_context),
+        setGeneralLevel: _context.setGeneralLevel.bind(_context),
+        getGeneralLevel: _context.getGeneralLevel.bind(_context),
         isAnaglyphRenderingEnabled: _context.isAnaglyphRenderingEnabled.bind(_context),
         getAnaglyphRenderingSettings: _context.getAnaglyphRenderingSettings.bind(_context),
         getAnaglyphOriginalColorRatio: getAnaglyphOriginalColorRatio,

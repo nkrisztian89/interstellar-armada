@@ -512,7 +512,8 @@
         "few": "kevés",
         "many": "sok",
         "easy": "könnyű",
-        "hard": "nehéz"
+        "hard": "nehéz",
+        "custom": "egyéni"
     },
     "generalSettings": {
         "backButton": "Vissza a menübe",
@@ -524,6 +525,7 @@
     "graphics": {
         "back": "Vissza a menübe",
         "title": "Grafikai beállítások",
+        "generalLevel": "Grafika részletessége:",
         "antialiasing": "Élsimítás:",
         "filtering": "Textúrák szűrése:",
         "bilinear": "bilineáris",

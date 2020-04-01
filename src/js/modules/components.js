@@ -1568,10 +1568,24 @@ define([
             this._valueSelector.setContent(this._valueList[0]);
             this._valueIndex = 0;
             this.setValueList(this._valueList);
-            this._valueSelector.getElement().onclick = function () {
-                this.selectNextValue();
+            this._valueSelector.getElement().onmouseup = function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                switch (event.which) {
+                    case 1:
+                        this.selectNextValue();
+                        break;
+                    case 3:
+                        this.selectPreviousValue();
+                        break;
+                }
                 return false;
             }.bind(this);
+            this._valueSelector.getElement().oncontextmenu = function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            };
         }
     };
     /**
@@ -1585,7 +1599,7 @@ define([
                 i++;
             }
             if (i < this._valueList.length) {
-                this.selectValueWithIndex(i);
+                this.selectValueWithIndex(i, 0);
             } else {
                 application.showError(
                         "Attempted to select value: '" + value + "' for '" + _getLabelText(this._propertyLabelDescriptor) + "', which is not one of the available options.",
@@ -1598,15 +1612,18 @@ define([
     /**
      * Selects the value with the passed index from the list.
      * @param {Number} index
+     * @param {Number} [stepping=0] If the value was changed by stepping through the value list (clicking on the selector),
+     * should be 1 for stepping up (forward), -1 for stepping down (backward) and 0 otherwise. The value of this is passed
+     * to the onChange() handler.
      */
-    Selector.prototype.selectValueWithIndex = function (index) {
+    Selector.prototype.selectValueWithIndex = function (index, stepping) {
         var originalIndex = this._valueIndex;
         if (this._rootElement) {
             if (this._valueList.length > index) {
                 this._valueIndex = index;
                 this._valueSelector.setContent(this._valueList[this._valueIndex]);
                 if ((originalIndex !== index) && this.onChange) {
-                    this.onChange();
+                    this.onChange(stepping || 0);
                 }
             } else {
                 application.showError(
@@ -1636,7 +1653,14 @@ define([
      * selects the first one.
      */
     Selector.prototype.selectNextValue = function () {
-        this.selectValueWithIndex((this._valueIndex + 1) % this._valueList.length);
+        this.selectValueWithIndex((this._valueIndex + 1) % this._valueList.length, 1);
+    };
+    /**
+     * Selects the previous available value from the list. If the first value was selected,
+     * selects the last one.
+     */
+    Selector.prototype.selectPreviousValue = function () {
+        this.selectValueWithIndex((this._valueIndex > 0) ? this._valueIndex - 1 : this._valueList.length - 1, -1);
     };
     /**
      * 

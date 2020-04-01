@@ -476,7 +476,8 @@
         "few": "few",
         "many": "many",
         "easy": "easy",
-        "hard": "hard"
+        "hard": "hard",
+        "custom": "custom"
     },
     "generalSettings": {
         "backButton": "Back to menu",
@@ -488,6 +489,7 @@
     "graphics": {
         "back": "Back to menu",
         "title": "Graphics settings",
+        "generalLevel": "Graphics quality:",
         "antialiasing": "Anti-aliasing:",
         "filtering": "Texture filtering:",
         "bilinear": "bilinear",

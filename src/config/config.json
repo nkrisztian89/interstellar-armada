@@ -1,5 +1,5 @@
 {
-    "version": "0.4.6-dev:829 (2020.03.28.)",
+    "version": "0.4.6-dev:830 (2020.04.01.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4", "0.4.5"],
@@ -389,6 +389,145 @@
                         "level": "high"
                     }
                 ]
+            }
+        },
+        "generalLevels": {
+            "minimum": {
+                "context": {
+                    "antialiasing": false,
+                    "filtering": "bilinear",
+                    "textureQuality": "low",
+                    "cubemapQuality": {
+                        "level": "low"
+                    },
+                    "shadowMapping": false,
+                    "pointLightAmount": "off"
+                },
+                "shaders": {
+                    "complexity": "veryLow"
+                },
+                "levelOfDetail": {
+                    "maxLevel": "veryLow"
+                },
+                "showMissilesInLaunchers": false, 
+                "particleAmount": {
+                    "amount": "low"
+                },
+                "dustParticleAmount": {
+                    "amount": "minimum"
+                }
+            },
+            "low": {
+                "context": {
+                    "antialiasing": false,
+                    "filtering": "bilinear",
+                    "textureQuality": "low",
+                    "cubemapQuality": {
+                        "level": "medium"
+                    },
+                    "shadowMapping": false,
+                    "pointLightAmount": "off"
+                },
+                "shaders": {
+                    "complexity": "low"
+                },
+                "levelOfDetail": {
+                    "maxLevel": "medium"
+                },
+                "showMissilesInLaunchers": false, 
+                "particleAmount": {
+                    "amount": "medium"
+                },
+                "dustParticleAmount": {
+                    "amount": "low"
+                }
+            },
+            "medium": {
+                "context": {
+                    "antialiasing": true,
+                    "filtering": "trilinear",
+                    "textureQuality": "medium",
+                    "cubemapQuality": {
+                        "level": "high"
+                    },
+                    "shadowMapping": true,
+                    "shadows": {
+                        "quality": "low",
+                        "distance": "medium"
+                    },
+                    "pointLightAmount": "medium"
+                },
+                "shaders": {
+                    "complexity": "medium"
+                },
+                "levelOfDetail": {
+                    "maxLevel": "veryHigh"
+                },
+                "showMissilesInLaunchers": false, 
+                "particleAmount": {
+                    "amount": "maximum"
+                },
+                "dustParticleAmount": {
+                    "amount": "maximum"
+                }
+            },
+            "high": {
+                "context": {
+                    "antialiasing": true,
+                    "filtering": "trilinear",
+                    "textureQuality": "high",
+                    "cubemapQuality": {
+                        "level": "high"
+                    },
+                    "shadowMapping": true,
+                    "shadows": {
+                        "quality": "medium",
+                        "distance": "far"
+                    },
+                    "pointLightAmount": "many"
+                },
+                "shaders": {
+                    "complexity": "high"
+                },
+                "levelOfDetail": {
+                    "maxLevel": "veryHigh"
+                },
+                "showMissilesInLaunchers": true, 
+                "particleAmount": {
+                    "amount": "maximum"
+                },
+                "dustParticleAmount": {
+                    "amount": "maximum"
+                }
+            },
+            "maximum": {
+                "context": {
+                    "antialiasing": true,
+                    "filtering": "anisotropic",
+                    "textureQuality": "high",
+                    "cubemapQuality": {
+                        "level": "high"
+                    },
+                    "shadowMapping": true,
+                    "shadows": {
+                        "quality": "high",
+                        "distance": "veryFar"
+                    },
+                    "pointLightAmount": "maximum"
+                },
+                "shaders": {
+                    "complexity": "veryHigh"
+                },
+                "levelOfDetail": {
+                    "maxLevel": "veryHigh"
+                },
+                "showMissilesInLaunchers": true, 
+                "particleAmount": {
+                    "amount": "maximum"
+                },
+                "dustParticleAmount": {
+                    "amount": "maximum"
+                }
             }
         }
     },
