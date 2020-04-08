@@ -66,21 +66,15 @@ original game files with the exported ones**.
 Electron
 --------
 
-The game can be run using [Electron](https://electron.atom.io/). To do this, 
-pass `electron: true` to the `initialize` method in `src/js/main.js` (and if you
-want to set up the editor for Electron, in `src/js/editor-main.js`) in the
-version you package. For non-development versions (which don't have "-dev" in 
-the version number), you will also need to run
-```
-npm install
-grunt clean
-grunt build
-```
-in the project folder after changing the source code.
-Then download a [release](https://github.com/electron/electron/releases) of Electron suitable for 
-your computer and copy the project files over to its appropriate folder (the `app` folder,
-which you will have to create within the `resources` folder). The project contains the necessary
-files for the Electron setup, so after this it can simply be run by starting the Electron executable.
+The game can be run using [Electron](https://www.electronjs.org/). To do this, just 
+download a [release](https://github.com/electron/electron/releases) of Electron suitable for 
+your computer, make a build of the game (see above), and then copy the project files over to the
+appropriate folder of Electron (the `app` folder, which you will have to create within the `resources` folder).
+The project contains the necessary files for the Electron setup, so after this it can simply be run by starting the Electron executable.
+When run this way, the game has some small differences such as a Quit button in the menu to close the application and the
+lack of a fullscreen button (as it will run in fullscreen by default).
+
+The last release of Electron tested with the game: 8.2.0
 
 Snap packaging
 --------------
@@ -100,4 +94,4 @@ details and attributions please do check LICENSE.txt.
 
 Krisztián Nagy
 
-21.03.2020.
+09.04.2020.
