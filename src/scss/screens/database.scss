@@ -1,33 +1,23 @@
 @import "../_common.scss";
 
-.database.pageContainer {
-    width: 90%;
-    height: 90%;
+$content-height: calc(100% - #{2*$separator-height+3*$page-padding});
+
+.database.pageContent {
+    height: $content-height;
+    margin-top: $page-padding;
 }
 
-.database.innerContainer {
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-div.databaseContainer {
-    padding: 0;
-}
-
-$data-preview-size: 40vh;
+$data-preview-size: 50vh;
 $gap: 0.5em;
 
 div.itemDataSheet {
     text-align: left;
-    border: 2px solid #333333;
     padding: 0.6em;
     width: $data-preview-size;
     min-width: 12em;
     height: calc(100% - #{$data-preview-size} - #{$gap});
-    box-sizing: border-box;
-    background-color: #111111;
+    @include bordered;
+    background-color: $panel-back-color;
 }
 
 div.itemDataSheet > p {
@@ -37,33 +27,22 @@ div.itemDataSheet > p {
 div.itemDescriptionContainer {
     display: inline-block;
     position: absolute;
-    left: 1em;
-    width: calc(100% - #{$data-preview-size} - #{2*$page-padding} - #{$gap});
-    height: calc(100% - #{2*$separator-height+$title-height+3*$page-padding});
+    left: 0;
+    width: calc(100% - #{$data-preview-size} - #{$gap});
+    height: 100%;
     text-align: left;
     margin: 0;
     padding: 0.5em;
-    border: 2px solid #333333;
-    box-sizing: border-box;
-    overflow-y: scroll;
-}
-
-div.itemDescriptionContainer::-webkit-scrollbar {
-    width: 0.2vw;
-    min-width: 2px;
-    background: transparent;
-}
-
-div.itemDescriptionContainer::-webkit-scrollbar-thumb {
-    background: #00aa00;
+    @include bordered;
+    @include styled-scrollbar;
 }
 
 div.itemView {
     display: inline-block;
     position: absolute;
     right: 0;
-    height: calc(100% - #{2*$separator-height+$title-height+3*$page-padding});
-    padding: 0 1em 1em 1em;
+    height: 100%;
+    padding: 0;
 }
 
 .itemTitle {
@@ -82,40 +61,13 @@ div.itemView {
 }
 
 canvas.databaseViewScreen {
-    box-sizing: border-box;
     width: $data-preview-size;
     height: $data-preview-size;
-    border: 2px solid #333333;
     display: block;
     margin-left: auto; 
     margin-right: auto; 
     margin-bottom: $gap;
-}
-
-@media screen and (orientation: portrait) {
-    div.itemDescriptionContainer {
-        position: relative;
-        left: 0;
-        width: calc(100% - 3em);
-        max-width: calc(100% - 3em);
-        height: auto;
-        margin-top: 0;
-        margin-bottom: 4em;
-    }
-
-    div.itemView {
-        position: relative;
-        display: inline-block;
-        padding: 1em;
-    }
-    
-    .database.pageContainer {
-        height: auto;
-    }
-    
-    div.itemDataSheet {
-        height: auto;
-    }
+    @include bordered;
 }
 
 @media screen and (min-aspect-ratio: 2/1) {

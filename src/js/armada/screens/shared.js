@@ -45,7 +45,6 @@ define([
                 LIST_COMPONENT_CSS: "listcomponent.css",
                 // menu component classes
                 MENU_CLASS_NAME: "menu",
-                MENU_BUTTON_CLASS_NAME: "button",
                 MENU_BUTTON_CONTAINER_CLASS_NAME: "transparentContainer",
                 // list component classes
                 LIST_CLASS_NAME: "list",
@@ -81,6 +80,7 @@ define([
                 SETTINGS_MENU_CONTAINER_ID: "menuContainer",
                 GENERAL_SETTINGS_SCREEN_NAME: "generalSettings",
                 GENERAL_SETTINGS_SCREEN_SOURCE: "general-settings.html",
+                GENERAL_SETTINGS_SCREEN_CSS: "general-settings.css",
                 GRAPHICS_SCREEN_NAME: "graphics",
                 GRAPHICS_SCREEN_SOURCE: "graphics.html",
                 GRAPHICS_SCREEN_CSS: "graphics.css",
@@ -103,6 +103,9 @@ define([
                 DIALOG_SCREEN_SOURCE: "dialog.html",
                 DIALOG_SCREEN_CSS: "dialog.css"
             },
+            // --------------------------------------------------------------------------------------------
+            // Constants
+            FULLSCREEN_BUTTON_ID = "fullscreenButton",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -117,6 +120,31 @@ define([
              * @type SoundSource
              */
             _buttonClickSound;
+    // --------------------------------------------------------------------------------------------
+    // Private functions
+    function _toggleFullscreen() {
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) {
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozExitFullScreen) {
+                document.mozExitFullScreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+    }
     // ------------------------------------------------------------------------------
     // Public functions
     /**
@@ -177,6 +205,16 @@ define([
     exports.getSubParagraph = function (text) {
         return '<p class="sub fadedText">' + text + "</p>";
     };
+    /**
+     * Call on the screen that has a fullscreen button to set up its event handlers
+     */
+    exports.setupFullscreenButton = function () {
+        if (game.usesElectron()) {
+            this.getElement(FULLSCREEN_BUTTON_ID).hidden = true;
+        } else {
+            this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
+        }
+    };
     // ------------------------------------------------------------------------------
     // Derived constants
     /**
@@ -185,7 +223,7 @@ define([
      * @type Object.<String, Object.<String, Function>>
      */
     exports.BUTTON_EVENT_HANDLERS = {
-        ".button": {
+        "button": {
             mouseenter: function () {
                 exports.playButtonSelectSound(!this.classList.contains(components.DISABLED_CLASS_NAME));
             },
@@ -196,9 +234,11 @@ define([
     };
     /**
      * Contains event handlers for MenuScreen screens to play the button select and click sounds for the menu option buttons
+     * and to set up the fullscreen toggling button
      * @type Object.<String, Function>
      */
     exports.MENU_EVENT_HANDLERS = {
+        show: exports.setupFullscreenButton,
         optionselect: exports.playButtonSelectSound,
         optionclick: exports.playButtonClickSound
     };
@@ -208,7 +248,6 @@ define([
      */
     exports.MENU_STYLE = {
         menuClassName: exports.MENU_CLASS_NAME,
-        buttonClassName: exports.MENU_BUTTON_CLASS_NAME,
         buttonContainerClassName: exports.MENU_BUTTON_CONTAINER_CLASS_NAME,
         selectedButtonClassName: components.SELECTED_CLASS_NAME,
         disabledClassName: components.DISABLED_CLASS_NAME

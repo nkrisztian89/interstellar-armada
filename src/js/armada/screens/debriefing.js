@@ -168,7 +168,6 @@ define([
      */
     DebriefingScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
-        //this._versionParagraph.customizeContent({version: game.getVersion()});
     };
     /**
      * @typedef {Object} DebreifingScreen~Data

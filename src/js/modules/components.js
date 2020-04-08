@@ -212,11 +212,6 @@ define([
          */
         this._element = null;
         /**
-         * The (initial) display CSS property of the HTML element.
-         * @type String
-         */
-        this._displayStyle = null;
-        /**
          * A function that runs whenever the component becomes visible.
          * @type Function
          */
@@ -332,42 +327,39 @@ define([
                     "Cannot initialize component: '" + this._name + "'!",
                     application.ErrorSeverity.SEVERE,
                     "No element can be found on the page with a corresponding ID: '" + this._elementID + "'!");
-        } else {
-            this._displayStyle = window.getComputedStyle(this._element).display;
         }
     };
     /**
-     * Nulls the element and the display style. Needs to be called if the element
+     * Nulls the element. Needs to be called if the element
      * has been removed from the current document.
      */
     SimpleComponent.prototype.resetComponent = function () {
         this._element = null;
-        this._displayStyle = null;
     };
     /**
      * Returns whether the component is currently visible.
      * @returns {Boolean}
      */
     SimpleComponent.prototype.isVisible = function () {
-        return (window.getComputedStyle(this._element).display !== "none");
+        return !this._element.hidden;
     };
     /**
-     * Hides the wrapped HTML element by setting its display CSS property.
+     * Hides the wrapped HTML element by setting its hidden attribute
      */
     SimpleComponent.prototype.hide = function () {
         if (this.isVisible()) {
-            this._element.style.display = "none";
+            this._element.hidden = true;
             if (this._onHide) {
                 this._onHide();
             }
         }
     };
     /**
-     * Shows (reveals) the wrapped HTML element by setting its display CSS property.
+     * Shows (reveals) the wrapped HTML element by setting its hidden attribute
      */
     SimpleComponent.prototype.show = function () {
         if (!this.isVisible()) {
-            this._element.style.display = this._displayStyle;
+            this._element.hidden = false;
             if (this._onShow) {
                 this._onShow();
             }
@@ -496,12 +488,6 @@ define([
          */
         this._rootElement = null;
         /**
-         * The initial value of the CSS display property of the root element. Store 
-         * to enable us to restore it after hiding it with display: none.
-         * @type String
-         */
-        this._rootElementDefaultDisplayMode = null;
-        /**
          * A flag that marks whether loading the correspoding CSS stylesheet has finished.
          * @type Boolean
          */
@@ -575,7 +561,6 @@ define([
         parentNode = parentNode || document.body;
         this._rootElement = parentNode.appendChild(document.importNode(_getModelForSource(this._htmlFilename).firstElementChild, true));
         this._rootElement.setAttribute("id", this._rootElementID);
-        this._rootElementDefaultDisplayMode = window.getComputedStyle(this._rootElement).display;
         // All elements with an "id" attribute within this structure have to
         // be renamed to make sure their id does not conflict with other elements
         // in the main document (such as elements of another instance of the
@@ -668,20 +653,20 @@ define([
         }
     };
     /**
-     * Returns whether the component is currently set to be visible according to its display style
+     * Returns whether the component is currently set to be visible
      * @returns {Boolean}
      */
     ExternalComponent.prototype.isVisible = function () {
-        return !(window.getComputedStyle(this._rootElement).display === "none");
+        return !this._rootElement.hidden;
     };
     /**
-     * Sets the display CSS property of the root element of the component to show it.
+     * Sets the hidden attribute of the root element of the component to show it.
      * @returns {Boolean} Whether the component became visible as the result of this call
      */
     ExternalComponent.prototype.show = function () {
         if (this._rootElement) {
             if (!this.isVisible()) {
-                this._rootElement.style.display = this._rootElementDefaultDisplayMode;
+                this._rootElement.hidden = false;
                 return true;
             }
         } else {
@@ -690,13 +675,13 @@ define([
         return false;
     };
     /**
-     * Sets the display CSS property of the root element of the component to hide it.
+     * Sets the hidden attribute of the root element of the component to hide it.
      * @returns {Boolean} Whether the component became hidden as the result of this call
      */
     ExternalComponent.prototype.hide = function () {
         if (this._rootElement) {
             if (this.isVisible()) {
-                this._rootElement.style.display = "none";
+                this._rootElement.hidden = true;
                 return true;
             }
         } else {
@@ -1088,28 +1073,27 @@ define([
      * Sets up the menu by appending the buttons to the container.
      */
     MenuComponent.prototype._initializeComponents = function () {
-        var i, aElement, liElement;
+        var i, buttonElement, liElement;
         ExternalComponent.prototype._initializeComponents.call(this);
         if (this._rootElement) {
             this._rootElement.classList.add(this._style.menuClassName);
             for (i = 0; i < this._menuOptions.length; i++) {
-                aElement = document.createElement("a");
+                buttonElement = document.createElement("button");
                 if (this._menuOptions[i].id) {
-                    aElement.id = this._getElementID(this._menuOptions[i].id);
-                    aElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._menuOptions[i].id);
+                    buttonElement.id = this._getElementID(this._menuOptions[i].id);
+                    buttonElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._menuOptions[i].id);
                 }
-                aElement.href = "#";
-                aElement.className = (this._style.menuClassName || "") + " " + (this._style.buttonClassName || "") + (this._menuOptions[i].enabled ? "" : this._style.disabledClassName);
-                aElement.innerHTML = _getLabelText(this._menuOptions[i]);
+                buttonElement.className = (this._style.menuClassName || "") + " " + (this._style.buttonClassName || "") + (this._menuOptions[i].enabled ? "" : this._style.disabledClassName);
+                buttonElement.innerHTML = _getLabelText(this._menuOptions[i]);
                 // we need to generate an appropriate handler function here for each
                 // menu element (cannot directly create it here as they would all use
                 // the same index as i would be a closure)
-                aElement.onclick = this._getMenuClickHandler(i);
-                aElement.onmousemove = this._getMenuMouseMoveHandler(i);
-                this._menuOptions[i].element = aElement;
+                buttonElement.onclick = this._getMenuClickHandler(i);
+                buttonElement.onmousemove = this._getMenuMouseMoveHandler(i);
+                this._menuOptions[i].element = buttonElement;
                 liElement = document.createElement("li");
                 liElement.className = (this._style.buttonContainerClassName || "");
-                liElement.appendChild(aElement);
+                liElement.appendChild(buttonElement);
                 this._rootElement.appendChild(liElement);
             }
             this._rootElement.onmouseout = this.unselect.bind(this);

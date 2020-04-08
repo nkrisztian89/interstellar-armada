@@ -1,23 +1,21 @@
+@import "../_common.scss";
+
 .infoBox {
     text-align: center;
-    vertical-align: middle;
     position: relative;
     white-space: normal;
     
-    width: 20em;
-    padding: 10px;
+    width: 25em;
+    padding: 0.6em;
 }
 
-.infoBoxBackGround {
-    background-color: rgba(64,64,64,0.5);
+.infoBoxBackground {
+    background-color: $overlay-background-color;
 }
 
 .infoBoxContent {
     position: relative;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin: 1em auto;
     max-width: 95%;
     text-align: center;
 }

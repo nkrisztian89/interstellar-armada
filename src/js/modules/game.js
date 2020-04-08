@@ -91,7 +91,7 @@ define([
                 if (_configInitComplete && _settingsInitComplete && _screenInitComplete) {
                     application.log("Initialization of " + _gameName + " completed.");
                     // hide the splash screen
-                    document.body.firstElementChild.style.display = "none";
+                    document.body.firstElementChild.hidden = true;
                     screenManager.setCurrentScreen(_startScreenName);
                 }
             },

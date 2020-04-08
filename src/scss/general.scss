@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018 Krisztián Nagy
+Copyright (C) 2017-2018, 2020 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -58,21 +58,36 @@ body {
     color: $text-color;
     background-color: $body-color;
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
-    font-size: 2vmin;
+    font-size: 2.2vmin;
     margin: 0;
     padding: 0;
-    border: 5px transparent;
+    border: 0;
+    
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
 
 @media screen and (orientation: portrait) {
-    body {
-        font-size: 3vmin;
+    .innerContainer, .pageGhost, .fullScreenFix, .fullScreenContainer {
+        display: none;
     }
 }
 
 @media screen and (min-aspect-ratio: 2/1) {
     body {
         font-size: 2.5vmin;
+    }
+}
+
+img.orientation {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    max-width: 90vw;
+    @media screen and (orientation: landscape) {
+        display: none;
     }
 }
 
@@ -104,33 +119,57 @@ canvas {
 .outerContainer {
     @include glowing;
     background-color: rgba($panel-back-color,$panel-opacity);
-    border: 2px solid $panel-front-color;
+    @include bordered;
+}
+
+.horizontallyCentered.innerContainer {
+    @include shadowed;
 }
 
 .innerContainer {
-    @include shadowed;
     background-color: rgba($panel-color,$panel-opacity);
     border: none;
 }
 
-/* To use with the outermost container div which houses the page content */
-.pageContainer {
-    padding: 1em;
-    margin-bottom: 1em;
-    margin-top: 1em;
+.innerContainer:not(.horizontallyCentered) {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: $page-padding;
     white-space: normal;
 }
 
+/* To use with the outermost container div which houses the page content */
+.pageContainer {
+    padding: $page-padding;
+    margin-bottom: $page-padding;
+    margin-top: $page-padding;
+    white-space: normal;
+}
+
+.pageContent {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    
+    @include styled-scrollbar;
+}
+
 .withSmallBackgroundSign {
-    background-image: url(../assets/images/empire_back_dark200.png);
-    background-position: center top;
+    background-image: url(../assets/images/empire_back_dark400.png);
+    background-position: center 0.75em;
     background-repeat: no-repeat;
+    background-size: contain;
 }
 
 .horizontallyCentered {
     display: table;
     margin-left: auto;
     margin-right: auto;
+    text-align: center;
 }
 
 /* This centering works on elements of any height, but requires a wrapper with the pageGhost class around the element */
@@ -139,14 +178,6 @@ canvas {
     vertical-align: middle;
     margin-left: 1em;
     margin-right: 1em;
-}
-
-/* This centering works only on fixed-height elements */
-.centered {
-    position: absolute;
-    top: 0; bottom: 0;
-    left: 0; right: 0;
-    margin: auto;
 }
 
 /* A full screen element that stays at the same place regardless of scrolling,
@@ -183,13 +214,8 @@ canvas {
     padding-right: 2em;
 }
 
-.fullWide {
-    margin-left: 0;
-    margin-right: 0;
-}
-
 .narrowFix {
-    width: 350px;
+    width: 22em;
 }
 
 @media screen and (max-width: 420px) {
@@ -211,17 +237,16 @@ canvas {
 
 .separatorBar {
     display: block;
+    margin-left: 0;
+    margin-right: 0;
     padding: 0.4em;
     background: 
-        url(../assets/images/empire_white_50.png) left center,
-        url(../assets/images/empire_white_50.png) right center;
+        url(../assets/images/empire_white_50.png) left 10px center,
+        url(../assets/images/empire_white_50.png) right 10px center;
     background-color: $separator-color;
     background-repeat: no-repeat;
     box-sizing: border-box; 
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: none;
-    border-bottom: none;
+    border: none;
 }
 
 $footer-margin: 1em;
@@ -261,77 +286,75 @@ li {
     list-style-type: none;
 }
 
-a {
+a, button {
     color: $light-text-color;
     text-decoration: none;
     font-weight: bold;
     font-variant: small-caps;
 }
 
-a:not(.button) {
+a {
     font-size: 1.1em;
     color: $link-color;
 }
 
-a.separate {
-    display: table;
-    margin-top: $horizontal-menu-margin;
-    margin-bottom: $horizontal-menu-margin;
-}
-
-a.menu {
-    display: block;
-    margin: 0.2em;
-}
-
-div.horizontalMenu {
-    border-spacing: 0.4em;
-}
-
-a.horizontalMenu {
-    display: table-cell;
-    vertical-align: middle;
-    margin: $horizontal-menu-margin;
-}
-
-a.button {
+button {
     @include shadowed;
-    min-width: 8em;
+    border: none;
+    min-width: 8.8em;
+    font-family: inherit;
     font-size: $button-font-size;
     text-align: center;
     padding: $button-padding;
     background-color: $panel-color;
-
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
+    &:active, &:focus {
+        border: none;
+        outline: none;
+    }
+    &.menu {
+        display: block;
+        margin: 0.2em;
+        min-width: 10em;
+    }
+    &.separate {
+        display: table;
+        margin-top: $horizontal-menu-margin;
+        margin-bottom: $horizontal-menu-margin;
+    }
+    &.disabled {
+        color: $text-disabled-color;
+        background-color: $panel-disabled-color;
+        cursor: $cursor, default;
+    }
+    &:hover:not(.disabled):not(.menu), &.selected {
+        background-color: $panel-front-color;
+        transition: all 0s;
+    }
 }
 
-a:hover:not(.disabled):not(.menu):not(.listElement), a.button.selected {
+div.horizontalMenu {
+    border-spacing: 0.4em;
+    &>button {
+        display: table-cell;
+        vertical-align: middle;
+        margin: $horizontal-menu-margin;
+        &[hidden] {
+            display: none;
+        }
+    }
+}
+
+a:hover, button:hover:not(.disabled):not(.menu):not(.listElement), button.selected {
     color: $light-text-color;
-    text-shadow:
-        $highlight-color 0 0 0.2em,
-        $highlight-color 0 0 0.2em;
+    @include highlight-text;
     transition: all 0s;
 }
 
-a.button:hover:not(.disabled):not(.menu), a.button.selected {
-    background-color: $panel-front-color;
-    transition: all 0s;
-}
-
-a {
+a, button {
     transition: all 0.2s;
 }
 
-a.button.disabled {
-    color: $text-disabled-color;
-    background-color: $panel-disabled-color;
-
-    cursor: $cursor, default;
-}
-
-a, a:hover, a:active {
+a, a:hover, a:active, button, button:hover, button:active {
     cursor: $cursor-light, pointer;
 }
 
@@ -358,10 +381,11 @@ a, a:hover, a:active {
 }
 
 img {
-    margin: 0.5em;
+    margin: $image-margin;
 }
 
 img.menuHeaderImage {
+    width: 15em;
     margin: 0.5em 0 0.5em 0;
 }
 
@@ -390,13 +414,17 @@ div#splashContainer {
 }
 
 progress#splashProgress {
-    margin-top: 20px;
-    margin-bottom: 10px;
+    margin-top: 1em;
+    margin-bottom: 1em;
 }
 
 p {
-    font-size: 90%;
+    font-size: 100%;
     text-align: left;
+}
+
+p.centered {
+    text-align: center;
 }
 
 p.sub {
@@ -423,8 +451,9 @@ h3 {
     text-shadow: #000000 0.0em 0.0em 0.4em;
     text-align: center;
     font-variant: small-caps;
-    margin: 10px;
-    padding: 10px;
+    font-size: 140%;
+    margin: 0.6em;
+    padding: 0.6em;
 }
 
 .clear:after {
@@ -450,7 +479,7 @@ h3 {
 /******************************************************************************************/
 /* Styling of determinate progress bars */
 progress[value] {
-    $inset-shadow: 0 2px 5px rgba(0, 0, 0, 0.75) inset;
+    $inset-shadow: 0 0.15em 0.4em rgba(0, 0, 0, 0.75) inset;
 
     // Reset the default appearance 
     -webkit-appearance: none;
@@ -461,14 +490,14 @@ progress[value] {
     border: none;
 
     // Styling of the container in Firefox 
-    background-color: #444444;
+    background-color: relLighten($panel-color,1.0);
     box-shadow: $inset-shadow;
-    width: 220px;
-    height: 6px;
+    width: 18em;
+    height: 0.5em;
 
     // Styling of the container in Webkit browsers
     &::-webkit-progress-bar {
-        background-color: #444444;
+        background-color: relLighten($panel-color,1.0);
         box-shadow: $inset-shadow;
     }
     // Styling of the value bar in Webkit browsers
@@ -476,8 +505,8 @@ progress[value] {
         background-image:
             -webkit-linear-gradient(
             top, 
-            #00ee00,
-            #00aa00
+            relDarken($highlight-color,0.067),
+            relDarken($highlight-color,0.333)
             );
         box-shadow: $faint-glow;
     }
@@ -486,8 +515,8 @@ progress[value] {
         background-image:
             -moz-linear-gradient(
             top, 
-            #00ee00,
-            #00aa00
+            relDarken($highlight-color,0.067),
+            relDarken($highlight-color,0.333)
             );
         box-shadow: $faint-glow;
     }
@@ -500,9 +529,9 @@ input[type=range] {
     -webkit-appearance: none; 
     width: 100%; /* Specific width is required for Firefox. */
     background: transparent; /* Otherwise white in Chrome */
-    height: 30px;
+    height: 2.5em;
 
-    margin: 4px 0 0 4px;
+    margin: 0.25em 0 0 0.25em;
     padding: 0;
     cursor: $cursor, pointer;
 
@@ -517,15 +546,15 @@ input[type=range] {
     &::-webkit-slider-thumb {
         -webkit-appearance: none;
 
-        height: 24px;
-        width: 11px;
+        height: 2.4em;
+        width: 1.1em;
         /*cursor: pointer;*/
-        margin-top: -9px; /* needed for Chrome, but in Firefox and IE it is automatic 
-                           * depends on height */
+        margin-top: -0.9em; /* needed for Chrome, but in Firefox and IE it is automatic 
+                              * depends on height */
 
         /* gray appearance similar to buttons - for consistent look */
         background-color: $panel-front-color;
-        border: 2px solid #555555;
+        border: 0.15em solid relLighten($panel-color,1.5);
         @include shadowed;
         /* glowing green appearance for better contrast */
         /*    background-color: #00cc00;
@@ -534,8 +563,8 @@ input[type=range] {
 
         &:hover {
             /* gray appearance similar to buttons - for consistent look */
-            background-color: #555555;
-            border: 2px solid #777777;
+            background-color: relLighten($panel-color,1.5);
+            border: 0.15em solid relLighten($panel-color,2.5);
             /* glowing green appearance for better contrast */
             /*    background-color: #44ff44;
                 border: 2px solid #00aa00;
@@ -544,34 +573,34 @@ input[type=range] {
     }
 
     &::-moz-range-thumb {
-        height: 20px;
-        width: 7px;
+        height: 2.0em;
+        width: 0.7em;
 
         border-radius: 0;
 
         background-color: $panel-front-color;
-        border: 2px solid #555555;
+        border: 0.15em solid relLighten($panel-color,1.5);
         @include shadowed;
 
         &:hover {
-            background-color: #555555;
-            border: 2px solid #777777;
+            background-color: relLighten($panel-color,1.5);
+            border: 0.15em solid relLighten($panel-color,2.5);
         }
     }
 
     &::-ms-thumb {
-        height: 24px;
-        width: 11px;
+        height: 2.4em;
+        width: 1.1em;
 
         border-radius: 0;
 
         background-color: $panel-front-color;
-        border: 2px solid #555555;
+        border: 0.15em solid relLighten($panel-color,1.5);
         @include shadowed;
 
         &:hover {
-            background-color: #555555;
-            border: 2px solid #777777;
+            background-color: relLighten($panel-color,1.5);
+            border: 0.15em solid relLighten($panel-color,2.5);
         }
     }
 
@@ -579,22 +608,22 @@ input[type=range] {
 
     &::-webkit-slider-runnable-track {
         width: 100%;
-        height: 10px;
+        height: 1.0em;
         @include inset-bordered-panel;
     }
 
     &::-moz-range-track {
         width: 100%;
-        height: 6px;
+        height: 0.6em;
         @include inset-bordered-panel;
     }
-    
+
     &::-ms-track {
         width: 100%;
-        height: 10px;
+        height: 1.0em;
         @include inset-bordered-panel;
     }
-    
+
     /* having different tracks to the left and right are only supported in IE and Firefox, not using for now */
 
     /* IE pseudo elements: -ms-fill-lower, -ms-fill-upper
@@ -602,7 +631,7 @@ input[type=range] {
     */
 }
 
-a.fullscreenButton {
+.fullscreenButton {
     position: fixed;
     right: 0.5em;
     bottom: 0.5em;
@@ -613,4 +642,9 @@ a.fullscreenButton {
     padding: 0;
     background-image: url(../assets/images/fullscreen.png);
     background-size: cover;
+    background-color: transparent;
+    
+    &:hover:not(.disabled) {
+        background-color: transparent;
+    }
 }

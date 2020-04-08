@@ -1,49 +1,16 @@
 @import "../_common.scss";
 
-.controls.pageContainer {
-    display: block;
-    width: 90%;
-    height: 90%;
-}
-
-.controls.innerContainer {
-    display: block;
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
 .controls.pageContent {
-    box-sizing: border-box;
-    width: 100%;
-    height: calc(100% - #{2*$separator-height+$title-height+$page-padding});
-    position: relative;
-    overflow-y: scroll;
-}
-
-.controls.pageContent::-webkit-scrollbar {
-    width: 0.2vw;
-    min-width: 2px;
-    background: transparent;
-}
-
-.controls.pageContent::-webkit-scrollbar-thumb {
-    background: #00aa00;
+    height: calc(100% - #{2*$separator-height+$page-padding});
 }
 
 .controlsTable {
     max-width: 90%;
-}
-
-.controls.tableTitle {
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
+    text-align: left;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .controls.tableTitle:hover {
-    text-shadow:
-        #00FF00 0 0 0.2em,
-        #00FF00 0 0 0.2em;
+    @include highlight-text;
 }

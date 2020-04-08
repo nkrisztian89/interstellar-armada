@@ -427,7 +427,6 @@
         "mass": "Mass",
         "weaponSlots": "Weapon slots",
         "missileLaunchers": "Missile launchers",
-        "thrusters": "Thrusters",
         "missingSpacecraftTypeDescription": "{originalDescription}",
         "missingSpacecraftClassDescription": "{originalDescription}"
     },
@@ -487,7 +486,7 @@
         "analyticsNote": "No personal information is included in the reports, only statistics of feature usage and in-game performance with a random generated ID. Please help the development by keeping this option turned on."
     },
     "graphics": {
-        "back": "Back to menu",
+        "backButton": "Back to menu",
         "title": "Graphics settings",
         "generalLevel": "Graphics quality:",
         "antialiasing": "Anti-aliasing:",
@@ -551,7 +550,7 @@
         "right": "the right half"
     },
     "controls": {
-        "back": "Back to menu",
+        "backButton": "Back to menu",
         "title": "Controls",
         "settingsTitle": "Settings",
         "mouseTurnSensitivity": "Mouse turn sensitivity:",

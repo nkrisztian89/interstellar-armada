@@ -1,23 +1,21 @@
+@import "../_common.scss";
+
 .loadingBox {
     text-align: center;
-    vertical-align: middle;
     position: relative;
     white-space: normal;
     
-    width: 21em;
-    padding: 10px 10px 15px 10px;
+    width: 25em;
+    padding: 0.6em 0.6em 0.9em 0.6em;
 }
 
-.loadingBoxBackGround {
-    background-color: rgba(64,64,64,0.5);
+.loadingBoxBackground {
+    background-color: $overlay-background-color;
 }
 
 .loadingBoxContent {
     position: relative;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin: 1em auto;
     max-width: 95%;
     text-align: center;
 }

@@ -20,6 +20,7 @@ module.exports = function (grunt) {
                 "css/database.css": 'src/scss/screens/database.scss',
                 "css/debriefing.css": 'src/scss/screens/debriefing.scss',
                 "css/gameplay-settings.css": 'src/scss/screens/gameplay-settings.scss',
+                "css/general-settings.css": 'src/scss/screens/general-settings.scss',
                 "css/graphics.css": 'src/scss/screens/graphics.scss',
                 "css/ingame-menu.css": 'src/scss/screens/ingame-menu.scss',
                 "css/missions.css": 'src/scss/screens/missions.scss',

@@ -1,57 +1,35 @@
-<div class="pageGhost">
-    <div class="missions anyHeightCentered outerContainer pageContainer">
-        <div class="missions horizontallyCentered contentWide innerContainer">
-            <div class="fullWide separatorBar">
-                <a id="backButton" class="horizontallyCentered separate button translatable" href="#" >
-                    Back to menu
-                </a>
+<div class="innerContainer">
+    <div class="separatorBar">
+        <h1 id="title" class="translatable"></h1>
+    </div>
+    <div class="missions pageContent">
+        <div id="missionListContainer" class="missionListContainer"></div>
+        <div class="missionInfoContainer">
+            <div class="missionInfoHeader">
+                <h2 id="missionTitle" class="missionTitle"></h2>
+                <p id="missionLocation" class="missionLocation"></p>
             </div>
-            <h1 id="title" class="translatable">Missions</h1>
-
-            <div class="missions pageContent">
-
-                <div id="missionListContainer" class="missionListContainer">
-
-                </div>
-
-                <div class="missionInfoContainer">
-                    <div class="missionInfoHeader">
-                        <h2 id="missionTitle" class="missionTitle">Mission</h2>
-                        <p id="missionLocation" class="missionLocation"></p>
-                    </div>
-                    <div id="difficultyContainer" class="difficultyContainer"></div>
-                    <div class="missionInfoBody">
-                        <p id="missionDescription" class="missionDescription"></p>
-                        <h3 id="missionObjectivesTitle" class="translatable missionObjectivesTitle">
-                            Objectives:
-                        </h3>
-                        <ul id="missionObjectives" class="missionObjectives">
-                        </ul>
-                        <h3 id="playerSpacecraftTitle" class="translatable playerSpacecraftTitle">
-                            Spacecraft:
-                        </h3>
-                        <div class="missionSpacecraftInfo">
-                            <p id="playerSpacecraftData" class="missionEquipment"></p>
-                            <p id="playerSpacecraftWeapons" class="missionEquipment"></p>
-                            <p id="playerSpacecraftMissiles" class="missionEquipment"></p>
-                            <p id="playerSpacecraftShield" class="missionEquipment"></p>
-                            <p id="playerSpacecraftPropulsion" class="missionEquipment"></p>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="footer fullWide separatorBar">
-                <div class="horizontallyCentered horizontalMenu" >
-                    <a id="demoButton" class="horizontalMenu button translatable" href="#" >
-                        Launch demo
-                    </a>
-                    <a id="launchButton" class="horizontalMenu button translatable" href="#" >
-                        Launch mission
-                    </a>
+            <div id="difficultyContainer" class="difficultyContainer"></div>
+            <div class="missionInfoBody">
+                <p id="missionDescription" class="missionDescription"></p>
+                <h3 id="missionObjectivesTitle" class="translatable missionObjectivesTitle"></h3>
+                <ul id="missionObjectives" class="missionObjectives"></ul>
+                <h3 id="playerSpacecraftTitle" class="translatable playerSpacecraftTitle"></h3>
+                <div class="missionSpacecraftInfo">
+                    <p id="playerSpacecraftData" class="missionEquipment"></p>
+                    <p id="playerSpacecraftWeapons" class="missionEquipment"></p>
+                    <p id="playerSpacecraftMissiles" class="missionEquipment"></p>
+                    <p id="playerSpacecraftShield" class="missionEquipment"></p>
+                    <p id="playerSpacecraftPropulsion" class="missionEquipment"></p>
                 </div>
             </div>
+        </div>
+    </div>
+    <div class="footer separatorBar">
+        <div class="horizontallyCentered horizontalMenu" >
+            <button id="backButton" class="translatable"></button>
+            <button id="demoButton" class="translatable"></button>
+            <button id="launchButton" class="translatable"></button>
         </div>
     </div>
 </div>

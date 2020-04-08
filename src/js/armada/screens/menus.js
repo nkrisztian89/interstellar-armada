@@ -37,7 +37,6 @@ define([
             // --------------------------------------------------------------------------------------------
             // Constants
             FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID = constants.LOCAL_STORAGE_PREFIX + "firstRunNoteShown",
-            FULLSCREEN_BUTTON_ID = "fullscreenButton",
             // --------------------------------------------------------------------------------------------
             // Private variables
             _releaseNotesShown = false,
@@ -70,45 +69,18 @@ define([
                         game.setScreen(armadaScreens.ABOUT_SCREEN_NAME);
                     }
                 }];
-    // --------------------------------------------------------------------------------------------
-    // Private functions
-    function _toggleFullscreen() {
-        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-            } else if (document.documentElement.mozRequestFullScreen) {
-                document.documentElement.mozRequestFullScreen();
-            } else if (document.documentElement.webkitRequestFullscreen) {
-                document.documentElement.webkitRequestFullscreen();
-            } else if (document.documentElement.msRequestFullscreen) {
-                document.documentElement.msRequestFullscreen();
-            }
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.mozExitFullScreen) {
-                document.mozExitFullScreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-        }
-    }
-    // -------------------------------------------------------------------------
-    // Initialization
-    if (application.usesElectron()) {
-        _mainMenuOptions.push({
-            id: strings.MAIN_MENU.QUIT.name,
-            action: function () {
-                window.close();
-            }
-        });
-    }
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         getMainMenuScreen: function () {
+            if (application.usesElectron()) {
+                _mainMenuOptions.push({
+                    id: strings.MAIN_MENU.QUIT.name,
+                    action: function () {
+                        window.close();
+                    }
+                });
+            }
             return new screens.MenuScreen(
                     armadaScreens.MAIN_MENU_SCREEN_NAME,
                     armadaScreens.MAIN_MENU_SCREEN_SOURCE,
@@ -178,7 +150,7 @@ define([
                                 audio.playMusic(armadaScreens.MENU_THEME);
                                 analytics.login();
                             }
-                            this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
+                            armadaScreens.setupFullscreenButton.call(this);
                         },
                         optionselect: armadaScreens.playButtonSelectSound,
                         optionclick: armadaScreens.playButtonClickSound
@@ -316,18 +288,13 @@ define([
                             }
                         }],
                     armadaScreens.INGAME_MENU_CONTAINER_ID,
+                    armadaScreens.MENU_EVENT_HANDLERS,
                     {
-                        show: function () {
-                            this.getElement(FULLSCREEN_BUTTON_ID).onclick = _toggleFullscreen;
-                        },
-                        optionselect: armadaScreens.playButtonSelectSound,
-                        optionclick: armadaScreens.playButtonClickSound
-                    }, {
-                "escape": function () {
-                    game.closeSuperimposedScreen();
-                    battle.resumeBattle();
-                }
-            });
+                        "escape": function () {
+                            game.closeSuperimposedScreen();
+                            battle.resumeBattle();
+                        }
+                    });
         }
     };
 });

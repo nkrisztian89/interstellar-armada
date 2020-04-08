@@ -1,22 +1,20 @@
+@import "../_common.scss";
+
 div.selector {
     display: table;
-    box-sizing: border-box;
-    width: 24.5em;
-    padding-left: 11px;
-    padding-right: 1.3em;
-    margin-top: 4px;
-    margin-bottom: 4px;
-    margin-left: 8px;
-    margin-right: 8px;
+    width: $input-width;
+    padding-left: 0.4em;
+    padding-right: 0.4em;
+    margin: 0.25em 0.5em;
     
-    background-color: #111111;
-    border: 2px solid #333333;
+    background-color: $panel-back-color;
+    @include bordered;
 }
 
 div.selectorButtonContainer {
     display: table-cell;
     vertical-align: middle;
-    width: 8em;
+    width: $input-value-width;
     margin: 0;
 }
 
@@ -25,7 +23,7 @@ div.selectorPropertyContainer {
     display: table-cell;
     text-align: left;
     vertical-align: middle;
-    width: 16.5em;
+    width: $input-label-width;
     margin: 0;
     padding: 0;
 }

@@ -450,8 +450,7 @@ define([
                 strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": {armor} (" +
                 strings.get(strings.SPACECRAFT_STATS.ARMOR_RATING) + ")<br/>" +
                 strings.get(strings.DATABASE.WEAPON_SLOTS) + ": {weaponSlots}<br/>" +
-                strings.get(strings.DATABASE.MISSILE_LAUNCHERS) + ": {missileLaunchers}<br/>" +
-                strings.get(strings.DATABASE.THRUSTERS) + ": {thrusters}";
+                strings.get(strings.DATABASE.MISSILE_LAUNCHERS) + ": {missileLaunchers}";
     }
     /**
      * Stops the ongoing loops and closes the database screen.
@@ -586,8 +585,7 @@ define([
             armor: shipClass.getHitpoints() || "-",
             rating: shipClass.getArmor() || "0",
             weaponSlots: shipClass.getWeaponSlots().length || "-",
-            missileLaunchers: (shipClass.getMissileLaunchers().length > 0) ? missileLaunchersText : "-",
-            thrusters: shipClass.getThrusterSlots().length || "-"
+            missileLaunchers: (shipClass.getMissileLaunchers().length > 0) ? missileLaunchersText : "-"
         });
         // descriptions can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise an info about the missing description is displayed

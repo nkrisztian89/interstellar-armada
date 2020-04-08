@@ -59,6 +59,7 @@ define([
                 armadaScreens.GENERAL_SETTINGS_SCREEN_NAME,
                 armadaScreens.GENERAL_SETTINGS_SCREEN_SOURCE,
                 {
+                    cssFilename: armadaScreens.GENERAL_SETTINGS_SCREEN_CSS,
                     backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
                     containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
                 },
@@ -149,7 +150,6 @@ define([
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
         this._analyticsSelector.setValueList(_getOnOffSettingValues());
-        this._analyticsNote.setContent(strings.get(strings.GENERAL_SETTINGS.ANALYTICS_NOTE));
         this._updateValues();
     };
     /**

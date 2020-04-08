@@ -175,11 +175,11 @@ define([
             this._buttons[i].getElement().onclick = this._createButtonClickHandler(data.buttons[i].action);
             this._buttons[i].getElement().onmousemove = this._selectIndex.bind(this, i);
             this._buttons[i].getElement().onmouseleave = this._buttonLeaveHandler;
-            this._buttons[i].setVisible(true);
+            this._buttons[i].show();
         }
         this._activeButtonCount = data.buttons.length;
         while (i < this._buttons.length) {
-            this._buttons[i].setVisible(false);
+            this._buttons[i].hide(true);
             i++;
         }
     };

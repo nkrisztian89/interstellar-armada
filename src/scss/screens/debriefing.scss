@@ -1,32 +1,17 @@
-.debriefing.pageContainer {
-    width: 90%;
-    height: 90%;
+@import "../_common.scss";
+
+$medal-height: 3em;
+$score-font-size: 1.2em;
+$score-margin: 1.0em;
+
+img.medal {
+    margin-top: $page-padding;
+    height: $medal-height;
 }
 
-.debriefing.innerContainer {
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-.debriefing.infoContainer {
-    box-sizing: border-box;
-    width: 100%;
-    height: calc(100% - 17em - 72px);
-    margin-top: 1em;
-    position: relative;
-    overflow-y: scroll;
-}
-
-.debriefing.infoContainer::-webkit-scrollbar {
-    width: 0.2vw;
-    min-width: 2px;
-    background: transparent;
-}
-
-.debriefing.infoContainer::-webkit-scrollbar-thumb {
-    background: #00aa00;
+.debriefing.pageContent {
+    margin: 1em auto 0 auto;
+    text-align: center;
 }
 
 h1.debriefing {
@@ -40,29 +25,23 @@ table.debriefing {
 }
 
 .scoreContainer {
-    margin-bottom: 1em;
+    margin-bottom: $score-margin;
 }
 
 .score {
     font-weight: bold;
-    font-size: 1.2em;
+    font-size: $score-font-size;
 }
 
 .newRecord {
     color: #44ff44;
-    text-shadow:
-        #00FF00 0 0 0.2em,
-        #00FF00 0 0 0.2em;
+    @include highlight-text;
 }
 
 .debriefingDescription {
     margin-top: 0;
     margin-bottom: 0;
     text-align: center;
-}
-
-.infoContainer {
-    min-width: 300px;
 }
 
 h2.statisticsHeader {

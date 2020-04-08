@@ -1,42 +1,29 @@
-.settingsDiv {
+@import "../_common.scss";
+
+.graphics.pageContent {
     padding: 0 0 0.5em 0;
+    text-align: center;
+    height: calc(100% - #{2*$separator-height+2*$button-height});
 }
 
 .generalLevelDiv {
     margin: 0.5em auto;
     text-align: center;
-    background: #111;
+    background: $panel-back-color;
     padding-top: 0.25em;
 }
 
+$div-width: $input-width + 0.5em;
+$margin-bottom: 0.5em;
+
 .settingsDivLeft {
     display: inline-block;
-    width: 25em;
+    width: $div-width;
+    margin-bottom: $margin-bottom;
 }
 
 .settingsDivRight {
     display: inline-block;
-    width: 25em;
-}
-
-@media screen and (orientation: landscape) {
-    .settingsDivRight {
-        float: right;
-    }
-}
-
-p.settings {
-    box-sizing: border-box;
-    width: 28em;
-    padding-left: 11px;
-    padding-right: 11px;
-    margin-top: 4px;
-    margin-bottom: 24px;
-    margin-left: 16px;
-    margin-right: 16px;
-}
-
-h2.settings {
-    margin-top: 0.2em;
-    margin-bottom: 0.2em;
+    width: $div-width;
+    margin-bottom: #{$margin-bottom + 3.95em};
 }

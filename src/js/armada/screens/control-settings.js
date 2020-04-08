@@ -40,7 +40,7 @@ define([
             HIGHLIGHTED_CLASS_NAME = "highlightedItem",
             TABLE_TITLE_CLASS_NAME = "controls tableTitle",
             TABLE_ID_PREFIX = "table_",
-            TABLE_CLASS_NAME = "controlsTable horizontallyCentered outerContainer",
+            TABLE_CLASS_NAME = "controlsTable outerContainer",
             CONTROL_STRING_DURING_SETTING = "?",
             SHIFT_CODE = 16,
             CTRL_CODE = 17,
@@ -247,8 +247,6 @@ define([
      */
     ControlsScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
-        this._backButton.setContent(strings.get(strings.CONTROLS.BACK));
-        this._titleHeading.setContent(strings.get(strings.CONTROLS.TITLE));
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
         this._updateValues();
         this._generateTables();
@@ -268,7 +266,7 @@ define([
                     actionStringDefinitionObject = {},
                     tableToggleFunction = function (id) {
                         var element = this.getElement(id);
-                        element.style.display = (element.style.display === "none") ? "table" : "none";
+                        element.hidden = !element.hidden;
                         armadaScreens.playButtonClickSound(true);
                     },
                     tableSelectFunction = function () {
@@ -322,7 +320,7 @@ define([
                 }
                 tableElement.appendChild(theadElement);
                 tableElement.appendChild(tbodyElement);
-                tableElement.style.display = "none";
+                tableElement.hidden = true;
                 tablesContainer.appendChild(tableElement);
             }
         }.bind(this));

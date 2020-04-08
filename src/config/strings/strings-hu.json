@@ -463,7 +463,6 @@
         "mass": "Tömeg",
         "weaponSlots": "Fegyverek",
         "missileLaunchers": "Rakétavetők",
-        "thrusters": "Hajtóműfúvókák",
         "missingSpacecraftTypeDescription": "A leírás nem érhető el ehhez a hajótípushoz ({spacecraftType}) magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
         "missingSpacecraftClassDescription": "A leírás nem érhető el ehhez a hajóosztályhoz ({spacecraftClass}) magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}"
     },
@@ -523,7 +522,7 @@
         "analyticsNote": "Az elküldött statisztikák nem tartalmaznak semmilyen személyes adatot, csak a játék funkcióinak használatára és a játékos teljesítményére vonatkozó információkat. Kérlek, segítsd a fejlesztést azzal, hogy nem kapcsolod ki ezt a funkciót!"
     },
     "graphics": {
-        "back": "Vissza a menübe",
+        "backButton": "Vissza a menübe",
         "title": "Grafikai beállítások",
         "generalLevel": "Grafika részletessége:",
         "antialiasing": "Élsimítás:",
@@ -587,7 +586,7 @@
         "right": "jobb felén"
     },
     "controls": {
-        "back": "Vissza a menübe",
+        "backButton": "Vissza a menübe",
         "title": "Irányítás",
         "settingsTitle": "Beállítások",
         "mouseTurnSensitivity": "Egérrel fordulás érzékenysége:",

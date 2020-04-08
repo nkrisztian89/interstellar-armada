@@ -3,7 +3,10 @@
 }
 
 .ingameMenuInnerContainer {
-    padding-top: 2em;
+    padding-top: 1.5em;
     padding-left: 1em;
     padding-right: 1em;
+    &>h2 {
+        padding-bottom: 0.5em;
+    }
 }

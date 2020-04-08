@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018 Krisztián Nagy
+Copyright (C) 2017-2018, 2020 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,9 +37,9 @@ $body-color: #000000;
 $shadow-color: #000000;
 $inset-shadow-color: rgba(0, 0, 0, 0.75);
 
-// ------------------------------------------
+$panel-opacity: 0.85;
 
-$panel-opacity: 0.75;
+$overlay-background-color: rgba(64,64,64,0.5);
 
 $panel-color: #222222;
 

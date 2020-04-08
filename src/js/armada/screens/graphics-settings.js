@@ -192,7 +192,6 @@ define([
             PARTICLE_AMOUNT_SELECTOR_ID = "particleAmountSelector",
             DUST_PARTICLE_AMOUNT_SELECTOR_ID = "dustParticleAmountSelector",
             GENERAL_LEVEL_PARENT_ID = "generalLevelDiv",
-            OPTION_PARENT_ID = "settingsDiv",
             LEFT_OPTION_PARENT_ID = "settingsDivLeft",
             RIGHT_OPTION_PARENT_ID = "settingsDivRight",
             SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
@@ -336,7 +335,7 @@ define([
      * @param {String} name
      * @param {String} propertyLabelID
      * @param {String[]} valueList
-     * @param {String} [parentID=OPTION_PARENT_ID]
+     * @param {String} parentID
      * @param {String} [selectorClassName]
      * @param {String} [propertyContainerClassName]
      * @returns {Selector}
@@ -353,7 +352,7 @@ define([
                         },
                         {id: propertyLabelID},
                         valueList),
-                parentID || OPTION_PARENT_ID);
+                parentID);
     };
     /**
      * Applies the currently selected settings and closes the screen.
@@ -455,8 +454,6 @@ define([
      */
     GraphicsScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
-        this._backButton.setContent(strings.get(strings.GRAPHICS.BACK));
-        this._titleHeading.setContent(strings.get(strings.GRAPHICS.TITLE));
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
         this._generalLevelSelector.setValueList(_getGeneralLevelSettingValues().map(_mapCaption));
         this._antialiasingSelector.setValueList(managedGL.isAntialiasingAvailable() ? _getOnOffSettingValues() : _getOffSettingValue());

@@ -368,11 +368,11 @@ define([
             this._background = document.createElement("div");
             this._background.setAttribute("id", this._getElementID(SCREEN_BACKGROUND_ID));
             this._background.className = this._style.backgroundClassName || DEFAULT_SCREEN_BACKGROUND_CLASS_NAME;
-            this._background.style.display = "none";
+            this._background.hidden = true;
             this._container = document.createElement("div");
             this._container.setAttribute("id", this._getElementID(SCREEN_CONTAINER_ID));
             this._container.className = this._style.containerClassName || DEFAULT_SCREEN_CONTAINER_CLASS_NAME;
-            this._container.style.display = "none";
+            this._container.hidden = true;
             if (!keepModelAfterAdding) {
                 this._container.appendChild(this._model.firstElementChild);
             } else {
@@ -402,7 +402,7 @@ define([
     HTMLScreen.prototype.show = function () {
         if (!this._visible) {
             if (this._container) {
-                this._container.style.display = "block";
+                this._container.hidden = false;
                 this._visible = true;
                 if (this._onShow) {
                     this._onShow();
@@ -426,7 +426,7 @@ define([
             if (backgroundColor) {
                 this._background.style.backgroundColor = utils.getCSSColor(backgroundColor);
             }
-            this._background.style.display = "block";
+            this._background.hidden = false;
             parentNode = parentNode || document.body;
             // appendChild does not clone the element if it is already part of the DOM, in that
             // case it will be simply moved to become the last child of parentNode
@@ -442,8 +442,8 @@ define([
     HTMLScreen.prototype.hide = function () {
         if (this._visible) {
             if (this._container && this._background) {
-                this._container.style.display = "none";
-                this._background.style.display = "none";
+                this._container.hidden = true;
+                this._background.hidden = true;
                 this._visible = false;
                 this.setActive(false);
                 if (this._onHide) {
@@ -460,7 +460,7 @@ define([
      * @returns {Boolean}
      */
     HTMLScreen.prototype.isSuperimposed = function () {
-        return this._background && (this._background.style.display !== "none");
+        return this._background && (!this._background.hidden);
     };
     /**
      * Executes the necessary actions required when closing the page. This method
@@ -1764,7 +1764,7 @@ define([
                 this._texts[i].invalidate();
             }
             this._visible = true;
-            this._canvas.style.display = "block";
+            this._canvas.hidden = false;
         }
     };
     /**
@@ -1778,7 +1778,7 @@ define([
                 this._texts[i].invalidate();
             }
             this._visible = false;
-            this._canvas.style.display = "none";
+            this._canvas.hidden = true;
         }
     };
     /**

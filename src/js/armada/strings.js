@@ -205,7 +205,6 @@ define([
         MASS: {name: "database.mass"},
         WEAPON_SLOTS: {name: "database.weaponSlots"},
         MISSILE_LAUNCHERS: {name: "database.missileLaunchers"},
-        THRUSTERS: {name: "database.thrusters"},
         MISSING_SPACECRAFT_TYPE_DESCRIPTION: {name: "database.missingSpacecraftTypeDescription"},
         MISSING_SPACECRAFT_CLASS_DESCRIPTION: {name: "database.missingSpacecraftClassDescription"}
     };
@@ -263,7 +262,7 @@ define([
     };
     strings.GRAPHICS = {
         PREFIX: {name: "graphics.", optional: true},
-        BACK: {name: "graphics.back"},
+        BACK: {name: "graphics.backButton"},
         TITLE: {name: "graphics.title"},
         GENERAL_LEVEL: {name: "graphics.generalLevel"},
         ANTIALIASING: {name: "graphics.antialiasing"},
@@ -324,7 +323,7 @@ define([
         DEFAULT: {name: "touchArea.default"}
     };
     strings.CONTROLS = {
-        BACK: {name: "controls.back"},
+        BACK: {name: "controls.backButton"},
         SETTINGS_TITLE: {name: "controls.settingsTitle"},
         TITLE: {name: "controls.title"},
         MOUSE_TURN_SENSITIVITY: {name: "controls.mouseTurnSensitivity"},

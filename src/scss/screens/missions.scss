@@ -1,30 +1,16 @@
 @import "../_common.scss";
 
-.missions.pageContainer {
-    width: 90%;
-    height: 90%;
-}
-
-.missions.innerContainer {
-    position: relative;
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-}
-
 $horizontal-margin: 1em;
-$list-width: 12em;
+$list-width: 14em;
 $header-height: 3em;
 
 .missions.pageContent {
-    position: relative;
-    box-sizing: border-box;
     width: calc(100% - #{$horizontal-margin});
-    height: calc(100% - #{2*$separator-height+$title-height+$page-padding});
+    height: calc(100% - #{2*$separator-height+3*$page-padding});
+    margin-top: $page-padding;
 }
 
 .missionListContainer {
-    box-sizing: border-box;
     position: absolute;
     top: 0;
     left: 0;
@@ -60,31 +46,22 @@ $header-height: 3em;
     position: absolute;
     right: 0;
     top: 0;
-    max-width: 19em;
+    max-width: 22em;
     height: 3em;
-    padding-top: 0.25em;
-    padding-right: 1em;
+    padding-bottom: 0.25em;
+    padding-right: 0.25em;
 }
 
 $info-top-margin: 0.5em;
 
 .missionInfoBody {
-    box-sizing: border-box;
     margin-top: $info-top-margin;
-    border-top: 2px solid #333333;
     padding-top: 0.5em;
+    padding-right: 0.5em;
     height: calc(100% - #{$header-height + $info-top-margin});
-    overflow-y: scroll;
-}
-
-.missionInfoBody::-webkit-scrollbar {
-    width: 0.2vw;
-    min-width: 2px;
-    background: transparent;
-}
-
-.missionInfoBody::-webkit-scrollbar-thumb {
-    background: #00aa00;
+    
+    @include top-bordered;
+    @include styled-scrollbar;
 }
 
 .missionInfoBody > p {
@@ -96,55 +73,25 @@ $info-top-margin: 0.5em;
 }
 
 .missionInfoBody > h3 {
+    padding: 0.1em 0 0.2em 0.1em;
     margin-bottom: 0.5em;
+    width: 25em;
+    background-image:
+            -webkit-linear-gradient(
+            left, 
+            $panel-back-color,
+            rgba($panel-back-color,0)
+            );
+    background-image:
+            -moz-linear-gradient(
+            left, 
+            $panel-back-color,
+            rgba($panel-back-color,0)
+            );
 }
 
 .subcaption.completed {
     color: #00CC00;
-}
-
-@media screen and (orientation: portrait) {
-    .missions.pageContainer {
-        width: auto;
-        height: auto;
-    }
-    
-    .missions.pageContent {
-        position: relative;
-        margin-left: 0;
-        margin-left: 0;
-        width: auto;
-        height: auto;
-    }
-
-    .missionListContainer {
-        position: relative;
-        margin-left: auto;
-        margin-right: auto;
-        margin-bottom: 1em;
-
-        width: 90%;
-        height: 60vh;
-    }
-    
-    .difficultyContainer {
-        left: 0;
-        right: auto;
-        margin-top: 3.5em;
-    }
-    
-    .missionInfoBody {
-        margin-top: 3.5em;
-        margin-bottom: 4em;
-    }
-
-    .missionInfoContainer {
-        position: relative;
-        margin-left: auto;
-        margin-right: auto;
-        width: 100%;
-        height: auto;
-    }
 }
 
 .missionTitle {
@@ -178,5 +125,5 @@ img.missionMedal {
 .missionEquipment {
     margin: 0;
     padding: 0.4em 0em 0.4em 0;
-    border-bottom: 2px solid #333333;
+    @include bottom-bordered;
 }

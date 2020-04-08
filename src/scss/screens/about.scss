@@ -1,33 +1,7 @@
 @import "../_common.scss";
 
-.about.pageContainer {
-    width: 90%;
-    height: 90%;
-}
-
-.about.innerContainer {
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
 .about.pageContent {
-    box-sizing: border-box;
-    width: 100%;
-    height: calc(100% - #{$separator-height+$title-height});
-    position: relative;
-    overflow-y: scroll;
-}
-
-.about.pageContent::-webkit-scrollbar {
-    width: 0.2vw;
-    min-width: 2px;
-    background: transparent;
-}
-
-.about.pageContent::-webkit-scrollbar-thumb {
-    background: #00aa00;
+    height: calc(100% - #{2*$separator-height});
 }
 
 p.about {
@@ -37,10 +11,6 @@ p.about {
     margin-left: 0;
     margin-right: 0;
     box-sizing: border-box;
-}
-
-p.aboutCentered {
-    text-align: center;
 }
 
 h3.credits {

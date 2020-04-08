@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018 Krisztián Nagy
+Copyright (C) 2017-2018, 2020 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,14 +32,14 @@ $cursor-light: url(../assets/images/cursor-light.png) 6 6;
 
 
 @function mulpercent($percent, $value) {
-  @return $percent / 100% * $value;
+    @return $percent / 100% * $value;
 }
 
 @function mulem($em, $value) {
-  @return $em / 1em * $value;
+    @return $em / 1em * $value;
 }
 
-$button-font-size: 100%;
+$button-font-size: 120%;
 $button-padding: 0.5em;
 
 $button-height: mulpercent($button-font-size, 1.09em + 2*$button-padding);
@@ -47,8 +47,6 @@ $button-height: mulpercent($button-font-size, 1.09em + 2*$button-padding);
 $horizontal-menu-margin: 0.4em;
 
 $separator-padding: 0.4em;
-
-$separator-height: $button-height + 2*$horizontal-menu-margin + 2*$separator-padding;
 
 $page-padding: 1em;
 
@@ -58,6 +56,16 @@ $title-bottom-margin: 0.5em;
 
 $title-height: mulpercent($title-font-size, 1em + $title-top-margin + $title-bottom-margin);
 
+$separator-height: $title-height + 2*$separator-padding;
+
+$image-margin: 0.5em;
+
+$border-width: 0.1em;
+$border-style: solid;
+
+$input-label-width: 16.5em;
+$input-value-width: 9em;
+$input-width: $input-label-width + $input-value-width;
 
 @mixin glowing {
     box-shadow: $glow;
@@ -75,8 +83,44 @@ $title-height: mulpercent($title-font-size, 1em + $title-top-margin + $title-bot
     text-shadow: $text-glow;
 }
 
+@mixin highlight-text {
+    text-shadow:
+        $highlight-color 0 0 0.2em,
+        $highlight-color 0 0 0.2em;
+}
+
+@mixin bordered {
+    box-sizing: border-box;
+    border: $border-width $border-style $panel-front-color;
+}
+
+@mixin top-bordered {
+    box-sizing: border-box;
+    border-top: $border-width $border-style $panel-front-color;
+}
+
+@mixin bottom-bordered {
+    box-sizing: border-box;
+    border-bottom: $border-width $border-style $panel-front-color;
+}
+
 @mixin inset-bordered-panel {
-    border: 2px solid $panel-front-color;
+    border: 0.15em solid $panel-front-color;
     background-color: $panel-color;
     box-shadow: 0 2px 5px $inset-shadow-color inset;
+}
+
+@mixin styled-scrollbar {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: relDarken($highlight-color,0.333) transparent;
+    &::-webkit-scrollbar {
+        width: 0.2vw;
+        min-width: 2px;
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: relDarken($highlight-color,0.333);
+    }
 }

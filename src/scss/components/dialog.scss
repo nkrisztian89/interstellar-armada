@@ -1,5 +1,8 @@
+@import "../_common.scss";
+
 .dialogContainer {
-    width: 30em;
+    width: 46em;
+    max-width: 90vw;
 }
 
 .dialogInnerContainer {
@@ -18,9 +21,12 @@
 
 .dialogHeader {
     padding: 0;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.75em;
 }
 
 .dialogMessage {
     margin-top: 0.5em;
+    max-height: 60vh;
+    padding: 0 0.5em;
+    @include styled-scrollbar;
 }

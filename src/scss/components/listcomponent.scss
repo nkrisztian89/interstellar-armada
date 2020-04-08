@@ -1,24 +1,17 @@
+@import "../_common.scss";
+
 .listContainer {
     display: inline-block;
 
     text-align: left;
 
-    background-color: rgba(17,17,17,0.75);
-    border: 2px solid #333333;
+    background-color: rgba($panel-back-color,$panel-opacity);
     padding: 0;
 
     overflow-x: hidden;
-    overflow-y: scroll;
-}
-
-.listContainer::-webkit-scrollbar {
-    width: 0.2vw;
-    min-width: 2px;
-    background: transparent;
-}
-
-.listContainer::-webkit-scrollbar-thumb {
-    background: #00aa00;
+    
+    @include bordered;
+    @include styled-scrollbar;
 }
 
 .list {
@@ -34,14 +27,10 @@
 
     width: 100%;
     padding: 0.6em;
-
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
 }
 
 .listElement:not(.disabled) {
-    cursor: url(../assets/images/cursor-light.png) 6 6, pointer;
+    cursor: $cursor-light, pointer;
 }
 
 .caption {
@@ -63,7 +52,7 @@
 }
 
 .listElement.selected {
-    background-color: #004400;
+    background-color: relDarken($highlight-color,0.733);
 }
 
 .listElement.selected > .subcaption {
@@ -72,12 +61,10 @@
 
 .listElement.highlighted {
     text-shadow: none;
-    box-shadow: inset 0em 0em 0.75em #00FF00;
+    box-shadow: inset 0em 0em 0.75em $highlight-color;
     transition: all 0s;
 }
 
 .listElement.highlighted > .caption {
-    text-shadow:
-        #00FF00 0 0 0.2em,
-        #00FF00 0 0 0.2em;
+    @include highlight-text;
 }
