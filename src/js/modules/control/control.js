@@ -1031,8 +1031,10 @@ define([
             // and delete their custom bindings as well as reload their default from the JSON
         } else {
             for (i = 0, n = dataJSON.inputDevices.length; i < n; i++) {
-                this._inputInterpreters[i].removeFromLocalStorage();
-                this._inputInterpreters[i].loadFromJSON(dataJSON.inputDevices[i]);
+                if (this._inputInterpreterTypes[dataJSON.inputDevices[i].type]) {
+                    this._inputInterpreters[i].removeFromLocalStorage();
+                    this._inputInterpreters[i].loadFromJSON(dataJSON.inputDevices[i]);
+                }
             }
         }
     };
