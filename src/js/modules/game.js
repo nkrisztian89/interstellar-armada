@@ -85,13 +85,13 @@ define([
             // -------------------------------------------------------------------------
             // Private methods
             /**
-             * Checks whether all initializations are complete and if so, hides the splash screen and displays the main menu.
+             * Checks whether all initializations are complete and if so, removes the splash screen and displays the main menu.
              */
             _checkInitComplete = function () {
                 if (_configInitComplete && _settingsInitComplete && _screenInitComplete) {
                     application.log("Initialization of " + _gameName + " completed.");
                     // hide the splash screen
-                    document.body.firstElementChild.hidden = true;
+                    document.body.firstElementChild.remove();
                     screenManager.setCurrentScreen(_startScreenName);
                 }
             },

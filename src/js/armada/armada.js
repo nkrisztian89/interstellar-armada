@@ -136,8 +136,8 @@ define([
         game.addScreen(gameplaySettingsScreen.getGameplaySettingsScreen());
         game.addScreen(controlsScreen.getControlsScreen());
         game.addScreen(aboutScreen.getAboutScreen());
-        game.addScreen(menus.getIngameMenuScreen());
-        game.addScreen(dialogScreen.getDialogScreen());
+        game.addScreen(menus.getIngameMenuScreen(), true);
+        game.addScreen(dialogScreen.getDialogScreen(), true);
         _progressBar.value = 4;
         game.executeWhenAllScreensReady(function () {
             _progressBar.value = 5;

@@ -81,34 +81,23 @@ define([
     /**
      * Adds a new screen to the list that can be set as current later.
      * @param {HTMLScreen} screen The new game screen to be added.
-     * @param {Boolean} [replace=false] Wether to replace the current page content with this
-     * screen's content.
+     * @param {Boolean} [addBackground=false] Whether to add a background <div>
+     * next to the screen container <div> that can be used when the screen is
+     * superimposed on other screens
      * @param {Boolean} [keepModelAfterAdding=false] Whether to keep storing the original DOM model
      * of the screen after adding it to the current document (so that it can be added again later)
      */
-    ScreenManager.prototype.addScreen = function (screen, replace, keepModelAfterAdding) {
-        var screenName, onScreenReadyFunction = function () {
+    ScreenManager.prototype.addScreen = function (screen, addBackground, keepModelAfterAdding) {
+        var onScreenReadyFunction = function () {
             this._screensLoaded++;
             if (this._screensLoaded === this._screensToLoad) {
                 this.setToReady();
             }
         }.bind(this);
         this.resetReadyState();
-        // in replace mode, the current screens are all removed from te page
-        if (replace === true) {
-            for (screenName in this._screens) {
-                if (this._screens.hasOwnProperty(screenName)) {
-                    this._screens[screenName].removeFromPage();
-                }
-            }
-        }
         this._screensToLoad++;
         this._screens[screen.getName()] = screen;
-        if (replace === true) {
-            screen.replacePageWithScreen(onScreenReadyFunction);
-        } else {
-            screen.addScreenToPage(onScreenReadyFunction, keepModelAfterAdding);
-        }
+        screen.addScreenToPage(onScreenReadyFunction, addBackground, keepModelAfterAdding);
         if (!this._currentScreen) {
             this._currentScreen = screen;
             this._currentScreen.setActive(true);

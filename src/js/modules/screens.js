@@ -164,6 +164,11 @@ define([
          */
         this._container = null;
         /**
+         * Whether the screen is currently superimposed on another one
+         * @type Boolean
+         */
+        this._superImposed = false;
+        /**
          * Stores the list of simple components (wrapped HTML elements) on this screen.
          * @type SimpleComponent[]
          */
@@ -318,19 +323,6 @@ define([
         }
     };
     /**
-     * Replaces the current HTML page's body with the sctructure of the screen.
-     * @param {Function} callback
-     */
-    HTMLScreen.prototype.replacePageWithScreen = function (callback) {
-        document.body.innerHTML = "";
-        this.addScreenToPage(function () {
-            if (callback) {
-                callback();
-            }
-            this.setActive(true);
-        });
-    };
-    /**
      * Adds the event listeners defined in this class (in the _elementEventHandlers property) to the appropriate HTML elements on this 
      * screen
      * @param {Element} [parent] If given, only those elements will be considered, which are below this element in the DOM
@@ -356,19 +348,24 @@ define([
      * If some source files for the screen have not been loaded yet, than sets a callback to append the 
      * screen once all necessary files have been loaded.
      * @param {Function} [callback] This function will be called after the screen has been added to the page.
+     * @param {Boolean} [addBackground=false] Whether to add a background <div>
+     * next to the screen container <div> that can be used when the screen is
+     * superimposed on other screens
      * @param {Boolean} [keepModelAfterAdding=false] Whether to keep storing the original DOM model
      * of the screen after adding it to the current document (so that it can be added again later)
      * @param {Element} [parentNode=document.body] If given, the screen and its background will be added as
      * children of this DOM node.
      */
-    HTMLScreen.prototype.addScreenToPage = function (callback, keepModelAfterAdding, parentNode) {
+    HTMLScreen.prototype.addScreenToPage = function (callback, addBackground, keepModelAfterAdding, parentNode) {
         parentNode = parentNode || document.body;
         this.executeWhenReady(function () {
             var elements, i;
-            this._background = document.createElement("div");
-            this._background.setAttribute("id", this._getElementID(SCREEN_BACKGROUND_ID));
-            this._background.className = this._style.backgroundClassName || DEFAULT_SCREEN_BACKGROUND_CLASS_NAME;
-            this._background.hidden = true;
+            if (addBackground) {
+                this._background = document.createElement("div");
+                this._background.setAttribute("id", this._getElementID(SCREEN_BACKGROUND_ID));
+                this._background.className = this._style.backgroundClassName || DEFAULT_SCREEN_BACKGROUND_CLASS_NAME;
+                this._background.hidden = true;
+            }
             this._container = document.createElement("div");
             this._container.setAttribute("id", this._getElementID(SCREEN_CONTAINER_ID));
             this._container.className = this._style.containerClassName || DEFAULT_SCREEN_CONTAINER_CLASS_NAME;
@@ -382,7 +379,9 @@ define([
             for (i = 0; i < elements.length; i++) {
                 elements[i].setAttribute("id", this._getElementID(elements[i].getAttribute("id")));
             }
-            parentNode.appendChild(this._background);
+            if (this._background) {
+                parentNode.appendChild(this._background);
+            }
             parentNode.appendChild(this._container);
             this._visible = false;
             this._initializeComponents();
@@ -422,16 +421,19 @@ define([
      * children of this DOM node.
      */
     HTMLScreen.prototype.superimposeOnPage = function (backgroundColor, parentNode) {
-        if (this._container && this._background) {
-            if (backgroundColor) {
-                this._background.style.backgroundColor = utils.getCSSColor(backgroundColor);
-            }
-            this._background.hidden = false;
+        if (this._container) {
             parentNode = parentNode || document.body;
-            // appendChild does not clone the element if it is already part of the DOM, in that
-            // case it will be simply moved to become the last child of parentNode
-            parentNode.appendChild(this._background);
+            if (this._background) {
+                if (backgroundColor) {
+                    this._background.style.backgroundColor = utils.getCSSColor(backgroundColor);
+                }
+                // appendChild does not clone the element if it is already part of the DOM, in that
+                // case it will be simply moved to become the last child of parentNode
+                this._background.hidden = false;
+                parentNode.appendChild(this._background);
+            }
             parentNode.appendChild(this._container);
+            this._superImposed = true;
         }
         this.show();
     };
@@ -441,10 +443,13 @@ define([
      */
     HTMLScreen.prototype.hide = function () {
         if (this._visible) {
-            if (this._container && this._background) {
+            if (this._container) {
                 this._container.hidden = true;
-                this._background.hidden = true;
+                if (this._background) {
+                    this._background.hidden = true;
+                }
                 this._visible = false;
+                this._superImposed = false;
                 this.setActive(false);
                 if (this._onHide) {
                     this._onHide();
@@ -460,7 +465,7 @@ define([
      * @returns {Boolean}
      */
     HTMLScreen.prototype.isSuperimposed = function () {
-        return this._background && (!this._background.hidden);
+        return this._superImposed;
     };
     /**
      * Executes the necessary actions required when closing the page. This method
@@ -469,7 +474,7 @@ define([
      */
     HTMLScreen.prototype.removeFromPage = function () {
         var i;
-        if (this._container && this._background) {
+        if (this._container) {
             for (i = 0; i < this._simpleComponents.length; i++) {
                 this._simpleComponents[i].resetComponent();
             }
@@ -477,10 +482,13 @@ define([
                 this._externalComponentBindings[i].component.resetComponent();
             }
             this.setActive(false);
-            this._background.remove();
+            if (this._background) {
+                this._background.remove();
+                this._background = null;
+            }
             this._container.remove();
-            this._background = null;
             this._container = null;
+            this._superImposed = false;
             this._visible = false;
         } else {
             application.showError("Attempting to remove screen '" + this._name + "' before adding it to the page!");
