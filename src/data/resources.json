@@ -441,7 +441,7 @@
     "cubemaps": [{
             "name": "stars_sparse",
             "basepath": "background/",
-            "format": "jpg",
+            "format": "png",
             "imageNames": {
                 "posX": "stars_2000",
                 "negX": "stars_2000",
@@ -458,7 +458,7 @@
         }, {
             "name": "stars_medium",
             "basepath": "background/",
-            "format": "jpg",
+            "format": "png",
             "imageNames": {
                 "posX": "stars_4000",
                 "negX": "stars_4000",
@@ -475,7 +475,7 @@
         }, {
             "name": "stars_dense",
             "basepath": "background/",
-            "format": "jpg",
+            "format": "png",
             "imageNames": {
                 "posX": "stars_6000",
                 "negX": "stars_6000",
@@ -492,7 +492,7 @@
         }, {
             "name": "stars_veryDense",
             "basepath": "background/",
-            "format": "jpg",
+            "format": "png",
             "imageNames": {
                 "posX": "stars_8000",
                 "negX": "stars_8000",
@@ -509,7 +509,7 @@
         }, {
             "name": "blueNebula_sparse",
             "basepath": "background/",
-            "format": "jpg",
+            "format": "png",
             "imageNames": {
                 "posX": "blueNebula_2000",
                 "negX": "stars_2000",
@@ -524,26 +524,9 @@
                 "high": "_2048"
             }
         }, {
-            "name": "blueNebula_medium",
-            "basepath": "background/",
-            "format": "jpg",
-            "imageNames": {
-                "posX": "blueNebula_4000",
-                "negX": "stars_4000",
-                "posY": "stars_4000",
-                "negY": "stars_4000",
-                "posZ": "stars_4000",
-                "negZ": "stars_4000"
-            },
-            "qualitySuffixes": {
-                "low": "_512",
-                "medium": "_1024",
-                "high": "_2048"
-            }
-        }, {
             "name": "redNebula_medium",
             "basepath": "background/",
-            "format": "jpg",
+            "format": "png",
             "imageNames": {
                 "posX": "stars_4000",
                 "negX": "redNebula_4000",
@@ -558,26 +541,9 @@
                 "high": "_2048"
             }
         }, {
-            "name": "redNebula_dense",
-            "basepath": "background/",
-            "format": "jpg",
-            "imageNames": {
-                "posX": "stars_6000",
-                "negX": "redNebula_6000",
-                "posY": "stars_6000",
-                "negY": "stars_6000",
-                "posZ": "stars_6000",
-                "negZ": "stars_6000"
-            },
-            "qualitySuffixes": {
-                "low": "_512",
-                "medium": "_1024",
-                "high": "_2048"
-            }
-        }, {
             "name": "crescentNebula_veryDense",
             "basepath": "background/",
-            "format": "jpg",
+            "format": "png",
             "imageNames": {
                 "posX": "stars_8000",
                 "negX": "stars_8000",

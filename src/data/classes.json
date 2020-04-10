@@ -27,17 +27,9 @@
             "shader": "skybox",
             "cubemap": "blueNebula_sparse"
         }, {
-            "name": "blueNebula_medium",
-            "shader": "skybox",
-            "cubemap": "blueNebula_medium"
-        }, {
             "name": "redNebula_medium",
             "shader": "skybox",
             "cubemap": "redNebula_medium"
-        }, {
-            "name": "redNebula_dense",
-            "shader": "skybox",
-            "cubemap": "redNebula_dense"
         }, {
             "name": "crescentNebula_veryDense",
             "shader": "skybox",
