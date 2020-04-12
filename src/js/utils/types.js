@@ -86,7 +86,7 @@ define([
      * @param {Number} [verbosityLevel=DEFAULT_ERROR_LOG_VERBOSITY_LEVEL]
      */
     function _logCheckFailError(name, value, defaultValue, checkFailMessage, verbosityLevel) {
-        application.log(_getCheckFailErrorMessage(name, value, defaultValue, checkFailMessage), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
+        application.log_DEBUG(_getCheckFailErrorMessage(name, value, defaultValue, checkFailMessage), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
     }
     /**
      * Returns an error message to be shown / logged when a variable value of any type fails type verification because if has a different type
@@ -125,7 +125,7 @@ define([
      * @returns {String}
      */
     function _logTypeError(type, name, value, defaultValue, verbosityLevel) {
-        application.log(_getTypeError(type, name, value, defaultValue), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
+        application.log_DEBUG(_getTypeError(type, name, value, defaultValue), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
     }
     /**
      * Returns an error message to be shown / logged when a variable value fails type verification because is not one of the available 
@@ -162,7 +162,7 @@ define([
      * @returns {String}
      */
     function _logEnumValueError(name, value, enumObject, defaultValue, verbosityLevel) {
-        application.log(_getEnumValueError(name, value, enumObject, defaultValue), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
+        application.log_DEBUG(_getEnumValueError(name, value, enumObject, defaultValue), verbosityLevel !== undefined ? verbosityLevel : DEFAULT_ERROR_LOG_VERBOSITY_LEVEL);
     }
     // ----------------------------------------------------------------------
     // constants

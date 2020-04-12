@@ -1712,7 +1712,7 @@ define([
         if (this._params.source) {
             source = mission.getSpacecraft(this._params.source);
             if (!source) {
-                application.log("Warning: message not played, because the source spacecraft '" + this._params.source + "' does not exist (might have been destroyed)!");
+                application.log_DEBUG("Warning: message not played, because the source spacecraft '" + this._params.source + "' does not exist (might have been destroyed)!");
                 return;
             }
         }
@@ -2413,7 +2413,7 @@ define([
      */
     Mission.prototype.loadFromJSON = function (dataJSON, difficulty, demoMode) {
         var i, j, craft, teamID, team, aiType, actions, count, factor, squad, names, equipments, pilotedIndex, positions, formation, orientation, spacecrafts, spacecraftDataTemplate, spacecraftData;
-        application.log("Loading mission from JSON file...", 2);
+        application.log_DEBUG("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
         this._nextMissionName = dataJSON.nextMission || null;
@@ -2586,7 +2586,7 @@ define([
         if ((this._state === MissionState.NONE) && !this.noHostilesPresent()) {
             this._state = MissionState.BATTLE;
         }
-        application.log("Mission successfully loaded.", 2);
+        application.log_DEBUG("Mission successfully loaded.", 2);
     };
     /**
      * Adds spacecrafts to the mission at random positions based on the configuration loaded from JSON before.

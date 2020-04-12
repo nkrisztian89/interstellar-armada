@@ -775,7 +775,7 @@ define([
             msg += ". ";
         }
         msg += typeName;
-        application.log(msg);
+        application.log_DEBUG(msg);
         this._scene.increaseCount(typeName);
         for (subnode = this._subnodes.getFirst(); subnode; subnode = subnode.next) {
             subnode.log(level + 1);
@@ -2735,19 +2735,19 @@ define([
      */
     Scene.prototype.logNodes = function () {
         var objectTypes, i;
-        application.log("--------------");
+        application.log_DEBUG("--------------");
         this._nodeCount = 0;
         this._nodeCountByType = {};
-        application.log("Scene structure:");
+        application.log_DEBUG("Scene structure:");
         this._rootNode.log(0);
-        application.log("Scene statistics:");
-        application.log("Total node count: " + this._nodeCount);
-        application.log("Count by type:");
+        application.log_DEBUG("Scene statistics:");
+        application.log_DEBUG("Total node count: " + this._nodeCount);
+        application.log_DEBUG("Count by type:");
         objectTypes = Object.keys(this._nodeCountByType);
         for (i = 0; i < objectTypes.length; i++) {
-            application.log("[" + objectTypes[i] + "]: " + this._nodeCountByType[objectTypes[i]]);
+            application.log_DEBUG("[" + objectTypes[i] + "]: " + this._nodeCountByType[objectTypes[i]]);
         }
-        application.log("--------------");
+        application.log_DEBUG("--------------");
     };
     /**
      * Returns the rendering statistics for the current frame about the scene graph in debug mode (shadow map rendering not included)

@@ -641,7 +641,7 @@ define([
                                         this._spacecraft.setPhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.fallbackRotations));
                                     }
                                 } else {
-                                    application.log("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid anchor for inward jump: '" + data.jump.anchor + "' and no fallback specified. Jump will be skipped. Might be because the anchor is already destroyed.");
+                                    application.log_DEBUG("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid anchor for inward jump: '" + data.jump.anchor + "' and no fallback specified. Jump will be skipped. Might be because the anchor is already destroyed.");
                                     break;
                                 }
                             }
@@ -671,7 +671,7 @@ define([
                             if (target) {
                                 this._targetList = [target];
                             } else {
-                                application.log("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target.single + "'. Might be because the ship is already destroyed.");
+                                application.log_DEBUG("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target.single + "'. Might be because the ship is already destroyed.");
                             }
                         } else if (data.target.list) {
                             // selecting a target list
@@ -681,7 +681,7 @@ define([
                                 if (target) {
                                     this._targetList.push(target);
                                 } else {
-                                    application.log("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target.list[i] + "'. Might be because the ship is already destroyed.");
+                                    application.log_DEBUG("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid target specified: '" + data.target.list[i] + "'. Might be because the ship is already destroyed.");
                                 }
                             }
                         } else if (data.target.squads) {

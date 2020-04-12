@@ -416,7 +416,7 @@ define([
             application.log_DEBUG("Texture from file: " + params.path + " has been loaded.", 2);
             return true;
         }
-        application.log("WARNING: Texture from file: " + params.path + " could not be loaded.", 1);
+        application.log_DEBUG("WARNING: Texture from file: " + params.path + " could not be loaded.", 1);
         return false;
     };
     /**
@@ -690,7 +690,7 @@ define([
             application.log_DEBUG("Face '" + params.path + "' of cubemap named '" + this.getName() + "' has been loaded.", 2);
             return true;
         }
-        application.log("WARNING: Face '" + params.path + "' of cubemap named '" + this.getName() + "' could not be loaded.", 1);
+        application.log_DEBUG("WARNING: Face '" + params.path + "' of cubemap named '" + this.getName() + "' could not be loaded.", 1);
         return false;
     };
     /**
@@ -955,7 +955,7 @@ define([
         }
         this._checkAllSourcesLoaded();
         if (!params.text) {
-            application.log("ERROR: There was an error loading " + params.shaderType + " shader of shader program '" + this._name + "'!", 1);
+            application.log_DEBUG("ERROR: There was an error loading " + params.shaderType + " shader of shader program '" + this._name + "'!", 1);
             return false;
         }
         return true;
@@ -1259,7 +1259,7 @@ define([
             application.log_DEBUG("Sound effect sample from file: " + params.path + " has been loaded.", 2);
             return true;
         }
-        application.log("WARNING: Sound effect sample from file: " + params.path + " could not be loaded.", 1);
+        application.log_DEBUG("WARNING: Sound effect sample from file: " + params.path + " could not be loaded.", 1);
         return false;
     };
     /**
@@ -1279,7 +1279,7 @@ define([
         if (sample) {
             audio.playSound(sample, volume, position, rolloff);
         } else {
-            application.log("WARNING: cannot play sound sample '" + sample + "', as there was a problem while loading it.", 1);
+            application.log_DEBUG("WARNING: cannot play sound sample '" + sample + "', as there was a problem while loading it.", 1);
         }
     };
     /**
@@ -1304,7 +1304,7 @@ define([
         if (sample) {
             return new audio.SoundClip(soundCategory, sample, volume, loop, shouldStack, stackTimeThreshold, stackVolumeFactor, source);
         }
-        application.log("WARNING: cannot create sound source for sample '" + sample + "', as there was a problem while loading it.", 1);
+        application.log_DEBUG("WARNING: cannot create sound source for sample '" + sample + "', as there was a problem while loading it.", 1);
         return null;
     };
     // ############################################################################################
@@ -1363,7 +1363,7 @@ define([
             application.log_DEBUG("Music song from file: " + params.path + " has been loaded.", 2);
             return true;
         }
-        application.log("WARNING: Music song from file: " + params.path + " cound not be loaded.", 1);
+        application.log_DEBUG("WARNING: Music song from file: " + params.path + " cound not be loaded.", 1);
         return false;
     };
     /**
@@ -1380,7 +1380,7 @@ define([
         if (this._sample) {
             return new audio.SoundClip(audio.SoundCategory.MUSIC, this._sample, volume, loop);
         }
-        application.log("WARNING: cannot create sound source for music track '" + this._sample + "', as there was a problem while loading it.", 1);
+        application.log_DEBUG("WARNING: cannot create sound source for music track '" + this._sample + "', as there was a problem while loading it.", 1);
         return null;
     };
     // ############################################################################################

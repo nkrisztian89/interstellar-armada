@@ -605,7 +605,7 @@ define([
                 this._simpleComponents[i].initComponent();
             }
         } else {
-            application.log("WARNING! Attempting to initaialize external component " + this._name + " before appending it to the page! It will be initialized automatically once it is added.");
+            application.log_DEBUG("WARNING! Attempting to initaialize external component " + this._name + " before appending it to the page! It will be initialized automatically once it is added.");
         }
     };
     /**
@@ -623,7 +623,7 @@ define([
                 });
             }
         } else {
-            application.log("WARNING! Attempting to update external component " + this._name + " before appending it to the page!");
+            application.log_DEBUG("WARNING! Attempting to update external component " + this._name + " before appending it to the page!");
         }
     };
     /**
@@ -670,7 +670,7 @@ define([
                 return true;
             }
         } else {
-            application.log("WARNING! Attempting to show external component " + this._name + " before appending it to the page!");
+            application.log_DEBUG("WARNING! Attempting to show external component " + this._name + " before appending it to the page!");
         }
         return false;
     };
@@ -685,7 +685,7 @@ define([
                 return true;
             }
         } else {
-            application.log("WARNING! Attempting to hide external component " + this._name + " before appending it to the page!");
+            application.log_DEBUG("WARNING! Attempting to hide external component " + this._name + " before appending it to the page!");
         }
         return false;
     };
@@ -745,7 +745,7 @@ define([
         if (this._rootElement) {
             this._progress.getElement().max = value;
         } else {
-            application.log("WARNING! Attempting to update the maximum progress value of loading box" + this._name + " before appending it to the page!");
+            application.log_DEBUG("WARNING! Attempting to update the maximum progress value of loading box" + this._name + " before appending it to the page!");
         }
     };
     /**
@@ -756,7 +756,7 @@ define([
         if (this._rootElement) {
             this._progress.getElement().value = value;
         } else {
-            application.log("WARNING! Attempting to update the progress value of loading box" + this._name + " before appending it to the page!");
+            application.log_DEBUG("WARNING! Attempting to update the progress value of loading box" + this._name + " before appending it to the page!");
         }
     };
     /**
@@ -773,7 +773,7 @@ define([
                 this.updateProgress(progress);
             }
         } else {
-            application.log("WARNING! Attempting to update the status message of loading box" + this._name + " before appending it to the page!");
+            application.log_DEBUG("WARNING! Attempting to update the status message of loading box" + this._name + " before appending it to the page!");
         }
     };
     // #########################################################################
@@ -932,7 +932,7 @@ define([
         if (this._rootElement) {
             this._message.setContent(message, replacements);
         } else {
-            application.log("WARNING! Attempting to update the message of info box" + this._name + " before appending it to the page!");
+            application.log_DEBUG("WARNING! Attempting to update the message of info box" + this._name + " before appending it to the page!");
         }
     };
     // #########################################################################

@@ -1770,7 +1770,7 @@ define([
     Spacecraft.prototype.addToSceneNow = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback, missileCallback) {
         var i, shader, node, exp, lightSources, originalFactionColor, replacementFactionColor, visualModel, light, emittingObjects, animationTime, weaponParams, missileParams;
         if (!this._class) {
-            application.log("WARNING! Cannot add spacecraft to scene because it has already been destroyed!");
+            application.log_DEBUG("WARNING! Cannot add spacecraft to scene because it has already been destroyed!");
             return;
         }
         application.log_DEBUG("Adding spacecraft (" + this._class.getName() + ") to scene...", 2);
@@ -2162,7 +2162,7 @@ define([
                 this._addShield(classes.getShieldClass(equipmentProfile.getShieldDescriptor().className));
             }
         } else {
-            application.log("WARNING: equipping empty profile on " + this._class.getName() + "!");
+            application.log_DEBUG("WARNING: equipping empty profile on " + this._class.getName() + "!");
         }
         this._updateScoreValue();
     };
@@ -2639,7 +2639,7 @@ define([
         if (!this._away && this._jumpEngine) {
             this._jumpEngine.jumpOut(toggle);
         } else {
-            application.log("Warning! Spacecraft '" + this.getDisplayName() + "' cannot jump out because it is already away or has no jump engines!");
+            application.log_DEBUG("Warning! Spacecraft '" + this.getDisplayName() + "' cannot jump out because it is already away or has no jump engines!");
         }
     };
     /**
@@ -2649,7 +2649,7 @@ define([
         if (this._away && this._jumpEngine) {
             this._jumpEngine.jumpIn();
         } else {
-            application.log("Warning! Spacecraft '" + this.getDisplayName() + "' cannot jump in because it is already present or has no jump engines!");
+            application.log_DEBUG("Warning! Spacecraft '" + this.getDisplayName() + "' cannot jump in because it is already present or has no jump engines!");
         }
     };
     /**

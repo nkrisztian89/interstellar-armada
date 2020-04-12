@@ -55,15 +55,15 @@ define([
                     return;
                 }
                 request.onload = function () {
-                    application.log("Analytics request: '" + path + "' successfully completed.", 2);
+                    application.log_DEBUG("Analytics request: '" + path + "' successfully completed.", 2);
                     onfinish(request);
                 }.bind(this);
                 request.onerror = function () {
-                    application.log("ERROR: An error occured during analytics request: '" + path + "'. The status of the request was: '" + request.statusText + "' when the error happened.", 1);
+                    application.log_DEBUG("ERROR: An error occured during analytics request: '" + path + "'. The status of the request was: '" + request.statusText + "' when the error happened.", 1);
                     onfinish();
                 }.bind(this);
                 request.ontimeout = function () {
-                    application.log("Analytics request : '" + path + "' timed out.", 1);
+                    application.log_DEBUG("Analytics request : '" + path + "' timed out.", 1);
                     onfinish();
                 }.bind(this);
                 request.overrideMimeType("text/plain; charset=utf-8");
@@ -100,9 +100,9 @@ define([
                     _userID = data.userID;
                     localStorage.analytics_id = _id;
                     localStorage.analytics_user_id = _userID;
-                    application.log("Successfully created new user '" + _id + "/" + _userID + "' for analytics.", 2);
+                    application.log_DEBUG("Successfully created new user '" + _id + "/" + _userID + "' for analytics.", 2);
                 } else {
-                    application.log("Successfully logged user '" + _id + "/" + _userID + "' for analytics.", 2);
+                    application.log_DEBUG("Successfully logged user '" + _id + "/" + _userID + "' for analytics.", 2);
                 }
             }
         });
@@ -119,7 +119,7 @@ define([
             return;
         }
         if (!(_id && _userID)) {
-            application.log("Warning! Cannot send analytics event, because user is not identified!", 2);
+            application.log_DEBUG("Warning! Cannot send analytics event, because user is not identified!", 2);
             return;
         }
         url = eventName + "/" + _id + "/" + _userID;
@@ -137,7 +137,7 @@ define([
         }
         _sendRequest(url, function (request) {
             if (request) {
-                application.log("Successfully sent analytics event '" + eventName + "'!", 2);
+                application.log_DEBUG("Successfully sent analytics event '" + eventName + "'!", 2);
             }
         });
     }

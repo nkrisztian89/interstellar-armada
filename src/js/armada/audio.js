@@ -376,7 +376,7 @@ define([
                     };
                 });
             } else {
-                application.log("Could not initialize music from resource '" + musicName + "' for theme ID '" + theme + "'!");
+                application.log_DEBUG("Could not initialize music from resource '" + musicName + "' for theme ID '" + theme + "'!");
             }
         }
     }
@@ -405,7 +405,7 @@ define([
             }
             if (theme) {
                 if (!_music[theme]) {
-                    application.log("Warning: music associated with theme '" + theme + "' cannot be played, because it is not loaded!");
+                    application.log_DEBUG("Warning: music associated with theme '" + theme + "' cannot be played, because it is not loaded!");
                 } else {
                     _music[theme].clip.play(true, followupTheme ? function () {
                         // start the followup music only if we are still playing the same theme it is followup for

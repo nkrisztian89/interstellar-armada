@@ -298,6 +298,12 @@ module.exports = function (grunt) {
                         }, {
                             match: 'egomModel.resetDebugStats();',
                             replacement: '//egomModel.resetDebugStats();'
+                        }, {
+                            match: '|| application.crash()',
+                            replacement: ''
+                        }, {
+                            match: 'application.crash();',
+                            replacement: ''
                         }
                     ],
                     usePrefix: false

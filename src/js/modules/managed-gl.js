@@ -1669,7 +1669,7 @@ define([
     ManagedShader.prototype.setupGLProgram = function (contextName, gl) {
         var vertexShader, infoLog, fragmentShader, prog, i;
         if (!this._vertexShaderSource || !this._fragmentShaderSource) {
-            application.log("ERROR: Cannot set up GL shader program for '" + this._name + "', because the vertex or fragment shader source is missing!", 1);
+            application.log_DEBUG("ERROR: Cannot set up GL shader program for '" + this._name + "', because the vertex or fragment shader source is missing!", 1);
             this._ids[contextName] = null;
             return;
         }
@@ -2135,7 +2135,7 @@ define([
      */
     ManagedGLContext.prototype._createContext = function (supressAntialiasingError) {
         var gl_, contextParameters;
-        application.log("Initializing WebGL context...", 1);
+        application.log_DEBUG("Initializing WebGL context...", 1);
         // -------------------------------------------------------------------------------------------------------
         // creating the WebGLRenderingContext
         contextParameters = {alpha: this._alpha, antialias: this._antialiasing};
@@ -2148,7 +2148,7 @@ define([
         }
         // if creating a normal context fails, fall back to experimental, but notify the user
         if (!this.gl) {
-            application.log("Initializing a regular context failed, initializing experimental context...", 1);
+            application.log_DEBUG("Initializing a regular context failed, initializing experimental context...", 1);
             contextParameters.alpha = false;
             try {
                 this.gl = this._canvas.getContext("experimental-webgl", contextParameters);
@@ -2286,7 +2286,7 @@ define([
             this._filtering = value;
             if (this._filtering === TextureFiltering.ANISOTROPIC) {
                 if (!this.anisotropicFilterExt) {
-                    application.log("Anisotropic filtering is set, but the required extension is not available. Trilinear filtering will be used.", 1);
+                    application.log_DEBUG("Anisotropic filtering is set, but the required extension is not available. Trilinear filtering will be used.", 1);
                     this._filtering = TextureFiltering.TRILINEAR;
                 }
             }
@@ -2698,7 +2698,7 @@ define([
                 this._currentShader = shader;
                 return true;
             }
-            application.log("ERROR: trying to switch to non-initialized shader: '" + shader.getName() + "'!", 3);
+            application.log_DEBUG("ERROR: trying to switch to non-initialized shader: '" + shader.getName() + "'!", 3);
             this._currentShader = null;
         }
         return false;

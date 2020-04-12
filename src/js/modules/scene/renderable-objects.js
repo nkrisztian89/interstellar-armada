@@ -1183,7 +1183,7 @@ define([
                 }
                 this.setUniformValueFunction(parameterArrayNames[i], this.createGetParameterArrayFunction(parameterArrayNames[i]));
             } else {
-                application.log("Note: cannot initialize parameter array '" + parameterArrayNames[i] + "' for parameterized mesh, as the given shader (" + shader.getName() + ") does not have a uniform array named '" + uniformArrayName + "'.", 2);
+                application.log_DEBUG("Note: cannot initialize parameter array '" + parameterArrayNames[i] + "' for parameterized mesh, as the given shader (" + shader.getName() + ") does not have a uniform array named '" + uniformArrayName + "'.", 2);
                 this._parameterArrays[parameterArrayNames[i]] = new Float32Array();
             }
         }

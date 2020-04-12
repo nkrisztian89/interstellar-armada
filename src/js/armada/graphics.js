@@ -1002,7 +1002,7 @@ define([
         this._list = this._list.filter(this._isWithinLimitFunction.bind(this, limit));
         if (this._currentIndex >= this._list.length) {
             this._currentIndex = this._list.length - 1;
-            application.log("Setting (" + this._optionValuePropertyName + ") changed to '" + this.getCurrentName() + "' from '" + originalName + "' as a result of limiting the setting to " + limit + ".", 1);
+            application.log_DEBUG("Setting (" + this._optionValuePropertyName + ") changed to '" + this.getCurrentName() + "' from '" + originalName + "' as a result of limiting the setting to " + limit + ".", 1);
         }
     };
     /**
@@ -1303,7 +1303,7 @@ define([
             })) {
                 complexities.push(originalComplexities[i]);
             } else {
-                application.log("Defined shader complexity level '" + originalComplexities[i][SHADER_COMPLEXITY_PROPERTIES.NAME.name] + "', which has too high requirements and thus will be dropped from the available shader complexities.", 1);
+                application.log_DEBUG("Defined shader complexity level '" + originalComplexities[i][SHADER_COMPLEXITY_PROPERTIES.NAME.name] + "', which has too high requirements and thus will be dropped from the available shader complexities.", 1);
             }
         }
         this.setShaderConfig(SHADER_CONFIG.COMPLEXITIES, complexities);
@@ -1552,7 +1552,7 @@ define([
         } else {
             this._antialiasing = false;
             if (value) {
-                application.log("Attempted to enable antialiasing, but it is not supported and so will be disabled.", 1);
+                application.log_DEBUG("Attempted to enable antialiasing, but it is not supported and so will be disabled.", 1);
             }
         }
         // saving the original preference
@@ -1582,7 +1582,7 @@ define([
         this._filtering = value;
         if ((!managedGL.isAnisotropicFilteringAvailable()) && (value === managedGL.TextureFiltering.ANISOTROPIC)) {
             this._filtering = ANISOTROPIC_FALLBACK_FILTERING;
-            application.log("Attempted to set texture filtering to anisotropic, but it is not supported and so a fallback filtering will be applied instead.", 1);
+            application.log_DEBUG("Attempted to set texture filtering to anisotropic, but it is not supported and so a fallback filtering will be applied instead.", 1);
         }
         // saving the original preference
         if (saveToLocalStorage) {
@@ -1776,12 +1776,12 @@ define([
             }
         }
         if (this.isShadowMappingEnabled() !== originalShadowMapping) {
-            application.log("Disabled shadow mapping to satisfy requirements of current shader complexity.", 1);
+            application.log_DEBUG("Disabled shadow mapping to satisfy requirements of current shader complexity.", 1);
         } else if (this.getNumShadowMapRanges() !== originalNumShadowMapRanges) {
-            application.log("Changed number of shadow map ranges from " + originalNumShadowMapRanges + " to " + this.getNumShadowMapRanges() + " to satisfy requirements of current shader complexity.", 1);
+            application.log_DEBUG("Changed number of shadow map ranges from " + originalNumShadowMapRanges + " to " + this.getNumShadowMapRanges() + " to satisfy requirements of current shader complexity.", 1);
         }
         if (this.getMaxPointLights() !== originalMaxPointLights) {
-            application.log("Changed number of maximum point lights from " + originalMaxPointLights + " to " + this.getMaxPointLights() + " to satisfy requirements of current shader complexity.", 1);
+            application.log_DEBUG("Changed number of maximum point lights from " + originalMaxPointLights + " to " + this.getMaxPointLights() + " to satisfy requirements of current shader complexity.", 1);
         }
     };
     /**
@@ -1818,7 +1818,7 @@ define([
         } else {
             if (fallbackToHighest) {
                 this._shaderComplexity = complexities[complexities.length - 1];
-                application.log("Attempted to set shader complexity to '" + value + "', which is not supported, and thus '" + this._shaderComplexity + "' has been selected instead.", 1);
+                application.log_DEBUG("Attempted to set shader complexity to '" + value + "', which is not supported, and thus '" + this._shaderComplexity + "' has been selected instead.", 1);
             } else {
                 application.showError(
                         "Attempting to set shader complexity to '" + value + "', which is not one of the available options (" + this.getShaderComplexities().join(", ") + ").",
@@ -1876,7 +1876,7 @@ define([
             }
         } else {
             this._shadowMappingEnabled = false;
-            application.log("Attempted to enable shadow mapping, but it is not supported (at the current shader complexity level) and so will be disabled.", 1);
+            application.log_DEBUG("Attempted to enable shadow mapping, but it is not supported (at the current shader complexity level) and so will be disabled.", 1);
         }
         // saving the original preference
         if (saveToLocalStorage) {
