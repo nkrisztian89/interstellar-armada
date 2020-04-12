@@ -325,7 +325,7 @@
         "marauder": "Marauder"
     },
     "battle": {
-        "developmentVersionNotice": "Interstellar Armada: Galactic Ace - development version: {version}",
+        "developmentVersionNotice": "Interstellar Armada: Galactic Ace alpha {version}",
         "spectatorMode": "Spectator mode",
         "score": "Score: {score}",
         "hud": {

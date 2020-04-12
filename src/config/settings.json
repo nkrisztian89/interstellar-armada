@@ -766,7 +766,7 @@
                 "headerTextLayerLayout": {
                     "centerX": 0,
                     "top": 0.97,
-                    "width": 0.85,
+                    "width": 0.7,
                     "height": 0.155,
                     "scaleMode": "maximum",
                     "xScaleMode": "maximum",
@@ -774,19 +774,19 @@
                 },
                 "smallHeaderText": {
                     "color": [1, 1, 1, 1],
-                    "fontSize": 0.025,
+                    "fontSize": 0.03,
                     "fontName": "gameFont",
                     "position": [0, 0.7]
                 },
                 "bigHeaderText": {
                     "color": [1, 1, 1, 1],
-                    "fontSize": 0.06,
+                    "fontSize": 0.0725,
                     "fontName": "gameFont",
                     "position": [0, -0.35]
                 },
                 "subheaderText": {
                     "color": [1, 1, 1, 1],
-                    "fontSize": 0.025,
+                    "fontSize": 0.03,
                     "fontName": "gameFont",
                     "position": [0, -0.85]
                 },
@@ -821,7 +821,7 @@
                 "topLeftTextLayerLayout": {
                     "left": -0.97,
                     "top": 0.97,
-                    "width": 0.5,
+                    "width": 0.35,
                     "height": 0.04,
                     "scaleMode": "minimum",
                     "xScaleMode": "minimum",

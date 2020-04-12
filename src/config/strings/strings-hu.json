@@ -361,7 +361,7 @@
         }
     },
     "battle": {
-        "developmentVersionNotice": "Interstellar Armada: Galactic Ace - fejlesztői verzió: {version}",
+        "developmentVersionNotice": "Interstellar Armada: Galactic Ace alfa {version}",
         "spectatorMode": "Nézelődő mód",
         "score": "Pontszám: {score}",
         "hud": {
