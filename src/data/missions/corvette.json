@@ -166,13 +166,6 @@
                     }
                 }]
         }],
-    "views": [{
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [70, 120, 30],
-            "rotations": ["x-75", "z+215"]
-        }],
     "spacecrafts": [{
             "team": "empire",
             "class": "aries",

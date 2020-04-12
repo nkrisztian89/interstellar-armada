@@ -2279,7 +2279,7 @@ define([
                         this.resumeBattle();
                         resumeTime();
                         if (!_demoMode) {
-                            control.switchToPilotMode(_mission.getPilotedSpacecraft());
+                            control.switchToPilotMode(_mission.getPilotedSpacecraft(), true);
                         } else {
                             control.switchToSpectatorMode(false, true);
                             _battleScene.getCamera().followNextNode();

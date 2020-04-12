@@ -21,13 +21,6 @@
         "empire",
         "pirates"
     ],
-    "views": [{
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [30, 0, 10],
-            "rotations": ["x-85", "z-90"]
-        }],
     "events": [{
             "trigger": {
                 "conditions": [{

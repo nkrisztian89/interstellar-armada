@@ -3090,7 +3090,8 @@ define([
                 },
                 VIEWS: {
                     name: "views",
-                    type: _createTypedArrayType(SCENE_VIEW)
+                    type: _createTypedArrayType(SCENE_VIEW),
+                    optional: true
                 },
                 SPACECRAFTS: {
                     name: "spacecrafts",

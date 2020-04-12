@@ -25,8 +25,8 @@
             "name": "free",
             "movable": true,
             "turnable": true,
-            "position": [9600, 750, 0],
-            "rotations": ["x-75", "z-90"]
+            "position": [8200, -250, -350],
+            "rotations": ["x-87", "z+26"]
         }],
     "events": [{
             "trigger": {
@@ -180,7 +180,7 @@
             "team": "empire",
             "ai": "ship",
             "initialTarget": "Mississippi",
-            "positions": [[8500, 750, -800], [8500, 1500, -400], [8500, 1000, -400], [8500, 500, -400], [8500, 0, -400], [8500, 750, 0]],
+            "positions": [[8500, 750, -700], [8500, 1500, -400], [8500, 1000, -400], [8500, 500, -400], [8500, 0, -400], [8500, 750, -100]],
             "rotations": ["z-90"],
             "equipment": "imperial-tier1",
             "excludeFromReferenceScore": true

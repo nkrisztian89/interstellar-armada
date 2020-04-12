@@ -17,13 +17,6 @@
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],
-    "views": [{
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, -130, 40],
-            "rotations": ["x-80"]
-        }],
     "events": [{
             "trigger": {
                 "conditions": [{

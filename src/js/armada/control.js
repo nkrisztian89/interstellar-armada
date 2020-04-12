@@ -547,8 +547,9 @@ define([
     /**
      * Switches to piloting game mode, putting the player in the pilot seat of the given spacecraft.
      * @param {Spacecraft} pilotedSpacecraft
+     * @param {Boolean} [skipTransition=false] If true, the camera transition will be instantaneous
      */
-    ArmadaControlContext.prototype.switchToPilotMode = function (pilotedSpacecraft) {
+    ArmadaControlContext.prototype.switchToPilotMode = function (pilotedSpacecraft, skipTransition) {
         if (!pilotedSpacecraft || !pilotedSpacecraft.isAlive() || this._pilotingMode) {
             return;
         }
@@ -562,11 +563,9 @@ define([
         this.getController(FIGHTER_CONTROLLER_NAME).setControlledSpacecraft(pilotedSpacecraft);
         this.getController(CAMERA_CONTROLLER_NAME).setCameraToFollowObject(
                 pilotedSpacecraft.getVisualModel(),
-                config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_DURATION),
+                skipTransition ? 0 : config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_DURATION),
                 config.getSetting(config.BATTLE_SETTINGS.CAMERA_PILOTING_SWITCH_TRANSITION_STYLE),
-                (pilotedSpacecraft.isFighter() ?
-                        config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME) :
-                        config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME)));
+                config.getDefaultCamerConfigurationName(pilotedSpacecraft));
         this.disableAction("followNext");
         this.disableAction("followPrevious");
         game.getScreen().setHeaderContent("");

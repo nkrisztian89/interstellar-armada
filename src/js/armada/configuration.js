@@ -1895,6 +1895,16 @@ define([
     ConfigurationContext.prototype.getDefaultCameraPointToFallback = function () {
         return this.getSetting(CAMERA_SETTINGS.DEFAULT_POINT_TO_FALLBACK);
     };
+    /**
+     * Returns the name of the camera configuration to be used for the default view when piloting the passed spacecraft
+     * @param {Spacecraft} spacecraft
+     * @returns {String}
+     */
+    ConfigurationContext.prototype.getDefaultCamerConfigurationName = function (spacecraft) {
+        return spacecraft.isFighter() ?
+                        this.getBattleSetting(BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME) :
+                        this.getBattleSetting(BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME);
+    };
     // methods
     /**
      * Loads all the setting and references from the passed JSON object and
@@ -1938,6 +1948,7 @@ define([
         getDefaultCameraSpanRange: _context.getDefaultCameraSpanRange.bind(_context),
         getDefaultCameraBaseOrientation: _context.getDefaultCameraBaseOrientation.bind(_context),
         getDefaultCameraPointToFallback: _context.getDefaultCameraPointToFallback.bind(_context),
+        getDefaultCamerConfigurationName: _context.getDefaultCamerConfigurationName.bind(_context),
         executeWhenReady: _context.executeWhenReady.bind(_context)
     };
 });

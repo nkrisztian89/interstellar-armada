@@ -44,6 +44,8 @@ $panel-color: #222222;
 $panel-back-color: relDarken($panel-color,0.5);
 $panel-front-color: relLighten($panel-color,0.5);
 
+$outer-panel-opacity: 0.8;
+
 $separator-color: $panel-back-color;
 $panel-disabled-color: relDarken($panel-color,0.25);
 

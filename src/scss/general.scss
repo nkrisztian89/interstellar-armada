@@ -118,7 +118,7 @@ canvas {
 
 .outerContainer {
     @include glowing;
-    background-color: $panel-back-color;
+    background-color: rgba($panel-back-color,$outer-panel-opacity);
     @include bordered;
 }
 

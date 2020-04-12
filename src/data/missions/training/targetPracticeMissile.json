@@ -20,15 +20,6 @@
         "empire",
         "practiceTargets"
     ],
-    "views": [
-        {
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, 50, 10],
-            "rotations": ["x-75"]
-        }
-    ],
     "events": [{
             "trigger": {
                 "fireWhen": "missionStarts",

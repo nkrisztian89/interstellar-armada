@@ -25,13 +25,6 @@
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],
-    "views": [{
-            "name": "free",
-            "movable": true,
-            "turnable": true,
-            "position": [0, -500, 280],
-            "rotations": ["x-70"]
-        }],
     "events": [{
             "trigger": {
                 "fireWhen": "missionStarts",

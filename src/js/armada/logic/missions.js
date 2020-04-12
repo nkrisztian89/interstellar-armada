@@ -2234,23 +2234,21 @@ define([
         return result;
     };
     /**
-     * Returns whether the passed spacecraft has the given renderable object as its visual model.
-     * @param {RenderableObject} visualModel
-     * @param {Spacecraft} spacecraft
-     * @returns {Boolean}
-     */
-    Mission.prototype._spacecraftHasVisualModel = function (visualModel, spacecraft) {
-        return spacecraft.getVisualModel() === visualModel;
-    };
-    /**
      * Returns the spacecraft from this mission that the current view is following in the passed scene, if any.
      * @param {Scene} scene
      * @returns {Spacecraft|null}
      */
     Mission.prototype.getFollowedSpacecraftForScene = function (scene) {
-        return scene.getCamera().getFollowedNode() ?
-                this._spacecrafts.find(this._spacecraftHasVisualModel.bind(this, scene.getCamera().getFollowedNode().getRenderableObject())) :
-                null;
+        var visualModel, i;
+        if (scene.getCamera().getFollowedNode()) {
+            visualModel = scene.getCamera().getFollowedNode().getRenderableObject();
+            for (i = 0; i < this._spacecrafts.length; i++) {
+                if (this._spacecrafts[i].getVisualModel() === visualModel) {
+                    return this._spacecrafts[i];
+                }
+            }
+        }
+        return null;
     };
     /**
      * Returns the environment of this mission
@@ -2830,13 +2828,17 @@ define([
             }
         }
         resources.executeWhenReady(function () {
-            for (i = 0; i < this._views.length; i++) {
-                battleScene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], battleScene));
-                if (i === 0) {
-                    battleScene.getCamera().followNode(null, true, 0);
-                    battleScene.getCamera().update(0);
+            if (this._views.length > 0) {
+                for (i = 0; i < this._views.length; i++) {
+                    battleScene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], battleScene));
+                    if (i === 0) {
+                        battleScene.getCamera().followNode(null, true, 0);
+                    }
                 }
+            } else if (this.getPilotedSpacecraft()) {
+                battleScene.getCamera().followNode(this.getPilotedSpacecraft().getVisualModel().getNode(), true, 0, null, config.getDefaultCamerConfigurationName(this.getPilotedSpacecraft()));
             }
+            battleScene.getCamera().update(0);
             // prefilling the pools with objects to avoid creating lots of new objects at the start of the mission as the pools grow
             _particlePool.prefill(Math.ceil(this.getMaxParticleCount() * config.getSetting(config.BATTLE_SETTINGS.PARTICLE_POOL_PREFILL_FACTOR)));
             _projectilePool.prefill(Math.ceil(this.getMaxProjectileCount() * config.getSetting(config.BATTLE_SETTINGS.PROJECTILE_POOL_PREFILL_FACTOR)), function (proj) {
