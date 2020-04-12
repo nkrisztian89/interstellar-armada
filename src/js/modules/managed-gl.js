@@ -1732,7 +1732,6 @@ define([
      */
     ManagedShader.prototype.assignUniforms = function (context, uniformValueFunctions) {
         var i;
-        context.setCurrentShader(this);
         if (uniformValueFunctions) {
             for (i = 0; i < this._uniforms.length; i++) {
                 if (uniformValueFunctions[this._uniforms[i].getName()] !== undefined) {
