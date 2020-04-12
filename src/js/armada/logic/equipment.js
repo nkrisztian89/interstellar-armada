@@ -2476,9 +2476,11 @@ define([
      * @returns {Number}
      */
     MissileLauncher.prototype.getLoadRatio = function () {
-        return this._salvo ?
-                1 - (this._salvoLeft + this._cooldown / this._class.getCooldown()) / this._descriptor.salvo :
-                1 - this._cooldown / this._class.getCooldown();
+        return (this._missileCount > this._salvoLeft) ?
+                (this._salvo ?
+                        1 - (this._salvoLeft + this._cooldown / this._class.getCooldown()) / this._descriptor.salvo :
+                        1 - this._cooldown / this._class.getCooldown()) :
+                0;
     };
     /**
      * Whether the launcher is currently in salvo mode
@@ -2778,6 +2780,13 @@ define([
      */
     MissileLauncher.prototype.getMissileCount = function () {
         return this._missileCount;
+    };
+    /**
+     * Returns whether this missile launcher still has missiles loaded in it which are not yet queued for launch
+     * @returns {Number}
+     */
+    MissileLauncher.prototype.hasMissilesLeftToLaunch = function () {
+        return this._missileCount > this._salvoLeft;
     };
     /**
      * Returns the highest number of missiles that might be simultaneously used (flying, rendered on the battle)
@@ -3259,7 +3268,7 @@ define([
         if (this._timeUntilNonHostileOrderReset > 0) {
             this._timeUntilNonHostileOrderReset -= dt;
         }
-        if (this._target && this._missileLauncher && (this._missileLauncher.getMissileCount() > 0) && (this._missileLauncher.isInLockingRange(this._target))) {
+        if (this._target && this._missileLauncher && this._missileLauncher.hasMissilesLeftToLaunch() && (this._missileLauncher.isInLockingRange(this._target))) {
             this._lockTimeLeft = Math.max(0, this._lockTimeLeft - dt);
         } else {
             this._resetMissileLock();

@@ -2212,11 +2212,52 @@ define([
         }
     };
     /**
+     * Automatically switch to the next launcher with the same missile class or to the first non-empty launcher if the current one is empty
+     */
+    Spacecraft.prototype._autoChangeMissileLauncher = function () {
+        var originalIndex, missileClass, salvo;
+        originalIndex = this._activeMissileLauncherIndex;
+        missileClass = this._missileLaunchers[originalIndex].getMissileClass();
+        salvo = this._missileLaunchers[originalIndex].isInSalvoMode();
+        // first, try to find another launcher that has the same missile class and has missiles left to launch
+        do {
+            this._activeMissileLauncherIndex = (this._activeMissileLauncherIndex + 1) % this._missileLaunchers.length;
+        } while ((this._activeMissileLauncherIndex !== originalIndex) &&
+                (!this._missileLaunchers[this._activeMissileLauncherIndex].hasMissilesLeftToLaunch() ||
+                        (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() !== missileClass)));
+        // if there is no other launcher with still available missiles of the same class, and we are out of missiles in
+        // the current launcher, try to find a launcher with a different missile class (if we are not out of missiles
+        // in the current launcher, we will settle for it once again and wait for it to load the next missile)
+        if ((this._activeMissileLauncherIndex === originalIndex) && !this._missileLaunchers[originalIndex].hasMissilesLeftToLaunch()) {
+            do {
+                this._activeMissileLauncherIndex = (this._activeMissileLauncherIndex + 1) % this._missileLaunchers.length;
+            } while ((this._activeMissileLauncherIndex !== originalIndex) &&
+                    !this._missileLaunchers[this._activeMissileLauncherIndex].hasMissilesLeftToLaunch());
+        }
+        if (this._activeMissileLauncherIndex === originalIndex) {
+            if (this._missileLaunchers[originalIndex].getMissileCount() <= 0) {
+                // current launcher is out of missiles (even queued ones) and we haven't found any others with missiles either
+                this._setActiveMissileLauncherIndex(-1);
+            }
+        } else {
+            this._setActiveMissileLauncherIndex(this._activeMissileLauncherIndex);
+            if (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass) {
+                this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(salvo);
+            } else {
+                this._missileLaunchers[this._activeMissileLauncherIndex].setMinimumCooldown(config.getBattleSetting(config.BATTLE_SETTINGS.MISSILE_AUTO_CHANGE_COOLDOWN));
+                if (config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE)) {
+                    this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(true);
+                }
+                control.playMissileChangeSound();
+            }
+        }
+    };
+    /**
      * If the currently active missile launcher is ready, launches a missile / starts a salvo from that launcher.
      * @returns {Number} The number of missiles launched
      */
     Spacecraft.prototype.launchMissile = function () {
-        var i, scaledOriMatrix, launched = false, missileCount, originalIndex, missileClass, salvo, outOfMissiles;
+        var i, scaledOriMatrix, launched = false, missileCount;
         if (!this._firingDisabled && (this._activeMissileLauncherIndex >= 0) && this._targetingComputer.isMissileLocked()) {
             scaledOriMatrix = this.getScaledOriMatrix();
             missileCount = this._missileLaunchers[this._activeMissileLauncherIndex].launch(scaledOriMatrix, this.getSoundSourceForFireSound(), false);
@@ -2228,32 +2269,7 @@ define([
                     this._targetedBy[i].handleEvent(SpacecraftEvents.TARGET_FIRED);
                 }
                 this.handleEvent(SpacecraftEvents.FIRED);
-                // automatically switch to the next launcher with the same missile class or to the first non-empty launcher if the current one is empty
-                originalIndex = this._activeMissileLauncherIndex;
-                missileClass = this._missileLaunchers[originalIndex].getMissileClass();
-                salvo = this._missileLaunchers[originalIndex].isInSalvoMode();
-                outOfMissiles = this._missileLaunchers[originalIndex].getMissileCount() <= this._missileLaunchers[originalIndex].getSalvoLeft();
-                do {
-                    this._activeMissileLauncherIndex = (this._activeMissileLauncherIndex + 1) % this._missileLaunchers.length;
-                } while ((this._activeMissileLauncherIndex !== originalIndex) &&
-                        ((this._missileLaunchers[this._activeMissileLauncherIndex].getMissileCount() <= 0) ||
-                                (!outOfMissiles && (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() !== missileClass))));
-                if (this._activeMissileLauncherIndex === originalIndex) {
-                    if (outOfMissiles) {
-                        this._setActiveMissileLauncherIndex(-1);
-                    }
-                } else {
-                    this._setActiveMissileLauncherIndex(this._activeMissileLauncherIndex);
-                    if (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass) {
-                        this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(salvo);
-                    } else {
-                        this._missileLaunchers[this._activeMissileLauncherIndex].setMinimumCooldown(config.getBattleSetting(config.BATTLE_SETTINGS.MISSILE_AUTO_CHANGE_COOLDOWN));
-                        if (config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE)) {
-                            this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(true);
-                        }
-                        control.playMissileChangeSound();
-                    }
-                }
+                this._autoChangeMissileLauncher();
             }
             return missileCount;
         }
@@ -2265,6 +2281,9 @@ define([
      */
     Spacecraft.prototype.handleSalvoMissileLaunched = function (count) {
         this._missilesLaunched += count;
+        if ((this._activeMissileLauncherIndex >= 0) && (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileCount() <= 0)) {
+            this._autoChangeMissileLauncher();
+        }
     };
     /**
      * Change to a missile launcher with a different missile equipped
@@ -2278,7 +2297,7 @@ define([
             do {
                 this._activeMissileLauncherIndex = (this._activeMissileLauncherIndex + 1) % this._missileLaunchers.length;
             } while ((this._activeMissileLauncherIndex !== originalIndex) &&
-                    ((this._missileLaunchers[this._activeMissileLauncherIndex].getMissileCount() <= 0) ||
+                    (!this._missileLaunchers[this._activeMissileLauncherIndex].hasMissilesLeftToLaunch() ||
                             (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass)));
             changed = this._activeMissileLauncherIndex !== originalIndex;
             if (changed) {
@@ -2766,6 +2785,9 @@ define([
             }
             for (i = 0; i < this._missileLaunchers.length; i++) {
                 this._missileLaunchers[i].simulate(dt);
+                if ((this._activeMissileLauncherIndex < 0) && this._missileLaunchers[i].hasMissilesLeftToLaunch()) {
+                    this._setActiveMissileLauncherIndex(i);
+                }
             }
             if (this._propulsion) {
                 if (params.controlThrusters) {

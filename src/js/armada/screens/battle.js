@@ -3138,7 +3138,7 @@ define([
                             missileLoaded = missileLauncher.isReady();
                             color = missileLoaded ? (targetInRange ? colors.readySelected : colors.lockingSelected) : colors.loadingSelected;
                             if (missileLauncher.isInSalvoMode()) {
-                                text += " (×" + missileLauncher.getSalvo() + ")";
+                                text += " (×" + Math.min(missileLauncher.getSalvo(), missileLauncher.getMissileCount()) + ")";
                             }
                             craftCount = count;
                             if (targetInRange) {
