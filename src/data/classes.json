@@ -2056,8 +2056,8 @@
             "texture": "trainingProjectile",
             "size": 3,
             "mass": 1,
-            "duration": 4000,
-            "dissipationDuration": 1000,
+            "duration": 2000,
+            "dissipationDuration": 750,
             "intersectionPositions": [0],
             "width": 0.35,
             "muzzleFlash": {
@@ -2078,7 +2078,7 @@
             "texture": "plasma",
             "size": 2.5,
             "mass": 2,
-            "duration": 3000,
+            "duration": 2000,
             "dissipationDuration": 750,
             "intersectionPositions": [0],
             "width": 0.3,
@@ -2100,7 +2100,7 @@
             "texture": "heavyPlasma",
             "size": 4,
             "mass": 3,
-            "duration": 4000,
+            "duration": 2500,
             "dissipationDuration": 1000,
             "intersectionPositions": [0.2],
             "width": 0.22,
@@ -2122,7 +2122,7 @@
             "texture": "redPlasma",
             "size": 2.5,
             "mass": 2.5,
-            "duration": 4000,
+            "duration": 3000,
             "dissipationDuration": 1000,
             "intersectionPositions": [0],
             "width": 0.3,
@@ -2302,7 +2302,7 @@
             "cooldown": 500,
             "barrels": [{
                     "projectile": "redPlasma",
-                    "projectileVelocity": 450,
+                    "projectileVelocity": 500,
                     "position": [0, 432, 0]
                 }],
             "attachmentPoint": [0, -20, 48],
@@ -2321,7 +2321,7 @@
             "cooldown": 500,
             "barrels": [{
                     "projectile": "heavyPlasma",
-                    "projectileVelocity": 550,
+                    "projectileVelocity": 600,
                     "position": [0, 415, -20]
                 }],
             "attachmentPoint": [0, 0, 25],
@@ -2340,19 +2340,19 @@
             "cooldown": 250,
             "barrels": [{
                     "projectile": "plasma",
-                    "projectileVelocity": 900,
+                    "projectileVelocity": 1000,
                     "position": [2, 25, 10]
                 }, {
                     "projectile": "plasma",
-                    "projectileVelocity": 900,
+                    "projectileVelocity": 1000,
                     "position": [-2, 25, 10]
                 }, {
                     "projectile": "plasma",
-                    "projectileVelocity": 900,
+                    "projectileVelocity": 1000,
                     "position": [2, 25, 14]
                 }, {
                     "projectile": "plasma",
-                    "projectileVelocity": 900,
+                    "projectileVelocity": 1000,
                     "position": [-2, 25, 14]
                 }],
             "attachmentPoint": [0, 0, 0],
@@ -2426,7 +2426,7 @@
             "cooldown": 1500,
             "barrels": [{
                     "projectile": "proton",
-                    "projectileVelocity": 900,
+                    "projectileVelocity": 1000,
                     "position": [0, 100, 0]
                 }],
             "attachmentPoint": [0, 0, 0],
@@ -2462,7 +2462,7 @@
             "cooldown": 3000,
             "barrels": [{
                     "projectile": "ion",
-                    "projectileVelocity": 1000,
+                    "projectileVelocity": 1200,
                     "position": [0, 320, 0]
                 }],
             "attachmentPoint": [0, 0, 0],
