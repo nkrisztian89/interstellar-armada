@@ -1,0 +1,132 @@
+{
+    "description": "",
+    "environment": "mera",
+    "anticipationTheme": "anticipation2",
+    "combatTheme": "combat3",
+    "tips": [
+        "prioritizeTargets",
+        "think",
+        "curve",
+        "strafe",
+        "cruiseMode",
+        "combatMode",
+        "protect",
+        "protectTaunt"
+    ],
+    "teams": [
+        "empire",
+        {
+            "name": "rebels",
+            "color": [0.2, 0.2, 0.8, 1.0]
+        }
+    ],
+    "views": [{
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, -100, 100],
+            "rotations": ["x-70", "z+0"]
+        }],
+    "events": [],
+    "spacecrafts": [{
+            "class": "viper",
+            "team": "empire",
+            "squad": "alpha",
+            "count": 3,
+            "ai": "fighter",
+            "position": [0, 0, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier1"
+        }, {
+            "class": "viper",
+            "team": "empire",
+            "squad": "beta",
+            "count": 3,
+            "ai": "fighter",
+            "position": [0, -20, 50],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier1"
+        }, {
+            "class": "viper",
+            "team": "empire",
+            "squad": "gamma",
+            "count": 3,
+            "ai": "fighter",
+            "position": [0, -20, -50],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier1"
+        }, {
+            "class": "viper",
+            "team": "empire",
+            "squad": "delta",
+            "count": 3,
+            "ai": "fighter",
+            "position": [200, -20, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier1"
+        }, {
+            "class": "viper",
+            "team": "empire",
+            "squad": "epsilon",
+            "count": 3,
+            "ai": "fighter",
+            "position": [-200, -20, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier1"
+        }, {
+            "class": "falcon",
+            "team": "rebels",
+            "squad": "phantom",
+            "count": 5,
+            "ai": "fighter",
+            "position": [0, 9500, 300],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+180"],
+            "equipment": "player-tier3"
+        }, {
+            "class": "falcon",
+            "team": "rebels",
+            "squad": "reaper",
+            "count": 5,
+            "ai": "fighter",
+            "position": [0, 9500, -300],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+180"],
+            "equipment": "player-tier3"
+        }, {
+            "class": "libra",
+            "name": "Mississippi",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [0, 10000, 0],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1",
+            "excludeFromReferenceScore": true
+        }]
+}

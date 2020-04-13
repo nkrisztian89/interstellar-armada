@@ -176,6 +176,7 @@
         "wraith": "Lidérc",
         "phantom": "Fantom",
         "serpent": "Kígyó",
+        "hydra": "Hüdra",
         "reaper": "Kaszás",
         "raider": "Betyár",
         "marauder": "Martalóc"
@@ -321,6 +322,9 @@
         "shadowTest": {
             "name": "Árnyékolás teszt"
         },
+        "cruiserVsBombers": {
+            "name": "Cirkáló a bombázók ellen"
+        },
         "sandbox-30": {
             "name": "Sandbox 30"
         },
@@ -329,6 +333,9 @@
         },
         "shipcount": {
             "name": "Sok hajós test"
+        },
+        "fleetBattle": {
+            "name": "Flottaütközet"
         },
         "libraTest": {
             "name": "Libra teszt"

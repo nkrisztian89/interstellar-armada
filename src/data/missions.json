@@ -37,6 +37,9 @@
         }, {
             "source": "tests/test.json"
         }, {
+            "source": "tests/cruiserVsBombers.json",
+            "test": true
+        }, {
             "source": "tests/shadowTest.json",
             "test": true
         }, {
@@ -47,6 +50,9 @@
             "test": true
         }, {
             "source": "tests/shipcount.json",
+            "test": true
+        }, {
+            "source": "tests/fleetBattle.json",
             "test": true
         }, {
             "source": "tests/libraTest.json",

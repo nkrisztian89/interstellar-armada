@@ -1,0 +1,374 @@
+{
+    "description": "",
+    "environment": "mera",
+    "anticipationTheme": "anticipation2",
+    "combatTheme": "combat3",
+    "tips": [
+        "prioritizeTargets",
+        "think",
+        "curve",
+        "strafe",
+        "cruiseMode",
+        "combatMode",
+        "protect",
+        "protectTaunt"
+    ],
+    "teams": [
+        "empire",
+        {
+            "name": "rebels",
+            "color": [0.2, 0.2, 0.8, 1.0]
+        }
+    ],
+    "views": [{
+            "name": "free",
+            "movable": true,
+            "turnable": true,
+            "position": [0, -100, 100],
+            "rotations": ["x-70", "z+0"]
+        }],
+    "events": [],
+    "spacecrafts": [{
+            "class": "falcon",
+            "team": "empire",
+            "squad": "alpha",
+            "count": 5,
+            "ai": "fighter",
+            "position": [0, 0, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier3"
+        }, {
+            "class": "falcon",
+            "team": "empire",
+            "squad": "beta",
+            "count": 5,
+            "ai": "fighter",
+            "position": [300, -20, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier2"
+        }, {
+            "class": "falcon",
+            "team": "empire",
+            "squad": "gamma",
+            "count": 5,
+            "ai": "fighter",
+            "position": [-300, -20, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier2"
+        }, {
+            "class": "viper",
+            "team": "empire",
+            "squad": "delta",
+            "count": 3,
+            "ai": "fighter",
+            "position": [200, -20, 100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier1"
+        }, {
+            "class": "viper",
+            "team": "empire",
+            "squad": "epsilon",
+            "count": 3,
+            "ai": "fighter",
+            "position": [-200, -20, 100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "player-tier1"
+        }, {
+            "class": "rhino",
+            "team": "empire",
+            "squad": "iota",
+            "count": 2,
+            "ai": "fighter",
+            "position": [200, -20, -100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "rhino",
+            "team": "empire",
+            "squad": "kappa",
+            "count": 2,
+            "ai": "fighter",
+            "position": [-200, -20, -100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Asimov",
+            "ai": "ship",
+            "team": "empire",
+            "position": [0, -100, 0],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Lem",
+            "ai": "ship",
+            "team": "empire",
+            "position": [150, -150, 0],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Vonnegut",
+            "ai": "ship",
+            "team": "empire",
+            "position": [-150, -150, 0],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Verne",
+            "ai": "ship",
+            "team": "empire",
+            "position": [300, -200, 0],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Wells",
+            "ai": "ship",
+            "team": "empire",
+            "position": [-300, -200, 0],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "taurus",
+            "name": "Indomitable",
+            "ai": "ship",
+            "team": "empire",
+            "position": [150, 0, 200],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "taurus",
+            "name": "Relentless",
+            "ai": "ship",
+            "team": "empire",
+            "position": [-150, 0, 200],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "taurus",
+            "name": "Resilient",
+            "ai": "ship",
+            "team": "empire",
+            "position": [150, 0, -200],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "taurus",
+            "name": "Defiant",
+            "ai": "ship",
+            "team": "empire",
+            "position": [-150, 0, -200],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "libra",
+            "name": "Styx",
+            "ai": "ship",
+            "team": "empire",
+            "position": [0, -1000, 0],
+            "rotations": ["z+0"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "falcon",
+            "team": "rebels",
+            "squad": "wraith",
+            "count": 5,
+            "ai": "fighter",
+            "position": [0, 6000, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+180"],
+            "equipment": "player-tier3"
+        }, {
+            "class": "falcon",
+            "team": "rebels",
+            "squad": "serpent",
+            "count": 5,
+            "ai": "fighter",
+            "position": [300, 6020, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+180"],
+            "equipment": "player-tier2"
+        }, {
+            "class": "falcon",
+            "team": "rebels",
+            "squad": "raider",
+            "count": 5,
+            "ai": "fighter",
+            "position": [-300, 6020, 0],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+180"],
+            "equipment": "player-tier2"
+        }, {
+            "class": "viper",
+            "team": "rebels",
+            "squad": "reaper",
+            "count": 3,
+            "ai": "fighter",
+            "position": [200, 6020, 100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+180"],
+            "equipment": "player-tier1"
+        }, {
+            "class": "viper",
+            "team": "rebels",
+            "squad": "phantom",
+            "count": 3,
+            "ai": "fighter",
+            "position": [-200, 6020, 100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+180"],
+            "equipment": "player-tier1"
+        }, {
+            "class": "rhino",
+            "team": "rebels",
+            "squad": "marauder",
+            "count": 2,
+            "ai": "fighter",
+            "position": [200, 6020, -100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "rhino",
+            "team": "rebels",
+            "squad": "hydra",
+            "count": 2,
+            "ai": "fighter",
+            "position": [-200, 6020, -100],
+            "formation": {
+                "type": "wedge",
+                "spacing": [50, -20, 0]
+            },
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Daneel",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [0, 6100, 0],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Giskard",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [150, 6150, 0],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Calvin",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [-150, 6150, 0],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Baley",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [300, 6200, 0],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "name": "Seldon",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [-300, 6200, 0],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "taurus",
+            "name": "Columbia",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [150, 6000, 200],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "taurus",
+            "name": "Challenger",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [-150, 6000, 200],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "taurus",
+            "name": "Enterprise",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [150, 6000, -200],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "taurus",
+            "name": "Atlantis",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [-150, 6000, -200],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "libra",
+            "name": "Mississippi",
+            "ai": "ship",
+            "team": "rebels",
+            "position": [0, 7000, 0],
+            "rotations": ["z+180"],
+            "equipment": "imperial-tier1"
+        }]
+}

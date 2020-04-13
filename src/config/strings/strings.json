@@ -262,6 +262,9 @@
         "shadowTest": {
             "name": "Shadow map test"
         },
+        "cruiserVsBombers": {
+            "name": "Cruiser vs bombers"
+        },
         "sandbox-30": {
             "name": "Sandbox 30"
         },
@@ -270,6 +273,9 @@
         },
         "shipcount": {
             "name": "Ship count test"
+        },
+        "fleetBattle": {
+            "name": "Fleet battle"
         },
         "libraTest": {
             "name": "Libra test"
@@ -320,6 +326,7 @@
         "wraith": "Wraith",
         "phantom": "Phantom",
         "serpent": "Serpent",
+        "hydra": "Hydra",
         "reaper": "Reaper",
         "raider": "Raider",
         "marauder": "Marauder"
