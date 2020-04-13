@@ -254,7 +254,7 @@ define([
         }.bind(this));
         // launch a missile from the active missile launcher of the fighter
         this.setActionFunction("launchMissile", true, function (i, source) {
-            if (this._controlledSpacecraft.launchMissile(i) <= 0) {
+            if (!this._controlledSpacecraft.launchMissile(i)) {
                 if (_missileChangeDeniedSound) {
                     _missileChangeDeniedSound.play();
                 }

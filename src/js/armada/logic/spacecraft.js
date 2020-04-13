@@ -2254,33 +2254,31 @@ define([
     };
     /**
      * If the currently active missile launcher is ready, launches a missile / starts a salvo from that launcher.
-     * @returns {Number} The number of missiles launched
+     * @returns {Missile} The missile that has been launched, if any
      */
     Spacecraft.prototype.launchMissile = function () {
-        var i, scaledOriMatrix, launched = false, missileCount;
+        var i, scaledOriMatrix, missile;
         if (!this._firingDisabled && (this._activeMissileLauncherIndex >= 0) && this._targetingComputer.isMissileLocked()) {
             scaledOriMatrix = this.getScaledOriMatrix();
-            missileCount = this._missileLaunchers[this._activeMissileLauncherIndex].launch(scaledOriMatrix, this.getSoundSourceForFireSound(), false);
-            launched = (missileCount > 0);
-            this._missilesLaunched += missileCount;
+            missile = this._missileLaunchers[this._activeMissileLauncherIndex].launch(scaledOriMatrix, this.getSoundSourceForFireSound(), false);
             // executing callbacks
-            if (launched) {
+            if (missile) {
+                this._missilesLaunched++;
                 for (i = 0; i < this._targetedBy.length; i++) {
                     this._targetedBy[i].handleEvent(SpacecraftEvents.TARGET_FIRED);
                 }
                 this.handleEvent(SpacecraftEvents.FIRED);
                 this._autoChangeMissileLauncher();
             }
-            return missileCount;
+            return missile;
         }
-        return 0;
+        return null;
     };
     /**
      * To be called when a missile launcher launches a missile automatically as part of a salvo
-     * @param {Number} count The number of missiles launched
      */
-    Spacecraft.prototype.handleSalvoMissileLaunched = function (count) {
-        this._missilesLaunched += count;
+    Spacecraft.prototype.handleSalvoMissileLaunched = function () {
+        this._missilesLaunched++;
         if ((this._activeMissileLauncherIndex >= 0) && (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileCount() <= 0)) {
             this._autoChangeMissileLauncher();
         }

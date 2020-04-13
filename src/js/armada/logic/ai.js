@@ -839,6 +839,11 @@ define([
          * @type Number
          */
         this._fireDelay = FIRE_DELAY * reactionTimeFactor;
+        /**
+         * The list of missiles that we fired at the current target (to avoid overkill by launching too many)
+         * @type Missile[]
+         */
+        this._missilesOnTarget = [];
         // attaching handlers to the various spacecraft events
         this._spacecraft.addEventHandler(SpacecraftEvents.TARGET_HIT, this._handleTargetHit.bind(this));
         this._spacecraft.addEventHandler(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._handleAnySpacecraftHit.bind(this));
@@ -879,6 +884,7 @@ define([
      */
     FighterAI.prototype._handleTargetSwitch = function () {
         SpacecraftAI.prototype._handleTargetSwitch.call(this);
+        this._missilesOnTarget.length = 0;
         this._startNewAttackRun();
     };
     /**
@@ -969,11 +975,14 @@ define([
         var
                 /** @type Spacecraft */
                 target,
+                /** @type Missile */
+                missile,
                 /** @type Number[3] */
                 positionVector, targetPositionVector, vectorToTarget, newOffset,
                 directionToTarget, relativeTargetDirection, relativeBlockerPosition,
                 /** @type Number */
-                targetHitTime,
+                i,
+                targetHitTime, hitpoints,
                 ownSize, targetSize,
                 fireThresholdAngle,
                 acceleration, minDistance, maxDistance, speed, blockAvoidanceSpeed, baseDistance,
@@ -1017,6 +1026,13 @@ define([
             speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             target = this._spacecraft.getTarget();
             this._attackingTarget = false;
+            // updating missile on target array
+            for (i = 0; i < this._missilesOnTarget.length; i++) {
+                if (this._missilesOnTarget[i].getTarget() !== target) {
+                    this._missilesOnTarget.splice(i, 1);
+                    i--;
+                }
+            }
             // .................................................................................................
             // evade phase of charge maneuver
             if (this._chargePhase === ChargePhase.EVADE) {
@@ -1133,10 +1149,6 @@ define([
                                 this._fireDelayLeft -= dt;
                             } else {
                                 this._spacecraft.fire();
-                                if (this._spacecraft.getActiveMissileLauncher() && (this._targetDistance <= this._spacecraft.getActiveMissileLauncher().getMissileClass().getNominalRange()) &&
-                                        this._spacecraft.getActiveMissileLauncher().getMissileClass().isAntiShip() !== target.isFighter()) {
-                                    this._spacecraft.launchMissile();
-                                }
                                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                 // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
                                 if (!this._isBlockedBy) {
@@ -1173,6 +1185,26 @@ define([
                     } else {
                         this._timeSinceLastRoll = 0;
                         this._fireDelayLeft = this._fireDelay;
+                    }
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // launching missiles
+                    if (this._spacecraft.getActiveMissileLauncher()) {
+                        // do not launch anti-ship missiles against fighters or vice versa
+                        if (this._spacecraft.getActiveMissileLauncher().getMissileClass().isAntiShip() === target.isFighter()) {
+                            this._spacecraft.changeMissile();
+                        } else {
+                            // do not launch additional missiles if there are already enough of them on their way to destroy the target (launched by us)
+                            hitpoints = target.getHitpoints() + target.getShieldCapacity();
+                            for (i = 0; i < this._missilesOnTarget.length; i++) {
+                                hitpoints -= this._missilesOnTarget[i].getClass().getDamage(0);
+                            }
+                            if (hitpoints > 0) {
+                                missile = this._spacecraft.launchMissile();
+                                if (missile) {
+                                    this._missilesOnTarget.push(missile);
+                                }
+                            }
+                        }
                     }
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // initiating charge

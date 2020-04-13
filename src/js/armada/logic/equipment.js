@@ -1152,6 +1152,20 @@ define([
         return this._visualModel;
     };
     /**
+     * Returns the target the missile is homing in on
+     * @returns {Spacecraft}
+     */
+    Missile.prototype.getTarget = function () {
+        return this._target;
+    };
+    /**
+     * Returns the class of the missile
+     * @returns {MissileClass}
+     */
+    Missile.prototype.getClass = function () {
+        return this._class;
+    };
+    /**
      * Adds the missile to a scene immediately, assuming its resources have already been loaded.
      * @param {Scene} scene The scene to which to add the renderable object presenting the missile.
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
@@ -2630,7 +2644,9 @@ define([
         if (this._salvoLeft > 0) {
             if (this._cooldown <= 0) {
                 if ((this._missileCount > 0) && this._salvoTarget && this._salvoTarget.isAlive()) {
-                    this._spacecraft.handleSalvoMissileLaunched(this.launch(this._spacecraft.getScaledOriMatrix(), this._spacecraft.getSoundSourceForFireSound(), true));
+                    if (this.launch(this._spacecraft.getScaledOriMatrix(), this._spacecraft.getSoundSourceForFireSound(), true)) {
+                        this._spacecraft.handleSalvoMissileLaunched();
+                    }
                 } else {
                     // cancel the salvo if we are out of missiles or the salvo target has been destroyed
                     this._salvoLeft = 0;
@@ -2657,10 +2673,10 @@ define([
      * is more effective to calculate it once for a spacecraft and pass it to all launchers as a parameter.
      * @param {SoundSource} shipSoundSource The sound source belonging to the spacecraft this launcher is on
      * @param {Boolean} salvo Whether this is an automatic launch as part of a salvo (the first launch in a salvo is manual)
-     * @returns {Number} How many missiles did the launcher launch.
+     * @returns {Missile} The missile that has been launched, if any
      */
     MissileLauncher.prototype.launch = function (shipScaledOriMatrix, shipSoundSource, salvo) {
-        var m, result,
+        var m,
                 tubePosVector,
                 missileOriMatrix,
                 soundPosition,
@@ -2683,7 +2699,6 @@ define([
             tubePosVector = vec.prodVec3Mat4Aux(this._descriptor.tubePositions[this._activeTubeIndex], shipScaledOriMatrix);
             mat.setTranslatedByVector(MissileLauncher._tubePosMatrix, this._spacecraft.getPhysicalPositionMatrix(), tubePosVector);
             missileOriMatrix = this.getMissileOrientationMatrix();
-            result = 0;
             // generate the missile
             m = _missilePool.getObject();
             m.init(
@@ -2701,15 +2716,14 @@ define([
                     this._class.getForceForDuration(_momentDuration),
                     _momentDuration
                     );
-            result++;
             if (!shipSoundSource) {
                 soundPosition = mat.translationVector3(m.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera()));
             }
             this._class.playLaunchSound(soundPosition, shipSoundSource, _fireSoundStackingTimeThreshold, _fireSoundStackingVolumeFactor);
             this._activeTubeIndex = (this._activeTubeIndex + 1) % this._descriptor.tubePositions.length;
-            return result;
+            return m;
         }
-        return 0;
+        return null;
     };
     /**
      * Whether the missile launcher is ready to launch the next missile
