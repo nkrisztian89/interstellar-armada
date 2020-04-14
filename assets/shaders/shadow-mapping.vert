@@ -37,6 +37,6 @@ void main() {
     gl_Position.z = -gl_Position.z + parallelism * range;
     gl_Position = LiSPTM * gl_Position;
     #if !DEPTH_TEXTURES
-    v_depth = -gl_Position.z * 0.5 + 0.5;
+    v_depth = -(gl_Position.z / gl_Position.w) * 0.5 + 0.5;
     #endif
 }
