@@ -4027,6 +4027,13 @@ define([
         }
     };
     /**
+     * @param {ObjectiveWithState} object Information about a mission objective
+     * @returns {Boolean} Whether the objective is completed
+     */
+    function _mapObjectiveState(object) {
+        return object.state === missions.ObjectiveState.COMPLETED;
+    }
+    /**
      * Sets up and navigates to the debriefing screen according to the current state of the mission.
      */
     function _goToDebriefing() {
@@ -4051,6 +4058,8 @@ define([
         }
         game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
             missionState: _mission.getState(),
+            objectives: _mission.getObjectives(),
+            objectivesCompleted: _mission.getObjectivesState().map(_mapObjectiveState),
             performance: victory ? perfStats.performance : missions.FAILED_MISSION_PERFORMACE,
             nextPerformance: victory ? perfStats.nextPerformance : null,
             nextPerformanceScore: victory ? perfStats.nextPerformanceScore : 0,

@@ -441,6 +441,9 @@
             "leftEarly": "Elhagytad a küldetés helyszínét, mielőtt teljesítetted volna a feladatokat.",
             "generic": "Teszt kipróbálva."
         },
+        "objectivesHeader": "Feladatok",
+        "completed": "Teljesítve",
+        "failed": "Elbukva",
         "statisticsHeader": "Statisztika",
         "timeLabelCell": "Eltelt idő:",
         "killsLabelCell": "Kilőtt űrhajók:",

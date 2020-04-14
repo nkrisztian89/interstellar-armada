@@ -2305,10 +2305,15 @@ define([
         }
         return result;
     };
+    /** 
+     * @typedef {Object} ObjectiveWithState
+     * @property {String} text 
+     * @property {Number} state From enum ObjectiveState
+     */
     /**
      * Returns a list of translated strings along with objective state values for displaying the current state of mission objectives for
      * the player on the HUD
-     * @returns {ObjectivesWithState[]}
+     * @returns {ObjectiveWithState[]}
      */
     Mission.prototype.getObjectivesState = function () {
         var i, result = [], suffix, hostiles, craft;

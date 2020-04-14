@@ -405,6 +405,9 @@
             "leftEarly": "You left the battlefield before completing all the mission objectives.",
             "generic": "Test has been checked out."
         },
+        "objectivesHeader": "Objectives",
+        "completed": "Completed",
+        "failed": "Failed",
         "statisticsHeader": "Statistics",
         "timeLabelCell": "Elapsed time:",
         "killsLabelCell": "Kills:",

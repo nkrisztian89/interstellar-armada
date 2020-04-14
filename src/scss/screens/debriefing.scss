@@ -10,12 +10,9 @@ img.medal {
 }
 
 .debriefing.pageContent {
-    margin: 1em auto 0 auto;
+    height: calc(100% - #{2*$separator-height});
     text-align: center;
-}
-
-h1.debriefing {
-    margin-bottom: 0.2em;
+    padding-bottom: 1em;
 }
 
 table.debriefing {
@@ -44,6 +41,21 @@ table.debriefing {
     text-align: center;
 }
 
+table.objectivesTable {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+td.completedObjective {
+    color: #00cc00;
+    font-weight: bold;
+}
+
+td.failedObjective {
+    color: #ff4444;
+    font-weight: bold;
+}
+
 h2.statisticsHeader {
     margin-top: 0;
 }
@@ -57,6 +69,9 @@ h2.statisticsHeader {
 .scoreBreakdownContainer {
     display: inline-block;
     margin-left: 1.5em;
+    &[hidden] {
+        display: none;
+    }
 }
 
 .statLabelCell {

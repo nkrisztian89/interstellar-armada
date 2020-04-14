@@ -41,6 +41,10 @@ define([
             SCORE_SPAN_ID = "score",
             NEW_RECORD_ID = "newRecord",
             DESCRIPTION_PARAGRAPH_ID = "description",
+            OBJECTIVES_TABLE_ID = "objectivesTable",
+            COMPLETED_OBJECTIVE_CLASS_NAME = "completedObjective",
+            FAILED_OBJECTIVE_CLASS_NAME = "failedObjective",
+            OBJECTIVE_TEXT_CELL_CLASS_NAME = "statLabelCell",
             SCORE_BREAKDOWN_CONTAINER_ID = "scoreBreakdownContainer",
             // statistics cells
             TIME_CELL_ID = "timeCell",
@@ -109,6 +113,8 @@ define([
         /** @type SimpleComponent */
         this._descriptionParagraph = this.registerSimpleComponent(DESCRIPTION_PARAGRAPH_ID);
         /** @type SimpleComponent */
+        this._objectivesTable = this.registerSimpleComponent(OBJECTIVES_TABLE_ID);
+        /** @type SimpleComponent */
         this._scoreBreakdownContainer = this.registerSimpleComponent(SCORE_BREAKDOWN_CONTAINER_ID);
         /** @type SimpleComponent */
         this._timeCell = this.registerSimpleComponent(TIME_CELL_ID);
@@ -172,6 +178,8 @@ define([
     /**
      * @typedef {Object} DebreifingScreen~Data
      * @property {Number} missionState (enum missions.MissionState)
+     * @property {String[]} objectives
+     * @property {Boolean[]} objectivesCompleted
      * @property {String} performance
      * @property {String} nextPerformanceScore
      * @property {Number} score 
@@ -196,7 +204,7 @@ define([
      * @param {DebreifingScreen~Data} data
      */
     DebriefingScreen.prototype.setData = function (data) {
-        var medalText, hasScore, description;
+        var medalText, hasScore, description, i;
         hasScore = (data.missionState === missions.MissionState.COMPLETED);
         _shouldPlayVictoryMusic = (data.missionState === missions.MissionState.COMPLETED) ||
                 (data.missionState === missions.MissionState.NONE);
@@ -240,6 +248,13 @@ define([
                 description = strings.get(strings.DEBRIEFING.DESCRIPTION_LEFT_EARLY);
         }
         this._descriptionParagraph.setContent(description);
+        description = "";
+        for (i = 0; i < data.objectives.length; i++) {
+            description += '<tr><td class="' + (data.objectivesCompleted[i] ? COMPLETED_OBJECTIVE_CLASS_NAME : FAILED_OBJECTIVE_CLASS_NAME) + '">' +
+                    (data.objectivesCompleted[i] ? strings.get(strings.DEBRIEFING.COMPLETED) : strings.get(strings.DEBRIEFING.FAILED)) +
+                    ':</td><td class="' + OBJECTIVE_TEXT_CELL_CLASS_NAME + '">' + data.objectives[i] + "</td></tr>";
+        }
+        this._objectivesTable.setContent(description);
         this._timeCell.setContent(utils.formatTimeToMinutes(data.elapsedTime));
         this._killsCell.setContent(data.kills.toString());
         this._damageCell.setContent(data.damageDealt.toString());
