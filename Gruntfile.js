@@ -220,7 +220,7 @@ module.exports = function (grunt) {
             distData: {
                 files: [
                     {expand: true, cwd: 'src/config/', src: ['**'], dest: 'config/'},
-                    {expand: true, cwd: 'src/data/', src: ['**', '!test/**', '!missions/tests**'], dest: 'data/'}
+                    {expand: true, cwd: 'src/data/', src: ['**', '!test/**', '!missions/tests/**', 'missions/tests/test.json'], dest: 'data/'}
                 ]
             },
             js: {
@@ -304,6 +304,9 @@ module.exports = function (grunt) {
                         }, {
                             match: 'application.crash();',
                             replacement: ''
+                        }, {
+                            match: 'application.isDebugVersion()',
+                            replacement: 'false'
                         }
                     ],
                     usePrefix: false
