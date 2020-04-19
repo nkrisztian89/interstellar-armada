@@ -68,6 +68,31 @@ define([
     "use strict";
     var
             // ------------------------------------------------------------------------------
+            // enums
+            HUDSection = {
+                TARGET_INFO: 0,
+                TARGET_INDICATOR: 1,
+                SHIP_INDICATORS: 2,
+                AIM_ASSIST_INDICATOR: 3,
+                WEAPON_IMPACT_INDICATORS: 4,
+                HULL_BAR: 5,
+                SHIELD_BAR: 6,
+                SPEED_BAR: 7,
+                DRIFT_ARROW: 8,
+                FLIGHT_MODE: 9,
+                WINGMEN_INFO: 10,
+                MISSILE_INFO: 11,
+                MISSILE_INDICATOR: 12,
+                OBJECTIVES: 13,
+                ESCORTS: 14,
+                SCORE: 15
+            },
+            HUDSectionState = {
+                VISIBLE: 0,
+                HIDDEN: 1,
+                HIGHLIGHTED: 2
+            },
+            // ------------------------------------------------------------------------------
             // constants
             /** @type String */
             STATS_PARAGRAPH_ID = "stats",
@@ -443,6 +468,16 @@ define([
              * @type Spacecraft[]
              */
             _newHostiles,
+            /**
+             * Used to determine the visibility of currently highlighted (blinking) HUD elements
+             * @type Number
+             */
+            _hudHighlightTime,
+            /**
+             * Whether currently highlighted (blinking) HUD elements are visible at the moment
+             * @type Number
+             */
+            _hudHighlightVisible,
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // music related
             /**
@@ -454,11 +489,16 @@ define([
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             // cached configuration settings
             /**
-             * Cached setting of theduration while the combat theme is kept playing during battle after a spacecraft fires at a hostile 
+             * Cached setting of the duration while the combat theme is kept playing during battle after a spacecraft fires at a hostile 
              * target, in milliseconds
              * @type Number
              */
             _combatThemeDurationAfterFire,
+            /**
+             * Cached setting of the interval of blinking for highlighted HUD elements
+             * @type Number
+             */
+            _hudHighlightInterval,
             // ................................................................................................
             // elements of the HUD and their stored state
             /**
@@ -1075,7 +1115,16 @@ define([
              * The settings object for message text is used frequently for setting message colors, so we store a cached reference to it
              * @type Object
              */
-            _messageTextSettings;
+            _messageTextSettings,
+            /**
+             * An array storing the current state of each of the HUD sections
+             * @type Number[]
+             */
+            _hudSectionStates;
+    // -------------------------------------------------------------------------
+    // Freezing enums
+    Object.freeze(HUDSection);
+    Object.freeze(HUDSectionState);
     // ------------------------------------------------------------------------------
     // private functions
     /**
@@ -1159,6 +1208,7 @@ define([
         _shipIndicatorHighlightTime = 0;
         // other
         _tipText = "";
+        _hudSectionStates = null;
     }
     /**
      * Sets the tip text by choosing one randomly from the available options.
@@ -1350,6 +1400,21 @@ define([
                 _newHostiles.push(this);
             }
             _newHostilesAlertTimeLeft = _newHostilesMessage.duration;
+        }
+    }
+    /**
+     * Updates the HUD state according to the passed HUD event data
+     * @param {SpacecraftEvents~HUDData} data
+     */
+    function _handleHUDEvent(data) {
+        var i, state;
+        state = HUDSectionState[utils.constantName(data.state)];
+        if (data.section) {
+            _hudSectionStates[HUDSection[utils.constantName(data.section)]] = state;
+        } else {
+            for (i = 0; i < _hudSectionStates.length; i++) {
+                _hudSectionStates[i] = state;
+            }
         }
     }
     // ##############################################################################
@@ -2227,6 +2292,15 @@ define([
         model.setScale(1 / model.getSize());
         _targetViewModel = model;
     }
+    /**
+     * Whether the passed HUD section should be currently visible according to its state
+     * @param {Number} hudSection (enum HUDSection)
+     * @returns {Boolean}
+     */
+    function _hudSectionIsVisible(hudSection) {
+        return (_hudSectionStates[hudSection] === HUDSectionState.VISIBLE) || 
+                ((_hudSectionStates[hudSection] === HUDSectionState.HIGHLIGHTED) && _hudHighlightVisible);
+    }
     // ##############################################################################
     /**
      * @class Represents the battle screen.
@@ -2879,6 +2953,7 @@ define([
                 canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement(),
                 /** @type Boolean */
                 isInAimingView, behind, targetInRange, targetIsHostile, targetSwitched, scalesWithWidth, playerFound, newHostilesPresent, skip, away, transmissionSource, missileLockIndicatorsUpdated, missileLoaded,
+                visible1, visible2, visible3, visible4,
                 /** @type MouseInputIntepreter */
                 mouseInputInterpreter,
                 /** @type String */
@@ -2890,19 +2965,25 @@ define([
                 /** @type Spacecraft[] */
                 ships, highlightedShips,
                 /** @type Battle~HUDMessage[] */
-                messageQueue;                
+                messageQueue;    
         missileLockIndicatorsUpdated = false;
         if (craft && _isHUDVisible) {
+            _hudHighlightTime = (_hudHighlightTime + dt) % _hudHighlightInterval;
+            _hudHighlightVisible = _hudHighlightTime < 0.5 * _hudHighlightInterval;
             isInAimingView = craft.getView(_battleScene.getCamera().getConfiguration().getName()).isAimingView();
             // .....................................................................................................
             // header and score
             _bigHeaderText.show();
             if (control.isInPilotMode()) {
                 _subheaderText.hide();
-                _scoreText.setText(utils.formatString(strings.get(strings.BATTLE.SCORE), {
-                    score: Math.round(craft.getScore())
-                }));
-                _scoreText.show();
+                if (_hudSectionIsVisible(HUDSection.SCORE)) {
+                    _scoreText.setText(utils.formatString(strings.get(strings.BATTLE.SCORE), {
+                        score: Math.round(craft.getScore())
+                    }));
+                    _scoreText.show();
+                } else {
+                    _scoreText.hide();
+                }
             } else {
                 _subheaderText.setText(craft.getDisplayName() || craft.getClass().getDisplayName());
                 _subheaderText.show();
@@ -2947,73 +3028,80 @@ define([
             // .....................................................................................................
             // speed bar
             relativeVelocity = craft.getRelativeVelocityMatrix();
-            speed = relativeVelocity[13];
-            absSpeed = Math.abs(speed);
-            acceleration = craft.getMaxAcceleration();
-            maxSpeed = craft.getMaxSpeed();
-            if (!maxSpeed) {
-                maxSpeed = (config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_BASE_MAX_SPEED_FACTOR) * acceleration) ||
-                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_DEFAULT_BASE_MAX_SPEED);
-                stepFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_MAX_SPEED_STEP_FACTOR);
-                stepBuffer = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_MAX_SPEED_STEP_BUFFER);
-                while ((maxSpeed + stepBuffer) < absSpeed) {
-                    maxSpeed *= stepFactor;
+            if (_hudSectionIsVisible(HUDSection.SPEED_BAR)) {
+                speed = relativeVelocity[13];
+                absSpeed = Math.abs(speed);
+                acceleration = craft.getMaxAcceleration();
+                maxSpeed = craft.getMaxSpeed();
+                if (!maxSpeed) {
+                    maxSpeed = (config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_BASE_MAX_SPEED_FACTOR) * acceleration) ||
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_DEFAULT_BASE_MAX_SPEED);
+                    stepFactor = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_MAX_SPEED_STEP_FACTOR);
+                    stepBuffer = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR_MAX_SPEED_STEP_BUFFER);
+                    while ((maxSpeed + stepBuffer) < absSpeed) {
+                        maxSpeed *= stepFactor;
+                    }
                 }
-            }
-            if (craft.hasSpeedTarget()) {
-                speedTarget = craft.getSpeedTarget();
-                if (speed * speedTarget >= 0) {
-                    speedTarget = Math.abs(speedTarget);
-                } else {
-                    speedTarget = 0;
-                }
-            }
-            speedRatio = Math.min(absSpeed / maxSpeed, 1.0);
-            maxSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxForward;
-            maxReverseSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxReverse;
-            colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors;
-            text = craft.getFlightMode();
-            if (speed >= 0) {
-                _speedBar.setColor(colors[text + "Filled"]);
-                _speedBar.setClipColor(colors[text + "Empty"]);
-                _speedBar.clipY(0, speedRatio);
-                _maxSpeedText.setPosition(maxSpeedTextPosition);
-                _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Forward"]);
-                _maxSpeedText.setText(Math.max(maxSpeed, speed).toFixed());
-                _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxReverseSpeedTextPosition[1] + (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
-                _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Forward"]);
-                _currentSpeedText.setText(absSpeed.toFixed());
-                _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
                 if (craft.hasSpeedTarget()) {
-                    _speedTargetIndicator.clipY(speedTarget / maxSpeed - _speedTargetIndicatorSize[1] / 2, speedTarget / maxSpeed + _speedTargetIndicatorSize[1] / 2);
-                    _speedTargetIndicator.show();
-                } else {
-                    _speedTargetIndicator.hide();
+                    speedTarget = craft.getSpeedTarget();
+                    if (speed * speedTarget >= 0) {
+                        speedTarget = Math.abs(speedTarget);
+                    } else {
+                        speedTarget = 0;
+                    }
                 }
+                speedRatio = Math.min(absSpeed / maxSpeed, 1.0);
+                maxSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxForward;
+                maxReverseSpeedTextPosition = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).positions.maxReverse;
+                colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_BAR).colors;
+                text = craft.getFlightMode();
+                if (speed >= 0) {
+                    _speedBar.setColor(colors[text + "Filled"]);
+                    _speedBar.setClipColor(colors[text + "Empty"]);
+                    _speedBar.clipY(0, speedRatio);
+                    _maxSpeedText.setPosition(maxSpeedTextPosition);
+                    _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Forward"]);
+                    _maxSpeedText.setText(Math.max(maxSpeed, speed).toFixed());
+                    _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxReverseSpeedTextPosition[1] + (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
+                    _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Forward"]);
+                    _currentSpeedText.setText(absSpeed.toFixed());
+                    _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
+                    if (craft.hasSpeedTarget()) {
+                        _speedTargetIndicator.clipY(speedTarget / maxSpeed - _speedTargetIndicatorSize[1] / 2, speedTarget / maxSpeed + _speedTargetIndicatorSize[1] / 2);
+                        _speedTargetIndicator.show();
+                    } else {
+                        _speedTargetIndicator.hide();
+                    }
+                } else {
+                    _speedBar.setColor(colors[text + "ReverseFilled"]);
+                    _speedBar.setClipColor(colors[text + "ReverseEmpty"]);
+                    _speedBar.clipY(1 - speedRatio, 1);
+                    _maxSpeedText.setPosition(maxReverseSpeedTextPosition);
+                    _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Reverse"]);
+                    _maxSpeedText.setText(Math.min(-maxSpeed, speed).toFixed());
+                    _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxSpeedTextPosition[1] - (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
+                    _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Reverse"]);
+                    _currentSpeedText.setText("-" + absSpeed.toFixed());
+                    _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
+                    if (craft.hasSpeedTarget()) {
+                        _speedTargetIndicator.clipY(1 - (speedTarget / maxSpeed + _speedTargetIndicatorSize[1] / 2), 1 - (speedTarget / maxSpeed - _speedTargetIndicatorSize[1] / 2));
+                        _speedTargetIndicator.show();
+                    } else {
+                        _speedTargetIndicator.hide();
+                    }
+                }
+                _speedBar.applyLayout(_speedBarLayout, canvas.width, canvas.height);
+                _speedBar.show();
+                _speedTargetIndicator.applyLayout(_speedBarLayout, canvas.width, canvas.height);
+                _speedTextLayer.show();
             } else {
-                _speedBar.setColor(colors[text + "ReverseFilled"]);
-                _speedBar.setClipColor(colors[text + "ReverseEmpty"]);
-                _speedBar.clipY(1 - speedRatio, 1);
-                _maxSpeedText.setPosition(maxReverseSpeedTextPosition);
-                _maxSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Reverse"]);
-                _maxSpeedText.setText(Math.min(-maxSpeed, speed).toFixed());
-                _currentSpeedText.setPosition([maxSpeedTextPosition[0], maxSpeedTextPosition[1] - (maxSpeedTextPosition[1] - maxReverseSpeedTextPosition[1]) * speedRatio]);
-                _currentSpeedText.setColor(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SPEED_TEXT).colors[text + "Reverse"]);
-                _currentSpeedText.setText("-" + absSpeed.toFixed());
-                _speedTargetIndicator.clipX(0.5 - _speedTargetIndicatorSize[0] / 2, 0.5 + _speedTargetIndicatorSize[0] / 2);
-                if (craft.hasSpeedTarget()) {
-                    _speedTargetIndicator.clipY(1 - (speedTarget / maxSpeed + _speedTargetIndicatorSize[1] / 2), 1 - (speedTarget / maxSpeed - _speedTargetIndicatorSize[1] / 2));
-                    _speedTargetIndicator.show();
-                } else {
-                    _speedTargetIndicator.hide();
-                }
+                _speedBar.hide();
+                _speedTargetIndicator.hide();
+                _speedTextLayer.hide();
             }
-            _speedBar.applyLayout(_speedBarLayout, canvas.width, canvas.height);
-            _speedTargetIndicator.applyLayout(_speedBarLayout, canvas.width, canvas.height);
-            _speedTextLayer.show();
             // .....................................................................................................
             // drift arrow
-            if (isInAimingView) {
+            if (isInAimingView && _hudSectionIsVisible(HUDSection.DRIFT_ARROW)) {
                 direction2D = [relativeVelocity[12], relativeVelocity[14]];
                 driftSpeed = vec.extractLength2(direction2D);
                 if (driftSpeed > _driftArrowMinSpeed) {
@@ -3071,16 +3159,21 @@ define([
                 _spacecraftShieldIntegrity = shieldIntegrity;
             }
             colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HULL_INTEGRITY_BAR).colors;
-            if (_hullIntegrityDecreaseTime > 0) {
-                _hullIntegrityBar.setColor(utils.getMixedColor(colors.filled, colors.filledWhenDecreasing, animationProgress));
-                _hullIntegrityBar.setClipColor(utils.getMixedColor(colors.empty, colors.emptyWhenDecreasing, animationProgress));
+            if (_hudSectionIsVisible(HUDSection.HULL_BAR)) {
+                if (_hullIntegrityDecreaseTime > 0) {
+                    _hullIntegrityBar.setColor(utils.getMixedColor(colors.filled, colors.filledWhenDecreasing, animationProgress));
+                    _hullIntegrityBar.setClipColor(utils.getMixedColor(colors.empty, colors.emptyWhenDecreasing, animationProgress));
+                } else {
+                    _hullIntegrityBar.setColor(colors.filled);
+                    _hullIntegrityBar.setClipColor(colors.empty);
+                }
+                _hullIntegrityBar.clipY(0, hullIntegrity);
+                _hullIntegrityBar.applyLayout(_hullIntegrityBarLayout, canvas.width, canvas.height);
+                _hullIntegrityBar.show();
             } else {
-                _hullIntegrityBar.setColor(colors.filled);
-                _hullIntegrityBar.setClipColor(colors.empty);
+                _hullIntegrityBar.hide();
             }
-            _hullIntegrityBar.clipY(0, hullIntegrity);
-            _hullIntegrityBar.applyLayout(_hullIntegrityBarLayout, canvas.width, canvas.height);
-            if (craft.hasShield()) {
+            if (craft.hasShield() && _hudSectionIsVisible(HUDSection.SHIELD_BAR)) {
                 colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIELD_BAR).colors;
                 if (_shieldDecreaseTime > 0) {
                     _shieldBar.setColor(utils.getMixedColor(colors.filled, colors.filledWhenDecreasing, animation2Progress));
@@ -3097,29 +3190,33 @@ define([
             }
             // .....................................................................................................
             // flight mode indicator
-            _flightModeIndicatorBackground.applyLayout(_flightModeIndicatorBackgroundLayout, canvas.width, canvas.height);
-            _flightModeText.setText(strings.get(strings.FLIGHT_MODE.PREFIX, craft.getFlightMode(), craft.getFlightMode()));
-            colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors;
-            switch (craft.getFlightMode()) {
-                case equipment.FlightMode.FREE:
-                    _flightModeText.setColor(colors.free);
-                    break;
-                case equipment.FlightMode.COMBAT:
-                    _flightModeText.setColor(colors.combat);
-                    break;
-                case equipment.FlightMode.CRUISE:
-                    _flightModeText.setColor(colors.cruise);
-                    break;
-                default:
-                    application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
+            if (_hudSectionIsVisible(HUDSection.FLIGHT_MODE)) {
+                _flightModeIndicatorBackground.applyLayout(_flightModeIndicatorBackgroundLayout, canvas.width, canvas.height);
+                _flightModeIndicatorBackground.show();
+                _flightModeText.setText(strings.get(strings.FLIGHT_MODE.PREFIX, craft.getFlightMode(), craft.getFlightMode()));
+                colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.FLIGHT_MODE_TEXT).colors;
+                switch (craft.getFlightMode()) {
+                    case equipment.FlightMode.FREE:
+                        _flightModeText.setColor(colors.free);
+                        break;
+                    case equipment.FlightMode.COMBAT:
+                        _flightModeText.setColor(colors.combat);
+                        break;
+                    case equipment.FlightMode.CRUISE:
+                        _flightModeText.setColor(colors.cruise);
+                        break;
+                    default:
+                        application.showError("Unknown flight mode: " + craft.getFlightMode() + "!");
+                }
+                _flightModeIndicatorTextLayer.show();
+            } else {
+                _flightModeIndicatorBackground.hide();
+                _flightModeIndicatorTextLayer.hide();
             }
-            _flightModeIndicatorTextLayer.show();
             // .....................................................................................................
             // missile info indicator
             lockRatio = 0;
             if (_missileClasses.length > 0) {
-                _missileInfoBackground.applyLayout(_missileInfoBackgroundLayout, canvas.width, canvas.height);
-                _missileInfoBackground.show();
                 colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INFO_TEXT).colors;
                 missileLauncher = craft.getActiveMissileLauncher();
                 craftCount = 0; // used for saving count of equipped missiles
@@ -3177,10 +3274,17 @@ define([
                         _missileInfoCountTexts[i].hide();
                     }
                 }
-                _missileInfoTextLayer.show();
+                if (_hudSectionIsVisible(HUDSection.MISSILE_INFO)) {
+                    _missileInfoBackground.applyLayout(_missileInfoBackgroundLayout, canvas.width, canvas.height);
+                    _missileInfoBackground.show();
+                    _missileInfoTextLayer.show();
+                } else {
+                    _missileInfoBackground.hide();
+                    _missileInfoTextLayer.hide();
+                }
                 // .....................................................................................................
                 // missile indicator
-                if (craftCount > 0) {
+                if ((craftCount > 0) && _hudSectionIsVisible(HUDSection.MISSILE_INDICATOR)) {
                     _missileIndicator.setTextureCoordinates(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).mappings[missileLauncher.isInSalvoMode() ? "salvo" : "single"]);
                     colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_INDICATOR).colors;
                     speedRatio = missileLauncher.getLoadRatio();
@@ -3212,34 +3316,39 @@ define([
             if (!_demoMode && control.isInPilotMode()) {
                 // .....................................................................................................
                 // objectives
-                _objectivesBackground.applyLayout(_objectivesBackgroundLayout, canvas.width, canvas.height);
-                _objectivesBackground.show();
-                objectivesState = _mission.getObjectivesState();
-                colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors;
-                for (i = 0; i < _objectivesTexts.length; i++) {
-                    if (i < objectivesState.length) {
-                        _objectivesTexts[i].setText(objectivesState[i].text);
-                        switch (objectivesState[i].state) {
-                            case missions.ObjectiveState.IN_PROGRESS:
-                                _objectivesTexts[i].setColor(colors.inProgress);
-                                break;
-                            case missions.ObjectiveState.COMPLETED:
-                                _objectivesTexts[i].setColor(colors.completed);
-                                break;
-                            case missions.ObjectiveState.FAILED:
-                                _objectivesTexts[i].setColor(colors.failed);
-                                break;
+                if (_hudSectionIsVisible(HUDSection.OBJECTIVES)) {
+                    _objectivesBackground.applyLayout(_objectivesBackgroundLayout, canvas.width, canvas.height);
+                    _objectivesBackground.show();
+                    objectivesState = _mission.getObjectivesState();
+                    colors = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.OBJECTIVES_TEXT).colors;
+                    for (i = 0; i < _objectivesTexts.length; i++) {
+                        if (i < objectivesState.length) {
+                            _objectivesTexts[i].setText(objectivesState[i].text);
+                            switch (objectivesState[i].state) {
+                                case missions.ObjectiveState.IN_PROGRESS:
+                                    _objectivesTexts[i].setColor(colors.inProgress);
+                                    break;
+                                case missions.ObjectiveState.COMPLETED:
+                                    _objectivesTexts[i].setColor(colors.completed);
+                                    break;
+                                case missions.ObjectiveState.FAILED:
+                                    _objectivesTexts[i].setColor(colors.failed);
+                                    break;
+                            }
+                            _objectivesTexts[i].show();
+                        } else {
+                            _objectivesTexts[i].hide();
                         }
-                        _objectivesTexts[i].show();
-                    } else {
-                        _objectivesTexts[i].hide();
                     }
+                    _objectivesTextLayer.show();
+                } else {
+                    _objectivesBackground.hide();
+                    _objectivesTextLayer.hide();
                 }
-                _objectivesTextLayer.show();
                 // .....................................................................................................
                 // escorts
                 ships = _escorts.filter(_escortShouldBeIndicated);
-                if (ships.length > 0) {
+                if ((ships.length > 0) && _hudSectionIsVisible(HUDSection.ESCORTS)) {
                     _escortsBackground.applyLayout(_escortsBackgroundLayout, canvas.width, canvas.height);
                     _escortsBackground.show();
                     for (i = 0; i < _escortsTexts.length; i++) {
@@ -3388,6 +3497,10 @@ define([
             } else {
                 aimAssistAppearAnimationProgress = 0;
             }
+            visible1 = false;
+            visible2 = false;
+            visible3 = false;
+            visible4 = false;
             if (target) {
                 targetPosition = target.getPhysicalPositionVector();
                 position = craft.getPhysicalPositionVector();
@@ -3398,7 +3511,7 @@ define([
                 if (weapons.length > 0) {
                     futureTargetPosition = craft.getTargetHitPosition();
                     // aim assist indicator at the expected future position of the target (if turned on)
-                    if (!_aimAssistCrosshairs) {
+                    if (!_aimAssistCrosshairs && _hudSectionIsVisible(HUDSection.AIM_ASSIST_INDICATOR)) {
                         _aimAssistIndicator.setPosition(futureTargetPosition);
                         color = targetIsHostile ?
                                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_INDICATOR).colors.hostile :
@@ -3418,8 +3531,7 @@ define([
                             _aimAssistIndicator.setSize(_aimAssistIndicatorSize);
                         }
                         _aimAssistIndicator.show();
-                    } else {
-                        _aimAssistIndicator.hide();
+                        visible1 = true;
                     }
                     // weapon crosshairs in the lines of fire
                     futureDistance = vec.length3(vec.diff3(futureTargetPosition, position));
@@ -3464,82 +3576,82 @@ define([
                         }
                         _weaponImpactIndicators[i].show();
                     }
-                    while (i < _weaponImpactIndicators.length) {
-                        _weaponImpactIndicators[i].hide();
-                        i++;
+                    if (_hudSectionIsVisible(HUDSection.WEAPON_IMPACT_INDICATORS)) {
+                        while (i < _weaponImpactIndicators.length) {
+                            _weaponImpactIndicators[i].hide();
+                            i++;
+                        }
+                        visible2 = true;
                     }
                     if (!targetInRange || (craft.isFighter() && (vec.dot3(mat.getRowB43(m), vectorToTarget) < 0))) {
-                        _aimAssistIndicator.hide();
+                        visible1 = false;
                         _aimAssistAppearTime = _hudAimAssistAppearAnimationDuration;
                     } else {
                         _aimAssistAppearTime -= dt;
                     }
-                } else {
-                    // if there are no weapons equipped
-                    _aimAssistIndicator.hide();
-                    for (i = 0; i < _weaponImpactIndicators.length; i++) {
-                        _weaponImpactIndicators[i].hide();
-                    }
                 }
                 // target info panel
-                _targetInfoBackground.applyLayout(_targetInfoBackgroundLayout, canvas.width, canvas.height);
-                _targetInfoBackground.show();
-                // target view
                 hullIntegrity = target.getHullIntegrity();
                 shieldIntegrity = target.getShieldIntegrity();
-                _targetViewItemColor = _getHullIntegrityColor(hullIntegrity,
-                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR),
-                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
-                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR));
-                if (_targetViewItem !== target) {
-                    _targetScene.clearNodes(true);
-                    _targetViewModel = null;
-                    _targetViewItem = target;
-                    _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, TARGET_VIEW_SUPPLEMENTS, _targetViewParams, _targetViewAddCallback);
+                if (_hudSectionIsVisible(HUDSection.TARGET_INFO)) {
+                    _targetInfoBackground.applyLayout(_targetInfoBackgroundLayout, canvas.width, canvas.height);
+                    _targetInfoBackground.show();
+                    // target view
+                    _targetViewItemColor = _getHullIntegrityColor(hullIntegrity,
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_FULL_INTEGRITY_COLOR),
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_HALF_INTEGRITY_COLOR),
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_TARGET_ITEM_ZERO_INTEGRITY_COLOR));
+                    if (_targetViewItem !== target) {
+                        _targetScene.clearNodes(true);
+                        _targetViewModel = null;
+                        _targetViewItem = target;
+                        _targetViewItem.addToScene(_targetScene, graphics.getMaxLoadedLOD(), true, TARGET_VIEW_SUPPLEMENTS, _targetViewParams, _targetViewAddCallback);
+                    }
+                    // setting orientation of the target view model
+                    if (_targetViewModel) {
+                        _targetViewModel.setOrientationM4(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION) ? mat.prod4Aux(
+                                target.getPhysicalOrientationMatrix(),
+                                mat.inverseOfRotation4Aux(mat.lookTowards4Aux(
+                                        vec.normalize3(vec.diffTranslation3Aux(craft.getPhysicalPositionMatrix(), target.getPhysicalPositionMatrix())),
+                                        mat.getRowC43(craft.getPhysicalOrientationMatrix())))) :
+                                mat.IDENTITY4);
+                    }
+                    _targetScene.setRelativeViewport(
+                            _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),
+                            _targetViewLayout.getPositiveBottom(canvas.width, canvas.height),
+                            _targetViewLayout.getPositiveWidth(canvas.width, canvas.height),
+                            _targetViewLayout.getPositiveHeight(canvas.width, canvas.height));
+                    // target hull and shield integrity bars
+                    _targetHullIntegrityBar.clipX(0, hullIntegrity);
+                    _targetHullIntegrityBar.applyLayout(_targetHullIntegrityBarLayout, canvas.width, canvas.height);
+                    _targetHullIntegrityBar.show();
+                    if (target.hasShield()) {
+                        _targetShieldBar.clipX(0, shieldIntegrity);
+                        _targetShieldBar.applyLayout(_targetShieldBarLayout, canvas.width, canvas.height);
+                        _targetShieldBar.show();
+                    } else {
+                        _targetShieldBar.hide();
+                    }
+                    // target info texts
+                    targetInfoTextColor = targetIsHostile ?
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.hostile :
+                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.friendly;
+                    _targetInfoTexts[TARGET_INFO_NAME].setColor(targetInfoTextColor);
+                    _targetInfoTexts[TARGET_INFO_NAME].setText(target.getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
+                    _targetInfoTexts[TARGET_INFO_TEAM].setColor(targetInfoTextColor);
+                    _targetInfoTexts[TARGET_INFO_TEAM].setText(target.getTeam() ? target.getTeam().getDisplayName() : strings.get(strings.BATTLE.HUD_TEAM_UNKNOWN));
+                    _targetInfoTexts[TARGET_INFO_CLASS].setColor(targetInfoTextColor);
+                    _targetInfoTexts[TARGET_INFO_CLASS].setText(target.getClass().getDisplayName());
+                    _targetInfoTexts[TARGET_INFO_FIREPOWER].setColor(targetInfoTextColor);
+                    armor = target.getTarget() && target.getTarget().getClass().getArmor();
+                    _targetInfoTexts[TARGET_INFO_FIREPOWER].setText(strings.get(strings.BATTLE.HUD_FIREPOWER) + ": " + (armor ? (target.getFirepower(armor).toFixed(1) + " / ") : "") + target.getFirepower().toFixed(1));
+                    _targetInfoTexts[TARGET_INFO_DISTANCE].setColor(targetInfoTextColor);
+                    _targetInfoTexts[TARGET_INFO_DISTANCE].setText(strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(distance));
+                    _targetInfoTexts[TARGET_INFO_VELOCITY].setColor(targetInfoTextColor);
+                    _targetInfoTexts[TARGET_INFO_VELOCITY].setText(strings.get(strings.BATTLE.HUD_VELOCITY) + ": " + vec.length3(mat.translationVector3(target.getVelocityMatrix())).toFixed() + " m/s");
+                    _targetInfoTextLayer.show();
+                    visible3 = true;
                 }
-                // setting orientation of the target view model
-                if (_targetViewModel) {
-                    _targetViewModel.setOrientationM4(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION) ? mat.prod4Aux(
-                            target.getPhysicalOrientationMatrix(),
-                            mat.inverseOfRotation4Aux(mat.lookTowards4Aux(
-                                    vec.normalize3(vec.diffTranslation3Aux(craft.getPhysicalPositionMatrix(), target.getPhysicalPositionMatrix())),
-                                    mat.getRowC43(craft.getPhysicalOrientationMatrix())))) :
-                            mat.IDENTITY4);
-                }
-                _targetScene.setRelativeViewport(
-                        _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),
-                        _targetViewLayout.getPositiveBottom(canvas.width, canvas.height),
-                        _targetViewLayout.getPositiveWidth(canvas.width, canvas.height),
-                        _targetViewLayout.getPositiveHeight(canvas.width, canvas.height));
-                // target hull and shield integrity bars
-                _targetHullIntegrityBar.clipX(0, hullIntegrity);
-                _targetHullIntegrityBar.applyLayout(_targetHullIntegrityBarLayout, canvas.width, canvas.height);
-                _targetHullIntegrityBar.show();
-                if (target.hasShield()) {
-                    _targetShieldBar.clipX(0, shieldIntegrity);
-                    _targetShieldBar.applyLayout(_targetShieldBarLayout, canvas.width, canvas.height);
-                    _targetShieldBar.show();
-                } else {
-                    _targetShieldBar.hide();
-                }
-                // target info texts
-                targetInfoTextColor = targetIsHostile ?
-                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.hostile :
-                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_INFO_TEXT).colors.friendly;
-                _targetInfoTexts[TARGET_INFO_NAME].setColor(targetInfoTextColor);
-                _targetInfoTexts[TARGET_INFO_NAME].setText(target.getDisplayName() || strings.get(strings.BATTLE.HUD_SPACECRAFT_NAME_UNKNOWN));
-                _targetInfoTexts[TARGET_INFO_TEAM].setColor(targetInfoTextColor);
-                _targetInfoTexts[TARGET_INFO_TEAM].setText(target.getTeam() ? target.getTeam().getDisplayName() : strings.get(strings.BATTLE.HUD_TEAM_UNKNOWN));
-                _targetInfoTexts[TARGET_INFO_CLASS].setColor(targetInfoTextColor);
-                _targetInfoTexts[TARGET_INFO_CLASS].setText(target.getClass().getDisplayName());
-                _targetInfoTexts[TARGET_INFO_FIREPOWER].setColor(targetInfoTextColor);
-                armor = target.getTarget() && target.getTarget().getClass().getArmor();
-                _targetInfoTexts[TARGET_INFO_FIREPOWER].setText(strings.get(strings.BATTLE.HUD_FIREPOWER) + ": " + (armor ? (target.getFirepower(armor).toFixed(1) + " / ") : "") + target.getFirepower().toFixed(1));
-                _targetInfoTexts[TARGET_INFO_DISTANCE].setColor(targetInfoTextColor);
-                _targetInfoTexts[TARGET_INFO_DISTANCE].setText(strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(distance));
-                _targetInfoTexts[TARGET_INFO_VELOCITY].setColor(targetInfoTextColor);
-                _targetInfoTexts[TARGET_INFO_VELOCITY].setText(strings.get(strings.BATTLE.HUD_VELOCITY) + ": " + vec.length3(mat.translationVector3(target.getVelocityMatrix())).toFixed() + " m/s");
-                _targetInfoTextLayer.show();
                 // .....................................................................................................
                 // target integrity quick view bar
                 if (isInAimingView) {
@@ -3600,17 +3712,19 @@ define([
                     } else {
                         _targetShieldQuickViewBar.hide();
                     }
-                } else {
-                    _targetHullIntegrityQuickViewBar.hide();
-                    _targetShieldQuickViewBar.hide();
+                    visible4 = _hudSectionIsVisible(HUDSection.TARGET_INDICATOR);
                 }
-            } else {
-                // if there is no target
-                _targetInfoBackground.hide();
+            }
+            if (!visible1) {
                 _aimAssistIndicator.hide();
+            }
+            if (!visible2) {
                 for (i = 0; i < _weaponImpactIndicators.length; i++) {
                     _weaponImpactIndicators[i].hide();
                 }
+            }
+            if (!visible3) {
+                _targetInfoBackground.hide();
                 if (_targetViewItem) {
                     _targetScene.clearNodes(true);
                     _targetViewItem = null;
@@ -3619,13 +3733,15 @@ define([
                 _targetHullIntegrityBar.hide();
                 _targetShieldBar.hide();
                 _targetInfoTextLayer.hide();
+            }
+            if (!visible4) {
                 _targetHullIntegrityQuickViewBar.hide();
                 _targetShieldQuickViewBar.hide();
                 _distanceTextLayer.hide();
             }
             // .....................................................................................................
             // wingmen status
-            if (_squads.length > 0) {
+            if ((_squads.length > 0) && _hudSectionIsVisible(HUDSection.WINGMEN_INFO)) {
                 _wingmenStatusBackground.applyLayout(_wingmenStatusBackgroundLayout, canvas.width, canvas.height);
                 _wingmenStatusBackground.show();
                 _wingmenStatusTextLayer.show();
@@ -3754,6 +3870,8 @@ define([
             }
             statusCount = 0; // counter for the status indicators that we are using
             for (i = 0; i < ships.length; i++) {
+                visible1 = ((ships[i] === target) && _hudSectionIsVisible(HUDSection.TARGET_INDICATOR)) || 
+                        ((ships[i] !== target) && _hudSectionIsVisible(HUDSection.SHIP_INDICATORS));
                 transmissionSource = (ships[i] === _messageSource);
                 // targeting reticle at the ship position
                 if (_shipIndicators.length <= i) {
@@ -3801,7 +3919,11 @@ define([
                     }
                     indicator.setSize(shipIndicatorSize);
                 }
-                indicator.show();
+                if (visible1) {
+                    indicator.show();
+                } else {
+                    indicator.hide();
+                }
                 // ship indicating arrow, if ship target is not visible on the screen
                 if (_shipArrows.length <= i) {
                     _shipArrows.push(_createShipArrow());
@@ -3812,7 +3934,11 @@ define([
                 vec.normalize4D(direction);
                 indicator = _shipArrows[i];
                 if (behind || (direction[0] < -1) || (direction[0] > 1) || (direction[1] < -1) || (direction[1] > 1)) {
-                    indicator.show();
+                    if (visible1) {
+                        indicator.show();
+                    } else {
+                        indicator.hide();
+                    }
                     direction[0] *= aspect;
                     vec.normalize2(direction);
                     if (behind) {
@@ -3856,7 +3982,7 @@ define([
                 } else {
                     indicator.hide();
                     // if no arrow is displayed for the target, display the distance text next to its reticle
-                    if (ships[i] === target) {
+                    if ((ships[i] === target) && visible1) {
                         _distanceText.setText(_getDistanceString(distance));
                         _distanceText.setColor(targetIsHostile ?
                                 config.getHUDSetting(config.BATTLE_SETTINGS.HUD.DISTANCE_TEXT).colors.hostile :
@@ -3940,7 +4066,7 @@ define([
                     statusIndicators.push("destroy");
                 }
                 // setting up the indicator(s)
-                if (statusIndicators.length > 0) {
+                if ((statusIndicators.length > 0) && visible1) {
                     if (!_shipArrows[i].isVisible()) {
                         // if the ship is on screen, all status indicators are displayed below its indicator reticle
                         scalesWithWidth = utils.scalesWithWidth(_shipIndicators[i].getScaleMode(), aspect, 1);
@@ -4255,7 +4381,7 @@ define([
                 canvas.height / 2);
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_MISSION), 0);
         missions.requestMission(_missionSourceFilename, _difficulty, _demoMode, function (createdMission) {
-            var anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex;
+            var anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex, i;
             _mission = createdMission;
             this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
             _mission.addRandomShips(undefined, _demoMode);
@@ -4325,6 +4451,11 @@ define([
             _targetScene.getCamera().moveToPosition([0, 0, config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_CAMERA_DISTANCE)], 0);
             _mission.addToScene(_battleScene, _targetScene);
             _addHUDToScene();
+            _hudSectionStates = new Array(Object.keys(HUDSection).length);
+            for (i = 0; i < _hudSectionStates.length; i++) {
+                _hudSectionStates[i] = HUDSectionState.VISIBLE;
+            }
+            _hudHighlightTime = 0;
             _shipIndicatorHighlightTime = 0;
             this._addUITexts();
             _messageQueues = _messageQueues || {};
@@ -4406,6 +4537,7 @@ define([
                             spacecraft.addEventHandler(SpacecraftEvents.JUMP_ENGAGED, _handlePilotedSpacecraftJumpEngaged.bind(spacecraft));
                             spacecraft.addEventHandler(SpacecraftEvents.JUMP_CANCELLED, _handlePilotedSpacecraftJumpCancelled.bind(spacecraft));
                             spacecraft.addEventHandler(SpacecraftEvents.PREPARING_JUMP, _handlePilotedSpacecraftPreparingJump.bind(spacecraft));
+                            spacecraft.addEventHandler(SpacecraftEvents.HUD, _handleHUDEvent.bind(spacecraft));
                         } else {
                             spacecraft.addEventHandler(SpacecraftEvents.JUMP_OUT_STARTED, _handleSpacecraftJumpOutStarted.bind(spacecraft));
                             spacecraft.addEventHandler(SpacecraftEvents.ARRIVED, _handleSpacecraftArrived.bind(spacecraft));
@@ -4502,6 +4634,7 @@ define([
             orientationMatrix: _targetViewOrientationMatrix,
             skipResources: true
         };
+        _hudHighlightInterval = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HIGHLIGHT_INTERVAL);
         // music
         _combatThemeDurationAfterFire = config.getSetting(config.BATTLE_SETTINGS.COMBAT_THEME_DURATION_AFTER_FIRE) * 1000;
     });

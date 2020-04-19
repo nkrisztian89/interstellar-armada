@@ -72,6 +72,11 @@ define(function () {
      * @property {SpacecraftEvents~JumpCommandData} [jump] Details of the command if it is a jump command
      * @property {SpacecraftEvents~TargetCommandData} [target] Details of the command if it is a target command
      */
+    /**
+     * @typedef {Object} SpacecraftEvents~HUDData
+     * @property {String} [section] (enum HUDSection - key in camelCase) The id of the section of the HUD to change. No value means the whole HUD
+     * @property {String} state (enum HUDSectionState - key in camelCase) The state to change to
+     */
     return {
         /** Another spacecraft targets the spacecraft. */
         BEING_TARGETED: "beingTargeted",
@@ -104,6 +109,8 @@ define(function () {
         /** The spacecraft cancelled the jump process. */
         JUMP_CANCELLED: "jumpCancelled",
         /** The spacecraft received a command (to be handled by the AI) */
-        COMMAND_RECEIVED: "commandReceived"
+        COMMAND_RECEIVED: "commandReceived",
+        /** The HUD of the spacecraft should be updated */
+        HUD: "hud"
     };
 });

@@ -1035,6 +1035,10 @@ define([
                 name: "relativeTargetOrientation",
                 type: "boolean"
             },
+            HIGHLIGHT_INTERVAL: {
+                name: "highlightInterval",
+                type: "number"
+            },
             TARGET_SWITCH_ANIMATION_DURATION: {
                 name: "targetSwitchAnimationDuration",
                 type: "number"

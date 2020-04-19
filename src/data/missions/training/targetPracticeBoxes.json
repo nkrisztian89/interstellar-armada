@@ -30,17 +30,29 @@
     "events": [{
             "trigger": {
                 "fireWhen": "missionStarts",
-                "oneShot": true,
-                "delay": 500
+                "oneShot": true
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "state": "hidden"
+                    }
+                }, {
+                    "type": "hud",
+                    "params": {
+                        "section": "targetIndicator",
+                        "state": "visible"
+                    }
+                }, {
                     "type": "message",
+                    "delay": 500,
                     "params": {
                         "textID": "tutorialWelcome",
                         "urgent": true
                     }
                 }, {
                     "type": "message",
+                    "delay": 500,
                     "params": {
                         "textID": "tutorialAimFire1",
                         "permanent": true,
@@ -99,6 +111,18 @@
             "actions": [{
                     "type": "clearMessages"
                 }, {
+                    "type": "hud",
+                    "params": {
+                        "section": "targetInfo",
+                        "state": "highlighted"
+                    }
+                }, {
+                    "type": "hud",
+                    "params": {
+                        "section": "targetIndicator",
+                        "state": "highlighted"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialTargetIndicator",
@@ -131,6 +155,18 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "targetInfo",
+                        "state": "visible"
+                    }
+                }, {
+                    "type": "hud",
+                    "params": {
+                        "section": "targetIndicator",
+                        "state": "visible"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialTargeting",
@@ -157,6 +193,12 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "weaponImpactIndicators",
+                        "state": "highlighted"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialImpactIndicators",
@@ -183,6 +225,12 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "weaponImpactIndicators",
+                        "state": "visible"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialFixedWeapons",
@@ -235,6 +283,12 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "aimAssistIndicator",
+                        "state": "highlighted"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialAimAssist",
@@ -261,6 +315,12 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "aimAssistIndicator",
+                        "state": "visible"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialMovingTargets",
@@ -399,6 +459,18 @@
                 "delay": 1500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "flightMode",
+                        "state": "highlighted"
+                    }
+                }, {
+                    "type": "hud",
+                    "params": {
+                        "section": "shipIndicators",
+                        "state": "visible"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialCruise1",
@@ -425,6 +497,12 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "flightMode",
+                        "state": "visible"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialCruise2",
@@ -549,6 +627,12 @@
                 "delay": 1500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "speedBar",
+                        "state": "highlighted"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialSpeedHolding",
@@ -575,6 +659,12 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "speedBar",
+                        "state": "visible"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialControls",
@@ -601,6 +691,12 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "hud",
+                    "params": {
+                        "section": "objectives",
+                        "state": "highlighted"
+                    }
+                }, {
                     "type": "message",
                     "params": {
                         "textID": "tutorialFinish",
@@ -627,6 +723,12 @@
             },
             "actions": [{
                     "type": "clearMessages"
+                }, {
+                    "type": "hud",
+                    "params": {
+                        "section": "objectives",
+                        "state": "visible"
+                    }
                 }]
         }
     ],

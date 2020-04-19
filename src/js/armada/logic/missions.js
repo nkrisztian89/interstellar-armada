@@ -125,7 +125,9 @@ define([
                 /** Executing this action clears the HUD message queue */
                 CLEAR_MESSAGES: "clearMessages",
                 /** Executing this action sends a command to the subject spacecrafts (to be processed by their AIs) */
-                COMMAND: "command"
+                COMMAND: "command",
+                /** Executing this action changes the state of the HUD on the piloted spacecraft (e.g. hide / show / highlight an element) */
+                HUD: "hud"
             },
             MissionState = {
                 // in progress states
@@ -1795,6 +1797,45 @@ define([
                 this._params.index = i;
                 spacecrafts[i].handleEvent(SpacecraftEvents.COMMAND_RECEIVED, this._params);
             }
+        }
+    };
+    // #########################################################################
+    /**
+     * @class 
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Trigger} trigger
+     */
+    function HUDAction(dataJSON, trigger) {
+        Action.call(this, dataJSON, trigger);
+    }
+    HUDAction.prototype = new Action();
+    HUDAction.prototype.constructor = HUDAction;
+    /**
+     * @override
+     * @param {SpacecraftEvents~HUDData} params 
+     * @returns {Boolean}
+     */
+    HUDAction.prototype._checkParams = function (params) {
+        /**
+         * @type SpacecraftEvents~HUDData
+         */
+        this._params = params;
+        if (!this._params ||
+                ((this._params.state !== undefined) && (typeof this._params.state !== "string"))) {
+            this._handleWrongParams();
+            return false;
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission 
+     */
+    HUDAction.prototype.execute = function (mission) {
+        var spacecraft = mission.getPilotedSpacecraft();
+        if (spacecraft) {
+            spacecraft.handleEvent(SpacecraftEvents.HUD, this._params);
         }
     };
     // #########################################################################
@@ -3699,6 +3740,7 @@ define([
     _actionConstructors[ActionType.MESSAGE] = MessageAction;
     _actionConstructors[ActionType.CLEAR_MESSAGES] = ClearMessagesAction;
     _actionConstructors[ActionType.COMMAND] = CommandAction;
+    _actionConstructors[ActionType.HUD] = HUDAction;
     // caching configuration settings
     config.executeWhenReady(function () {
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
