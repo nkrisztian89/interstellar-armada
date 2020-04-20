@@ -4,8 +4,11 @@
   "description": "The Interstellar Armada WebGL space combat game.",
   "main": "main.js",
   "scripts": {
-    "start": "armada .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "grunt clean",
+    "lint": "grunt lint",
+    "build": "grunt build",
+    "dev-build": "grunt dev-build",
+    "start": "google-chrome --allow-file-access-from-files --user-data-dir=/tmp file://${INIT_CWD}/index.html#local"
   },
   "repository": {
     "type": "git",

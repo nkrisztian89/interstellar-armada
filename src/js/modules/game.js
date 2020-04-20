@@ -277,7 +277,7 @@ define([
     application.initialize = function (data) {
         application.log("Initializing " + _gameName + "...");
         application.useElectron(data.electron);
-        if (!application.usesElectron() && (location.protocol === "file:")) {
+        if (!application.usesElectron() && (location.protocol === "file:") && !data.local) {
             this.showError("Trying to run the game from the local filesystem!",
                     application.ErrorSeverity.CRITICAL,
                     "This application can only be run through a web server. " +
