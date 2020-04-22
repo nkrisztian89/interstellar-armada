@@ -157,7 +157,7 @@
         "empire": "Galaktikus Birodalom",
         "rebels": "Szeparatista lázadók",
         "pirates": "Kalózok",
-        "practiceTargets": "Gyakorló cél"
+        "targets": "Gyakorló cél"
     },
     "squad": {
         "drone": "Drón",
@@ -186,35 +186,44 @@
             "name": "Kezdő lőgyakorlat",
             "description": "Ebben a tréning küldetésben megismerkedhet az űrhajó irányításával, és szabadon gyakorolhat konténerek és fegyvertelen drónok ellen.",
             "messages": {
-                "tutorialWelcome": "Üdvözöllek a kezdő lőgyakorlaton!",
-                "tutorialAimFire1": "Célozz és tüzelj az előtted lévő konténerre!\nEgér: mozgatás és {controlStrings/mouse/fire}\nBillentyűzet: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} és {controlStrings/keyboard/fire}\nJoystick: botkormány mozgatása és {controlStrings/joystick/fire}",
-                "tutorialAimFire2": "Semmisíts meg a konténert. Lődd, amíg fel nem robban!\nEgér: mozgatás és {controlStrings/mouse/fire}\nBillentyűzet: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} és {controlStrings/keyboard/fire}\nJoystick: botkormány mozgatása és {controlStrings/joystick/fire}",
-                "tutorialTargetIndicator": "Szép munka!\nA következő célpontot automatikusan kijelöli a számítógép. Élénkvörös kerettel, illetve ha nincs a látótérben, egy ugyanilyen színű nyíllal van jelölve. Az adatait a jobb felső sarokban láthatod.",
-                "tutorialMove": "Ez a konténer messzebb van. Közelítsd meg ({controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse}), hogy könnyebben célba vehesd. Semmisítsd meg, ha a közelébe értél!",
-                "tutorialTargeting": "Manuálisan is kijelölhetsz új célpontokat.\n({controlStrings/keyboard/nextNearestHostileTarget} / egér: {controlStrings/mouse/nextNearestHostileTarget} / joystick: {controlStrings/joystick/nextNearestHostileTarget})\nLőjj ki egy újabb konténert!",
-                "tutorialImpactIndicators": "A zöld célkeresztek mutatják, hogy ha tüzet nyitsz, a lövedékeid várhatóan hol fogják eltalálni (vagy elhibázni) a célpontot. A hajód minden fegyveréhez külön célkereszt tartozik. Akkor tüzelj, ha mindegyik ráállt a célra.",
-                "tutorialFixedWeapons": "A most használt gyakorló fegyvertől eltérően egyes fegyverek nem forgatható módon lehetnek a hajóra szerelve, így mereven előrefelé mutatnak. Az ilyen fegyverekkel gondosabban kell célozni.",
-                "tutorialMultiWeaponAiming": "Nem minden helyzetben lehetséges az összes fegyverrel találatot elérni. Mindig mérlegeld a szituációt, és aszerint tüzelj.",
-                "tutorialAimAssist": "Figyeld meg az aktuális célpont közepe körül a kisebb vörös jelzést. Azt mutatja, várhatóan hol lesz a célpont közepe, mire odaérnek a lövedékeid. Ez alapján tudsz mozgó célpontokra pontosan lőni.",
-                "tutorialMovingTargets": "A konténereken is gyakorolhatod a mozgó célpontra tüzelést, ha oldalirányú mozgás közben célzol. Ehhez tüzelés előtt tegyél éles fordulatokat nagyobb sebességgel, vagy oldalazz! ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower})",
-                "tutorialStrafingRolling": "Az oldalazás ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower}) harc közben is nagyon hasznos a közeledő lövedékek kikerüléséhez.\nOrsózással ({controlStrings/keyboard/rollLeft}, {controlStrings/keyboard/rollRight}) kombinálva rendkívül megnehezíti, hogy pontosan célba vegyenek.",
-                "tutorialViews1": "Repülési nézetet is válthatsz. ({controlStrings/keyboard/nextView}/{controlStrings/keyboard/previousView})\nEgyes nézetekben könnyebb célozni, mások a támadások elleni kitérésben segítenek jobban.",
-                "tutorialViews2": "Néhány nézetben a repülési iránytől függetlenül is körül lehet nézni. ({controlStrings/keyboard/controlCamera} lenyomva tartásával, vagy joystickon a nézetváltó kalap segítségével) Ezután a nézetet vissza lehet állítani az eredeti állapotába.\n({controlStrings/keyboard/resetView} / joystick: {controlStrings/joystick/resetView})",
-                "tutorialCruise1": "Behívtunk pár fegyvertelen drónt. Válts cirkáló repülési módba ({controlStrings/keyboard/toggleCruise}). Így gyorsabban haladhatsz, viszont az oldalirányú mozgás nem megengedett. Emiatt nagy sebességnél lassabban fordulhatsz, cserébe pontosabban célozhatsz.",
-                "tutorialCruise2": "A cirkáló repülési mód ideális a távoli ellenséges gépek megközelítéséhez és elfogásához. Miután közel értél, válts vissza harci módba ({controlStrings/keyboard/toggleCruise}), így könnyebben manőverezhetsz.",
-                "tutorialSpeedHolding": "Sebességtartó módban ({controlStrings/keyboard/toggleSpeedHolding}) csak gyorsításhoz/lassításhoz ({controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse}), vagy teljes megálláshoz ({controlStrings/keyboard/resetSpeed}) van szükség beavatkozásra.",
-                "tutorialTargetingFriendly": "Érkezett egy baráti drón. Igény esetén nem ellenséges célpontokat is ki tudsz jelölni. ({controlStrings/keyboard/nextNearestNonHostileTarget} / egér: {controlStrings/mouse/nextNearestNonHostileTarget})\nÁm légy óvatos, a forgatható fegyverek akkor is ráállnak a kijelölt célpontra, ha az nem ellenséges!",
-                "tutorialControls": "Az összes irányítási beállítást megtekintheted bármikor a menüből ({controlStrings/keyboard/quit}) elérhető opcióval.",
-                "tutorialFinish": "A küldetés teljesítéséhez lődd ki az összes drónt! A még megsemmisítendő ellenségek számát nyomon követheted a feladatjelző paneljén a képernyő bal oldalán."
+                "welcome": "Üdvözöllek a kezdő lőgyakorlaton!",
+                "aimFire1": "Célozz és tüzelj az előtted lévő konténerre!\nEgér: mozgatás és {controlStrings/mouse/fire}\nBillentyűzet: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} és {controlStrings/keyboard/fire}\nJoystick: botkormány mozgatása és {controlStrings/joystick/fire}",
+                "aimFire2": "Semmisíts meg a konténert. Lődd, amíg fel nem robban!\nEgér: mozgatás és {controlStrings/mouse/fire}\nBillentyűzet: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} és {controlStrings/keyboard/fire}\nJoystick: botkormány mozgatása és {controlStrings/joystick/fire}",
+                "targetIndicator": "Szép munka!\nA következő célpontot automatikusan kijelöli a számítógép. Élénkvörös kerettel, illetve ha nincs a látótérben, egy ugyanilyen színű nyíllal van jelölve. Az adatait a jobb felső sarokban láthatod.",
+                "move": "Ez a konténer messzebb van. Közelítsd meg ({controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse}), hogy könnyebben célba vehesd. A sebességedet a jobb oldalon láthatod.\nSemmisítsd meg, ha a közelébe értél!",
+                "targeting": "Manuálisan is kijelölhetsz új célpontokat.\n({controlStrings/keyboard/nextNearestHostileTarget} / egér: {controlStrings/mouse/nextNearestHostileTarget} / joystick: {controlStrings/joystick/nextNearestHostileTarget})\nLőjj ki egy újabb konténert!",
+                "impactIndicators": "A zöld célkeresztek mutatják, hogy ha tüzet nyitsz, a lövedékeid várhatóan hol fogják eltalálni vagy elhibázni a célpontot.",
+                "views": "Próbálj ki különböző nézeteket! ({controlStrings/keyboard/nextView}/{controlStrings/keyboard/previousView})\nPilótafülke nézetben körül is tudsz nézni ({controlStrings/keyboard/controlCamera} nyomva tartása).",
+                "destroyContainers": "Lődd ki a megmaradt konténereket!",
+                "cruise1": "Behívtunk pár fegyvertelen drónt. Válts cirkáló repülési módba ({controlStrings/keyboard/toggleCruise}). Így a végsebességed nagyobb lesz, viszont nagy sebességnél csak lassabban fordulhatsz.",
+                "cruise2": "A cirkáló repülési mód ideális a távoli ellenséges gépek megközelítéséhez és elfogásához. Miután közel értél, válts vissza harci módba ({controlStrings/keyboard/toggleCruise}), így könnyebben manőverezhetsz.",
+                "aimAssist": "A kis vörös célkör jelöli, hova kell céloznod, hogy a mozgó célpontot is eltaláld.",
+                "speedHolding": "Bekapcsolhatod az aktuális sebesség tartását ({controlStrings/keyboard/toggleSpeedHolding}). Így csak gyorsításhoz/lassításhoz ({controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse}), vagy teljes megálláshoz ({controlStrings/keyboard/resetSpeed}) van szükség beavatkozásra.",
+                "targetingFriendly": "Érkezett egy baráti drón. Nem ellenséges célpontokat is ki tudsz jelölni ({controlStrings/keyboard/nextNearestNonHostileTarget} vagy egér: {controlStrings/mouse/nextNearestNonHostileTarget}).",
+                "controls": "Az összes irányítási beállítást megtekintheted bármikor a menüből ({controlStrings/keyboard/quit}) elérhető opcióval.",
+                "finish": "A küldetés teljesítéséhez lődd ki az összes drónt! A még megsemmisítendő ellenségek számát nyomon követheted a képernyő bal oldalán."
             }
         },
         "targetPracticeDrones": {
             "name": "Középhaladó lőgyakorlat",
-            "description": "Ebben a fegyvertelen és fegyveres drónokat is felvonultató küldetésben a kitérő manőverek és a mozgó célpontra tüzelés gyakorlására van lehetőség. A drónok lassabbak, és gyengébben páncélozottak, mint az űrhajója, ám ha túl óvatlan, veszélyt jelenthetnek. A hajóját gyakorló fegyverekkel szereltük fel."
+            "description": "Ebben a fegyvertelen és fegyveres drónokat is felvonultató küldetésben a kitérő manőverek és a mozgó célpontra tüzelés gyakorlására van lehetőség. A drónok lassabbak, és gyengébben páncélozottak, mint az űrhajója, ám ha túl óvatlan, veszélyt jelenthetnek. A hajóját gyakorló fegyverekkel szereltük fel.",
+            "messages": {
+                "welcome": "Üdvözöllek a középhaladó lőgyakorlaton!",
+                "unarmed": "Ez a drón fegyvertelen. Lődd ki, és küldünk izgalmasabb célpontokat is!",
+                "hullBar": "Semmisítsd meg a drónt, mielőtt ő lő ki téged! A páncélzatod állapotát a bal oldalon láthatod. Minél zöldebb, annál jobb!",
+                "strafe": "Újabb célpontok érkeznek!\nNe maradj egy helyben, oldalazz ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower}) hogy kitérj a lövedékek elől!",
+                "finish": "A gyakorlat teljesítéséhez semmisítsd meg az összes drónt!"
+            }
         },
         "targetPracticeFalcon": {
             "name": "Haladó lőgyakorlat",
-            "description": "Használja fel az eddig tanultakat, hogy ezúttal azonos osztályú elfogó vadászokkal szemben is megállja a helyét! Immár szabványos plazmaágyúkkal szereltük fel a hajóját, amik nagyobb tűzerőt biztosítanak. Viszont nem képesek ugyanakkora területen automatikusan követni a célpontot. Használja ki ezt a célzási technikája továbbfejlesztésére! Az ellenséges gépeket - rögzített - gyakorló fegyverekkel szereltük fel."
+            "description": "Használja fel az eddig tanultakat, hogy ezúttal azonos osztályú elfogó vadászokkal szemben is megállja a helyét! Immár szabványos plazmaágyúkkal szereltük fel a hajóját, amik nagyobb tűzerőt biztosítanak. Viszont nem képesek ugyanakkora területen automatikusan követni a célpontot. Használja ki ezt a célzási technikája továbbfejlesztésére! Az ellenséges gépeket - rögzített - gyakorló fegyverekkel szereltük fel.",
+            "messages": {
+                "welcome": "Üdvözöllek a haladó lőgyakorlaton!",
+                "shield": "Most már védőpajzzsal is fel vagy szerelve. Több lövést felfog, és egy kis idő után újratöltődik.",
+                "missiles": "Követőrakétákkal is el vagy látva. Ha bemérted a célt, tüzelni így tudsz: {controlStrings/keyboard/launchMissile} / egér: {controlStrings/mouse/launchMissile} / joystick: {controlStrings/joystick/launchMissile}.",
+                "finish": "A gyakorlat teljesítéséhez lődd ki a megmaradt célpontokat!"
+            }
         },
         "pirates": {
             "name": "Kalózok",

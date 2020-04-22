@@ -201,7 +201,7 @@
                 "alwaysShowTargetHullBarAtCenter": false,
                 "aimAssistCrosshairs": false,
                 "relativeTargetOrientation": true,
-                "highlightInterval": 1000,
+                "highlightInterval": 750,
                 "targetSwitchAnimationDuration": 100,
                 "aimAssistAppearAnimationDuration": 100,
                 "hullIntegrityDecreaseAnimationDuration": 300,

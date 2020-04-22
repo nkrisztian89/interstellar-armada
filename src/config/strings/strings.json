@@ -142,33 +142,42 @@
         "targetPracticeBoxes": {
             "name": "Basic target practice",
             "messages": {
-                "tutorialWelcome": "Welcome to the target practice tutorial!",
-                "tutorialAimFire1": "First, aim and fire at the container in front.\nMouse: move and {controlStrings/mouse/fire}\nKeyboard: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} and {controlStrings/keyboard/fire}\nJoystick: move the stick and {controlStrings/joystick/fire}",
-                "tutorialAimFire2": "Destroy the container. Keep hitting it until it explodes.\nMouse: move and {controlStrings/mouse/fire}\nKeyboard: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} and {controlStrings/keyboard/fire}\nJoystick: move the stick and {controlStrings/joystick/fire}",
-                "tutorialTargetIndicator": "Good job!\nThe next target is automatically selected. It is marked by a red reticle, or by an arrow if it is not visible in front of you. Its details are displayed in the top right corner of your HUD.",
-                "tutorialMove": "This container is farther away. Move ({controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse}) closer to it to get a better aim. Destroy it when you are close enough!",
-                "tutorialTargeting": "You can also switch targets manually.\n({controlStrings/keyboard/nextNearestHostileTarget} / mouse: {controlStrings/mouse/nextNearestHostileTarget} / joystick: {controlStrings/joystick/nextNearestHostileTarget})\nDestroy another container!",
-                "tutorialImpactIndicators": "The green crosshairs show the estimated positions where your projectiles will hit (or miss) your current target. There are always as many crosshairs as weapons on your ship. Fire when all your crosshairs are locked on your target.",
-                "tutorialFixedWeapons": "Note that unlike these training guns, some weapons cannot be rotated and always face strictly forward. You will need to aim more carefully with such weapons.",
-                "tutorialMultiWeaponAiming": "It is also not always possible to hit the enemy with all your weapons. You have to take your best chances.",
-                "tutorialAimAssist": "Notice the smaller red reticle near the center of your target. It shows its estimated position at the time your projectiles will reach it. You will need to aim at it to hit moving targets.",
-                "tutorialMovingTargets": "You can practice hitting moving targets by moving your own ship sideways while aiming. Make sharp turns at speed to drift, or strafe ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower}) to achieve this.",
-                "tutorialStrafingRolling": "Strafing ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower}) is also very useful in combat for evading incoming projectiles.\nCombining it with rolling ({controlStrings/keyboard/rollLeft}, {controlStrings/keyboard/rollRight}) makes you a very difficult target for enemies.",
-                "tutorialViews1": "You can switch between different views. ({controlStrings/keyboard/nextView}/{controlStrings/keyboard/previousView})\nSome make it easier to aim, while others are more useful for seeing incoming attacks.",
-                "tutorialViews2": "In some views it is possible to look around holding down {controlStrings/keyboard/controlCamera} or using the extra axes on your joystick. You can also reset the view to its original state.\n({controlStrings/keyboard/resetView} / joystick: {controlStrings/joystick/resetView})",
-                "tutorialCruise1": "We brought in some unarmed drones. Switch to cruise flight mode ({controlStrings/keyboard/toggleCruise}) to engage them. In this mode, you are allowed to move faster, but you are not allowed to strafe or drift. Your turn rate is restricted at high speed, thus your aim remains accurate.",
-                "tutorialCruise2": "Cruise flight mode is ideal for engaging or intercepting targets that are far away. Once you are close, switch back to combat mode ({controlStrings/keyboard/toggleCruise}) for better maneuverability.",
-                "tutorialSpeedHolding": "Press {controlStrings/keyboard/toggleSpeedHolding} to toggle speed holding. While on, you only need to press {controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse} when you want to change your speed, and you can press {controlStrings/keyboard/resetSpeed} to come to a full stop.",
-                "tutorialTargetingFriendly": "A friendly drone has arrived. If you wish, you can target non-hostile spacecrafts. ({controlStrings/keyboard/nextNearestNonHostileTarget} / mouse: {controlStrings/mouse/nextNearestNonHostileTarget})\nBe careful though, as your rotating weapons will aim at the current target, even if it isn't hostile!",
-                "tutorialControls": "You can always check and modify the full set of controls in the control settings which you can reach from the menu. ({controlStrings/keyboard/quit})",
-                "tutorialFinish": "Destroy the rest of the drones to complete this mission! You can see the number of remaining enemies you need to destroy in the mission objective indicator on the left."
+                "welcome": "Welcome to the target practice tutorial!",
+                "aimFire1": "Aim and fire at the container in front.\nMouse: move and {controlStrings/mouse/fire}\nKeyboard: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} and {controlStrings/keyboard/fire}\nJoystick: move the stick and {controlStrings/joystick/fire}",
+                "aimFire2": "Destroy the container. Keep hitting it until it explodes.\nMouse: move and {controlStrings/mouse/fire}\nKeyboard: {controlStrings/keyboard/yawLeft}, {controlStrings/keyboard/yawRight}, {controlStrings/keyboard/pitchUp}, {controlStrings/keyboard/pitchDown} and {controlStrings/keyboard/fire}\nJoystick: move the stick and {controlStrings/joystick/fire}",
+                "targetIndicator": "Good job!\nThe next target is automatically selected. It is marked by a red reticle, or by an arrow if it is not visible in front of you. Its details are displayed in the top right corner of your HUD.",
+                "move": "This container is farther away. Move ({controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse}) closer to it to get a better aim. Your speed is shown on the right.\nDestroy it when you are close enough!",
+                "targeting": "You can also switch targets manually.\n({controlStrings/keyboard/nextNearestHostileTarget} / mouse: {controlStrings/mouse/nextNearestHostileTarget} / joystick: {controlStrings/joystick/nextNearestHostileTarget})\nDestroy another container!",
+                "impactIndicators": "The green crosshairs show the estimated positions where your shots will hit or miss your current target.",
+                "views": "Try switching between different views! ({controlStrings/keyboard/nextView}/{controlStrings/keyboard/previousView})\nHold {controlStrings/keyboard/controlCamera} and turn to look around in cockpit view.",
+                "destroyContainers": "Destroy the rest of the containers!",
+                "cruise1": "We brought in some unarmed drones. Switch to cruise flight mode ({controlStrings/keyboard/toggleCruise}) to engage them. In this mode, you are allowed to move faster, but your turn rate is restricted at high speed.",
+                "cruise2": "Cruise flight mode is ideal for engaging or intercepting targets that are far away. Once you are close, switch back to combat mode ({controlStrings/keyboard/toggleCruise}) for better maneuverability.",
+                "aimAssist": "The small red reticle shows where you need to aim to hit a moving target.",
+                "speedHolding": "Press {controlStrings/keyboard/toggleSpeedHolding} to toggle maintining current speed. While on, pressing {controlStrings/keyboard/forward}/{controlStrings/keyboard/reverse} will change the speed, pressing {controlStrings/keyboard/resetSpeed} will set a full stop.",
+                "targetingFriendly": "A friendly drone has arrived.\nYou can target non-hostile spacecrafts with {controlStrings/keyboard/nextNearestNonHostileTarget} or mouse: {controlStrings/mouse/nextNearestNonHostileTarget}.",
+                "controls": "You can always check and modify the full set of controls in the control settings which you can reach from the menu. ({controlStrings/keyboard/quit})",
+                "finish": "Destroy the rest of the drones to complete this mission! You can see the number of remaining enemies on the left."
             }
         },
         "targetPracticeDrones": {
-            "name": "Intermediate target practice"
+            "name": "Intermediate target practice",
+            "messages": {
+                "welcome": "Welcome to intermediate target practice!",
+                "unarmed": "This first drone is unarmed. Destroy it and we will send in armed drones.",
+                "hullBar": "Destroy this armed drone before it destroys you! The state of your ship's armor is shown on the left. The greener the better!",
+                "strafe": "More drones incoming!\nDon't stay in one place, strafe ({controlStrings/keyboard/strafeLeft}, {controlStrings/keyboard/strafeRight}, {controlStrings/keyboard/raise}, {controlStrings/keyboard/lower}) to avoid incoming fire!",
+                "finish": "Destroy these final drones to finish the training!"
+            }
         },
         "targetPracticeFalcon": {
-            "name": "Advanced target practice"
+            "name": "Advanced target practice",
+            "messages": {
+                "welcome": "Welcome to advanced target practice!",
+                "shield": "Now you are equipped with a shield. It can absorb a few shots, and recharges after a short time.",
+                "missiles": "You also have a few homing missiles. Once they are locked, press {controlStrings/keyboard/launchMissile} / mouse: {controlStrings/mouse/launchMissile} / joystick: {controlStrings/joystick/launchMissile} to launch one.",
+                "finish": "Destroy the remaining targets to finish the training!"
+            }
         },
         "pirates": {
             "name": "Pirates"
@@ -307,7 +316,7 @@
         "empire": "Galactic Empire",
         "rebels": "Separatist rebels",
         "pirates": "Pirates",
-        "practiceTargets": "Practice target"
+        "targets": "Practice target"
     },
     "squad": {
         "drone": "Drone",

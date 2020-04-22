@@ -16,7 +16,7 @@
     ],
     "teams": [
         "empire",
-        "practiceTargets"
+        "targets"
     ],
     "views": [
         {
@@ -47,14 +47,14 @@
                     "type": "message",
                     "delay": 500,
                     "params": {
-                        "textID": "tutorialWelcome",
+                        "textID": "welcome",
                         "urgent": true
                     }
                 }, {
                     "type": "message",
                     "delay": 500,
                     "params": {
-                        "textID": "tutorialAimFire1",
+                        "textID": "aimFire1",
                         "permanent": true,
                         "urgent": false
                     }
@@ -70,7 +70,7 @@
                     }, {
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "equals",
@@ -85,7 +85,7 @@
             "actions": [{
                     "type": "message",
                     "params": {
-                        "textID": "tutorialAimFire2",
+                        "textID": "aimFire2",
                         "permanent": true,
                         "urgent": true
                     }
@@ -95,7 +95,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -125,15 +125,38 @@
                 }, {
                     "type": "message",
                     "params": {
-                        "textID": "tutorialTargetIndicator",
+                        "textID": "targetIndicator",
+                        "permanent": true,
                         "urgent": true
                     }
                 }, {
-                    "type": "message",
+                    "type": "hud",
+                    "delay": 9000,
                     "params": {
-                        "textID": "tutorialMove",
+                        "section": "targetInfo",
+                        "state": "visible"
+                    }
+                }, {
+                    "type": "hud",
+                    "delay": 9000,
+                    "params": {
+                        "section": "targetIndicator",
+                        "state": "visible"
+                    }
+                }, {
+                    "type": "hud",
+                    "delay": 9000,
+                    "params": {
+                        "section": "speedBar",
+                        "state": "highlighted"
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 9000,
+                    "params": {
+                        "textID": "move",
                         "permanent": true,
-                        "urgent": false
+                        "urgent": true
                     }
                 }]
         }, {
@@ -141,7 +164,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -155,21 +178,17 @@
                 "delay": 500
             },
             "actions": [{
-                    "type": "hud",
-                    "params": {
-                        "section": "targetInfo",
-                        "state": "visible"
-                    }
+                    "type": "clearMessages"
                 }, {
                     "type": "hud",
                     "params": {
-                        "section": "targetIndicator",
+                        "section": "speedBar",
                         "state": "visible"
                     }
                 }, {
                     "type": "message",
                     "params": {
-                        "textID": "tutorialTargeting",
+                        "textID": "targeting",
                         "permanent": true,
                         "urgent": true
                     }
@@ -179,7 +198,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -199,9 +218,15 @@
                         "state": "highlighted"
                     }
                 }, {
+                    "type": "hud",
+                    "params": {
+                        "section": "speedBar",
+                        "state": "visible"
+                    }
+                }, {
                     "type": "message",
                     "params": {
-                        "textID": "tutorialImpactIndicators",
+                        "textID": "impactIndicators",
                         "permanent": true,
                         "urgent": true
                     }
@@ -211,7 +236,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -233,7 +258,7 @@
                 }, {
                     "type": "message",
                     "params": {
-                        "textID": "tutorialFixedWeapons",
+                        "textID": "views",
                         "permanent": true,
                         "urgent": true
                     }
@@ -243,7 +268,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -259,7 +284,7 @@
             "actions": [{
                     "type": "message",
                     "params": {
-                        "textID": "tutorialMultiWeaponAiming",
+                        "textID": "destroyContainers",
                         "permanent": true,
                         "urgent": true
                     }
@@ -269,149 +294,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 12
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 500
-            },
-            "actions": [{
-                    "type": "hud",
-                    "params": {
-                        "section": "aimAssistIndicator",
-                        "state": "highlighted"
-                    }
-                }, {
-                    "type": "message",
-                    "params": {
-                        "textID": "tutorialAimAssist",
-                        "permanent": true,
-                        "urgent": true
-                    }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "teams": ["practiceTargets"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 11
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 500
-            },
-            "actions": [{
-                    "type": "hud",
-                    "params": {
-                        "section": "aimAssistIndicator",
-                        "state": "visible"
-                    }
-                }, {
-                    "type": "message",
-                    "params": {
-                        "textID": "tutorialMovingTargets",
-                        "permanent": true,
-                        "urgent": true
-                    }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "teams": ["practiceTargets"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 10
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 500
-            },
-            "actions": [{
-                    "type": "message",
-                    "params": {
-                        "textID": "tutorialStrafingRolling",
-                        "permanent": true,
-                        "urgent": true
-                    }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "teams": ["practiceTargets"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 9
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 500
-            },
-            "actions": [{
-                    "type": "message",
-                    "params": {
-                        "textID": "tutorialViews1",
-                        "permanent": true,
-                        "urgent": true
-                    }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "teams": ["practiceTargets"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 8
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 500
-            },
-            "actions": [{
-                    "type": "message",
-                    "params": {
-                        "textID": "tutorialViews2",
-                        "permanent": true,
-                        "urgent": true
-                    }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -425,6 +308,8 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "clearMessages"
+                }, {
                     "type": "command",
                     "subjects": {
                         "spacecrafts": ["drone 1", "drone 2", "drone 3"]
@@ -439,31 +324,6 @@
                             }
                         }
                     }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "teams": ["practiceTargets"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 7
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 1500
-            },
-            "actions": [{
-                    "type": "hud",
-                    "params": {
-                        "section": "flightMode",
-                        "state": "highlighted"
-                    }
                 }, {
                     "type": "hud",
                     "params": {
@@ -471,11 +331,27 @@
                         "state": "visible"
                     }
                 }, {
-                    "type": "message",
+                    "type": "hud",
+                    "delay": 1000,
                     "params": {
-                        "textID": "tutorialCruise1",
-                        "permanent": true,
+                        "section": "flightMode",
+                        "state": "highlighted"
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 1000,
+                    "params": {
+                        "textID": "cruise1",
+                        "permanent": false,
                         "urgent": true
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 1000,
+                    "params": {
+                        "textID": "cruise2",
+                        "permanent": true,
+                        "urgent": false
                     }
                 }]
         }, {
@@ -483,7 +359,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -497,15 +373,23 @@
                 "delay": 500
             },
             "actions": [{
+                    "type": "clearMessages"
+                }, {
                     "type": "hud",
                     "params": {
                         "section": "flightMode",
                         "state": "visible"
                     }
                 }, {
+                    "type": "hud",
+                    "params": {
+                        "section": "aimAssistIndicator",
+                        "state": "highlighted"
+                    }
+                }, {
                     "type": "message",
                     "params": {
-                        "textID": "tutorialCruise2",
+                        "textID": "aimAssist",
                         "permanent": true,
                         "urgent": true
                     }
@@ -515,7 +399,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -536,29 +420,17 @@
                     "params": {
                         "command": "jump"
                     }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "teams": ["practiceTargets"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 5
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 1000
-            },
-            "actions": [{
-                    "type": "message",
+                }, {
+                    "type": "hud",
                     "params": {
-                        "textID": "tutorialTargetingFriendly",
+                        "section": "aimAssistIndicator",
+                        "state": "visible"
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 500,
+                    "params": {
+                        "textID": "targetingFriendly",
                         "permanent": true,
                         "urgent": true
                     }
@@ -568,7 +440,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -607,35 +479,11 @@
                             "way": "out"
                         }
                     }
-                }]
-        }, {
-            "trigger": {
-                "conditions": [{
-                        "type": "count",
-                        "subjects": {
-                            "teams": ["practiceTargets"]
-                        },
-                        "params": {
-                            "relation": "below",
-                            "count": 4
-                        }
-                    }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
-                "delay": 1500
-            },
-            "actions": [{
-                    "type": "hud",
-                    "params": {
-                        "section": "speedBar",
-                        "state": "highlighted"
-                    }
                 }, {
                     "type": "message",
+                    "delay": 1000,
                     "params": {
-                        "textID": "tutorialSpeedHolding",
+                        "textID": "speedHolding",
                         "permanent": true,
                         "urgent": true
                     }
@@ -645,7 +493,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -659,15 +507,9 @@
                 "delay": 500
             },
             "actions": [{
-                    "type": "hud",
-                    "params": {
-                        "section": "speedBar",
-                        "state": "visible"
-                    }
-                }, {
                     "type": "message",
                     "params": {
-                        "textID": "tutorialControls",
+                        "textID": "controls",
                         "permanent": true,
                         "urgent": true
                     }
@@ -677,7 +519,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -699,7 +541,7 @@
                 }, {
                     "type": "message",
                     "params": {
-                        "textID": "tutorialFinish",
+                        "textID": "finish",
                         "permanent": true,
                         "urgent": true
                     }
@@ -709,7 +551,7 @@
                 "conditions": [{
                         "type": "count",
                         "subjects": {
-                            "teams": ["practiceTargets"]
+                            "teams": ["targets"]
                         },
                         "params": {
                             "relation": "below",
@@ -737,77 +579,65 @@
             "team": "empire",
             "class": "falcon",
             "piloted": true,
-            "position": [0, 0, 0],
+            "position": [700, -600, 0],
             "equipment": "training"
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
-            "position": [0, 100, 20],
+            "position": [700, -500, 15],
             "rotations": ["z+270"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-240, 500, 20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-200, 460, 20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-200, 500, 20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-160, 500, 20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-200, 540, 20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-240, 500, -20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-200, 460, -20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-200, 500, -20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-160, 500, -20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "container",
             "position": [-200, 540, -20],
             "rotations": ["z+45"]
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 1",
@@ -815,49 +645,43 @@
             "rotations": ["z+45"],
             "away": true,
             "equipment": "unarmed"
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 2",
             "away": true,
             "equipment": "unarmed"
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 3",
             "away": true,
             "equipment": "unarmed"
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "position": [-3000, -2000, 0],
             "squad": "drone 4",
             "away": true,
             "equipment": "unarmed"
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 5",
             "away": true,
             "equipment": "unarmed"
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 6",
             "away": true,
             "equipment": "unarmed"
-        },
-        {
+        }, {
             "team": "empire",
             "name": "Flapper",
             "class": "drone",

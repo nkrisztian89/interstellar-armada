@@ -19,11 +19,98 @@
     "teams": [
         "empire",
         {
-            "name": "practiceTargets",
+            "name": "targets",
             "color": [1, 1, 0, 1]
         }
     ],
     "events": [{
+            "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "message",
+                    "delay": 500,
+                    "params": {
+                        "textID": "welcome",
+                        "urgent": true
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 4500,
+                    "params": {
+                        "textID": "shield",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }, {
+                    "type": "hud",
+                    "delay": 4500,
+                    "params": {
+                        "section": "shieldBar",
+                        "state": "highlighted"
+                    }
+                }, {
+                    "type": "command",
+                    "delay": 11500,
+                    "subjects": {
+                        "spacecrafts": ["theta 1"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "position": [0, 5000, 0],
+                            "rotations": ["z+180"]
+                        }
+                    }
+                }, {
+                    "type": "hud",
+                    "delay": 11500,
+                    "params": {
+                        "section": "shieldBar",
+                        "state": "visible"
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 12500,
+                    "params": {
+                        "textID": "missiles",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }, {
+                    "type": "hud",
+                    "delay": 12500,
+                    "params": {
+                        "section": "missileIndicator",
+                        "state": "highlighted"
+                    }
+                }, {
+                    "type": "hud",
+                    "delay": 12500,
+                    "params": {
+                        "section": "missileInfo",
+                        "state": "highlighted"
+                    }
+                }, {
+                    "type": "hud",
+                    "delay": 20500,
+                    "params": {
+                        "section": "missileIndicator",
+                        "state": "visible"
+                    }
+                }, {
+                    "type": "hud",
+                    "delay": 20500,
+                    "params": {
+                        "section": "missileInfo",
+                        "state": "visible"
+                    }
+                }]
+        }, {
             "trigger": {
                 "conditions": [{
                         "type": "destroyed",
@@ -45,7 +132,7 @@
                             "way": "in",
                             "anchor": "Rookie",
                             "relative": "true",
-                            "position": [500, 2500, 50],
+                            "position": [1000, 3500, 50],
                             "rotations": ["z-135"]
                         }
                     }
@@ -61,9 +148,16 @@
                             "way": "in",
                             "anchor": "Rookie",
                             "relative": "true",
-                            "position": [-500, 2500, 50],
+                            "position": [-1000, 3500, 50],
                             "rotations": ["z+135"]
                         }
+                    }
+                }, {
+                    "type": "message",
+                    "params": {
+                        "textID": "finish",
+                        "permanent": true,
+                        "urgent": true
                     }
                 }]
         }, {
@@ -84,7 +178,7 @@
             "actions": [{
                     "type": "command",
                     "subjects": {
-                        "spacecrafts": ["omega 1"]
+                        "squads": ["omega"]
                     },
                     "params": {
                         "command": "jump",
@@ -92,7 +186,11 @@
                             "way": "in",
                             "anchor": "Rookie",
                             "relative": "true",
-                            "distance": 2000
+                            "distance": 4000,
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [75, -50, 0]
+                            }
                         }
                     }
                 }]
@@ -105,33 +203,21 @@
             "position": [0, 0, 0],
             "equipment": "player-tier1"
         }, {
-            "team": "practiceTargets",
+            "team": "targets",
             "class": "falcon",
-            "squad": "theta 1",
+            "squad": "theta",
+            "count": 3,
             "ai": "fighter",
-            "position": [0, 2400, 0],
+            "away": true,
             "rotations": ["z+180"],
             "equipment": "training-fixed"
         }, {
-            "team": "practiceTargets",
+            "team": "targets",
             "class": "falcon",
-            "squad": "theta 2",
+            "squad": "omega",
+            "count": 2,
             "ai": "fighter",
             "away": true,
-            "equipment": "training-fixed"
-        }, {
-            "team": "practiceTargets",
-            "class": "falcon",
-            "squad": "theta 3",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "training-fixed"
-        }, {
-            "team": "practiceTargets",
-            "class": "falcon",
-            "squad": "omega 1",
-            "ai": "fighter",
-            "away": true,
-            "equipment": "training-full-fixed"
+            "equipments": ["training-full-fixed", "training-fixed"]
         }]
 }

@@ -18,14 +18,35 @@
     ],
     "teams": [
         "empire",
-        "practiceTargets"
+        "targets"
     ],
     "events": [{
+            "trigger": {
+                "fireWhen": "missionStarts",
+                "oneShot": true
+            },
+            "actions": [{
+                    "type": "message",
+                    "delay": 500,
+                    "params": {
+                        "textID": "welcome",
+                        "urgent": true
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 500,
+                    "params": {
+                        "textID": "unarmed",
+                        "permanent": true,
+                        "urgent": false
+                    }
+                }]
+        }, {
             "trigger": {
                 "conditions": [{
                         "type": "destroyed",
                         "subjects": {
-                            "spacecrafts": ["drone 1"]
+                            "spacecrafts": ["RS-01"]
                         }
                     }
                 ],
@@ -37,7 +58,7 @@
             "actions": [{
                     "type": "command",
                     "subjects": {
-                        "spacecrafts": ["drone 2"]
+                        "spacecrafts": ["drone 1"]
                     },
                     "params": {
                         "command": "jump",
@@ -45,9 +66,32 @@
                             "way": "in",
                             "anchor": "Rookie",
                             "relative": "true",
-                            "position": [500, 1000, 50],
+                            "position": [500, 1600, 50],
                             "rotations": ["z-90"]
                         }
+                    }
+                }, {
+                    "type": "hud",
+                    "params": {
+                        "section": "hullBar",
+                        "state": "highlighted"
+                    }
+                }, {
+                    "type": "clearMessages"
+                }, {
+                    "type": "message",
+                    "delay": 500,
+                    "params": {
+                        "textID": "hullBar",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }, {
+                    "type": "hud",
+                    "delay": 6000,
+                    "params": {
+                        "section": "hullBar",
+                        "state": "visible"
                     }
                 }
             ]
@@ -56,7 +100,7 @@
                 "conditions": [{
                         "type": "destroyed",
                         "subjects": {
-                            "spacecrafts": ["drone 2"]
+                            "spacecrafts": ["drone 1"]
                         }
                     }
                 ],
@@ -68,7 +112,7 @@
             "actions": [{
                     "type": "command",
                     "subjects": {
-                        "spacecrafts": ["drone 3", "drone 4"]
+                        "spacecrafts": ["drone 2", "drone 3"]
                     },
                     "params": {
                         "command": "jump",
@@ -76,13 +120,64 @@
                             "way": "in",
                             "anchor": "Rookie",
                             "relative": "true",
-                            "position": [-400, 1200, 100],
+                            "position": [-500, 1800, 100],
                             "rotations": ["z+120"],
                             "formation": {
                                 "type": "wedge",
                                 "spacing": [50, -50, 0]
                             }
                         }
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 500,
+                    "params": {
+                        "textID": "strafe",
+                        "permanent": true,
+                        "urgent": true
+                    }
+                }
+            ]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "destroyed",
+                        "subjects": {
+                            "spacecrafts": ["drone 2", "drone 3"]
+                        }
+                    }
+                ],
+                "conditionsRequired": "all",
+                "fireWhen": "changeToTrue",
+                "oneShot": true,
+                "delay": 2500
+            },
+            "actions": [{
+                    "type": "command",
+                    "subjects": {
+                        "spacecrafts": ["drone 4", "drone 5", "drone 6"]
+                    },
+                    "params": {
+                        "command": "jump",
+                        "jump": {
+                            "way": "in",
+                            "anchor": "Rookie",
+                            "relative": "true",
+                            "position": [400, 2000, -200],
+                            "rotations": ["z-135"],
+                            "formation": {
+                                "type": "wedge",
+                                "spacing": [85, -50, 0]
+                            }
+                        }
+                    }
+                }, {
+                    "type": "message",
+                    "delay": 500,
+                    "params": {
+                        "textID": "finish",
+                        "permanent": true,
+                        "urgent": true
                     }
                 }
             ]
@@ -96,34 +191,19 @@
             "piloted": true,
             "position": [0, 0, 0],
             "equipment": "training"
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "drone",
-            "squad": "drone 1",
+            "name": "RS-01",
             "ai": "fighter",
             "position": [0, 100, 0],
             "rotations": ["z+180"],
             "equipment": "unarmed"
-        },
-        {
-            "team": "practiceTargets",
+        }, {
+            "team": "targets",
             "class": "drone",
-            "squad": "drone 2",
-            "ai": "fighter",
-            "away": true
-        },
-        {
-            "team": "practiceTargets",
-            "class": "drone",
-            "squad": "drone 3",
-            "ai": "fighter",
-            "away": true
-        },
-        {
-            "team": "practiceTargets",
-            "class": "drone",
-            "squad": "drone 4",
+            "squad": "drone",
+            "count": 6,
             "ai": "fighter",
             "away": true
         }
