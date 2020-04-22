@@ -521,7 +521,7 @@ define([
                     popup.alignPosition();
                 },
                 updateButtonText = function () {
-                    button.textContent = ((!isArray && typeDescriptor.getPreviewText) ? typeDescriptor.getPreviewText(data) : typeDescriptor.name) + (isArray ? (" (" + data.length + ")") : "");
+                    button.textContent = ((!isArray && typeDescriptor.getPreviewText) ? typeDescriptor.getPreviewText(data) : typeDescriptor.name) + (isArray ? (" (" + (((data.length === 1) && typeDescriptor.getName) ? typeDescriptor.getName(data[0]) : data.length) + ")") : "");
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }

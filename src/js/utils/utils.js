@@ -544,6 +544,18 @@ define(function () {
                         exports.getDelimitedStringForNumber(Math.round(massInKilograms / 1000)) + " t");
     };
     /**
+     * Returns a string describing a time (duration) in human-readable form based on its value in milliseconds.
+     * @param {Number} timeInMs
+     * @returns {String}
+     */
+    exports.getTimeString = function (timeInMs) {
+        return (timeInMs < 1000) ?
+                timeInMs + " ms" :
+                ((timeInMs < 60000) ?
+                        (Math.round(timeInMs / 10) / 100) + " s" :
+                        exports.formatTimeToMinutes(timeInMs));
+    };
+    /**
      * Converts the string to all uppercase and replaces spaces and dashes with underscores as well as inserts underscores before uppercase letters
      * @param {String} string
      * @returns {String}

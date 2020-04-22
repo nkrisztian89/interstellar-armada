@@ -4661,5 +4661,7 @@ define([
     _battle.hideHUD = hideHUD;
     _battle.toggleHUDVisibility = toggleHUDVisibility;
     _battle.handleGraphicsSettingsChanged = handleGraphicsSettingsChanged;
+    _battle.HUDSection = HUDSection;
+    _battle.HUDSectionState = HUDSectionState;
     return _battle;
 });

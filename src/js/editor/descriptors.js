@@ -23,6 +23,7 @@
  * @param equipment Used to access enums 
  * @param spacecraft Used to access enums 
  * @param ai Used to access the list of valid AI types
+ * @param battle Used to access HUD enums
  * @param common Used to access enums (ItemType)
  */
 define([
@@ -39,8 +40,9 @@ define([
     "armada/logic/equipment",
     "armada/logic/spacecraft",
     "armada/logic/ai",
+    "armada/screens/battle",
     "editor/common"
-], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes, environments, missions, equipment, spacecraft, ai, common) {
+], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes, environments, missions, equipment, spacecraft, ai, battle, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -2397,7 +2399,7 @@ define([
                     }
                     // TimeCondition params:
                     if (instance.satisfiedWhen !== undefined) {
-                        return instance.satisfiedWhen + ": " + instance.time + " ms";
+                        return instance.satisfiedWhen + (instance.maxCount ? " (" + instance.maxCount + "x)" : "") + ": " + utils.getTimeString(instance.time) + (instance.start ? " after " + instance.start : "");
                     }
                     return "none";
                 },
@@ -2447,6 +2449,26 @@ define([
             CONDITION = {
                 baseType: BaseType.OBJECT,
                 name: "Condition",
+                getName: function (instance) {
+                    if (instance.type) {
+                        return instance.type;
+                    }
+                    return "condition";
+                },
+                getPreviewText: function (instance) {
+                    if (instance.type) {
+                        switch (instance.type) {
+                            case missions.ConditionType.COUNT:
+                                return "count of " + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " " + CONDITION_PARAMS.getPreviewText(instance.params || utils.EMPTY_OBJECT);
+                            case missions.ConditionType.DESTROYED:
+                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " destroyed";
+                            case missions.ConditionType.TIME_ELAPSED:
+                                return instance.params ? CONDITION_PARAMS.getPreviewText(instance.params) : "time elapsed";
+                        }
+                        return instance.type;
+                    }
+                    return "condition";
+                },
                 properties: {
                     TYPE: {
                         name: "type",
@@ -2484,6 +2506,19 @@ define([
             TRIGGER = {
                 baseType: BaseType.OBJECT,
                 name: "Trigger",
+                getPreviewText: function (instance) {
+                    if (instance.conditions && (instance.conditions.length > 0)) {
+                        if (instance.conditions.length > 1) {
+                            return instance.conditions.length + " conditions";
+                        } else {
+                            return CONDITION.getPreviewText(instance.conditions[0]);
+                        }
+                    }
+                    if (instance.fireWhen === missions.TriggerFireWhen.MISSION_STARTS) {
+                        return "start";
+                    }
+                    return "trigger";
+                },
                 properties: {
                     CONDITIONS: {
                         name: "conditions",
@@ -2667,6 +2702,20 @@ define([
                 }
             },
             /**
+             * @type Editor~TypeDescriptor
+             */
+            HUD_SECTION = {
+                baseType: BaseType.ENUM,
+                values: battle.HUDSection
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            HUD_SECTION_STATE = {
+                baseType: BaseType.ENUM,
+                values: battle.HUDSectionState
+            },
+            /**
              * A merge of all the different possible action parameters
              * @type Editor~TypeDescriptor
              */
@@ -2680,7 +2729,17 @@ define([
                     }
                     // CommandAction params:
                     if (instance.command !== undefined) {
-                        return "command: " + instance.command;
+                        if (instance.jump && instance.jump.way) {
+                            return instance.command + " " + instance.jump.way;
+                        }
+                        if (instance.target) {
+                            return instance.command + " " + TARGET_COMMAND_PARAMS.getPreviewText(instance.target);
+                        }
+                        return instance.command;
+                    }
+                    // HUDAction params:
+                    if (instance.state !== undefined) {
+                        return "HUD: " + (instance.section ? instance.section + " " : "") + instance.state;
                     }
                     return "none";
                 },
@@ -2736,6 +2795,17 @@ define([
                         name: "target",
                         type: TARGET_COMMAND_PARAMS,
                         optional: true
+                    },
+                    // HUDAction params:
+                    SECTION: {
+                        name: "section",
+                        type: HUD_SECTION,
+                        optional: true
+                    },
+                    STATE: {
+                        name: "state",
+                        type: HUD_SECTION_STATE,
+                        optional: true
                     }
                 }
             },
@@ -2745,6 +2815,12 @@ define([
             ACTION = {
                 baseType: BaseType.OBJECT,
                 name: "Action",
+                getName: function (instance) {
+                    if (instance.type) {
+                        return instance.type;
+                    }
+                    return "action";
+                },
                 properties: {
                     TYPE: {
                         name: "type",
@@ -2787,7 +2863,7 @@ define([
                         return "start";
                     }
                     if (instance.actions && (instance.actions.length === 1)) {
-                        return instance.actions[0].type;
+                        return ACTION.getName(instance.actions[0]);
                     }
                     return "event";
                 },
