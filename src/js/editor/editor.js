@@ -90,6 +90,9 @@ define([
             EXPORT_DIALOG_ID = "exportDialog",
             EXPORT_TYPE_ID = "exportType",
             EXPORT_NAME_ID = "exportName",
+            EXPORT_NAME_CONTAINER_ID = "exportNameContainer",
+            EXPORT_ITEM_ID = "exportItem",
+            EXPORT_ITEM_CONTAINER_ID = "exportItemContainer",
             EXPORT_AUTHOR_ID = "exportAuthor",
             EXPORT_EXPORT_BUTTON_ID = "exportExport",
             EXPORT_CANCEL_BUTTON_ID = "exportCancel",
@@ -673,14 +676,27 @@ define([
                 exportDialog = document.getElementById(EXPORT_DIALOG_ID),
                 exportType = document.getElementById(EXPORT_TYPE_ID),
                 exportName = document.getElementById(EXPORT_NAME_ID),
+                exportNameContainer = document.getElementById(EXPORT_NAME_CONTAINER_ID),
+                exportItem = document.getElementById(EXPORT_ITEM_ID),
+                exportItemContainer = document.getElementById(EXPORT_ITEM_CONTAINER_ID),
                 exportAuthor = document.getElementById(EXPORT_AUTHOR_ID),
                 exportExport = document.getElementById(EXPORT_EXPORT_BUTTON_ID),
                 exportCancel = document.getElementById(EXPORT_CANCEL_BUTTON_ID);
-        common.setSelectorOptions(exportType, [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT]);
+        common.setSelectorOptions(exportType, [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT, common.ItemType.MISSION]);
         exportType.onchange = function () {
-            exportName.value = exportType.value;
+            if (exportType.value === common.ItemType.MISSION) {
+                common.setSelectorOptions(exportItem, missions.getMissionNames().map(function (missionName) {
+                    return utils.getFilenameWithoutExtension(missionName);
+                }));
+                exportNameContainer.hidden = true;
+                exportItemContainer.hidden = false;
+            } else {
+                exportName.value = exportType.value;
+                exportNameContainer.hidden = false;
+                exportItemContainer.hidden = true;
+            }
         };
-        exportName.value = exportType.value;
+        exportType.onchange();
         exportExport.onclick = function () {
             switch (exportType.value) {
                 case common.ItemType.RESOURCE:
@@ -714,6 +730,13 @@ define([
                                     function (categoryName, itemName) {
                                         return (categoryName === ENVIRONMENTS_CATEGORY) ? environments.getEnvironment(itemName) : null;
                                     }));
+                    break;
+                case common.ItemType.MISSION:
+                    missions.requestMissionDescriptor(missions.getMissionNames()[exportItem.selectedIndex], function (missionDescriptor) {
+                        _exportString(
+                                exportItem.value,
+                                JSON.stringify(missionDescriptor._dataJSON));
+                    });
                     break;
                 default:
                     application.showError("Exporting " + exportType.value + " is not yet implemented!");
@@ -1000,13 +1023,13 @@ define([
                     application.log("Configuration loaded.");
                 });
                 application.requestTextFile(
-                    configJSON.configFiles.strings[language].folder,
-                    configJSON.configFiles.strings[language].filename,
-                    function (responseText) {
-                        strings.loadStrings(language, JSON.parse(responseText), strings);
-                        strings.setLanguage(language);
-                        _requestSettingsLoad(configJSON.configFiles.settings);
-                    });
+                        configJSON.configFiles.strings[language].folder,
+                        configJSON.configFiles.strings[language].filename,
+                        function (responseText) {
+                            strings.loadStrings(language, JSON.parse(responseText), strings);
+                            strings.setLanguage(language);
+                            _requestSettingsLoad(configJSON.configFiles.settings);
+                        });
             });
         });
     }

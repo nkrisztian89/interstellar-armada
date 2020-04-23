@@ -54,13 +54,13 @@ game itself to load / display game data). You can open it by serving and opening
 `editor.html` after making a dev-build (see the previous section).
 Please note that the editor is even less complete than the game, there are
 things that cannot be edited with it (most notably game configuration / settings and
-missions), and it has limitations for even the things it can edit (such as not being
+language files), and it has limitations for even the things it can edit (such as not being
 able to delete items). It is also fairly buggy.
 However, it can still be useful and more comfortable than dealing with the JSON files manually, 
 and can be great for understanding how the game data is structured. **To apply the changes
 you make** in the editor, you need to **download the game files** to your computer and put them 
 in your server's serving folder (or use Electron, as explained in the next chapter), **export 
-the files you changed** with the editor (resources/classes/environments), and **overwrite the 
+the files you changed** with the editor (resources/classes/environments/mission), and **overwrite the 
 original game files with the exported ones**.
 
 Electron
