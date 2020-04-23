@@ -408,7 +408,6 @@
         },
         "loadingBox": {
             "loadingMission": "küldetésleíró fájl betöltése...",
-            "addingRandomElements": "véletlen elemek hozzáadása...",
             "buildingScene": "színtér felépítése..."
         },
         "message": {

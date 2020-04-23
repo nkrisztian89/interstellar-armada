@@ -284,15 +284,47 @@
             "position": [-100, 500, -400],
             "rotations": ["z+90"],
             "equipment": "imperial-tier1"
-        }],
-    "randomShips": {
-        "falcon": 3,
-        "viper": 2,
-        "aries": 1,
-        "taurus": 1
-    },
-    "randomShipsMapSize": 3000,
-    "randomShipsEquipmentProfileName": "imperial-tier1",
-    "randomShipsHeadingAngle": 90,
-    "randomShipsRandomHeading": true
+        }, {
+            "class": "falcon",
+            "squad": "gamma",
+            "count": 3,
+            "position": [0, 0, 0],
+            "rotations": ["z+90"],
+            "formation": {
+                "type": "random",
+                "spacing": [3000, 3000, 3000]
+            },
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "viper",
+            "squad": "delta",
+            "count": 2,
+            "position": [0, 0, 0],
+            "formation": {
+                "type": "random",
+                "spacing": [3000, 3000, 3000]
+            },
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "aries",
+            "squad": "epsilon",
+            "count": 1,
+            "position": [0, 0, 0],
+            "formation": {
+                "type": "random",
+                "spacing": [3000, 3000, 3000]
+            },
+            "equipment": "imperial-tier1"
+        }, {
+            "class": "taurus",
+            "squad": "omega",
+            "count": 1,
+            "position": [0, 0, 0],
+            "rotations": ["z+90"],
+            "formation": {
+                "type": "random",
+                "spacing": [3000, 3000, 3000]
+            },
+            "equipment": "imperial-tier1"
+        }]
 }

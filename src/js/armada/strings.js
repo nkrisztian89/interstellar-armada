@@ -150,7 +150,6 @@ define([
         OBJECTIVE_WIN_PREFIX: {name: "battle.winObjective.", optional: true},
         OBJECTIVE_LOSE_PREFIX: {name: "battle.loseObjective.", optional: true},
         LOADING_BOX_LOADING_MISSION: {name: "battle.loadingBox.loadingMission"},
-        LOADING_BOX_ADDING_RANDOM_ELEMENTS: {name: "battle.loadingBox.addingRandomElements"},
         LOADING_BOX_BUILDING_SCENE: {name: "battle.loadingBox.buildingScene"},
         MESSAGE_READY: {name: "battle.message.ready"},
         MESSAGE_PAUSED: {name: "battle.message.paused"},

@@ -70,7 +70,9 @@ define([
              */
             SpacecraftFormation = {
                 /** X offset is alternating (+/-), all offset factors increase for every second ship */
-                WEDGE: "wedge"
+                WEDGE: "wedge",
+                /** The position is randomly generated within the +/- X/2,Y/2,Z/2 around the lead position */
+                RANDOM: "random"
             },
             // ------------------------------------------------------------------------------
             // constants
@@ -166,7 +168,12 @@ define([
              * Cached value of the configuratino settings of the factor for score awarded for kills
              * @type Number
              */
-            _scoreFactorForKill;
+            _scoreFactorForKill,
+            /**
+             * A random function with a specific seed
+             * @type Function
+             */
+            _random;
     // #########################################################################
     /**
      * Needs to be executed whenever the settings in the graphics module change
@@ -179,6 +186,9 @@ define([
             _parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
         }
         _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
+    }
+    function resetRandomSeed() {
+        _random = Math.seed(config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED));
     }
     // #########################################################################
     /**
@@ -593,17 +603,25 @@ define([
                     (((index % 2) === 1) ? 1 : -1) * factor * formation.spacing[0],
                     factor * formation.spacing[1],
                     factor * formation.spacing[2]];
-                if (orientation) {
-                    vec.mulVec3Mat4(result, orientation);
-                }
-                if (leadPosition) {
-                    vec.add3(result, leadPosition);
-                }
-                return result;
+                break;
+            case SpacecraftFormation.RANDOM:
+                result = [
+                    _random() * formation.spacing[0] - formation.spacing[0] / 2,
+                    _random() * formation.spacing[1] - formation.spacing[1] / 2,
+                    _random() * formation.spacing[2] - formation.spacing[2] / 2
+                ];
+                break;
             default:
                 application.showError("Unknown formation type specified: '" + formation.type + "!");
                 return [0, 0, 0];
         }
+        if (orientation) {
+            vec.mulVec3Mat4(result, orientation);
+        }
+        if (leadPosition) {
+            vec.add3(result, leadPosition);
+        }
+        return result;
     };
     // initializer
     /**
@@ -3002,6 +3020,7 @@ define([
         _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
         _weaponFireSoundStackMinimumDistance = config.getSetting(config.BATTLE_SETTINGS.WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE);
         _scoreFactorForKill = config.getSetting(config.BATTLE_SETTINGS.SCORE_FRACTION_FOR_KILL);
+        resetRandomSeed();
         graphics.executeWhenReady(handleGraphicsSettingsChanged);
     });
     // -------------------------------------------------------------------------
@@ -3009,6 +3028,7 @@ define([
     return {
         SpacecraftFormation: SpacecraftFormation,
         handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
+        resetRandomSeed: resetRandomSeed,
         Spacecraft: Spacecraft
     };
 });

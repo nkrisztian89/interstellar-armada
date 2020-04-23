@@ -11,7 +11,7 @@
 /**
  * @param utils Used for string formatting, async calls.
  * @param vec Used for vector operation for the HUD elements.
- * @param mat Used for matrix operation for the HUD elements, displaying matrix stats and orienting random ships.
+ * @param mat Used for matrix operation for the HUD elements and displaying matrix stats.
  * @param application Used for displaying errors and logging.
  * @param game Used for navigation
  * @param components Used for the components of the screen (e.g. loading box)
@@ -102,7 +102,6 @@ define([
             /** @type Number */
             LOOP_CANCELED = -1,
             LOOP_REQUESTANIMFRAME = -2,
-            LOADING_RANDOM_ITEMS_PROGRESS = 5,
             LOADING_BUILDING_SCENE_PROGRESS = 10,
             LOADING_RESOURCES_START_PROGRESS = 20,
             LOADING_RESOURCE_PROGRESS = 60,
@@ -4383,8 +4382,6 @@ define([
         missions.requestMission(_missionSourceFilename, _difficulty, _demoMode, function (createdMission) {
             var anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex, i;
             _mission = createdMission;
-            this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_ADDING_RANDOM_ELEMENTS), LOADING_RANDOM_ITEMS_PROGRESS);
-            _mission.addRandomShips(undefined, _demoMode);
             _targets = _mission.getTargetSpacecrafts();
             _escorts = _mission.getEscortedSpacecrafts();
             // for missions that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the

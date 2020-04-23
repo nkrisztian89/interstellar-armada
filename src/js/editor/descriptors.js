@@ -3172,31 +3172,6 @@ define([
                 SPACECRAFTS: {
                     name: "spacecrafts",
                     type: _createTypedArrayType(SPACECRAFT)
-                },
-                RANDOM_SHIPS: {
-                    name: "randomShips",
-                    type: SPACECRAFT_COUNTS,
-                    optional: true
-                },
-                RANDOM_SHIPS_MAP_SIZE: {
-                    name: "randomShipsMapSize",
-                    type: METERS,
-                    optional: true
-                },
-                RANDOM_SHIPS_HEADING_ANGLE: {
-                    name: "randomShipsHeadingAngle",
-                    type: DEGREES,
-                    defaultValue: 0
-                },
-                RANDOM_SHIPS_RANDOM_HEADING: {
-                    name: "randomShipsRandomHeading",
-                    type: BaseType.BOOLEAN,
-                    defaultValue: false
-                },
-                RANDOM_SHIPS_EQUIPMENT_PROFILE_NAME: {
-                    name: "randomShipsEquipmentProfileName",
-                    type: BaseType.STRING,
-                    optional: true
                 }
             };
     /**

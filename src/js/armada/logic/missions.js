@@ -179,7 +179,7 @@ define([
              */
             MISSION_ARRAY_NAME = "missions",
             /**
-             * When adding random ships or ships without a team to a mission in demo mode, they will be automatically put into a team with
+             * When adding ships without a team to a mission in demo mode, they will be automatically put into a team with
              * this name, with an ID that equals the index of the spacecraft added + 1 (converted to string).
              * @type String
              */
@@ -1987,31 +1987,6 @@ define([
          */
         this._hitObjects = null;
         /**
-         * The amount of randomly positioned ships to add to the mission at start by class
-         * @type Object.<String, Number>
-         */
-        this._randomShips = null;
-        /**
-         * The random ships will be added in random positions within a box of this width, height and depth centered at the origo
-         * @type Number
-         */
-        this._randomShipsMapSize = 0;
-        /**
-         * The added random ships are rotated around the Z axis by this angle (in degrees)
-         * @type Number
-         */
-        this._randomShipsHeadingAngle = 0;
-        /**
-         * Whether to rotate the added random ships to a random heading (around axis Z)
-         * @type Boolean
-         */
-        this._randomShipsRandomHeading = false;
-        /**
-         * The added random ships will be equipped with the profile having this name, if they have such
-         * @type string
-         */
-        this._randomShipsEquipmentProfileName = null;
-        /**
          * Tracks the state of mission objective completion.
          * @type Number
          */
@@ -2450,8 +2425,7 @@ define([
         return this._referenceScore;
     };
     /**
-     * Loads all the data describing this mission from the passed JSON object. Does not add random ships to the mission, only loads their 
-     * configuration - they can be added by calling addRandomShips() later, which will use the loaded configuration.
+     * Loads all the data describing this mission from the passed JSON object.
      * @param {Object} dataJSON
      * @param {String} difficulty The string ID of the difficulty level to use
      * @param {Boolean} demoMode If true, the data from the JSON object will be loaded in demo mode, so that the piloted craft is not set
@@ -2462,6 +2436,7 @@ define([
         application.log_DEBUG("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
+        spacecraft.resetRandomSeed();
         this._nextMissionName = dataJSON.nextMission || null;
         this.loadEnvironment(dataJSON);
         this._anticipationTheme = dataJSON.anticipationTheme;
@@ -2598,12 +2573,6 @@ define([
         if (count > 0) {
             this._referenceScore /= count;
         }
-        // loading random ship information
-        this._randomShips = dataJSON.randomShips || {};
-        this._randomShipsMapSize = dataJSON.randomShipsMapSize;
-        this._randomShipsHeadingAngle = dataJSON.randomShipsHeadingAngle || 0;
-        this._randomShipsRandomHeading = dataJSON.randomShipsRandomHeading || false;
-        this._randomShipsEquipmentProfileName = dataJSON.randomShipsEquipmentProfileName || null;
         // cache target spacecrafts
         this._targetSpacecrafts = [];
         for (i = 0; i < this._events.length; i++) {
@@ -2633,48 +2602,6 @@ define([
             this._state = MissionState.BATTLE;
         }
         application.log_DEBUG("Mission successfully loaded.", 2);
-    };
-    /**
-     * Adds spacecrafts to the mission at random positions based on the configuration loaded from JSON before.
-     * @param {Number} [randomSeed]
-     * @param {Boolean} demoMode If true, a suitable AI and a unique team will be set for each added random ship.
-     */
-    Mission.prototype.addRandomShips = function (randomSeed, demoMode) {
-        var random, shipClass, craft, team, i, orientation, orientationMatrix = mat.rotationZ4(Math.radians(this._randomShipsHeadingAngle));
-        randomSeed = randomSeed || config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED);
-        random = Math.seed(randomSeed);
-        for (shipClass in this._randomShips) {
-            if (this._randomShips.hasOwnProperty(shipClass)) {
-                for (i = 0; i < this._randomShips[shipClass]; i++) {
-                    orientation = orientationMatrix ?
-                            mat.matrix4(orientationMatrix) : mat.identity4();
-                    if (this._randomShipsRandomHeading) {
-                        mat.mul43(orientation, mat.rotation3Aux(mat.getRowC4(orientation), random() * utils.DOUBLE_PI));
-                    }
-                    craft = new spacecraft.Spacecraft(
-                            classes.getSpacecraftClass(shipClass),
-                            "",
-                            mat.translation4(random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2, random() * this._randomShipsMapSize - this._randomShipsMapSize / 2),
-                            orientation,
-                            this._randomShipsEquipmentProfileName || classes.getSpacecraftClass(shipClass).getDefaultEquipmentProfileName(),
-                            this._hitObjects);
-                    if (demoMode) {
-                        if (craft.isFighter()) {
-                            ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_FIGHTER_AI_TYPE), craft, this);
-                        } else {
-                            ai.addAI(config.getSetting(config.BATTLE_SETTINGS.DEMO_SHIP_AI_TYPE), craft, this);
-                        }
-                        team = new Team({
-                            name: GENERIC_TEAM_NAME,
-                            id: (this._teams.length + 1).toString()
-                        });
-                        this._teams.push(team);
-                        craft.setTeam(team);
-                    }
-                    this._spacecrafts.push(craft);
-                }
-            }
-        }
     };
     /**
      * Returns whether the mission is starting (has been started) with the player having teammates.
