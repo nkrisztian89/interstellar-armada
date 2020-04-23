@@ -99,6 +99,7 @@ define([
              * @property {String} [resourceReference] For BaseType.ENUM and BaseType.SET
              * @property {String} [classReference] For BaseType.ENUM and BaseType.SET
              * @property {String} [environmentReference] For BaseType.ENUM and BaseType.SET
+             * @property {String} [missionReference] For BaseType.ENUM and BaseType.SET
              * @property {String} [name] For BaseType.OBJECT and BaseType.SET
              * @property {Editor~ItemDescriptor} [properties] For BaseType.OBJECT
              * @property {Object} [values] For BaseType.ENUM and BaseType.SET
@@ -349,6 +350,13 @@ define([
             ENVIRONMENT_REFERENCE = {
                 baseType: BaseType.ENUM,
                 environmentReference: "environments"
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            MISSION_REFERENCE = {
+                baseType: BaseType.ENUM,
+                missionReference: "missions"
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2329,6 +2337,18 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            TEAM_NAME = {
+                baseType: BaseType.ENUM,
+                getValues: function () {
+                    var prefix = strings.TEAM.PREFIX.name, prefixLength = prefix.length;
+                    return strings.getKeys(prefix).map(function (key) {
+                        return key.substring(prefixLength);
+                    });
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             TEAM = {
                 baseType: BaseType.OBJECT,
                 name: "Team",
@@ -2346,7 +2366,7 @@ define([
                     },
                     NAME: {
                         name: "name",
-                        type: BaseType.STRING,
+                        type: TEAM_NAME,
                         optional: true
                     },
                     COLOR: {
@@ -3388,6 +3408,11 @@ define([
                     name: "description",
                     type: LONG_STRING
                 },
+                NEXT_MISSION: {
+                    name: "nextMission",
+                    type: MISSION_REFERENCE,
+                    optional: true
+                },
                 TIPS: {
                     name: "tips",
                     type: TIPS_SET,
@@ -3510,6 +3535,9 @@ define([
         if (this._descriptor.environmentReference) {
             return this._descriptor.environmentReference;
         }
+        if (this._descriptor.missionReference) {
+            return this._descriptor.missionReference;
+        }
         return this._descriptor.baseType;
     };
     /**
@@ -3531,7 +3559,7 @@ define([
      * @returns {Boolean}
      */
     Type.prototype.isItemReference = function () {
-        return !!this._descriptor.resourceReference || !!this._descriptor.classReference || !!this._descriptor.environmentReference;
+        return !!this._descriptor.resourceReference || !!this._descriptor.classReference || !!this._descriptor.environmentReference || !!this._descriptor.missionReference;
     };
     /**
      * For resource reference string types, returns the category of resources the type refers to
@@ -3555,6 +3583,13 @@ define([
         return this._descriptor.environmentReference;
     };
     /**
+     * For mission reference string types, returns the category of missions the type refers to
+     * @returns {String}
+     */
+    Type.prototype.getMissionReference = function () {
+        return this._descriptor.missionReference;
+    };
+    /**
      * For reference string types, returns the ItemType corresponding to the type of reference
      * @returns {ItemType}
      */
@@ -3568,6 +3603,9 @@ define([
         if (this.getEnvironmentReference()) {
             return common.ItemType.ENVIRONMENT;
         }
+        if (this.getMissionReference()) {
+            return common.ItemType.MISSION;
+        }
         return common.ItemType.NONE;
     };
     /**
@@ -3575,7 +3613,7 @@ define([
      * @returns {String}
      */
     Type.prototype.getReferenceItemCategory = function () {
-        return this._descriptor.resourceReference || this._descriptor.classReference || this._descriptor.environmentReference;
+        return this._descriptor.resourceReference || this._descriptor.classReference || this._descriptor.environmentReference || this._descriptor.missionReference;
     };
     /**
      * For string types, returns whether the type is flagged as long
@@ -3609,6 +3647,9 @@ define([
         }
         if (this._descriptor.environmentReference) {
             return environments.getEnvironmentNames();
+        }
+        if (this._descriptor.missionReference) {
+            return missions.getMissionNames();
         }
         if (allowNull) {
             return null;

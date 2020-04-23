@@ -733,9 +733,11 @@ define([
                     break;
                 case common.ItemType.MISSION:
                     missions.requestMissionDescriptor(missions.getMissionNames()[exportItem.selectedIndex], function (missionDescriptor) {
+                        var data = Object.assign({}, missionDescriptor.getData());
+                        delete data.name;
                         _exportString(
                                 exportItem.value,
-                                JSON.stringify(missionDescriptor._dataJSON));
+                                JSON.stringify(data));
                     });
                     break;
                 default:
@@ -869,8 +871,8 @@ define([
                 newItemName = document.getElementById(NEW_ITEM_NAME_ID),
                 createButton = document.getElementById(NEW_ITEM_CREATE_BUTTON_ID),
                 cancelButton = document.getElementById(NEW_ITEM_CANCEL_BUTTON_ID),
-                getItems, create;
-        common.setSelectorOptions(newItemType, [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT]);
+                getItems, create, createAsync;
+        common.setSelectorOptions(newItemType, [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT, common.ItemType.MISSION]);
         newItemType.onchange = function () {
             switch (newItemType.value) {
                 case common.ItemType.RESOURCE:
@@ -912,9 +914,33 @@ define([
                         environments.createEnvironment(newItemData);
                     };
                     break;
+                case common.ItemType.MISSION:
+                    common.setSelectorOptions(newItemCategory, [MISSIONS_CATEGORY]);
+                    getItems = missions.getMissionNames;
+                    create = null;
+                    createAsync = function (callback) {
+                        var newItemData;
+                        if (newItemBase.selectedIndex > 0) {
+                            missions.requestMissionDescriptor(newItemBase.value, function (missionDescriptor) {
+                                newItemData = utils.deepCopy(missionDescriptor.getData());
+                                newItemData.name = newItemName.value;
+                                missions.createMissionDescriptor(newItemData);
+                                callback();
+                            });
+                        } else {
+                            newItemData = utils.deepCopy(properties.getDefaultItemData(
+                                    descriptors.itemDescriptors[newItemCategory.value],
+                                    newItemName.value));
+                            newItemData.name = newItemName.value;
+                            missions.createMissionDescriptor(newItemData);
+                            callback();
+                        }
+                    };
+                    break;
                 default:
                     getItems = null;
                     create = null;
+                    createAsync = null;
                     application.showError("Creating " + newItemType.value + " is not yet implemented!");
             }
             newItemCategory.onchange();
@@ -922,11 +948,31 @@ define([
         newItemCategory.onchange = function () {
             if (getItems) {
                 common.setSelectorOptions(newItemBase, ["none"].concat(getItems(newItemCategory.value)));
-                newItemName.value = newItemCategory.value;
+                if (newItemType.value === common.ItemType.MISSION) {
+                    newItemName.value = "newMission";
+                } else {
+                    newItemName.value = newItemCategory.value;
+                }
             }
         };
         newItemBase.onchange = function () {
-            newItemName.value = newItemBase.value + "_copy";
+            if (newItemBase.selectedIndex > 0) {
+                if (newItemType.value === common.ItemType.MISSION) {
+                    newItemName.value = newItemBase.value;
+                    if (newItemName.value.indexOf(".json") === newItemName.value.length - 5) {
+                        newItemName.value = newItemName.value.substring(0, newItemName.value.length - 5);
+                    }
+                    newItemName.value = newItemName.value + "_copy";
+                } else {
+                    newItemName.value = newItemBase.value + "_copy";
+                }
+            } else {
+                if (newItemType.value === common.ItemType.MISSION) {
+                    newItemName.value = "newMission";
+                } else {
+                    newItemName.value = newItemCategory.value;
+                }
+            }
         };
         newItemType.onchange();
         createButton.onclick = function () {
@@ -941,6 +987,11 @@ define([
                     create();
                     _loadItems();
                     newItemDialog.hidden = true;
+                } else if (createAsync) {
+                    createAsync(function () {
+                        _loadItems();
+                        newItemDialog.hidden = true;
+                    });
                 }
             }
         };

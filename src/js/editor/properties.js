@@ -418,7 +418,7 @@ define([
                 }
                 return result;
             case descriptors.BaseType.ENUM:
-                return descriptors.getPropertyValues(propertyDescriptor, parent, topParent, _item.name)[0];
+                return descriptors.getPropertyValues(propertyDescriptor, parent, topParent, _item ? _item.name : null)[0];
             case descriptors.BaseType.COLOR3:
             case descriptors.BaseType.VECTOR3:
                 return [0, 0, 0];
@@ -1099,11 +1099,12 @@ define([
      * @param {Object} parent See _changeData
      * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this property editor is displayed within a popup, give a reference to that popup here
+     * @param {Function} [changeHandler] Operations need to be executed in case this property changes
      * @param {Function} [nameChangeHandler] If special operations need to be executed in case this control changes the name property of the 
      * item, the function executing those operations needs to be given here
      * @returns {Element}
      */
-    function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, nameChangeHandler) {
+    function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, nameChangeHandler) {
         var result = document.createElement("div"),
                 labelText, label, button, type;
         if ((!parent || (parent === _item.data)) && _basedOn) {
@@ -1139,8 +1140,11 @@ define([
             var value = _getDefaultValue(propertyDescriptor, _basedOn, parent, topParent),
                     parentNode = result.parentNode;
             parentNode.removeChild(result);
-            parentNode.appendChild(_createControl(propertyDescriptor, value, topName, parent, null, topParent, parentPopup, null, nameChangeHandler));
+            parentNode.appendChild(_createControl(propertyDescriptor, value, topName, parent, null, topParent, parentPopup, changeHandler, nameChangeHandler));
             _changeData(topName, value, parent, propertyDescriptor.name);
+            if (changeHandler) {
+                changeHandler();
+            }
         };
         result.appendChild(button);
         return result;
@@ -1172,7 +1176,7 @@ define([
                 type = new descriptors.Type(propertyDescriptor.type), elementType;
         topName = topName || propertyDescriptor.name;
         if (data === undefined) {
-            result = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, nameChangeHandler);
+            result = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, nameChangeHandler);
         } else {
             switch (type.getBaseType()) {
                 case descriptors.BaseType.BOOLEAN:
@@ -1258,7 +1262,7 @@ define([
                         control.popup.remove();
                     }
                     parentNode.removeChild(result);
-                    parentNode.appendChild(_createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, nameChangeHandler));
+                    parentNode.appendChild(_createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, nameChangeHandler));
                     _changeData(topName, undefined, parent, propertyDescriptor.name);
                 }, UNSET_PROPERTY_BUTTON_TOOLTIP);
                 button.classList.add(UNSET_PROPERTY_BUTTON_CLASS);

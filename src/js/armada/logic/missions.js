@@ -3646,6 +3646,12 @@ define([
             callback(null);
         }
     };
+    /**
+     * @param {Object} data
+     */
+    MissionContext.prototype.createMissionDescriptor = function (data) {
+        this._missionManager.createResource(MISSION_ARRAY_NAME, data);
+    };
     // initializazion
     // obtaining pool references
     _particlePool = pools.getPool(logicConstants.PARTICLE_POOL_NAME, renderableObjects.Particle);
@@ -3697,6 +3703,7 @@ define([
         getMissionDescriptor: _context.getMissionDescriptor.bind(_context),
         getMissionDescriptors: _context.getMissionDescriptors.bind(_context),
         requestMissionDescriptor: _context.requestMissionDescriptor.bind(_context),
-        requestMission: _context.requestMission.bind(_context)
+        requestMission: _context.requestMission.bind(_context),
+        createMissionDescriptor: _context.createMissionDescriptor.bind(_context)
     };
 });
