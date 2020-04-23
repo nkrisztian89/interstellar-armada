@@ -20,6 +20,7 @@
  * @param environments Used to load the environments 
  * @param missions Used to load the missions 
  * @param control Used to load game controllers so they can be used in previews
+ * @param strings Used to load translations
  * @param common Used for clearing open popups
  * @param descriptors Used to determine whether the descriptor for a specific resource / class category is available
  * @param properties Used to generate the content of the Properties window
@@ -44,6 +45,7 @@ define([
     "armada/logic/environments",
     "armada/logic/missions",
     "armada/control",
+    "armada/strings",
     "editor/common",
     "editor/descriptors",
     "editor/properties",
@@ -60,7 +62,7 @@ define([
         application, resources, lights,
         constants, config, graphics, classes,
         environments, missions,
-        control,
+        control, strings,
         common, descriptors, properties,
         shaderPreview,
         skyboxPreview, explosionPreview, projectilePreview, weaponPreview, missilePreview, spacecraftPreview, environmentPreview) {
@@ -473,7 +475,7 @@ define([
      * @param {String} category The category the selected item belongs to (this will determine the format of the Preview and Properties windows)
      * @param {Element} [element] The HTML element (<span>) that references the item in the category list (if not given, will be looked up from the _itemElements object)
      */
-    _selectItem = function(type, name, category, element) {
+    _selectItem = function (type, name, category, element) {
         if ((_selectedItem.type !== type) || (_selectedItem.name !== name) || (_selectedItem.category !== category)) {
             _loadItem(type, name, category, element);
             if ((_itemHistory.length > 0) && (_historyIndex < (_itemHistory.length - 1))) {
@@ -989,6 +991,7 @@ define([
             requirejs([
                 "modules/media-resources"
             ], function (resources) {
+                var language = "English";
                 config.loadConfigurationFromJSON(configJSON.dataFiles.logic);
                 graphics.loadConfigurationFromJSON(configJSON.graphics);
                 missions.loadConfigurationFromJSON(configJSON.logic);
@@ -996,7 +999,14 @@ define([
                 resources.requestConfigLoad(configJSON.dataFiles.media.resources, function () {
                     application.log("Configuration loaded.");
                 });
-                _requestSettingsLoad(configJSON.configFiles.settings);
+                application.requestTextFile(
+                    configJSON.configFiles.strings[language].folder,
+                    configJSON.configFiles.strings[language].filename,
+                    function (responseText) {
+                        strings.loadStrings(language, JSON.parse(responseText), strings);
+                        strings.setLanguage(language);
+                        _requestSettingsLoad(configJSON.configFiles.settings);
+                    });
             });
         });
     }

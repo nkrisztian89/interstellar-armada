@@ -17,6 +17,7 @@
  * @param resources Used to retrieve resource name lists
  * @param config Used for configuration (setting) key strings
  * @param graphics Used to access contants
+ * @param strings Used to access string key lists
  * @param classes Used to access enums and retrieve class name lists
  * @param environments Used to retrieve environment name lists
  * @param missions Used to access enums
@@ -34,6 +35,7 @@ define([
     "modules/media-resources",
     "armada/configuration",
     "armada/graphics",
+    "armada/strings",
     "armada/logic/classes",
     "armada/logic/environments",
     "armada/logic/missions",
@@ -42,7 +44,7 @@ define([
     "armada/logic/ai",
     "armada/screens/battle",
     "editor/common"
-], function (utils, managedGL, egomModel, camera, resources, config, graphics, classes, environments, missions, equipment, spacecraft, ai, battle, common) {
+], function (utils, managedGL, egomModel, camera, resources, config, graphics, strings, classes, environments, missions, equipment, spacecraft, ai, battle, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -370,6 +372,18 @@ define([
                 values: Axis
             },
             /**
+             * @type Editor~TypeDescriptor
+             */
+            TEXTURE_IMAGE_FORMAT = {
+                baseType: BaseType.ENUM,
+                values: {
+                    PNG: "png",
+                    JPG: "jpg",
+                    JPEG: "jpeg",
+                    WEBP: "webp"
+                }
+            },
+            /**
              * The descriptor object for texture resources, describing their properties
              * @type Editor~ItemDescriptor
              */
@@ -384,7 +398,7 @@ define([
                 },
                 FORMAT: {
                     name: "format",
-                    type: BaseType.STRING
+                    type: TEXTURE_IMAGE_FORMAT
                 },
                 USE_MIPMAP: {
                     name: "useMipmap",
@@ -447,7 +461,7 @@ define([
                 },
                 FORMAT: {
                     name: "format",
-                    type: BaseType.STRING
+                    type: TEXTURE_IMAGE_FORMAT
                 },
                 IMAGE_NAMES: {
                     name: "imageNames",
@@ -539,6 +553,16 @@ define([
                 }
             },
             /**
+             * Supported model file formats
+             * @type Editor~TypeDescriptor
+             */
+            MODEL_FORMAT = {
+                baseType: BaseType.ENUM,
+                values: {
+                    EGM: "egm"
+                }
+            },
+            /**
              * The descriptor object for model resources, describing their properties
              * @type Editor~ItemDescriptor
              */
@@ -553,7 +577,7 @@ define([
                 },
                 FORMAT: {
                     name: "format",
-                    type: BaseType.STRING
+                    type: MODEL_FORMAT
                 },
                 FILES: {
                     name: "files",
@@ -2049,6 +2073,20 @@ define([
                 }
             },
             /**
+             * @type Editor~TypeDescriptor
+             */
+            EQUIPMENT_PROFILE_REFERENCE = {
+                baseType: BaseType.ENUM,
+                getValues: function (parent) {
+                    if (parent.equipmentProfiles) {
+                        return parent.equipmentProfiles.map(function (profile) {
+                            return profile.name;
+                        });
+                    }
+                    return [];
+                }
+            },
+            /**
              * The descriptor object for spacecraft classes, describing their properties
              * @type Editor~ItemDescriptor
              */
@@ -2165,7 +2203,7 @@ define([
                 },
                 DEFAULT_EQUIPMENT_PROFILE_NAME: {
                     name: "defaultEquipmentProfileName",
-                    type: BaseType.STRING, // should be an enum, taking the values from the existing equipment profile names
+                    type: EQUIPMENT_PROFILE_REFERENCE,
                     optional: true
                 },
                 HUM_SOUND: {
@@ -2328,6 +2366,77 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            SPACECRAFT_REFERENCE = {
+                baseType: BaseType.ENUM,
+                getValues: function (parent, topParent) {
+                    var result = [], i, j, spacecraft;
+                    if (topParent.spacecrafts) {
+                        for (i = 0; i < topParent.spacecrafts.length; i++) {
+                            spacecraft = topParent.spacecrafts[i];
+                            if (spacecraft.name) {
+                                result.push(spacecraft.name);
+                            } else if (spacecraft.squad) {
+                                if (spacecraft.count) {
+                                    for (j = 0; j < spacecraft.count; j++) {
+                                        result.push(spacecraft.squad + " " + (j + 1));
+                                    }
+                                } else {
+                                    result.push(spacecraft.squad);
+                                }
+                            } else if (spacecraft.count && spacecraft.names) {
+                                for (j = 0; j < Math.min(spacecraft.count, spacecraft.names.length); j++) {
+                                    result.push(spacecraft.names[j]);
+                                }
+                            }
+                        }
+                    }
+                    return result;
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SQUAD_REFERENCE = {
+                baseType: BaseType.ENUM,
+                getValues: function (parent, topParent) {
+                    var result = [], i, spacecraft, squad;
+                    if (topParent.spacecrafts) {
+                        for (i = 0; i < topParent.spacecrafts.length; i++) {
+                            spacecraft = topParent.spacecrafts[i];
+                            if (spacecraft.squad) {
+                                if (spacecraft.squad.indexOf(" ") < 0) {
+                                    result.push(spacecraft.squad);
+                                } else {
+                                    squad = spacecraft.squad.split(" ")[0];
+                                    if (result.indexOf(squad) < 0) {
+                                        result.push(squad);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return result;
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            TEAM_REFERENCE = {
+                baseType: BaseType.ENUM,
+                getValues: function (parent, topParent) {
+                    if (topParent.teams) {
+                        return topParent.teams.filter(function (team) {
+                            return !!team.id || !!team.name;
+                        }).map(function (team) {
+                            return team.id || team.name;
+                        });
+                    }
+                    return [];
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             SUBJECT_GROUP = {
                 baseType: BaseType.OBJECT,
                 name: "SubjectGroup",
@@ -2356,17 +2465,17 @@ define([
                 properties: {
                     SPACECRAFTS: {
                         name: "spacecrafts",
-                        type: STRING_ARRAY,
+                        type: _createTypedArrayType(SPACECRAFT_REFERENCE),
                         optional: true
                     },
                     SQUADS: {
                         name: "squads",
-                        type: STRING_ARRAY,
+                        type: _createTypedArrayType(SQUAD_REFERENCE),
                         optional: true
                     },
                     TEAMS: {
                         name: "teams",
-                        type: STRING_ARRAY,
+                        type: _createTypedArrayType(TEAM_REFERENCE),
                         optional: true
                     }
                 }
@@ -2384,6 +2493,28 @@ define([
             TIME_CONDITION_SATISFIED_WHEN = {
                 baseType: BaseType.ENUM,
                 values: missions.TimeConditionSatisfiedWhen
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            EVENT_REFERENCE = {
+                baseType: BaseType.ENUM,
+                getValues: function (parent, topParent) {
+                    if (topParent.events) {
+                        return topParent.events.filter(function (event) {
+                            return !!event.name;
+                        }).map(function (event) {
+                            return event.name;
+                        });
+                    }
+                    return [];
+                }
+            },
+            _parentIsCountCondition = function (data, parent) {
+                return parent.type === missions.ConditionType.COUNT;
+            },
+            _parentIsTimeCondition = function (data, parent) {
+                return parent.type === missions.ConditionType.TIME_ELAPSED;
             },
             /**
              * A merge of all the different possible condition parameters
@@ -2408,40 +2539,53 @@ define([
                     COUNT: {
                         name: "count",
                         type: BaseType.NUMBER,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsCountCondition
                     },
                     RELATION: {
                         name: "relation",
                         type: COUNT_CONDITION_RELATION,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsCountCondition
                     },
                     // TimeCondition params:
                     TIME: {
                         name: "time",
                         type: MILLISECONDS,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsTimeCondition
                     },
                     SATISFIED_WHEN: {
                         name: "satisfiedWhen",
                         type: TIME_CONDITION_SATISFIED_WHEN,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsTimeCondition
                     },
                     START: {
                         name: "start",
-                        type: BaseType.STRING,
-                        optional: true
+                        type: EVENT_REFERENCE,
+                        optional: true,
+                        isValid: _parentIsTimeCondition
                     },
                     MAX_COUNT: {
                         name: "maxCount",
                         type: BaseType.NUMBER,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsTimeCondition
                     },
                     START_OFFSET: {
                         name: "startOffset",
                         type: MILLISECONDS,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsTimeCondition
                     }
                 }
+            },
+            _conditionCanHaveSubjects = function (data) {
+                return (data.type === missions.ConditionType.DESTROYED) || (data.type === missions.ConditionType.COUNT);
+            },
+            _conditionCanHaveParams = function (data) {
+                return (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME_ELAPSED);
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2477,12 +2621,14 @@ define([
                     SUBJECTS: {
                         name: "subjects",
                         type: SUBJECT_GROUP,
-                        optional: true
+                        optional: true,
+                        isValid: _conditionCanHaveSubjects
                     },
                     PARAMS: {
                         name: "params",
                         type: CONDITION_PARAMS,
-                        optional: true
+                        optional: true,
+                        isValid: _conditionCanHaveParams
                     }
                 }
             },
@@ -2499,6 +2645,12 @@ define([
             TRIGGER_FIRE_WHEN = {
                 baseType: BaseType.ENUM,
                 values: missions.TriggerFireWhen
+            },
+            _triggerCanHaveConditions = function (data) {
+                return data.fireWhen !== missions.TriggerFireWhen.MISSION_STARTS;
+            },
+            _triggerHasMultipleConditions = function (data) {
+                return data.conditions && (data.conditions.length > 1);
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2522,12 +2674,14 @@ define([
                 properties: {
                     CONDITIONS: {
                         name: "conditions",
-                        type: _createTypedArrayType(CONDITION)
+                        type: _createTypedArrayType(CONDITION),
+                        isValid: _triggerCanHaveConditions
                     },
                     CONDITIONS_REQUIRED: {
                         name: "conditionsRequired",
                         type: TRIGGER_CONDITIONS_REQUIRED,
-                        defaultValue: missions.TriggerConditionsRequired.ALL
+                        defaultValue: missions.TriggerConditionsRequired.ALL,
+                        isValid: _triggerHasMultipleConditions
                     },
                     FIRE_WHEN: {
                         name: "fireWhen",
@@ -2616,7 +2770,7 @@ define([
                     },
                     ANCHOR: {
                         name: "anchor",
-                        type: BaseType.STRING,
+                        type: SPACECRAFT_REFERENCE,
                         optional: true
                     },
                     DISTANCE: {
@@ -2662,7 +2816,7 @@ define([
                     if (instance.single) {
                         result = instance.single;
                     } else if (instance.list) {
-                        result =  "list (" + instance.list.length + ")";
+                        result = "list (" + instance.list.length + ")";
                     } else if (instance.squads) {
                         result = "squads (" + instance.squads.length + ")";
                     } else if (instance.none) {
@@ -2676,17 +2830,17 @@ define([
                 properties: {
                     SINGLE: {
                         name: "single",
-                        type: BaseType.STRING,
+                        type: SPACECRAFT_REFERENCE,
                         optional: true
                     },
                     LIST: {
                         name: "list",
-                        type: STRING_ARRAY,
+                        type: _createTypedArrayType(SPACECRAFT_REFERENCE),
                         optional: true
                     },
                     SQUADS: {
                         name: "squads",
-                        type: STRING_ARRAY,
+                        type: _createTypedArrayType(SQUAD_REFERENCE),
                         optional: true
                     },
                     NONE: {
@@ -2714,6 +2868,37 @@ define([
             HUD_SECTION_STATE = {
                 baseType: BaseType.ENUM,
                 values: battle.HUDSectionState
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            MESSAGE_REFERENCE = {
+                baseType: BaseType.ENUM,
+                getValues: function (parent, topParent, itemName) {
+                    var prefix = strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(itemName) + strings.MISSION.MESSAGES_SUFFIX.name, prefixLength = prefix.length;
+                    return strings.getKeys(prefix).map(function (key) {
+                        return key.substring(prefixLength);
+                    });
+                }
+            },
+            _parentIsMessageAction = function (data, parent) {
+                return parent.type === missions.ActionType.MESSAGE;
+            },
+            _parentIsCommandAction = function (data, parent) {
+                return parent.type === missions.ActionType.COMMAND;
+            },
+            _isJumpCommandActionParams = function (data, parent) {
+                return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.JUMP);
+            },
+            _isTargetCommandActionParams = function (data, parent) {
+                return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.TARGET);
+            },
+            _parentIsHUDAction = function (data, parent) {
+                return parent.type === missions.ActionType.HUD;
+            },
+            _missionHasMessages = function (data, parent, itemName) {
+                var prefix = strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(itemName) + strings.MISSION.MESSAGES_SUFFIX.name;
+                return (parent.type === missions.ActionType.MESSAGE) && (strings.getKeys(prefix).length > 0);
             },
             /**
              * A merge of all the different possible action parameters
@@ -2748,66 +2933,84 @@ define([
                     TEXT: {
                         name: "text",
                         type: BaseType.STRING,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsMessageAction
                     },
                     TEXT_ID: {
                         name: "textID",
-                        type: BaseType.STRING,
-                        optional: true
+                        type: MESSAGE_REFERENCE,
+                        optional: true,
+                        isValid: _missionHasMessages
                     },
                     SOURCE: {
                         name: "source",
-                        type: BaseType.STRING,
-                        optional: true
+                        type: SPACECRAFT_REFERENCE,
+                        optional: true,
+                        isValid: _parentIsMessageAction
                     },
                     DURATION: {
                         name: "duration",
                         type: MILLISECONDS,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsMessageAction
                     },
                     PERMANENT: {
                         name: "permanent",
                         type: BaseType.BOOLEAN,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsMessageAction
                     },
                     URGENT: {
                         name: "urgent",
                         type: BaseType.BOOLEAN,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsMessageAction
                     },
                     COLOR: {
                         name: "color",
                         type: BaseType.COLOR4,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsMessageAction
                     },
                     // CommandAction params:
                     COMMAND: {
                         name: "command",
                         type: SPACECRAFT_COMMAND,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsCommandAction
                     },
                     JUMP: {
                         name: "jump",
                         type: JUMP_COMMAND_PARAMS,
-                        optional: true
+                        optional: true,
+                        isValid: _isJumpCommandActionParams
                     },
                     TARGET: {
                         name: "target",
                         type: TARGET_COMMAND_PARAMS,
-                        optional: true
+                        optional: true,
+                        isValid: _isTargetCommandActionParams
                     },
                     // HUDAction params:
                     SECTION: {
                         name: "section",
                         type: HUD_SECTION,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsHUDAction
                     },
                     STATE: {
                         name: "state",
                         type: HUD_SECTION_STATE,
-                        optional: true
+                        optional: true,
+                        isValid: _parentIsHUDAction
                     }
                 }
+            },
+            _actionCanHaveSubjects = function (data) {
+                return data.type === missions.ActionType.COMMAND;
+            },
+            _actionCanHaveParams = function (data) {
+                return [missions.ActionType.MESSAGE, missions.ActionType.COMMAND, missions.ActionType.HUD].indexOf(data.type) >= 0;
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2834,12 +3037,14 @@ define([
                     SUBJECTS: {
                         name: "subjects",
                         type: SUBJECT_GROUP,
-                        optional: true
+                        optional: true,
+                        isValid: _actionCanHaveSubjects
                     },
                     PARAMS: {
                         name: "params",
                         type: ACTION_PARAMS,
-                        optional: true
+                        optional: true,
+                        isValid: _actionCanHaveParams
                     }
                 }
             },
@@ -3013,26 +3218,65 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            EQUIPMENT_REFERENCE = {
+                baseType: BaseType.ENUM,
+                getValues: function (parent) {
+                    var spacecraftClass;
+                    if (parent.class) {
+                        spacecraftClass = classes.getSpacecraftClass(parent.class);
+                        return spacecraftClass.getEquipmentProfileNames();
+                    }
+                    return [];
+                }
+            },
+            _craftIsSingle = function (data) {
+                return !data.count || (data.count === 1);
+            },
+            _craftIsMulti = function (data) {
+                return data.count && (data.count > 1);
+            },
+            _craftCanHaveEquipments = function (data) {
+                return _craftIsMulti(data) && !data.equipment;
+            },
+            _craftHasNoEquipments = function (data) {
+                return !data.equipments || (data.equipments.length === 0);
+            },
+            _craftIsNotPiloted = function (data) {
+                return !data.piloted && !data.pilotedIndex;
+            },
+            _craftCanHavePositions = function (data) {
+                return _craftIsMulti(data) && !data.position && !data.formation;
+            },
+            _craftHasNoPositions = function (data) {
+                return !data.positions;
+            },
+            _craftCanHaveFormation = function (data) {
+                return _craftIsMulti(data) && _craftHasNoPositions(data);
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             SPACECRAFT = {
                 baseType: BaseType.OBJECT,
                 name: "Spacecraft",
                 getName: function (instance) {
-                    return instance.name || (instance.squad || instance.class) + (instance.count ? (" (" + instance.count +  ")") : "");
+                    return instance.name || (instance.squad || instance.class) + (instance.count ? (" (" + instance.count + ")") : "");
                 },
                 properties: {
                     NAME: {
                         name: "name",
                         type: BaseType.STRING,
-                        optional: true
+                        optional: true,
+                        isValid: _craftIsSingle
                     },
                     SQUAD: {
                         name: "squad",
-                        type: BaseType.STRING,
+                        type: BaseType.STRING, // should be an enum with the squad names from strings, with an optional index
                         optional: true
                     },
                     TEAM: {
                         name: "team",
-                        type: BaseType.STRING,
+                        type: TEAM_REFERENCE,
                         optional: true
                     },
                     CLASS: {
@@ -3047,17 +3291,19 @@ define([
                     POSITION: {
                         name: "position",
                         type: BaseType.VECTOR3,
-                        optional: true
+                        optional: true,
+                        isValid: _craftHasNoPositions
                     },
                     ROTATIONS: {
                         name: "rotations",
                         type: BaseType.ROTATIONS,
                         optional: true
                     },
-                    EQUIPMENT: { //TODO: can be an object as well
+                    EQUIPMENT: {//TODO: can be an object as well
                         name: "equipment",
-                        type: BaseType.STRING,
-                        optional: true
+                        type: EQUIPMENT_REFERENCE,
+                        optional: true,
+                        isValid: _craftHasNoEquipments
                     },
                     AWAY: {
                         name: "away",
@@ -3067,17 +3313,19 @@ define([
                     PILOTED: {
                         name: "piloted",
                         type: BaseType.BOOLEAN,
-                        defaultValue: false
+                        defaultValue: false,
+                        isValid: _craftIsSingle
                     },
                     INITIAL_TARGET: {
                         name: "initialTarget",
-                        type: BaseType.STRING,
+                        type: SPACECRAFT_REFERENCE,
                         optional: true
                     },
                     EXCLUDE_FROM_REFERENCE_SCORE: {
                         name: "excludeFromReferenceScore",
                         type: BaseType.BOOLEAN,
-                        defaultValue: false
+                        defaultValue: false,
+                        isValid: _craftIsNotPiloted
                     },
                     COUNT: {
                         name: "count",
@@ -3087,27 +3335,32 @@ define([
                     NAMES: {
                         name: "names",
                         type: STRING_ARRAY,
-                        optional: true
+                        optional: true,
+                        isValid: _craftIsMulti
                     },
                     EQUIPMENTS: {
                         name: "equipments",
-                        type: STRING_ARRAY,
-                        optional: true
+                        type: _createTypedArrayType(EQUIPMENT_REFERENCE),
+                        optional: true,
+                        isValid: _craftCanHaveEquipments
                     },
                     PILOTED_INDEX: {
                         name: "pilotedIndex",
                         type: BaseType.NUMBER,
-                        optional: true
+                        optional: true,
+                        isValid: _craftIsMulti
                     },
                     POSITIONS: {
                         name: "positions",
                         type: _createTypedArrayType(BaseType.VECTOR3),
-                        optional: true
+                        optional: true,
+                        isValid: _craftCanHavePositions
                     },
                     FORMATION: {
                         name: "formation",
                         type: FORMATION,
-                        optional: true
+                        optional: true,
+                        isValid: _craftCanHaveFormation
                     }
                 }
             },
@@ -3140,7 +3393,7 @@ define([
                     type: TIPS_SET,
                     optional: true
                 },
-                ENVIRONMENT: { //TODO: can be an object as well
+                ENVIRONMENT: {//TODO: can be an object as well
                     name: "environment",
                     type: ENVIRONMENT_REFERENCE
                 },
@@ -3334,13 +3587,19 @@ define([
     /**
      * For enum and set types, returns the list of possible values
      * @param {Boolean} [allowNull=false] 
+     * @param {Object} [dataParent] The parent object of the property with this type 
+     * @param {Object} [dataTopParent] The top level parent object of the property with this type 
+     * @param {String} [itemName] The name of the editor item this property belongs to
      * @returns {String[]}
      */
-    Type.prototype.getValues = function (allowNull) {
+    Type.prototype.getValues = function (allowNull, dataParent, dataTopParent, itemName) {
         var values;
         if (this._descriptor.values) {
             values = utils.getEnumValues(this._descriptor.values);
             return (typeof values[0] === "number") ? utils.getEnumKeys(this._descriptor.values) : values;
+        }
+        if (this._descriptor.getValues) {
+            return this._descriptor.getValues(dataParent, dataTopParent, itemName);
         }
         if (this._descriptor.resourceReference) {
             return resources.getResourceNames(this._descriptor.resourceReference);
@@ -3397,10 +3656,12 @@ define([
      * 
      * @param {Editor~PropertyDescriptor} propertyDescriptor
      * @param {Object} parent
+     * @param {Object} topParent
+     * @param {String} itemName
      * @returns {String[]}
      */
-    function getPropertyValues(propertyDescriptor, parent) {
-        var values = new Type(propertyDescriptor.type).getValues();
+    function getPropertyValues(propertyDescriptor, parent, topParent, itemName) {
+        var values = new Type(propertyDescriptor.type).getValues(false, parent, topParent, itemName);
         // an object cannot reference itself (e.g. a fighter class cannot be based on itself)
         if (parent && (propertyDescriptor.name === BASED_ON_PROPERTY_NAME)) {
             utils.removeFromArray(values, parent[NAME_PROPERTY_NAME]);

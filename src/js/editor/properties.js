@@ -275,10 +275,9 @@ define([
     function _createNumberControl(topName, data, allowFloats, changeHandler, parent, name, unit) {
         var result = document.createElement("div"),
                 input = common.createNumericInput(data, allowFloats, function (value) {
+                    _changeData(topName, value, parent, name);
                     if (changeHandler) {
                         changeHandler(value);
-                    } else {
-                        _changeData(topName, value, parent, name);
                     }
                 });
         result.appendChild(input);
@@ -294,11 +293,15 @@ define([
      * @param {String} data The starting value
      * @param {Object} [parent] See _changeData
      * @param {String} [name] See _changeData
+     * @param {Function} [onchange]
      * @returns {Element}
      */
-    function _createEnumControl(topName, values, data, parent, name) {
+    function _createEnumControl(topName, values, data, parent, name, onchange) {
         var result = common.createSelector(values, data, false, function () {
             _changeData(topName, result.value, parent, name);
+            if (onchange) {
+                onchange();
+            }
         });
         return result;
     }
@@ -341,12 +344,13 @@ define([
      * @param {GenericResource|GenericClass} basedOn If the resource / class the property of which is considered has a reference to
      * another object as a base (inheriting undefined properties from it), that base resource / class needs to be given here
      * @param {Object} parent The object itself the data of which is considered (see _changeData)
+     * @param {Object} topParent The top level object we are editing
      * @param {Boolean} [undefinedIfOptional=false] If true, the function will return undefined for properties marked as optional and does
      * not have a default value set
      * @param {String} [typeName] The name of the type of the object this property is part of
      * @returns {}
      */
-    function _getDefaultValue(propertyDescriptor, basedOn, parent, undefinedIfOptional, typeName) {
+    function _getDefaultValue(propertyDescriptor, basedOn, parent, topParent, undefinedIfOptional, typeName) {
         var result, type, propertyDescriptors, propertyDescriptorNames, i;
         type = new descriptors.Type(propertyDescriptor.type);
         // automatic naming - only for string type name properties (can be enum as well)
@@ -364,7 +368,7 @@ define([
                         (basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME] ?
                                 common.getItemReference({type: _item.type, category: _item.category, name: basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME]}) :
                                 null),
-                        null, undefinedIfOptional);
+                        null, topParent, undefinedIfOptional);
             }
             return result;
         }
@@ -391,6 +395,7 @@ define([
                             {type: propertyDescriptor.type.elementType},
                             null,
                             result,
+                            topParent,
                             true));
                 }
                 return result;
@@ -407,12 +412,13 @@ define([
                             propertyDescriptors[propertyDescriptorNames[i]],
                             null,
                             result,
+                            topParent,
                             undefinedIfOptional,
                             type.getName());
                 }
                 return result;
             case descriptors.BaseType.ENUM:
-                return descriptors.getPropertyValues(propertyDescriptor, parent)[0];
+                return descriptors.getPropertyValues(propertyDescriptor, parent, topParent, _item.name)[0];
             case descriptors.BaseType.COLOR3:
             case descriptors.BaseType.VECTOR3:
                 return [0, 0, 0];
@@ -441,7 +447,7 @@ define([
             if (propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) {
                 result[propertyDescriptor.name] = name;
             } else {
-                result[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, null, true);
+                result[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, null, null, true);
             }
         }
         return result;
@@ -472,11 +478,13 @@ define([
      * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object, with BaseType.OBJECT basetype, that describes the properties
      * @param {Object|Array} data The data itself to be modified (an instance of the object the type of which is described, or an array of
      * such objects)
+     * @param {Object} parent The parent of data
+     * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
      * @param {Boolean} [atLeastOneElementNeeded=false] For object arrays: When true, an empty array is not acceptable, at least one element always has to be set
      * @returns {Element}
      */
-    function _createObjectControl(topName, typeDescriptor, data, parentPopup, atLeastOneElementNeeded) {
+    function _createObjectControl(topName, typeDescriptor, data, parent, topParent, parentPopup, atLeastOneElementNeeded) {
         var
                 i, button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
@@ -490,7 +498,7 @@ define([
                     indexSelector.options[index].text = newName;
                 },
                 addPropertiesTable = function (index) {
-                    propertiesTable = _createProperties(popup.getElement(), (index === undefined) ? data : data[index], typeDescriptor.properties, topName, popup, hasName ? nameChangeHandler.bind(this, index) : null);
+                    propertiesTable = _createProperties(popup.getElement(), (index === undefined) ? data : data[index], typeDescriptor.properties, topName, parent, topParent, popup, hasName ? nameChangeHandler.bind(this, index) : null, type);
                 },
                 indexChangeHandler = function () {
                     var index = indexSelector.selectedIndex;
@@ -521,7 +529,9 @@ define([
                     popup.alignPosition();
                 },
                 updateButtonText = function () {
-                    button.textContent = ((!isArray && typeDescriptor.getPreviewText) ? typeDescriptor.getPreviewText(data) : typeDescriptor.name) + (isArray ? (" (" + (((data.length === 1) && typeDescriptor.getName) ? typeDescriptor.getName(data[0]) : data.length) + ")") : "");
+                    button.textContent = isArray ?
+                            (((data.length === 1) && typeDescriptor.getName) ? "[" + typeDescriptor.getName(data[0]) + "]" : typeDescriptor.name + " [" + data.length + "]") :
+                            (typeDescriptor.getPreviewText ? typeDescriptor.getPreviewText(data) : typeDescriptor.name);
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }
@@ -546,7 +556,7 @@ define([
             indexSelector = common.createSelector(indices, indices[0], false, indexChangeHandler);
             addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
                 var newIndex;
-                data.push(_getDefaultValue({type: typeDescriptor}, null, null, true));
+                data.push(_getDefaultValue({type: typeDescriptor}, null, null, topParent, true));
                 updateButtonText();
                 newIndex = document.createElement("option");
                 newIndex.value = hasName ? type.getInstanceName(data[data.length - 1]) : (data.length - 1).toString();
@@ -627,6 +637,7 @@ define([
                 indexChangeHandler();
             }
             popup.toggle();
+            updateButtonText();
         };
         button.popup = popup; // custom property referencing the popup
         return button;
@@ -667,17 +678,19 @@ define([
      * Creates and returns a control that can be used to edit array properties. (by opening a popup to edit the elements of that array)
      * @param {String} topName Name of the top property being edited (under which this array resides)
      * @param {Editor~TypeDescriptor} elementTypeDescriptor The descriptor object describing the type of the elements of the array
-     * @param {Array} data The array itself that the control should edit
+     * @param {Array} array The array itself that the control should edit
+     * @param {Array} parent The parent object that houses the array
+     * @param {Object} topParent The top level object we are editing
      * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
      * @returns {Element}
      */
-    function _createArrayControl(topName, elementTypeDescriptor, data, parentPopup) {
+    function _createArrayControl(topName, elementTypeDescriptor, array, parent, topParent, parentPopup) {
         var
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
                 table, addElementButton, i,
                 updateButtonText = function () {
-                    button.innerHTML = new descriptors.Type(elementTypeDescriptor).getDisplayName() + " (" + data.length + ")";
+                    button.innerHTML = new descriptors.Type(elementTypeDescriptor).getDisplayName() + " [" + array.length + "]";
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }
@@ -686,9 +699,9 @@ define([
                 addElementEditor = function (index) {
                     _addRow(table, [
                         common.createLabel(index.toString()),
-                        _createControl({name: index, type: elementTypeDescriptor}, data[index], topName, data, parentPopup),
+                        _createControl({name: index, type: elementTypeDescriptor}, array[index], topName, array, parent, topParent, parentPopup),
                         common.createButton(REMOVE_BUTTON_CAPTION, function () {
-                            data.splice(index, 1);
+                            array.splice(index, 1);
                             updateButtonText();
                             refreshTable();
                             popup.alignPosition();
@@ -698,14 +711,14 @@ define([
                 };
         refreshTable = function () {
             table.innerHTML = "";
-            for (i = 0; i < data.length; i++) {
+            for (i = 0; i < array.length; i++) {
                 addElementEditor(i);
             }
         };
         addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
-            data.push(_getDefaultValue({type: elementTypeDescriptor}, null, null, true));
+            array.push(_getDefaultValue({type: elementTypeDescriptor}, null, parent, topParent, true));
             updateButtonText();
-            addElementEditor(data.length - 1);
+            addElementEditor(array.length - 1);
             popup.alignPosition();
             _updateData(topName);
         });
@@ -792,10 +805,11 @@ define([
      * @param {String} topName Name of the top property being edited (under which this array resides)
      * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object describing the pair array type
      * @param {Array} data The array itself that the control should edit
+     * @param {Object} topParent The top level object we are editing
      * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
      * @returns {Element}
      */
-    function _createPairsControl(topName, typeDescriptor, data, parentPopup) {
+    function _createPairsControl(topName, typeDescriptor, data, topParent, parentPopup) {
         var
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
@@ -809,8 +823,8 @@ define([
                 },
                 addPairEditor = function (index) {
                     _addPairRow(table,
-                            _createControl({name: 0, type: typeDescriptor.first.type}, data[index][0], topName, data[index], parentPopup),
-                            _createControl({name: 1, type: typeDescriptor.second.type}, data[index][1], topName, data[index], parentPopup),
+                            _createControl({name: 0, type: typeDescriptor.first.type}, data[index][0], topName, data[index], null, topParent, parentPopup),
+                            _createControl({name: 1, type: typeDescriptor.second.type}, data[index][1], topName, data[index], null, topParent, parentPopup),
                             common.createButton(REMOVE_BUTTON_CAPTION, function () {
                                 data.splice(index, 1);
                                 updateButtonText();
@@ -828,8 +842,8 @@ define([
         };
         addPairButton = common.createButton(ADD_BUTTON_CAPTION, function () {
             data.push([
-                _getDefaultValue({type: typeDescriptor.first.type}),
-                _getDefaultValue({type: typeDescriptor.second.type})]);
+                _getDefaultValue({type: typeDescriptor.first.type}, null, null, topParent),
+                _getDefaultValue({type: typeDescriptor.second.type}, null, null, topParent)]);
             updateButtonText();
             addPairEditor(data.length - 1);
             popup.alignPosition();
@@ -868,8 +882,8 @@ define([
                 },
                 addRotationEditor = function (index) {
                     _addPairRow(table,
-                            _createControl({name: "axis", type: descriptors.AXIS}, data[index].axis, topName, data[index], parentPopup),
-                            _createControl({name: "degrees", type: descriptors.BaseType.NUMBER}, data[index].degrees, topName, data[index], parentPopup),
+                            _createControl({name: "axis", type: descriptors.AXIS}, data[index].axis, topName, data[index], null, null, parentPopup),
+                            _createControl({name: "degrees", type: descriptors.BaseType.NUMBER}, data[index].degrees, topName, data[index], null, null, parentPopup),
                             common.createButton(REMOVE_BUTTON_CAPTION, function () {
                                 data.splice(index, 1);
                                 updateButtonText();
@@ -958,10 +972,11 @@ define([
      * @param {String[]} [validKeys] If only a set of values are accepted as valid keys in the array, pass them here (if not given, arbitrary string keys can be used)
      * @param {Editor~TypeDescriptor} elementTypeDescriptor The descriptor object describing the type of the elements of the array
      * @param {Object} data The array itself that the control should edit
+     * @param {Object} topParent The top level object we are editing
      * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
      * @returns {Element}
      */
-    function _createAssocArrayControl(topName, validKeys, elementTypeDescriptor, data, parentPopup) {
+    function _createAssocArrayControl(topName, validKeys, elementTypeDescriptor, data, topParent, parentPopup) {
         var
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
@@ -1015,7 +1030,7 @@ define([
                     var key = Object.keys(data)[index];
                     _addPairRow(table,
                             common.createLabel(key),
-                            _createControl({name: key, type: elementTypeDescriptor}, data[key], topName, data, parentPopup),
+                            _createControl({name: key, type: elementTypeDescriptor}, data[key], topName, data, null, topParent, parentPopup),
                             common.createButton(REMOVE_BUTTON_CAPTION, function () {
                                 delete data[key];
                                 updateButtonText();
@@ -1047,7 +1062,7 @@ define([
             });
         }
         addEntryButton = common.createButton(ADD_BUTTON_CAPTION, function () {
-            data[getKeyEditor().value] = _getDefaultValue({type: elementTypeDescriptor});
+            data[getKeyEditor().value] = _getDefaultValue({type: elementTypeDescriptor}, null, null, topParent);
             updateButtonText();
             updateEntryKeySelector();
             refreshTable();
@@ -1082,12 +1097,13 @@ define([
      * @param {Editor~PropertyDescriptor} propertyDescriptor
      * @param {String} topName See _changeData
      * @param {Object} parent See _changeData
+     * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this property editor is displayed within a popup, give a reference to that popup here
      * @param {Function} [nameChangeHandler] If special operations need to be executed in case this control changes the name property of the 
      * item, the function executing those operations needs to be given here
      * @returns {Element}
      */
-    function _createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler) {
+    function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, nameChangeHandler) {
         var result = document.createElement("div"),
                 labelText, label, button, type;
         if ((!parent || (parent === _item.data)) && _basedOn) {
@@ -1120,10 +1136,10 @@ define([
         button.type = "button";
         button.innerHTML = SET_PROPERTY_BUTTON_CAPTION;
         button.onclick = function () {
-            var value = _getDefaultValue(propertyDescriptor, _basedOn, parent),
+            var value = _getDefaultValue(propertyDescriptor, _basedOn, parent, topParent),
                     parentNode = result.parentNode;
             parentNode.removeChild(result);
-            parentNode.appendChild(_createControl(propertyDescriptor, value, topName, parent, parentPopup, nameChangeHandler));
+            parentNode.appendChild(_createControl(propertyDescriptor, value, topName, parent, null, topParent, parentPopup, null, nameChangeHandler));
             _changeData(topName, value, parent, propertyDescriptor.name);
         };
         result.appendChild(button);
@@ -1138,12 +1154,16 @@ define([
      * directly under the main item must be given here (so that the preview can be notified about under which property did the change happen)
      * @param {Object} [parent] If the property to edit resides below another property of the main edited item, the parent object of the
      * edited property must be given here
+     * @param {Object} [arrayParent] If the property is the element of an array, the parent parameter will refer to the array, and this one
+     * will refer to the parent of the array
+     * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this property editor is displayed within a popup, give a reference to that popup here
-     * @param {Function} nameChangeHandler If special operations need to be executed in case this control changes the name property of the 
+     * @param {Function} [changeHandler] Operations to be executed in case this property changes
+     * @param {Function} [nameChangeHandler] If special operations need to be executed in case this control changes the name property of the 
      * item, the function executing those operations needs to be given here
      * @returns {Element}
      */
-    _createControl = function (propertyDescriptor, data, topName, parent, parentPopup, nameChangeHandler) {
+    _createControl = function (propertyDescriptor, data, topName, parent, arrayParent, topParent, parentPopup, changeHandler, nameChangeHandler) {
         var
                 result, control, button,
                 /**
@@ -1152,14 +1172,14 @@ define([
                 type = new descriptors.Type(propertyDescriptor.type), elementType;
         topName = topName || propertyDescriptor.name;
         if (data === undefined) {
-            result = _createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler);
+            result = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, nameChangeHandler);
         } else {
             switch (type.getBaseType()) {
                 case descriptors.BaseType.BOOLEAN:
                     result = _createBooleanControl(topName, data, parent, propertyDescriptor.name);
                     break;
                 case descriptors.BaseType.NUMBER:
-                    result = _createNumberControl(topName, data, true, null, parent, propertyDescriptor.name, type.getUnit());
+                    result = _createNumberControl(topName, data, true, changeHandler, parent, propertyDescriptor.name, type.getUnit());
                     break;
                 case descriptors.BaseType.STRING:
                     if (type.isLong()) {
@@ -1170,7 +1190,7 @@ define([
                     }
                     break;
                 case descriptors.BaseType.ENUM:
-                    control = _createEnumControl(topName, descriptors.getPropertyValues(propertyDescriptor, parent), data, parent, propertyDescriptor.name);
+                    control = _createEnumControl(topName, descriptors.getPropertyValues(propertyDescriptor, arrayParent || parent, topParent, _item.name), data, parent, propertyDescriptor.name, changeHandler);
                     control.classList.add(CONTROL_CLASS);
                     result = document.createElement("div");
                     result.appendChild(control);
@@ -1194,7 +1214,7 @@ define([
                     result = _createRangeControl(topName, data);
                     break;
                 case descriptors.BaseType.PAIRS:
-                    result = _createPairsControl(topName, propertyDescriptor.type, data, parentPopup);
+                    result = _createPairsControl(topName, propertyDescriptor.type, data, topParent, parentPopup);
                     break;
                 case descriptors.BaseType.ROTATIONS:
                     result = _createRotationsControl(topName, data, parentPopup);
@@ -1208,16 +1228,16 @@ define([
                 case descriptors.BaseType.ARRAY:
                     elementType = type.getElementType();
                     if (elementType.getBaseType() === descriptors.BaseType.OBJECT) {
-                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parentPopup, propertyDescriptor.createDefaultElement);
+                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, propertyDescriptor.createDefaultElement);
                     } else {
-                        result = _createArrayControl(topName, elementType.getDescriptor(), data, parentPopup);
+                        result = _createArrayControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup);
                     }
                     break;
                 case descriptors.BaseType.ASSOCIATIVE_ARRAY:
-                    result = _createAssocArrayControl(topName, type.getValidKeys(), type.getElementType().getDescriptor(), data, parentPopup);
+                    result = _createAssocArrayControl(topName, type.getValidKeys(), type.getElementType().getDescriptor(), data, topParent, parentPopup);
                     break;
                 case descriptors.BaseType.OBJECT:
-                    result = _createObjectControl(topName, propertyDescriptor.type, data, parentPopup);
+                    result = _createObjectControl(topName, propertyDescriptor.type, data, parent, topParent, parentPopup);
                     break;
                 default:
                     result = _createDefaultControl(data);
@@ -1238,7 +1258,7 @@ define([
                         control.popup.remove();
                     }
                     parentNode.removeChild(result);
-                    parentNode.appendChild(_createUnsetControl(propertyDescriptor, topName, parent, parentPopup, nameChangeHandler));
+                    parentNode.appendChild(_createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, nameChangeHandler));
                     _changeData(topName, undefined, parent, propertyDescriptor.name);
                 }, UNSET_PROPERTY_BUTTON_TOOLTIP);
                 button.classList.add(UNSET_PROPERTY_BUTTON_CLASS);
@@ -1255,29 +1275,61 @@ define([
      * @param {Editor~ItemDescriptor} itemDescriptor An object that should contain the property descriptors based on which to create the 
      * controls
      * @param {String} [topName] See _changeData or _createControl
+     * @param {Object} parent The parent object of data
+     * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
      * @param {Function} nameChangeHandler If special operations need to be executed one of the created controls changes the name property 
      * of the item, the function executing those operations needs to be given here
+     * @param {Type} [type]
      * @returns {Element} The element that houses the properties and was added to the parent element
      */
-    _createProperties = function (element, data, itemDescriptor, topName, parentPopup, nameChangeHandler) {
+    _createProperties = function (element, data, itemDescriptor, topName, parent, topParent, parentPopup, nameChangeHandler, type) {
         var
-                table, row, nameCell, valueCell, properties, i;
+                table, row, rows, nameCell, valueCell, properties, i, valid, validate, generateTable;
+        generateTable = function () {
+            rows = [];
+            for (i = 0; i < properties.length; i++) {
+                row = document.createElement("tr");
+                nameCell = document.createElement("td");
+                nameCell.classList.add(PROPERTY_CLASS);
+                nameCell.innerHTML = itemDescriptor[properties[i]].name;
+                nameCell.title = itemDescriptor[properties[i]].name;
+                row.appendChild(nameCell);
+                valueCell = document.createElement("td");
+                valid = !itemDescriptor[properties[i]].isValid || itemDescriptor[properties[i]].isValid(data, parent, _item.name);
+                if (!valid) {
+                    delete data[itemDescriptor[properties[i]].name];
+                }
+                valueCell.appendChild(_createControl(itemDescriptor[properties[i]], data[itemDescriptor[properties[i]].name], topName, data, null, topParent, parentPopup, validate, nameChangeHandler));
+                row.appendChild(valueCell);
+                if (!valid) {
+                    row.hidden = true;
+                }
+                table.appendChild(row);
+                rows.push(row);
+            }
+        };
+        validate = function () {
+            var i, valid;
+            if (type && nameChangeHandler && type.getInstanceName(data)) {
+                nameChangeHandler(type.getInstanceName(data));
+            }
+            for (i = 0; i < rows.length; i++) {
+                valid = !itemDescriptor[properties[i]].isValid || itemDescriptor[properties[i]].isValid(data, parent, _item.name);
+                if (rows[i].hidden !== !valid) {
+                    table.innerHTML = "";
+                    generateTable();
+                    return;
+                }
+            }
+            if (parentPopup) {
+                parentPopup.alignPosition(true);
+            }
+        };
         table = document.createElement("table");
         table.classList.add(PROPERTIES_CLASS);
         properties = Object.keys(itemDescriptor);
-        for (i = 0; i < properties.length; i++) {
-            row = document.createElement("tr");
-            nameCell = document.createElement("td");
-            nameCell.classList.add(PROPERTY_CLASS);
-            nameCell.innerHTML = itemDescriptor[properties[i]].name;
-            nameCell.title = itemDescriptor[properties[i]].name;
-            row.appendChild(nameCell);
-            valueCell = document.createElement("td");
-            valueCell.appendChild(_createControl(itemDescriptor[properties[i]], data[itemDescriptor[properties[i]].name], topName, data, parentPopup, nameChangeHandler));
-            row.appendChild(valueCell);
-            table.appendChild(row);
-        }
+        generateTable();
         element.appendChild(table);
         return table;
     };
@@ -1297,7 +1349,7 @@ define([
         _nameChangeHandler = nameChangeHandler;
         _selectItemFunction = selectItemFunction;
         _updateBasedOn();
-        _createProperties(element, item.data, descriptors.itemDescriptors[item.category], null, null, nameChangeHandler);
+        _createProperties(element, item.data, descriptors.itemDescriptors[item.category], null, null, item.data, null, nameChangeHandler);
     };
     // ------------------------------------------------------------------------------
     // The public interface of the module

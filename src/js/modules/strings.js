@@ -168,6 +168,16 @@ define([
     exports.has = function (stringDefinitionObject, suffix) {
         return _allStrings[_currentLanguage] && (_allStrings[_currentLanguage][stringDefinitionObject.name + (suffix || "")] !== undefined);
     };
+    /**
+     * Returns a list of all the translation keys that start with the passed prefix.
+     * @param {String} prefix
+     * @returns {String[]}
+     */
+    exports.getKeys = function (prefix) {
+        return Object.keys(_allStrings[_currentLanguage]).filter(function (key) {
+            return key.indexOf(prefix) === 0;
+        });
+    };
     exports.CATEGORY_SEPARATOR = CATEGORY_SEPARATOR;
     return exports;
 });
