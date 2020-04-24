@@ -2687,7 +2687,7 @@ define([
                         }
                     }
                     if (instance.fireWhen === missions.TriggerFireWhen.MISSION_STARTS) {
-                        return "start";
+                        return (instance.delay ? utils.getTimeString(instance.delay) + " after " : "") + "mission start";
                     }
                     return "trigger";
                 },
@@ -3078,10 +3078,10 @@ define([
                     if (instance.name) {
                         return instance.name;
                     }
-                    if (instance.actions && (instance.actions[0].type === missions.ActionType.WIN)) {
+                    if (instance.actions && (instance.actions.length > 0) && (instance.actions[0].type === missions.ActionType.WIN)) {
                         return "win";
                     }
-                    if (instance.actions && (instance.actions[0].type === missions.ActionType.LOSE)) {
+                    if (instance.actions && (instance.actions.length > 0) && (instance.actions[0].type === missions.ActionType.LOSE)) {
                         return "lose";
                     }
                     if (instance.trigger && (instance.trigger.fireWhen === missions.TriggerFireWhen.MISSION_STARTS)) {

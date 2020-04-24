@@ -374,33 +374,34 @@ define([
     }
     /**
      * A function to execute whenever the name property of the selected item is changed
-     * @param {String} newName
      */
-    function _handleNameChange(newName) {
-        var oldName = _selectedItemElement.innerHTML, nameChangeHandler;
-        _selectedItemElement.innerHTML = newName;
-        switch (_selectedItem.type) {
-            case common.ItemType.RESOURCE:
-                resources.renameResource(_selectedItem.category, oldName, newName);
-                nameChangeHandler = _createItemNameChangeHandler(oldName, newName, function (type) {
-                    return type.getResourceReference();
-                });
-                break;
-            case common.ItemType.CLASS:
-                classes.renameClass(_selectedItem.category, oldName, newName);
-                nameChangeHandler = _createItemNameChangeHandler(oldName, newName, function (type) {
-                    return type.getClassReference();
-                });
-                break;
-            default:
-                application.showError("Name change not supported for this type of item!");
-                return;
+    function _handleNameChange() {
+        var newName = _selectedItem.data.name, oldName = _selectedItemElement.innerHTML, nameChangeHandler;
+        if (newName && (newName !== oldName)) {
+            _selectedItemElement.innerHTML = newName;
+            switch (_selectedItem.type) {
+                case common.ItemType.RESOURCE:
+                    resources.renameResource(_selectedItem.category, oldName, newName);
+                    nameChangeHandler = _createItemNameChangeHandler(oldName, newName, function (type) {
+                        return type.getResourceReference();
+                    });
+                    break;
+                case common.ItemType.CLASS:
+                    classes.renameClass(_selectedItem.category, oldName, newName);
+                    nameChangeHandler = _createItemNameChangeHandler(oldName, newName, function (type) {
+                        return type.getClassReference();
+                    });
+                    break;
+                default:
+                    application.showError("Name change not supported for this type of item!");
+                    return;
+            }
+            _itemElements[_selectedItem.type][_selectedItem.category][newName] = _itemElements[_selectedItem.type][_selectedItem.category][oldName];
+            delete _itemElements[_selectedItem.type][_selectedItem.category][oldName];
+            resources.executeForAllResources(nameChangeHandler);
+            classes.executeForAllClasses(nameChangeHandler);
+            environments.executeForAllEnvironments(nameChangeHandler);
         }
-        _itemElements[_selectedItem.type][_selectedItem.category][newName] = _itemElements[_selectedItem.type][_selectedItem.category][oldName];
-        delete _itemElements[_selectedItem.type][_selectedItem.category][oldName];
-        resources.executeForAllResources(nameChangeHandler);
-        classes.executeForAllClasses(nameChangeHandler);
-        environments.executeForAllEnvironments(nameChangeHandler);
     }
     /**
      * Updates the enabled / disabled states of history back / forward buttons, to be called every time
