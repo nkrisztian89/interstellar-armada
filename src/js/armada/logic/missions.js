@@ -18,6 +18,7 @@
  * @param resources Used to access the loaded media (graphics and sound) resources
  * @param resourceManager Used for storing the mission descriptors in a resource manager 
  * @param pools Used to access the pools for particles and projectiles
+ * @param egomModel
  * @param camera Used for creating camera configurations for views
  * @param renderableObjects Used for creating visual models for game objects
  * @param constants Used for Accessing global localStorage prefixes
@@ -43,6 +44,7 @@ define([
     "modules/resource-manager",
     "modules/media-resources",
     "modules/pools",
+    "modules/egom-model",
     "modules/scene/camera",
     "modules/scene/renderable-objects",
     "armada/constants",
@@ -60,7 +62,7 @@ define([
     "utils/polyfill"
 ], function (
         utils, types, mat,
-        application, game, asyncResource, resourceManager, resources, pools,
+        application, game, asyncResource, resourceManager, resources, pools, egomModel,
         camera, renderableObjects,
         constants, graphics, classes, config, strings,
         logicConstants, environments, SpacecraftEvents, spacecraft, equipment, explosion, ai) {
@@ -184,6 +186,8 @@ define([
              * @type String
              */
             GENERIC_TEAM_NAME = "team",
+            GRID_MODEL_NAME = "grid",
+            MARKER_MODEL_NAME = "marker",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -191,6 +195,11 @@ define([
              * @type Boolean
              */
             _showHitboxesForHitchecks,
+            /**
+             * Cached value of the configuration setting of the name of the uniform array storing the group transforms for models.
+             * @type String
+             */
+            _groupTransformsArrayName = null,
             /**
              * A pool containing dynamic particles (such as particles for muzzle flashes and explosions) for reuse, so that creation of
              * new particle objects can be decreased for optimization.
@@ -2760,9 +2769,18 @@ define([
     /**
      * @typedef {Object} PreviewParams
      * @property {String} spacecraftShaderName
+     * @property {String} gridShaderName
+     * @property {String} markerShaderName
+     * @property {Number[4]} gridColor
+     * @property {Number} gridCount
+     * @property {Number} smallestGridSize
+     * @property {Number} markerSize
+     * @property {Number[4]} markerColor
      * @property {Number[4]} friendlyColor 
      * @property {Number[4]} hostileColor 
      * @property {Number} smallestSizeWhenDrawn
+     * @property {Number} awayColorFactor
+     * @property {Number} awayAlphaFactor
      */
     /**
      * Adds renderable objects representing all visual elements of the mission to
@@ -2772,27 +2790,69 @@ define([
      * @param {PreviewParams} [previewParams]
      */
     Mission.prototype.addToScene = function (battleScene, targetScene, previewParams) {
-        var i, preview = !!previewParams, friendly, friendlyColor, hostileColor, friendlyCallback, hostileCallback;
+        var i, preview = !!previewParams,
+                friendly, friendlyColor, hostileColor, markerColor, callback,
+                white = [1, 1, 1],
+                getSpacecraftColor;
         if (this._environment) {
             this._environment.addToScene(battleScene);
         }
         if (preview) {
+            // add grids
+            graphics.getShader(previewParams.gridShaderName);
+            graphics.getShader(previewParams.markerShaderName);
+            markerColor = previewParams.markerColor;
+            resources.getOrAddModel(egomModel.gridModel(GRID_MODEL_NAME, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize + 1, 2 * previewParams.smallestGridSize + 1, white));
+            resources.getOrAddModel(egomModel.positionMarkerModel(MARKER_MODEL_NAME, 8, white));
+            resources.executeWhenReady(function () {
+                var i, size, grid,
+                        gridColor = previewParams.gridColor,
+                        shader = graphics.getManagedShader(previewParams.gridShaderName),
+                        model = graphics.getModel(GRID_MODEL_NAME).getEgomModel();
+                size = previewParams.smallestGridSize;
+                for (i = 0; i < previewParams.gridCount; i++) {
+                    grid = new renderableObjects.ShadedLODMesh(model, shader, {}, mat.identity4(), mat.identity4(), mat.scaling4(size), true, 0, previewParams.smallestSizeWhenDrawn);
+                    grid.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
+                        return gridColor;
+                    });
+                    grid.setUniformValueFunction(_groupTransformsArrayName, function () {
+                        return graphics.getGroupTransformIdentityArray();
+                    });
+                    battleScene.addObject(grid, false);
+                    size *= previewParams.smallestGridSize;
+                }
+            });
+            // set up the callback to be used on added spacecrafts
             friendlyColor = previewParams.friendlyColor;
             hostileColor = previewParams.hostileColor;
+            getSpacecraftColor = function (spacecraft, color) {
+                return spacecraft.isAway() ?
+                        [
+                            previewParams.awayColorFactor * color[0],
+                            previewParams.awayColorFactor * color[1],
+                            previewParams.awayColorFactor * color[2],
+                            previewParams.awayAlphaFactor * color[3]
+                        ] :
+                        color;
+            };
+            callback = function (spacecraft, color, model) {
+                var marker, position = model.getPositionMatrix(), ownColor = getSpacecraftColor(spacecraft, color);
+                model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
+                    return ownColor;
+                });
+                if (position[14] !== 0) {
+                    marker = new renderableObjects.ShadedLODMesh(resources.getModel(MARKER_MODEL_NAME).getEgomModel(), graphics.getManagedShader(previewParams.markerShaderName), {},
+                            mat.translation4(position[12], position[13], 0), mat.identity4(), mat.scaling4(previewParams.markerSize, previewParams.markerSize, position[14]), true, 0, previewParams.smallestSizeWhenDrawn);
+                    marker.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
+                        return markerColor;
+                    });
+                    battleScene.addObject(marker, false);
+                }
+            };
         }
         for (i = 0; i < this._spacecrafts.length; i++) {
             if (preview) {
                 friendly = !this.getPilotedSpacecraft() || !this._spacecrafts[i].isHostile(this.getPilotedSpacecraft());
-                friendlyCallback = function (model) {
-                    model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
-                        return friendlyColor;
-                    });
-                };
-                hostileCallback = function (model) {
-                    model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
-                        return hostileColor;
-                    });
-                };
             }
             this._spacecrafts[i].addToScene(battleScene, undefined, preview, {
                 hitboxes: application.isDebugVersion(),
@@ -2813,7 +2873,7 @@ define([
                 randomAnimationTime: true,
                 smallestSizeWhenDrawn: preview ? previewParams.smallestSizeWhenDrawn : undefined,
                 shaderName: preview ? previewParams.spacecraftShaderName : null
-            }, preview ? (friendly ? friendlyCallback : hostileCallback) : null);
+            }, preview ? callback.bind(this, this._spacecrafts[i], friendly ? friendlyColor : hostileColor) : null);
             if (targetScene) {
                 this._spacecrafts[i].addToScene(targetScene, graphics.getMaxLoadedLOD(), true, {
                     weapons: true
@@ -3706,6 +3766,7 @@ define([
     // caching configuration settings
     config.executeWhenReady(function () {
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
+        _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module

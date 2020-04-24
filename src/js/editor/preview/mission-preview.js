@@ -42,6 +42,51 @@ define([
              * @type String
              */
             SPACECRAFT_SHADER_NAME = "oneColor",
+            /**
+             * The grids in the mission preview are rendered with this shader
+             * @type String
+             */
+            GRID_SHADER_NAME = "oneColor",
+            /**
+             * The position markers in the mission preview are rendered with this shader
+             * @type String
+             */
+            MARKER_SHADER_NAME = "oneColor",
+            /**
+             * The number of grids (increasing in size) to add to the mission preview scene
+             * @type Number
+             */
+            GRID_COUNT = 4,
+            /**
+             * The size of the smallest grid to add, in meters
+             * @type Number
+             */
+            SMALLEST_GRID_SIZE = 10,
+            /**
+             * The size (radius) of the circle part of the position markers
+             * @type Number
+             */
+            MARKER_SIZE = 10,
+            /**
+             * The RGB color components of spacecrafts that are away will be multiplied by this factor
+             * @type String
+             */
+            AWAY_COLOR_FACTOR = 0.5,
+            /**
+             * The alpha color component of spacecrafts that are away will be multiplied by this factor
+             * @type String
+             */
+            AWAY_ALPHA_FACTOR = 0.1,
+            /** 
+             * Grids are rendered with this color in the mission preview
+             * @type Number[4]
+             */
+            GRID_COLOR = [1, 1, 1, 0.1],
+            /** 
+             * Position markers for spacecrafts are rendered with this color in the mission preview
+             * @type Number[4]
+             */
+            MARKER_COLOR = [1, 1, 0, 0.25],
             /** 
              * Friendly spacecrafts are rendered with this color in the mission preview
              * @type Number[4]
@@ -99,9 +144,18 @@ define([
             }
             _mission.addToScene(preview.getScene(), null, {
                 spacecraftShaderName: SPACECRAFT_SHADER_NAME,
+                gridShaderName: GRID_SHADER_NAME,
+                markerShaderName: MARKER_SHADER_NAME,
+                gridColor: GRID_COLOR,
+                gridCount: GRID_COUNT,
+                smallestGridSize: SMALLEST_GRID_SIZE,
+                markerColor: MARKER_COLOR,
+                markerSize: MARKER_SIZE,
                 friendlyColor: FRIENDLY_COLOR,
                 hostileColor: HOSTILE_COLOR,
-                smallestSizeWhenDrawn: SMALLEST_SIZE_WHEN_DRAWN
+                smallestSizeWhenDrawn: SMALLEST_SIZE_WHEN_DRAWN,
+                awayColorFactor: AWAY_COLOR_FACTOR,
+                awayAlphaFactor: AWAY_ALPHA_FACTOR
             });
         }
     }

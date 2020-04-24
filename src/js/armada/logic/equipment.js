@@ -287,12 +287,6 @@ define([
              */
             _groupTransformsArrayName = null,
             /**
-             * Precalculated value of an array containing as many identity matrices (flattened into a single one dimensional array) as the
-             * number of available transform groups.
-             * @type Float32Array
-             */
-            _groupTransformIdentityArray = null,
-            /**
              * Stores the uniform parameter array definitions (what arrays are there and what are their types in
              * name: type format) to use when creating visual models for equipment
              * @type Object
@@ -1135,7 +1129,7 @@ define([
         // setting the starting values of the parameter arrays
         // setting an identity transformation for all transform groups
         if (this._visualModel.hasParameterArray(_groupTransformsArrayName)) {
-            this._visualModel.setParameterArray(_groupTransformsArrayName, _groupTransformIdentityArray);
+            this._visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
         }
         // setting the default luminosity for all luminosity groups
         if (graphics.areLuminosityTexturesAvailable() && this._visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
@@ -1953,7 +1947,7 @@ define([
         // setting the starting values of the parameter arrays
         // setting an identity transformation for all transform groups
         if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
-            visualModel.setParameterArray(_groupTransformsArrayName, _groupTransformIdentityArray);
+            visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
         }
         // setting the default luminosity for all luminosity groups
         if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
@@ -2622,7 +2616,7 @@ define([
                 // setting the starting values of the parameter arrays
                 // setting an identity transformation for all transform groups
                 if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
-                    visualModel.setParameterArray(_groupTransformsArrayName, _groupTransformIdentityArray);
+                    visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
                 }
                 // setting the default luminosity for all luminosity groups
                 if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
@@ -4952,7 +4946,6 @@ define([
     _trailSegmentPool = pools.getPool(constants.TRAIL_SEGMENT_POOL_NAME, renderableObjects.TrailSegment);
     // caching configuration settings
     config.executeWhenReady(function () {
-        var i;
         _isSelfFireEnabled = config.getSetting(config.BATTLE_SETTINGS.SELF_FIRE);
         _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
         _minimumParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_PARTICLE_COUNT_FOR_INSTANCING);
@@ -4965,10 +4958,6 @@ define([
         _showHitboxesForHitchecks = config.getSetting(config.BATTLE_SETTINGS.SHOW_HITBOXES_FOR_HITCHECKS);
         _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
         _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
-        _groupTransformIdentityArray = new Float32Array(graphics.getMaxGroupTransforms() * 16);
-        for (i = 0; i < _groupTransformIdentityArray.length; i++) {
-            _groupTransformIdentityArray[i] = mat.IDENTITY4[i % 16];
-        }
         _fireSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_TIME_THRESHOLD);
         _fireSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_VOLUME_FACTOR);
         graphics.executeWhenReady(handleGraphicsSettingsChanged);

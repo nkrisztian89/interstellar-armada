@@ -162,7 +162,8 @@ module.exports = function (grunt) {
                 ["mousePosition"],
                 ["isRenderedWithoutDepthMask", ""],
                 ["isRenderedWithDepthMask", ""],
-                ["dissipationDuration"]
+                ["dissipationDuration"],
+                ["wireframe", "is"]
             ].map(function (replacement) {
         // create the replacements for each simple getter
         var
@@ -307,6 +308,15 @@ module.exports = function (grunt) {
                         }, {
                             match: 'application.isDebugVersion()',
                             replacement: 'false'
+                        }, {
+                            match: 'if (preview) {',
+                            replacement: 'if (false) {'
+                        }, {
+                            match: 'if (!preview) {',
+                            replacement: 'if (true) {'
+                        }, {
+                            match: 'preview ? ',
+                            replacement: 'false ? '
                         }
                     ],
                     usePrefix: false

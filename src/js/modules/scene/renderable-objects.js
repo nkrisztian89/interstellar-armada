@@ -954,6 +954,13 @@ define([
         return this._model;
     };
     /**
+     * Returns whether this model is rendered in wireframe mode
+     * @returns {Model}
+     */
+    ShadedLODMesh.prototype.isWireframe = function () {
+        return this._wireframe;
+    };
+    /**
      * Returns the size of the largest model of the mesh.
      * @returns {Number} The size of the largest model of the mesh.
      */

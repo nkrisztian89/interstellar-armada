@@ -2274,6 +2274,69 @@ define([
                 result.addLine(new Line(i * 2, i * 2 + 1, color, normal));
             }
             return result;
+        },
+        /**
+         * Creates and returns a model with lines forming a uniform grid on
+         * the XY plane.
+         * @param {String} [name] The name to set for the model
+         * @param {Number} width The size on the grid on the X axis
+         * @param {Number} height The size of the grid on the Y axis
+         * @param {Number} xCount The number of lines dividing the X axis
+         * @param {Number} yCount The number of lines dividing the Y axis
+         * @param {Number[3]} color The color of the lines
+         */
+        gridModel: function (name, width, height, xCount, yCount, color) {
+            var i, v = [0, 0, 0], normal = [0, 0, 1], result = new Model();
+            if (name) {
+                result.setName(name);
+            }
+            for (i = 0; i < xCount; i++) {
+                v[0] = width * (i / (xCount - 1) - 0.5);
+                v[1] = height * -0.5;
+                result.appendVertex(v);
+                v[1] = height * 0.5;
+                result.appendVertex(v);
+                result.addLine(new Line(i * 2, i * 2 + 1, color, normal));
+            }
+            for (i = 0; i < yCount; i++) {
+                v[0] = width * -0.5;
+                v[1] = height * (i / (yCount - 1) - 0.5);
+                result.appendVertex(v);
+                v[0] = width * 0.5;
+                result.appendVertex(v);
+                result.addLine(new Line((xCount + i) * 2, (xCount + i) * 2 + 1, color, normal));
+            }
+            return result;
+        },
+        /**
+         * Creates and returns a model with lines forming a cirle on the XY plane,
+         * with an extra line pointing up from the center of the cirle towards +Z
+         * @param {String} [name] The name to set for the model
+         * @param {Number} count The amount of vertices to create the circle
+         * @param {Number[3]} color The color of the lines
+         */
+        positionMarkerModel: function (name, count, color) {
+            var i, v = [1, 0, 0], normal = [0, 0, 1], angle, result = new Model();
+            if (name) {
+                result.setName(name);
+            }
+            result.appendVertex(v);
+            for (i = 1; i < count; i++) {
+                angle = (i / count) * 2 * Math.PI;
+                v[0] = Math.cos(angle);
+                v[1] = Math.sin(angle);
+                result.appendVertex(v);
+                result.addLine(new Line(i - 1, i, color, normal));
+            }
+            result.addLine(new Line(i - 1, 0, color, normal));
+            v[0] = 0;
+            v[1] = 0;
+            v[2] = 0;
+            result.appendVertex(v);
+            v[2] = 1;
+            result.appendVertex(v);
+            result.addLine(new Line(i, i + 1, color, normal));
+            return result;
         }
     };
 });

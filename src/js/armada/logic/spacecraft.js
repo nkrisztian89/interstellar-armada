@@ -138,12 +138,6 @@ define([
              */
             _groupTransformsArrayName = null,
             /**
-             * Precalculated value of an array containing as many identity matrices (flattened into a single one dimensional array) as the
-             * number of available transform groups.
-             * @type Float32Array
-             */
-            _groupTransformIdentityArray = null,
-            /**
              * Stores the uniform parameter array definitions (what arrays are there and what are their types in
              * name: type format) to use when creating visual models for spacecraft
              * @type Object
@@ -723,12 +717,13 @@ define([
      * @param {Boolean} value 
      */
     Spacecraft.prototype.setAway = function (value) {
-        var i;
+        var i, p;
         if (this._away !== value) {
             this._away = value;
             if (this._away) {
                 this.setTarget(null);
-                if (this._visualModel) {
+                p = this.getPhysicalPositionMatrix();
+                if (this._visualModel && (!this._visualModel.isWireframe() || ((p[12] === 0) && (p[13] === 0) && (p[14] === 0)))) {
                     this._visualModel.getNode().hide();
                 }
                 if (this._lights) {
@@ -1708,7 +1703,7 @@ define([
             return _hitZoneColor;
         });
         hitZoneMesh.setUniformValueFunction(_groupTransformsArrayName, function () {
-            return _groupTransformIdentityArray;
+            return graphics.getGroupTransformIdentityArray();
         });
         this._hitbox.addSubnode(new sceneGraph.RenderableNode(hitZoneMesh, false));
     };
@@ -1826,7 +1821,7 @@ define([
             // setting the starting values of the parameter arrays
             // setting an identity transformation for all transform groups
             if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
-                visualModel.setParameterArray(_groupTransformsArrayName, _groupTransformIdentityArray);
+                visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
             }
             // setting the default luminosity for all luminosity groups
             if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
@@ -3012,13 +3007,8 @@ define([
     };
     // caching configuration settings
     config.executeWhenReady(function () {
-        var i;
         _luminosityFactorsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME);
         _groupTransformsArrayName = config.getSetting(config.GENERAL_SETTINGS.UNIFORM_GROUP_TRANSFORMS_ARRAY_NAME);
-        _groupTransformIdentityArray = new Float32Array(graphics.getMaxGroupTransforms() * 16);
-        for (i = 0; i < _groupTransformIdentityArray.length; i++) {
-            _groupTransformIdentityArray[i] = mat.IDENTITY4[i % 16];
-        }
         _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
         _weaponFireSoundStackMinimumDistance = config.getSetting(config.BATTLE_SETTINGS.WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE);
         _scoreFactorForKill = config.getSetting(config.BATTLE_SETTINGS.SCORE_FRACTION_FOR_KILL);

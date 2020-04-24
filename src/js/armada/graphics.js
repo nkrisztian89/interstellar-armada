@@ -10,6 +10,7 @@
 /*global define, parseFloat, window, localStorage, screen */
 
 /**
+ * @param mat Used for getting the elements of identity matrices for default uniform values
  * @param types Used for type checking JSON settings and set values
  * @param application Using the application module for error displaying functionality
  * @param asyncResource GraphicsSettingsContext is an AsynchResource subclass
@@ -19,6 +20,7 @@
  * @param constants Used to access common game constants
  */
 define([
+    "utils/matrices",
     "utils/types",
     "modules/application",
     "modules/async-resource",
@@ -27,7 +29,7 @@ define([
     "modules/scene/scene-graph",
     "armada/constants",
     "utils/polyfill"
-], function (types, application, asyncResource, managedGL, resources, sceneGraph, constants) {
+], function (mat, types, application, asyncResource, managedGL, resources, sceneGraph, constants) {
     "use strict";
     var
             // --------------------------------------------------------------------------------------------
@@ -1212,6 +1214,12 @@ define([
          */
         this._luminosityTextureAreAvailable = false;
         /**
+         * Precalculated value of an array containing as many identity matrices (flattened into a single one dimensional array) as the
+         * number of available transform groups.
+         * @type Float32Array
+         */
+        this._groupTransformIdentityArray = null;
+        /**
          * An object storing the general graphics quality levels, the names of the properties are the level string IDs (e.g. "low", "medium"...),
          * the values are objects storing all the graphics settings the same way the default settings are stored
          * @type Object
@@ -1383,6 +1391,10 @@ define([
                 dataJSON.levelOfDetailSettings.lodDisplayProfile.referenceSize,
                 dataJSON.levelOfDetailSettings.lodDisplayProfile.minimumRelativeSize);
         this._generalLevels = dataJSON.generalLevels;
+        this._groupTransformIdentityArray = new Float32Array(this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS) * 16);
+        for (i = 0; i < this._groupTransformIdentityArray.length; i++) {
+            this._groupTransformIdentityArray[i] = mat.IDENTITY4[i % 16];
+        }
     };
     /**
      * Based on the passed limiting settings, if necessary, lowers the value of the passed setting to the appropriate level
@@ -2226,6 +2238,13 @@ define([
         return this._luminosityTextureAreAvailable;
     };
     /**
+     * Returns the an array that can be passed as value for the group transforms uniform with all transforms being identity
+     * @returns {Float32Array}
+     */
+    GraphicsSettingsContext.prototype.getGroupTransformIdentityArray = function () {
+        return this._groupTransformIdentityArray;
+    };
+    /**
      * Returns whether the reveal effect is available according to the currently set shader complexity level.
      * @returns {Boolean}
      */
@@ -2528,6 +2547,7 @@ define([
         getMaxSpotLights: _context.getMaxSpotLights.bind(_context),
         isShadowMappingAvailable: _context.isShadowMappingAvailable.bind(_context),
         areLuminosityTexturesAvailable: _context.areLuminosityTexturesAvailable.bind(_context),
+        getGroupTransformIdentityArray: _context.getGroupTransformIdentityArray.bind(_context),
         isRevealAvailable: _context.isRevealAvailable.bind(_context),
         areDynamicLightsAvailable: _context.areDynamicLightsAvailable.bind(_context),
         canEnableShadowMapping: _context.canEnableShadowMapping.bind(_context),
