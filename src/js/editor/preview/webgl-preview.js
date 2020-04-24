@@ -64,6 +64,11 @@ define([
             INITIAL_CAMERA_FOV = 40,
             INITIAL_CAMERA_SPAN = 0.2,
             ROTATION_MOUSE_SENSITIVITY = 1.0,
+            CAMERA_ROTATION_MOUSE_SENSITIVITY = 0.25,
+            CAMERA_PAN_MOUSE_SENSITIVITY = 0.25,
+            CAMERA_SCROLL_MOVE_FACTOR = 1000,
+            FREE_CAMERA_INITIAL_HEIGHT = 500,
+            FREE_CAMERA_VIEW_DISTANCE = 15000,
             MODEL_ROTATE_BUTTON = utils.MouseButton.LEFT,
             CAMERA_ROTATE_BUTTON = utils.MouseButton.MIDDLE,
             ENLARGE_FACTOR = 1.05,
@@ -243,8 +248,8 @@ define([
     function _updateInfo() {
         var infoSections = [], info;
         _elements.info.innerHTML = "";
-        if (_currentContext && _model) {
-            if (_model.getModel) {
+        if (_currentContext) {
+            if (_model && _model.getModel) {
                 infoSections.push(
                         "Model: " +
                         "triangles: " + _model.getModel().getNumTriangles(_model.getCurrentLOD()) +
@@ -309,13 +314,13 @@ define([
             if (_explosionPool.hasLockedObjects()) {
                 _explosionPool.executeForLockedObjects(_handleExplosion);
             }
+            _updateInfo();
+            _updateCanvasSize();
             _scene.render(_context, dt);
             if (_currentContext && _currentContext.functions.animate) {
                 _currentContext.functions.animate(dt);
             }
             _fps = dt ? Math.round(1000 / dt) : 0;
-            _updateInfo();
-            _updateCanvasSize();
         }
     }
     /**
@@ -376,13 +381,13 @@ define([
      * @param {MouseEvent} event
      */
     function _handleMouseMove(event) {
-        var cameraOri,
+        var camera = _scene.getCamera(), cameraOri,
                 rotA = -(event.screenX - _mousePos[0]) * Math.radians(ROTATION_MOUSE_SENSITIVITY),
                 rotB = -(event.screenY - _mousePos[1]) * Math.radians(ROTATION_MOUSE_SENSITIVITY),
                 axisA, axisB;
         if (_model) {
             if (_turningModel) {
-                cameraOri = _scene.getCamera().getCameraOrientationMatrix();
+                cameraOri = camera.getCameraOrientationMatrix();
                 axisA = mat.getRowA43(cameraOri);
                 axisB = mat.getRowB43(cameraOri);
                 _model.rotate(axisB, rotA);
@@ -396,12 +401,31 @@ define([
                     _currentContext.functions.onModelRotate();
                 }
             }
+        } else {
+            if (_turningModel) {
+                camera.setAngularVelocityVector([
+                    CAMERA_ROTATION_MOUSE_SENSITIVITY * rotB,
+                    CAMERA_ROTATION_MOUSE_SENSITIVITY * rotA,
+                    0]);
+                camera.update(10000);
+                camera.setAngularVelocityVector([0, 0, 0]);
+                mat.setMatrix4(_currentContext.cameraOrientationMatrix, camera.getCameraOrientationMatrix());
+            }
         }
         if (_turningCamera) {
-            _scene.getCamera().setAngularVelocityVector([-rotB, -rotA, 0]);
-            _scene.getCamera().update(10000);
-            _scene.getCamera().setAngularVelocityVector([0, 0, 0]);
-            mat.setMatrix4(_currentContext.cameraOrientationMatrix, _scene.getCamera().getCameraOrientationMatrix());
+            if (_model) {
+                camera.setAngularVelocityVector([-rotB, -rotA, 0]);
+                camera.update(10000);
+                camera.setAngularVelocityVector([0, 0, 0]);
+                mat.setMatrix4(_currentContext.cameraOrientationMatrix, camera.getCameraOrientationMatrix());
+            } else {
+                _scene.getCamera().setControlledVelocityVector([
+                    -(event.screenX - _mousePos[0]) * CAMERA_PAN_MOUSE_SENSITIVITY,
+                    (event.screenY - _mousePos[1]) * CAMERA_PAN_MOUSE_SENSITIVITY,
+                    0]);
+                _scene.getCamera().update(1000);
+                _scene.getCamera().setControlledVelocityVector([0, 0, 0]);
+            }
         }
         requestRender();
         _mousePos = [event.screenX, event.screenY];
@@ -469,7 +493,7 @@ define([
         if (scaleFactor) {
             originalPos = mat.translationVector3(_scene.getCamera().getCameraPositionMatrix());
             originalDistance = vec.length3(originalPos);
-            _scene.getCamera().setControlledVelocityVector([0, 0, originalDistance * (scaleFactor - 1)]);
+            _scene.getCamera().setControlledVelocityVector([0, 0, (_model ? originalDistance : CAMERA_SCROLL_MOVE_FACTOR) * (scaleFactor - 1)]);
             _scene.getCamera().update(1000);
             _scene.getCamera().setControlledVelocityVector([0, 0, 0]);
             _currentContext.cameraDistance = vec.length3(mat.translationVector3(_scene.getCamera().getCameraPositionMatrix()));
@@ -663,6 +687,7 @@ define([
                             distanceRange: [0, MAX_DISTANCE_FACTOR * _model.getScaledSize()],
                             position: vec.scaled3(_currentContext.params.cameraDirection || DEFAULT_CAMERA_DIRECTION, _currentContext.cameraDistance)
                         });
+                        _scene.getCamera().setViewDistance(config.getSetting(config.BATTLE_SETTINGS.VIEW_DISTANCE));
                         _scene.getCamera().setConfiguration(view.createCameraConfiguration(_model,
                                 config.getDefaultCameraBaseOrientation(),
                                 config.getDefaultCameraPointToFallback(),
@@ -671,8 +696,11 @@ define([
                                 config.getDefaultCameraSpan(),
                                 config.getDefaultCameraSpanRange()));
                     } else {
-                        _scene.getCamera().moveToPosition([0, 0, 0], 0);
-                        _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.identity4(), true);
+                        if (!params.preserve) {
+                            _scene.getCamera().moveToPosition([0, 0, FREE_CAMERA_INITIAL_HEIGHT], 0);
+                            _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.identity4(), true);
+                        }
+                        _scene.getCamera().setViewDistance(FREE_CAMERA_VIEW_DISTANCE);
                     }
                     if (params.preserve) {
                         _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.matrix4(_currentContext.cameraOrientationMatrix), true);
@@ -684,17 +712,17 @@ define([
                     _updateForRenderMode();
                     _updateForLOD();
                     _currentContext.functions.updateForRefresh();
-                        if (_currentContext.params.animateOnRefresh || (wasAnimating && (_currentContext.params.animateOnRefresh !== false))) {
-                            startAnimating();
-                        } else {
-                            requestRender();
-                        }
+                    if (_currentContext.params.animateOnRefresh || (wasAnimating && (_currentContext.params.animateOnRefresh !== false))) {
+                        startAnimating();
+                    } else {
+                        requestRender();
+                    }
                 });
             });
             // cannot directly call a new load request inside executeWhenReady() as it would change the ready state
             // back to not ready and commence an infinite loop, with the setTimeout() it is executed after all 
             // onReady handlers are cleared
-            setTimeout(function() {
+            setTimeout(function () {
                 resources.requestResourceLoad();
             }, 0);
         });

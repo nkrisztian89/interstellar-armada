@@ -32,6 +32,7 @@
  * @param missilePreview Used to create previews for missile classes
  * @param spacecraftPreview Used to create previews for spacecraft classes
  * @param environmentPreview Used to create previews for environments
+ * @param missionPreview Used to create previews for missions
  */
 define([
     "utils/utils",
@@ -56,7 +57,8 @@ define([
     "editor/preview/weapon-preview",
     "editor/preview/missile-preview",
     "editor/preview/spacecraft-preview",
-    "editor/preview/environment-preview"
+    "editor/preview/environment-preview",
+    "editor/preview/mission-preview"
 ], function (
         utils,
         application, resources, lights,
@@ -65,7 +67,7 @@ define([
         control, strings,
         common, descriptors, properties,
         shaderPreview,
-        skyboxPreview, explosionPreview, projectilePreview, weaponPreview, missilePreview, spacecraftPreview, environmentPreview) {
+        skyboxPreview, explosionPreview, projectilePreview, weaponPreview, missilePreview, spacecraftPreview, environmentPreview, missionPreview) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -132,7 +134,8 @@ define([
                 "weaponClasses": weaponPreview,
                 "missileClasses": missilePreview,
                 "spacecraftClasses": spacecraftPreview,
-                "environments": environmentPreview
+                "environments": environmentPreview,
+                "missions": missionPreview
             },
             /**
              * The HTML elements (<span>) that corresponds to the various items, by type, category and string id

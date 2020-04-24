@@ -1773,6 +1773,7 @@ define([
      * false), a visual model can be specified in this parameter that will be used instead of the existing one (when adding supplements)
      * @property {Boolean} [randomAnimationTime=false] If true, the blinking lights on the spacecraft will be set to a random animation
      * state (the same state for all of them)
+     * @property {Number} [smallestSizeWhenDrawn]
      */
     /**
      * Adds the spacecraft's visual representation to a scene, assuming that its resources have already been loaded.
@@ -1803,6 +1804,7 @@ define([
                     params.scalingMatrix || mat.scaling4(this._class.getModel().getScale()),
                     (wireframe === true),
                     lod,
+                    params.smallestSizeWhenDrawn,
                     _parameterArrays);
             if (!this._visualModel || params.replaceVisualModel) {
                 this._visualModel = visualModel;

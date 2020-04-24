@@ -1130,6 +1130,7 @@ define([
                 this._physicalModel.getScalingMatrix(),
                 wireframe,
                 lod,
+                undefined,
                 _parameterArrays);
         // setting the starting values of the parameter arrays
         // setting an identity transformation for all transform groups
@@ -1946,6 +1947,7 @@ define([
                 mat.scaling4(scale),
                 (wireframe === true),
                 lod,
+                undefined,
                 _parameterArrays);
         parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel));
         // setting the starting values of the parameter arrays
@@ -2614,6 +2616,7 @@ define([
                         mat.scaling4(scale),
                         (wireframe === true),
                         lod,
+                        undefined,
                         _parameterArrays);
                 parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel));
                 // setting the starting values of the parameter arrays

@@ -62,7 +62,7 @@ define([
         utils, types, mat,
         application, game, asyncResource, resourceManager, resources, pools,
         camera, renderableObjects,
-        constants, graphics, classes, config, strings, 
+        constants, graphics, classes, config, strings,
         logicConstants, environments, SpacecraftEvents, spacecraft, equipment, explosion, ai) {
     "use strict";
     var
@@ -2758,35 +2758,62 @@ define([
         return result;
     };
     /**
+     * @typedef {Object} PreviewParams
+     * @property {String} spacecraftShaderName
+     * @property {Number[4]} friendlyColor 
+     * @property {Number[4]} hostileColor 
+     * @property {Number} smallestSizeWhenDrawn
+     */
+    /**
      * Adds renderable objects representing all visual elements of the mission to
      * the passed scene.
      * @param {Scene} battleScene
      * @param {Scene} targetScene
+     * @param {PreviewParams} [previewParams]
      */
-    Mission.prototype.addToScene = function (battleScene, targetScene) {
-        var i;
+    Mission.prototype.addToScene = function (battleScene, targetScene, previewParams) {
+        var i, preview = !!previewParams, friendly, friendlyColor, hostileColor, friendlyCallback, hostileCallback;
         if (this._environment) {
             this._environment.addToScene(battleScene);
         }
+        if (preview) {
+            friendlyColor = previewParams.friendlyColor;
+            hostileColor = previewParams.hostileColor;
+        }
         for (i = 0; i < this._spacecrafts.length; i++) {
-            this._spacecrafts[i].addToScene(battleScene, undefined, false, {
+            if (preview) {
+                friendly = !this.getPilotedSpacecraft() || !this._spacecrafts[i].isHostile(this.getPilotedSpacecraft());
+                friendlyCallback = function (model) {
+                    model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
+                        return friendlyColor;
+                    });
+                };
+                hostileCallback = function (model) {
+                    model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
+                        return hostileColor;
+                    });
+                };
+            }
+            this._spacecrafts[i].addToScene(battleScene, undefined, preview, {
                 hitboxes: application.isDebugVersion(),
                 weapons: true,
                 missilesInLaunchers: graphics.areMissilesInLaunchersVisible(),
-                thrusterParticles: true,
-                projectileResources: true,
-                missileResources: true,
-                explosion: true,
-                damageIndicators: true,
-                cameraConfigurations: true,
-                lightSources: true,
-                blinkers: true,
-                jumpEngine: true,
-                shield: true,
-                sound: true
+                thrusterParticles: !preview,
+                projectileResources: !preview,
+                missileResources: !preview,
+                explosion: !preview,
+                damageIndicators: !preview,
+                cameraConfigurations: !preview,
+                lightSources: !preview,
+                blinkers: !preview,
+                jumpEngine: !preview,
+                shield: !preview,
+                sound: !preview
             }, {
-                randomAnimationTime: true
-            });
+                randomAnimationTime: true,
+                smallestSizeWhenDrawn: preview ? previewParams.smallestSizeWhenDrawn : undefined,
+                shaderName: preview ? previewParams.spacecraftShaderName : null
+            }, preview ? (friendly ? friendlyCallback : hostileCallback) : null);
             if (targetScene) {
                 this._spacecrafts[i].addToScene(targetScene, graphics.getMaxLoadedLOD(), true, {
                     weapons: true
@@ -2800,31 +2827,33 @@ define([
                 this._spacecrafts[i].addEventHandler(SpacecraftEvents.JUMPED_IN, this._handleSpacecraftJumpIn.bind(this, this._spacecrafts[i]));
             }
         }
-        resources.executeWhenReady(function () {
-            if (this._views.length > 0) {
-                for (i = 0; i < this._views.length; i++) {
-                    battleScene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], battleScene));
-                    if (i === 0) {
-                        battleScene.getCamera().followNode(null, true, 0);
+        if (!preview) {
+            resources.executeWhenReady(function () {
+                if (this._views.length > 0) {
+                    for (i = 0; i < this._views.length; i++) {
+                        battleScene.addCameraConfiguration(this.createCameraConfigurationForSceneView(this._views[i], battleScene));
+                        if (i === 0) {
+                            battleScene.getCamera().followNode(null, true, 0);
+                        }
                     }
+                } else if (this.getPilotedSpacecraft()) {
+                    battleScene.getCamera().followNode(this.getPilotedSpacecraft().getVisualModel().getNode(), true, 0, null, config.getDefaultCamerConfigurationName(this.getPilotedSpacecraft()));
                 }
-            } else if (this.getPilotedSpacecraft()) {
-                battleScene.getCamera().followNode(this.getPilotedSpacecraft().getVisualModel().getNode(), true, 0, null, config.getDefaultCamerConfigurationName(this.getPilotedSpacecraft()));
-            }
-            battleScene.getCamera().update(0);
-            // prefilling the pools with objects to avoid creating lots of new objects at the start of the mission as the pools grow
-            _particlePool.prefill(Math.ceil(this.getMaxParticleCount() * config.getSetting(config.BATTLE_SETTINGS.PARTICLE_POOL_PREFILL_FACTOR)));
-            _projectilePool.prefill(Math.ceil(this.getMaxProjectileCount() * config.getSetting(config.BATTLE_SETTINGS.PROJECTILE_POOL_PREFILL_FACTOR)), function (proj) {
-                proj.createVisualModel();
-            });
-            _missilePool.prefill(Math.ceil(this.getMaxMissileCount() * config.getSetting(config.BATTLE_SETTINGS.MISSILE_POOL_PREFILL_FACTOR)), function (miss) {
-                miss.createVisualModel();
-            });
-            _explosionPool.prefill(Math.ceil(this.getMaxExplosionCount() * config.getSetting(config.BATTLE_SETTINGS.EXPLOSION_POOL_PREFILL_FACTOR)), function (exp) {
-                exp.createVisualModel();
-            });
-            _trailSegmentPool.prefill(Math.ceil(this.getMaxMissileCount() * config.getSetting(config.BATTLE_SETTINGS.MISSILE_POOL_PREFILL_FACTOR) * config.getSetting(config.BATTLE_SETTINGS.TRAIL_SEGMENT_POOL_PREFILL_FACTOR)));
-        }.bind(this));
+                battleScene.getCamera().update(0);
+                // prefilling the pools with objects to avoid creating lots of new objects at the start of the mission as the pools grow
+                _particlePool.prefill(Math.ceil(this.getMaxParticleCount() * config.getSetting(config.BATTLE_SETTINGS.PARTICLE_POOL_PREFILL_FACTOR)));
+                _projectilePool.prefill(Math.ceil(this.getMaxProjectileCount() * config.getSetting(config.BATTLE_SETTINGS.PROJECTILE_POOL_PREFILL_FACTOR)), function (proj) {
+                    proj.createVisualModel();
+                });
+                _missilePool.prefill(Math.ceil(this.getMaxMissileCount() * config.getSetting(config.BATTLE_SETTINGS.MISSILE_POOL_PREFILL_FACTOR)), function (miss) {
+                    miss.createVisualModel();
+                });
+                _explosionPool.prefill(Math.ceil(this.getMaxExplosionCount() * config.getSetting(config.BATTLE_SETTINGS.EXPLOSION_POOL_PREFILL_FACTOR)), function (exp) {
+                    exp.createVisualModel();
+                });
+                _trailSegmentPool.prefill(Math.ceil(this.getMaxMissileCount() * config.getSetting(config.BATTLE_SETTINGS.MISSILE_POOL_PREFILL_FACTOR) * config.getSetting(config.BATTLE_SETTINGS.TRAIL_SEGMENT_POOL_PREFILL_FACTOR)));
+            }.bind(this));
+        }
     };
     /**
      * Toggles the visibility of the hitboxes of all spacecrafts in the mission.

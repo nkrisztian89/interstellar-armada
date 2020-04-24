@@ -2001,6 +2001,14 @@ define([
         return this._viewDistance;
     };
     /**
+     * Sets a new view distance for the camera (the distance of the far cutting plane of the camera's view frustum from its focal point)
+     * @param {Number} value
+     */
+    Camera.prototype.setViewDistance = function (value) {
+        this._viewDistance = value;
+        this._updateProjectionMatrix(this._fov, this._span);
+    };
+    /**
      * Returns the distance of the near cutting plane of the camera's view frustum from its focal point
      * @returns {Number}
      */
