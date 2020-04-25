@@ -163,7 +163,9 @@ module.exports = function (grunt) {
                 ["isRenderedWithoutDepthMask", ""],
                 ["isRenderedWithDepthMask", ""],
                 ["dissipationDuration"],
-                ["wireframe", "is"]
+                ["wireframe", "is"],
+                ["test", "is"],
+                ["custom", "is"]
             ].map(function (replacement) {
         // create the replacements for each simple getter
         var
@@ -317,6 +319,9 @@ module.exports = function (grunt) {
                         }, {
                             match: 'preview ? ',
                             replacement: 'false ? '
+                        }, {
+                            match: 'missionDescriptor.isTest()',
+                            replacement: 'false'
                         }
                     ],
                     usePrefix: false
@@ -463,6 +468,5 @@ module.exports = function (grunt) {
     grunt.registerTask('clean', ['_clean:full']);
     grunt.registerTask('lint', ['_eslint']);
     grunt.registerTask('dev-build', ['_concurrent:dev']);
-    grunt.registerTask('css-build', ['_sass:dist']);
     grunt.registerTask('watch', ['_concurrent:watch']);
 };

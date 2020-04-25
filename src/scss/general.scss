@@ -264,6 +264,9 @@ table {
 ul {
     display: table;
     padding: 1.0em;
+    &[hidden] {
+        display: none;
+    }
 }
 
 th, td {

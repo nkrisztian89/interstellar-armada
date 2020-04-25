@@ -44,6 +44,8 @@ define([
             DIFFICULTY_CONTAINER_ID = "difficultyContainer",
             DIFFICULTY_SELECTOR_ID = "difficultySelector",
             MISSION_DESCRIPTION_ID = "missionDescription",
+            FILE_BUTTON_ID = "fileButton",
+            FILE_INPUT_ID = "fileInput",
             LIST_COMPONENT_NAME = "list",
             MEDAL_IMAGE_HTML = "<img class='missionMedal' src='assets/images/empire_{performance}_20.png' alt='{performance}'>",
             // ------------------------------------------------------------------------------
@@ -114,6 +116,10 @@ define([
         /** @type SimpleComponent */
         this._playerSpacecraftPropulsion = this.registerSimpleComponent("playerSpacecraftPropulsion");
         /** @type SimpleComponent */
+        this._fileInput = this.registerSimpleComponent(FILE_INPUT_ID);
+        /** @type SimpleComponent */
+        this._fileButton = this.registerSimpleComponent(FILE_BUTTON_ID);
+        /** @type SimpleComponent */
         this._demoButton = this.registerSimpleComponent(DEMO_BUTTON_ID);
         /** @type SimpleComponent */
         this._launchButton = this.registerSimpleComponent(LAUNCH_BUTTON_ID);
@@ -178,6 +184,10 @@ define([
                 subcaptionID: strings.MISSIONS.NOT_COMPLETED.name
             });
         }
+        result.push({
+            captionID: strings.MISSIONS.CUSTOM_MISSION_CAPTION.name,
+            subcaptionID: strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION.name
+        });
         return result;
     };
     /**
@@ -185,11 +195,11 @@ define([
      * @param {Number} index
      */
     MissionsScreen.prototype._selectMission = function (index) {
-        var missionFilename, missionName, pilotedCraftDescriptor;
-        if (index >= 0) {
+        var missionFilename, missionName, pilotedCraftDescriptor, custom;
+        if ((index >= 0) && (index < missions.getMissionNames().length)) {
             missionFilename = missions.getMissionNames()[index];
             missionName = utils.getFilenameWithoutExtension(missionFilename);
-            this._missionTitle.setContent(strings.get({name: strings.MISSION.PREFIX.name + missionName + strings.MISSION.NAME_SUFFIX.name}));
+            this._missionTitle.setContent(strings.get({name: strings.MISSION.PREFIX.name + missionName + strings.MISSION.NAME_SUFFIX.name}, undefined, missionName));
             this._missionDescription.setContent(strings.get(strings.MISSIONS.LOADING_DESCRIPTION));
             this._missionObjectivesTitle.hide();
             this._missionObjectives.hide();
@@ -199,6 +209,7 @@ define([
             this._playerSpacecraftMissiles.hide();
             this._playerSpacecraftShield.hide();
             this._playerSpacecraftPropulsion.hide();
+            this._fileButton.hide();
             missions.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
                 var
                         /** @type String[] */
@@ -279,9 +290,12 @@ define([
             this._launchButton.enable();
             this._demoButton.enable();
         } else {
+            custom = (index >= 0);
             this._missionTitle.setContent(strings.get(strings.MISSIONS.NO_SELECTED_NAME));
             this._missionLocation.setContent("");
-            this._missionDescription.setContent(strings.get(strings.MISSIONS.NO_SELECTED_DESCRIPTION));
+            this._missionDescription.setContent(strings.get(custom ? strings.MISSIONS.CUSTOM_DESCRIPTION : strings.MISSIONS.NO_SELECTED_DESCRIPTION), {
+                editor: '<a target="_blank" href="editor.html">Interstellar Armada editor</a>'
+            });
             this._missionObjectivesTitle.hide();
             this._missionObjectives.hide();
             this._playerSpacecraftTitle.hide();
@@ -292,6 +306,7 @@ define([
             this._playerSpacecraftPropulsion.hide();
             this._launchButton.disable();
             this._demoButton.disable();
+            this._fileButton.setVisible(custom);
         }
     };
     /**
@@ -334,26 +349,33 @@ define([
         missionDescriptors = missions.getMissionDescriptors();
         i = 0;
         this._listComponent.executeForListElements(function (listElement) {
-            var
-                    score = missionDescriptors[i].getBestScore(),
-                    performance = missionDescriptors[i].getBestPerformance(),
-                    winCount = missionDescriptors[i].getWinCount(),
-                    subcaption = listElement.querySelector("." + armadaScreens.SUBCAPTION_CLASS_NAME);
-            subcaption.innerHTML = utils.formatString(
-                    ((winCount > 0) ?
-                            ((score === undefined) ?
-                                    strings.get(strings.MISSIONS.SANDBOX_COMPLETED) :
-                                    strings.get(strings.MISSIONS.BEST_SCORE)) :
-                            strings.get(strings.MISSIONS.NOT_COMPLETED)), {
-                score: score || 0,
-                medal: performance ? utils.formatString(MEDAL_IMAGE_HTML, {
-                    performance: performance
-                }) : " - "
-            });
-            if (winCount > 0) {
-                subcaption.classList.add(COMPLETED_CLASS);
-            } else {
-                subcaption.classList.remove(COMPLETED_CLASS);
+            var score, performance, winCount, subcaption;
+            if (i < missionDescriptors.length) {
+                subcaption = listElement.querySelector("." + armadaScreens.SUBCAPTION_CLASS_NAME);
+                if (missionDescriptors[i].isCustom()) {
+                    subcaption.innerHTML = strings.get(strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION);
+                    winCount = 0;
+                } else {
+                    score = missionDescriptors[i].getBestScore();
+                    performance = missionDescriptors[i].getBestPerformance();
+                    winCount = missionDescriptors[i].getWinCount();
+                    subcaption.innerHTML = utils.formatString(
+                            ((winCount > 0) ?
+                                    ((score === undefined) ?
+                                            strings.get(strings.MISSIONS.SANDBOX_COMPLETED) :
+                                            strings.get(strings.MISSIONS.BEST_SCORE)) :
+                                    strings.get(strings.MISSIONS.NOT_COMPLETED)), {
+                        score: score || 0,
+                        medal: performance ? utils.formatString(MEDAL_IMAGE_HTML, {
+                            performance: performance
+                        }) : " - "
+                    });
+                }
+                if (winCount > 0) {
+                    subcaption.classList.add(COMPLETED_CLASS);
+                } else {
+                    subcaption.classList.remove(COMPLETED_CLASS);
+                }
             }
             i++;
         });
@@ -414,6 +436,36 @@ define([
             this._launchMission(false);
             return false;
         }.bind(this);
+        this._fileInput.getElement().onchange = function () {
+            var file = this._fileInput.getElement().files[0];
+            if (file) {
+                file.text().then(function (text) {
+                    var data = JSON.parse(text);
+                    if (data) {
+                        data.name = file.name;
+                        data.custom = true;
+                        if (missions.getMissionNames().indexOf(data.name) >= 0) {
+                            game.showError("A mission with this filename already exists!", game.ErrorSeverity.MINOR);
+                        } else {
+                            missions.createMissionDescriptor(data);
+                            this._listComponent.setCaption(missions.getMissionNames().length - 1, utils.getFilenameWithoutExtension(data.name));
+                            this.selectMission(data.name);
+                            this._listComponent.addListElement({
+                                captionID: strings.MISSIONS.CUSTOM_MISSION_CAPTION.name,
+                                subcaptionID: strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION.name
+                            });
+                        }
+                    }
+                }.bind(this)).catch(function () {
+                    game.showError("The selected file doesn't seem to be a valid mission file!", game.ErrorSeverity.MINOR);
+                });
+            }
+        }.bind(this);
+        this._fileButton.getElement().onclick = function () {
+            this._fileInput.getElement().click();
+            return false;
+        }.bind(this);
+        this._fileInput.hide();
     };
     /**
      * @override

@@ -669,12 +669,13 @@ define([
      * @param {String} resourceType 
      * @param {ResourceManager~executeCallback} callback
      * @param {Boolean} [includeUnlisted=false] 
+     * @param {Boolean} [doNotRequest=false] 
      */
-    ResourceManager.prototype.executeForAllResourcesOfType = function (resourceType, callback, includeUnlisted) {
+    ResourceManager.prototype.executeForAllResourcesOfType = function (resourceType, callback, includeUnlisted, doNotRequest) {
         var i, resourceNames;
         resourceNames = this._resourceHolders[resourceType].getResourceNames(includeUnlisted);
         for (i = 0; i < resourceNames.length; i++) {
-            callback(this._resourceHolders[resourceType].getResource(resourceNames[i]), resourceType);
+            callback(this._resourceHolders[resourceType].getResource(resourceNames[i], {doNotLoad: doNotRequest}), resourceType);
         }
     };
     /**

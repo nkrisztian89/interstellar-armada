@@ -2297,7 +2297,7 @@ define([
      * @returns {Boolean}
      */
     function _hudSectionIsVisible(hudSection) {
-        return (_hudSectionStates[hudSection] === HUDSectionState.VISIBLE) || 
+        return (_hudSectionStates[hudSection] === HUDSectionState.VISIBLE) ||
                 ((_hudSectionStates[hudSection] === HUDSectionState.HIGHLIGHTED) && _hudHighlightVisible);
     }
     // ##############################################################################
@@ -2964,7 +2964,7 @@ define([
                 /** @type Spacecraft[] */
                 ships, highlightedShips,
                 /** @type Battle~HUDMessage[] */
-                messageQueue;    
+                messageQueue;
         missileLockIndicatorsUpdated = false;
         if (craft && _isHUDVisible) {
             _hudHighlightTime = (_hudHighlightTime + dt) % _hudHighlightInterval;
@@ -3869,7 +3869,7 @@ define([
             }
             statusCount = 0; // counter for the status indicators that we are using
             for (i = 0; i < ships.length; i++) {
-                visible1 = ((ships[i] === target) && _hudSectionIsVisible(HUDSection.TARGET_INDICATOR)) || 
+                visible1 = ((ships[i] === target) && _hudSectionIsVisible(HUDSection.TARGET_INDICATOR)) ||
                         ((ships[i] !== target) && _hudSectionIsVisible(HUDSection.SHIP_INDICATORS));
                 transmissionSource = (ships[i] === _messageSource);
                 // targeting reticle at the ship position
@@ -4163,22 +4163,24 @@ define([
      */
     function _goToDebriefing() {
         var
-                /**@type Boolean*/ victory, isRecord,
+                /**@type Boolean*/ victory, isRecord = false,
                 /**@type Spacecraft*/ craft,
                 /**@type Number*/ hitRatio,
-                /**@type Object*/ perfStats;
+                /**@type Object*/ perfStats,
+                /**@type MissionDescriptor */ missionDescriptor;
         craft = _mission.getPilotedSpacecraft();
         victory = _mission.getState() === missions.MissionState.COMPLETED;
+        missionDescriptor = missions.getMissionDescriptor(_mission.getName());
         // NONE state mission playthrough count is increased right when the mission starts
         if (_mission.getState() !== missions.MissionState.NONE) {
-            missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(victory);
+            missionDescriptor.increasePlaythroughCount(victory);
         }
         hitRatio = craft ? craft.getHitRatio() : 0;
         // calculating score from base score and bonuses
         perfStats = craft ? _mission.getPerformanceStatistics() : {};
-        if (victory) {
+        if (victory && !missionDescriptor.isCustom()) {
             // updating the record if needed
-            isRecord = missions.getMissionDescriptor(_mission.getName()).updateBestScore(perfStats.score, perfStats.performance);
+            isRecord = missionDescriptor.updateBestScore(perfStats.score, perfStats.performance);
             analytics.sendEvent("score", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty, score: perfStats.score});
         }
         game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
@@ -4271,22 +4273,24 @@ define([
                     if (_timeSinceGameStateChanged >= config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = _mission.getState() === missions.MissionState.COMPLETED;
                         time = Math.round(_elapsedTime / 1000);
-                        analyticsParams = {difficulty: _difficulty, time: time};
-                        if (_analyticsState) {
-                            if (_analyticsState.win) {
-                                analyticsParams.prevwin = true;
-                            } else {
-                                analyticsParams.prevlose = true;
+                        if (!missions.getMissionDescriptor(_mission.getName()).isCustom()) {
+                            analyticsParams = {difficulty: _difficulty, time: time};
+                            if (_analyticsState) {
+                                if (_analyticsState.win) {
+                                    analyticsParams.prevwin = true;
+                                } else {
+                                    analyticsParams.prevlose = true;
+                                }
+                                analyticsParams.prevdifficulty = _analyticsState.difficulty;
+                                analyticsParams.prevtime = _analyticsState.time;
                             }
-                            analyticsParams.prevdifficulty = _analyticsState.difficulty;
-                            analyticsParams.prevtime = _analyticsState.time;
+                            analytics.sendEvent(victory ? "win" : "lose", [utils.getFilenameWithoutExtension(_missionSourceFilename)], analyticsParams);
+                            _analyticsState = {
+                                win: victory,
+                                difficulty: _difficulty,
+                                time: time
+                            };
                         }
-                        analytics.sendEvent(victory ? "win" : "lose", [utils.getFilenameWithoutExtension(_missionSourceFilename)], analyticsParams);
-                        _analyticsState = {
-                            win: victory,
-                            difficulty: _difficulty,
-                            time: time
-                        };
                         if (craft && craft.isAlive()) {
                             this.queueHUDMessage({
                                 text: strings.get(victory ? strings.BATTLE.MESSAGE_VICTORY : strings.BATTLE.MESSAGE_FAIL),
@@ -4366,10 +4370,6 @@ define([
         if (params.demoMode !== undefined) {
             _demoMode = params.demoMode;
         }
-        if (!_demoMode) {
-            _analyticsState = null;
-            analytics.sendEvent("start", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty});
-        }
         _clearData();
         _chooseTipText();
         document.body.classList.add("wait");
@@ -4386,8 +4386,14 @@ define([
             _escorts = _mission.getEscortedSpacecrafts();
             // for missions that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
             // victory / defeat message
-            if (!_demoMode && ((!_mission.getPilotedSpacecraft() || (_mission.getState() === missions.MissionState.NONE)))) {
-                missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(true);
+            if (!_demoMode) { 
+                if ((!_mission.getPilotedSpacecraft() || (_mission.getState() === missions.MissionState.NONE))) {
+                    missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(true);
+                }
+                if (!missions.getMissionDescriptor(_mission.getName()).isCustom()) {
+                    _analyticsState = null;
+                    analytics.sendEvent("start", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty});
+                }
             }
             _displayedMissionState = _mission.getState();
             _timeSinceGameStateChanged = config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY);

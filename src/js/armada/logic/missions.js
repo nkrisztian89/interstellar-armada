@@ -3122,6 +3122,11 @@ define([
          */
         this._test = (this._dataJSON.test === true);
         /**
+         * Whether this is mission descriptor loaded from a user selected file
+         * @type Boolean
+         */
+        this._custom = (this._dataJSON.custom === true);
+        /**
          * The cached value of the spacecraft descriptor object belonging to the piloted spacecraft
          * (since it might need to be extracted from a bulk spacecraft descriptor, so that the extraction is only done the first time)
          * @type Object
@@ -3168,6 +3173,13 @@ define([
      */
     MissionDescriptor.prototype.isTest = function () {
         return this._test;
+    };
+    /**
+     * Returns whether the mission described is a test mission (to be listed only in debug mode)
+     * @returns {Boolean}
+     */
+    MissionDescriptor.prototype.isCustom = function () {
+        return this._custom;
     };
     /**
      * Returns the raw description of this mission (as given in the data JSON)
@@ -3595,7 +3607,10 @@ define([
      * @param {Boolean} [loadDescriptors=false] If true, the mission descriptors are also requested and loaded (used for the editor)
      */
     MissionContext.prototype.requestLoad = function (loadDescriptors) {
-        var missionAssignment = {}, setToReady = this.setToReady.bind(this);
+        var missionAssignment = {}, setToReady = function () {
+            this.setToReady();
+            this._missionManager.setToReady();
+        }.bind(this);
         missionAssignment[MISSION_ARRAY_NAME] = MissionDescriptor;
         this._missionManager.requestConfigLoad(
                 config.getConfigurationSetting(config.CONFIGURATION.MISSION_FILES).filename,
@@ -3675,7 +3690,7 @@ define([
             if (application.isDebugVersion() || !missionDescriptor.isTest()) {
                 result.push(missionDescriptor.getName());
             }
-        });
+        }, false, true);
         return result;
     };
     /**
@@ -3688,7 +3703,7 @@ define([
             if (application.isDebugVersion() || !missionDescriptor.isTest()) {
                 result.push(missionDescriptor);
             }
-        });
+        }, false, true);
         return result;
     };
     /**

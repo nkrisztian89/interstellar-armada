@@ -1220,6 +1220,11 @@ define([
          * @type Function
          */
         this._onElementSelect = eventHandlers ? eventHandlers[ELEMENT_SELECT_EVENT_NAME] : null;
+        /**
+         * The ul tag housing the list elements
+         * @type Element
+         */
+        this._ulElement = null;
         // validate the style object as a missings highlighted style can lead to obscure bugs
         this._validateStyle(style);
     }
@@ -1351,53 +1356,72 @@ define([
         }.bind(this);
     };
     /**
+     * @param {ListComponent~ListElement} listElement
+     * @param {Number} index
+     */
+    ListComponent.prototype._addListElement = function (listElement, index) {
+        var spanElement, aElement, liElement;
+        // element container
+        liElement = document.createElement("li");
+        liElement.className = (this._style.elementContainerClassName || "");
+        // element 
+        aElement = document.createElement("a");
+        aElement.className = (this._style.elementClassName || "") + " " + (listElement.enabled ? "" : this._style.disabledElementClassName);
+        listElement.element = aElement;
+        aElement.onclick = this._getElementClickHandler(index);
+        aElement.onmousemove = this._getElementMouseMoveHandler(index);
+        liElement.appendChild(aElement);
+        // main caption
+        spanElement = document.createElement("span");
+        if (listElement.captionID) {
+            spanElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, listElement.captionID);
+        }
+        spanElement.className = (this._style.captionClassName || "");
+        spanElement.innerHTML = listElement.caption || strings.get({name: listElement.captionID});
+        aElement.appendChild(spanElement);
+        if (this._subcaptions) {
+            // dividing captions
+            aElement.appendChild(document.createElement("br"));
+            // subcaption
+            spanElement = document.createElement("span");
+            if (listElement.subcaptionID) {
+                spanElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, listElement.subcaptionID);
+            }
+            spanElement.className = (this._style.subcaptionClassName || "");
+            spanElement.innerHTML = listElement.subcaption || strings.get({name: listElement.subcaptionID});
+            aElement.appendChild(spanElement);
+        }
+        // adding to DOM hierarchy
+        this._ulElement.appendChild(liElement);
+    };
+    /**
+     * Add a new list element after the last one
+     * @param {ListComponent~ListElement} listElement
+     */
+    ListComponent.prototype.addListElement = function (listElement) {
+        if (listElement.enabled === undefined) {
+            listElement.enabled = true;
+        }
+        this._listElements.push(listElement);
+        this._addListElement(listElement, this._listElements.length - 1);
+    };
+    /**
      * @override
      */
     ListComponent.prototype._initializeComponents = function () {
-        var i, ulElement, spanElement, aElement, liElement;
+        var i;
         ExternalComponent.prototype._initializeComponents.call(this);
         if (this._rootElement) {
             // list container
             this._rootElement.classList.add(this._style.listContainerClassName);
             // list
-            ulElement = document.createElement("ul");
-            ulElement.classList.add(this._style.listClassName);
+            this._ulElement = document.createElement("ul");
+            this._ulElement.classList.add(this._style.listClassName);
             for (i = 0; i < this._listElements.length; i++) {
-                // element container
-                liElement = document.createElement("li");
-                liElement.className = (this._style.elementContainerClassName || "");
-                // element 
-                aElement = document.createElement("a");
-                aElement.className = (this._style.elementClassName || "") + " " + (this._listElements[i].enabled ? "" : this._style.disabledElementClassName);
-                this._listElements[i].element = aElement;
-                aElement.onclick = this._getElementClickHandler(i);
-                aElement.onmousemove = this._getElementMouseMoveHandler(i);
-                liElement.appendChild(aElement);
-                // main caption
-                spanElement = document.createElement("span");
-                if (this._listElements[i].captionID) {
-                    spanElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._listElements[i].captionID);
-                }
-                spanElement.className = (this._style.captionClassName || "");
-                spanElement.innerHTML = this._listElements[i].caption || strings.get({name: this._listElements[i].captionID});
-                aElement.appendChild(spanElement);
-                if (this._subcaptions) {
-                    // dividing captions
-                    aElement.appendChild(document.createElement("br"));
-                    // subcaption
-                    spanElement = document.createElement("span");
-                    if (this._listElements[i].subcaptionID) {
-                        spanElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._listElements[i].subcaptionID);
-                    }
-                    spanElement.className = (this._style.subcaptionClassName || "");
-                    spanElement.innerHTML = this._listElements[i].subcaption || strings.get({name: this._listElements[i].subcaptionID});
-                    aElement.appendChild(spanElement);
-                }
-                // adding to DOM hierarchy
-                ulElement.appendChild(liElement);
+                this._addListElement(this._listElements[i], i);
             }
             this._rootElement.onmouseleave = this.unhighlight.bind(this);
-            this._rootElement.appendChild(ulElement);
+            this._rootElement.appendChild(this._ulElement);
         }
     };
     /**
@@ -1472,6 +1496,20 @@ define([
         for (i = 0; i < this._listElements.length; i++) {
             callback(this._listElements[i].element);
         }
+    };
+    /**
+     * Set the caption of a list element directly (removing any translation keys)
+     * @param {Number} index
+     * @param {String} caption
+     */
+    ListComponent.prototype.setCaption = function (index, caption) {
+        var listElement = this._listElements[index], spanElement = listElement.element.querySelector("." + this._style.captionClassName);
+        if (listElement.captionID) {
+            listElement.captionID = "";
+            spanElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, "");
+        }
+        listElement.caption = caption;
+        spanElement.innerHTML = caption;
     };
     // #########################################################################
     /**
