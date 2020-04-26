@@ -155,6 +155,7 @@ define([
             // Constants
             NAME_PROPERTY_NAME = "name",
             BASED_ON_PROPERTY_NAME = "basedOn",
+            LONG_TEXT_PREVIEW_LENGTH = 12,
             /**
              * @type Editor~TypeDescriptor
              */
@@ -2655,9 +2656,9 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            TRIGGER_CONDITIONS_REQUIRED = {
+            TRIGGER_WHICH = {
                 baseType: BaseType.ENUM,
-                values: missions.TriggerConditionsRequired
+                values: missions.TriggerWhich
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2672,6 +2673,14 @@ define([
             _triggerHasMultipleConditions = function (data) {
                 return data.conditions && (data.conditions.length > 1);
             },
+            _getFireWhenString = function (fireWhen, plural) {
+                switch (fireWhen) {
+                    case missions.TriggerFireWhen.BECOMES_TRUE:
+                        return "";
+                    case missions.TriggerFireWhen.BECOMES_FALSE:
+                        return (plural ? "become" : "becomes") + " false";
+                }
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -2679,17 +2688,19 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "Trigger",
                 getPreviewText: function (instance) {
+                    var result = (instance.delay ? utils.getTimeString(instance.delay) + " after " : "");
                     if (instance.conditions && (instance.conditions.length > 0)) {
                         if (instance.conditions.length > 1) {
-                            return instance.conditions.length + " conditions";
+                            result = result + ((instance.which === missions.TriggerWhich.ANY) ? "any of " : "") + instance.conditions.length + " conditions";
                         } else {
-                            return CONDITION.getPreviewText(instance.conditions[0]);
+                            result = result + CONDITION.getPreviewText(instance.conditions[0]);
                         }
+                        return result + (instance.fireWhen ? " " + _getFireWhenString(instance.fireWhen, instance.conditions.length > 1) : "");
                     }
                     if (instance.fireWhen === missions.TriggerFireWhen.MISSION_STARTS) {
-                        return (instance.delay ? utils.getTimeString(instance.delay) + " after " : "") + "mission start";
+                        return result + "mission start";
                     }
-                    return "trigger";
+                    return "trigger needs setting up";
                 },
                 properties: {
                     CONDITIONS: {
@@ -2697,16 +2708,16 @@ define([
                         type: _createTypedArrayType(CONDITION),
                         isValid: _triggerCanHaveConditions
                     },
-                    CONDITIONS_REQUIRED: {
-                        name: "conditionsRequired",
-                        type: TRIGGER_CONDITIONS_REQUIRED,
-                        defaultValue: missions.TriggerConditionsRequired.ALL,
+                    WHICH: {
+                        name: "which",
+                        type: TRIGGER_WHICH,
+                        defaultValue: missions.TriggerWhich.ALL,
                         isValid: _triggerHasMultipleConditions
                     },
                     FIRE_WHEN: {
                         name: "fireWhen",
                         type: TRIGGER_FIRE_WHEN,
-                        defaultValue: missions.TriggerFireWhen.CHANGE_TO_TRUE
+                        defaultValue: missions.TriggerFireWhen.BECOMES_TRUE
                     },
                     ONE_SHOT: {
                         name: "oneShot",
@@ -2920,6 +2931,9 @@ define([
                 var prefix = strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(itemName) + strings.MISSION.MESSAGES_SUFFIX.name;
                 return (parent.type === missions.ActionType.MESSAGE) && (strings.getKeys(prefix).length > 0);
             },
+            _getStringPreview = function (string) {
+                return (string.length > 0) ? (string.substr(0, LONG_TEXT_PREVIEW_LENGTH) + ((string.length > LONG_TEXT_PREVIEW_LENGTH) ? "..." : "")) : "...";
+            },
             /**
              * A merge of all the different possible action parameters
              * @type Editor~TypeDescriptor
@@ -2930,7 +2944,7 @@ define([
                 getPreviewText: function (instance) {
                     // MessageAction params:
                     if ((instance.text !== undefined) || (instance.textID !== undefined)) {
-                        return "message" + (instance.textID ? " (" + instance.textID + ")" : "");
+                        return "message" + (instance.text ? " (" + _getStringPreview(instance.text) + ")" : (instance.textID ? " (" + instance.textID + ")" : ""));
                     }
                     // CommandAction params:
                     if (instance.command !== undefined) {

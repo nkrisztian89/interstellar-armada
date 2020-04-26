@@ -70,25 +70,19 @@ define([
     var
             // ------------------------------------------------------------------------------
             // enums
-            TriggerConditionsRequired = {
-                /** All the conditions need to be satisfied for the trigger state to be considered true */
+            TriggerWhich = {
+                /** All the conditions need to be true / false (see TriggerFireWhen) for the trigger to fire */
                 ALL: "all",
-                /** Any if the conditions being satisfied causes the trigger state to be considered true */
+                /** Any of the conditions being true / false (see TriggerFireWhen) causes the trigger to fire */
                 ANY: "any"
             },
             TriggerFireWhen = {
                 /** The trigger fires ones at the very first simulation step of the mission (must be oneShot) */
                 MISSION_STARTS: "missionStarts",
-                /** The trigger fires in every simulation step when its condition state is true */
-                TRUE: "true",
-                /** The trigger fires in every simulation step when its condition state is false */
-                FALSE: "false",
-                /** The trigger fires in every simulation step when its condition state is different from the previous step */
-                CHANGE: "change",
-                /** The trigger fires in every simulation step when its condition state changes to true from false */
-                CHANGE_TO_TRUE: "changeToTrue",
-                /** The trigger fires in every simulation step when its condition state changes to false from true */
-                CHANGE_TO_FALSE: "changeToFalse"
+                /** The trigger fires when all / any (see TriggerWhich) of its conditions become true */
+                BECOMES_TRUE: "becomesTrue",
+                /** The trigger fires when all / any (see TriggerWhich) of its conditions become false */
+                BECOMES_FALSE: "becomesFalse"
             },
             ConditionType = {
                 /** The condition is evaluated true when all of its subjects are destroyed */
@@ -249,7 +243,7 @@ define([
             _debugInfo = "";
     // -------------------------------------------------------------------------
     // Freezing enums
-    Object.freeze(TriggerConditionsRequired);
+    Object.freeze(TriggerWhich);
     Object.freeze(TriggerFireWhen);
     Object.freeze(ConditionType);
     Object.freeze(TimeConditionSatisfiedWhen);
@@ -1231,17 +1225,30 @@ define([
             }
         }
         /**
-         * (enum TriggerConditionsRequired) 
+         * (enum TriggerWhich) 
          * Determines the logical operation used to combine the conditions when deciding whether to fire
          * @type String
          */
-        this._conditionsRequired = utils.getSafeEnumValue(TriggerConditionsRequired, dataJSON.conditionsRequired, TriggerConditionsRequired.ALL);
+        this._which = utils.getSafeEnumValue(TriggerWhich, dataJSON.which, TriggerWhich.ALL);
+        /**
+         * Cached value of whether we need to check for the state of all conditions to be true / false
+         * @type Boolean
+         */
+        this._all = (this._which === TriggerWhich.ALL);
         /**
          * (enum TriggerFireWhen) 
          * Determines at what logic state (or state change) should the trigger fire
          * @type String
          */
-        this._fireWhen = utils.getSafeEnumValue(TriggerFireWhen, dataJSON.fireWhen, TriggerFireWhen.CHANGE_TO_TRUE);
+        this._fireWhen = utils.getSafeEnumValue(TriggerFireWhen, dataJSON.fireWhen, TriggerFireWhen.BECOMES_TRUE);
+        /**
+         * Cached value of whether we need to check for false values of conditions rather then true
+         * @type Boolean
+         */
+        this._falsy = (this._fireWhen === TriggerFireWhen.BECOMES_FALSE);
+        if (!this._all) {
+            this._falsy = !this._falsy;
+        }
         /**
          * When true, the trigger can only fire once during a mission, and then it does not evaluate its conditions anymore
          * @type Boolean
@@ -1342,56 +1349,15 @@ define([
             this.fire(mission);
             return;
         }
-        switch (this._conditionsRequired) {
-            case TriggerConditionsRequired.ALL:
-                conditionState = true;
-                for (i = 0; i < this._conditions.length; i++) {
-                    if (!this._conditions[i].isSatisfied(mission, dt)) {
-                        conditionState = false;
-                        break;
-                    }
-                }
+        conditionState = this._all;
+        for (i = 0; i < this._conditions.length; i++) {
+            if (this._conditions[i].isSatisfied(mission, dt) === this._falsy) {
+                conditionState = !this._all;
                 break;
-            case TriggerConditionsRequired.ANY:
-                conditionState = false;
-                for (i = 0; i < this._conditions.length; i++) {
-                    if (this._conditions[i].isSatisfied(mission, dt)) {
-                        conditionState = true;
-                        break;
-                    }
-                }
-                break;
-            default:
-                application.showError("Unrecognized trigger condition requirement: '" + this._conditionsRequired + "'!");
+            }
         }
-        switch (this._fireWhen) {
-            case TriggerFireWhen.TRUE:
-                if (conditionState) {
-                    this.fire(mission);
-                }
-                break;
-            case TriggerFireWhen.FALSE:
-                if (!conditionState) {
-                    this.fire(mission);
-                }
-                break;
-            case TriggerFireWhen.CHANGE:
-                if (conditionState !== this._previousConditionState) {
-                    this.fire(mission);
-                }
-                break;
-            case TriggerFireWhen.CHANGE_TO_TRUE:
-                if (conditionState && !this._previousConditionState) {
-                    this.fire(mission);
-                }
-                break;
-            case TriggerFireWhen.CHANGE_TO_FALSE:
-                if (!conditionState && this._previousConditionState) {
-                    this.fire(mission);
-                }
-                break;
-            default:
-                application.showError("Unrecognized trigger firing requirement: '" + this._fireWhen + "'!");
+        if ((this._previousConditionState === this._falsy) && (conditionState !== this._falsy)) {
+            this.fire(mission);
         }
         this._previousConditionState = conditionState;
     };
@@ -1403,12 +1369,12 @@ define([
      */
     Trigger.prototype.getObjectiveStrings = function (stringPrefix) {
         var i, result = [];
-        if (this._conditionsRequired !== TriggerConditionsRequired.ALL) {
-            application.showError("Triggers for mission objectives must be set to conditionsRequired state of '" + TriggerConditionsRequired.ALL + "'!");
+        if (this._which !== TriggerWhich.ALL) {
+            application.showError("Triggers for mission objectives must be set to 'which' state of '" + TriggerWhich.ALL + "'!");
             return null;
         }
-        if (this._fireWhen !== TriggerFireWhen.CHANGE_TO_TRUE) {
-            application.showError("Triggers for mission objectives must be set to fireWhen state of '" + TriggerFireWhen.CHANGE_TO_TRUE + "'!");
+        if (this._fireWhen !== TriggerFireWhen.BECOMES_TRUE) {
+            application.showError("Triggers for mission objectives must be set to 'which' state of '" + TriggerFireWhen.BECOMES_TRUE + "'!");
             return null;
         }
         for (i = 0; i < this._conditions.length; i++) {
@@ -1430,12 +1396,12 @@ define([
      */
     Trigger.prototype.getObjectivesState = function (triggersWinAction, mission) {
         var i, result = [];
-        if (this._conditionsRequired !== TriggerConditionsRequired.ALL) {
-            application.showError("Triggers for mission objectives must be set to conditionsRequired state of '" + TriggerConditionsRequired.ALL + "'!");
+        if (this._which !== TriggerWhich.ALL) {
+            application.showError("Triggers for mission objectives must be set to 'which' state of '" + TriggerWhich.ALL + "'!");
             return null;
         }
-        if (this._fireWhen !== TriggerFireWhen.CHANGE_TO_TRUE) {
-            application.showError("Triggers for mission objectives must be set to fireWhen state of '" + TriggerFireWhen.CHANGE_TO_TRUE + "'!");
+        if (this._fireWhen !== TriggerFireWhen.BECOMES_TRUE) {
+            application.showError("Triggers for mission objectives must be set to 'fireWhen' state of '" + TriggerFireWhen.BECOMES_TRUE + "'!");
             return null;
         }
         for (i = 0; i < this._conditions.length; i++) {
@@ -3795,7 +3761,7 @@ define([
     return {
         ConditionType: ConditionType,
         TriggerFireWhen: TriggerFireWhen,
-        TriggerConditionsRequired: TriggerConditionsRequired,
+        TriggerWhich: TriggerWhich,
         CountConditionRelation: CountConditionRelation,
         TimeConditionSatisfiedWhen: TimeConditionSatisfiedWhen,
         ActionType: ActionType,

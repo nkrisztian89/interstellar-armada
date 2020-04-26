@@ -235,9 +235,10 @@ define([
      * @param {Object} [parent] See _changeData
      * @param {String} [name] See _changeData
      * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
+     * @param {Function} [onChange] A function to execute every time after the value of the string was changed using this control
      * @returns {Element}
      */
-    function _createLongStringControl(topName, data, parent, name, parentPopup) {
+    function _createLongStringControl(topName, data, parent, name, parentPopup, onChange) {
         var
                 textarea = document.createElement("textarea"),
                 button, popup;
@@ -247,6 +248,12 @@ define([
         popup = _createPopup(button, parentPopup, topName, null, function () {
             _changeData(topName, textarea.value, parent, name);
             button.textContent = _getStringPreview(textarea.value);
+            if (parentPopup) {
+                parentPopup.alignPosition();
+            }
+            if (onChange) {
+                onChange();
+            }
         });
         textarea.value = data;
         textarea.cols = TEXT_AREA_COLS;
@@ -349,19 +356,21 @@ define([
      * another object as a base (inheriting undefined properties from it), that base resource / class needs to be given here
      * @param {Object} parent The object itself the data of which is considered (see _changeData)
      * @param {Object} topParent The top level object we are editing
-     * @param {Boolean} [undefinedIfOptional=false] If true, the function will return undefined for properties marked as optional and does
+     * @param {Boolean} [undefinedIfOptionalWithNoDefault=false] If true, the function will return undefined for properties marked as optional which do
      * not have a default value set
+     * @param {Boolean} [undefinedIfOptionalOrHasDefault=false] If true, the function will return undefined for properties marked as optional OR has a default value
      * @param {String} [typeName] The name of the type of the object this property is part of
      * @returns {}
      */
-    function _getDefaultValue(propertyDescriptor, basedOn, parent, topParent, undefinedIfOptional, typeName) {
+    function _getDefaultValue(propertyDescriptor, basedOn, parent, topParent, undefinedIfOptionalWithNoDefault, undefinedIfOptionalOrHasDefault, typeName) {
         var result, type, propertyDescriptors, propertyDescriptorNames, i;
         type = new descriptors.Type(propertyDescriptor.type);
         // automatic naming - only for string type name properties (can be enum as well)
         if ((propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) && typeName && (type.getBaseType() === descriptors.BaseType.STRING)) {
             return NEW_OBJECT_NAME_PREFIX + typeName;
         }
-        if (undefinedIfOptional && propertyDescriptor.optional && (propertyDescriptor.defaultValue === undefined)) {
+        if ((undefinedIfOptionalWithNoDefault && propertyDescriptor.optional && (propertyDescriptor.defaultValue === undefined)) ||
+                (undefinedIfOptionalOrHasDefault && (propertyDescriptor.optional || (propertyDescriptor.defaultValue !== undefined)))) {
             return undefined;
         }
         if (basedOn) {
@@ -372,7 +381,7 @@ define([
                         (basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME] ?
                                 common.getItemReference({type: _item.type, category: _item.category, name: basedOn.getData()[descriptors.BASED_ON_PROPERTY_NAME]}) :
                                 null),
-                        null, topParent, undefinedIfOptional);
+                        null, topParent, undefinedIfOptionalWithNoDefault, undefinedIfOptionalOrHasDefault);
             }
             return result;
         }
@@ -417,7 +426,8 @@ define([
                             null,
                             result,
                             topParent,
-                            undefinedIfOptional,
+                            true,
+                            true,
                             type.getName());
                 }
                 return result;
@@ -451,7 +461,7 @@ define([
             if (propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) {
                 result[propertyDescriptor.name] = name;
             } else {
-                result[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, null, null, true);
+                result[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, null, null, true, true);
             }
         }
         return result;
@@ -1200,7 +1210,7 @@ define([
                     break;
                 case descriptors.BaseType.STRING:
                     if (type.isLong()) {
-                        result = _createLongStringControl(topName, data, parent, propertyDescriptor.name, parentPopup);
+                        result = _createLongStringControl(topName, data, parent, propertyDescriptor.name, parentPopup, changeHandler);
                     } else {
                         result = _createStringControl(topName, data, parent, propertyDescriptor.name, changeHandler);
                     }
@@ -1314,6 +1324,8 @@ define([
             valid = !itemDescriptor[properties[index]].isValid || itemDescriptor[properties[index]].isValid(data, parent, _item.name);
             if (!valid) {
                 delete data[itemDescriptor[properties[index]].name];
+            } else if (data[itemDescriptor[properties[index]].name] === undefined) {
+                data[itemDescriptor[properties[index]].name] = _getDefaultValue(itemDescriptor[properties[index]], null, data, topParent, true, true);
             }
             valueCell.appendChild(_createControl(itemDescriptor[properties[index]], data[itemDescriptor[properties[index]].name], topName, data, null, topParent, parentPopup, validate));
             row.appendChild(valueCell);
