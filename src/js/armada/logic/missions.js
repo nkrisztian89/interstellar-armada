@@ -3182,6 +3182,13 @@ define([
         return this._custom;
     };
     /**
+     * Returns the mission title as given in the data JSON
+     * @returns {String} 
+     */
+    MissionDescriptor.prototype.getTitle = function () {
+        return this._dataJSON.title || "";
+    };
+    /**
      * Returns the raw description of this mission (as given in the data JSON)
      * @returns {String} 
      */

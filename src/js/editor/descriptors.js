@@ -3404,6 +3404,11 @@ define([
              * @type Editor~ItemDescriptor
              */
             MISSION = {
+                TITLE: {
+                    name: "title",
+                    type: BaseType.STRING,
+                    optional: true
+                },
                 DESCRIPTION: {
                     name: "description",
                     type: LONG_STRING

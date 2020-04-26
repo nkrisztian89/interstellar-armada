@@ -1506,7 +1506,7 @@ define([
         var listElement = this._listElements[index], spanElement = listElement.element.querySelector("." + this._style.captionClassName);
         if (listElement.captionID) {
             listElement.captionID = "";
-            spanElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, "");
+            spanElement.removeAttribute(TRANSLATION_KEY_ATTRIBUTE);
         }
         listElement.caption = caption;
         spanElement.innerHTML = caption;

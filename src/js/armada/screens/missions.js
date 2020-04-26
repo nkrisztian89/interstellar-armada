@@ -215,6 +215,9 @@ define([
                         /** @type String[] */
                         objectives;
                 if (this._listComponent.getSelectedIndex() === index) {
+                    if (missionDescriptor.getTitle()) {
+                        this._missionTitle.setContent(missionDescriptor.getTitle());
+                    }
                     if (_spacecraft) {
                         _spacecraft.destroy();
                         _spacecraft = null;
@@ -228,7 +231,9 @@ define([
                         return "<li>" + objective + "</li>";
                     });
                     this._missionLocation.setContent(strings.get(strings.MISSIONS.LOCATION) + " " + missionDescriptor.getEnvironment().getDisplayName());
-                    this._missionDescription.setContent(missionDescriptor.getDisplayDescription());
+                    this._missionDescription.setContent((missionDescriptor.isCustom() && missionDescriptor.getDescription()) ?
+                            missionDescriptor.getDescription() :
+                            missionDescriptor.getDisplayDescription());
                     this._missionObjectives.setContent(objectives.join(""));
                     if (_spacecraft) {
                         this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {
@@ -448,7 +453,7 @@ define([
                             game.showError("A mission with this filename already exists!", game.ErrorSeverity.MINOR);
                         } else {
                             missions.createMissionDescriptor(data);
-                            this._listComponent.setCaption(missions.getMissionNames().length - 1, utils.getFilenameWithoutExtension(data.name));
+                            this._listComponent.setCaption(missions.getMissionNames().length - 1, data.title || utils.getFilenameWithoutExtension(data.name));
                             this.selectMission(data.name);
                             this._listComponent.addListElement({
                                 captionID: strings.MISSIONS.CUSTOM_MISSION_CAPTION.name,
