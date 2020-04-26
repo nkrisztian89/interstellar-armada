@@ -2389,6 +2389,7 @@ define([
              */
             SPACECRAFT_REFERENCE = {
                 baseType: BaseType.ENUM,
+                name: "Spacecraft",
                 getValues: function (parent, topParent) {
                     var result = [], i, j, spacecraft;
                     if (topParent.spacecrafts) {
@@ -2419,6 +2420,7 @@ define([
              */
             SQUAD_REFERENCE = {
                 baseType: BaseType.ENUM,
+                name: "Squad",
                 getValues: function (parent, topParent) {
                     var result = [], i, spacecraft, squad;
                     if (topParent.spacecrafts) {
@@ -2444,6 +2446,7 @@ define([
              */
             TEAM_REFERENCE = {
                 baseType: BaseType.ENUM,
+                name: "Team",
                 getValues: function (parent, topParent) {
                     if (topParent.teams) {
                         return topParent.teams.filter(function (team) {
@@ -3054,6 +3057,9 @@ define([
                 name: "Action",
                 getName: function (instance) {
                     if (instance.type) {
+                        if (instance.type === missions.ActionType.COMMAND) {
+                            return instance.type + ((instance.params && instance.params.command) ? ": " + instance.params.command : "");
+                        }
                         return instance.type;
                     }
                     return "action";

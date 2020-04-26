@@ -509,7 +509,8 @@ define([
                 addElementButton, removeElementButton, moveUpElementButton, moveDownElementButton, duplicateElementButton,
                 propertiesTable, getIndexText, addPropertiesTable, indexChangeHandler, updateButtonText, refreshIndices, update;
         getIndexText = function (index) {
-            return type.getInstanceName(data[index]) || index.toString();
+            var instanceName = type.getInstanceName(data[index]);
+            return index.toString() + (instanceName ? ": " + instanceName : "");
         };
         refreshIndices = function () {
             return common.setSelectorOptions(indexSelector, data.map(function (entry, index) {
@@ -711,25 +712,28 @@ define([
                 popup = _createPopup(button, parentPopup, topName),
                 table, addElementButton, i,
                 updateButtonText = function () {
-                    button.innerHTML = new descriptors.Type(elementTypeDescriptor).getDisplayName() + " [" + array.length + "]";
+                    button.innerHTML = ((array.length === 1) && (typeof array[0] === "string")) ? "[" + array[0] + "]" : new descriptors.Type(elementTypeDescriptor).getDisplayName() + " [" + array.length + "]";
                     if (parentPopup) {
                         parentPopup.alignPosition();
+                    }
+                },
+                elementChangeHandler = function () {
+                    updateButtonText();
+                    if (changeHandler) {
+                        changeHandler();
                     }
                 },
                 refreshTable,
                 addElementEditor = function (index) {
                     _addRow(table, [
                         common.createLabel(index.toString()),
-                        _createControl({name: index, type: elementTypeDescriptor}, array[index], topName, array, parent, topParent, parentPopup, changeHandler),
+                        _createControl({name: index, type: elementTypeDescriptor}, array[index], topName, array, parent, topParent, parentPopup, elementChangeHandler),
                         common.createButton(REMOVE_BUTTON_CAPTION, function () {
                             array.splice(index, 1);
-                            updateButtonText();
                             refreshTable();
                             popup.alignPosition();
                             _updateData(topName);
-                            if (changeHandler) {
-                                changeHandler();
-                            }
+                            elementChangeHandler();
                         })
                     ]);
                 };
@@ -741,13 +745,10 @@ define([
         };
         addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
             array.push(_getDefaultValue({type: elementTypeDescriptor}, null, parent, topParent, true));
-            updateButtonText();
             addElementEditor(array.length - 1);
             popup.alignPosition();
             _updateData(topName);
-            if (changeHandler) {
-                changeHandler();
-            }
+            elementChangeHandler();
         });
         _addPropertyEditorHeader(popup, [], [addElementButton]);
         table = document.createElement("table");
@@ -1163,9 +1164,11 @@ define([
         button.innerHTML = SET_PROPERTY_BUTTON_CAPTION;
         button.onclick = function () {
             var value = _getDefaultValue(propertyDescriptor, _basedOn, parent, topParent),
-                    parentNode = result.parentNode;
+                    parentNode = result.parentNode, control;
             parentNode.removeChild(result);
-            parentNode.appendChild(_createControl(propertyDescriptor, value, topName, parent, null, topParent, parentPopup, changeHandler));
+            control = _createControl(propertyDescriptor, value, topName, parent, null, topParent, parentPopup, changeHandler);
+            parentNode.appendChild(control);
+            parentNode.control = control;
             _changeData(topName, value, parent, propertyDescriptor.name);
             if (changeHandler) {
                 changeHandler();
@@ -1276,15 +1279,18 @@ define([
                     control.classList.add(CONTROL_CLASS);
                     result = document.createElement("div");
                     result.appendChild(control);
+                    result.popup = control.popup;
                 }
                 control.classList.add(WITH_UNSET_PROPERTY_BUTTON_CLASS);
                 button = common.createButton(UNSET_PROPERTY_BUTTON_CAPTION, function () {
-                    var parentNode = result.parentNode;
+                    var parentNode = result.parentNode, newControl;
                     if (control.popup) {
                         control.popup.remove();
                     }
                     parentNode.removeChild(result);
-                    parentNode.appendChild(_createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler));
+                    newControl = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler);
+                    parentNode.appendChild(newControl);
+                    parentNode.control = newControl;
                     _changeData(topName, undefined, parent, propertyDescriptor.name);
                     if (changeHandler) {
                         changeHandler();
@@ -1314,7 +1320,7 @@ define([
         var
                 table, rows, properties, validate, generateRow, generateTable;
         generateRow = function (row, index) {
-            var valid, nameCell, valueCell;
+            var valid, nameCell, valueCell, control;
             nameCell = document.createElement("td");
             nameCell.classList.add(PROPERTY_CLASS);
             nameCell.innerHTML = itemDescriptor[properties[index]].name;
@@ -1327,8 +1333,11 @@ define([
             } else if (data[itemDescriptor[properties[index]].name] === undefined) {
                 data[itemDescriptor[properties[index]].name] = _getDefaultValue(itemDescriptor[properties[index]], null, data, topParent, true, true);
             }
-            valueCell.appendChild(_createControl(itemDescriptor[properties[index]], data[itemDescriptor[properties[index]].name], topName, data, null, topParent, parentPopup, validate));
+            control = _createControl(itemDescriptor[properties[index]], data[itemDescriptor[properties[index]].name], topName, data, null, topParent, parentPopup, validate);
+            valueCell.appendChild(control);
+            valueCell.control = control;
             row.appendChild(valueCell);
+            row.valueCell = valueCell;
             row.hidden = !valid;
         };
         generateTable = function () {
@@ -1346,6 +1355,9 @@ define([
             for (i = 0; i < rows.length; i++) {
                 valid = !itemDescriptor[properties[i]].isValid || itemDescriptor[properties[i]].isValid(data, parent, _item.name);
                 if (rows[i].hidden !== !valid) {
+                    if (rows[i].valueCell.control.popup) {
+                        rows[i].valueCell.control.popup.remove();
+                    }
                     rows[i].innerHTML = "";
                     generateRow(rows[i], i);
                 }
