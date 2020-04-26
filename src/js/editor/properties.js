@@ -509,7 +509,7 @@ define([
                 addElementButton, removeElementButton, moveUpElementButton, moveDownElementButton, duplicateElementButton,
                 propertiesTable, getIndexText, addPropertiesTable, indexChangeHandler, updateButtonText, refreshIndices, update;
         getIndexText = function (index) {
-            var instanceName = type.getInstanceName(data[index]);
+            var instanceName = ((index >= 0) && data[index]) ? type.getInstanceName(data[index]) : "";
             return index.toString() + (instanceName ? ": " + instanceName : "");
         };
         refreshIndices = function () {
@@ -558,7 +558,7 @@ define([
         };
         update = function () {
             updateButtonText();
-            if (indexSelector) {
+            if (indexSelector && (indexSelector.selectedIndex >= 0)) {
                 indexSelector.options[indexSelector.selectedIndex].text = getIndexText(indexSelector.selectedIndex);
             }
             if (changeHandler) {
