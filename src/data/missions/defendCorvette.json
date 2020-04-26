@@ -34,8 +34,7 @@
                         "subjects": {
                             "spacecrafts": ["Ohio"]
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "lose"
@@ -54,7 +53,6 @@
         }, {
             "trigger": {
                 "fireWhen": "missionStarts",
-                "oneShot": true,
                 "delay": 1800
             },
             "actions": [{
@@ -85,7 +83,6 @@
                             "squads": ["wraith"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 1000
             },
             "actions": [{
@@ -126,7 +123,6 @@
                             "count": 2
                         }
                     }],
-                "oneShot": true,
                 "delay": 5000
             },
             "actions": [{
@@ -160,7 +156,6 @@
                             "count": 3
                         }
                     }],
-                "oneShot": true,
                 "delay": 8000
             },
             "actions": [{
@@ -197,7 +192,6 @@
                             "teams": ["rebels"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 30000
             },
             "actions": [{

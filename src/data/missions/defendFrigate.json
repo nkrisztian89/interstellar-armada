@@ -42,8 +42,7 @@
                         "subjects": {
                             "spacecrafts": ["Danube"]
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "lose"
@@ -62,7 +61,6 @@
         }, {
             "trigger": {
                 "fireWhen": "missionStarts",
-                "oneShot": true,
                 "delay": 1800
             },
             "actions": [{
@@ -123,7 +121,6 @@
                             "squads": ["wraith"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 1000
             },
             "actions": [{
@@ -164,7 +161,6 @@
                             "count": 2
                         }
                     }],
-                "oneShot": true,
                 "delay": 1000
             },
             "actions": [{
@@ -198,7 +194,6 @@
                             "count": 2
                         }
                     }],
-                "oneShot": true,
                 "delay": 1000
             },
             "actions": [{
@@ -243,8 +238,7 @@
                             "relation": "above",
                             "count": 0
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "command",
@@ -270,7 +264,6 @@
                             "teams": ["rebels"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 30000
             },
             "actions": [{

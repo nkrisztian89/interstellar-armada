@@ -25,7 +25,6 @@
         {
             "trigger": {
                 "fireWhen": "missionStarts",
-                "oneShot": true,
                 "delay": 1500
             },
             "actions": [{

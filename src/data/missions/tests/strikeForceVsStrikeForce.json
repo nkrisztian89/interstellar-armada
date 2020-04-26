@@ -40,8 +40,7 @@
     "events": [
         {
             "trigger": {
-                "fireWhen": "missionStarts",
-                "oneShot": true
+                "fireWhen": "missionStarts"
             },
             "actions": [{
                     "type": "command",
@@ -78,9 +77,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 45000
             },
             "actions": [{
@@ -105,9 +101,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 45000
             },
             "actions": [{

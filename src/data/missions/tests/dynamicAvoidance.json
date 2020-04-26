@@ -27,9 +27,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 5000
             },
             "actions": [{

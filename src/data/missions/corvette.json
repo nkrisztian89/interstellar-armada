@@ -28,8 +28,7 @@
                         "subjects": {
                             "spacecrafts": ["Ohio"]
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "command",
@@ -46,7 +45,6 @@
         }, {
             "trigger": {
                 "fireWhen": "missionStarts",
-                "oneShot": true,
                 "delay": 1300
             },
             "actions": [{
@@ -101,7 +99,6 @@
                             "count": 3
                         }
                     }],
-                "oneShot": true,
                 "delay": 2500
             },
             "actions": [{
@@ -150,7 +147,6 @@
                             "teams": ["rebels"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 30000
             },
             "actions": [{

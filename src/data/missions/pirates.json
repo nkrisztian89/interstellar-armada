@@ -32,7 +32,6 @@
                             "spacecrafts": ["raider 1"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 1500
             },
             "actions": [{
@@ -66,7 +65,6 @@
                             "count": 2
                         }
                     }],
-                "oneShot": true,
                 "delay": 2500
             },
             "actions": [{

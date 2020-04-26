@@ -45,16 +45,14 @@
                         "subjects": {
                             "spacecrafts": ["Dnieper"]
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "win" 
                 }]
         }, {
             "trigger": {
-                "fireWhen": "missionStarts",
-                "oneShot": true
+                "fireWhen": "missionStarts"
             },
             "actions": [{
                     "type": "command",
@@ -83,8 +81,7 @@
                         "subjects": {
                             "squads": ["wraith"]
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "command",
@@ -192,7 +189,6 @@
                             "spacecrafts": ["Dnieper"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -215,7 +211,6 @@
                             "teams": ["rebels"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 5000
             },
             "actions": [{

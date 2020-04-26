@@ -39,16 +39,14 @@
                             "relation": "below",
                             "count": 2
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "lose"
                 }]
         }, {
             "trigger": {
-                "fireWhen": "missionStarts",
-                "oneShot": true
+                "fireWhen": "missionStarts"
             },
             "actions": [{
                     "type": "command",
@@ -99,8 +97,7 @@
                             "relation": "above",
                             "count": 1
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "message",
@@ -115,8 +112,7 @@
                         "subjects": {
                             "squads": ["phantom", "reaper"]
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "command",
@@ -134,8 +130,7 @@
                         "subjects": {
                             "spacecrafts": ["St. Petersburg", "Oslo", "Stockholm", "Tallinn", "Riga", "Vilnius"]
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "command",
@@ -157,7 +152,6 @@
                             "teams": ["rebels"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 45000
             },
             "actions": [{

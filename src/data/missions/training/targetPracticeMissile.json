@@ -23,7 +23,6 @@
     "events": [{
             "trigger": {
                 "fireWhen": "missionStarts",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -48,10 +47,7 @@
                             "spacecrafts": ["drone 1"]
                         }
                     }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true
+                ]
             },
             "actions": [{
                     "type": "clearMessages"
@@ -88,10 +84,7 @@
                             "spacecrafts": ["Tisza"]
                         }
                     }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true
+                ]
             },
             "actions": [{
                     "type": "clearMessages"
@@ -137,7 +130,6 @@
                             "count": 6
                         }
                     }],
-                "oneShot": true,
                 "delay": 1000
             },
             "actions": [{

@@ -2534,7 +2534,7 @@ define([
                 return parent.type === missions.ConditionType.COUNT;
             },
             _parentIsTimeCondition = function (data, parent) {
-                return parent.type === missions.ConditionType.TIME_ELAPSED;
+                return parent.type === missions.ConditionType.TIME;
             },
             /**
              * A merge of all the different possible condition parameters
@@ -2605,7 +2605,7 @@ define([
                 return (data.type === missions.ConditionType.DESTROYED) || (data.type === missions.ConditionType.COUNT);
             },
             _conditionCanHaveParams = function (data) {
-                return (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME_ELAPSED);
+                return (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME);
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2626,8 +2626,8 @@ define([
                                 return "count of " + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " " + CONDITION_PARAMS.getPreviewText(instance.params || utils.EMPTY_OBJECT);
                             case missions.ConditionType.DESTROYED:
                                 return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " destroyed";
-                            case missions.ConditionType.TIME_ELAPSED:
-                                return instance.params ? CONDITION_PARAMS.getPreviewText(instance.params) : "time elapsed";
+                            case missions.ConditionType.TIME:
+                                return instance.params ? CONDITION_PARAMS.getPreviewText(instance.params) : "time";
                         }
                         return instance.type;
                     }
@@ -2711,7 +2711,7 @@ define([
                     ONE_SHOT: {
                         name: "oneShot",
                         type: BaseType.BOOLEAN,
-                        defaultValue: false
+                        defaultValue: true
                     },
                     DELAY: {
                         name: "delay",
@@ -2952,7 +2952,7 @@ define([
                     // MessageAction params:
                     TEXT: {
                         name: "text",
-                        type: BaseType.STRING,
+                        type: LONG_STRING,
                         optional: true,
                         isValid: _parentIsMessageAction
                     },

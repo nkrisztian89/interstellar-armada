@@ -4380,17 +4380,19 @@ define([
                 canvas.height / 2);
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_MISSION), 0);
         missions.requestMission(_missionSourceFilename, _difficulty, _demoMode, function (createdMission) {
-            var anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex, i;
+            var missionDescriptor, custom, anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex, i;
             _mission = createdMission;
             _targets = _mission.getTargetSpacecrafts();
             _escorts = _mission.getEscortedSpacecrafts();
+            missionDescriptor = missions.getMissionDescriptor(_mission.getName());
+            custom = missionDescriptor.isCustom();
             // for missions that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
             // victory / defeat message
-            if (!_demoMode) { 
+            if (!_demoMode) {
                 if ((!_mission.getPilotedSpacecraft() || (_mission.getState() === missions.MissionState.NONE))) {
-                    missions.getMissionDescriptor(_mission.getName()).increasePlaythroughCount(true);
+                    missionDescriptor.increasePlaythroughCount(true);
                 }
-                if (!missions.getMissionDescriptor(_mission.getName()).isCustom()) {
+                if (!custom) {
                     _analyticsState = null;
                     analytics.sendEvent("start", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty});
                 }
@@ -4529,7 +4531,9 @@ define([
                     _smallHeaderText.setText(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
                     document.body.classList.remove("wait");
                     control.switchToSpectatorMode(false, true);
-                    this.setHeaderContent(strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(_missionSourceFilename) + strings.MISSION.NAME_SUFFIX.name));
+                    this.setHeaderContent(custom ?
+                            missionDescriptor.getTitle() || utils.getFilenameWithoutExtension(_missionSourceFilename) :
+                            strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(_missionSourceFilename) + strings.MISSION.NAME_SUFFIX.name));
                     _battleCursor = document.body.style.cursor;
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
                         menuKey: _getMenuKeyHTMLString()

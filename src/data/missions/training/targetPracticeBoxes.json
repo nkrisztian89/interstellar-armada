@@ -29,8 +29,7 @@
     ],
     "events": [{
             "trigger": {
-                "fireWhen": "missionStarts",
-                "oneShot": true
+                "fireWhen": "missionStarts"
             },
             "actions": [{
                     "type": "hud",
@@ -62,7 +61,7 @@
         }, {
             "trigger": {
                 "conditions": [{
-                        "type": "timeElapsed",
+                        "type": "time",
                         "params": {
                             "time": 15000,
                             "satisfiedWhen": "once"
@@ -77,10 +76,7 @@
                             "count": 17
                         }
                     }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true
+                ]
             },
             "actions": [{
                     "type": "message",
@@ -103,9 +99,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -172,9 +165,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -206,9 +196,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -244,9 +231,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -276,9 +260,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -302,9 +283,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -367,9 +345,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -407,9 +382,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -448,9 +420,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -501,9 +470,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -527,9 +493,6 @@
                         }
                     }
                 ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true,
                 "delay": 500
             },
             "actions": [{
@@ -558,10 +521,7 @@
                             "count": 1
                         }
                     }
-                ],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
-                "oneShot": true
+                ]
             },
             "actions": [{
                     "type": "clearMessages"

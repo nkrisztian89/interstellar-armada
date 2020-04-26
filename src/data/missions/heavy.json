@@ -26,8 +26,7 @@
         }],
     "events": [{
             "trigger": {
-                "fireWhen": "missionStarts",
-                "oneShot": true
+                "fireWhen": "missionStarts"
             },
             "actions": [{
                     "type": "command",
@@ -85,7 +84,6 @@
                             "count": 3
                         }
                     }],
-                "oneShot": true,
                 "delay": 1500
             },
             "actions": [{
@@ -120,7 +118,6 @@
                             "count": 2
                         }
                     }],
-                "oneShot": true,
                 "delay": 2500
             },
             "actions": [{
@@ -173,7 +170,6 @@
                             "count": 1
                         }
                     }],
-                "oneShot": true,
                 "delay": 2500
             },
             "actions": [{
@@ -204,7 +200,6 @@
                             "teams": ["pirates"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 15000
             },
             "actions": [{
@@ -227,7 +222,6 @@
                             "teams": ["empire"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 15000
             },
             "actions": [{

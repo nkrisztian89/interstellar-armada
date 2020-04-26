@@ -42,7 +42,7 @@
             "name": "testMessage",
             "trigger": {
                 "conditions": [{
-                        "type": "timeElapsed",
+                        "type": "time",
                         "params": {
                             "time": 10000,
                             "satisfiedWhen": "repeat",
@@ -50,8 +50,6 @@
                             "startOffset": 8000
                         }
                     }],
-                "conditionsRequired": "all",
-                "fireWhen": "changeToTrue",
                 "oneShot": false
             },
             "actions": [{
@@ -65,14 +63,13 @@
         }, {
             "trigger": {
                 "conditions": [{
-                        "type": "timeElapsed",
+                        "type": "time",
                         "params": {
                             "time": 5000,
                             "satisfiedWhen": "once",
                             "start": "testMessage"
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "message",
@@ -85,7 +82,7 @@
         }, {
             "trigger": {
                 "conditions": [{
-                        "type": "timeElapsed",
+                        "type": "time",
                         "params": {
                             "time": 25000,
                             "satisfiedWhen": "repeat",
@@ -127,7 +124,7 @@
         }, {
             "trigger": {
                 "conditions": [{
-                        "type": "timeElapsed",
+                        "type": "time",
                         "params": {
                             "time": 30000,
                             "satisfiedWhen": "repeat",
@@ -171,7 +168,7 @@
         }, {
             "trigger": {
                 "conditions": [{
-                        "type": "timeElapsed",
+                        "type": "time",
                         "params": {
                             "time": 30000,
                             "satisfiedWhen": "repeat",

@@ -24,8 +24,7 @@
                         "subjects": {
                             "spacecrafts": ["Amazonas"]
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "lose"
@@ -44,7 +43,6 @@
         }, {
             "trigger": {
                 "fireWhen": "missionStarts",
-                "oneShot": true,
                 "delay": 1500
             },
             "actions": [{
@@ -131,8 +129,7 @@
                             "relation": "above",
                             "count": 0
                         }
-                    }],
-                "oneShot": true
+                    }]
             },
             "actions": [{
                     "type": "message",
@@ -150,7 +147,6 @@
                             "teams": ["rebels"]
                         }
                     }],
-                "oneShot": true,
                 "delay": 10000
             },
             "actions": [{

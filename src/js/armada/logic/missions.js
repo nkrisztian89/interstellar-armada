@@ -96,7 +96,7 @@ define([
                 /** The condition is evaluated true based on the count of still alive spacecrafts from its subjects */
                 COUNT: "count",
                 /** The condition is evaluated true based on the time elapsed since the start of the mission or the firing of a trigger */
-                TIME_ELAPSED: "timeElapsed"
+                TIME: "time"
             },
             CountConditionRelation = {
                 /** The condition is satisfied when there are less subjects alive than the specified count */
@@ -1246,7 +1246,7 @@ define([
          * When true, the trigger can only fire once during a mission, and then it does not evaluate its conditions anymore
          * @type Boolean
          */
-        this._oneShot = dataJSON.oneShot || false;
+        this._oneShot = dataJSON.oneShot !== false;
         /**
          * For oneShot triggers only - if this is set (to a larger than 0 value), the trigger will fire this much later after the first
          * time it is evaluated true, in milliseconds.
@@ -3776,7 +3776,7 @@ define([
     _conditionConstructors = {};
     _conditionConstructors[ConditionType.DESTROYED] = DestroyedCondition;
     _conditionConstructors[ConditionType.COUNT] = CountCondition;
-    _conditionConstructors[ConditionType.TIME_ELAPSED] = TimeCondition;
+    _conditionConstructors[ConditionType.TIME] = TimeCondition;
     // associating action constructors
     _actionConstructors = {};
     _actionConstructors[ActionType.WIN] = WinAction;
