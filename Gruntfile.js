@@ -322,6 +322,15 @@ module.exports = function (grunt) {
                         }, {
                             match: 'missionDescriptor.isTest()',
                             replacement: 'false'
+                        }, {
+                            match: 'if (this._shadowMapDebugging) {',
+                            replacement: 'if (false) {'
+                        }, {
+                            match: 'egomModel.resetDebugStats();',
+                            replacement: ''
+                        }, {
+                            match: 'if (this._stereoscopicMode !== Scene.StereoscopicMode.NONE) {',
+                            replacement: 'if (false) {'
                         }
                     ],
                     usePrefix: false

@@ -1335,11 +1335,6 @@ define([
          */
         this._shouldUpdateCamera = true;
         /**
-         * Stores the number of triangles rendered during the last rendering of the scene.
-         * @type Number
-         */
-        this._numDrawnTriangles = 0;
-        /**
          * The array of managed contexts to which this scene has been added. The scene needs to be added to a managed context before it can
          * be rendered to it, so that it sets up the vertex buffers and framebuffers of the context to contain the vertices and shadow map 
          * buffers required to render this scene.
@@ -1927,13 +1922,6 @@ define([
      */
     Scene.prototype.setShouldAnimate = function (value) {
         this._shouldAnimate = value;
-    };
-    /**
-     * Returns whether this scene is set to update its camera's state when it is rendered.
-     * @returns {Boolean}
-     */
-    Scene.prototype.shouldUpdateCamera = function () {
-        return this._shouldUpdateCamera;
     };
     /**
      * Sets whether this scene should update its camera's state when it is rendered.
@@ -2635,8 +2623,6 @@ define([
         if (this._shouldUpdateCamera) {
             this._camera.update(dt);
         }
-        // reset triangle counter so we can count all triangles for one render
-        this._numDrawnTriangles = 0;
         // scene uniforms will need to be updated for this frame
         this._uniformsUpdated.clear();
         this._cameraUniformsUpdated.clear();
