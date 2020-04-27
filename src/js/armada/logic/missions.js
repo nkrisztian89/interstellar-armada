@@ -315,7 +315,7 @@ define([
      * @returns {String}
      */
     Team.prototype.getDisplayName = function () {
-        return utils.formatString(strings.get(strings.TEAM.PREFIX, this._name), {
+        return utils.formatString(strings.get(strings.TEAM.PREFIX, this._name, this._name || this._id), {
             id: this._id
         });
     };
@@ -684,7 +684,7 @@ define([
      * @returns {String}
      */
     SubjectGroup._mapSquadID = function (subjectID) {
-        subjectID = strings.get(strings.SQUAD.PREFIX, subjectID);
+        subjectID = strings.get(strings.SQUAD.PREFIX, subjectID, subjectID);
         return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
     };
     /**
@@ -701,7 +701,7 @@ define([
      * @returns {String}
      */
     SubjectGroup._mapTeamID = function (subjectID) {
-        subjectID = strings.get(strings.TEAM.PREFIX, subjectID);
+        subjectID = strings.get(strings.TEAM.PREFIX, subjectID, subjectID);
         return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
     };
     /**
@@ -773,13 +773,13 @@ define([
                 if (this._descriptor.squads.length > 1) {
                     this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SQUADS), {count: this._descriptor.squads.length});
                 } else {
-                    this._shortString = strings.get(strings.SQUAD.PREFIX, this._descriptor.squads[0]);
+                    this._shortString = strings.get(strings.SQUAD.PREFIX, this._descriptor.squads[0], this._descriptor.squads[0]);
                 }
             } else if (!this._descriptor.spacecrafts && !this._descriptor.squads && this._descriptor.teams) {
                 if (this._descriptor.teams.length > 1) {
                     this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_TEAMS), {count: this._descriptor.teams.length});
                 } else {
-                    this._shortString = strings.get(strings.TEAM.PREFIX, this._descriptor.teams[0]);
+                    this._shortString = strings.get(strings.TEAM.PREFIX, this._descriptor.teams[0], this._descriptor.teams[0]);
                 }
             } else {
                 this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});

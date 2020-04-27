@@ -687,7 +687,7 @@ define([
                 this._squad + " " + this._indexInSquad.toString();
         this._displayName = (this._name || !this._squad) ?
                 this._name :
-                (strings.get(strings.SQUAD.PREFIX, this._squad)) + " " + this._indexInSquad.toString();
+                strings.get(strings.SQUAD.PREFIX, this._squad, this._squad) + " " + this._indexInSquad.toString();
     };
     /**
      * Updates the cached values for faster calculation of needed burn levels (depends on propulsion and phyiscal model (mass))

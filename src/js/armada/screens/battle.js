@@ -3753,7 +3753,7 @@ define([
                         _wingmenStatusSquadTexts.push(_createWingmenStatusSquadText(i));
                         _wingmenStatusTextLayer.addText(_wingmenStatusSquadTexts[i]);
                     }
-                    _wingmenStatusSquadTexts[i].setText(strings.get(strings.SQUAD.PREFIX, _squads[i].name));
+                    _wingmenStatusSquadTexts[i].setText(strings.get(strings.SQUAD.PREFIX, _squads[i].name, _squads[i].name));
                     _wingmenStatusSquadTexts[i].show();
                     // only check as many spacecrafts as there are positions defined for, as we cannot display more
                     craftCount = Math.min(_squads[i].crafts.length, _wingmenStatusMaxSquadMemberCount);
