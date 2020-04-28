@@ -422,12 +422,6 @@ define([
     /**
      * @returns {String[]}
      */
-    TextureResource.prototype.getTypes = function () {
-        return Object.keys(this._typeSuffixes);
-    };
-    /**
-     * @returns {String[]}
-     */
     TextureResource.prototype.getQualities = function () {
         return Object.keys(this._qualitySuffixes);
     };
@@ -477,13 +471,6 @@ define([
             textures: result
         });
         return result;
-    };
-    /**
-     * @param {String[]} qualityPreferenceList
-     * @returns {Object.<String, ManagedTexture>} 
-     */
-    TextureResource.prototype.getManagedTextures = function (qualityPreferenceList) {
-        return this.getManagedTexturesOfTypes(this.getTypes(), qualityPreferenceList);
     };
     // ############################################################################################x
     /**

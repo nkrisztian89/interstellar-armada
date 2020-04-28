@@ -890,13 +890,6 @@ define([
         return this._texture.getManagedTexturesOfTypes(types, qualityPreferenceList);
     };
     /**
-     * @param {String[]} qualityPreferenceList
-     * @returns {Object.<String, ManagedTexture>} 
-     */
-    TexturedModelClass.prototype.getTextures = function (qualityPreferenceList) {
-        return this.getTexturesOfTypes(this._texture.getTypes(), qualityPreferenceList);
-    };
-    /**
      * @param {Number} groupIndex
      * @returns {Number}
      */

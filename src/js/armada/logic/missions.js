@@ -2192,22 +2192,6 @@ define([
         return result;
     };
     /**
-     * Returns the sum of the score values of spacecrafts hostile to the given spacecraft are currently alive 
-     * @param {Spacecraft} craft
-     * @returns {Number}
-     */
-    Mission.prototype.getTotalHostileSpacecraftValue = function (craft) {
-        var i, result = 0;
-        for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
-                if (this._spacecrafts[i].isHostile(craft)) {
-                    result += this._spacecrafts[i].getScoreValue();
-                }
-            }
-        }
-        return result;
-    };
-    /**
      * Returns how many spacecrafts hostile to the given spacecraft are currently alive 
      * @param {Spacecraft} craft
      * @param {Boolean} [presentOnly=false] Whether to count only present (= already jumped in, has not jumpoed out yet) spacecrafts
