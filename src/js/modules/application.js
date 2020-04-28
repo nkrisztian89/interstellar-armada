@@ -7,7 +7,7 @@
  * - (optional) set application version
  * - set the application folders using setFolders()
  * - (optional) set if you want to bypass file caching with setFileCacheBypassEnabled()
- * - use requestTextFile(), requestXMLFile() or requestFile() to easily manage the loading of files from the set folders
+ * - use requestTextFile(), requestFile() or requestCSSFile() to easily manage the loading of files from the set folders
  * - use setLogVerbosity() and log() to log with a settable level of verbosity
  * - use showError() to display verbose error messages
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -404,36 +404,6 @@ define(function () {
             this.requestFile(filetype, filename, function (request) {
                 onfinish(request ? request.responseText : null);
             }, mimeType || DEFAULT_TEXT_MIME_TYPE);
-        },
-        /**
-         * Issues an asynchronous request to get a XML file and executes a callback function when the file has been grabbed. Uses HTTP 
-         * request, thus only works through servers, cannot be used to access files on the local filesystem!
-         * @param {String} filetype The type of the file to be accessed, such as model, texture or config. This will be used to choose the 
-         * appropriate folder where to look for the file.
-         * @param {String} filename The name of the file (not the full URL!)
-         * @param {Function} onfinish See requestFile()
-         */
-        requestXMLFile: function (filetype, filename, onfinish) {
-            this.requestFile(filetype, filename, function (request) {
-                var responseXML = request ?
-                        ((request.responseXML === null) ?
-                                new DOMParser().parseFromString(request.responseText, "application/xml") :
-                                request.responseXML) :
-                        null;
-                if (responseXML && (responseXML.documentElement.nodeName !== "parsererror")) {
-                    onfinish(responseXML);
-                } else {
-                    this.showError("Could not parse XML file: '" + filename + "'.",
-                            ErrorSeverity.SEVERE,
-                            "The file could be loaded, but for some reason the parsing of it has failed. \n" +
-                            "The status of the request was: '" + request.statusText + "' when the error happened.\n" +
-                            "The text content of the file:\n" +
-                            (request.responseText.length > 120 ?
-                                    request.responseText.slice(0, 120) + "..." :
-                                    request.responseText));
-                    onfinish();
-                }
-            }.bind(this), "application/xml");
         },
         /**
          * Issues an asynchronous request to get a CSS file and apply it to the current

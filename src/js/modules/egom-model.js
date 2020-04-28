@@ -1531,10 +1531,9 @@ define([
         application.log_DEBUG("Loading EgomModel data from file: " + filename + " ...", 2);
         // checking the passed JSON file
         if (typeof dataJSON !== "object") {
-            application.showError("'" + filename + "' does not appear to be an JSON file.",
+            application.showError("'" + filename + "' does not appear to be a JSON file.",
                     application.ErrorSeverity.SEVERE,
-                    "A model was supposed to be loaded from this file, but only models of EgomModel format " +
-                    "are accepted. Such a file needs to be a valid XML document with an EgomModel root element or a valid JSON file.");
+                    "A model was supposed to be loaded from this file, but only models of EgomModel JSON format are accepted.");
             return false;
         }
         // checking EgomModel version
