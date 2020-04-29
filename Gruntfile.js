@@ -166,25 +166,41 @@ module.exports = function (grunt) {
                 ["wireframe", "is"],
                 ["test", "is"],
                 ["custom", "is"]
-            ].map(function (replacement) {
-        // create the replacements for each simple getter
-        var
-                functionName = ((replacement.length > 1) ? replacement[1] : "get") + ((replacement[1] === "") ? replacement[0] : replacement[0][0].toUpperCase() + replacement[0].substring(1)),
-                fieldName = "_" + ((replacement.length > 2) ? replacement[2] : replacement[0]);
-        return [{
-                // replace calls to this getter with a simple reference to the property
-                match: "." + functionName + '()',
-                replacement: "." + fieldName
-            }, {
-                // remove the getter definition from the prototype
-                match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = function \\(\\) {\\s+return this." + fieldName + ";\\s+};", "g"),
-                replacement: ""
-            }, {
-                // remove the getter definition from the prototype if it was added by reference
-                match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = \\w+;", "g"),
-                replacement: ""
-            }];
-    });
+            ].map(
+            function (replacement) {
+                // create the replacements for each simple getter
+                var
+                        functionName = ((replacement.length > 1) ? replacement[1] : "get") + ((replacement[1] === "") ? replacement[0] : replacement[0][0].toUpperCase() + replacement[0].substring(1)),
+                        fieldName = "_" + ((replacement.length > 2) ? replacement[2] : replacement[0]);
+                return [{
+                        // replace calls to this getter with a simple reference to the property
+                        match: "." + functionName + '()',
+                        replacement: "." + fieldName
+                    }, {
+                        // remove the getter definition from the prototype
+                        match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = function \\(\\) {\\s+return this." + fieldName + ";\\s+};", "g"),
+                        replacement: ""
+                    }, {
+                        // remove the getter definition from the prototype if it was added by reference
+                        match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = \\w+;", "g"),
+                        replacement: ""
+                    }];
+            }),
+            methodRemovals = [
+                "showHitbox",
+                "hideHitbox",
+                "toggleHitboxVisibility",
+                "getHitboxTextures",
+                "_addHitboxModel",
+                "getHitbox"
+            ].map(
+            function (functionName) {
+                return [{
+                        // remove the method definition from the prototype (matching max 1 param, up to 2 levels of curly braces nesting in function body)
+                        match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = function \\(\\w*\\) {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*};", "g"),
+                        replacement: ""
+                    }];
+            });
     // flatten the getterReplacements array
     getterReplacements.reduce(function (acc, val) {
         return acc.concat(val);
@@ -343,7 +359,7 @@ module.exports = function (grunt) {
             // avoid the overhead of calling the getter functions
             optimize: {
                 options: {
-                    patterns: getterReplacements.concat([
+                    patterns: getterReplacements.concat(methodRemovals.concat([
                         {
                             match: '_scene.getLODContext()',
                             replacement: '_scene._lodContext'
@@ -353,8 +369,17 @@ module.exports = function (grunt) {
                         }, {
                             match: 'setFileCacheBypassEnabled(true)',
                             replacement: 'setFileCacheBypassEnabled(false)'
+                        }, {
+                            match: 'addSupplements.hitboxes',
+                            replacement: 'false'
+                        }, {
+                            match: 'this._hitbox = null',
+                            replacement: '//'
+                        }, {
+                            match: 'if (this._hitbox) {',
+                            replacement: 'if (false) {'
                         }
-                    ]),
+                    ])),
                     usePrefix: false
                 },
                 files: [
