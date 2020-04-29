@@ -1164,23 +1164,6 @@ define([
          */
         this._maxLOD = this.LOD_NOT_SET;
         /**
-         * A convenience property holding a reference to the currently edited
-         * mesh, in case a single LOD is set to be edited. Editing operations
-         * affect only this mesh, if it is set.
-         * @type Mesh
-         */
-        this._editedMesh = null;
-        /**
-         * Editing operations affect the meshes equal to or above this LOD.
-         * @type Number
-         */
-        this._minEditedLOD = 0;
-        /**
-         * Editing operations affect the meshes up to this LOD.
-         * @type Number
-         */
-        this._maxEditedLOD = 0;
-        /**
          * The name of this model.
          * @type String
          */
@@ -1288,44 +1271,6 @@ define([
         return this._meshes[lod];
     };
 
-    /**
-     * After calling this method, editing methods of the model will affect the 
-     * mesh that contains the specified LOD.
-     * @param {Number} lod
-     */
-    Model.prototype.startEditingMeshWithLOD = function (lod) {
-        this._editedMesh = this.getMeshWithLOD(lod);
-        this._minEditedLOD = lod;
-        this._maxEditedLOD = lod;
-    };
-
-    /**
-     * If available, returns a reference to the currently edited mesh.
-     * @returns {Mesh}
-     */
-    Model.prototype.getCurrentlyEditedMesh = function () {
-        return this._editedMesh;
-    };
-
-    /**
-     * After this call, editing methods will affect meshes with LODs greater
-     * than or equal to the passed value (up to the set maximum)
-     * @param {Number} value
-     */
-    Model.prototype.setMinimumEditedLOD = function (value) {
-        this._minEditedLOD = value;
-        this._editedMesh = (this._minEditedLOD === this._maxEditedLOD) ? this.getMeshWithLOD(value) : null;
-    };
-
-    /**
-     * After this call, editing methods will affect meshes with LODs smaller
-     * than or equal to the passed value (down to the set minimum)
-     * @param {Number} value
-     */
-    Model.prototype.setMaximumEditedLOD = function (value) {
-        this._maxEditedLOD = value;
-        this._editedMesh = (this._minEditedLOD === this._maxEditedLOD) ? this.getMeshWithLOD(value) : null;
-    };
     /**
      * Directly sets the vertex of the passed index in the meshes belonging in the passed LOD range (no LOD existence check)
      * @param {Number} minLOD
@@ -1840,7 +1785,7 @@ define([
      */
     Model.prototype.getBufferData = function (wireframe, startIndex, lod) {
         lod = (lod !== undefined) ? lod : this._minLOD;
-        return this.getMeshWithLOD(lod).getBufferData(wireframe, startIndex, this._position4);
+        return this._meshes[lod].getBufferData(wireframe, startIndex, this._position4);
     };
 
     /**
@@ -1854,7 +1799,7 @@ define([
                 props = this._contextProperties[context.getName()],
                 result = 0;
         for (i = props.minLOD; i <= props.maxLOD; i++) {
-            result += this.getMeshWithLOD(i).getBufferSize(props.wireframe, props.solid);
+            result += this._meshes[i].getBufferSize(props.wireframe, props.solid);
         }
         return result;
     };
@@ -1872,7 +1817,7 @@ define([
     Model.prototype.loadToVertexBuffers = function (context, startIndex, lod) {
         lod = (lod !== undefined) ? lod : this._minLOD;
         var props = this._contextProperties[context.getName()];
-        return this.getMeshWithLOD(lod).loadToVertexBuffers(context, startIndex, props.wireframe, props.solid, this._position4);
+        return this._meshes[lod].loadToVertexBuffers(context, startIndex, props.wireframe, props.solid, this._position4);
     };
 
     /**
@@ -1891,7 +1836,7 @@ define([
      */
     Model.prototype.render = function (context, wireframe, opaque, lod) {
         lod = (lod !== undefined) ? lod : this._minLOD;
-        this.getMeshWithLOD(lod).render(context, wireframe, opaque);
+        this._meshes[lod].render(context, wireframe, opaque);
     };
     /**
      * Similar to the regular render method, but this renders the given number of instances of the model using instancing.
@@ -1903,7 +1848,7 @@ define([
      */
     Model.prototype.renderInstances = function (context, wireframe, opaque, lod, instanceCount) {
         lod = (lod !== undefined) ? lod : this._minLOD;
-        this.getMeshWithLOD(lod).renderInstances(context, wireframe, opaque, instanceCount);
+        this._meshes[lod].renderInstances(context, wireframe, opaque, instanceCount);
     };
 
     /**
@@ -1912,14 +1857,7 @@ define([
      * @param {Number[2]} [texCoords]
      */
     Model.prototype.appendVertex = function (position, texCoords) {
-        var i;
-        if (this._editedMesh) {
-            this._editedMesh.appendVertex(position, texCoords);
-        } else {
-            for (i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
-                this.getMeshWithLOD(i).appendVertex(position, texCoords);
-            }
-        }
+        this.getMeshWithLOD(0).appendVertex(position, texCoords);
     };
 
     /**
@@ -1927,14 +1865,7 @@ define([
      * @param {Line} line
      */
     Model.prototype.addLine = function (line) {
-        var i;
-        if (this._editedMesh) {
-            this._editedMesh.addLine(line);
-        } else {
-            for (i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
-                this.getMeshWithLOD(i).addLine(line);
-            }
-        }
+        this.getMeshWithLOD(0).addLine(line);
     };
 
     /**
@@ -1948,14 +1879,7 @@ define([
      * @see Model#addTriangle
      */
     Model.prototype.addQuad = function (a, b, c, d, params) {
-        var i;
-        if (this._editedMesh) {
-            this._editedMesh.addQuad(a, b, c, d, params);
-        } else {
-            for (i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
-                this.getMeshWithLOD(i).addQuad(a, b, c, d, params);
-            }
-        }
+        this.getMeshWithLOD(0).addQuad(a, b, c, d, params);
     };
 
     /**
@@ -1975,14 +1899,7 @@ define([
      * should be culled (omitted)
      */
     Model.prototype.addCuboid = function (x, y, z, width, height, depth, color, textureCoordinates, cullFace) {
-        var i;
-        if (this._editedMesh) {
-            this._editedMesh.addCuboid(x, y, z, width, height, depth, color, textureCoordinates, cullFace);
-        } else {
-            for (i = this._minEditedLOD; i <= this._maxEditedLOD; i++) {
-                this.getMeshWithLOD(i).addCuboid(x, y, z, width, height, depth, color, textureCoordinates, cullFace);
-            }
-        }
+        this.getMeshWithLOD(0).addCuboid(x, y, z, width, height, depth, color, textureCoordinates, cullFace);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
