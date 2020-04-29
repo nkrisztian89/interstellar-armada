@@ -820,25 +820,6 @@ define([
         application.showError("Wrong parameters specified for condition of type: '" + this._type + "'!");
     };
     /**
-     * Based on the type of the condition, checks whether it has all the appropriate parameters set in the passed object, 
-     * and outputs errors if it doesn't
-     * Override this to add the appropriate checks!
-     * @returns {Boolean} Whether the parameters passed are valid for this condition
-     */
-    Condition.prototype._checkParams = function () {
-        application.showError("Unrecognized condition type: '" + this._type + "'!");
-        return false;
-    };
-    /**
-     * Returns whether the condition is considered to be satisfied (true) according to the current state of the passed mission
-     * Override this to add the appropriate satisfaction checks!
-     * @returns {Boolean}
-     */
-    Condition.prototype.isSatisfied = function () {
-        application.showError("Unrecognized condition type: '" + this._type + "'!");
-        return false;
-    };
-    /**
      * Returns a translated sentence that can be used to display a mission objective to the user that is based on this condition (for either
      * winning or losing). The prefix to be passed determines whether it should be considered a winning or losing condition
      * Override this for conditions that can correspond to mission objectives.
@@ -852,7 +833,7 @@ define([
      * Returns a translated string that can be used to display a mission objective and its status to the player based on this condition 
      * (for either winning or losing). The prefix to be passed determines whether it should be considered a winning or losing condition
      * To be used on the HUD for displaying live status of objectives
-     * Overidde this for conditions that can correspond to mission objectives.
+     * Override this for conditions that can correspond to mission objectives.
      * @returns {String}
      */
     Condition.prototype.getObjectiveStateString = function () {
@@ -862,7 +843,7 @@ define([
     /**
      * If the condition corresponds to a mission objective that requires the player to destroy some spacecrafts, this method
      * returns the list of these target spacecrafts.
-     * Overidde this for conditions that can correspond to mission objectives.
+     * Override this for conditions that can correspond to mission objectives.
      * @returns {Spacecraft[]}
      */
     Condition.prototype.getTargetSpacecrafts = function () {
@@ -872,7 +853,7 @@ define([
     /**
      * If the condition corresponds to a mission objective that requires the player to escort (protect) some spacecrafts, this method
      * returns the list of these escorted spacecrafts.
-     * Overidde this for conditions that can correspond to mission objectives.
+     * Override this for conditions that can correspond to mission objectives.
      * @returns {Spacecraft[]}
      */
     Condition.prototype.getEscortedSpacecrafts = function () {
@@ -1497,16 +1478,6 @@ define([
         application.showError("Wrong parameters specified for action of type: '" + this._type + "'!");
     };
     /**
-     * Based on the type of the action, checks whether it has all the appropriate parameters set in the passed object, 
-     * and outputs errors if it doesn't
-     * Override this to add the appropriate checks!
-     * @returns {Boolean} Whether the parameters passed are valid for this condition
-     */
-    Action.prototype._checkParams = function () {
-        application.showError("Unrecognized action type: '" + this._type + "'!");
-        return false;
-    };
-    /**
      * If the action has a delay set, it is added to the execution queue of the passed mission with the set delay, otherwise
      * it is executed right away
      * @param {Mission} mission
@@ -1517,32 +1488,6 @@ define([
         } else {
             this.execute(mission);
         }
-    };
-    /**
-     * Executes the action - does whatever its type defines. Called whenever the associated trigger fires.
-     * Override this implementing the specific logic for the corresponding Action sublcasses!
-     * The mission is passed as the only argument when called.
-     */
-    Action.prototype.execute = function () {
-        application.showError("Unrecognized action type: '" + this._type + "'!");
-    };
-    /**
-     * Returns a list of strings that contain translated HTML text which can be used to display the mission objectives associated with this
-     * action (if it is a win or lose action). Used on the Missions screen.
-     * @returns {String[]}
-     */
-    Action.prototype.getObjectiveStrings = function () {
-        application.showError("Action of type '" + this._type + "' does no correspond to a mission objective!");
-        return null;
-    };
-    /**
-     * Returns a list of translated strings along objective state values for displaying the current states of the objectives for the player
-     * (used on the HUD) Works for win or lose events only.
-     * @returns {ObjectiveWithState[]}
-     */
-    Action.prototype.getObjectivesState = function () {
-        application.showError("Action of type '" + this._type + "' does no correspond to a mission objective!");
-        return null;
     };
     // #########################################################################
     /**

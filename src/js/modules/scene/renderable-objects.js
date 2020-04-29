@@ -470,15 +470,6 @@ define([
         }
         return false;
     };
-    /**
-     * A method to override which should define how to render a given number of instances of this object to a managed context in instanced
-     * rendering mode.
-     * @param {ManagedGLContext} context
-     * @param {Number} instanceCount
-     */
-    RenderableObject.prototype._peformRenderInstances = function (context, instanceCount) {
-        application.showError("Cannot render " + instanceCount + " instances of " + this.constructor.name + " to " + context.getName() + " in instanced mode, because no instanced render method was defined for it!");
-    };
     /*
      * Finishes the preparation for instanced rendering and renders the given number of instances of this object to the given context, using
      * the instance attributes for the instance queue with the given index.

@@ -59,48 +59,12 @@ define([
         return this._actionName;
     };
     /**
-     * Returns a string describing the control assigned to the action in this binding.
-     * @returns {String}
-     */
-    ControlBinding.prototype.getControlString = function () {
-        application.showError("Cannot get control string of generic control binding!");
-        return null;
-    };
-    /**
      * Loads the properties of this binding from a JSON object. Needs to be overridden for each specific binding
      * subclass to load their properties.
      * @param {Object} dataJSON
      */
     ControlBinding.prototype.loadFromJSON = function (dataJSON) {
         this._actionName = dataJSON.action;
-    };
-    /**
-     * Saves the properties of this binding to local storage. Needs to be overridden for each specific binding
-     * subclass to save their properties.
-     */
-    ControlBinding.prototype.saveToLocalStorage = function () {
-        application.showError("Cannot save generic control binding to local storage!");
-    };
-    /**
-     * Loads the properties of this binding from local storage. Needs to be overridden for each specific binding
-     * subclass to load their properties.
-     */
-    ControlBinding.prototype.loadFromLocalStorage = function () {
-        application.showError("Cannot load generic control binding from local storage!");
-    };
-    /**
-     * Removes the properties of this binding from local storage. Needs to be overridden for each specific binding
-     * subclass to remove their properties.
-     */
-    ControlBinding.prototype.removeFromLocalStorage = function () {
-        application.showError("Cannot remove generic control binding from local storage!");
-    };
-    /**
-     * Needs to be ovverridden to check whether this binding binds the same controls as another binding of the same type.
-     */
-    ControlBinding.prototype.bindsTheSameControls = function () {
-        application.showError("Cannot check if generic control binds the same controls as another binding!");
-        return true;
     };
     // #########################################################################
     /**
@@ -156,13 +120,6 @@ define([
      */
     InputInterpreter.prototype.getDeviceName = function () {
         return "Generic";
-    };
-    /**
-     * Resets the stored state of the input device. Automatically called every time listening is stopped or started.
-     * Needs to be overridden for every specific interpreter.
-     */
-    InputInterpreter.prototype.resetState = function () {
-        application.showError("Cannot reset the state of a generic input interpreter!");
     };
     /**
      * Whether the interpreter is currently listening for input (and thus also intercepting it, preventing most default actions)
@@ -330,15 +287,6 @@ define([
             binding: binding,
             actions: [action]
         });
-    };
-    /**
-     * Needs to be overridden to check whether the action with the supplied name is triggered based on the currently maintained input state
-     * and if yes, with what intensity. (if it has a specific intensity)
-     * @param {String} actionName
-     * @returns {(ActionTrigger|null)} Null, if the action is not triggered
-     */
-    InputInterpreter.prototype.checkAction = function (actionName) {
-        application.showError("Cannot check if action '" + actionName + "' is triggered with a generic input interpreter!");
     };
     /**
      * Disables the action with the given name. While disabled, this action will not
@@ -604,15 +552,6 @@ define([
      */
     Controller.prototype.setContext = function (value) {
         this._context = value;
-    };
-    /**
-     * Returns the type (domain) of the controller. This needs to be implemented for
-     * the sublasses.
-     * @returns {String}
-     */
-    Controller.prototype.getType = function () {
-        application.showError("Attempting to get the type of a generic controller object!");
-        return "none (generic)";
     };
     /**
      * Returns an array containing all the actions that are recognized by this controller.

@@ -151,29 +151,6 @@ define([
                 });
             };
     // -------------------------------------------------------------------------
-    // Protected methods
-    /**
-     * Override this method to initialize the game settings from a JSON object that is loaded from the settings file and will be passed as
-     * its single parameter when called.
-     */
-    application._loadGameSettingsAndExecuteCallback = function () {
-        application.showError("You need to override the _loadGameSettings method!");
-    };
-    /**
-     * Override this method to initialize the game configuration from a JSON object that is loaded from the configuration file and will be 
-     * passed as its single parameter when called.
-     */
-    application._loadGameConfigurationAndExecuteCallback = function () {
-        application.showError("You need to override the _loadGameConfiguration method!");
-    };
-    /**
-     * Override this method to initialize the game screens. When called, it will receive a callback that needs to be executed after the 
-     * loading is complete as its single parameter.
-     */
-    application._buildScreensAndExecuteCallback = function () {
-        application.showError("You need to override the _buildScreensAndExecuteCallback method!");
-    };
-    // -------------------------------------------------------------------------
     // Public methods
     /**
      * Sets the name of the game that will be displayed in logs.
