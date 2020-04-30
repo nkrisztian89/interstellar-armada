@@ -538,7 +538,7 @@ define([
         function getModelMatrix() {
             if (!this._modelMatrixForFrameValid) {
                 if (!this._modelMatrixValid) {
-                    mat.setTranslationRotation(this._modelMatrix, this._positionMatrix, mat.prodScalingRotationAux(this._scalingMatrix, this._orientationMatrix));
+                    mat.setModelMatrix(this._modelMatrix, this._positionMatrix, this._orientationMatrix, this._scalingMatrix);
                     this._modelMatrixValid = true;
                 }
                 if (this._parent && !this._parent.shouldIgnoreTransform()) {
@@ -634,39 +634,38 @@ define([
          * @returns {Object} 
          */
         function getSizeInsideViewFrustum(camera, checkNearAndFarPlanes) {
-            var size, scalingMatrix, baseMatrix, fullMatrix, positionX, positionY, xOffsetPosition, yOffsetPosition, xOffset, yOffset, factor;
+            var size, scalingMatrix, baseMatrix, projMatrix, positionX, positionY, xOffset, yOffset, factor;
             // scaling and orientation is lost here, since we create a new translation matrix based on the original transformation
             baseMatrix = this.getPositionMatrixInCameraSpace(camera);
-            scalingMatrix = this.getCascadeScalingMatrix();
-            // frustum culling: back and front
-            if (checkNearAndFarPlanes) {
-                size = this.getSize() * scalingMatrix[0];
-                if ((baseMatrix[14] - size >= -camera.getNearDistance()) || ((baseMatrix[14] + size) < -camera.getViewDistance())) {
-                    this._lastSizeInsideViewFrustum.width = 0;
-                    this._lastSizeInsideViewFrustum.height = 0;
+            if (baseMatrix[14] !== 0) {
+                scalingMatrix = this.getCascadeScalingMatrix();
+                // frustum culling: back and front
+                if (checkNearAndFarPlanes) {
+                    size = this.getSize() * scalingMatrix[0];
+                    if ((baseMatrix[14] - size >= -camera.getNearDistance()) || ((baseMatrix[14] + size) < -camera.getViewDistance())) {
+                        this._lastSizeInsideViewFrustum.width = 0;
+                        this._lastSizeInsideViewFrustum.height = 0;
+                        return this._lastSizeInsideViewFrustum;
+                    }
+                }
+                // we reintroduce appropriate scaling, but not the orientation, so 
+                // we can check border points of the properly scaled model, but translated
+                // along the axes of the camera space
+                projMatrix = camera.getProjectionMatrix();
+                size = this.getSize();
+                factor = -1 / baseMatrix[14];
+                positionX = baseMatrix[12] * projMatrix[0] * factor;
+                positionY = baseMatrix[13] * projMatrix[5] * factor;
+                // Z coordinate is not needed
+                // frustum culling: sides
+                xOffset = Math.abs(scalingMatrix[0] * projMatrix[0] * size * factor);
+                yOffset = Math.abs(scalingMatrix[5] * projMatrix[5] * size * factor);
+                if (!((positionX + xOffset < -1) || (positionX - xOffset > 1)) &&
+                        !((positionY + yOffset < -1) || (positionY - yOffset > 1))) {
+                    this._lastSizeInsideViewFrustum.width = xOffset;
+                    this._lastSizeInsideViewFrustum.height = yOffset;
                     return this._lastSizeInsideViewFrustum;
                 }
-            }
-            // we reintroduce appropriate scaling, but not the orientation, so 
-            // we can check border points of the properly scaled model, but translated
-            // along the axes of the camera space
-            fullMatrix = mat.translationRotationAux(baseMatrix, scalingMatrix);
-            mat.mulModelProj(fullMatrix, camera.getProjectionMatrix());
-            size = this.getSize();
-            factor = 1 / fullMatrix[15];
-            positionX = (fullMatrix[12] === 0.0) ? 0.0 : fullMatrix[12] * factor;
-            positionY = (fullMatrix[13] === 0.0) ? 0.0 : fullMatrix[13] * factor;
-            // Z coordinate is not needed
-            // frustum culling: sides
-            xOffsetPosition = vec.prodVecX4Mat4Aux(size, fullMatrix);
-            yOffsetPosition = vec.prodVecY4Mat4Aux(size, fullMatrix);
-            xOffset = Math.abs(((xOffsetPosition[0] === 0.0) ? 0.0 : xOffsetPosition[0] / xOffsetPosition[3]) - positionX);
-            yOffset = Math.abs(((yOffsetPosition[1] === 0.0) ? 0.0 : yOffsetPosition[1] / yOffsetPosition[3]) - positionY);
-            if (!((positionX + xOffset < -1) || (positionX - xOffset > 1)) &&
-                    !((positionY + yOffset < -1) || (positionY - yOffset > 1))) {
-                this._lastSizeInsideViewFrustum.width = xOffset;
-                this._lastSizeInsideViewFrustum.height = yOffset;
-                return this._lastSizeInsideViewFrustum;
             }
             this._lastSizeInsideViewFrustum.width = 0;
             this._lastSizeInsideViewFrustum.height = 0;

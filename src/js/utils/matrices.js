@@ -867,21 +867,6 @@ define([
         ]);
     };
     /**
-     * Returns a 4x4 transformation matrix describing a translation and a rotation based on
-     * two separate matrices, only the translation / rotation part of which are taken into
-     * account and combined.
-     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
-     * @param {Float32Array} t A 4x4 translation matrix, without rotation, scaling or projection.
-     * @param {Float32Array} r A 4x4 rotation or scaling and rotation matrix, without translation or projection.
-     * @returns {Float32Array}
-     */
-    mat.translationRotationAux = function (t, r) {
-        var aux = _auxMatrices[_auxMatrixIndex];
-        mat.setTranslationRotation(aux, t, r);
-        _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
-        return aux;
-    };
-    /**
      * Returns a 4x4 transformation matrix describing a perspective projection.
      * @param {Number} right
      * @param {Number} top
@@ -2612,30 +2597,6 @@ define([
         _releaseTempMatrix(index);
     };
     /**
-     * Multiples the given 4x4 model matrix (having translation, rotation and scaling, but no
-     * projection component) mm in place by the 4x4 perspective projection matrix pm from the right.
-     * @param {Float32Array} mm A 4x4 model matrix
-     * @param {Float32Array} pm A 4x4 perspective projection matrix (perspective along Z)
-     */
-    mat.mulModelProj = function (mm, pm) {
-        mm[0] = mm[0] * pm[0];
-        mm[1] = mm[1] * pm[5];
-        mm[3] = -mm[2];
-        mm[2] = mm[2] * pm[10];
-        mm[4] = mm[4] * pm[0];
-        mm[5] = mm[5] * pm[5];
-        mm[7] = -mm[6];
-        mm[6] = mm[6] * pm[10];
-        mm[8] = mm[8] * pm[0];
-        mm[9] = mm[9] * pm[5];
-        mm[11] = -mm[10];
-        mm[10] = mm[10] * pm[10];
-        mm[12] = mm[12] * pm[0];
-        mm[13] = mm[13] * pm[5];
-        mm[15] = -mm[14];
-        mm[14] = mm[14] * pm[10] + pm[14];
-    };
-    /**
      * Modifies the passed 4x4 matrix is place, multiplying it with the passed 3x3 matrix
      * padded to a 4x4 matrix (complemented as an identity matrix, with a 0,0,0,1 last row/column)
      * @param {Float32Array} m4 A 4x4 matrix
@@ -2729,7 +2690,7 @@ define([
     };
     /**
      * Sets a passed 4x4 matrix to be equal with the product of two other 4x4 matrices, assuming
-     * that the 4th columns are all (0, 0, 0, 1)
+     * that the 4th rows and columns are all (0, 0, 0, 1)
      * @param {Float32Array} m The 4x4 matrix to modify.
      * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
      * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
@@ -2738,19 +2699,15 @@ define([
         m[0] = m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8];
         m[1] = m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9];
         m[2] = m1[0] * m2[2] + m1[1] * m2[6] + m1[2] * m2[10];
-        m[3] = 0;
         m[4] = m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8];
         m[5] = m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9];
         m[6] = m1[4] * m2[2] + m1[5] * m2[6] + m1[6] * m2[10];
-        m[7] = 0;
         m[8] = m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8];
         m[9] = m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9];
         m[10] = m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10];
-        m[11] = 0;
         m[12] = m1[12] * m2[0] + m1[13] * m2[4] + m1[14] * m2[8] + m2[12];
         m[13] = m1[12] * m2[1] + m1[13] * m2[5] + m1[14] * m2[9] + m2[13];
         m[14] = m1[12] * m2[2] + m1[13] * m2[6] + m1[14] * m2[10] + m2[14];
-        m[15] = 1;
     };
     /**
      * Modifies a 4x4 matrix in-place to be equal to the product of the upper left 3x3 submatrices of two 4x4 matrices padded to a 4x4 matrix.
@@ -2770,30 +2727,6 @@ define([
         m[8] = m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8];
         m[9] = m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9];
         m[10] = m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10];
-        m[11] = 0;
-        m[12] = 0;
-        m[13] = 0;
-        m[14] = 0;
-        m[15] = 1;
-    };
-    /**
-     * Modifies a 4x4 matrix in-place to be equal to the product of two 4x4 sacling matrices.
-     * @param {Float32Array} m The 4x4 matrix to modify
-     * @param {Float32Array} m1 The 4x4 scaling matrix on the left of the multiplicaton.
-     * @param {Float32Array} m2 The 4x4 scaling matrix on the right of the multiplicaton.
-     */
-    mat.setProdScalingScaling4 = function (m, m1, m2) {
-        m[0] = m1[0] * m2[0];
-        m[1] = 0;
-        m[2] = 0;
-        m[3] = 0;
-        m[4] = 0;
-        m[5] = m1[5] * m2[5];
-        m[6] = 0;
-        m[7] = 0;
-        m[8] = 0;
-        m[9] = 0;
-        m[10] = m1[10] * m2[10];
         m[11] = 0;
         m[12] = 0;
         m[13] = 0;
@@ -2838,31 +2771,26 @@ define([
         m[15] = 1;
     };
     /**
-     * Sets a passed 4x4 matrix to be a matrix describing a translation and a rotation based on
-     * two separate matrices, only the translation / rotation part of which are taken into
-     * account and combined.
-     * @param {Float32Array} m The 4x4 matrix to set
-     * @param {Float32Array} t A 4x4 matrix. Taken as a translation matrix, irrelevant parts are not considered.
-     * @param {Float32Array} r A 4x4 matrix. Taken as a roation matrix, irrelevant parts are not considered.
-     * @returns {Float32Array}
+     * Sets (updates) a model matrix based on the passed translation, rotation 
+     * and scaling matrices.
+     * @param {Float32Array} m The 4x4 model matrix to update
+     * @param {Float32Array} t A 4x4 translation matrix
+     * @param {Float32Array} r A 4x4 rotation matrix
+     * @param {Float32Array} s A 4x4 scaling matrix
      */
-    mat.setTranslationRotation = function (m, t, r) {
-        m[0] = r[0];
-        m[1] = r[1];
-        m[2] = r[2];
-        m[3] = 0;
-        m[4] = r[4];
-        m[5] = r[5];
-        m[6] = r[6];
-        m[7] = 0;
-        m[8] = r[8];
-        m[9] = r[9];
-        m[10] = r[10];
-        m[11] = 0;
+    mat.setModelMatrix = function (m, t, r, s) {
+        m[0] = s[0] * r[0];
+        m[1] = s[0] * r[1];
+        m[2] = s[0] * r[2];
+        m[4] = s[5] * r[4];
+        m[5] = s[5] * r[5];
+        m[6] = s[5] * r[6];
+        m[8] = s[10] * r[8];
+        m[9] = s[10] * r[9];
+        m[10] = s[10] * r[10];
         m[12] = t[12];
         m[13] = t[13];
         m[14] = t[14];
-        m[15] = 1;
     };
     /**
      * Modifies a 4x4 transformation matrix, setting it to be equal to the result of translating m1 by the translation vector v
