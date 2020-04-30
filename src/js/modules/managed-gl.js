@@ -472,6 +472,7 @@ define([
      * with the index of the value. Can only be used with arrays of samplers.
      */
     function ShaderUniform(name, type, arraySize, unpacked) {
+        var i;
         // properties for file resource management
         /**
          * The name of the shader uniform, same as how declared in the shader source
@@ -522,6 +523,80 @@ define([
          * @type Object
          */
         this._numericValues = {};
+        /**
+         * Cached string values for structs to use as the prefixes for the members when getting their locations
+         * @type String[]
+         */
+        this._prefixes = null;
+        if (this._type === ShaderVariableType.STRUCT) {
+            this._prefixes = [];
+            if (this._arraySize > 0) {
+                for (i = 0; i < this._arraySize; i++) {
+                    this._prefixes.push(this._name + "[" + i + "].");
+                }
+            } else {
+                this._prefixes.push(this._name + ".");
+            }
+        }
+        /**
+         * The function to execute to set the value of the uniform on the GPU (see _setFloatArrayValue() for paramaters)
+         * @type Function
+         */
+        this._setConstantValue = null;
+        switch (this._type) {
+            case ShaderVariableType.FLOAT:
+                if (this._arraySize > 0) {
+                    this._setConstantValue = this._setFloatArrayValue;
+                } else {
+                    this._setConstantValue = this._setFloatValue;
+                }
+                break;
+            case ShaderVariableType.VEC2:
+                this._setConstantValue = this._setVec2Value;
+                break;
+            case ShaderVariableType.VEC3:
+                this._setConstantValue = this._setVec3Value;
+                break;
+            case ShaderVariableType.VEC4:
+                this._setConstantValue = this._setVec4Value;
+                break;
+            case ShaderVariableType.MAT2:
+                this._setConstantValue = this._setMat2Value;
+                break;
+            case ShaderVariableType.MAT3:
+                this._setConstantValue = this._setMat3Value;
+                break;
+            case ShaderVariableType.MAT4:
+                this._setConstantValue = this._setMat4Value;
+                break;
+            case ShaderVariableType.SAMPLER2D:
+            case ShaderVariableType.SAMPLER_CUBE:
+            case ShaderVariableType.INT:
+                if (this._arraySize > 0) {
+                    if (this._unpacked) {
+                        this._setConstantValue = this._setUnpackedIntArrayValue;
+                    } else {
+                        this._setConstantValue = this._setIntArrayValue;
+                    }
+                } else {
+                    this._setConstantValue = this._setIntValue;
+                }
+                break;
+            case ShaderVariableType.BOOL:
+                if (this._arraySize > 0) {
+                    this._setConstantValue = this._setBoolArrayValue;
+                } else {
+                    this._setConstantValue = this._setBoolValue;
+                }
+                break;
+            case ShaderVariableType.STRUCT:
+                if (this._arraySize > 0) {
+                    this._setConstantValue = this._setStructArrayValue;
+                } else {
+                    this._setConstantValue = this._setStructValue;
+                }
+                break;
+        }
     }
     /**
      * Getter for the property _name.
@@ -703,7 +778,7 @@ define([
      * @param {String} contextName The name of the managed GL context
      * @param {WebGLRenderingContext} gl
      * @param {ManagedShader} shader The shader which this uniform belongs to.
-     * @param {any} value The new uniform value.
+     * @param {Number[]} value The new uniform value.
      * The type of this argument should be appropriate to the uniform type.
      * For structs, it needs to be an Object with properties which have names
      * equal to the names of the members of the struct and the values are of 
@@ -714,103 +789,188 @@ define([
      * "lights[3].color", the name would be "color" and so the prefix should be
      * "lights[3]."
      */
-    ShaderUniform.prototype.setConstantValue = function (contextName, gl, shader, value, locationPrefix) {
-        var location, i, j, memberCount, memberName, numericValue;
-        // get the location
-        if (!this._unpacked) {
-            location = this.getLocation(contextName, gl, shader, locationPrefix);
+    ShaderUniform.prototype._setFloatArrayValue = function (contextName, gl, shader, value, locationPrefix) {
+        gl.uniform1fv(this.getLocation(contextName, gl, shader, locationPrefix), value);
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Number} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setFloatValue = function (contextName, gl, shader, value, locationPrefix) {
+        if (locationPrefix || (this._numericValues[contextName] !== value)) {
+            gl.uniform1f(this.getLocation(contextName, gl, shader, locationPrefix), value);
+            this._numericValues[contextName] = value;
         }
-        switch (this._type) {
-            case ShaderVariableType.FLOAT:
-                if (this._arraySize > 0) {
-                    gl.uniform1fv(location, value);
-                } else {
-                    if (locationPrefix || (this._numericValues[contextName] !== value)) {
-                        gl.uniform1f(location, value);
-                        this._numericValues[contextName] = value;
-                    }
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Number[]} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setVec2Value = function (contextName, gl, shader, value, locationPrefix) {
+        gl.uniform2fv(this.getLocation(contextName, gl, shader, locationPrefix), value);
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Number[]} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setVec3Value = function (contextName, gl, shader, value, locationPrefix) {
+        gl.uniform3fv(this.getLocation(contextName, gl, shader, locationPrefix), value);
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Number[]} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setVec4Value = function (contextName, gl, shader, value, locationPrefix) {
+        gl.uniform4fv(this.getLocation(contextName, gl, shader, locationPrefix), value);
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Float32Array} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setMat2Value = function (contextName, gl, shader, value, locationPrefix) {
+        gl.uniformMatrix2fv(this.getLocation(contextName, gl, shader, locationPrefix), false, value);
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Float32Array} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setMat3Value = function (contextName, gl, shader, value, locationPrefix) {
+        gl.uniformMatrix3fv(this.getLocation(contextName, gl, shader, locationPrefix), false, value);
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Float32Array} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setMat4Value = function (contextName, gl, shader, value, locationPrefix) {
+        gl.uniformMatrix4fv(this.getLocation(contextName, gl, shader, locationPrefix), false, value);
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Number[]} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setUnpackedIntArrayValue = function (contextName, gl, shader, value, locationPrefix) {
+        var i;
+        for (i = 0; i < value.length; i++) {
+            gl.uniform1i(this.getLocation(contextName, gl, shader, locationPrefix, i.toString()), value[i]);
+        }
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Number[]} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setIntArrayValue = function (contextName, gl, shader, value, locationPrefix) {
+        gl.uniform1iv(this.getLocation(contextName, gl, shader, locationPrefix), value);
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Number} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setIntValue = function (contextName, gl, shader, value, locationPrefix) {
+        if (locationPrefix || (this._numericValues[contextName] !== value)) {
+            gl.uniform1i(this.getLocation(contextName, gl, shader, locationPrefix), value);
+            this._numericValues[contextName] = value;
+        }
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Boolean[]} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setBoolArrayValue = function (contextName, gl, shader, value, locationPrefix) {
+        gl.uniform1iv(this.getLocation(contextName, gl, shader, locationPrefix), value.map(intValueOfBool));
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Boolean} value
+     * @param {String} locationPrefix
+     */
+    ShaderUniform.prototype._setBoolValue = function (contextName, gl, shader, value, locationPrefix) {
+        var numericValue = value ? 1 : 0;
+        if (locationPrefix || (this._numericValues[contextName] !== numericValue)) {
+            gl.uniform1i(this.getLocation(contextName, gl, shader, locationPrefix), numericValue);
+            this._numericValues[contextName] = numericValue;
+        }
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Object[]} value
+     */
+    ShaderUniform.prototype._setStructArrayValue = function (contextName, gl, shader, value) {
+        var i, j, memberName, memberCount = this._members.length;
+        // for structs, launch recursive assignment of members
+        // we stop at the first null member of the array
+        for (i = 0; i < value.length && (value[i] !== null); i++) {
+            for (j = 0; j < memberCount; j++) {
+                if (value[i][this._members[j]._name] !== undefined) {
+                    memberName = this._members[j]._name;
+                    this._members[j]._setConstantValue(contextName, gl, shader, value[i][memberName], this._prefixes[i]);
                 }
-                break;
-            case ShaderVariableType.VEC2:
-                gl.uniform2fv(location, value);
-                break;
-            case ShaderVariableType.VEC3:
-                gl.uniform3fv(location, value);
-                break;
-            case ShaderVariableType.VEC4:
-                gl.uniform4fv(location, value);
-                break;
-            case ShaderVariableType.MAT2:
-                gl.uniformMatrix2fv(location, false, value);
-                break;
-            case ShaderVariableType.MAT3:
-                gl.uniformMatrix3fv(location, false, value);
-                break;
-            case ShaderVariableType.MAT4:
-                gl.uniformMatrix4fv(location, false, value);
-                break;
-            case ShaderVariableType.SAMPLER2D:
-            case ShaderVariableType.SAMPLER_CUBE:
-            case ShaderVariableType.INT:
-                if (this._arraySize > 0) {
-                    // values in unpacked arrays are assigned individually
-                    if (this._unpacked) {
-                        for (i = 0; i < value.length; i++) {
-                            gl.uniform1i(this.getLocation(contextName, gl, shader, locationPrefix, i.toString()), value[i]);
-                        }
-                    } else {
-                        // non-unpacked arrays are assigned normally
-                        gl.uniform1iv(location, value);
-                    }
-                } else {
-                    if (locationPrefix || (this._numericValues[contextName] !== value)) {
-                        gl.uniform1i(location, value);
-                        this._numericValues[contextName] = value;
-                    }
-                }
-                break;
-            case ShaderVariableType.BOOL:
-                if (this._arraySize > 0) {
-                    gl.uniform1iv(location, value.map(intValueOfBool));
-                } else {
-                    numericValue = value ? 1 : 0;
-                    if (locationPrefix || (this._numericValues[contextName] !== numericValue)) {
-                        gl.uniform1i(location, numericValue);
-                        this._numericValues[contextName] = numericValue;
-                    }
-                }
-                break;
-            case ShaderVariableType.STRUCT:
-                memberCount = this._members.length;
-                if (this._arraySize > 0) {
-                    // for structs, launch recursive assignment of members
-                    // we stop at the first null member of the array
-                    for (i = 0; i < value.length && (value[i] !== null); i++) {
-                        for (j = 0; j < memberCount; j++) {
-                            if (value[i][this._members[j]._name] !== undefined) {
-                                memberName = this._members[j]._name;
-                                this._members[j].setConstantValue(contextName, gl, shader, value[i][memberName], this._name + "[" + i + "].");
-                            }
-                        }
-                    }
-                } else {
-                    for (i = 0; i < memberCount; i++) {
-                        if (value[this._members[i]._name] !== undefined) {
-                            memberName = this._members[i]._name;
-                            this._members[i].setConstantValue(contextName, gl, shader, value[memberName], this._name + ".");
-                        }
-                    }
-                }
-                break;
-            default:
-                application.showError(
-                        "Attempting to set uniform '" +
-                        this._name +
-                        "', but it has a type that cannot be handled! (" +
-                        ((this._arraySize > 0) ?
-                                ("array (" + this._arraySize + ") of ") :
-                                "") +
-                        this._type + ")");
+            }
+        }
+    };
+    /**
+     * See _setFloatArrayValue()
+     * @param {String} contextName
+     * @param {WebGLRenderingContext} gl
+     * @param {ManagedShader} shader
+     * @param {Object} value
+     */
+    ShaderUniform.prototype._setStructValue = function (contextName, gl, shader, value) {
+        var i, memberName, memberCount = this._members.length;
+        for (i = 0; i < memberCount; i++) {
+            if (value[this._members[i]._name] !== undefined) {
+                memberName = this._members[i]._name;
+                this._members[i]._setConstantValue(contextName, gl, shader, value[memberName], this._prefixes[0]);
+            }
         }
     };
     /**
@@ -833,7 +993,7 @@ define([
      * "lights[3]."
      */
     ShaderUniform.prototype.setValue = function (contextName, gl, shader, valueFunction, locationPrefix) {
-        this.setConstantValue(contextName, gl, shader, valueFunction(contextName), locationPrefix);
+        this._setConstantValue(contextName, gl, shader, valueFunction(contextName), locationPrefix);
     };
     /**
      * Returns how many 4 component vectors does this uniform variable take (for counting shader requirements).
@@ -1026,7 +1186,7 @@ define([
                 }
                 context.gl.vertexAttribPointer(location, this._vectorSize, context.gl.FLOAT, false, 0, 0);
                 this._dirty = false;
-            } 
+            }
             context.setBoundVertexBuffer(location, this, !!instanced);
         }
     };
