@@ -2400,13 +2400,6 @@ define([
         screens.HTMLScreenWithCanvases.prototype._updateComponents.call(this);
     };
     /**
-     * @override
-     */
-    BattleScreen.prototype.removeFromPage = function () {
-        screens.HTMLScreenWithCanvases.prototype.removeFromPage.call(this);
-        window.removeEventListener("resize", _handleResize);
-    };
-    /**
      * Pauses the battle by canceling all control, simulation and the render loop (e.g. for when a menu is 
      * displayed)
      * @param {Boolean} [dimMusic=true] 

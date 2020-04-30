@@ -330,13 +330,6 @@ define([
         }
     };
     /**
-     * Nulls the element. Needs to be called if the element
-     * has been removed from the current document.
-     */
-    SimpleComponent.prototype.resetComponent = function () {
-        this._element = null;
-    };
-    /**
      * Returns whether the component is currently visible.
      * @returns {Boolean}
      */
@@ -639,18 +632,6 @@ define([
         var component = new SimpleComponent(simpleComponentName, this._getElementID(simpleComponentName), eventHandlers);
         this._simpleComponents.push(component);
         return component;
-    };
-    /**
-     * When the screen is destroyed, references to the DOM elements should be removed.
-     * In subclasses, this method should be overloaded, clearing the additional
-     * properties.
-     */
-    ExternalComponent.prototype.resetComponent = function () {
-        var i;
-        this.resetResource();
-        for (i = 0; i < this._simpleComponents.length; i++) {
-            this._simpleComponents[i].resetComponent();
-        }
     };
     /**
      * Returns whether the component is currently set to be visible

@@ -527,25 +527,6 @@ define([
     DatabaseScreen.prototype.constructor = DatabaseScreen;
     /**
      * @override
-     * Nulls out the components and module objects
-     */
-    DatabaseScreen.prototype.removeFromPage = function () {
-        screens.HTMLScreenWithCanvases.prototype.removeFromPage.call(this);
-        _stopRevealLoop();
-        _stopRotationLoop();
-        _itemViewScene.clearNodes(true);
-        _itemViewScene.clearPointLights();
-        _itemViewScene.clearSpotLights();
-        _itemViewScene = null;
-        if (_currentItem) {
-            _currentItem.destroy();
-            _currentItem = null;
-        }
-        _solidModel = null;
-        _wireframeModel = null;
-    };
-    /**
-     * @override
      */
     DatabaseScreen.prototype._initializeComponents = function () {
         screens.HTMLScreenWithCanvases.prototype._initializeComponents.call(this);

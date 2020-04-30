@@ -468,33 +468,6 @@ define([
         return this._superImposed;
     };
     /**
-     * Executes the necessary actions required when closing the page. This method
-     * only nulls out the default components, additional functions need to be added
-     * in the descendant classes.
-     */
-    HTMLScreen.prototype.removeFromPage = function () {
-        var i;
-        if (this._container) {
-            for (i = 0; i < this._simpleComponents.length; i++) {
-                this._simpleComponents[i].resetComponent();
-            }
-            for (i = 0; i < this._externalComponentBindings.length; i++) {
-                this._externalComponentBindings[i].component.resetComponent();
-            }
-            this.setActive(false);
-            if (this._background) {
-                this._background.remove();
-                this._background = null;
-            }
-            this._container.remove();
-            this._container = null;
-            this._superImposed = false;
-            this._visible = false;
-        } else {
-            application.showError("Attempting to remove screen '" + this._name + "' before adding it to the page!");
-        }
-    };
-    /**
      * Setting the properties that will be used to easier access DOM elements later.
      * In descendants, this method should be overwritten, adding the additional
      * components of the screen after calling this parent method.
@@ -2061,18 +2034,6 @@ define([
             this._sceneCanvasBindings[i].canvas.clearManagedContext();
         }
         this._sceneCanvasBindings = [];
-    };
-    /**
-     * @override
-     * Stops the render loop and nulls out the components.
-     */
-    HTMLScreenWithCanvases.prototype.removeFromPage = function () {
-        HTMLScreen.prototype.removeFromPage.call(this);
-        this.stopRenderLoop();
-        window.removeEventListener("resize", this._resizeEventListener);
-        this._canvases = {};
-        this.clearSceneCanvasBindings();
-        resources.clearResourceContextBindings();
     };
     /**
      * @override

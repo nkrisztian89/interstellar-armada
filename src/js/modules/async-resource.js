@@ -71,14 +71,6 @@ define(function () {
         this._readyToUse = false;
     };
     /**
-     * Resets the state of the resource to be not ready, resetting the queued 
-     * actions as well.
-     */
-    AsyncResource.prototype.resetResource = function () {
-        this._readyToUse = false;
-        this._onReadyQueue = [];
-    };
-    /**
      * Executes the onReady queue then erases it.
      */
     AsyncResource.prototype.executeOnReadyQueue = function () {

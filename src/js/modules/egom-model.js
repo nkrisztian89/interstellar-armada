@@ -1457,11 +1457,13 @@ define([
         }
         application.log_DEBUG("Loaded " + nTriangles + " triangles.", 3);
         application.log_DEBUG("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
-        str = "Number of triangles per LOD for " + this._name + ": ";
-        for (i = this._minLOD; i <= this._maxLOD; i++) {
-            str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
+        if (application.isDebugVersion()) {
+            str = "Number of triangles per LOD for " + this._name + ": ";
+            for (i = this._minLOD; i <= this._maxLOD; i++) {
+                str += " [" + i + "]: " + this.getMeshWithLOD(i).getNumTriangles();
+            }
+            application.log_DEBUG(str, 2);
         }
-        application.log_DEBUG(str, 2);
         return true;
     };
     /**

@@ -153,22 +153,6 @@ define(function () {
         return ((scaleMode === ScaleMode.ASPECT) || (scaleMode === ScaleMode.HEIGHT) || ((scaleMode === ScaleMode.MINIMUM) && (height < width)) || ((scaleMode === ScaleMode.MAXIMUM) && (height >= width)));
     };
     /**
-     * Evaluates mathematically the string representation of a simple expression 
-     * containing only multiplication operators and floating point numbers (and
-     * possibly space characters), and returns the result.
-     * @param {String} productExpression
-     * @returns {Number}
-     */
-    exports.evaluateProduct = function (productExpression) {
-        var operands, result, i;
-        operands = productExpression.split("*");
-        result = 1;
-        for (i = 0; i < operands.length; i++) {
-            result *= parseFloat(operands[i]);
-        }
-        return result;
-    };
-    /**
      * Returns the key code of the key passed in human readable string form.
      * @see KeyboardInputInterpreter#getKeyCodeTable
      * @param {String} key

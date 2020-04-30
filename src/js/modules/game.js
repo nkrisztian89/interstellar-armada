@@ -274,7 +274,7 @@ define([
     application.setScreen = screenManager.setCurrentScreen;
     application.addScreen = screenManager.addScreen;
     application.closeSuperimposedScreen = screenManager.closeSuperimposedScreen;
-    application.closeOrNavigateTo = screenManager.closeOrNavitageTo;
+    application.closeOrNavigateTo = screenManager.closeOrNavigateTo;
     application.updateAllScreens = screenManager.updateAllScreens;
     application.executeWhenAllScreensReady = screenManager.executeWhenReady;
     return application;

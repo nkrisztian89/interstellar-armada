@@ -62,13 +62,6 @@ define([
     ScreenManager.prototype = new asyncResource.AsyncResource();
     ScreenManager.prototype.constructor = ScreenManager;
     /**
-     * Gets the object corresponding to the currently set game screen.
-     * @returns {HTMLScreen}
-     */
-    ScreenManager.prototype.getCurrentScreen = function () {
-        return this._currentScreen;
-    };
-    /**
      * Returns the game screen with the specified name that the game has.
      * @param {String} screenName
      * @returns {HTMLScreen}
@@ -76,7 +69,7 @@ define([
     ScreenManager.prototype.getScreen = function (screenName) {
         return screenName ?
                 this._screens[screenName] :
-                this.getCurrentScreen();
+                this._currentScreen;
     };
     /**
      * Adds a new screen to the list that can be set as current later.
@@ -151,8 +144,8 @@ define([
      * (sets) the screen with the given name.
      * @param {String} screenName
      */
-    ScreenManager.prototype.closeOrNavitageTo = function (screenName) {
-        if (this.getCurrentScreen().isSuperimposed()) {
+    ScreenManager.prototype.closeOrNavigateTo = function (screenName) {
+        if (this._currentScreen.isSuperimposed()) {
             this.closeSuperimposedScreen();
         } else {
             this.setCurrentScreen(screenName);
@@ -171,12 +164,11 @@ define([
     };
     _screenManager = new ScreenManager();
     return {
-        getCurrentScreen: _screenManager.getCurrentScreen.bind(_screenManager),
         getScreen: _screenManager.getScreen.bind(_screenManager),
         addScreen: _screenManager.addScreen.bind(_screenManager),
         setCurrentScreen: _screenManager.setCurrentScreen.bind(_screenManager),
         closeSuperimposedScreen: _screenManager.closeSuperimposedScreen.bind(_screenManager),
-        closeOrNavitageTo: _screenManager.closeOrNavitageTo.bind(_screenManager),
+        closeOrNavigateTo: _screenManager.closeOrNavigateTo.bind(_screenManager),
         updateAllScreens: _screenManager.updateAllScreens.bind(_screenManager),
         executeWhenReady: _screenManager.executeWhenReady.bind(_screenManager)
     };

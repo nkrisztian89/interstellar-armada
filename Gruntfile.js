@@ -192,17 +192,119 @@ module.exports = function (grunt) {
                 "toggleHitboxVisibility",
                 "getHitboxTextures",
                 "_addHitboxModel",
-                "getHitbox"
+                "getHitbox",
+                "addCuboid",
+                "log",
+                "logNodes",
+                ["increaseCount", false, "Scene"],
+                "setupShadowMapDebugging",
+                "getMainDebugStats",
+                "getShadowMapDebugStats",
+                ["isShadowMapDebuggingEnabled", true],
+                ["getShadowMapDebuggingSettings", true],
+                "getNumLines",
+                "getNumTriangles",
+                // -------------------------------------------------------------
+                // stereoscopy
+                "setAnaglyphRendering",
+                "setSideBySideRendering",
+                ["isAnaglyphRenderingEnabled", true],
+                ["getAnaglyphRenderingSettings", true],
+                ["isSideBySideRenderingEnabled", true],
+                ["getSideBySideRenderingSettings", true]
             ].map(
-            function (functionName) {
-                return [{
-                        // remove the method definition from the prototype (matching max 1 param, up to 2 levels of curly braces nesting in function body)
-                        match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = function \\(\\w*\\) {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*};", "g"),
+            function (replacement) {
+                var functionName = Array.isArray(replacement) ? replacement[0] : replacement, exported = Array.isArray(replacement) && replacement[1], className = Array.isArray(replacement) && replacement[2],
+                        result = [{
+                                // remove the method definition from the prototype (up to 2 levels of curly braces nesting in function body)
+                                match: new RegExp("\\s" + (className || "\\w+") + "\\.prototype\\." + functionName + " = function \\((\\w+,*\\s*)*\\) {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*};", "g"),
+                                replacement: ""
+                            }];
+                if (exported) {
+                    result.push({
+                        // remove the method export
+                        match: new RegExp(functionName + ": _context\\." + functionName + "\\.bind\\(_context\\),*", "g"),
                         replacement: ""
-                    }];
+                    });
+                }
+                return result;
+            }),
+            exportedFunctionRemovals = [
+                ["isDebugVersion", null, true],
+                ["resetDebugStats", "egomModel"],
+                ["getDebugStats", "egomModel"],
+                ["getDebugInfo"],
+                ["cuboidModel", null, true]
+            ].map(
+            function (replacement) {
+                var functionName = replacement[0], moduleName = (replacement.length > 1) ? replacement[1] : null, direct = (replacement.length > 2) ? replacement[2] : false,
+                        result = direct ? [{
+                                // remove the function definition and export (up to 2 levels of curly braces nesting in function body)
+                                match: new RegExp(functionName + ": function \\((\\w+,*\\s*)*\\) {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*},*", "g"),
+                                replacement: ""
+                            }] :
+                        [{
+                                // remove the function definition (up to 2 levels of curly braces nesting in function body)
+                                match: new RegExp("function " + functionName + "\\((\\w+,*\\s*)*\\) {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*}", "g"),
+                                replacement: ""
+                            }, {
+                                // remove the function export
+                                match: new RegExp(functionName + ": " + functionName + ",*", "g"),
+                                replacement: ""
+                            }];
+                if (moduleName) {
+                    result.push({
+                        // remove the function calls (matching alphanumeric params)
+                        match: new RegExp(moduleName + "\\." + functionName + "\\((\\w+,*\\s*)*\\);", "g"),
+                        replacement: ""
+                    });
+                }
+                return result;
+            }),
+            objectRemovals = [
+                "_DEBUG_STATS"
+            ].map(
+            function (objectName) {
+                return {
+                    // remove the object definition (up to 2 levels of curly braces nesting)
+                    match: new RegExp(objectName + " = {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*}(,|;)*", "g"),
+                    replacement: ""
+                };
+            }),
+            fieldRemovals = [
+                "_nodeCount",
+                "_nodeCountByType",
+                "_mainDebugStats",
+                "_shadowMapDebugStats",
+                "_shadowMapDebugging",
+                "_shadowMapDebugLightIndex",
+                "_shadowMapDebugRangeIndex",
+                "_shadowMapDebugShader",
+                // -------------------------------------------------------------
+                // stereoscopy
+                "_stereoscopicMode",
+                "_redShader",
+                "_cyanShader",
+                "_stereoscopicFrameBuffer",
+                "_leftShader",
+                "_rightShader",
+                "_sideBySideOriginalAspect"
+            ].map(
+            function (fieldName) {
+                return {
+                    // remove field setter
+                    match: new RegExp("this\\." + fieldName + " = [\\w\\.]+;", "g"),
+                    replacement: ""
+                };
             });
-    // flatten the getterReplacements array
+    // flatten the replacements arrays
     getterReplacements.reduce(function (acc, val) {
+        return acc.concat(val);
+    }, []);
+    methodRemovals.reduce(function (acc, val) {
+        return acc.concat(val);
+    }, []);
+    exportedFunctionRemovals.reduce(function (acc, val) {
         return acc.concat(val);
     }, []);
     // Project configuration.
@@ -315,9 +417,6 @@ module.exports = function (grunt) {
                             match: '_DEBUG_STATS.',
                             replacement: '//_DEBUG_STATS.'
                         }, {
-                            match: 'egomModel.resetDebugStats();',
-                            replacement: '//egomModel.resetDebugStats();'
-                        }, {
                             match: '|| application.crash()',
                             replacement: ''
                         }, {
@@ -342,8 +441,16 @@ module.exports = function (grunt) {
                             match: 'if (this._shadowMapDebugging) {',
                             replacement: 'if (false) {'
                         }, {
-                            match: 'egomModel.resetDebugStats();',
-                            replacement: ''
+                            match: 'graphics.isShadowMapDebuggingEnabled()',
+                            replacement: 'false'
+                            // -------------------------------------------------
+                            // stereoscopy
+                        }, {
+                            match: 'graphics.isAnaglyphRenderingEnabled()',
+                            replacement: 'false'
+                        }, {
+                            match: 'graphics.isSideBySideRenderingEnabled()',
+                            replacement: 'false'
                         }, {
                             match: 'if (this._stereoscopicMode !== Scene.StereoscopicMode.NONE) {',
                             replacement: 'if (false) {'
@@ -359,7 +466,7 @@ module.exports = function (grunt) {
             // avoid the overhead of calling the getter functions
             optimize: {
                 options: {
-                    patterns: getterReplacements.concat(methodRemovals.concat([
+                    patterns: getterReplacements.concat(methodRemovals.concat(exportedFunctionRemovals.concat(objectRemovals.concat(fieldRemovals.concat([
                         {
                             match: '_scene.getLODContext()',
                             replacement: '_scene._lodContext'
@@ -379,7 +486,7 @@ module.exports = function (grunt) {
                             match: 'if (this._hitbox) {',
                             replacement: 'if (false) {'
                         }
-                    ])),
+                    ]))))),
                     usePrefix: false
                 },
                 files: [
@@ -423,6 +530,30 @@ module.exports = function (grunt) {
                         }, {
                             match: '_physicalModel',
                             replacement: 'pMo'
+                        }, {
+                            match: '_spacecraft',
+                            replacement: '_sc'
+                        }, {
+                            match: '_weapon',
+                            replacement: '_w'
+                        }, {
+                            match: '_projectile',
+                            replacement: '_p'
+                        }, {
+                            match: '_missileLauncher',
+                            replacement: '_mL'
+                        }, {
+                            match: '_missile',
+                            replacement: '_m'
+                        }, {
+                            match: '_targetingComputer',
+                            replacement: '_tC'
+                        }, {
+                            match: '_target',
+                            replacement: '_t'
+                        }, {
+                            match: '_maneuveringComputer',
+                            replacement: '_mC'
                         }, {
                             match: 'BATTLE_SETTINGS',
                             replacement: 'BS'
