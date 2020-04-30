@@ -47,15 +47,20 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "model", "shader", "texture",
-                "trail", "thrusterSlots",
-                // to refresh info
-                "launchVelocity", "ignitionTime", "acceleration", "duration"
+                "trail", "thrusterSlots"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
              * @type String[]
              */
             OPTION_REFRESH_PROPERIES = [
+            ],
+            /**
+             * The names of the properties the change of which should trigger a refresh of the info text
+             * @type String[]
+             */
+            INFO_UPDATE_PROPERTIES = [
+                "launchVelocity", "ignitionTime", "acceleration", "duration"
             ],
             // ----------------------------------------------------------------------
             // Private variables
@@ -386,7 +391,8 @@ define([
         lodSetting: true,
         animateButton: true,
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
-        optionRefreshProperties: OPTION_REFRESH_PROPERIES
+        optionRefreshProperties: OPTION_REFRESH_PROPERIES,
+        infoUpdateProperties: INFO_UPDATE_PROPERTIES
     }, {
         clear: _clear,
         load: _load,

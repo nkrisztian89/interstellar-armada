@@ -32,6 +32,13 @@ define([
              */
             OPTION_REFRESH_PROPERIES = [
             ],
+            /**
+             * The names of the properties the change of which should trigger a refresh of the info text
+             * @type String[]
+             */
+            INFO_UPDATE_PROPERTIES = [
+                "events"
+            ],
             /** 
              * The mission is loaded on this difficulty for the preview
              * @type String 
@@ -190,7 +197,8 @@ define([
         var result, spacecrafts, pilotedCraft, i, friendlyPresent = 0, friendlyTotal = 0, hostilePresent = 0, hostileTotal = 0;
         result = "";
         if (_mission) {
-            result = "Reference score: " + Math.round(_mission.getReferenceScore());
+            result = '<span class="objectives">[show objectives]<div class="objectives popup">' + _missionDescriptor.getMissionObjectives().join('<br>') + '</div></span>';
+            result += " Reference score: " + Math.round(_mission.getReferenceScore());
             spacecrafts = _mission.getSpacecrafts();
             pilotedCraft = _mission.getPilotedSpacecraft();
             for (i = 0; i < spacecrafts.length; i++) {
@@ -257,7 +265,8 @@ define([
     // Initialization
     _previewContext = new preview.WebGLPreviewContext({
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
-        optionRefreshProperties: OPTION_REFRESH_PROPERIES
+        optionRefreshProperties: OPTION_REFRESH_PROPERIES,
+        infoUpdateProperties: INFO_UPDATE_PROPERTIES
     }, {
         clear: _clear,
         load: _load,

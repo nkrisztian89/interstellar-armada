@@ -415,6 +415,25 @@ li.element.dragover {
     padding: 0;
 }
 
+span.objectives {
+    font-weight: bold;
+    position: relative;
+    padding: 0 0.3em;
+}
+
+div.objectives.popup {
+    display: none;
+    font-weight: normal;
+    position: absolute;
+    left: 0;
+    padding: 0.5em;
+    bottom: 100%;
+    span.objectives:hover>&, &:hover {
+        display: block;
+        width: 300%;
+    }
+}
+
 .setting {
     display: inline-block;
     padding-left: 0.5em;

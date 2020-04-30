@@ -42,6 +42,12 @@ define([
              */
             OPTION_REFRESH_PROPERIES = [
             ],
+            /**
+             * The names of the properties the change of which should trigger a refresh of the info text
+             * @type String[]
+             */
+            INFO_UPDATE_PROPERTIES = [
+            ],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -170,6 +176,7 @@ define([
         lodSetting: false,
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
         optionRefreshProperties: OPTION_REFRESH_PROPERIES,
+        infoUpdateProperties: INFO_UPDATE_PROPERTIES,
         defaultDistanceFactor: 3
     }, {
         clear: _clear,

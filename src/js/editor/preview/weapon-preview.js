@@ -34,14 +34,20 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "model", "shader", "texture",
-                "defaultLuminosityFactors",
-                "cooldown", "barrels" // to refresh info
+                "defaultLuminosityFactors"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
              * @type String[]
              */
             OPTION_REFRESH_PROPERIES = [
+            ],
+            /**
+             * The names of the properties the change of which should trigger a refresh of the info text
+             * @type String[]
+             */
+            INFO_UPDATE_PROPERTIES = [
+                "cooldown", "barrels"
             ],
             // ----------------------------------------------------------------------
             // Private variables
@@ -208,7 +214,8 @@ define([
         renderModeSetting: true,
         lodSetting: true,
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
-        optionRefreshProperties: OPTION_REFRESH_PROPERIES
+        optionRefreshProperties: OPTION_REFRESH_PROPERIES,
+        infoUpdateProperties: INFO_UPDATE_PROPERTIES
     }, {
         clear: _clear,
         load: _load,

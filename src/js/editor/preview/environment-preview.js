@@ -36,6 +36,12 @@ define([
              */
             OPTION_REFRESH_PROPERIES = [
             ],
+            /**
+             * The names of the properties the change of which should trigger a refresh of the info text
+             * @type String[]
+             */
+            INFO_UPDATE_PROPERTIES = [
+            ],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -190,7 +196,8 @@ define([
         animateButton: true,
         muteCheckbox: false,
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
-        optionRefreshProperties: OPTION_REFRESH_PROPERIES
+        optionRefreshProperties: OPTION_REFRESH_PROPERIES,
+        infoUpdateProperties: INFO_UPDATE_PROPERTIES
     }, {
         clear: _clear,
         load: _load,

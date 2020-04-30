@@ -74,6 +74,12 @@ define([
                 "equipmentProfiles"
             ],
             /**
+             * The names of the properties the change of which should trigger a refresh of the info text
+             * @type String[]
+             */
+            INFO_UPDATE_PROPERTIES = [
+            ],
+            /**
              * The params to pass to spacecraft.simulate()
              * @type Spacecraft~SimulateParams
              */
@@ -578,7 +584,8 @@ define([
         animateButton: true,
         muteCheckbox: true,
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
-        optionRefreshProperties: OPTION_REFRESH_PROPERIES
+        optionRefreshProperties: OPTION_REFRESH_PROPERIES,
+        infoUpdateProperties: INFO_UPDATE_PROPERTIES
     }, {
         clear: _clear,
         load: _load,

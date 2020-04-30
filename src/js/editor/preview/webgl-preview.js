@@ -177,6 +177,7 @@ define([
      * @property {Boolean} muteCheckbox
      * @property {String[]} canvasUpdateProperties
      * @property {String[]} optionRefreshProperties
+     * @property {String[]} infoUpdateProperties
      * @property {Number} [defaultDistanceFactor]
      * @property {Number[3]} [cameraDirection] 
      */
@@ -821,6 +822,10 @@ define([
                 preserve: true,
                 reload: true
             });
+        } else if (_currentContext.params.infoUpdateProperties.indexOf(name) >= 0) {
+            _updateInfo();
+            _updateCanvasSize();
+            requestRender();
         }
     }
     // initializazion

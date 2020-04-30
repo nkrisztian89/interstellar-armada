@@ -51,6 +51,12 @@ define([
              */
             OPTION_REFRESH_PROPERIES = [
             ],
+            /**
+             * The names of the properties the change of which should trigger a refresh of the info text
+             * @type String[]
+             */
+            INFO_UPDATE_PROPERTIES = [
+            ],
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -210,6 +216,7 @@ define([
         muteCheckbox: true,
         canvasUpdateProperties: CANVAS_UPDATE_PROPERTIES,
         optionRefreshProperties: OPTION_REFRESH_PROPERIES,
+        infoUpdateProperties: INFO_UPDATE_PROPERTIES,
         defaultDistanceFactor: 2
     }, {
         clear: _clear,
