@@ -1,1 +1,1 @@
-../fonts/Sansation_1.31_ReadMe.txt
+../assets/fonts/Sansation_1.31_ReadMe.txt
