@@ -114,7 +114,7 @@ define(function () {
      */
     function log(message, verbosity) {
         if (!verbosity || (verbosity <= _logVerbosity)) {
-            console.log(message);
+            console.log(message); //eslint-disable-line no-console
         }
     }
     return {
