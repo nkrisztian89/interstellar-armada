@@ -2535,10 +2535,13 @@ define([
                 }
             },
             _parentIsCountCondition = function (data, parent) {
-                return parent.type === missions.ConditionType.COUNT;
+                return !!parent && (parent.type === missions.ConditionType.COUNT);
             },
             _parentIsTimeCondition = function (data, parent) {
-                return parent.type === missions.ConditionType.TIME;
+                return !!parent && (parent.type === missions.ConditionType.TIME);
+            },
+            _isRepeatTime = function (data, parent) {
+                return _parentIsTimeCondition(data, parent) && (data.satisfiedWhen === missions.TimeConditionSatisfiedWhen.REPEAT);
             },
             /**
              * A merge of all the different possible condition parameters
@@ -2563,26 +2566,26 @@ define([
                     COUNT: {
                         name: "count",
                         type: BaseType.NUMBER,
-                        optional: true,
+                        isRequired: _parentIsCountCondition,
                         isValid: _parentIsCountCondition
                     },
                     RELATION: {
                         name: "relation",
                         type: COUNT_CONDITION_RELATION,
-                        optional: true,
+                        isRequired: _parentIsCountCondition,
                         isValid: _parentIsCountCondition
                     },
                     // TimeCondition params:
                     TIME: {
                         name: "time",
                         type: MILLISECONDS,
-                        optional: true,
+                        isRequired: _parentIsTimeCondition,
                         isValid: _parentIsTimeCondition
                     },
                     SATISFIED_WHEN: {
                         name: "satisfiedWhen",
                         type: TIME_CONDITION_SATISFIED_WHEN,
-                        optional: true,
+                        isRequired: _parentIsTimeCondition,
                         isValid: _parentIsTimeCondition
                     },
                     START: {
@@ -2595,13 +2598,13 @@ define([
                         name: "maxCount",
                         type: BaseType.NUMBER,
                         optional: true,
-                        isValid: _parentIsTimeCondition
+                        isValid: _isRepeatTime
                     },
                     START_OFFSET: {
                         name: "startOffset",
                         type: MILLISECONDS,
                         optional: true,
-                        isValid: _parentIsTimeCondition
+                        isValid: _isRepeatTime
                     }
                 }
             },
@@ -2645,14 +2648,15 @@ define([
                     SUBJECTS: {
                         name: "subjects",
                         type: SUBJECT_GROUP,
-                        optional: true,
+                        isRequired: _conditionCanHaveSubjects,
                         isValid: _conditionCanHaveSubjects
                     },
                     PARAMS: {
                         name: "params",
                         type: CONDITION_PARAMS,
-                        optional: true,
-                        isValid: _conditionCanHaveParams
+                        isRequired: _conditionCanHaveParams,
+                        isValid: _conditionCanHaveParams,
+                        updateOnValidate: true
                     }
                 }
             },
@@ -2675,6 +2679,9 @@ define([
             },
             _triggerHasMultipleConditions = function (data) {
                 return data.conditions && (data.conditions.length > 1);
+            },
+            _triggerIsOneShot = function (data) {
+                return data.oneShot !== false;
             },
             _getFireWhenString = function (fireWhen, plural) {
                 switch (fireWhen) {
@@ -2730,7 +2737,8 @@ define([
                     DELAY: {
                         name: "delay",
                         type: MILLISECONDS,
-                        defaultValue: 0
+                        defaultValue: 0,
+                        isValid: _triggerIsOneShot
                     }
                 }
             },
@@ -2916,10 +2924,10 @@ define([
                 }
             },
             _parentIsMessageAction = function (data, parent) {
-                return parent.type === missions.ActionType.MESSAGE;
+                return !!parent && (parent.type === missions.ActionType.MESSAGE);
             },
             _parentIsCommandAction = function (data, parent) {
-                return parent.type === missions.ActionType.COMMAND;
+                return !!parent && (parent.type === missions.ActionType.COMMAND);
             },
             _isJumpCommandActionParams = function (data, parent) {
                 return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.JUMP);
@@ -2928,11 +2936,14 @@ define([
                 return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.TARGET);
             },
             _parentIsHUDAction = function (data, parent) {
-                return parent.type === missions.ActionType.HUD;
+                return !!parent && (parent.type === missions.ActionType.HUD);
             },
             _missionHasMessages = function (data, parent, itemName) {
                 var prefix = strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(itemName) + strings.MISSION.MESSAGES_SUFFIX.name;
-                return (parent.type === missions.ActionType.MESSAGE) && (strings.getKeys(prefix).length > 0);
+                return !!parent && (parent.type === missions.ActionType.MESSAGE) && (strings.getKeys(prefix).length > 0);
+            },
+            _requiresMessage = function (data, parent, itemName) {
+                return _parentIsMessageAction(data, parent) && !_missionHasMessages(data, parent, itemName);
             },
             _getStringPreview = function (string) {
                 return (string.length > 0) ? (string.substr(0, LONG_TEXT_PREVIEW_LENGTH) + ((string.length > LONG_TEXT_PREVIEW_LENGTH) ? "..." : "")) : "...";
@@ -2970,7 +2981,8 @@ define([
                     TEXT: {
                         name: "text",
                         type: LONG_STRING,
-                        optional: true,
+                        newValue: "Test",
+                        isRequired: _requiresMessage,
                         isValid: _parentIsMessageAction
                     },
                     TEXT_ID: {
@@ -3013,7 +3025,7 @@ define([
                     COMMAND: {
                         name: "command",
                         type: SPACECRAFT_COMMAND,
-                        optional: true,
+                        isRequired: _parentIsCommandAction,
                         isValid: _parentIsCommandAction
                     },
                     JUMP: {
@@ -3038,7 +3050,7 @@ define([
                     STATE: {
                         name: "state",
                         type: HUD_SECTION_STATE,
-                        optional: true,
+                        isRequired: _parentIsHUDAction,
                         isValid: _parentIsHUDAction
                     }
                 }
@@ -3078,13 +3090,15 @@ define([
                         name: "subjects",
                         type: SUBJECT_GROUP,
                         optional: true,
+                        isRequired: _actionCanHaveSubjects,
                         isValid: _actionCanHaveSubjects
                     },
                     PARAMS: {
                         name: "params",
                         type: ACTION_PARAMS,
-                        optional: true,
-                        isValid: _actionCanHaveParams
+                        isRequired: _actionCanHaveParams,
+                        isValid: _actionCanHaveParams,
+                        updateOnValidate: true
                     }
                 }
             },
