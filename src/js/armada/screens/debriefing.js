@@ -204,7 +204,7 @@ define([
      * @param {DebreifingScreen~Data} data
      */
     DebriefingScreen.prototype.setData = function (data) {
-        var medalText, hasScore, description, i;
+        var medalText, hasScore, description, i, completed;
         hasScore = (data.missionState === missions.MissionState.COMPLETED);
         _shouldPlayVictoryMusic = (data.missionState === missions.MissionState.COMPLETED) ||
                 (data.missionState === missions.MissionState.NONE);
@@ -250,8 +250,9 @@ define([
         this._descriptionParagraph.setContent(description);
         description = "";
         for (i = 0; i < data.objectives.length; i++) {
-            description += '<tr><td class="' + (data.objectivesCompleted[i] ? COMPLETED_OBJECTIVE_CLASS_NAME : FAILED_OBJECTIVE_CLASS_NAME) + '">' +
-                    (data.objectivesCompleted[i] ? strings.get(strings.DEBRIEFING.COMPLETED) : strings.get(strings.DEBRIEFING.FAILED)) +
+            completed = (data.missionState === missions.MissionState.COMPLETED) || data.objectivesCompleted[i];
+            description += '<tr><td class="' + (completed ? COMPLETED_OBJECTIVE_CLASS_NAME : FAILED_OBJECTIVE_CLASS_NAME) + '">' +
+                    (completed ? strings.get(strings.DEBRIEFING.COMPLETED) : strings.get(strings.DEBRIEFING.FAILED)) +
                     ':</td><td class="' + OBJECTIVE_TEXT_CELL_CLASS_NAME + '">' + data.objectives[i] + "</td></tr>";
         }
         this._objectivesTable.setContent(description);

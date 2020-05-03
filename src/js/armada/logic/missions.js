@@ -792,9 +792,10 @@ define([
      * @class A condition that can be evaluated in every simulation step of the mission to be found either true (satisfied) or false, and 
      * can be used to fire triggers.
      * This is a base class that needs to be subclassed for each different condition type:
-     * - override _checkParams() and isSatisfied() 
+     * - implement _checkParams() and isSatisfied() (see existing condition classes for details)
      * - add a new corresponding ConditionType and register the subclass for it in _conditionConstructors
-     * - if the condition can correspond to a mission objective, override getObjectiveString() and getObjectiveStateString()
+     * - if the condition can correspond to a mission objective, implement 
+     *   getObjectiveString(), getObjectiveStateString(), getTargetSpacecrafts() and getEscortedSpacecrafts() (see existing condition classes for details)
      * @param {Object} dataJSON The object storing the data for the condition
      */
     function Condition(dataJSON) {
@@ -820,45 +821,25 @@ define([
         application.showError("Wrong parameters specified for condition of type: '" + this._type + "'!");
     };
     /**
-     * Returns a translated sentence that can be used to display a mission objective to the user that is based on this condition (for either
-     * winning or losing). The prefix to be passed determines whether it should be considered a winning or losing condition
-     * Override this for conditions that can correspond to mission objectives.
-     * @returns {String}
+     * Returns true if this condition has a chance of becoming impossible to satisfy
+     * @returns {Boolean}
      */
-    Condition.prototype.getObjectiveString = function () {
-        application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
-        return null;
+    Condition.prototype.canBeImpossible = function () {
+        return false;
     };
     /**
-     * Returns a translated string that can be used to display a mission objective and its status to the player based on this condition 
-     * (for either winning or losing). The prefix to be passed determines whether it should be considered a winning or losing condition
-     * To be used on the HUD for displaying live status of objectives
-     * Override this for conditions that can correspond to mission objectives.
-     * @returns {String}
+     * Returns true if this condition can not be satisfied anymore during the current mission
+     * @returns {Boolean}
      */
-    Condition.prototype.getObjectiveStateString = function () {
-        application.showError("No mission objective string associated with condition type: '" + this._type + "'!");
-        return null;
+    Condition.prototype.isImpossible = function () {
+        return false;
     };
     /**
-     * If the condition corresponds to a mission objective that requires the player to destroy some spacecrafts, this method
-     * returns the list of these target spacecrafts.
-     * Override this for conditions that can correspond to mission objectives.
-     * @returns {Spacecraft[]}
+     * For mission objective conditions, whether the objective corresponding to this condition should be considered active
+     * @returns {Boolean}
      */
-    Condition.prototype.getTargetSpacecrafts = function () {
-        application.showError("No target spacecrafts associated with condition type: '" + this._type + "'!");
-        return null;
-    };
-    /**
-     * If the condition corresponds to a mission objective that requires the player to escort (protect) some spacecrafts, this method
-     * returns the list of these escorted spacecrafts.
-     * Override this for conditions that can correspond to mission objectives.
-     * @returns {Spacecraft[]}
-     */
-    Condition.prototype.getEscortedSpacecrafts = function () {
-        application.showError("No escorted spacecrafts associated with condition type: '" + this._type + "'!");
-        return null;
+    Condition.prototype.isActive = function () {
+        return true;
     };
     // ##############################################################################
     /**
@@ -879,7 +860,6 @@ define([
         return true;
     };
     /**
-     * @override
      * @param {Mission} mission
      * @returns {Boolean}
      */
@@ -893,7 +873,6 @@ define([
         return true;
     };
     /**
-     * @override
      * @param {Object} stringPrefix 
      * @returns {String}
      */
@@ -905,7 +884,6 @@ define([
         return result;
     };
     /**
-     * @override
      * @param {Object} stringPrefix 
      * @returns {String}
      */
@@ -923,7 +901,6 @@ define([
         return result;
     };
     /**
-     * @override
      * Note: this is only correct if this condition belongs to the trigger of a WIN event
      * @param {Mission} mission 
      * @returns {Spacecraft[]}
@@ -932,7 +909,6 @@ define([
         return this._subjects.getSpacecrafts(mission);
     };
     /**
-     * @override
      * Note: this is only correct if this condition belongs to the trigger of a LOSE event
      * @param {Mission} mission 
      * @returns {Spacecraft[]}
@@ -957,7 +933,6 @@ define([
      * @property {String} relation (enum CountConditionRelation) The relation determining when is this condition satisfied
      */
     /**
-     * @override
      * @param {CountCondition~Params} params
      * @returns {Boolean}
      */
@@ -975,7 +950,6 @@ define([
         return true;
     };
     /**
-     * @override
      * @param {Mission} mission
      * @returns {Boolean}
      */
@@ -998,7 +972,6 @@ define([
         return false;
     };
     /**
-     * @override
      * @param {Object} stringPrefix
      * @returns {String}
      */
@@ -1016,52 +989,38 @@ define([
         return result;
     };
     /**
-     * @override
      * @param {Object} stringPrefix 
      * @returns {String}
      */
     CountCondition.prototype.getObjectiveStateString = function (stringPrefix) {
-        var result, count, suffix;
-        if (this._params.relation !== CountConditionRelation.BELOW) {
-            application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
-            return null;
-        }
+        var result, count;
         if (!this._subjects.getSpacecrafts()) {
             return "";
         }
         count = this._subjects.getLiveSubjectCount();
-        suffix = " (" + count + ")";
         result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.COUNT_BELOW_SUFFIX.name), {
             subjects: this._subjects.getShortString(),
-            count: this._params.count
-        }) + suffix;
+            count: this._params.count,
+            live: count,
+            remaining: Math.max(0, count - this._params.count)
+        });
         result = result.charAt(0).toUpperCase() + result.slice(1);
         return result;
     };
     /**
-     * @override
      * Note: this is only correct if this condition belongs to the trigger of a WIN event
      * @param {Mission} mission 
      * @returns {Spacecraft[]}
      */
     CountCondition.prototype.getTargetSpacecrafts = function (mission) {
-        if (this._params.relation !== CountConditionRelation.BELOW) {
-            application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
-            return null;
-        }
         return this._subjects.getSpacecrafts(mission);
     };
     /**
-     * @override
      * Note: this is only correct if this condition belongs to the trigger of a LOSE event
      * @param {Mission} mission 
      * @returns {Spacecraft[]}
      */
     CountCondition.prototype.getEscortedSpacecrafts = function (mission) {
-        if (this._params.relation !== CountConditionRelation.BELOW) {
-            application.showError("Count conditions for mission objectives must have relation set to '" + CountConditionRelation.BELOW + "'!");
-            return null;
-        }
         return this._subjects.getSpacecrafts(mission);
     };
     // ##############################################################################
@@ -1077,7 +1036,7 @@ define([
          * Whether the timer for this condition is currently running.
          * @type Boolean
          */
-        this._running = !this._params.start;
+        this._running = !this._params || !this._params.start;
         /**
          * A reference to the trigger setting off the timer for this condition (if any)
          * @type Trigger
@@ -1087,12 +1046,24 @@ define([
          * The time elapsed while running the timer for this condition, in milliseconds
          * @type Number
          */
-        this._timeElapsed = this._params.startOffset || 0;
+        this._timeElapsed = this._params ? this._params.startOffset || 0 : 0;
         /**
          * The number of times this condition has already been satisfied (for repeat mode)
          * @type Number
          */
         this._count = 0;
+        /**
+         * When this condition can become impossible to be satisfied
+         * @type Boolean
+         */
+        this._canBeImpossible = this._params ? (this._params.satisfiedWhen === TimeConditionSatisfiedWhen.BEFORE) ||
+                (this._params.satisfiedWhen === TimeConditionSatisfiedWhen.ONCE) ||
+                ((this._params.satisfiedWhen === TimeConditionSatisfiedWhen.REPEAT) && this._params.maxCount) : false;
+        /**
+         * Whether this condition cannot be satisfied anymore
+         * @type Boolean
+         */
+        this._impossible = false;
     }
     TimeCondition.prototype = new Condition();
     TimeCondition.prototype.constructor = TimeCondition;
@@ -1105,7 +1076,6 @@ define([
      * @property {Number} [startOffset] The value of the timer when started (for repeat mode)
      */
     /**
-     * @override
      * @param {TimeCondition~Params} params 
      * @returns {Boolean}
      */
@@ -1127,7 +1097,6 @@ define([
         return true;
     };
     /**
-     * @override
      * @param {Mission} mission
      * @param {Number} dt
      * @returns {Boolean}
@@ -1149,6 +1118,8 @@ define([
                 case TimeConditionSatisfiedWhen.BEFORE:
                     if (this._timeElapsed < this._params.time) {
                         return true;
+                    } else {
+                        this._impossible = true;
                     }
                     break;
                 case TimeConditionSatisfiedWhen.AFTER:
@@ -1160,6 +1131,7 @@ define([
                     if ((this._timeElapsed >= this._params.time) && (this._count === 0)) {
                         this._running = false;
                         this._count = 1;
+                        this._impossible = true;
                         return true;
                     }
                     break;
@@ -1175,16 +1147,93 @@ define([
                         }
                     } else {
                         this._running = false;
+                        this._impossible = true;
                     }
                     break;
             }
         }
         return false;
     };
+    /**
+     * @param {Object} stringPrefix
+     * @param {Boolean} multipleConditions
+     * @returns {String}
+     */
+    TimeCondition.prototype.getObjectiveString = function (stringPrefix, multipleConditions) {
+        var result;
+        if (!multipleConditions && (!this._params || (this._params.satisfiedWhen !== TimeConditionSatisfiedWhen.AFTER))) {
+            application.showError("Single time conditions for mission objectives must have satisfiedWhen set to '" + TimeConditionSatisfiedWhen.AFTER + "'!");
+            return null;
+        }
+        if (multipleConditions && (!this._params || (this._params.satisfiedWhen !== TimeConditionSatisfiedWhen.BEFORE))) {
+            application.showError("Time conditions used in combination with other conditions for mission objectives must have satisfiedWhen set to '" + TimeConditionSatisfiedWhen.BEFORE + "'!");
+            return null;
+        }
+        result = utils.formatString(strings.get(stringPrefix, multipleConditions ? strings.OBJECTIVE.TIME_MULTI_SUFFIX.name : strings.OBJECTIVE.TIME_SUFFIX.name), {
+            time: utils.formatTimeToMinutes(this._params.time)
+        });
+        if (!multipleConditions) {
+            result = result.charAt(0).toUpperCase() + result.slice(1);
+        }
+        return result;
+    };
+    /**
+     * @param {Object} stringPrefix 
+     * @param {Boolean} multipleConditions
+     * @returns {String}
+     */
+    TimeCondition.prototype.getObjectiveStateString = function (stringPrefix, multipleConditions) {
+        var result, timeRemaining;
+        timeRemaining = Math.ceil(Math.max(0, this._params.time - this._timeElapsed) * 0.001) * 1000;
+        result = utils.formatString(strings.get(stringPrefix, multipleConditions ? strings.OBJECTIVE.TIME_MULTI_SUFFIX.name : strings.OBJECTIVE.TIME_SUFFIX.name), {
+            time: utils.formatTimeToMinutes(timeRemaining)
+        });
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    TimeCondition.prototype.getTargetSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    TimeCondition.prototype.getEscortedSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    TimeCondition.prototype.canBeImpossible = function () {
+        return this._canBeImpossible;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    TimeCondition.prototype.isImpossible = function () {
+        return this._impossible;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    TimeCondition.prototype.isActive = function () {
+        return this._running && (!this._params || (this._timeElapsed < this._params.time));
+    };
     // #########################################################################
     /**
      * @callback Trigger~onFireCallback
      * @param {Mission} mission 
+     */
+    /**
+     * @typedef {Object} ObjectiveWithState
+     * @property {String} text A translated text to display the objective and its current progress state to the player on the HUD
+     * @property {Number} state (enum ObjectiveState)
+     * @property {Boolean} completable Whether this is a completable objective (if not, it is completed (if not failed) upon finishing the mission)
      */
     /**
      * @class Missions contain triggers, which fire based on a set of conditions that they evaluate in every simulation step, and can have
@@ -1261,6 +1310,19 @@ define([
          * @type Boolean
          */
         this._fired = false;
+        /**
+         * Whether based on its conditions, this trigger can possibly become impossible to fire
+         */
+        this._canBeImpossible = true;
+        if (!this._falsy && this._conditions) {
+            this._canBeImpossible = !this._all;
+            for (i = 0; i < this._conditions.length; i++) {
+                if (this._conditions[i].canBeImpossible()) {
+                    this._canBeImpossible = this._all;
+                    break;
+                }
+            }
+        }
         // invalid state checks
         if (!this._conditions) {
             if (this._fireWhen !== TriggerFireWhen.MISSION_STARTS) {
@@ -1332,9 +1394,9 @@ define([
         }
         conditionState = this._all;
         for (i = 0; i < this._conditions.length; i++) {
+            // need to loop all conditions, to make sure timers are all updated with dt
             if (this._conditions[i].isSatisfied(mission, dt) === this._falsy) {
                 conditionState = !this._all;
-                break;
             }
         }
         if ((this._previousConditionState === this._falsy) && (conditionState !== this._falsy)) {
@@ -1343,13 +1405,22 @@ define([
         this._previousConditionState = conditionState;
     };
     /**
+     * Returns the number of mission objectives corresponding to this trigger
+     * @param {Boolean} triggersWinAction Whether this trigger firing causes the player to win 
+     * @returns {Number}
+     */
+    Trigger.prototype.getObjectiveCount = function (triggersWinAction) {
+        return triggersWinAction ? this._conditions.length : 1;
+    };
+    /**
      * Returns the list of HTML strings that can be used to display the objectives associated with the conditions of this trigger.
      * @param {Object} stringPrefix The translation string descriptor containing the prefix to be used to decide whether the conditions 
      * should be considered win or lose conditions
+     * @param {Boolean} triggersWinAction Whether this trigger firing causes the player to win 
      * @returns {String[]}
      */
-    Trigger.prototype.getObjectiveStrings = function (stringPrefix) {
-        var i, result = [];
+    Trigger.prototype.getObjectiveStrings = function (stringPrefix, triggersWinAction) {
+        var i, result = [], multi = this._conditions.length > 1, text;
         if (this._which !== TriggerWhich.ALL) {
             application.showError("Triggers for mission objectives must be set to 'which' state of '" + TriggerWhich.ALL + "'!");
             return null;
@@ -1358,48 +1429,78 @@ define([
             application.showError("Triggers for mission objectives must be set to 'which' state of '" + TriggerFireWhen.BECOMES_TRUE + "'!");
             return null;
         }
-        for (i = 0; i < this._conditions.length; i++) {
-            result.push(this._conditions[i].getObjectiveString(stringPrefix));
+        if (triggersWinAction) {
+            for (i = 0; i < this._conditions.length; i++) {
+                result.push(this._conditions[i].getObjectiveString(stringPrefix, multi));
+            }
+        } else {
+            text = "";
+            for (i = 0; i < this._conditions.length; i++) {
+                text += ((i > 0) ? " " : "") + this._conditions[i].getObjectiveString(stringPrefix, multi);
+            }
+            result.push(text);
         }
         return result;
     };
     /**
-     * @typedef {Object} ObjectiveWithState
-     * @property {String} text A text to display the objective and its current state to the player
-     * @property {Number} state (enum ObjectiveState)
-     */
-    /**
-     * Returns the list of translated strings that can be used to display the objectives and their states associated with the conditions 
-     * of this trigger. To be used on the HUD.
+     * Updates the passed array starting from the passed index with the objectives and their states
+     * belonging to this trigger.
+     * To be used for the HUD objective indicator.
      * @param {Boolean} triggersWinAction Whether this trigger firing causes the player to win 
      * @param {Mission} mission 
-     * @returns {ObjectiveWithState[]}
+     * @param {Boolean} missionEnded Whether the mission has already ended (and we are gathering objective 
+     * states for display on the debriefing screen)
+     * @param {ObjectiveWithState[]} [objectivesState] The array to update
+     * @param {Number} [index] The starting index in the array to start the update from
+     * @returns {Number} The index coming after the last updated element of the array
      */
-    Trigger.prototype.getObjectivesState = function (triggersWinAction, mission) {
-        var i, result = [];
-        if (this._which !== TriggerWhich.ALL) {
-            application.showError("Triggers for mission objectives must be set to 'which' state of '" + TriggerWhich.ALL + "'!");
-            return null;
+    Trigger.prototype.getObjectivesState = function (triggersWinAction, mission, missionEnded, objectivesState, index) {
+        var i, multi = this._conditions.length > 1, satisfied, impossible, text, state;
+        if (triggersWinAction) {
+            for (i = 0; i < this._conditions.length; i++) {
+                state = this._conditions[i].isSatisfied(mission, 0) ?
+                        ((this._conditions[i].canBeImpossible() && !missionEnded) ?
+                                ((mission.getState() === MissionState.COMPLETED) ?
+                                        ObjectiveState.COMPLETED :
+                                        ObjectiveState.IN_PROGRESS) :
+                                ObjectiveState.COMPLETED) :
+                        this._conditions[i].isImpossible() ? ObjectiveState.FAILED : ObjectiveState.IN_PROGRESS;
+                if ((state !== ObjectiveState.IN_PROGRESS) || this._conditions[i].isActive() || missionEnded) {
+                    objectivesState[index].text = this._conditions[i].getObjectiveStateString(strings.BATTLE.OBJECTIVE_WIN_PREFIX, multi);
+                    objectivesState[index].state = state;
+                    objectivesState[index].completable = true;
+                    index++;
+                }
+            }
+        } else {
+            satisfied = true;
+            impossible = false;
+            for (i = 0; i < this._conditions.length; i++) {
+                if (!this._conditions[i].isSatisfied(mission, 0)) {
+                    satisfied = false;
+                    if (this._conditions[i].isImpossible()) {
+                        impossible = true;
+                        break;
+                    }
+                }
+            }
+            text = (this._conditions.length > 0) ? this._conditions[0].getObjectiveStateString(strings.BATTLE.OBJECTIVE_LOSE_PREFIX, multi) : "";
+            state = satisfied ? ObjectiveState.FAILED : (impossible || missionEnded) ? ObjectiveState.COMPLETED : ObjectiveState.IN_PROGRESS;
+            if (state === ObjectiveState.IN_PROGRESS) {
+                for (i = 1; i < this._conditions.length; i++) {
+                    if (this._conditions[i].isActive()) {
+                        text += " " + this._conditions[i].getObjectiveStateString(strings.BATTLE.OBJECTIVE_LOSE_PREFIX, multi);
+                    }
+                }
+            }
+            if (text) {
+                objectivesState[index].text = text;
+                objectivesState[index].state = state;
+                objectivesState[index].completable = this._canBeImpossible;
+                index++;
+            }
         }
-        if (this._fireWhen !== TriggerFireWhen.BECOMES_TRUE) {
-            application.showError("Triggers for mission objectives must be set to 'fireWhen' state of '" + TriggerFireWhen.BECOMES_TRUE + "'!");
-            return null;
-        }
-        for (i = 0; i < this._conditions.length; i++) {
-            result.push({
-                text: this._conditions[i].getObjectiveStateString(triggersWinAction ?
-                        strings.BATTLE.OBJECTIVE_WIN_PREFIX :
-                        strings.BATTLE.OBJECTIVE_LOSE_PREFIX),
-                state: this._conditions[i].isSatisfied(mission) ?
-                        (triggersWinAction ?
-                                ObjectiveState.COMPLETED :
-                                ObjectiveState.FAILED) :
-                        ((mission.getState() === MissionState.COMPLETED) ?
-                                ObjectiveState.COMPLETED :
-                                ObjectiveState.IN_PROGRESS)
-            });
-        }
-        return result;
+        return index;
     };
     /**
      * If the event of the trigger corresponds to a mission objective that requires the player to destroy some spacecrafts, this 
@@ -1426,6 +1527,13 @@ define([
             result = result.concat(this._conditions[i].getEscortedSpacecrafts(mission));
         }
         return result;
+    };
+    /**
+     * Whether based on its conditions, this trigger can possibly become impossible to fire
+     * @returns {Boolean}
+     */
+    Trigger.prototype.canBeImpossible = function () {
+        return this._canBeImpossible;
     };
     // #########################################################################
     /**
@@ -1489,6 +1597,13 @@ define([
             this.execute(mission);
         }
     };
+    /**
+     * Whether the trigger belonging to this action has a chance of becoming impossible to fire
+     * @returns {Boolean}
+     */
+    Action.prototype.triggerCanBeImpossible = function () {
+        return this._trigger.canBeImpossible();
+    };
     // #########################################################################
     /**
      * @class 
@@ -1516,19 +1631,27 @@ define([
         mission.completeMission();
     };
     /**
-     * @override
+     * Returns the number of mission objectives corresponding to this action
+     * @returns {Number}
+     */
+    WinAction.prototype.getObjectiveCount = function () {
+        return this._trigger.getObjectiveCount(true);
+    };
+    /**
      * @returns {String[]}
      */
     WinAction.prototype.getObjectiveStrings = function () {
-        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_WIN_PREFIX);
+        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_WIN_PREFIX, true);
     };
     /**
-     * @override
      * @param {Mission} mission
-     * @returns {ObjectiveWithState[]}
+     * @param {Boolean} missionEnded
+     * @param {ObjectiveWithState[]} [objectivesState]
+     * @param {Number} [index]
+     * @returns {Number}
      */
-    WinAction.prototype.getObjectivesState = function (mission) {
-        return this._trigger.getObjectivesState(true, mission);
+    WinAction.prototype.getObjectivesState = function (mission, missionEnded, objectivesState, index) {
+        return this._trigger.getObjectivesState(true, mission, missionEnded, objectivesState, index);
     };
     // #########################################################################
     /**
@@ -1557,19 +1680,27 @@ define([
         mission.failMission();
     };
     /**
-     * @override
+     * Returns the number of mission objectives corresponding to this action
+     * @returns {Number}
+     */
+    LoseAction.prototype.getObjectiveCount = function () {
+        return this._trigger.getObjectiveCount(false);
+    };
+    /**
      * @returns {String[]}
      */
     LoseAction.prototype.getObjectiveStrings = function () {
-        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_LOSE_PREFIX);
+        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_LOSE_PREFIX, false);
     };
     /**
-     * @override
      * @param {Mission} mission
-     * @returns {ObjectiveWithState[]}
+     * @param {Boolean} missionEnded
+     * @param {ObjectiveWithState[]} [objectivesState]
+     * @param {Number} [index]
+     * @returns {Number}
      */
-    LoseAction.prototype.getObjectivesState = function (mission) {
-        return this._trigger.getObjectivesState(false, mission);
+    LoseAction.prototype.getObjectivesState = function (mission, missionEnded, objectivesState, index) {
+        return this._trigger.getObjectivesState(false, mission, missionEnded, objectivesState, index);
     };
     // #########################################################################
     /**
@@ -1912,6 +2043,16 @@ define([
          */
         this._state = MissionState.NONE;
         /**
+         * Whether this mission has the implicit default objective (as it lacks any explicit completable objectives)
+         * @type Boolean
+         */
+        this._defaultObjective = true;
+        /**
+         * A cached value of the last calculated objectives state
+         * @type ObjectiveWithState[]
+         */
+        this._objectivesState = null;
+        /**
          * How much score falls on the player in this mission, based on the total score that can be achieved and the number of teammates.
          * (e.g. in a 3v3 match, this would be the score value of one enemy, in a 3v6 match, the value of 2 enemies etc)
          * Needs to be calculated at the start of missions.
@@ -2064,7 +2205,7 @@ define([
      */
     Mission.prototype.failMission = function () {
         // a completed mission can still be failed, if one of the lose conditions is satisfied after the win condition
-        if ((this._state === MissionState.IN_PROGRESS) || (this._state === MissionState.COMPLETED)) {
+        if (((this._state === MissionState.IN_PROGRESS) || (this._state === MissionState.COMPLETED)) && (this._pilotedCraft && !this._pilotedCraft.isAway())) {
             this._state = MissionState.FAILED;
         }
     };
@@ -2072,18 +2213,20 @@ define([
      * Updates the stored mission state value based on the current situation.
      */
     Mission.prototype._updateState = function () {
-        var i;
+        var i, completed;
         // first check for missions with a player
         if (this._pilotedCraft) {
+            if (!this._pilotedCraft.isAway()) {
+                // update stored objectives state
+                this._updateObjectivesState();
+            }
             // if the player is destroyed, the mission state is always defeat
             if (this._pilotedCraft.canBeReused()) {
                 this._state = MissionState.DEFEAT;
                 return;
             } else {
-                // a battle with a player and missions with no win (only lose) objectives can be completed if there are no hostiles left
-                // (missionState cannot change from NONE, and missions with win objectives are completed whenever the objectives are completed,
-                // regardless of remaining hostiles)
-                if (this._state === MissionState.BATTLE || ((this._state === MissionState.IN_PROGRESS) && (this._winActions.length === 0))) {
+                // a battle with a player can be completed if there are no hostiles left
+                if (this._state === MissionState.BATTLE) {
                     for (i = 0; i < this._spacecrafts.length; i++) {
                         if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused() && this._pilotedCraft.isHostile(this._spacecrafts[i])) {
                             return;
@@ -2091,6 +2234,20 @@ define([
                     }
                     this._state = MissionState.COMPLETED;
                     return;
+                } else if ((this._state === MissionState.IN_PROGRESS) && !this._pilotedCraft.isAway()) {
+                    // check the objectives - if any objective is failed, lose, if all of them are complete, win
+                    completed = true;
+                    for (i = 0; i < this._objectivesState.length; i++) {
+                        if (this._objectivesState[i].state === ObjectiveState.FAILED) {
+                            this._state = MissionState.FAILED;
+                            return;
+                        }
+                        completed = completed && ((this._objectivesState[i].state === ObjectiveState.COMPLETED) || !this._objectivesState[i].completable);
+                    }
+                    if (completed) {
+                        this._state = MissionState.COMPLETED;
+                        return;
+                    }
                 }
             }
         } else {
@@ -2213,32 +2370,37 @@ define([
      */
     Mission.prototype.getObjectives = function () {
         var i, result = [];
-        if (this._winActions.length === 0) {
+        if (this._defaultObjective) {
             result.push(strings.get(strings.MISSIONS.OBJECTIVE_WIN_PREFIX, strings.OBJECTIVE.DESTROY_ALL_SUFFIX.name));
-        } else {
-            for (i = 0; i < this._winActions.length; i++) {
-                result = result.concat(this._winActions[i].getObjectiveStrings());
-            }
+        }
+        for (i = 0; i < this._winActions.length; i++) {
+            result = result.concat(this._winActions[i].getObjectiveStrings());
         }
         for (i = 0; i < this._loseActions.length; i++) {
             result = result.concat(this._loseActions[i].getObjectiveStrings());
         }
         return result;
     };
-    /** 
-     * @typedef {Object} ObjectiveWithState
-     * @property {String} text 
-     * @property {Number} state From enum ObjectiveState
-     */
     /**
      * Returns a list of translated strings along with objective state values for displaying the current state of mission objectives for
      * the player on the HUD
+     * @param {Boolean} missionEnded
      * @returns {ObjectiveWithState[]}
      */
-    Mission.prototype.getObjectivesState = function () {
-        var i, result = [], suffix, hostiles, craft;
+    Mission.prototype.getObjectivesState = function (missionEnded) {
+        if (missionEnded) {
+            this._updateObjectivesState(missionEnded);
+        }
+        return this._objectivesState;
+    };
+    /**
+     * Updates the stores mission objective states
+     * @param {Boolean} missionEnded
+     */
+    Mission.prototype._updateObjectivesState = function (missionEnded) {
+        var i, index = 0, suffix, hostiles, craft;
         // handling the default "destroy all enemies" implicit mission objective
-        if (this._winActions.length === 0) {
+        if (this._defaultObjective) {
             craft = this.getPilotedSpacecraft();
             suffix = "";
             if (craft) {
@@ -2247,20 +2409,23 @@ define([
                     suffix = " (" + hostiles + ")";
                 }
             }
-            result.push({
-                text: strings.get(strings.BATTLE.OBJECTIVE_WIN_PREFIX, strings.OBJECTIVE.DESTROY_ALL_SUFFIX.name) + suffix,
-                state: (craft && craft.isAlive()) ? ((this.getHostileSpacecraftCount(craft, false) > 0) ? ObjectiveState.IN_PROGRESS : ObjectiveState.COMPLETED) : ObjectiveState.FAILED
-            });
-            // handling explicit mission objectives
-        } else {
-            for (i = 0; i < this._winActions.length; i++) {
-                result = result.concat(this._winActions[i].getObjectivesState(this));
-            }
+            this._objectivesState[0].text = strings.get(strings.BATTLE.OBJECTIVE_WIN_PREFIX, strings.OBJECTIVE.DESTROY_ALL_SUFFIX.name) + suffix;
+            this._objectivesState[0].state = (craft && craft.isAlive()) ? ((this.getHostileSpacecraftCount(craft, false) > 0) ? ObjectiveState.IN_PROGRESS : ObjectiveState.COMPLETED) : ObjectiveState.FAILED;
+            this._objectivesState[0].completable = true;
+            index++;
+        }
+        // handling explicit mission objectives
+        for (i = 0; i < this._winActions.length; i++) {
+            index = this._winActions[i].getObjectivesState(this, missionEnded, this._objectivesState, index);
         }
         for (i = 0; i < this._loseActions.length; i++) {
-            result = result.concat(this._loseActions[i].getObjectivesState(this));
+            index = this._loseActions[i].getObjectivesState(this, missionEnded, this._objectivesState, index);
         }
-        return result;
+        // we might not have all the objectives active
+        while (index < this._objectivesState.length) {
+            this._objectivesState[index].text = "";
+            index++;
+        }
     };
     // #########################################################################
     // methods
@@ -2287,7 +2452,7 @@ define([
      * @param {Object} dataJSON The object storing the mission data
      */
     Mission.prototype.loadObjectives = function (dataJSON) {
-        var i, j, actions, actionType;
+        var i, j, actions, actionType, count;
         this._events = [];
         if (dataJSON.events) {
             for (i = 0; i < dataJSON.events.length; i++) {
@@ -2308,6 +2473,28 @@ define([
                     this._loseActions.push(actions[j]);
                 }
             }
+        }
+        this._defaultObjective = (this._winActions.length === 0);
+        if (this._defaultObjective) {
+            for (i = 0; i < this._loseActions.length; i++) {
+                if (this._loseActions[i].triggerCanBeImpossible()) {
+                    this._defaultObjective = false;
+                    break;
+                }
+            }
+        }
+        count = (this._defaultObjective ? 1 : 0);
+        if (this._pilotedCraft) {
+            for (i = 0; i < this._winActions.length; i++) {
+                count += this._winActions[i].getObjectiveCount();
+            }
+            for (i = 0; i < this._loseActions.length; i++) {
+                count += this._loseActions[i].getObjectiveCount();
+            }
+        }
+        this._objectivesState = new Array(count);
+        for (i = 0; i < count; i++) {
+            this._objectivesState[i] = {};
         }
         if ((this._winActions.length > 0) || (this._loseActions.length > 0)) {
             this._state = MissionState.IN_PROGRESS;
@@ -2351,7 +2538,6 @@ define([
                 this._teams.push(new Team(dataJSON.teams[i]));
             }
         }
-        this.loadObjectives(dataJSON);
         this._views = [];
         if (dataJSON.views) {
             for (i = 0; i < dataJSON.views.length; i++) {
@@ -2477,6 +2663,8 @@ define([
         if (count > 0) {
             this._referenceScore /= count;
         }
+        // load events and mission objectives
+        this.loadObjectives(dataJSON);
         // cache target spacecrafts
         this._targetSpacecrafts = [];
         for (i = 0; i < this._events.length; i++) {
@@ -2901,7 +3089,7 @@ define([
         }
         this._actionQueue = this._actionQueue.filter(Mission._filterActionEntry);
         for (i = 0; i < this._events.length; i++) {
-            this._events[i].simulate(this, dt);
+            this._events[i].simulate(this, (!this._pilotedCraft || !this._pilotedCraft.isAway()) ? dt : 0); // event timers are stopped when the player jumps out
         }
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].simulate(dt);

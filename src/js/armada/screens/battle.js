@@ -4179,7 +4179,7 @@ define([
         game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
             missionState: _mission.getState(),
             objectives: _mission.getObjectives(),
-            objectivesCompleted: _mission.getObjectivesState().map(_mapObjectiveState),
+            objectivesCompleted: _mission.getObjectivesState(true).map(_mapObjectiveState),
             performance: victory ? perfStats.performance : missions.FAILED_MISSION_PERFORMACE,
             nextPerformance: victory ? perfStats.nextPerformance : null,
             nextPerformanceScore: victory ? perfStats.nextPerformanceScore : 0,

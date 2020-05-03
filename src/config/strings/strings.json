@@ -89,13 +89,17 @@
             "teams": "all spacecrafts of {ids}"
         },
         "winObjective": {
-            "destroyAll": "Destroy all enemies.",
-            "destroy": "Destroy {subjects}.",
-            "countBelow": "Less than {count} out of {subjects} can survive."
+            "destroyAll": "Destroy all enemies",
+            "destroy": "Destroy {subjects}",
+            "countBelow": "Less than {count} out of {subjects} must remain",
+            "time": "Survive for {time}",
+            "timeMulti": "Complete all objectives within {time}"
         },
         "loseObjective": {
-            "destroy": "Protect {subjects}.",
-            "countBelow": "Protect at least {count} out of {subjects}."
+            "destroy": "{subjects} must survive",
+            "countBelow": "At least {count} out of {subjects} must survive",
+            "time": "Jump out within {time}",
+            "timeMulti": "for {time}"
         }
     },
     "location": {
@@ -361,18 +365,22 @@
             "escortedShipsHeader": "Protect:"
         },
         "objectiveSubjects": {
-            "spacecrafts": "{count} spacecrafts",
+            "spacecrafts": "spacecrafts",
             "squads": "{count} squads",
             "teams": "{count} teams"
         },
         "winObjective": {
             "destroyAll": "Destroy all enemies",
             "destroy": "Destroy: {subjects}",
-            "countBelow": "Decimate to {count}: {subjects}"
+            "countBelow": "Destroy {count} of {subjects} ({remaining})",
+            "time": "Survive for {time}",
+            "timeMulti": "Time left: {time}"
         },
         "loseObjective": {
             "destroy": "Protect: {subjects}",
-            "countBelow": "Protect: {count}/{subjects}"
+            "countBelow": "Protect {count}/{live} of {subjects}",
+            "time": "Jump out within {time}",
+            "timeMulti": "({time})"
         },
         "loadingBox": {
             "loadingMission": "loading mission information...",

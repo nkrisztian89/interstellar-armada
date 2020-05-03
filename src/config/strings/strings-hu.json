@@ -103,13 +103,17 @@
             "teams": "{ids} összes űrhajója"
         },
         "winObjective": {
-            "destroyAll": "Semmisítsen meg minden ellenséget.",
-            "destroy": "Megsemmisítendő: {subjects}.",
-            "countBelow": "Kevesebb, mint {count} maradhat meg a következőkből: {subjects}."
+            "destroyAll": "Semmisíts meg minden ellenséget",
+            "destroy": "Megsemmisítendő: {subjects}",
+            "countBelow": "Kevesebb, mint {count} maradhat meg belőlük: {subjects}",
+            "time": "Maradj életben {time}-ig",
+            "timeMulti": "Teljesítsd a feladatokat {time}-n belül"
         },
         "loseObjective": {
-            "destroy": "Megvédendő: {subjects}.",
-            "countBelow": "Legalább {count} maradjon meg a következőkből: {subjects}."
+            "destroy": "Megvédendő: {subjects}",
+            "countBelow": "Legalább {count} maradjon meg a következőkből: {subjects}",
+            "time": "Hagyd el a csatateret {time}-n belül",
+            "timeMulti": "{time}-ig"
         }
     },
     "location": {
@@ -397,18 +401,22 @@
             "escortedShipsHeader": "Megvédendő:"
         },
         "objectiveSubjects": {
-            "spacecrafts": "{count} űrhajó",
+            "spacecrafts": "űrhajó",
             "squads": "{count} osztag",
             "teams": "{count} csapat"
         },
         "winObjective": {
             "destroyAll": "Célpont: minden ellenség",
             "destroy": "Célpont: {subjects}",
-            "countBelow": "Célpont ({count}): {subjects}"
+            "countBelow": "Célpont ({count}): {subjects} ({remaining})",
+            "time": "Élj túl: {time}",
+            "timeMulti": "Hátralévő idő: {time}"
         },
         "loseObjective": {
             "destroy": "Megvédendő: {subjects}",
-            "countBelow": "Megvédendő: {count}/{subjects}"
+            "countBelow": "Megvédendő: {count}/{live} {subjects}",
+            "time": "Ugorj ki: {time}",
+            "timeMulti": "({time})"
         },
         "loadingBox": {
             "loadingMission": "küldetésleíró fájl betöltése...",
