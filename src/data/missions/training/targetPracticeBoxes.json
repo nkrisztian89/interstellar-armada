@@ -28,9 +28,7 @@
         }
     ],
     "events": [{
-            "trigger": {
-                "fireWhen": "missionStarts"
-            },
+            "trigger": {},
             "actions": [{
                     "type": "hud",
                     "params": {
@@ -64,7 +62,7 @@
                         "type": "time",
                         "params": {
                             "time": 15000,
-                            "satisfiedWhen": "once"
+                            "when": "once"
                         }
                     }, {
                         "type": "count",

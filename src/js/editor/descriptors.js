@@ -2514,9 +2514,9 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            TIME_CONDITION_SATISFIED_WHEN = {
+            TIME_CONDITION_WHEN = {
                 baseType: BaseType.ENUM,
-                values: missions.TimeConditionSatisfiedWhen
+                values: missions.TimeConditionWhen
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2541,7 +2541,7 @@ define([
                 return !!parent && (parent.type === missions.ConditionType.TIME);
             },
             _isRepeatTime = function (data, parent) {
-                return _parentIsTimeCondition(data, parent) && (data.satisfiedWhen === missions.TimeConditionSatisfiedWhen.REPEAT);
+                return _parentIsTimeCondition(data, parent) && (data.when === missions.TimeConditionWhen.REPEAT);
             },
             /**
              * A merge of all the different possible condition parameters
@@ -2556,8 +2556,8 @@ define([
                         return instance.relation + " " + instance.count;
                     }
                     // TimeCondition params:
-                    if (instance.satisfiedWhen !== undefined) {
-                        return instance.satisfiedWhen + (instance.maxCount ? " (" + instance.maxCount + "x)" : "") + ": " + utils.getTimeString(instance.time) + (instance.start ? " after " + instance.start : "");
+                    if (instance.when !== undefined) {
+                        return instance.when + (instance.maxCount ? " (" + instance.maxCount + "x)" : "") + ": " + utils.getTimeString(instance.time) + (instance.start ? " after " + instance.start : "");
                     }
                     return "none";
                 },
@@ -2582,9 +2582,9 @@ define([
                         isRequired: _parentIsTimeCondition,
                         isValid: _parentIsTimeCondition
                     },
-                    SATISFIED_WHEN: {
-                        name: "satisfiedWhen",
-                        type: TIME_CONDITION_SATISFIED_WHEN,
+                    WHEN: {
+                        name: "when",
+                        type: TIME_CONDITION_WHEN,
                         isRequired: _parentIsTimeCondition,
                         isValid: _parentIsTimeCondition
                     },
@@ -2600,8 +2600,8 @@ define([
                         optional: true,
                         isValid: _isRepeatTime
                     },
-                    START_OFFSET: {
-                        name: "startOffset",
+                    START_VALUE: {
+                        name: "startValue",
                         type: MILLISECONDS,
                         optional: true,
                         isValid: _isRepeatTime
@@ -2670,26 +2670,41 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            TRIGGER_FIRE_WHEN = {
+            TRIGGER_WHEN = {
                 baseType: BaseType.ENUM,
-                values: missions.TriggerFireWhen
+                values: missions.TriggerWhen
             },
-            _triggerCanHaveConditions = function (data) {
-                return data.fireWhen !== missions.TriggerFireWhen.MISSION_STARTS;
+            _triggerHasConditions = function (data) {
+                return data.conditions && (data.conditions.length > 0);
             },
             _triggerHasMultipleConditions = function (data) {
                 return data.conditions && (data.conditions.length > 1);
             },
-            _triggerIsOneShot = function (data) {
-                return data.oneShot !== false;
-            },
-            _getFireWhenString = function (fireWhen, plural) {
-                switch (fireWhen) {
-                    case missions.TriggerFireWhen.BECOMES_TRUE:
+            _getTriggerWhenString = function (when, plural) {
+                switch (when) {
+                    case missions.TriggerWhen.BECOMES_TRUE:
                         return "";
-                    case missions.TriggerFireWhen.BECOMES_FALSE:
+                    case missions.TriggerWhen.BECOMES_FALSE:
                         return (plural ? "become" : "becomes") + " false";
                 }
+            },
+            _getTriggerDefaultOnce = function (data) {
+                var i;
+                if (data.conditions) {
+                    for (i = 0; i < data.conditions.length; i++) {
+                        if (missions.createCondition(data.conditions[i]).canChangeMultipleTimes()) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            },
+            _isTriggerOnceValid = function (data) {
+                return !_getTriggerDefaultOnce(data);
+            },
+            _triggerIsOneShot = function (data) {
+                return (data.once === true) ||
+                        ((data.once === undefined) && _getTriggerDefaultOnce(data));
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2705,18 +2720,15 @@ define([
                         } else {
                             result = result + CONDITION.getPreviewText(instance.conditions[0]);
                         }
-                        return result + (instance.fireWhen ? " " + _getFireWhenString(instance.fireWhen, instance.conditions.length > 1) : "");
+                        return result + (instance.when ? " " + _getTriggerWhenString(instance.when, instance.conditions.length > 1) : "");
                     }
-                    if (instance.fireWhen === missions.TriggerFireWhen.MISSION_STARTS) {
-                        return result + "mission start";
-                    }
-                    return "trigger needs setting up";
+                    return result + "mission start";
                 },
                 properties: {
                     CONDITIONS: {
                         name: "conditions",
                         type: _createTypedArrayType(CONDITION),
-                        isValid: _triggerCanHaveConditions
+                        optional: true
                     },
                     WHICH: {
                         name: "which",
@@ -2724,15 +2736,18 @@ define([
                         defaultValue: missions.TriggerWhich.ALL,
                         isValid: _triggerHasMultipleConditions
                     },
-                    FIRE_WHEN: {
-                        name: "fireWhen",
-                        type: TRIGGER_FIRE_WHEN,
-                        defaultValue: missions.TriggerFireWhen.BECOMES_TRUE
+                    WHEN: {
+                        name: "when",
+                        type: TRIGGER_WHEN,
+                        defaultValue: missions.TriggerWhen.BECOMES_TRUE,
+                        isValid: _triggerHasConditions
                     },
-                    ONE_SHOT: {
-                        name: "oneShot",
+                    ONCE: {
+                        name: "once",
                         type: BaseType.BOOLEAN,
-                        defaultValue: true
+                        getDerivedDefault: _getTriggerDefaultOnce,
+                        isValid: _isTriggerOnceValid,
+                        optional: true
                     },
                     DELAY: {
                         name: "delay",
@@ -3118,7 +3133,7 @@ define([
                     if (instance.actions && (instance.actions.length > 0) && (instance.actions[0].type === missions.ActionType.LOSE)) {
                         return "lose";
                     }
-                    if (instance.trigger && (instance.trigger.fireWhen === missions.TriggerFireWhen.MISSION_STARTS)) {
+                    if (instance.trigger && (!instance.trigger.conditions || instance.trigger.conditions.length === 0)) {
                         return "start";
                     }
                     if (instance.actions && (instance.actions.length === 1)) {

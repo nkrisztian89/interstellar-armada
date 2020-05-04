@@ -6,7 +6,7 @@
  * @version 2.0
  */
 
-/*global define, Element, Float32Array, performance, localStorage */
+/*global define, localStorage */
 
 /**
  * @param utils Used for format strings and useful constants
@@ -71,14 +71,12 @@ define([
             // ------------------------------------------------------------------------------
             // enums
             TriggerWhich = {
-                /** All the conditions need to be true / false (see TriggerFireWhen) for the trigger to fire */
+                /** All the conditions need to be true / false (see TriggerWhen) for the trigger to fire */
                 ALL: "all",
-                /** Any of the conditions being true / false (see TriggerFireWhen) causes the trigger to fire */
+                /** Any of the conditions being true / false (see TriggerWhen) causes the trigger to fire */
                 ANY: "any"
             },
-            TriggerFireWhen = {
-                /** The trigger fires ones at the very first simulation step of the mission (must be oneShot) */
-                MISSION_STARTS: "missionStarts",
+            TriggerWhen = {
                 /** The trigger fires when all / any (see TriggerWhich) of its conditions become true */
                 BECOMES_TRUE: "becomesTrue",
                 /** The trigger fires when all / any (see TriggerWhich) of its conditions become false */
@@ -100,7 +98,7 @@ define([
                 /** The condition is satisfied when there are exactly as many subjects alive as the specified count */
                 EQUALS: "equals"
             },
-            TimeConditionSatisfiedWhen = {
+            TimeConditionWhen = {
                 /** The condition is satisfied until the specified time has elapsed */
                 BEFORE: "before",
                 /** The condition is satisfied starting from when the specified time has elapsed */
@@ -244,9 +242,9 @@ define([
     // -------------------------------------------------------------------------
     // Freezing enums
     Object.freeze(TriggerWhich);
-    Object.freeze(TriggerFireWhen);
+    Object.freeze(TriggerWhen);
     Object.freeze(ConditionType);
-    Object.freeze(TimeConditionSatisfiedWhen);
+    Object.freeze(TimeConditionWhen);
     Object.freeze(ActionType);
     Object.freeze(MissionState);
     // -------------------------------------------------------------------------
@@ -841,6 +839,13 @@ define([
     Condition.prototype.isActive = function () {
         return true;
     };
+    /**
+     * Whether this condition can change between being satisfied and not multiple times during the mission
+     * @returns {Boolean}
+     */
+    Condition.prototype.canChangeMultipleTimes = function () {
+        return false;
+    };
     // ##############################################################################
     /**
      * @class A condition that is satisfied when all of its subjects have been destroyed
@@ -1046,7 +1051,7 @@ define([
          * The time elapsed while running the timer for this condition, in milliseconds
          * @type Number
          */
-        this._timeElapsed = this._params ? this._params.startOffset || 0 : 0;
+        this._timeElapsed = this._params ? this._params.startValue || 0 : 0;
         /**
          * The number of times this condition has already been satisfied (for repeat mode)
          * @type Number
@@ -1056,9 +1061,9 @@ define([
          * When this condition can become impossible to be satisfied
          * @type Boolean
          */
-        this._canBeImpossible = this._params ? (this._params.satisfiedWhen === TimeConditionSatisfiedWhen.BEFORE) ||
-                (this._params.satisfiedWhen === TimeConditionSatisfiedWhen.ONCE) ||
-                ((this._params.satisfiedWhen === TimeConditionSatisfiedWhen.REPEAT) && this._params.maxCount) : false;
+        this._canBeImpossible = this._params ? (this._params.when === TimeConditionWhen.BEFORE) ||
+                (this._params.when === TimeConditionWhen.ONCE) ||
+                ((this._params.when === TimeConditionWhen.REPEAT) && this._params.maxCount) : false;
         /**
          * Whether this condition cannot be satisfied anymore
          * @type Boolean
@@ -1070,10 +1075,10 @@ define([
     /**
      * @typedef TimeCondition~Params
      * @property {Number} time The amount of time this condition refers to, in milliseconds
-     * @property {String} satisfiedWhen (enum TimeConditionSatisfiedWhen) How to determine when the condition is satisfied
+     * @property {String} when (enum TimeConditionWhen) How to determine when the condition is satisfied
      * @property {String} [start] The name of the event starting the timer for this condition (not set: start of mission)
      * @property {Number} [maxCount] The maximum number of times this condition can be satisfied (only for repeat mode)
-     * @property {Number} [startOffset] The value of the timer when started (for repeat mode)
+     * @property {Number} [startValue] The value of the timer when started (for repeat mode)
      */
     /**
      * @param {TimeCondition~Params} params 
@@ -1086,11 +1091,11 @@ define([
         this._params = params;
         if (!this._params ||
                 ((typeof this._params.time) !== "number") ||
-                !(utils.getSafeEnumValue(TimeConditionSatisfiedWhen, this._params.satisfiedWhen)) ||
+                !(utils.getSafeEnumValue(TimeConditionWhen, this._params.when)) ||
                 ((this._params.start !== undefined) && (typeof this._params.start !== "string")) ||
-                ((this._params.satisfiedWhen !== TimeConditionSatisfiedWhen.REPEAT) && (this._params.maxCount !== undefined)) ||
-                ((this._params.satisfiedWhen === TimeConditionSatisfiedWhen.REPEAT) && (this._params.maxCount !== undefined) && (typeof this._params.maxCount !== "number")) ||
-                ((this._params.startOffset !== undefined) && (typeof this._params.startOffset !== "number"))) {
+                ((this._params.when !== TimeConditionWhen.REPEAT) && (this._params.maxCount !== undefined)) ||
+                ((this._params.when === TimeConditionWhen.REPEAT) && (this._params.maxCount !== undefined) && (typeof this._params.maxCount !== "number")) ||
+                ((this._params.startValue !== undefined) && (typeof this._params.startValue !== "number"))) {
             this._handleWrongParams();
             return false;
         }
@@ -1114,20 +1119,20 @@ define([
         }
         if (this._running) {
             this._timeElapsed += dt;
-            switch (this._params.satisfiedWhen) {
-                case TimeConditionSatisfiedWhen.BEFORE:
+            switch (this._params.when) {
+                case TimeConditionWhen.BEFORE:
                     if (this._timeElapsed < this._params.time) {
                         return true;
                     } else {
                         this._impossible = true;
                     }
                     break;
-                case TimeConditionSatisfiedWhen.AFTER:
+                case TimeConditionWhen.AFTER:
                     if (this._timeElapsed > this._params.time) {
                         return true;
                     }
                     break;
-                case TimeConditionSatisfiedWhen.ONCE:
+                case TimeConditionWhen.ONCE:
                     if ((this._timeElapsed >= this._params.time) && (this._count === 0)) {
                         this._running = false;
                         this._count = 1;
@@ -1135,7 +1140,7 @@ define([
                         return true;
                     }
                     break;
-                case TimeConditionSatisfiedWhen.REPEAT:
+                case TimeConditionWhen.REPEAT:
                     if (!this._params.maxCount || (this._count < this._params.maxCount)) {
                         while (this._timeElapsed >= this._params.time) {
                             this._timeElapsed -= this._params.time;
@@ -1161,12 +1166,12 @@ define([
      */
     TimeCondition.prototype.getObjectiveString = function (stringPrefix, multipleConditions) {
         var result;
-        if (!multipleConditions && (!this._params || (this._params.satisfiedWhen !== TimeConditionSatisfiedWhen.AFTER))) {
-            application.showError("Single time conditions for mission objectives must have satisfiedWhen set to '" + TimeConditionSatisfiedWhen.AFTER + "'!");
+        if (!multipleConditions && (!this._params || (this._params.when !== TimeConditionWhen.AFTER))) {
+            application.showError("Single time conditions for mission objectives must have 'when' = '" + TimeConditionWhen.AFTER + "'!");
             return null;
         }
-        if (multipleConditions && (!this._params || (this._params.satisfiedWhen !== TimeConditionSatisfiedWhen.BEFORE))) {
-            application.showError("Time conditions used in combination with other conditions for mission objectives must have satisfiedWhen set to '" + TimeConditionSatisfiedWhen.BEFORE + "'!");
+        if (multipleConditions && (!this._params || (this._params.when !== TimeConditionWhen.BEFORE))) {
+            application.showError("Time conditions used in combination with other conditions for mission objectives must have 'when' = '" + TimeConditionWhen.BEFORE + "'!");
             return null;
         }
         result = utils.formatString(strings.get(stringPrefix, multipleConditions ? strings.OBJECTIVE.TIME_MULTI_SUFFIX.name : strings.OBJECTIVE.TIME_SUFFIX.name), {
@@ -1224,6 +1229,20 @@ define([
     TimeCondition.prototype.isActive = function () {
         return this._running && (!this._params || (this._timeElapsed < this._params.time));
     };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    TimeCondition.prototype.canChangeMultipleTimes = function () {
+        return this._params.when === TimeConditionWhen.REPEAT;
+    };
+    /**
+     * @param {Object} dataJSON
+     * @returns {DestroyedCondition|CountCondition|TimeCondition|Condition}
+     */
+    function createCondition(dataJSON) {
+        return new (_conditionConstructors[dataJSON.type] || Condition)(dataJSON);
+    }
     // #########################################################################
     /**
      * @callback Trigger~onFireCallback
@@ -1242,16 +1261,16 @@ define([
      * @param {Object} dataJSON
      */
     function Trigger(dataJSON) {
-        var i;
+        var i, when, which;
         /**
          * The list of conditions to evaluate when deciding whether to fire
          * @type Condition[]
          */
         this._conditions = null;
-        if (dataJSON.conditions) {
+        if (dataJSON.conditions && (dataJSON.conditions.length > 0)) {
             this._conditions = [];
             for (i = 0; i < dataJSON.conditions.length; i++) {
-                this._conditions.push(new (_conditionConstructors[dataJSON.conditions[i].type] || Condition)(dataJSON.conditions[i]));
+                this._conditions.push(createCondition(dataJSON.conditions[i]));
             }
         }
         /**
@@ -1259,23 +1278,23 @@ define([
          * Determines the logical operation used to combine the conditions when deciding whether to fire
          * @type String
          */
-        this._which = utils.getSafeEnumValue(TriggerWhich, dataJSON.which, TriggerWhich.ALL);
+        which = utils.getSafeEnumValue(TriggerWhich, dataJSON.which, TriggerWhich.ALL);
         /**
          * Cached value of whether we need to check for the state of all conditions to be true / false
          * @type Boolean
          */
-        this._all = (this._which === TriggerWhich.ALL);
+        this._all = (which === TriggerWhich.ALL);
         /**
-         * (enum TriggerFireWhen) 
+         * (enum TriggerWhen)
          * Determines at what logic state (or state change) should the trigger fire
          * @type String
          */
-        this._fireWhen = utils.getSafeEnumValue(TriggerFireWhen, dataJSON.fireWhen, TriggerFireWhen.BECOMES_TRUE);
+        when = utils.getSafeEnumValue(TriggerWhen, dataJSON.when, TriggerWhen.BECOMES_TRUE);
         /**
          * Cached value of whether we need to check for false values of conditions rather then true
          * @type Boolean
          */
-        this._falsy = (this._fireWhen === TriggerFireWhen.BECOMES_FALSE);
+        this._falsy = (when === TriggerWhen.BECOMES_FALSE);
         if (!this._all) {
             this._falsy = !this._falsy;
         }
@@ -1283,10 +1302,20 @@ define([
          * When true, the trigger can only fire once during a mission, and then it does not evaluate its conditions anymore
          * @type Boolean
          */
-        this._oneShot = dataJSON.oneShot !== false;
+        this._once = true;
+        if (dataJSON.once !== undefined) {
+            this._once = dataJSON.once;
+        } else if (this._conditions) {
+            for (i = 0; i < this._conditions.length; i++) {
+                if (this._conditions[i].canChangeMultipleTimes()) {
+                    this._once = false;
+                    break;
+                }
+            }
+        }
         /**
-         * For oneShot triggers only - if this is set (to a larger than 0 value), the trigger will fire this much later after the first
-         * time it is evaluated true, in milliseconds.
+         * If this is set (to a larger than 0 value), the trigger will fire this much later after the first
+         * time it is evaluated true, in milliseconds. "once" must be set to true.
          * @type Number
          */
         this._delay = dataJSON.delay || 0;
@@ -1324,18 +1353,12 @@ define([
             }
         }
         // invalid state checks
-        if (!this._conditions) {
-            if (this._fireWhen !== TriggerFireWhen.MISSION_STARTS) {
-                application.showError("A trigger has no conditions, and so its fireWhen state must be '" + TriggerFireWhen.MISSION_STARTS + "'!");
-                this._fireWhen = TriggerFireWhen.MISSION_STARTS;
-            }
-            if (!this._oneShot) {
-                application.showError("A trigger has no conditions, and so it must be set as oneShot!");
-                this._oneShot = true;
-            }
+        if (!this._conditions && !this._once) {
+            application.showError("A trigger has no conditions, 'once' cannot be set to false!");
+            this._once = true;
         }
-        if (!this._oneShot && this._delay) {
-            application.showError("Only oneShot triggers can have delays!");
+        if (!this._once && this._delay) {
+            application.showError("Triggers without 'once' cannot have delays!");
             this._delay = 0;
         }
     }
@@ -1376,7 +1399,7 @@ define([
      */
     Trigger.prototype.simulate = function (mission, dt) {
         var conditionState, i;
-        if (this._oneShot) {
+        if (this._once) {
             if (this._fired) {
                 return;
             }
@@ -1388,7 +1411,7 @@ define([
                 return;
             }
         }
-        if (this._fireWhen === TriggerFireWhen.MISSION_STARTS) {
+        if (!this._conditions) {
             this.fire(mission);
             return;
         }
@@ -1421,12 +1444,12 @@ define([
      */
     Trigger.prototype.getObjectiveStrings = function (stringPrefix, triggersWinAction) {
         var i, result = [], multi = this._conditions.length > 1, text;
-        if (this._which !== TriggerWhich.ALL) {
-            application.showError("Triggers for mission objectives must be set to 'which' state of '" + TriggerWhich.ALL + "'!");
+        if (!this._all) {
+            application.showError("Triggers for mission objectives must be set to 'which' = '" + TriggerWhich.ALL + "'!");
             return null;
         }
-        if (this._fireWhen !== TriggerFireWhen.BECOMES_TRUE) {
-            application.showError("Triggers for mission objectives must be set to 'which' state of '" + TriggerFireWhen.BECOMES_TRUE + "'!");
+        if (this._falsy) {
+            application.showError("Triggers for mission objectives must be set to 'when' = '" + TriggerWhen.BECOMES_TRUE + "'!");
             return null;
         }
         if (triggersWinAction) {
@@ -3877,13 +3900,14 @@ define([
     // The public interface of the module
     return {
         ConditionType: ConditionType,
-        TriggerFireWhen: TriggerFireWhen,
+        TriggerWhen: TriggerWhen,
         TriggerWhich: TriggerWhich,
         CountConditionRelation: CountConditionRelation,
-        TimeConditionSatisfiedWhen: TimeConditionSatisfiedWhen,
+        TimeConditionWhen: TimeConditionWhen,
         ActionType: ActionType,
         MissionState: MissionState,
         ObjectiveState: ObjectiveState,
+        createCondition: createCondition,
         FAILED_MISSION_PERFORMACE: FAILED_MISSION_PERFORMACE,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromLocalStorage: _context.loadSettingsFromLocalStorage.bind(_context),

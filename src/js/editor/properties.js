@@ -1145,6 +1145,8 @@ define([
                 }
             }
             label = _createDefaultControl(labelText);
+        } else if (propertyDescriptor.getDerivedDefault) {
+            label = _createDefaultControl(propertyDescriptor.getDerivedDefault(parent, null, _item.name));
         } else if (propertyDescriptor.defaultDerived) {
             label = _createDefaultControl(DERIVED_PROPERTY_TEXT);
         } else if (optional) {
@@ -1265,7 +1267,7 @@ define([
                     result = _createDefaultControl(data);
             }
             // add unset button for optional values
-            if ((optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultDerived ||
+            if ((optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultDerived || propertyDescriptor.getDerivedDefault ||
                     ((!parent || (parent === _item.data)) && _basedOn && (propertyDescriptor.name !== descriptors.NAME_PROPERTY_NAME))) && (propertyDescriptor.name !== descriptors.BASED_ON_PROPERTY_NAME)) {
                 if (!control) {
                     control = result;

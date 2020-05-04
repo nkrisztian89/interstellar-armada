@@ -45,9 +45,7 @@
                     "type": "lose"
                 }]
         }, {
-            "trigger": {
-                "fireWhen": "missionStarts"
-            },
+            "trigger": {},
             "actions": [{
                     "type": "command",
                     "subjects": {

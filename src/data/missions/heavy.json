@@ -25,9 +25,7 @@
             "rotations": ["x-70","z+180"]
         }],
     "events": [{
-            "trigger": {
-                "fireWhen": "missionStarts"
-            },
+            "trigger": {},
             "actions": [{
                     "type": "command",
                     "subjects": {

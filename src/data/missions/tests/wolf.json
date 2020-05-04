@@ -24,7 +24,6 @@
     "events": [
         {
             "trigger": {
-                "fireWhen": "missionStarts",
                 "delay": 1500
             },
             "actions": [{

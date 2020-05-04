@@ -44,7 +44,6 @@
                 }]
         }, {
             "trigger": {
-                "fireWhen": "missionStarts",
                 "delay": 1300
             },
             "actions": [{

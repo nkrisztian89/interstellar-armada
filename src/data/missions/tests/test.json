@@ -45,12 +45,11 @@
                         "type": "time",
                         "params": {
                             "time": 10000,
-                            "satisfiedWhen": "repeat",
+                            "when": "repeat",
                             "maxCount": 3,
-                            "startOffset": 8000
+                            "startValue": 8000
                         }
-                    }],
-                "oneShot": false
+                    }]
             },
             "actions": [{
                     "type": "message",
@@ -66,7 +65,7 @@
                         "type": "time",
                         "params": {
                             "time": 5000,
-                            "satisfiedWhen": "once",
+                            "when": "once",
                             "start": "testMessage"
                         }
                     }]
@@ -85,11 +84,10 @@
                         "type": "time",
                         "params": {
                             "time": 25000,
-                            "satisfiedWhen": "repeat",
-                            "startOffset": 20000
+                            "when": "repeat",
+                            "startValue": 20000
                         }
-                    }],
-                "oneShot": false
+                    }]
             },
             "actions": [{
                     "type": "command",
@@ -127,11 +125,10 @@
                         "type": "time",
                         "params": {
                             "time": 30000,
-                            "satisfiedWhen": "repeat",
-                            "startOffset": 27000
+                            "when": "repeat",
+                            "startValue": 27000
                         }
-                    }],
-                "oneShot": false
+                    }]
             },
             "actions": [{
                     "type": "command",
@@ -171,11 +168,10 @@
                         "type": "time",
                         "params": {
                             "time": 30000,
-                            "satisfiedWhen": "repeat",
-                            "startOffset": 20000
+                            "when": "repeat",
+                            "startValue": 20000
                         }
-                    }],
-                "oneShot": false
+                    }]
             },
             "actions": [{
                     "type": "command",
