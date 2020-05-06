@@ -13,7 +13,7 @@
             "class": "falcon",
             "piloted": true,
             "position": [0, 0, -60],
-            "equipment": "imperial-tier3"
+            "loadout": "imperial-tier3"
         }, {
             "class": "falcon",
             "position": [-7.5, 20, -60]
@@ -23,7 +23,7 @@
         }, {
             "class": "viper",
             "position": [50, -30, -170],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "viper",
             "position": [50, 50, -160],
@@ -55,7 +55,7 @@
             "class": "taurus",
             "position": [200, -80, -350],
             "rotations": ["z+90"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "libra",
             "name": "Tiberis",
@@ -71,7 +71,7 @@
                 "type": "random",
                 "spacing": [3000, 3000, 3000]
             },
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "viper",
             "squad": "delta",
@@ -81,7 +81,7 @@
                 "type": "random",
                 "spacing": [3000, 3000, 3000]
             },
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "squad": "epsilon",
@@ -91,7 +91,7 @@
                 "type": "random",
                 "spacing": [3000, 3000, 3000]
             },
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "taurus",
             "squad": "omega",
@@ -102,7 +102,7 @@
                 "type": "random",
                 "spacing": [3000, 3000, 3000]
             },
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }
     ]
 }

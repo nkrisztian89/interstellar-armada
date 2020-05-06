@@ -3532,20 +3532,20 @@ define([
     }
     // ##############################################################################
     /**
-     * @class Every ship (class) can have several equipment profiles, each defining a 
+     * @class Every ship (class) can have several predefined loadouts, each defining a
      * specific set of equipment. These can then be used to more easily equip the
-     * ships, by only referencing the profile to equip all the different pieces of
+     * ships, by only referencing the loadout to equip all the different pieces of
      * equipment stored in it.
      * @param {Object} [dataJSON]
      */
-    function EquipmentProfile(dataJSON) {
+    function Loadout(dataJSON) {
         var i;
         /**
          * @type String
          */
         this._name = dataJSON.name || "custom";
         /**
-         * The list of descriptors of the weapons in this profile to be equipped.
+         * The list of descriptors of the weapons in this loadout to be equipped.
          * @type WeaponDescriptor[]
          */
         this._weaponDescriptors = [];
@@ -3555,7 +3555,7 @@ define([
             }
         }
         /**
-         * The list of descriptors of the missiles in this profile to be equipped.
+         * The list of descriptors of the missiles in this loadout to be equipped.
          * @type MissileDescriptor[]
          */
         this._missileDescriptors = [];
@@ -3565,63 +3565,63 @@ define([
             }
         }
         /**
-         * The descriptor of the propulsion system for this profile to be equipped.
+         * The descriptor of the propulsion system for this loadout to be equipped.
          * @type PropulsionDescriptor
          */
         this._propulsionDescriptor = dataJSON.propulsion ? new PropulsionDescriptor(dataJSON.propulsion) : null;
         /**
-         * The descriptor of the jump engine for this profile to be equipped.
+         * The descriptor of the jump engine for this loadout to be equipped.
          * @type JumpEngineDescriptor
          */
         this._jumpEngineDescriptor = dataJSON.jumpEngine ? new JumpEngineDescriptor(dataJSON.jumpEngine) : null;
         /**
-         * The descriptor of the shield for this profile to be equipped.
+         * The descriptor of the shield for this loadout to be equipped.
          * @type ShieldDescriptor
          */
         this._shieldDescriptor = dataJSON.shield ? new ShieldDescriptor(dataJSON.shield) : null;
     }
     /**
-     * Returns the name of this equipment profile.
+     * Returns the name of this loadout.
      * @returns {String}
      */
-    EquipmentProfile.prototype.getName = function () {
+    Loadout.prototype.getName = function () {
         return this._name;
     };
     /**
      * Returns the list of the descriptors for the weapons to be equipped with this
-     * profile.
+     * loadout.
      * @returns {WeaponDescriptor[]}
      */
-    EquipmentProfile.prototype.getWeaponDescriptors = function () {
+    Loadout.prototype.getWeaponDescriptors = function () {
         return this._weaponDescriptors;
     };
     /**
      * Returns the list of the descriptors for the missiles to be equipped with this
-     * profile.
+     * loadout.
      * @returns {MissileDescriptor[]}
      */
-    EquipmentProfile.prototype.getMissileDescriptors = function () {
+    Loadout.prototype.getMissileDescriptors = function () {
         return this._missileDescriptors;
     };
     /**
-     * Returns the propulsion descriptor of this profile.
+     * Returns the propulsion descriptor of this loadout.
      * @returns {PropulsionDescriptor}
      */
-    EquipmentProfile.prototype.getPropulsionDescriptor = function () {
+    Loadout.prototype.getPropulsionDescriptor = function () {
         return this._propulsionDescriptor;
     };
     /**
-     * Returns the jump engine descriptor of this profile.
+     * Returns the jump engine descriptor of this loadout.
      * @returns {JumpEngineDescriptor}
      */
-    EquipmentProfile.prototype.getJumpEngineDescriptor = function () {
+    Loadout.prototype.getJumpEngineDescriptor = function () {
         return this._jumpEngineDescriptor;
     };
     /**
-     * Returns the shield descriptor of this profile.
+     * Returns the shield descriptor of this loadout.
      * @returns {ShieldDescriptor}
      */
-    EquipmentProfile.prototype.getShieldDescriptor = function () {
+    Loadout.prototype.getShieldDescriptor = function () {
         return this._shieldDescriptor;
     };
     // ##############################################################################
@@ -4583,29 +4583,29 @@ define([
             _showMissingPropertyError(this, "views");
         }
         /**
-         * The available equipment profiles (possible sets of equipment that can be
-         * equipped by default, referring to this profile) for this ship, stored in
-         * an associative array (the profile names are keys)
+         * The available loadouts (possible sets of equipment that can be
+         * equipped by default) for this ship, stored in an associative array
+         * (the loadout names are keys)
          * @type Object
          */
-        this._equipmentProfiles = (otherSpacecraftClass && !dataJSON.equipmentProfiles) ? otherSpacecraftClass._equipmentProfiles : {};
-        if (dataJSON.equipmentProfiles) {
-            for (i = 0; i < dataJSON.equipmentProfiles.length; i++) {
-                this._equipmentProfiles[dataJSON.equipmentProfiles[i].name] = new EquipmentProfile(dataJSON.equipmentProfiles[i]);
+        this._loadouts = (otherSpacecraftClass && !dataJSON.loadouts) ? otherSpacecraftClass._loadouts : {};
+        if (dataJSON.loadouts) {
+            for (i = 0; i < dataJSON.loadouts.length; i++) {
+                this._loadouts[dataJSON.loadouts[i].name] = new Loadout(dataJSON.loadouts[i]);
             }
         }
         /**
-         * The name of the equipment profile to be used by default (e.g. in the database)
+         * The name of the loadout to be used by default (e.g. in the database)
          * @type String
          */
-        this._defaultEquipmentProfileName = otherSpacecraftClass ?
-                (dataJSON.defaultEquipmentProfileName || otherSpacecraftClass._defaultEquipmentProfileName) :
-                (dataJSON.defaultEquipmentProfileName || null);
-        if (this._defaultEquipmentProfileName && !this._equipmentProfiles[this._defaultEquipmentProfileName]) {
+        this._defaultLoadout = otherSpacecraftClass ?
+                (dataJSON.defaultLoadout || otherSpacecraftClass._defaultLoadout) :
+                (dataJSON.defaultLoadout || null);
+        if (this._defaultLoadout && !this._loadouts[this._defaultLoadout]) {
             application.showError(
-                    "Non-existing default equipment profile name '" + this._defaultEquipmentProfileName + "' specified for spacecraft class " + this.getName() + "!",
+                    "Non-existing default loadout '" + this._defaultLoadout + "' specified for spacecraft class " + this.getName() + "!",
                     application.ErrorSeverity.MINOR);
-            this._defaultEquipmentProfileName = null;
+            this._defaultLoadout = null;
         }
         /**
          * The descriptor of the sound effect to be played continuously at the position of this spacecraft.
@@ -4822,20 +4822,20 @@ define([
     /**
      * @param {String} name
      */
-    SpacecraftClass.prototype.getEquipmentProfile = function (name) {
-        return this._equipmentProfiles[name];
+    SpacecraftClass.prototype.getLoadout = function (name) {
+        return this._loadouts[name];
     };
     /**
      * @returns {String[]}
      */
-    SpacecraftClass.prototype.getEquipmentProfileNames = function () {
-        return Object.keys(this._equipmentProfiles);
+    SpacecraftClass.prototype.getLoadoutNames = function () {
+        return Object.keys(this._loadouts);
     };
     /**
      * @returns {String}
      */
-    SpacecraftClass.prototype.getDefaultEquipmentProfileName = function () {
-        return this._defaultEquipmentProfileName;
+    SpacecraftClass.prototype.getDefaultLoadout = function () {
+        return this._defaultLoadout;
     };
     /**
      * @returns {ObjectView[]}
@@ -5035,7 +5035,7 @@ define([
         getClassNames: getClassNames,
         getClass: getClass,
         createClass: _classManager.createResource.bind(_classManager),
-        EquipmentProfile: EquipmentProfile,
+        Loadout: Loadout,
         ObjectView: ObjectView,
         SceneView: SceneView,
         requestLoad: requestLoad,

@@ -246,14 +246,14 @@
                 "type": "wedge",
                 "spacing": [35, -35, 10]
             },
-            "equipments": ["imperial-tier3", "imperial-tier2", "imperial-tier2"]
+            "loadouts": ["imperial-tier3", "imperial-tier2", "imperial-tier2"]
         }, {
             "team": "empire",
             "class": "viper",
             "squad": "beta",
             "count": 3,
             "ai": "fighter",
-            "equipment": "imperial-tier1",
+            "loadout": "imperial-tier1",
             "away": true
         }, {
             "team": "empire",
@@ -267,7 +267,7 @@
                 "type": "wedge",
                 "spacing": [35, -35, 10]
             },
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "team": "pirates",
             "class": "wolf",
@@ -279,7 +279,7 @@
                 "type": "wedge",
                 "spacing": [50, -30, -5]
             },
-            "equipments": ["pirate-elite", "pirate-full", "pirate-full", "pirate-shielded", "pirate-shielded"],
+            "loadouts": ["pirate-elite", "pirate-full", "pirate-full", "pirate-shielded", "pirate-shielded"],
             "rotations": ["z+180"]
         }, {
             "team": "pirates",
@@ -287,7 +287,7 @@
             "ai": "fighter",
             "squad": "marauder",
             "count": 6,
-            "equipments": ["pirate-elite", "pirate-shielded"],
+            "loadouts": ["pirate-elite", "pirate-shielded"],
             "away": true
         }, {
             "team": "pirates",
@@ -295,7 +295,7 @@
             "ai": "fighter",
             "squad": "wraith",
             "count": 3,
-            "equipment": "rebel",
+            "loadout": "rebel",
             "away": true
         }, {
             "team": "pirates",
@@ -304,7 +304,7 @@
             "ai": "ship",
             "position": [-400, 2750, 0],
             "rotations": ["x-10", "z+80"],
-            "equipment": "rebel",
+            "loadout": "rebel",
             "away": true
         }, {
             "team": "pirates",
@@ -313,7 +313,7 @@
             "ai": "ship",
             "position": [-700, 1950, 200],
             "rotations": ["x-5", "z+90"],
-            "equipment": "rebel",
+            "loadout": "rebel",
             "away": true
         }]
 }

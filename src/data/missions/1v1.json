@@ -32,13 +32,13 @@
             "class": "falcon",
             "piloted": true,
             "position": [0, 0, 0],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "team": "rebels",
             "class": "falcon",
             "ai": "fighter",
             "position": [0, 3200, -100],
             "rotations": ["z+180"],
-            "equipment": "rebel"
+            "loadout": "rebel"
         }]
 }

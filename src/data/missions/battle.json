@@ -443,14 +443,14 @@
                 "type": "wedge",
                 "spacing": [35, -35, 10]
             },
-            "equipments": ["player-tier3", "imperial-tier1", "imperial-tier1"]
+            "loadouts": ["player-tier3", "imperial-tier1", "imperial-tier1"]
         }, {
             "team": "empire",
             "class": "viper",
             "ai": "fighter",
             "squad": "beta",
             "count": 3,
-            "equipment": "imperial-tier1",
+            "loadout": "imperial-tier1",
             "away": true
         }, {
             "team": "empire",
@@ -458,7 +458,7 @@
             "name": "Ohio",
             "ai": "ship",
             "position": [0, 50, 0],
-            "equipment": "imperial-tier1",
+            "loadout": "imperial-tier1",
             "excludeFromReferenceScore": true,
             "away": true
         }, {
@@ -467,7 +467,7 @@
             "name": "Danube",
             "ai": "ship",
             "position": [-200, -50, 100],
-            "equipment": "imperial-half",
+            "loadout": "imperial-half",
             "excludeFromReferenceScore": true
         }, {
             "team": "empire",
@@ -475,7 +475,7 @@
             "name": "Vistula",
             "ai": "ship",
             "position": [200, -50, 100],
-            "equipment": "imperial-half",
+            "loadout": "imperial-half",
             "excludeFromReferenceScore": true
         }, {
             "team": "rebels",
@@ -483,7 +483,7 @@
             "ai": "fighter",
             "squad": "raider",
             "count": 5,
-            "equipment": "pirate-full",
+            "loadout": "pirate-full",
             "away": true
         }, {
             "team": "rebels",
@@ -491,7 +491,7 @@
             "ai": "fighter",
             "squad": "serpent",
             "count": 3,
-            "equipment": "rebel",
+            "loadout": "rebel",
             "away": true
         }, {
             "team": "rebels",
@@ -499,7 +499,7 @@
             "ai": "fighter",
             "squad": "wraith",
             "count": 3,
-            "equipment": "rebel",
+            "loadout": "rebel",
             "away": true
         }, {
             "team": "rebels",
@@ -507,7 +507,7 @@
             "ai": "fighter",
             "squad": "phantom",
             "count": 4,
-            "equipment": "rebel-heavy",
+            "loadout": "rebel-heavy",
             "away": true
         }, {
             "team": "rebels",
@@ -516,7 +516,7 @@
             "ai": "ship",
             "position": [0, 3950, 0],
             "rotations": ["z+180"],
-            "equipment": "rebel",
+            "loadout": "rebel",
             "excludeFromReferenceScore": true
         }, {
             "team": "rebels",
@@ -525,14 +525,14 @@
             "ai": "ship",
             "position": [-200, 4150, -50],
             "rotations": ["z+180"],
-            "equipment": "rebel",
+            "loadout": "rebel",
             "excludeFromReferenceScore": true
         }, {
             "team": "rebels",
             "class": "taurus",
             "name": "Tigris",
             "ai": "ship",
-            "equipment": "rebel",
+            "loadout": "rebel",
             "excludeFromReferenceScore": true,
             "away": true
         }, {
@@ -540,7 +540,7 @@
             "class": "taurus",
             "name": "Ganges",
             "ai": "ship",
-            "equipment": "rebel",
+            "loadout": "rebel",
             "excludeFromReferenceScore": true,
             "away": true
         }]

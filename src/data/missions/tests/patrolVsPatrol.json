@@ -63,7 +63,7 @@
             "name": "Ohio",
             "ai": "ship",
             "position": [0, 50, 0],
-            "equipment": "full",
+            "loadout": "full",
             "excludeFromReferenceScore": true
         },
         {
@@ -92,7 +92,7 @@
             "class": "aries",
             "ai": "ship",
             "position": [0, 4950, 0],
-            "equipment": "full",
+            "loadout": "full",
             "excludeFromReferenceScore": true
         }
     ]

@@ -33,7 +33,7 @@
             "class": "falcon",
             "piloted": true,
             "position": [0, 3200, 0],
-            "equipment": "player-tier3",
+            "loadout": "player-tier3",
             "rotations": ["z+180"]
         }, {
             "team": "rebels",
@@ -41,7 +41,7 @@
             "squad": "wraith",
             "count": 3,
             "ai": "fighter",
-            "equipment": "rebel",
+            "loadout": "rebel",
             "position": [0, 0, -100],
             "formation": {
                 "type": "wedge",
@@ -58,6 +58,6 @@
                 "type": "wedge",
                 "spacing": [-35, -35, 0]
             },
-            "equipments": ["rebel-heavy", "rebel-light", "rebel-light"]
+            "loadouts": ["rebel-heavy", "rebel-light", "rebel-light"]
         }]
 }

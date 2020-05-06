@@ -329,7 +329,7 @@ define([
                 null,
                 mat.identity4(),
                 mat.identity4(),
-                spacecraftClass.getDefaultEquipmentProfileName());
+                spacecraftClass.getDefaultLoadout());
         // request the required shaders from the resource manager
         graphics.getShader(_getSetting(SETTINGS.WIREFRAME_SHADER_NAME));
         graphics.getShader(_getSetting(SETTINGS.SOLID_SHADER_NAME));

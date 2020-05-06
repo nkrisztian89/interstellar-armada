@@ -140,7 +140,7 @@ define([
      * @param {String|Number} [name] If the changed property belongs to an object or array below the main item, the name of the property or
      * in case of array the index of the element needs to be given
      * here (topName refers to the name of the property under which the change happened. In case of changing 
-     * selectedSpacecraftClass.equipmentProfiles[1].weapons[0].class, topName would be "equipmentProfiles" and name would be "class"
+     * selectedSpacecraftClass.loadouts[1].weapons[0].class, topName would be "loadouts" and name would be "class"
      * (and parent should refer to weapons[0]))
      * @param {Function} callback Function to execute after the data object has been changed but before the game objects have been reloaded from the new data
      */
@@ -300,8 +300,8 @@ define([
      * @returns {Element}
      */
     function _createEnumControl(topName, values, data, parent, name, onchange) {
-        var result = common.createSelector(values, data, false, function () {
-            _changeData(topName, result.value, parent, name, onchange);
+        var result = common.createSelector(values, data, false, function (value) {
+            _changeData(topName, result ? result.value : value, parent, name, onchange);
         });
         return result;
     }
@@ -1129,16 +1129,17 @@ define([
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, null, _item.name));
         if ((!parent || (parent === _item.data)) && _basedOn) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
-        } else if (!optional && ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault)) {
+        } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault) {
             labelText = DEFAULT_PROPERTY_TEXT;
-            if ((typeof propertyDescriptor.defaultValue === "number") || (typeof propertyDescriptor.defaultValue === "boolean")) {
+            if (typeof propertyDescriptor.defaultValue === "number") {
                 labelText = propertyDescriptor.defaultValue.toString();
                 type = new descriptors.Type(propertyDescriptor.type);
                 if (type.getUnit()) {
                     labelText += " " + type.getUnit();
                 }
-            }
-            if (typeof propertyDescriptor.defaultValue === "string") {
+            } else if (typeof propertyDescriptor.defaultValue === "boolean") {
+                labelText = propertyDescriptor.defaultValue ? "yes" : "no";
+            } else if (typeof propertyDescriptor.defaultValue === "string") {
                 labelText = propertyDescriptor.defaultValue;
                 if (labelText.length > 15) {
                     labelText = labelText.substring(0, 12) + "...";

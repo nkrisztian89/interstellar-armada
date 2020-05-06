@@ -42,7 +42,7 @@
             "squad": "alpha 2",
             "ai": "fighter",
             "position": [35, -35, 0],
-            "equipment": "light"
+            "loadout": "light"
         },
         {
             "team": "empire",
@@ -50,7 +50,7 @@
             "squad": "alpha 3",
             "ai": "fighter",
             "position": [-35, -35, 0],
-            "equipment": "light"
+            "loadout": "light"
         },
         {
             "team": "rebels",
@@ -59,7 +59,7 @@
             "ai": "fighter",
             "position": [0, 3200, -100],
             "rotations": ["z+180"],
-            "equipment": "rebel"
+            "loadout": "rebel"
         },
         {
             "team": "rebels",
@@ -68,7 +68,7 @@
             "ai": "fighter",
             "position": [-35, 3235, -100],
             "rotations": ["z+180"],
-            "equipment": "rebel-light"
+            "loadout": "rebel-light"
         },
         {
             "team": "rebels",
@@ -77,7 +77,7 @@
             "ai": "fighter",
             "position": [35, 3235, -100],
             "rotations": ["z+180"],
-            "equipment": "rebel-light"
+            "loadout": "rebel-light"
         }
     ]
 }

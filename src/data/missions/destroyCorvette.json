@@ -236,14 +236,14 @@
                 "type": "wedge",
                 "spacing": [35, -35, 0]
             },
-            "equipments": ["player-tier2", "imperial-tier1", "imperial-tier1"]
+            "loadouts": ["player-tier2", "imperial-tier1", "imperial-tier1"]
         }, {
             "team": "empire",
             "class": "viper",
             "squad": "delta",
             "count": 3,
             "ai": "fighter",
-            "equipment": "imperial-tier1",
+            "loadout": "imperial-tier1",
             "away": true
         }, {
             "team": "rebels",
@@ -252,7 +252,7 @@
             "ai": "ship",
             "position": [-135, 3835, -200],
             "rotations": ["z+90"],
-            "equipment": "rebel"
+            "loadout": "rebel"
         }, {
             "team": "rebels",
             "class": "falcon",
@@ -265,14 +265,14 @@
                 "type": "wedge",
                 "spacing": [35, -35, 0]
             },
-            "equipment": "rebel"
+            "loadout": "rebel"
         }, {
             "team": "rebels",
             "class": "falcon",
             "squad": "serpent",
             "count": 5,
             "ai": "fighter",
-            "equipment": "rebel",
+            "loadout": "rebel",
             "away": true
         }]
 }

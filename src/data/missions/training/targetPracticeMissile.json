@@ -150,7 +150,7 @@
             "name": "Rookie",
             "piloted": true,
             "position": [0, 0, 0],
-            "equipment": "training"
+            "loadout": "training"
         },
         {
             "team": "practiceTargets",
@@ -159,7 +159,7 @@
             "ai": "fighter",
             "position": [0, 150, 0],
             "rotations": ["z+180"],
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         },
         {
             "team": "practiceTargets",
@@ -167,7 +167,7 @@
             "name": "Tisza",
             "ai": "ship",
             "away": true,
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         },
         {
             "team": "practiceTargets",

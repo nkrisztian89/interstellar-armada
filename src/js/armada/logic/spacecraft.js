@@ -266,14 +266,13 @@ define([
      * the initial position of the spacecraft.
      * @param {Float32Array} [orientationMatrix] The rotation matrix describing
      * the initial orientation of the spacecraft.
-     * @param {String} [equipmentProfileName] The name of the equipment profile
-     * to use to equip the spacecraft. If not given, the spacecraft will not be
-     * equipped.
+     * @param {String} [loadoutName] The name of the loadout to use to equip the
+     * spacecraft. If not given, the spacecraft will not be equipped.
      * @param {Spacecraft[]} spacecraftArray The array of spacecrafts participating
      * in the same battle simulation as this one.
      * @returns {Spacecraft}
      */
-    function Spacecraft(spacecraftClass, name, positionMatrix, orientationMatrix, equipmentProfileName, spacecraftArray) {
+    function Spacecraft(spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray) {
         // ---------------------------------------
         // basic info
         /**
@@ -578,7 +577,7 @@ define([
         this._burnForAngularVelocityChangeFactor = 0;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
-            this._init(spacecraftClass, name, positionMatrix, orientationMatrix, equipmentProfileName, spacecraftArray);
+            this._init(spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray);
         }
     }
     /**
@@ -625,11 +624,11 @@ define([
      * @param {String} [name]
      * @param {Float32Array} [positionMatrix]
      * @param {Float32Array} [orientationMatrix]
-     * @param {String} [equipmentProfileName]
+     * @param {String} [loadoutName]
      * @param {Spacecraft[]} [spacecraftArray]
      * @see Spacecraft
      */
-    Spacecraft.prototype._init = function (spacecraftClass, name, positionMatrix, orientationMatrix, equipmentProfileName, spacecraftArray) {
+    Spacecraft.prototype._init = function (spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray) {
         var i, blinkerDescriptors;
         this._class = spacecraftClass;
         this._name = name || "";
@@ -657,9 +656,9 @@ define([
             this._blinkers.push(new Blinker(blinkerDescriptors[i]));
         }
         this._lights = [];
-        // equipping the craft if a profile name was given
-        if (equipmentProfileName) {
-            this.equipProfile(this._class.getEquipmentProfile(equipmentProfileName));
+        // equipping the craft if a loadout name was given
+        if (loadoutName) {
+            this.equipLoadout(this._class.getLoadout(loadoutName));
         }
         this._targetedBy = [];
         this._eventHandlers = {};
@@ -1406,7 +1405,7 @@ define([
      * participating in the same battle.
      */
     Spacecraft.prototype.loadFromJSON = function (dataJSON, spacecraftArray) {
-        var equipmentProfile, squadData;
+        var loadout, squadData;
         this._init(
                 classes.getSpacecraftClass(dataJSON.class),
                 dataJSON.name,
@@ -1419,20 +1418,16 @@ define([
             this.setSquad(squadData[0], parseInt(squadData[1], 10));
         }
         // equipping the created spacecraft
-        if (dataJSON.equipment) {
-            // if a profile is referenced, look up that profile and equip according to that
-            if ((typeof dataJSON.equipment) === "string") {
-                this.equipProfile(this._class.getEquipmentProfile(dataJSON.equipment));
-                // if no profile is referenced, simply create a custom profile from the given equipment object, and equip that
-            } else if ((typeof dataJSON.equipment) === "object") {
-                equipmentProfile = new classes.EquipmentProfile(dataJSON.equipment);
-                this.equipProfile(equipmentProfile);
-            } else {
-                application.showError("Invalid equipment property specified for spacecraft " + this.getID() + "!");
-            }
-            // if there is no equipment specified, attempt to load the default profile
-        } else if (this._class.getDefaultEquipmentProfileName()) {
-            this.equipProfile(this._class.getEquipmentProfile(this._class.getDefaultEquipmentProfileName()));
+        if (dataJSON.loadout) {
+            // if a loadout is referenced, look up that loadout and equip according to that
+            this.equipLoadout(this._class.getLoadout(dataJSON.loadout));
+        } else if (dataJSON.equipment) {
+            // if a custom loadout is specified, simply create it from the given object, and equip that
+            loadout = new classes.Loadout(dataJSON.equipment);
+            this.equipLoadout(loadout);
+        // if there is no equipment specified, attempt to load the default loadout
+        } else if (this._class.getDefaultLoadout()) {
+            this.equipLoadout(this._class.getLoadout(this._class.getDefaultLoadout()));
         }
         if (dataJSON.away) {
             this.setAway(true);
@@ -2152,41 +2147,40 @@ define([
         this._updateScoreValue();
     };
     /**
-     * Equips the spacecraft according to the specifications in the given equipment
-     * profile.
-     * @param {EquipmentProfile} [equipmentProfile]
+     * Equips the spacecraft according to the specifications in the given loadout.
+     * @param {Loadout} [loadout]
      */
-    Spacecraft.prototype.equipProfile = function (equipmentProfile) {
+    Spacecraft.prototype.equipLoadout = function (loadout) {
         var i, weaponDescriptors, missileDescriptors;
-        if (equipmentProfile) {
-            weaponDescriptors = equipmentProfile.getWeaponDescriptors();
+        if (loadout) {
+            weaponDescriptors = loadout.getWeaponDescriptors();
             for (i = 0; i < weaponDescriptors.length; i++) {
                 this._addWeapon(classes.getWeaponClass(weaponDescriptors[i].className), weaponDescriptors[i].slotIndex);
             }
-            missileDescriptors = equipmentProfile.getMissileDescriptors();
+            missileDescriptors = loadout.getMissileDescriptors();
             for (i = 0; i < missileDescriptors.length; i++) {
                 this._addMissiles(classes.getMissileClass(missileDescriptors[i].className), missileDescriptors[i].amount, missileDescriptors[i].launcherIndex);
             }
-            if (equipmentProfile.getPropulsionDescriptor() !== null) {
-                this._addPropulsion(classes.getPropulsionClass(equipmentProfile.getPropulsionDescriptor().className));
+            if (loadout.getPropulsionDescriptor() !== null) {
+                this._addPropulsion(classes.getPropulsionClass(loadout.getPropulsionDescriptor().className));
             }
-            if (equipmentProfile.getJumpEngineDescriptor() !== null) {
-                this._addJumpEngine(classes.getJumpEngineClass(equipmentProfile.getJumpEngineDescriptor().className));
+            if (loadout.getJumpEngineDescriptor() !== null) {
+                this._addJumpEngine(classes.getJumpEngineClass(loadout.getJumpEngineDescriptor().className));
             }
-            if (equipmentProfile.getShieldDescriptor() !== null) {
-                this._addShield(classes.getShieldClass(equipmentProfile.getShieldDescriptor().className));
+            if (loadout.getShieldDescriptor() !== null) {
+                this._addShield(classes.getShieldClass(loadout.getShieldDescriptor().className));
             }
         } else {
-            application.log_DEBUG("WARNING: equipping empty profile on " + this._class.getName() + "!");
+            application.log_DEBUG("WARNING: equipping empty loadout on " + this._class.getName() + "!");
         }
         this._updateScoreValue();
     };
     /**
-     * Returns the list of names (IDs) of the available equipment profiles for this spacecraft.
+     * Returns the list of names (IDs) of the available loadouts for this spacecraft.
      * @returns {String[]}
      */
-    Spacecraft.prototype.getEquipmentProfileNames = function () {
-        return this._class.getEquipmentProfileNames();
+    Spacecraft.prototype.getLoadoutNames = function () {
+        return this._class.getLoadoutNames();
     };
     /**
      * Returns the sound source of the ship if it is far away enough from the camera that fire/launch sound effects should

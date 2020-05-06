@@ -1959,9 +1959,9 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            EQUIPMENT_PROFILE = {
+            LOADOUT = {
                 baseType: BaseType.OBJECT,
-                name: "EquipmentProfile",
+                name: "Loadout",
                 properties: {
                     NAME: {
                         name: "name",
@@ -2084,12 +2084,12 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            EQUIPMENT_PROFILE_REFERENCE = {
+            LOADOUT_REFERENCE = {
                 baseType: BaseType.ENUM,
                 getValues: function (parent) {
-                    if (parent.equipmentProfiles) {
-                        return parent.equipmentProfiles.map(function (profile) {
-                            return profile.name;
+                    if (parent.loadouts) {
+                        return parent.loadouts.map(function (loadout) {
+                            return loadout.name;
                         });
                     }
                     return [];
@@ -2205,15 +2205,16 @@ define([
                     name: "views",
                     type: _createTypedArrayType(VIEW)
                 },
-                EQUIPMENT_PROFILES: {
-                    name: "equipmentProfiles",
-                    type: _createTypedArrayType(EQUIPMENT_PROFILE),
+                LOADOUTS: {
+                    name: "loadouts",
+                    type: _createTypedArrayType(LOADOUT),
                     optional: true
                 },
-                DEFAULT_EQUIPMENT_PROFILE_NAME: {
-                    name: "defaultEquipmentProfileName",
-                    type: EQUIPMENT_PROFILE_REFERENCE,
-                    optional: true
+                DEFAULT_LOADOUT: {
+                    name: "defaultLoadout",
+                    type: LOADOUT_REFERENCE,
+                    optional: true,
+                    updateOnValidate: true
                 },
                 HUM_SOUND: {
                     name: "humSound",
@@ -3287,13 +3288,13 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            EQUIPMENT_REFERENCE = {
+            CLASS_LOADOUT_REFERENCE = {
                 baseType: BaseType.ENUM,
                 getValues: function (parent) {
                     var spacecraftClass;
                     if (parent.class) {
                         spacecraftClass = classes.getSpacecraftClass(parent.class);
-                        return spacecraftClass.getEquipmentProfileNames();
+                        return spacecraftClass.getLoadoutNames();
                     }
                     return [];
                 }
@@ -3304,11 +3305,24 @@ define([
             _craftIsMulti = function (data) {
                 return data.count && (data.count > 1);
             },
-            _craftCanHaveEquipments = function (data) {
-                return _craftIsMulti(data) && !data.equipment;
+            _craftCanHaveLoadouts = function (data) {
+                return _craftIsMulti(data) && !data.loadout && !data.equipment;
             },
-            _craftHasNoEquipments = function (data) {
-                return !data.equipments || (data.equipments.length === 0);
+            _craftHasNoLoadouts = function (data) {
+                return !data.loadouts || (data.loadouts.length === 0);
+            },
+            _craftCanHaveLoadout = function (data) {
+                return _craftHasNoLoadouts(data) && !data.equipment;
+            },
+            _craftCanHaveEquipment = function (data) {
+                return _craftHasNoLoadouts(data) && !data.loadout;
+            },
+            _getDefaultLoadout = function (data) {
+                var spacecraftClass;
+                if (data.class) {
+                    spacecraftClass = classes.getSpacecraftClass(data.class);
+                    return spacecraftClass.getDefaultLoadout() || "none";
+                }
             },
             _craftIsNotPiloted = function (data) {
                 return !data.piloted && !data.pilotedIndex;
@@ -3368,11 +3382,21 @@ define([
                         type: BaseType.ROTATIONS,
                         optional: true
                     },
-                    EQUIPMENT: {//TODO: can be an object as well
-                        name: "equipment",
-                        type: EQUIPMENT_REFERENCE,
+                    LOADOUT: {
+                        name: "loadout",
+                        type: CLASS_LOADOUT_REFERENCE,
                         optional: true,
-                        isValid: _craftHasNoEquipments
+                        isValid: _craftCanHaveLoadout,
+                        getDerivedDefault: _getDefaultLoadout,
+                        updateOnValidate: true
+                    },
+                    EQUIPMENT: {
+                        name: "equipment",
+                        type: LOADOUT,
+                        optional: true,
+                        isValid: _craftCanHaveEquipment,
+                        defaultValue: "from loadout",
+                        updateOnValidate: true
                     },
                     AWAY: {
                         name: "away",
@@ -3407,11 +3431,12 @@ define([
                         optional: true,
                         isValid: _craftIsMulti
                     },
-                    EQUIPMENTS: {
-                        name: "equipments",
-                        type: _createTypedArrayType(EQUIPMENT_REFERENCE),
+                    LOADOUTS: {
+                        name: "loadouts",
+                        type: _createTypedArrayType(CLASS_LOADOUT_REFERENCE),
                         optional: true,
-                        isValid: _craftCanHaveEquipments
+                        isValid: _craftCanHaveLoadouts,
+                        updateOnValidate: true
                     },
                     PILOTED_INDEX: {
                         name: "pilotedIndex",

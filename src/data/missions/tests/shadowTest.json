@@ -16,7 +16,7 @@
             "ai": "ship",
             "position": [-100, 500, -400],
             "rotations": ["z+90"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "falcon",
             "squad": "alpha",
@@ -26,6 +26,6 @@
                 "spacing": [40, 0, 0]
             },
             "position": [-200, 500, -100],
-            "equipment": "player-tier2"
+            "loadout": "player-tier2"
         }]
 }

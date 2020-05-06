@@ -242,20 +242,20 @@
             "squad": "alpha 1",
             "position": [0, 0, 0],
             "rotations": ["z-90"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "team": "empire",
             "class": "falcon",
             "squad": "gamma 1",
             "ai": "fighter",
             "position": [-2000, -100, -50],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 1",
-            "equipment": "pirate-weak",
+            "loadout": "pirate-weak",
             "position": [-2200, 400, 200],
             "rotations": ["z+180"]
         }, {
@@ -263,7 +263,7 @@
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 2",
-            "equipment": "pirate-weak",
+            "loadout": "pirate-weak",
             "position": [-1900, 650, -250],
             "rotations": ["z+180"]
         }, {
@@ -271,14 +271,14 @@
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 3",
-            "equipment": "pirate-weak",
+            "loadout": "pirate-weak",
             "away": true
         }, {
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
             "squad": "raider 4",
-            "equipment": "pirate-weak",
+            "loadout": "pirate-weak",
             "away": true
         }, {
             "team": "pirates",
@@ -286,7 +286,7 @@
             "ai": "fighter",
             "squad": "marauder",
             "count": 9,
-            "equipment": "pirate-full",
+            "loadout": "pirate-full",
             "away": true,
             "excludeFromReferenceScore": true
         }, {
@@ -294,7 +294,7 @@
             "class": "rubyBlade",
             "ai": "fighter",
             "name": "Ruby Blade",
-            "equipment": "pirate-ruby-blade",
+            "loadout": "pirate-ruby-blade",
             "away": true
         }]
 }

@@ -219,7 +219,7 @@
             "name": "Ohio",
             "ai": "ship",
             "position": [0, 50, 0],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "team": "empire",
             "class": "falcon",
@@ -232,7 +232,7 @@
                 "type": "wedge",
                 "spacing": [35, -40, 10]
             },
-            "equipments": ["player-tier2", "imperial-tier1"]
+            "loadouts": ["player-tier2", "imperial-tier1"]
         }, {
             "team": "rebels",
             "class": "falcon",
@@ -240,7 +240,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "rebel",
+            "loadout": "rebel",
             "excludeFromReferenceScore": true
         }, {
             "team": "rebels",
@@ -249,7 +249,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipments": ["rebel-heavy", "rebel-heavy", "rebel-light"]
+            "loadouts": ["rebel-heavy", "rebel-heavy", "rebel-light"]
         }, {
             "team": "rebels",
             "class": "falcon",
@@ -257,7 +257,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "rebel",
+            "loadout": "rebel",
             "excludeFromReferenceScore": true
         }, {
             "team": "rebels",
@@ -266,6 +266,6 @@
             "count": 4,
             "ai": "fighter",
             "away": true,
-            "equipments": ["rebel-heavy", "rebel-heavy", "rebel-light", "rebel-light"]
+            "loadouts": ["rebel-heavy", "rebel-heavy", "rebel-light", "rebel-light"]
         }]
 }

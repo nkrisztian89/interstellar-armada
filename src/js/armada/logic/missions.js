@@ -1443,7 +1443,11 @@ define([
      * @returns {String[]}
      */
     Trigger.prototype.getObjectiveStrings = function (stringPrefix, triggersWinAction) {
-        var i, result = [], multi = this._conditions.length > 1, text;
+        var i, result = [], multi, text;
+        if (!this._conditions) {
+            application.showError("Win and lose events must have conditions!");
+            return null;
+        }
         if (!this._all) {
             application.showError("Triggers for mission objectives must be set to 'which' = '" + TriggerWhich.ALL + "'!");
             return null;
@@ -1452,6 +1456,7 @@ define([
             application.showError("Triggers for mission objectives must be set to 'when' = '" + TriggerWhen.BECOMES_TRUE + "'!");
             return null;
         }
+        multi = this._conditions.length > 1;
         if (triggersWinAction) {
             for (i = 0; i < this._conditions.length; i++) {
                 result.push(this._conditions[i].getObjectiveString(stringPrefix, multi));
@@ -2546,7 +2551,7 @@ define([
      * and a suitable AI is added to all spacecrafts if possible.
      */
     Mission.prototype.loadFromJSON = function (dataJSON, difficulty, demoMode) {
-        var i, j, craft, teamID, team, aiType, actions, count, factor, squad, names, equipments, pilotedIndex, positions, formation, orientation, spacecrafts, spacecraftDataTemplate, spacecraftData;
+        var i, j, craft, teamID, team, aiType, actions, count, factor, squad, names, loadouts, pilotedIndex, positions, formation, orientation, spacecrafts, spacecraftDataTemplate, spacecraftData;
         application.log_DEBUG("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
@@ -2578,7 +2583,7 @@ define([
                 // NOTE: MissionDescriptor.getPilotedSpacecraftDescriptor() also does this extraction!
                 squad = dataJSON.spacecrafts[i].squad;
                 names = dataJSON.spacecrafts[i].names;
-                equipments = dataJSON.spacecrafts[i].equipments;
+                loadouts = dataJSON.spacecrafts[i].loadouts;
                 pilotedIndex = dataJSON.spacecrafts[i].pilotedIndex;
                 positions = dataJSON.spacecrafts[i].positions;
                 formation = dataJSON.spacecrafts[i].formation;
@@ -2587,7 +2592,7 @@ define([
                 spacecraftDataTemplate = utils.deepCopy(dataJSON.spacecrafts[i]);
                 delete spacecraftDataTemplate.count;
                 delete spacecraftDataTemplate.names;
-                delete spacecraftDataTemplate.equipments;
+                delete spacecraftDataTemplate.loadouts;
                 delete spacecraftDataTemplate.pilotedIndex;
                 delete spacecraftDataTemplate.positions;
                 delete spacecraftDataTemplate.formation;
@@ -2599,8 +2604,8 @@ define([
                     if (names) {
                         spacecraftData.name = names[j];
                     }
-                    if (equipments) {
-                        spacecraftData.equipment = equipments[j % equipments.length];
+                    if (loadouts) {
+                        spacecraftData.loadout = loadouts[j % loadouts.length];
                     }
                     if (pilotedIndex === (j + 1)) {
                         spacecraftData.piloted = true;
@@ -3332,9 +3337,9 @@ define([
                         result.name = result.names[result.pilotedIndex - 1];
                         delete result.names;
                     }
-                    if (result.equipments) {
-                        result.equipment = result.equipments[result.pilotedIndex - 1];
-                        delete result.equipments;
+                    if (result.loadouts) {
+                        result.loadout = result.loadouts[result.pilotedIndex - 1];
+                        delete result.loadouts;
                     }
                     delete result.count;
                     delete result.pilotedIndex;

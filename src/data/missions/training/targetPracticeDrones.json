@@ -178,7 +178,7 @@
             "name": "Rookie",
             "piloted": true,
             "position": [0, 0, 0],
-            "equipment": "training"
+            "loadout": "training"
         }, {
             "team": "targets",
             "class": "drone",
@@ -186,7 +186,7 @@
             "ai": "fighter",
             "position": [0, 100, 0],
             "rotations": ["z+180"],
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         }, {
             "team": "targets",
             "class": "drone",

@@ -174,7 +174,7 @@
             "initialTarget": "Mississippi",
             "positions": [[8500, 750, -700], [8500, 1500, -400], [8500, 1000, -400], [8500, 500, -400], [8500, 0, -400], [8500, 750, -100]],
             "rotations": ["z-90"],
-            "equipment": "imperial-tier1",
+            "loadout": "imperial-tier1",
             "excludeFromReferenceScore": true
         }, {
             "class": "falcon",
@@ -189,7 +189,7 @@
                 "spacing": [100, -100, 0]
             },
             "rotations": ["z-90"],
-            "equipments": ["player-tier3", "imperial-tier2"]
+            "loadouts": ["player-tier3", "imperial-tier2"]
         }, {
             "class": "viper",
             "team": "rebels",
@@ -202,7 +202,7 @@
                 "spacing": [50, 0, 0]
             },
             "rotations": ["z+90"],
-            "equipment": "rebel-heavy"
+            "loadout": "rebel-heavy"
         }, {
             "class": "viper",
             "team": "rebels",
@@ -215,7 +215,7 @@
                 "spacing": [50, 0, 0]
             },
             "rotations": ["z+90"],
-            "equipment": "rebel-heavy"
+            "loadout": "rebel-heavy"
         }, {
             "class": "libra",
             "name": "Mississippi",
@@ -223,7 +223,7 @@
             "team": "rebels",
             "position": [-3000, 500, -400],
             "rotations": ["z+90"],
-            "equipment": "imperial-tier1",
+            "loadout": "imperial-tier1",
             "excludeFromReferenceScore": true
         }]
 }

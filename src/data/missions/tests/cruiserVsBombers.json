@@ -40,7 +40,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "class": "viper",
             "team": "empire",
@@ -53,7 +53,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "class": "viper",
             "team": "empire",
@@ -66,7 +66,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "class": "viper",
             "team": "empire",
@@ -79,7 +79,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "class": "viper",
             "team": "empire",
@@ -92,7 +92,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "class": "falcon",
             "team": "rebels",
@@ -105,7 +105,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+180"],
-            "equipment": "player-tier3"
+            "loadout": "player-tier3"
         }, {
             "class": "falcon",
             "team": "rebels",
@@ -118,7 +118,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+180"],
-            "equipment": "player-tier3"
+            "loadout": "player-tier3"
         }, {
             "class": "libra",
             "name": "Mississippi",
@@ -126,7 +126,7 @@
             "team": "rebels",
             "position": [0, 10000, 0],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1",
+            "loadout": "imperial-tier1",
             "excludeFromReferenceScore": true
         }]
 }

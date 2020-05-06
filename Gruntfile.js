@@ -123,7 +123,7 @@ module.exports = function (grunt) {
                 ["bodies"],
                 ["weaponSlots"],
                 ["missileLaunchers"],
-                ["defaultEquipmentProfileName"],
+                ["defaultLoadout"],
                 ["views"],
                 ["showTimeRatioDuringExplosion"],
                 ["damageIndicators"],

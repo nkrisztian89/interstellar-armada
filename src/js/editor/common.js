@@ -239,6 +239,9 @@ define([
             result.value = selected;
         } else {
             result.selectedIndex = 0;
+            if (selected && onchange) {
+                onchange(result.value);
+            }
         }
         result.onchange = onchange;
         return result;

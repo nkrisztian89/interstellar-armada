@@ -167,7 +167,7 @@
             "piloted": true,
             "name": "Ohio",
             "position": [0, 0, 0],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "team": "empire",
             "class": "falcon",
@@ -179,7 +179,7 @@
                 "type": "wedge",
                 "spacing": [35, -35, 0]
             },
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "team": "rebels",
             "class": "falcon",
@@ -187,7 +187,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "rebel"
+            "loadout": "rebel"
         }, {
             "team": "rebels",
             "class": "viper",
@@ -195,7 +195,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipments": ["rebel-heavy", "rebel-light", "rebel-heavy"]
+            "loadouts": ["rebel-heavy", "rebel-light", "rebel-heavy"]
         }, {
             "team": "rebels",
             "class": "falcon",
@@ -203,7 +203,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "rebel"
+            "loadout": "rebel"
         }, {
             "team": "rebels",
             "class": "viper",
@@ -211,6 +211,6 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipments": ["rebel-heavy", "rebel-light", "rebel-heavy"]
+            "loadouts": ["rebel-heavy", "rebel-light", "rebel-heavy"]
         }]
 }

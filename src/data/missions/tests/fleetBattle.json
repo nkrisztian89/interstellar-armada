@@ -40,7 +40,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier3"
+            "loadout": "player-tier3"
         }, {
             "class": "falcon",
             "team": "empire",
@@ -53,7 +53,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier2"
+            "loadout": "player-tier2"
         }, {
             "class": "falcon",
             "team": "empire",
@@ -66,7 +66,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier2"
+            "loadout": "player-tier2"
         }, {
             "class": "viper",
             "team": "empire",
@@ -79,7 +79,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "class": "viper",
             "team": "empire",
@@ -92,7 +92,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "class": "rhino",
             "team": "empire",
@@ -105,7 +105,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "rhino",
             "team": "empire",
@@ -118,7 +118,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Asimov",
@@ -126,7 +126,7 @@
             "team": "empire",
             "position": [0, -100, 0],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Lem",
@@ -134,7 +134,7 @@
             "team": "empire",
             "position": [150, -150, 0],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Vonnegut",
@@ -142,7 +142,7 @@
             "team": "empire",
             "position": [-150, -150, 0],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Verne",
@@ -150,7 +150,7 @@
             "team": "empire",
             "position": [300, -200, 0],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Wells",
@@ -158,7 +158,7 @@
             "team": "empire",
             "position": [-300, -200, 0],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "taurus",
             "name": "Indomitable",
@@ -166,7 +166,7 @@
             "team": "empire",
             "position": [150, 0, 200],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "taurus",
             "name": "Relentless",
@@ -174,7 +174,7 @@
             "team": "empire",
             "position": [-150, 0, 200],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "taurus",
             "name": "Resilient",
@@ -182,7 +182,7 @@
             "team": "empire",
             "position": [150, 0, -200],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "taurus",
             "name": "Defiant",
@@ -190,7 +190,7 @@
             "team": "empire",
             "position": [-150, 0, -200],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "libra",
             "name": "Styx",
@@ -198,7 +198,7 @@
             "team": "empire",
             "position": [0, -1000, 0],
             "rotations": ["z+0"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "falcon",
             "team": "rebels",
@@ -211,7 +211,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+180"],
-            "equipment": "player-tier3"
+            "loadout": "player-tier3"
         }, {
             "class": "falcon",
             "team": "rebels",
@@ -224,7 +224,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+180"],
-            "equipment": "player-tier2"
+            "loadout": "player-tier2"
         }, {
             "class": "falcon",
             "team": "rebels",
@@ -237,7 +237,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+180"],
-            "equipment": "player-tier2"
+            "loadout": "player-tier2"
         }, {
             "class": "viper",
             "team": "rebels",
@@ -250,7 +250,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+180"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "class": "viper",
             "team": "rebels",
@@ -263,7 +263,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+180"],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "class": "rhino",
             "team": "rebels",
@@ -276,7 +276,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "rhino",
             "team": "rebels",
@@ -289,7 +289,7 @@
                 "spacing": [50, -20, 0]
             },
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Daneel",
@@ -297,7 +297,7 @@
             "team": "rebels",
             "position": [0, 6100, 0],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Giskard",
@@ -305,7 +305,7 @@
             "team": "rebels",
             "position": [150, 6150, 0],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Calvin",
@@ -313,7 +313,7 @@
             "team": "rebels",
             "position": [-150, 6150, 0],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Baley",
@@ -321,7 +321,7 @@
             "team": "rebels",
             "position": [300, 6200, 0],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "aries",
             "name": "Seldon",
@@ -329,7 +329,7 @@
             "team": "rebels",
             "position": [-300, 6200, 0],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "taurus",
             "name": "Columbia",
@@ -337,7 +337,7 @@
             "team": "rebels",
             "position": [150, 6000, 200],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "taurus",
             "name": "Challenger",
@@ -345,7 +345,7 @@
             "team": "rebels",
             "position": [-150, 6000, 200],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "taurus",
             "name": "Enterprise",
@@ -353,7 +353,7 @@
             "team": "rebels",
             "position": [150, 6000, -200],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "taurus",
             "name": "Atlantis",
@@ -361,7 +361,7 @@
             "team": "rebels",
             "position": [-150, 6000, -200],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "class": "libra",
             "name": "Mississippi",
@@ -369,6 +369,6 @@
             "team": "rebels",
             "position": [0, 7000, 0],
             "rotations": ["z+180"],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }]
 }

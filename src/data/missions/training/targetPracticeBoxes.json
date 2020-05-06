@@ -538,7 +538,7 @@
             "class": "falcon",
             "piloted": true,
             "position": [700, -600, 0],
-            "equipment": "training"
+            "loadout": "training"
         }, {
             "team": "targets",
             "class": "container",
@@ -602,21 +602,21 @@
             "position": [-3000, -3000, 0],
             "rotations": ["z+45"],
             "away": true,
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         }, {
             "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 2",
             "away": true,
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         }, {
             "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 3",
             "away": true,
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         }, {
             "team": "targets",
             "class": "drone",
@@ -624,21 +624,21 @@
             "position": [-3000, -2000, 0],
             "squad": "drone 4",
             "away": true,
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         }, {
             "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 5",
             "away": true,
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         }, {
             "team": "targets",
             "class": "drone",
             "ai": "fighter",
             "squad": "drone 6",
             "away": true,
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         }, {
             "team": "empire",
             "name": "Flapper",
@@ -647,7 +647,7 @@
             "position": [-2000, -2000, -150],
             "rotations": ["z+45"],
             "away": true,
-            "equipment": "unarmed"
+            "loadout": "unarmed"
         }
     ]
 }

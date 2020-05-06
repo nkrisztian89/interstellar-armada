@@ -41,7 +41,7 @@
             "piloted": true,
             "squad": "alpha 1",
             "position": [0, 0, 0],
-            "equipment": "full"
+            "loadout": "full"
         },
         {
             "team": "empire",
@@ -63,7 +63,7 @@
             "squad": "beta 1",
             "ai": "fighter",
             "position": [0, -50, -50],
-            "equipment": "heavy"
+            "loadout": "heavy"
         },
         {
             "team": "empire",
@@ -71,7 +71,7 @@
             "squad": "beta 2",
             "ai": "fighter",
             "position": [35, -85, -50],
-            "equipment": "half"
+            "loadout": "half"
         },
         {
             "team": "empire",
@@ -79,7 +79,7 @@
             "squad": "beta 3",
             "ai": "fighter",
             "position": [-35, -85, -50],
-            "equipment": "half"
+            "loadout": "half"
         },
         {
             "team": "rebels",
@@ -112,7 +112,7 @@
             "ai": "fighter",
             "position": [0, 3250, -150],
             "rotations": ["z+180"],
-            "equipment": "heavy"
+            "loadout": "heavy"
         },
         {
             "team": "rebels",
@@ -121,7 +121,7 @@
             "ai": "fighter",
             "position": [-35, 3285, -150],
             "rotations": ["z+180"],
-            "equipment": "half"
+            "loadout": "half"
         },
         {
             "team": "rebels",
@@ -130,7 +130,7 @@
             "ai": "fighter",
             "position": [35, 3285, -150],
             "rotations": ["z+180"],
-            "equipment": "half"
+            "loadout": "half"
         }
     ]
 }

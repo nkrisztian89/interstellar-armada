@@ -167,7 +167,7 @@
             "name": "Amazonas",
             "ai": "ship",
             "position": [0, -2500, -200],
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "team": "empire",
             "class": "falcon",
@@ -179,7 +179,7 @@
                 "type": "wedge",
                 "spacing": [35, -35, 0]
             },
-            "equipment": "imperial-tier1"
+            "loadout": "imperial-tier1"
         }, {
             "team": "empire",
             "class": "viper",
@@ -192,7 +192,7 @@
                 "type": "wedge",
                 "spacing": [35, -35, 0]
             },
-            "equipments": ["player-tier1", "imperial-tier1", "imperial-tier1"]
+            "loadouts": ["player-tier1", "imperial-tier1", "imperial-tier1"]
         }, {
             "team": "rebels",
             "class": "taurus",
@@ -200,14 +200,14 @@
             "ai": "ship",
             "position": [-135, 5500, -200],
             "rotations": ["z+90"],
-            "equipment": "rebel"
+            "loadout": "rebel"
         }, {
             "team": "rebels",
             "class": "falcon",
             "squad": "wraith",
             "count": 7,
             "ai": "fighter",
-            "equipment": "rebel",
+            "loadout": "rebel",
             "away": true
         }]
 }

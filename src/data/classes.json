@@ -3466,11 +3466,11 @@
                     "position": [0, -10, 0],
                     "lookAt": "none"
                 }],
-            "equipmentProfiles": [{
+            "loadouts": [{
                     "name": "default",
                     "weapons": []
                 }],
-            "defaultEquipmentProfileName": "default",
+            "defaultLoadout": "default",
             "explosion": "containerExplosion",
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [],
@@ -3784,7 +3784,7 @@
                     "position": [0, -40, 7.5],
                     "distanceRange": [25, 80]
                 }],
-            "equipmentProfiles": [{
+            "loadouts": [{
                     "name": "player-tier1",
                     "weapons": [{
                             "class": "plasmaGun"
@@ -3974,7 +3974,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }],
-            "defaultEquipmentProfileName": "imperial-tier1",
+            "defaultLoadout": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
@@ -4332,7 +4332,7 @@
                     "position": [0, -48, 13.5],
                     "distanceRange": [33, 90]
                 }],
-            "equipmentProfiles": [{
+            "loadouts": [{
                     "name": "training",
                     "propulsion": {
                         "class": "imperialBomberMk1"
@@ -4519,7 +4519,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }],
-            "defaultEquipmentProfileName": "imperial-tier1",
+            "defaultLoadout": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
@@ -4836,7 +4836,7 @@
                     "capacity": 8,
                     "salvo": 5
                 }],
-            "equipmentProfiles": [{
+            "loadouts": [{
                     "name": "imperial-tier1",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
@@ -5080,7 +5080,7 @@
                     "array": false
                 }],
             "defaultLuminosityFactors": [[19, 1]],
-            "defaultEquipmentProfileName": "imperial-tier1"
+            "defaultLoadout": "imperial-tier1"
         }, {
             "name": "drone",
             "type": "drone",
@@ -5298,7 +5298,7 @@
                     "position": [0, -40, 7.5],
                     "distanceRange": [25, 80]
                 }],
-            "equipmentProfiles": [{
+            "loadouts": [{
                     "name": "default",
                     "weapons": [{
                             "class": "fixedTrainingGun"
@@ -5318,7 +5318,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }],
-            "defaultEquipmentProfileName": "default",
+            "defaultLoadout": "default",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
@@ -5701,7 +5701,7 @@
                     "position": [0, -125, 35],
                     "distanceRange": [90, 240]
                 }],
-            "equipmentProfiles": [{
+            "loadouts": [{
                     "name": "imperial-tier1",
                     "weapons": [{
                             "class": "smallPlasmaTurret"
@@ -5740,7 +5740,7 @@
                         "class": "rebelCorvetteMk1"
                     }
                 }],
-            "defaultEquipmentProfileName": "imperial-tier1",
+            "defaultLoadout": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.75
@@ -6181,7 +6181,7 @@
                     "position": [0, -185, 45],
                     "distanceRange": [150, 320]
                 }],
-            "equipmentProfiles": [{
+            "loadouts": [{
                     "name": "imperial-half",
                     "weapons": [{
                             "class": "smallProtonCannon"
@@ -6234,7 +6234,7 @@
                         "class": "rebelFrigateMk1"
                     }
                 }],
-            "defaultEquipmentProfileName": "imperial-tier1",
+            "defaultLoadout": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.75
@@ -6861,7 +6861,7 @@
                     "position": [0, -750, 240],
                     "distanceRange": [700, 1300]
                 }],
-            "equipmentProfiles": [{
+            "loadouts": [{
                     "name": "imperial-tier1",
                     "weapons": [{
                             "class": "largeIonCannon"
@@ -6910,7 +6910,7 @@
                         "class": "imperialCruiserMk1"
                     }
                 }],
-            "defaultEquipmentProfileName": "imperial-tier1",
+            "defaultLoadout": "imperial-tier1",
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 1.5
@@ -7239,7 +7239,7 @@
                     "size": "small",
                     "capacity": 14
                 }],
-            "equipmentProfiles": [{
+            "loadouts": [{
                     "name": "pirate-full",
                     "weapons": [{
                             "class": "pirateGun"
@@ -7350,7 +7350,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }],
-            "defaultEquipmentProfileName": "pirate-full",
+            "defaultLoadout": "pirate-full",
             "thrusterSlots": [{
                     "group": 1,
                     "uses": ["yawRight"],

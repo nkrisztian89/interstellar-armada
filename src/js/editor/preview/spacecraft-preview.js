@@ -61,7 +61,7 @@ define([
                 "factionColor", "defaultLuminosityFactors",
                 "bodies",
                 "weaponSlots", "missileLaunchers", "thrusterSlots",
-                "equipmentProfiles",
+                "loadouts",
                 "humSound",
                 "explosion",
                 "lights", "blinkers"],
@@ -71,7 +71,7 @@ define([
              */
             OPTION_REFRESH_PROPERIES = [
                 "basedOn",
-                "equipmentProfiles"
+                "loadouts"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the info text
@@ -106,7 +106,7 @@ define([
             /**
              * @type String
              */
-            _environmentName, _equipmentProfileName,
+            _environmentName, _loadoutName,
             /**
              * The faction color to use on the previewed spacecraft model
              * @type Number[4]
@@ -143,7 +143,7 @@ define([
              */
             _optionElements = {
                 environmentSelector: null,
-                equipmentSelector: null,
+                loadoutSelector: null,
                 factionColorPicker: null,
                 engineStateEditor: null,
                 engineStatePopup: null,
@@ -238,7 +238,7 @@ define([
     /**
      * @typedef {Editor~RefreshParams} Editor~SpacecraftClassRefreshParams
      * @property {String} environmentName The name of the environment to put the previewed spacecraft in
-     * @property {String} equipmentProfileName The name of the equipment profile to be equipped on the previewed spacecraft
+     * @property {String} loadoutName The name of the loadout to be equipped on the previewed spacecraft
      */
     /**
      * 
@@ -259,7 +259,7 @@ define([
     function _load(params, orientationMatrix) {
         var
                 environmentChanged,
-                equipmentProfileChanged,
+                loadoutChanged,
                 shouldReload,
                 i;
         params = params || {};
@@ -267,12 +267,12 @@ define([
             if (params.environmentName === undefined) {
                 params.environmentName = _environmentName;
             }
-            if (params.equipmentProfileName === undefined) {
-                params.equipmentProfileName = _equipmentProfileName;
+            if (params.loadoutName === undefined) {
+                params.loadoutName = _loadoutName;
             }
         }
         environmentChanged = params.environmentName !== _environmentName;
-        equipmentProfileChanged = params.equipmentProfileName !== _equipmentProfileName;
+        loadoutChanged = params.loadoutName !== _loadoutName;
         shouldReload = !params.preserve || params.reload;
         if ((environmentChanged || shouldReload) && !params.environmentName) {
             for (i = 0; i < LIGHT_SOURCES.length; i++) {
@@ -283,16 +283,16 @@ define([
             _spacecraft = new spacecraft.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
             _wireframeSpacecraft = new spacecraft.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
         }
-        if (equipmentProfileChanged || environmentChanged || shouldReload) {
-            if (_equipmentProfileName) {
+        if (loadoutChanged || environmentChanged || shouldReload) {
+            if (_loadoutName) {
                 _spacecraft.unequip();
                 _wireframeSpacecraft.unequip();
-                _equipmentProfileName = null;
+                _loadoutName = null;
             }
-            if (params.equipmentProfileName) {
-                _spacecraft.equipProfile(_spacecraftClass.getEquipmentProfile(params.equipmentProfileName));
-                _wireframeSpacecraft.equipProfile(_spacecraftClass.getEquipmentProfile(params.equipmentProfileName));
-                _equipmentProfileName = params.equipmentProfileName;
+            if (params.loadoutName) {
+                _spacecraft.equipLoadout(_spacecraftClass.getLoadout(params.loadoutName));
+                _wireframeSpacecraft.equipLoadout(_spacecraftClass.getLoadout(params.loadoutName));
+                _loadoutName = params.loadoutName;
             }
         }
         _spacecraft.addToScene(preview.getScene(), undefined, false,
@@ -336,7 +336,7 @@ define([
      */
     function _clearSettingsForNewItem() {
         _environmentName = null;
-        _equipmentProfileName = null;
+        _loadoutName = null;
         if (!_factionColor) {
             _factionColorChanged = false;
         }
@@ -410,18 +410,18 @@ define([
             _updateShieldRechargeButton();
         });
         _elements.options.appendChild(preview.createSetting(_optionElements.environmentSelector, "Environment:"));
-        // equipment profile selector
-        _optionElements.equipmentSelector = common.createSelector(_spacecraftClass.getEquipmentProfileNames(), _equipmentProfileName, true, function () {
+        // loadout selector
+        _optionElements.loadoutSelector = common.createSelector(_spacecraftClass.getLoadoutNames(), _loadoutName, true, function () {
             preview.updateCanvas({
                 preserve: true,
                 reload: true,
-                equipmentProfileName: (_optionElements.equipmentSelector.value !== "none") ? _optionElements.equipmentSelector.value : null
+                loadoutName: (_optionElements.loadoutSelector.value !== "none") ? _optionElements.loadoutSelector.value : null
             });
             _updateEngineStateEditor();
             _updateExplodeButton();
             _updateShieldRechargeButton();
         });
-        _elements.options.appendChild(preview.createSetting(_optionElements.equipmentSelector, "Equipment:"));
+        _elements.options.appendChild(preview.createSetting(_optionElements.loadoutSelector, "Loadout:"));
         // faction color picker
         _optionElements.factionColorPicker = common.createColorPicker(_factionColor, function () {
             _factionColorChanged = true;

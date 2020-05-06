@@ -196,7 +196,7 @@
             "name": "Rookie",
             "piloted": true,
             "position": [0, 0, 0],
-            "equipment": "player-tier1"
+            "loadout": "player-tier1"
         }, {
             "team": "targets",
             "class": "falcon",
@@ -205,7 +205,7 @@
             "ai": "fighter",
             "away": true,
             "rotations": ["z+180"],
-            "equipment": "training-fixed"
+            "loadout": "training-fixed"
         }, {
             "team": "targets",
             "class": "falcon",
@@ -213,6 +213,6 @@
             "count": 2,
             "ai": "fighter",
             "away": true,
-            "equipments": ["training-full-fixed", "training-fixed"]
+            "loadouts": ["training-full-fixed", "training-fixed"]
         }]
 }

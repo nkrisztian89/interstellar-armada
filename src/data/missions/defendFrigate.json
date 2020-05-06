@@ -285,7 +285,7 @@
             "ai": "ship",
             "initialTarget": "Don",
             "position": [0, 50, 0],
-            "equipment": "imperial-tier1",
+            "loadout": "imperial-tier1",
             "excludeFromReferenceScore": true
         }, {
             "team": "empire",
@@ -299,7 +299,7 @@
                 "type": "wedge",
                 "spacing": [35, -40, 10]
             },
-            "equipments": ["player-tier2", "imperial-tier1", "imperial-tier1"]
+            "loadouts": ["player-tier2", "imperial-tier1", "imperial-tier1"]
         }, {
             "team": "rebels",
             "class": "falcon",
@@ -307,7 +307,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "rebel"
+            "loadout": "rebel"
         }, {
             "team": "rebels",
             "class": "viper",
@@ -315,7 +315,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipments": ["rebel-heavy", "rebel-light", "rebel-light"]
+            "loadouts": ["rebel-heavy", "rebel-light", "rebel-light"]
         }, {
             "team": "rebels",
             "class": "falcon",
@@ -323,7 +323,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipment": "rebel"
+            "loadout": "rebel"
         }, {
             "team": "rebels",
             "class": "viper",
@@ -331,7 +331,7 @@
             "count": 3,
             "ai": "fighter",
             "away": true,
-            "equipments": ["rebel-heavy", "rebel-light", "rebel-light"]
+            "loadouts": ["rebel-heavy", "rebel-light", "rebel-light"]
         }, {
             "team": "rebels",
             "class": "aries",
@@ -339,7 +339,7 @@
             "ai": "ship",
             "position": [-15000, 0, -150],
             "rotations": ["z+90"],
-            "equipment": "imperial-tier1",
+            "loadout": "imperial-tier1",
             "excludeFromReferenceScore": true
         }]
 }

@@ -53,7 +53,7 @@
             "team": "empire",
             "piloted": true,
             "position": [0, 0, -60],
-            "equipment": "full"
+            "loadout": "full"
         },
         {
             "class": "libra",
@@ -67,14 +67,14 @@
             "team": "rebels",
             "position": [500, 1500, -400],
             "rotations": ["z-90"],
-            "equipment": "full"
+            "loadout": "full"
         },
         {
             "class": "taurus",
             "team": "rebels",
             "position": [500, -500, -400],
             "rotations": ["z-90"],
-            "equipment": "full"
+            "loadout": "full"
         }
     ]
 }
