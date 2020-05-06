@@ -275,48 +275,6 @@
                 "test": "This is a test mission. Fly around and do as you please.\nThis reminder will be displayed 3 times.",
                 "test2": "You can freely destroy other spacecrafts."
             }
-        },
-        "shadowTest": {
-            "name": "Shadow map test"
-        },
-        "cruiserVsBombers": {
-            "name": "Cruiser vs bombers"
-        },
-        "sandbox-30": {
-            "name": "Sandbox 30"
-        },
-        "sandbox-50": {
-            "name": "Sandbox 50"
-        },
-        "shipcount": {
-            "name": "Ship count test"
-        },
-        "fleetBattle": {
-            "name": "Fleet battle"
-        },
-        "libraTest": {
-            "name": "Libra test"
-        },
-        "3v3": {
-            "name": "Three versus three"
-        },
-        "bombers": {
-            "name": "Bombers"
-        },
-        "mixed": {
-            "name": "Mixed"
-        },
-        "patrolVsPatrol": {
-            "name": "Patrol vs patrol"
-        },
-        "strikeForceVsStrikeForce": {
-            "name": "Strike force battle"
-        },
-        "staticAvoidance": {
-            "name": "Static avoidance test"
-        },
-        "dynamicAvoidance": {
-            "name": "Dynamic avoidance test"
         }
     },
     "team": {

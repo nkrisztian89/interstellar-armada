@@ -335,53 +335,6 @@
                 "test": "Ez egy teszt küldetés. Szabadon repülhetsz, és tehetsz, amit csak szeretnél.\nEz az emlékeztető ötször fog megjelenni.",
                 "test2": "Szabadon kilőheted a többi űrhajót."
             }
-        },
-        "shadowTest": {
-            "name": "Árnyékolás teszt"
-        },
-        "cruiserVsBombers": {
-            "name": "Cirkáló a bombázók ellen"
-        },
-        "sandbox-30": {
-            "name": "Sandbox 30"
-        },
-        "sandbox-50": {
-            "name": "Sandbox 50"
-        },
-        "shipcount": {
-            "name": "Sok hajós test"
-        },
-        "fleetBattle": {
-            "name": "Flottaütközet"
-        },
-        "libraTest": {
-            "name": "Libra teszt"
-        },
-        "3v3": {
-            "name": "Három három ellen",
-            "description": "Gyakorold a csapatos harcot ebben a három-három elfogó vadászt egymással szembeállító küldetésben. A hajódat jobban felszereltük, mint a többiekét."
-        },
-        "bombers": {
-            "name": "Bombázók",
-            "description": "Ebben a küldetésben egy nehezebb páncélzatú és fegyverzetű bombázót próbálhatsz ki egy egyszerű három három ellen felállású manőverező űrharcban. Az ellenséges gépek gyengébben vannak felszerelve."
-        },
-        "mixed": {
-            "name": "Vegyes",
-            "description": "Három elfogó vadászból és három bombázóból álló vegyes csapatok néznek farkasszemet ebben a gyakorló küldetésben, ahol az egyik csapat elfogó vadász vezérét kell irányítanod. Vigyázz, hogy ne kerülj kereszttűzbe és ne találd el a csapattársaidat!"
-        },
-        "patrolVsPatrol": {
-            "name": "Őrjárat őrjárat ellen",
-            "description": "Két azonos összetételű - egy korvettből és három elfogó vadászból álló - őrjárat csap össze ebben a gyakorló küldetésben. Az egyik vadászt irányítod. Vond el az ellenséges korvett tüzét a csapattársaidról ügyenesen manőverezve, de biztonságos távolságban maradva, közelről ugyanis könnyű célpontot jelentesz neki."
-        },
-        "strikeForceVsStrikeForce": {
-            "name": "Hajóraj összecsapás",
-            "description": "Két azonos erejű, három elfogó vadászból, három bombázóból és három kisebb hadihajóból álló hajóraj ütközethez készülődik. Rajtad áll, hogy a saját csapatod javára billentsd a mérleget!"
-        },
-        "staticAvoidance": {
-            "name": "Statikus akadály teszt"
-        },
-        "dynamicAvoidance": {
-            "name": "Dinamikus akadály teszt"
         }
     },
     "battle": {

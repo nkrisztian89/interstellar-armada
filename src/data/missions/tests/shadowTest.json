@@ -1,4 +1,5 @@
 {
+    "title": "Shadow map test",
     "description": "A map for testing shadow mapping.",
     "environment": "shadowTest",
     "views": [{

@@ -217,6 +217,7 @@ define([
                 if (this._listComponent.getSelectedIndex() === index) {
                     if (missionDescriptor.getTitle()) {
                         this._missionTitle.setContent(missionDescriptor.getTitle());
+                        this._listComponent.setCaption(index, missionDescriptor.getTitle());
                     }
                     if (_spacecraft) {
                         _spacecraft.destroy();
