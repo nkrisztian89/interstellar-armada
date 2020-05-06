@@ -222,6 +222,18 @@ define([
         selector.innerHTML = s;
     }
     /**
+     * Returns the list of options available in the passed HTML <select> element as an array of strings
+     * @param {Element} selector
+     * @returns {String[]} 
+     */
+    function getSelectorOptions(selector) {
+        var i, result = [];
+        for (i = 0; i < selector.options.length; i++) {
+            result.push(selector.options[i].value);
+        }
+        return result;
+    }
+    /**
      * Creates and returns an HTML <select> element storing the given options (with the same value and text)
      * @param {String[]} options The options to include in the element
      * @param {String} selected The initial text of the element (should be one of the options)
@@ -590,6 +602,7 @@ define([
         createBooleanInput: createBooleanInput,
         createNumericInput: createNumericInput,
         setSelectorOptions: setSelectorOptions,
+        getSelectorOptions: getSelectorOptions,
         createSelector: createSelector,
         createColorPicker: createColorPicker,
         setColorForPicker: setColorForPicker,

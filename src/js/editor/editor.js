@@ -175,7 +175,11 @@ define([
             _classList,
             _environmentList,
             _missionList,
-            _selectItem;
+            _selectItem,
+            _newItemDialog,
+            _exportDialog,
+            _initNewItemDialog,
+            _initExportDialog;
     // ------------------------------------------------------------------------------
     // Private functions
     /**
@@ -434,6 +438,8 @@ define([
      * @param {Element} [element] The HTML element (<span>) that references the item in the category list (if not given, will be looked up from the _itemElements object)
      */
     function _loadItem(type, name, category, element) {
+        _newItemDialog.hidden = true;
+        _exportDialog.hidden = true;
         if (_selectedItemElement) {
             _selectedItemElement.classList.remove(SELECTED_CLASS);
         }
@@ -677,7 +683,6 @@ define([
      */
     function _loadExportDialog() {
         var
-                exportDialog = document.getElementById(EXPORT_DIALOG_ID),
                 exportType = document.getElementById(EXPORT_TYPE_ID),
                 exportName = document.getElementById(EXPORT_NAME_ID),
                 exportNameContainer = document.getElementById(EXPORT_NAME_CONTAINER_ID),
@@ -685,13 +690,17 @@ define([
                 exportItemContainer = document.getElementById(EXPORT_ITEM_CONTAINER_ID),
                 exportAuthor = document.getElementById(EXPORT_AUTHOR_ID),
                 exportExport = document.getElementById(EXPORT_EXPORT_BUTTON_ID),
-                exportCancel = document.getElementById(EXPORT_CANCEL_BUTTON_ID);
-        common.setSelectorOptions(exportType, [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT, common.ItemType.MISSION]);
+                exportCancel = document.getElementById(EXPORT_CANCEL_BUTTON_ID),
+                typeOptions = [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT, common.ItemType.MISSION],
+                getMissions = function () {
+                    return missions.getMissionNames().map(function (missionName) {
+                        return utils.getFilenameWithoutExtension(missionName);
+                    });
+                };
+        common.setSelectorOptions(exportType, typeOptions);
         exportType.onchange = function () {
             if (exportType.value === common.ItemType.MISSION) {
-                common.setSelectorOptions(exportItem, missions.getMissionNames().map(function (missionName) {
-                    return utils.getFilenameWithoutExtension(missionName);
-                }));
+                common.setSelectorOptions(exportItem, getMissions());
                 exportNameContainer.hidden = true;
                 exportItemContainer.hidden = false;
             } else {
@@ -747,10 +756,26 @@ define([
                 default:
                     application.showError("Exporting " + exportType.value + " is not yet implemented!");
             }
-            exportDialog.hidden = true;
+            _exportDialog.hidden = true;
         };
         exportCancel.onclick = function () {
-            exportDialog.hidden = true;
+            _exportDialog.hidden = true;
+        };
+        _initExportDialog = function () {
+            var index;
+            if (_selectedItem) {
+                index = typeOptions.indexOf(_selectedItem.type);
+                if (index >= 0) {
+                    exportType.selectedIndex = index;
+                    exportType.onchange();
+                    if (exportType.value === common.ItemType.MISSION) {
+                        index = getMissions().indexOf(utils.getFilenameWithoutExtension(_selectedItem.name));
+                        if (index >= 0) {
+                            exportItem.selectedIndex = index;
+                        }
+                    }
+                }
+            }
         };
     }
     /**
@@ -868,15 +893,15 @@ define([
      */
     function _loadNewItemDialog() {
         var
-                newItemDialog = document.getElementById(NEW_ITEM_DIALOG_ID),
                 newItemType = document.getElementById(NEW_ITEM_TYPE_ID),
                 newItemCategory = document.getElementById(NEW_ITEM_CATEGORY_ID),
                 newItemBase = document.getElementById(NEW_ITEM_BASE_ID),
                 newItemName = document.getElementById(NEW_ITEM_NAME_ID),
                 createButton = document.getElementById(NEW_ITEM_CREATE_BUTTON_ID),
                 cancelButton = document.getElementById(NEW_ITEM_CANCEL_BUTTON_ID),
+                typeOptions = [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT, common.ItemType.MISSION],
                 getItems, create, createAsync;
-        common.setSelectorOptions(newItemType, [common.ItemType.RESOURCE, common.ItemType.CLASS, common.ItemType.ENVIRONMENT, common.ItemType.MISSION]);
+        common.setSelectorOptions(newItemType, typeOptions);
         newItemType.onchange = function () {
             switch (newItemType.value) {
                 case common.ItemType.RESOURCE:
@@ -990,33 +1015,55 @@ define([
                 if (create) {
                     create();
                     _loadItems();
-                    newItemDialog.hidden = true;
+                    _newItemDialog.hidden = true;
                 } else if (createAsync) {
                     createAsync(function () {
                         _loadItems();
-                        newItemDialog.hidden = true;
+                        _newItemDialog.hidden = true;
                     });
                 }
             }
         };
         cancelButton.onclick = function () {
-            newItemDialog.hidden = true;
+            _newItemDialog.hidden = true;
+        };
+        _initNewItemDialog = function () {
+            var index;
+            if (_selectedItem) {
+                index = typeOptions.indexOf(_selectedItem.type);
+                if (index >= 0) {
+                    newItemType.selectedIndex = index;
+                    newItemType.onchange();
+                    index = common.getSelectorOptions(newItemCategory).indexOf(_selectedItem.category);
+                    if (index >= 0) {
+                        newItemCategory.selectedIndex = index;
+                        newItemCategory.onchange();
+                    }
+                }
+            }
         };
     }
     /**
      * Sets up the content for all dialogs
      */
     function _loadDialogs() {
-        var
-                newItemDialog = document.getElementById(NEW_ITEM_DIALOG_ID),
-                exportDialog = document.getElementById(EXPORT_DIALOG_ID);
+        _newItemDialog = document.getElementById(NEW_ITEM_DIALOG_ID);
+        _exportDialog = document.getElementById(EXPORT_DIALOG_ID);
         document.getElementById(NEW_ITEM_BUTTON_ID).onclick = function () {
-            newItemDialog.hidden = !newItemDialog.hidden;
+            _newItemDialog.hidden = !_newItemDialog.hidden;
+            if (!_newItemDialog.hidden) {
+                _initNewItemDialog();
+                _exportDialog.hidden = true;
+            }
         };
         _loadNewItemDialog();
 
         document.getElementById(EXPORT_BUTTON_ID).onclick = function () {
-            exportDialog.hidden = !exportDialog.hidden;
+            _exportDialog.hidden = !_exportDialog.hidden;
+            if (!_exportDialog.hidden) {
+                _initExportDialog();
+                _newItemDialog.hidden = true;
+            }
         };
         _loadExportDialog();
     }
