@@ -25,15 +25,19 @@ define([
             // ------------------------------------------------------------------------------
             // Constants
             PROPERTIES_CLASS = "propertiesTable",
+            PROPERTY_ROW_CLASS = "property",
+            UNSET_PROPERTY_ROW_CLASS = "unset",
             PROPERTY_CLASS = "propertyName",
             CONTROL_CLASS = "propertyControl",
             PROPERTY_EDITOR_HEADER_CLASS = "propertyEditorHeader",
             PROPERTY_EDITOR_HEADER_BUTTON_CLASS = "propertyEditorHeaderButton",
+            SET_PROPERTY_BUTTON_CLASS = "setProperty",
             UNSET_PROPERTY_BUTTON_CLASS = "unsetProperty",
             JUMP_TO_REFERENCE_BUTTON_CLASS = "jumpReference",
             TEXT_AREA_ROWS = 5,
             TEXT_AREA_COLS = 100,
             LONG_TEXT_PREVIEW_LENGTH = 16,
+            EMPTY_LIST_TEXT = "empty list",
             INHERITED_PROPERTY_TEXT = "inherited",
             DEFAULT_PROPERTY_TEXT = "default",
             DERIVED_PROPERTY_TEXT = "derived",
@@ -42,6 +46,7 @@ define([
             SET_PROPERTY_BUTTON_CAPTION = "set",
             UNSET_PROPERTY_BUTTON_CAPTION = "x",
             UNSET_PROPERTY_BUTTON_TOOLTIP = "Unset property",
+            WITH_SET_PROPERTY_BUTTON_CLASS = "withSetButton",
             WITH_UNSET_PROPERTY_BUTTON_CLASS = "withUnsetButton",
             JUMP_TO_REFERENCE_BUTTON_CAPTION = "↷",
             JUMP_TO_REFERENCE_BUTTON_TOOLTIP = "Jump to referenced item",
@@ -276,11 +281,13 @@ define([
      * @param {Object} [parent] See _changeData
      * @param {String} [name] See _changeData
      * @param {String} [unit] The unit of measurement using which the number is to be interpreted 
+     * @param {Number} [min] The minimum allowed value for this number
+     * @param {Number} [max] The minimum allowed value for this number
      * @returns {Element}
      */
-    function _createNumberControl(topName, data, allowFloats, changeHandler, parent, name, unit) {
+    function _createNumberControl(topName, data, allowFloats, changeHandler, parent, name, unit, min, max) {
         var result = document.createElement("div"),
-                input = common.createNumericInput(data, allowFloats, function (value) {
+                input = common.createNumericInput(data, {allowFloats, min, max}, function (value) {
                     _changeData(topName, value, parent, name, changeHandler);
                 });
         result.appendChild(input);
@@ -350,14 +357,19 @@ define([
      * not have a default value set
      * @param {Boolean} [undefinedIfOptionalOrHasDefault=false] If true, the function will return undefined for properties marked as optional OR has a default value
      * @param {String} [typeName] The name of the type of the object this property is part of
+     * @param {Number} [arrayIndex] If this value is created for an element an array, this should be the index of the element
+     * @param {Number} [propertyOfArrayElement=false] If this value is created for a property of an object that is an element in the array, this should be true
      * @returns {}
      */
-    function _getDefaultValue(propertyDescriptor, basedOn, parent, grandParent, topParent, undefinedIfOptionalWithNoDefault, undefinedIfOptionalOrHasDefault, typeName) {
+    function _getDefaultValue(propertyDescriptor, basedOn, parent, grandParent, topParent, undefinedIfOptionalWithNoDefault, undefinedIfOptionalOrHasDefault, typeName, arrayIndex, propertyOfArrayElement) {
         var result, type, propertyDescriptors, propertyDescriptorNames, i, optional;
         type = new descriptors.Type(propertyDescriptor.type);
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, grandParent, _item.name));
         // automatic naming - only for string type name properties (can be enum as well)
         if ((propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) && typeName && (type.getBaseType() === descriptors.BaseType.STRING)) {
+            if (arrayIndex !== undefined) {
+                return typeName + " " + (arrayIndex + 1).toString();
+            }
             return NEW_OBJECT_NAME_PREFIX + typeName;
         }
         if ((undefinedIfOptionalWithNoDefault && optional && (propertyDescriptor.defaultValue === undefined)) ||
@@ -389,7 +401,7 @@ define([
             case descriptors.BaseType.BOOLEAN:
                 return false;
             case descriptors.BaseType.NUMBER:
-                return 0;
+                return type.getMin() || 0;
             case descriptors.BaseType.STRING:
                 return "";
             case descriptors.BaseType.ARRAY:
@@ -421,7 +433,9 @@ define([
                             topParent,
                             true,
                             true,
-                            type.getName());
+                            type.getName(),
+                            propertyOfArrayElement ? undefined : arrayIndex,
+                            (arrayIndex !== undefined));
                 }
                 return result;
             case descriptors.BaseType.ENUM:
@@ -503,7 +517,7 @@ define([
                 propertiesTable, getIndexText, addPropertiesTable, indexChangeHandler, updateButtonText, refreshIndices, update;
         getIndexText = function (index) {
             var instanceName = ((index >= 0) && data[index]) ? type.getInstanceName(data[index]) : "";
-            return index.toString() + (instanceName ? ": " + instanceName : "");
+            return (index + 1).toString() + (instanceName ? ": " + instanceName : "");
         };
         refreshIndices = function () {
             return common.setSelectorOptions(indexSelector, data.map(function (entry, index) {
@@ -525,14 +539,14 @@ define([
                     _preview.handleStartEdit(topName, index);
                 }
                 addPropertiesTable(index);
-                indexLabel.hidden = false;
+                indexLabel.textContent = typeDescriptor.name;
                 indexSelector.hidden = false;
                 removeElementButton.hidden = !!atLeastOneElementNeeded && (data.length <= 1);
                 duplicateElementButton.hidden = false;
                 moveUpElementButton.hidden = (data.length < 2) || (index === 0);
                 moveDownElementButton.hidden = (data.length < 2) || (index === (data.length - 1));
             } else {
-                indexLabel.hidden = true;
+                indexLabel.textContent = EMPTY_LIST_TEXT;
                 indexSelector.hidden = true;
                 removeElementButton.hidden = true;
                 duplicateElementButton.hidden = true;
@@ -574,11 +588,11 @@ define([
             while (indices.length < data.length) {
                 indices.push(getIndexText(indices.length));
             }
-            indexLabel = common.createLabel(typeDescriptor.name);
+            indexLabel = common.createLabel((data.length > 0) ? typeDescriptor.name : EMPTY_LIST_TEXT);
             indexSelector = common.createSelector(indices, indices[0], false, indexChangeHandler);
             addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
                 var newIndex;
-                data.push(_getDefaultValue({type: typeDescriptor}, null, null, null, topParent, true));
+                data.push(_getDefaultValue({type: typeDescriptor}, null, null, null, topParent, true, undefined, undefined, data.length));
                 newIndex = document.createElement("option");
                 newIndex.value = getIndexText(data.length - 1);
                 newIndex.text = newIndex.value;
@@ -632,7 +646,6 @@ define([
             if (data.length > 0) {
                 addPropertiesTable(0);
             } else {
-                indexLabel.hidden = true;
                 indexSelector.hidden = true;
                 moveUpElementButton.hidden = true;
                 moveDownElementButton.hidden = true;
@@ -1121,29 +1134,44 @@ define([
      * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this property editor is displayed within a popup, give a reference to that popup here
      * @param {Function} [changeHandler] Operations need to be executed in case this property changes
+     * @param {Element} [row] The <tr> element within which this control sits
      * @returns {Element}
      */
-    function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler) {
+    function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row) {
         var result = document.createElement("div"),
                 labelText, label, button, type, optional;
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, null, _item.name));
         if ((!parent || (parent === _item.data)) && _basedOn) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
-        } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault) {
+        } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultText) {
             labelText = DEFAULT_PROPERTY_TEXT;
-            if (typeof propertyDescriptor.defaultValue === "number") {
-                labelText = propertyDescriptor.defaultValue.toString();
-                type = new descriptors.Type(propertyDescriptor.type);
-                if (type.getUnit()) {
-                    labelText += " " + type.getUnit();
+            if (propertyDescriptor.defaultText) {
+                labelText = propertyDescriptor.defaultText;
+            } else {
+                if (typeof propertyDescriptor.defaultValue === "number") {
+                    labelText = propertyDescriptor.defaultValue.toString();
+                    type = new descriptors.Type(propertyDescriptor.type);
+                    if (type.getUnit()) {
+                        labelText += " " + type.getUnit();
+                    }
+                } else if (typeof propertyDescriptor.defaultValue === "boolean") {
+                    labelText = propertyDescriptor.defaultValue ? "yes" : "no";
+                } else if (typeof propertyDescriptor.defaultValue === "string") {
+                    labelText = propertyDescriptor.defaultValue;
+                } else if (Array.isArray(propertyDescriptor.defaultValue)) {
+                    if (propertyDescriptor.defaultValue.length === 0) {
+                        labelText = "empty list";
+                    } else {
+                        if ((typeof propertyDescriptor.defaultValue[0] === "number") || (typeof propertyDescriptor.defaultValue[0] === "string")) {
+                            labelText = propertyDescriptor.defaultValue.join(", ");
+                        } else if (typeof propertyDescriptor.defaultValue[0] === "boolean") {
+                            labelText = propertyDescriptor.defaultValue.map((boolean) => (boolean ? "yes" : "no")).join(", ");
+                        }
+                    }
                 }
-            } else if (typeof propertyDescriptor.defaultValue === "boolean") {
-                labelText = propertyDescriptor.defaultValue ? "yes" : "no";
-            } else if (typeof propertyDescriptor.defaultValue === "string") {
-                labelText = propertyDescriptor.defaultValue;
-                if (labelText.length > 15) {
-                    labelText = labelText.substring(0, 12) + "...";
-                }
+            }
+            if (labelText.length > 15) {
+                labelText = labelText.substring(0, 12) + "...";
             }
             label = _createDefaultControl(labelText);
         } else if (propertyDescriptor.getDerivedDefault) {
@@ -1155,20 +1183,28 @@ define([
         } else {
             label = _createDefaultControl(UNKNOWN_PROPERTY_TEXT);
         }
+        label.classList.add(WITH_SET_PROPERTY_BUTTON_CLASS);
         result.appendChild(label);
         button = document.createElement("button");
         button.type = "button";
         button.innerHTML = SET_PROPERTY_BUTTON_CAPTION;
+        button.className = SET_PROPERTY_BUTTON_CLASS;
         button.onclick = function () {
             var value = _getDefaultValue(propertyDescriptor, _basedOn, parent, null, topParent),
                     parentNode = result.parentNode, control;
             parentNode.removeChild(result);
-            control = _createControl(propertyDescriptor, value, topName, parent, null, null, topParent, parentPopup, changeHandler);
+            if (row) {
+                row.classList.remove(UNSET_PROPERTY_ROW_CLASS);
+            }
+            control = _createControl(propertyDescriptor, value, topName, parent, null, null, topParent, parentPopup, changeHandler, row);
             parentNode.appendChild(control);
             parentNode.control = control;
             _changeData(topName, value, parent, propertyDescriptor.name, changeHandler);
         };
         result.appendChild(button);
+        if (row) {
+            row.classList.add(UNSET_PROPERTY_ROW_CLASS);
+        }
         return result;
     }
     /**
@@ -1186,9 +1222,10 @@ define([
      * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this property editor is displayed within a popup, give a reference to that popup here
      * @param {Function} [changeHandler] Operations to be executed in case this property changes
+     * @param {Element} [row] The <tr> element within which this control sits
      * @returns {Element}
      */
-    _createControl = function (propertyDescriptor, data, topName, parent, arrayParent, objectParent, topParent, parentPopup, changeHandler) {
+    _createControl = function (propertyDescriptor, data, topName, parent, arrayParent, objectParent, topParent, parentPopup, changeHandler, row) {
         var
                 result, control, button,
                 /**
@@ -1198,14 +1235,14 @@ define([
         topName = topName || propertyDescriptor.name;
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, objectParent, _item.name));
         if (data === undefined) {
-            result = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler);
+            result = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row);
         } else {
             switch (type.getBaseType()) {
                 case descriptors.BaseType.BOOLEAN:
                     result = _createBooleanControl(topName, data, parent, propertyDescriptor.name, changeHandler);
                     break;
                 case descriptors.BaseType.NUMBER:
-                    result = _createNumberControl(topName, data, true, changeHandler, parent, propertyDescriptor.name, type.getUnit());
+                    result = _createNumberControl(topName, data, !type.isInteger(), changeHandler, parent, propertyDescriptor.name, type.getUnit(), type.getMin(), type.getMax());
                     break;
                 case descriptors.BaseType.STRING:
                     if (type.isLong()) {
@@ -1277,14 +1314,15 @@ define([
                     result.appendChild(control);
                     result.popup = control.popup;
                 }
-                control.classList.add(WITH_UNSET_PROPERTY_BUTTON_CLASS);
+                result.classList.add(WITH_UNSET_PROPERTY_BUTTON_CLASS);
                 button = common.createButton(UNSET_PROPERTY_BUTTON_CAPTION, function () {
                     var parentNode = result.parentNode, newControl;
                     if (control.popup) {
                         control.popup.remove();
                     }
                     parentNode.removeChild(result);
-                    newControl = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler);
+                    newControl = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row);
+                    newControl.classList.add(CONTROL_CLASS);
                     parentNode.appendChild(newControl);
                     parentNode.control = newControl;
                     _changeData(topName, undefined, parent, propertyDescriptor.name, changeHandler);
@@ -1326,7 +1364,7 @@ define([
             } else if (data[itemDescriptor[properties[index]].name] === undefined) {
                 data[itemDescriptor[properties[index]].name] = _getDefaultValue(itemDescriptor[properties[index]], null, data, parent, topParent, true, true);
             }
-            control = _createControl(itemDescriptor[properties[index]], data[itemDescriptor[properties[index]].name], topName, data, null, parent, topParent, parentPopup, validate.bind(this, row));
+            control = _createControl(itemDescriptor[properties[index]], data[itemDescriptor[properties[index]].name], topName, data, null, parent, topParent, parentPopup, validate.bind(this, row), row);
             valueCell.appendChild(control);
             valueCell.control = control;
             row.appendChild(valueCell);
@@ -1338,6 +1376,7 @@ define([
             rows = [];
             for (i = 0; i < properties.length; i++) {
                 row = document.createElement("tr");
+                row.className = PROPERTY_ROW_CLASS;
                 generateRow(row, i);
                 table.appendChild(row);
                 rows.push(row);

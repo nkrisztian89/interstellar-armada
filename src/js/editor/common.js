@@ -185,21 +185,33 @@ define([
         return result;
     }
     /**
+     * @typedef {Object} NumericParams
+     * @property {Boolean} allowFloats If true, float values are allowed (otherwise only integer values)
+     * @property {Number} [min] Minimum allowed value
+     * @property {Number} [max] Maximum allowed value
+     */
+    /**
      * Creates and returns a control that can be used to edit numeric values.
      * @param {Number} data The starting value
-     * @param {Boolean} allowFloats If true, float values are allowed (otherwise only integer values)
+     * @param {NumericParams} params
      * @param {Function} [changeHandler] The function that should be run on the change event, after checking the value to be a number
      * @returns {Element}
      */
-    function createNumericInput(data, allowFloats, changeHandler) {
+    function createNumericInput(data, params, changeHandler) {
         var result = document.createElement("input");
         result.classList.add(NUMERIC_INPUT_CLASS);
         result.type = "text";
         result.value = data;
         result.onchange = function () {
-            var number = allowFloats ? parseFloat(result.value) : parseInt(result.value, 10);
+            var number = params.allowFloats ? parseFloat(result.value) : parseInt(result.value, 10);
             if (isNaN(number)) {
                 number = 0;
+            }
+            if ((params.min !== undefined) && (number < params.min)) {
+                number = params.min;
+            }
+            if ((params.max !== undefined) && (number > params.max)) {
+                number = params.max;
             }
             result.value = number.toString();
             if (changeHandler) {
@@ -292,7 +304,7 @@ define([
         result.appendChild(preview);
         components = [];
         for (i = 0; i < data.length; i++) {
-            component = createNumericInput(data[i], true, componentChangeHander.bind(this, i));
+            component = createNumericInput(data[i], {allowFloats: true, min: 0, max: 1}, componentChangeHander.bind(this, i));
             component.classList.add(COLOR_COMPONENT_CLASS);
             result.appendChild(component);
             components.push(component);
@@ -333,7 +345,7 @@ define([
                 };
         components = [];
         for (i = 0; i < data.length; i++) {
-            component = createNumericInput(data[i], true, componentChangeHander.bind(this, i));
+            component = createNumericInput(data[i], {allowFloats: true}, componentChangeHander.bind(this, i));
             component.classList.add(VECTOR_COMPONENT_CLASS);
             result.appendChild(component);
             components.push(component);
@@ -356,7 +368,7 @@ define([
             }
         });
         minCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
-        minEditor = createNumericInput(data[0] || 0, true, function (value) {
+        minEditor = createNumericInput(data[0] || 0, {allowFloats: true}, function (value) {
             data[0] = minCheckbox.checked ? value : undefined;
             if (changeHandler) {
                 changeHandler();
@@ -374,7 +386,7 @@ define([
             }
         });
         maxCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
-        maxEditor = createNumericInput(data[1] || 0, true, function (value) {
+        maxEditor = createNumericInput(data[1] || 0, {allowFloats: true}, function (value) {
             data[1] = maxCheckbox.checked ? value : undefined;
             if (changeHandler) {
                 changeHandler();

@@ -11,13 +11,15 @@ body,html {
     height: 100%;
 }
 
+$text-color: #cccccc;
+
 body {
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     position: static;
     margin: 0;
     padding: 0;
     overflow: hidden;
-    color: #cccccc;
+    color: $text-color;
 
     font-size: 0.9vw; /* for em units */ 
 }
@@ -49,16 +51,24 @@ select {
     height: 1.6em;
 }
 
+span.propertyControl.withSetButton {
+    margin-right: 3.5em;
+}
+
+.withUnsetButton {
+    margin-right: 1.6em;
+}
+
 select.withJumpButton, select.withUnsetButton {
     max-width: 10.6em;
 }
 
-select.withJumpButton.withUnsetButton {
-    max-width: 8.6em;
+.withUnsetButton input {
+    max-width: 10.4em;
 }
 
-input.withUnsetButton {
-    max-width: 10.4em;
+.withUnsetButton button.propertyControl {
+    margin-right: 1.1em;
 }
 
 /* -------------------------------------------------------------------- */
@@ -392,7 +402,7 @@ li.element.dragover {
     position: relative;
     max-height: 100%;
     width: calc(100% + #{$scrollbar-width}); /* hiding scrollbar */
-    
+
     padding: 0;
     border: 0;
 
@@ -470,8 +480,26 @@ span.settingLabel {
     margin-bottom: 0;
 }
 
+tr.property {
+    height: 1.7em;
+}
+
+$td-background: #4d4d4d;
+$unset-opacity: 50%;
+
 td {
-    background-color: #4d4d4d;
+    background-color: $td-background;
+    padding: 2px;
+    tr.property:hover & {
+        color: white;
+    }
+    tr.property.unset:hover & {
+        color: $text-color;
+    }
+    tr.property.unset & {
+        background-color: rgba($td-background, $unset-opacity);
+        color: rgba($text-color, $unset-opacity);
+    }
 }
 
 .propertyName {
@@ -494,6 +522,7 @@ span.propertyControl {
 }
 
 div.propertyControl {
+    width: 100%;
     display: inline-block;
     vertical-align: middle;
 }
@@ -501,14 +530,32 @@ div.propertyControl {
 div.propertyEditorHeader {
     background-color: #545454;
     border: 2px solid #444444;
+    padding: 0.2em;
+    margin-bottom: 0.2em;
 }
 
 button.propertyEditorHeaderButton {
     margin-left: 0.5em;
 }
 
+button.setProperty {
+    position: absolute;
+    right: 0;
+    top: -2px;
+}
+
+tr:not(:hover) button.setProperty {
+   display: none; 
+}
+
 button.unsetProperty {
-    margin-left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+tr:not(:hover) button.unsetProperty {
+   opacity: 25%;
 }
 
 button.jumpReference {

@@ -1016,10 +1016,12 @@ define([
                     create();
                     _loadItems();
                     _newItemDialog.hidden = true;
+                    _selectItem(newItemType.value, newItemName.value, newItemCategory.value);
                 } else if (createAsync) {
                     createAsync(function () {
                         _loadItems();
                         _newItemDialog.hidden = true;
+                        _selectItem(newItemType.value, newItemName.value, newItemCategory.value);
                     });
                 }
             }

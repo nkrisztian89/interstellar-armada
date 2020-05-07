@@ -123,6 +123,8 @@ define([
              * @property {} [newValue] When a new object is created having this property, this value will be set as its value.
              * @property {Boolean} [createDefaultElement] If the property is of an array type, its default value should be an array with one
              * element having its default value (instead of an empty array)
+             * @property {String} [defaultText] The text to show in the editor when the property is unset and has no default value or it is better to show
+             * some explanation instead of the default value
              */
             /**
              * @typedef {Object.<String, PropertyDescriptor>} Editor~ItemDescriptor
@@ -201,7 +203,9 @@ define([
             },
             DEGREES = {
                 baseType: BaseType.NUMBER,
-                unit: Unit.DEGREES
+                unit: Unit.DEGREES,
+                min: -360,
+                max: 360
             },
             DEGREES_PER_SECOND = {
                 baseType: BaseType.NUMBER,
@@ -217,7 +221,9 @@ define([
             },
             PERCENT = {
                 baseType: BaseType.NUMBER,
-                unit: Unit.PERCENT
+                unit: Unit.PERCENT,
+                min: 0,
+                max: 100
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3299,6 +3305,15 @@ define([
                     return [];
                 }
             },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            SPACECRAFT_COUNT = {
+                baseType: BaseType.NUMBER,
+                integer: true,
+                min: 1,
+                max: 9
+            },
             _craftIsSingle = function (data) {
                 return !data.count || (data.count === 1);
             },
@@ -3355,7 +3370,8 @@ define([
                     SQUAD: {
                         name: "squad",
                         type: BaseType.STRING, // should be an enum with the squad names from strings, with an optional index
-                        optional: true
+                        optional: true,
+                        defaultText: "none"
                     },
                     TEAM: {
                         name: "team",
@@ -3369,18 +3385,21 @@ define([
                     AI: {
                         name: "ai",
                         type: AI_TYPE,
-                        optional: true
+                        optional: true,
+                        defaultText: "none"
                     },
                     POSITION: {
                         name: "position",
                         type: BaseType.VECTOR3,
                         optional: true,
-                        isValid: _craftHasNoPositions
+                        isValid: _craftHasNoPositions,
+                        defaultValue: [0, 0, 0]
                     },
                     ROTATIONS: {
                         name: "rotations",
                         type: BaseType.ROTATIONS,
-                        optional: true
+                        optional: true,
+                        defaultText: "none"
                     },
                     LOADOUT: {
                         name: "loadout",
@@ -3395,7 +3414,7 @@ define([
                         type: LOADOUT,
                         optional: true,
                         isValid: _craftCanHaveEquipment,
-                        defaultValue: "from loadout",
+                        defaultText: "from loadout",
                         updateOnValidate: true
                     },
                     AWAY: {
@@ -3422,8 +3441,9 @@ define([
                     },
                     COUNT: {
                         name: "count",
-                        type: BaseType.NUMBER,
-                        optional: true
+                        type: SPACECRAFT_COUNT,
+                        optional: true,
+                        defaultText: "single ship"
                     },
                     NAMES: {
                         name: "names",
@@ -3457,15 +3477,6 @@ define([
                         isValid: _craftCanHaveFormation
                     }
                 }
-            },
-            /**
-             * @type Editor~TypeDescriptor
-             */
-            SPACECRAFT_COUNTS = {
-                baseType: BaseType.ASSOCIATIVE_ARRAY,
-                name: "SpacecraftCounts",
-                validKeys: [],
-                elementType: BaseType.NUMBER
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3634,6 +3645,27 @@ define([
         return this._descriptor.unit;
     };
     /**
+     * For number types, returns the minimum allowed value
+     * @returns {Number}
+     */
+    Type.prototype.getMin = function () {
+        return this._descriptor.min;
+    };
+    /**
+     * For number types, returns the maximum allowed value
+     * @returns {Number}
+     */
+    Type.prototype.getMax = function () {
+        return this._descriptor.max;
+    };
+    /**
+     * For number types, returns whether only integers are allowed
+     * @returns {Boolean}
+     */
+    Type.prototype.isInteger = function () {
+        return !!this._descriptor.integer;
+    };
+    /**
      * Returns whether this type is a reference string (e.g. resource or class reference) type
      * @returns {Boolean}
      */
@@ -3794,9 +3826,6 @@ define([
         // shader variants can be set for graphics quality levels (which will be used instead of the original shader in case the corresponding
         // graphics quality is set)
         SHADER_VARIANTS.validKeys = graphics.getShaderComplexities().concat(SHADER_VARIANTS.validKeys);
-    });
-    classes.executeWhenReady(function () {
-        SPACECRAFT_COUNTS.validKeys = classes.getClassNames("spacecraftClasses"); //TODO: needs to refresh if classes change
     });
     missions.executeWhenReady(function () {
         TIPS_SET.values = missions.getTipIDs();
