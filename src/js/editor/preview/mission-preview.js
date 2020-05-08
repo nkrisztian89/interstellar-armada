@@ -201,6 +201,9 @@ define([
             result += " Reference score: " + Math.round(_mission.getReferenceScore());
             spacecrafts = _mission.getSpacecrafts();
             pilotedCraft = _mission.getPilotedSpacecraft();
+            if (pilotedCraft) {
+                result += ", Player ship: " + (pilotedCraft.getDisplayName() || ("unnamed " + pilotedCraft.getClass().getDisplayName()));
+            }
             for (i = 0; i < spacecrafts.length; i++) {
                 if (pilotedCraft && spacecrafts[i].isHostile(pilotedCraft)) {
                     if (!spacecrafts[i].isAway()) {

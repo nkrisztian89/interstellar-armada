@@ -181,9 +181,15 @@ define([
                 baseType: BaseType.NUMBER,
                 unit: Unit.TIMES
             },
-            METERS = {
+            NON_NEGATIVE_SCALE = {
                 baseType: BaseType.NUMBER,
-                unit: Unit.METERS
+                unit: Unit.TIMES,
+                min: 0
+            },
+            DISTANCE = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.METERS,
+                min: 0
             },
             METERS_PER_SECOND = {
                 baseType: BaseType.NUMBER,
@@ -195,7 +201,14 @@ define([
             },
             MILLISECONDS = {
                 baseType: BaseType.NUMBER,
-                unit: Unit.MILLISECONDS
+                unit: Unit.MILLISECONDS,
+                integer: true
+            },
+            NON_NEGATIVE_MILLISECONDS = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.MILLISECONDS,
+                integer: true,
+                min: 0
             },
             PER_SECOND = {
                 baseType: BaseType.NUMBER,
@@ -217,13 +230,33 @@ define([
             },
             KILOGRAMS = {
                 baseType: BaseType.NUMBER,
-                unit: Unit.KILOGRAMS
+                unit: Unit.KILOGRAMS,
+                min: 0.001
             },
             PERCENT = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.PERCENT,
                 min: 0,
                 max: 100
+            },
+            NON_NEGATIVE_INTEGER = {
+                baseType: BaseType.NUMBER,
+                integer: true,
+                min: 0
+            },
+            POSITIVE_INTEGER = {
+                baseType: BaseType.NUMBER,
+                integer: true,
+                min: 1
+            },
+            RATIO = {
+                baseType: BaseType.NUMBER,
+                min: 0,
+                max: 1
+            },
+            NON_NEGATIVE_NUMBER = {
+                baseType: BaseType.NUMBER,
+                min: 0
             },
             /**
              * @type Editor~TypeDescriptor
@@ -372,11 +405,11 @@ define([
                 baseType: BaseType.PAIRS,
                 first: {
                     name: "group",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_INTEGER
                 },
                 second: {
                     name: "luminosity",
-                    type: BaseType.NUMBER
+                    type: RATIO
                 }
             },
             /**
@@ -563,7 +596,7 @@ define([
                     },
                     MAX_LOD: {
                         name: "maxLOD",
-                        type: BaseType.NUMBER
+                        type: NON_NEGATIVE_INTEGER
                     }
                 }
             },
@@ -654,7 +687,7 @@ define([
                 properties: {
                     SIZE: {
                         name: "size",
-                        type: SCALE
+                        type: NON_NEGATIVE_SCALE
                     },
                     SHADER: {
                         name: "shader",
@@ -703,11 +736,11 @@ define([
                 },
                 NUMBER_OF_PARTICLES: {
                     name: "numberOfParticles",
-                    type: BaseType.NUMBER
+                    type: POSITIVE_INTEGER
                 },
                 RANGE: {
                     name: "range",
-                    type: METERS
+                    type: DISTANCE
                 },
                 COLOR: {
                     name: "color",
@@ -734,11 +767,11 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: BaseType.NUMBER
+                        type: NON_NEGATIVE_NUMBER
                     },
                     TIME_TO_REACH: {
                         name: "timeToReach",
-                        type: MILLISECONDS
+                        type: NON_NEGATIVE_MILLISECONDS
                     }
                 }
             },
@@ -760,7 +793,7 @@ define([
                     },
                     PROJECTILE_MODEL_WIDTH: {
                         name: "projectileModelWidth",
-                        type: BaseType.NUMBER,
+                        type: RATIO,
                         optional: true,
                         defaultValue: 1
                     },
@@ -792,27 +825,27 @@ define([
                     },
                     INITIAL_NUMBER: {
                         name: "initialNumber",
-                        type: BaseType.NUMBER,
+                        type: NON_NEGATIVE_INTEGER,
                         defaultValue: 0
                     },
                     SPAWN_NUMBER: {
                         name: "spawnNumber",
-                        type: BaseType.NUMBER,
+                        type: NON_NEGATIVE_INTEGER,
                         defaultValue: 0
                     },
                     SPAWN_TIME: {
                         name: "spawnTime",
-                        type: MILLISECONDS,
+                        type: NON_NEGATIVE_MILLISECONDS,
                         defaultValue: 1
                     },
                     DURATION: {
                         name: "duration",
-                        type: MILLISECONDS,
+                        type: NON_NEGATIVE_MILLISECONDS,
                         defaultValue: 1
                     },
                     DELAY: {
                         name: "delay",
-                        type: MILLISECONDS,
+                        type: NON_NEGATIVE_MILLISECONDS,
                         defaultValue: 0
                     },
                     SHADER: {
@@ -845,11 +878,11 @@ define([
                     },
                     INTENSITY: {
                         name: "intensity",
-                        type: BaseType.NUMBER
+                        type: NON_NEGATIVE_NUMBER
                     },
                     TIME_TO_REACH: {
                         name: "timeToReach",
-                        type: MILLISECONDS
+                        type: NON_NEGATIVE_MILLISECONDS
                     }
                 }
             },
@@ -866,7 +899,7 @@ define([
                     },
                     VOLUME: {
                         name: "volume",
-                        type: BaseType.NUMBER,
+                        type: NON_NEGATIVE_NUMBER,
                         defaultValue: 1
                     }
                 }
@@ -920,12 +953,12 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: SCALE,
+                        type: NON_NEGATIVE_SCALE,
                         defaultValue: 1
                     },
                     DURATION: {
                         name: "duration",
-                        type: MILLISECONDS
+                        type: NON_NEGATIVE_MILLISECONDS
                     }
                 }
             },
@@ -952,11 +985,11 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: SCALE
+                        type: NON_NEGATIVE_SCALE
                     },
                     DURATION: {
                         name: "duration",
-                        type: MILLISECONDS
+                        type: NON_NEGATIVE_MILLISECONDS
                     },
                     GROWTH_RATE: {
                         name: "growthRate",
@@ -987,7 +1020,7 @@ define([
                 },
                 SIZE: {
                     name: "size",
-                    type: SCALE
+                    type: NON_NEGATIVE_SCALE
                 },
                 MASS: {
                     name: "mass",
@@ -995,11 +1028,11 @@ define([
                 },
                 DURATION: {
                     name: "duration",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 DISSIPATION_DURATION: {
                     name: "dissipationDuration",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 INTERSECTION_POSITIONS: {
                     name: "intersectionPositions",
@@ -1007,7 +1040,7 @@ define([
                 },
                 WIDTH: {
                     name: "width",
-                    type: BaseType.NUMBER
+                    type: RATIO
                 },
                 MUZZLE_FLASH: {
                     name: "muzzleFlash",
@@ -1019,7 +1052,7 @@ define([
                 },
                 LIGHT_INTENSITY: {
                     name: "lightIntensity",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_NUMBER
                 },
                 EXPLOSION: {
                     name: "explosion",
@@ -1043,7 +1076,7 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: SCALE
+                        type: NON_NEGATIVE_SCALE
                     }
                 }
             },
@@ -1064,7 +1097,7 @@ define([
                 properties: {
                     GROUP: {
                         name: "group",
-                        type: BaseType.NUMBER
+                        type: NON_NEGATIVE_INTEGER
                     },
                     USES: {
                         name: "uses",
@@ -1082,7 +1115,7 @@ define([
                     },
                     COUNT: {
                         name: "count",
-                        type: BaseType.NUMBER,
+                        type: POSITIVE_INTEGER,
                         optional: true
                     },
                     START_POSITION: {
@@ -1097,7 +1130,7 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: SCALE,
+                        type: NON_NEGATIVE_SCALE,
                         optional: true
                     }
                 }
@@ -1139,7 +1172,7 @@ define([
                 },
                 MODEL_SCALE: {
                     name: "modelScale",
-                    type: SCALE,
+                    type: NON_NEGATIVE_SCALE,
                     optional: true,
                     defaultValue: 1
                 },
@@ -1166,11 +1199,11 @@ define([
                 },
                 CAPACITY: {
                     name: "capacity",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_INTEGER
                 },
                 LENGTH: {
                     name: "length",
-                    type: METERS
+                    type: DISTANCE
                 },
                 HOMING_MODE: {
                     name: "homingMode",
@@ -1186,7 +1219,7 @@ define([
                 },
                 IGNITION_TIME: {
                     name: "ignitionTime",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 ACCELERATION: {
                     name: "acceleration",
@@ -1202,11 +1235,11 @@ define([
                 },
                 DURATION: {
                     name: "duration",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 LOCKING_TIME: {
                     name: "lockingTime",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 LOCKING_ANGLE: {
                     name: "lockingAngle",
@@ -1214,20 +1247,20 @@ define([
                 },
                 COOLDOWN: {
                     name: "cooldown",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 SALVO_COOLDOWN: {
                     name: "salvoCooldown",
-                    type: MILLISECONDS,
+                    type: NON_NEGATIVE_MILLISECONDS,
                     defaultDerived: true
                 },
                 PROXIMITY_RANGE: {
                     name: "proximityRange",
-                    type: METERS
+                    type: DISTANCE
                 },
                 KINETIC_FACTOR: {
                     name: "kineticFactor",
-                    type: SCALE
+                    type: NON_NEGATIVE_SCALE
                 },
                 LIGHT_COLOR: {
                     name: "lightColor",
@@ -1235,7 +1268,7 @@ define([
                 },
                 LIGHT_INTENSITY: {
                     name: "lightIntensity",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_NUMBER
                 },
                 TRAIL: {
                     name: "trail",
@@ -1251,7 +1284,7 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_INTEGER
                 },
                 LAUNCH_SOUND: {
                     name: "launchSound",
@@ -1327,7 +1360,7 @@ define([
                     },
                     TRANSFORM_GROUP_INDEX: {
                         name: "transformGroupIndex",
-                        type: BaseType.NUMBER
+                        type: NON_NEGATIVE_INTEGER
                     }
                 }
             },
@@ -1362,7 +1395,7 @@ define([
                 },
                 COOLDOWN: {
                     name: "cooldown",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 BARRELS: {
                     name: "barrels",
@@ -1393,7 +1426,7 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_INTEGER
                 }
             },
             /**
@@ -1435,11 +1468,11 @@ define([
                 },
                 MAX_MOVE_BURN_LEVEL: {
                     name: "maxMoveBurnLevel",
-                    type: BaseType.NUMBER
+                    type: RATIO
                 },
                 MAX_TURN_BURN_LEVEL: {
                     name: "maxTurnBurnLevel",
-                    type: BaseType.NUMBER
+                    type: RATIO
                 },
                 THRUSTER_SOUND: {
                     name: "thrusterSound",
@@ -1447,7 +1480,7 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_INTEGER
                 }
             },
             /**
@@ -1473,7 +1506,7 @@ define([
                 },
                 PREPARE_DURATION: {
                     name: "prepareDuration",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 PREPARE_SOUND: {
                     name: "prepareSound",
@@ -1489,7 +1522,7 @@ define([
                 },
                 JUMP_OUT_DURATION: {
                     name: "jumpOutDuration",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 JUMP_OUT_SCALING: {
                     name: "jumpOutScaling",
@@ -1509,7 +1542,7 @@ define([
                 },
                 JUMP_IN_DURATION: {
                     name: "jumpInDuration",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 JUMP_IN_VELOCITY: {
                     name: "jumpInVelocity",
@@ -1543,11 +1576,11 @@ define([
                 },
                 CAPACITY: {
                     name: "capacity",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_NUMBER
                 },
                 RECHARGE_DELAY: {
                     name: "rechargeDelay",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 RECHARGE_RATE: {
                     name: "rechargeRate",
@@ -1559,7 +1592,7 @@ define([
                 },
                 RECHARGE_ANIMATION_DURATION: {
                     name: "rechargeAnimationDuration",
-                    type: MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS
                 },
                 RECHARGE_START_SOUND: {
                     name: "rechargeStartSound",
@@ -1567,7 +1600,7 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_NUMBER
                 }
             },
             /**
@@ -1657,7 +1690,7 @@ define([
                     },
                     COUNT: {
                         name: "count",
-                        type: BaseType.NUMBER,
+                        type: POSITIVE_INTEGER,
                         optional: true
                     },
                     START_POSITION: {
@@ -1694,7 +1727,7 @@ define([
                     },
                     COUNT: {
                         name: "count",
-                        type: BaseType.NUMBER
+                        type: POSITIVE_INTEGER
                     }
                 }
             },
@@ -1720,11 +1753,11 @@ define([
                     },
                     CAPACITY: {
                         name: "capacity",
-                        type: BaseType.NUMBER
+                        type: NON_NEGATIVE_INTEGER
                     },
                     SALVO: {
                         name: "salvo",
-                        type: BaseType.NUMBER,
+                        type: POSITIVE_INTEGER,
                         defaultValue: 1
                     }
                 }
@@ -1779,7 +1812,7 @@ define([
                     },
                     SPAN: {
                         name: "span",
-                        type: METERS,
+                        type: DISTANCE,
                         globalDefault: true,
                         settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN
                     },
@@ -1894,7 +1927,7 @@ define([
                     },
                     SLOT_INDEX: {
                         name: "slotIndex",
-                        type: BaseType.NUMBER,
+                        type: NON_NEGATIVE_INTEGER,
                         optional: true,
                         defaultDerived: true
                     }
@@ -1913,11 +1946,11 @@ define([
                     },
                     AMOUNT: {
                         name: "amount",
-                        type: BaseType.NUMBER
+                        type: POSITIVE_INTEGER
                     },
                     LAUNCHER_INDEX: {
                         name: "launcherIndex",
-                        type: BaseType.NUMBER,
+                        type: NON_NEGATIVE_INTEGER,
                         optional: true,
                         defaultDerived: true
                     }
@@ -2036,7 +2069,7 @@ define([
                     },
                     INTENSITY: {
                         name: "intensity",
-                        type: BaseType.NUMBER,
+                        type: NON_NEGATIVE_NUMBER,
                         defaultValue: 1
                     },
                     SPOT_DIRECTION: {
@@ -2073,7 +2106,7 @@ define([
                     },
                     PERIOD: {
                         name: "period",
-                        type: MILLISECONDS,
+                        type: NON_NEGATIVE_MILLISECONDS,
                         defaultValue: 1
                     },
                     BLINKS: {
@@ -2082,7 +2115,7 @@ define([
                     },
                     INTENSITY: {
                         name: "intensity",
-                        type: BaseType.NUMBER,
+                        type: NON_NEGATIVE_NUMBER,
                         defaultValue: 1
                     }
                 }
@@ -2135,12 +2168,12 @@ define([
                 },
                 HITPOINTS: {
                     name: "hitpoints",
-                    type: BaseType.NUMBER,
+                    type: NON_NEGATIVE_NUMBER,
                     newValue: 1
                 },
                 ARMOR: {
                     name: "armor",
-                    type: BaseType.NUMBER
+                    type: NON_NEGATIVE_NUMBER
                 },
                 TURN_STYLE: {
                     name: "turnStyle",
@@ -2185,7 +2218,7 @@ define([
                 },
                 LOCKING_TIME_FACTOR: {
                     name: "lockingTimeFactor",
-                    type: SCALE,
+                    type: NON_NEGATIVE_SCALE,
                     newValue: 1
                 },
                 BODIES: {
@@ -2233,7 +2266,7 @@ define([
                 },
                 SHOW_TIME_RATIO_DURING_EXPLOSION: {
                     name: "showTimeRatioDuringExplosion",
-                    type: BaseType.NUMBER,
+                    type: RATIO,
                     newValue: 1
                 },
                 DAMAGE_INDICATORS: {
@@ -2250,7 +2283,7 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: BaseType.NUMBER,
+                    type: NON_NEGATIVE_INTEGER,
                     newValue: 1
                 }
             },
@@ -2302,7 +2335,7 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: SCALE,
+                        type: NON_NEGATIVE_SCALE,
                         newValue: 100
                     },
                     POSITION: {
@@ -2572,7 +2605,7 @@ define([
                     // CountCondition params:
                     COUNT: {
                         name: "count",
-                        type: BaseType.NUMBER,
+                        type: NON_NEGATIVE_INTEGER,
                         isRequired: _parentIsCountCondition,
                         isValid: _parentIsCountCondition
                     },
@@ -2585,7 +2618,7 @@ define([
                     // TimeCondition params:
                     TIME: {
                         name: "time",
-                        type: MILLISECONDS,
+                        type: NON_NEGATIVE_MILLISECONDS,
                         isRequired: _parentIsTimeCondition,
                         isValid: _parentIsTimeCondition
                     },
@@ -2599,19 +2632,22 @@ define([
                         name: "start",
                         type: EVENT_REFERENCE,
                         optional: true,
-                        isValid: _parentIsTimeCondition
+                        isValid: _parentIsTimeCondition,
+                        defaultText: "mission start"
                     },
                     MAX_COUNT: {
                         name: "maxCount",
-                        type: BaseType.NUMBER,
+                        type: POSITIVE_INTEGER,
                         optional: true,
-                        isValid: _isRepeatTime
+                        isValid: _isRepeatTime,
+                        defaultText: "infinite"
                     },
                     START_VALUE: {
                         name: "startValue",
                         type: MILLISECONDS,
                         optional: true,
-                        isValid: _isRepeatTime
+                        isValid: _isRepeatTime,
+                        defaultValue: 0
                     }
                 }
             },
@@ -2735,7 +2771,8 @@ define([
                     CONDITIONS: {
                         name: "conditions",
                         type: _createTypedArrayType(CONDITION),
-                        optional: true
+                        optional: true,
+                        createDefaultElement: true
                     },
                     WHICH: {
                         name: "which",
@@ -2758,7 +2795,7 @@ define([
                     },
                     DELAY: {
                         name: "delay",
-                        type: MILLISECONDS,
+                        type: NON_NEGATIVE_MILLISECONDS,
                         defaultValue: 0,
                         isValid: _triggerIsOneShot
                     }
@@ -2839,7 +2876,7 @@ define([
                     },
                     DISTANCE: {
                         name: "distance",
-                        type: METERS,
+                        type: DISTANCE,
                         optional: true
                     },
                     POSITION: {
@@ -3021,7 +3058,7 @@ define([
                     },
                     DURATION: {
                         name: "duration",
-                        type: MILLISECONDS,
+                        type: NON_NEGATIVE_MILLISECONDS,
                         optional: true,
                         isValid: _parentIsMessageAction
                     },
@@ -3105,7 +3142,7 @@ define([
                     },
                     DELAY: {
                         name: "delay",
-                        type: MILLISECONDS,
+                        type: NON_NEGATIVE_MILLISECONDS,
                         defaultValue: 0
                     },
                     SUBJECTS: {
@@ -3196,7 +3233,7 @@ define([
                     },
                     SPAN: {
                         name: "span",
-                        type: METERS,
+                        type: DISTANCE,
                         globalDefault: true,
                         settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN
                     },
@@ -3295,6 +3332,7 @@ define([
              * @type Editor~TypeDescriptor
              */
             CLASS_LOADOUT_REFERENCE = {
+                name: "loadout",
                 baseType: BaseType.ENUM,
                 getValues: function (parent) {
                     var spacecraftClass;
@@ -3320,6 +3358,12 @@ define([
             _craftIsMulti = function (data) {
                 return data.count && (data.count > 1);
             },
+            _craftCanBePiloted = function (data) {
+                return _craftIsSingle(data) && !data.away;
+            },
+            _multiCraftCanBePiloted = function (data) {
+                return _craftIsMulti(data) && !data.away;
+            },
             _craftCanHaveLoadouts = function (data) {
                 return _craftIsMulti(data) && !data.loadout && !data.equipment;
             },
@@ -3341,6 +3385,9 @@ define([
             },
             _craftIsNotPiloted = function (data) {
                 return !data.piloted && !data.pilotedIndex;
+            },
+            _craftIsNotPilotedSingle = function (data) {
+                return !data.piloted;
             },
             _craftCanHavePositions = function (data) {
                 return _craftIsMulti(data) && !data.position && !data.formation;
@@ -3386,7 +3433,8 @@ define([
                         name: "ai",
                         type: AI_TYPE,
                         optional: true,
-                        defaultText: "none"
+                        defaultText: "none",
+                        isValid: _craftIsNotPilotedSingle
                     },
                     POSITION: {
                         name: "position",
@@ -3420,13 +3468,14 @@ define([
                     AWAY: {
                         name: "away",
                         type: BaseType.BOOLEAN,
-                        defaultValue: false
+                        defaultValue: false,
+                        isValid: _craftIsNotPiloted
                     },
                     PILOTED: {
                         name: "piloted",
                         type: BaseType.BOOLEAN,
                         defaultValue: false,
-                        isValid: _craftIsSingle
+                        isValid: _craftCanBePiloted
                     },
                     INITIAL_TARGET: {
                         name: "initialTarget",
@@ -3460,9 +3509,9 @@ define([
                     },
                     PILOTED_INDEX: {
                         name: "pilotedIndex",
-                        type: BaseType.NUMBER,
+                        type: SPACECRAFT_COUNT,
                         optional: true,
-                        isValid: _craftIsMulti
+                        isValid: _multiCraftCanBePiloted
                     },
                     POSITIONS: {
                         name: "positions",

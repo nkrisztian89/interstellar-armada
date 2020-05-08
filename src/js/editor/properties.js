@@ -909,15 +909,21 @@ define([
                 table, i, addRotationButton,
                 refreshTable,
                 updateButtonText = function () {
-                    button.innerHTML = "rotations (" + data.length + ")";
+                    if (data.length > 1) {
+                        button.textContent = data.length + " rotations";
+                    } else if (data.length === 1) {
+                        button.textContent = data[0].axis + ((data[0].degrees < 0) ? " - " : " + ") + Math.abs(data[0].degrees) + "°";
+                    } else {
+                        button.textContent = "none";
+                    }
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }
                 },
                 addRotationEditor = function (index) {
                     _addPairRow(table,
-                            _createControl({name: "axis", type: descriptors.AXIS}, data[index].axis, topName, data[index], null, null, null, parentPopup),
-                            _createControl({name: "degrees", type: descriptors.BaseType.NUMBER}, data[index].degrees, topName, data[index], null, null, null, parentPopup),
+                            _createControl({name: "axis", type: descriptors.AXIS}, data[index].axis, topName, data[index], null, null, null, parentPopup, updateButtonText),
+                            _createControl({name: "degrees", type: {baseType: descriptors.BaseType.NUMBER, min: -360, max: 360}}, data[index].degrees, topName, data[index], null, null, null, parentPopup, updateButtonText),
                             common.createButton(REMOVE_BUTTON_CAPTION, function () {
                                 data.splice(index, 1);
                                 updateButtonText();
@@ -952,7 +958,7 @@ define([
                 };
             }
         }
-        _addPropertyEditorHeader(popup, [], [addRotationButton]);
+        _addPropertyEditorHeader(popup, [common.createLabel("rotations")], [addRotationButton]);
         table = document.createElement("table");
         refreshTable();
         popup.getElement().appendChild(table);
