@@ -105,14 +105,15 @@ define([
                 EQUALS: "equals"
             },
             TimeConditionWhen = {
-                /** The condition is satisfied until the specified time has elapsed */
+                /** The condition is satisfied from the beginning of the mission until the specified time has elapsed (after start) */
                 BEFORE: "before",
-                /** The condition is satisfied starting from when the specified time has elapsed */
+                /** The condition is satisfied starting from when the specified time has elapsed (after start) */
                 AFTER: "after",
-                /** The condition is satisfied when exactly the specified time has elapsed (if the start
-                 * is a trigger, counted from the first time the trigger is fired) */
+                /** The condition is satisfied after start, within the specified time */
+                WITHIN: "within",
+                /** The condition is satisfied when exactly the specified time has elapsed (after start) */
                 ONCE: "once",
-                /** The condition is satisfied every time the specified time has been elapsed, in a looping fashion */
+                /** The condition is satisfied every time the specified time has been elapsed (after start), in a looping fashion */
                 REPEAT: "repeat"
             },
             ActionType = {
@@ -1097,8 +1098,14 @@ define([
          * @type Boolean
          */
         this._canBeImpossible = this._params ? (this._params.when === TimeConditionWhen.BEFORE) ||
+                (this._params.when === TimeConditionWhen.WITHIN) ||
                 (this._params.when === TimeConditionWhen.ONCE) ||
                 ((this._params.when === TimeConditionWhen.REPEAT) && this._params.maxCount) : false;
+        /**
+         * Cached value of whether the time condition has the 'when' param set to 'before'
+         * @type Boolean
+         */
+        this._before = !!this._params && (this._params.when === TimeConditionWhen.BEFORE);
         /**
          * Whether this condition cannot be satisfied anymore
          * @type Boolean
@@ -1149,13 +1156,14 @@ define([
                 this._params.start = null;
             }
         }
-        if (!this._running && this._trigger && this._trigger.hasFired()) {
+        if (!this._running && !this._impossible && this._trigger && this._trigger.hasFired()) {
             this._running = true;
         }
         if (this._running) {
             this._timeElapsed += dt;
             switch (this._params.when) {
                 case TimeConditionWhen.BEFORE:
+                case TimeConditionWhen.WITHIN:
                     if (this._timeElapsed < this._params.time) {
                         return true;
                     } else {
@@ -1192,7 +1200,7 @@ define([
                     break;
             }
         }
-        return false;
+        return this._before ? (this._timeElapsed < this._params.time) : false;
     };
     /**
      * @param {Object} stringPrefix
@@ -2305,7 +2313,7 @@ define([
                             this._state = MissionState.FAILED;
                             return;
                         }
-                        completed = completed && ((this._objectivesState[i].state === ObjectiveState.COMPLETED) || !this._objectivesState[i].completable);
+                        completed = completed && ((this._objectivesState[i].state === ObjectiveState.COMPLETED) || !this._objectivesState[i].completable) && this._objectivesState[i].text;
                     }
                     if (completed) {
                         this._state = MissionState.COMPLETED;
