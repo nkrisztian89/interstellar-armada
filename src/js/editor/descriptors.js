@@ -2547,6 +2547,13 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            DESTROYED_CONDITION_WHICH = {
+                baseType: BaseType.ENUM,
+                values: missions.DestroyedConditionWhich
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             COUNT_CONDITION_RELATION = {
                 baseType: BaseType.ENUM,
                 values: missions.CountConditionRelation
@@ -2574,6 +2581,9 @@ define([
                     return [];
                 }
             },
+            _parentIsDestroyedCondition = function (data, parent) {
+                return !!parent && (parent.type === missions.ConditionType.DESTROYED);
+            },
             _parentIsCountCondition = function (data, parent) {
                 return !!parent && (parent.type === missions.ConditionType.COUNT);
             },
@@ -2591,6 +2601,10 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "ConditionParams",
                 getPreviewText: function (instance) {
+                    // DestroyedCondition params:
+                    if (instance.which) {
+                        return instance.which;
+                    }
                     // CountCondition params:
                     if (instance.relation !== undefined) {
                         return instance.relation + " " + instance.count;
@@ -2602,6 +2616,13 @@ define([
                     return "none";
                 },
                 properties: {
+                    // DestroyedCondition params:
+                    WHICH: {
+                        name: "which",
+                        type: DESTROYED_CONDITION_WHICH,
+                        isRequired: _parentIsDestroyedCondition,
+                        isValid: _parentIsDestroyedCondition
+                    },
                     // CountCondition params:
                     COUNT: {
                         name: "count",
@@ -2655,7 +2676,13 @@ define([
                 return (data.type === missions.ConditionType.DESTROYED) || (data.type === missions.ConditionType.COUNT);
             },
             _conditionCanHaveParams = function (data) {
+                return (data.type === missions.ConditionType.DESTROYED) || (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME);
+            },
+            _conditionMustHaveParams = function (data) {
                 return (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME);
+            },
+            _getConditionParamDefault = function (data) {
+                return (data.type === missions.ConditionType.DESTROYED) ? "all" : "none";
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2675,7 +2702,7 @@ define([
                             case missions.ConditionType.COUNT:
                                 return "count of " + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " " + CONDITION_PARAMS.getPreviewText(instance.params || utils.EMPTY_OBJECT);
                             case missions.ConditionType.DESTROYED:
-                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " destroyed";
+                                return ((instance.params && instance.params.which === missions.DestroyedConditionWhich.ANY) ? "any of " : "") + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " destroyed";
                             case missions.ConditionType.TIME:
                                 return instance.params ? CONDITION_PARAMS.getPreviewText(instance.params) : "time";
                         }
@@ -2697,9 +2724,10 @@ define([
                     PARAMS: {
                         name: "params",
                         type: CONDITION_PARAMS,
-                        isRequired: _conditionCanHaveParams,
+                        isRequired: _conditionMustHaveParams,
                         isValid: _conditionCanHaveParams,
-                        updateOnValidate: true
+                        updateOnValidate: true,
+                        getDerivedDefault: _getConditionParamDefault
                     }
                 }
             },

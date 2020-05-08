@@ -90,6 +90,12 @@ define([
                 /** The condition is evaluated true based on the time elapsed since the start of the mission or the firing of a trigger */
                 TIME: "time"
             },
+            DestroyedConditionWhich = {
+                /** All the subjects need to be destroyed for the condition to be fulfilled */
+                ALL: "all",
+                /** Any of the subjects can be destroyed for the condition to be fulfilled */
+                ANY: "any"
+            },
             CountConditionRelation = {
                 /** The condition is satisfied when there are less subjects alive than the specified count */
                 BELOW: "below",
@@ -661,6 +667,15 @@ define([
         return this._spacecrafts;
     };
     /**
+     * Whether this subject group (potentially) includes multiple spacecrafts
+     * @returns {Boolean}
+     */
+    SubjectGroup.prototype.isMulti = function () {
+        return (this._descriptor.spacecrafts && (this._descriptor.spacecrafts.length > 1)) ||
+                (this._descriptor.squads && (this._descriptor.squads.length > 0)) ||
+                (this._descriptor.teams && (this._descriptor.teams.length > 0));
+    };
+    /**
      * 
      * @param {String} subjectID
      * @returns {String}
@@ -858,10 +873,27 @@ define([
     DestroyedCondition.prototype = new Condition();
     DestroyedCondition.prototype.constructor = DestroyedCondition;
     /**
-     * @override
-     * This condition has no parameters - always returns true.
+     * @typedef DestroyedCondition~Params
+     * @property {String} [which] (enum DestroyedConditionWhich)
      */
-    DestroyedCondition.prototype._checkParams = function () {
+    /**
+     * @param {DestroyedCondition~Params} params
+     * @returns {Boolean}
+     */
+    DestroyedCondition.prototype._checkParams = function (params) {
+        /**
+         * @type DestroyedCondition~Params
+         */
+        this._params = params;
+        if (this._params && this._params.which &&
+                !utils.getSafeEnumValue(DestroyedConditionWhich, this._params.which)) {
+            this._handleWrongParams();
+            return false;
+        }
+        /**
+         * @type Boolean
+         */
+        this._all = !this._params || !this._params.which || (this._params.which === DestroyedConditionWhich.ALL);
         return true;
     };
     /**
@@ -871,18 +903,21 @@ define([
     DestroyedCondition.prototype.isSatisfied = function (mission) {
         var i, spacecrafts = this._subjects.getSpacecrafts(mission);
         for (i = 0; i < spacecrafts.length; i++) {
-            if (spacecrafts[i].isAlive()) {
-                return false;
+            if (spacecrafts[i].isAlive() === this._all) {
+                return !this._all;
             }
         }
-        return true;
+        return this._all;
     };
     /**
      * @param {Object} stringPrefix 
      * @returns {String}
      */
     DestroyedCondition.prototype.getObjectiveString = function (stringPrefix) {
-        var result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.DESTROY_SUFFIX.name), {
+        var result = utils.formatString(strings.get(stringPrefix,
+                this._subjects.isMulti() ?
+                (this._all ? strings.OBJECTIVE.DESTROY_SUFFIX.name : strings.OBJECTIVE.DESTROY_ANY_SUFFIX.name) :
+                strings.OBJECTIVE.DESTROY_ONE_SUFFIX.name), {
             subjects: this._subjects.toString()
         });
         result = result.charAt(0).toUpperCase() + result.slice(1);
@@ -3907,6 +3942,7 @@ define([
         ConditionType: ConditionType,
         TriggerWhen: TriggerWhen,
         TriggerWhich: TriggerWhich,
+        DestroyedConditionWhich: DestroyedConditionWhich,
         CountConditionRelation: CountConditionRelation,
         TimeConditionWhen: TimeConditionWhen,
         ActionType: ActionType,

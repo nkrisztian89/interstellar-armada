@@ -80,6 +80,8 @@ define([
     strings.OBJECTIVE = {
         DESTROY_ALL_SUFFIX: {name: "destroyAll", optional: true},
         DESTROY_SUFFIX: {name: "destroy", optional: true},
+        DESTROY_ONE_SUFFIX: {name: "destroyOne", optional: true},
+        DESTROY_ANY_SUFFIX: {name: "destroyAny", optional: true},
         COUNT_BELOW_SUFFIX: {name: "countBelow", optional: true},
         TIME_SUFFIX: {name: "time", optional: true},
         TIME_MULTI_SUFFIX: {name: "timeMulti", optional: true}

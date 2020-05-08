@@ -91,12 +91,16 @@
         "winObjective": {
             "destroyAll": "Destroy all enemies",
             "destroy": "Destroy {subjects}",
+            "destroyOne": "Destroy {subjects}",
+            "destroyAny": "Destroy any of {subjects}",
             "countBelow": "Less than {count} out of {subjects} must remain",
             "time": "Survive for {time}",
             "timeMulti": "Complete all objectives within {time}"
         },
         "loseObjective": {
-            "destroy": "{subjects} must survive",
+            "destroy": "At least one ship of {subjects} must survive",
+            "destroyOne": "{subjects} must survive",
+            "destroyAny": "{subjects} must survive",
             "countBelow": "At least {count} out of {subjects} must survive",
             "time": "Jump out within {time}",
             "timeMulti": "for {time}"

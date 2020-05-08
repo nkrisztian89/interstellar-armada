@@ -1237,8 +1237,9 @@ define([
                 /**
                  * @type Type
                  */
-                type = new descriptors.Type(propertyDescriptor.type), elementType, optional;
+                type = new descriptors.Type(propertyDescriptor.type), elementType, required, optional;
         topName = topName || propertyDescriptor.name;
+        required = !!propertyDescriptor.isRequired && propertyDescriptor.isRequired(parent, objectParent, _item.name);
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, objectParent, _item.name));
         if (data === undefined) {
             result = _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row);
@@ -1310,8 +1311,11 @@ define([
                 default:
                     result = _createDefaultControl(data);
             }
+            if (row) {
+                row.classList.remove(UNSET_PROPERTY_ROW_CLASS);
+            }
             // add unset button for optional values
-            if ((optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultDerived || propertyDescriptor.getDerivedDefault ||
+            if (!required && (optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultDerived || propertyDescriptor.getDerivedDefault ||
                     ((!parent || (parent === _item.data)) && _basedOn && (propertyDescriptor.name !== descriptors.NAME_PROPERTY_NAME))) && (propertyDescriptor.name !== descriptors.BASED_ON_PROPERTY_NAME)) {
                 if (!control) {
                     control = result;
