@@ -2123,7 +2123,7 @@ define([
                         this._spacecraft,
                         barrels[i].getProjectileVelocity());
                 p.addToSceneNow(scene);
-                if (_dynamicLights) {
+                if (_dynamicLights && projectileClass.getLightColor()) {
                     // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
                     // been created, so that projectiles from the same weapon and of the same class only use one light source object
                     if (!projectileLights[projectileClass.getName()]) {

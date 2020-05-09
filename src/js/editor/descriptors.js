@@ -134,12 +134,14 @@ define([
             /**
              * Returns a type descriptor describing an array type that has elements of the passed type
              * @param {Editor~TypeDescriptor} elementType
+             * @param {Number} [fixedLength]
              * @returns {Editor~TypeDescriptor}
              */
-            _createTypedArrayType = function (elementType) {
+            _createTypedArrayType = function (elementType, fixedLength) {
                 return {
                     baseType: BaseType.ARRAY,
-                    elementType: elementType
+                    elementType: elementType,
+                    fixedLength: fixedLength
                 };
             },
             /**
@@ -210,6 +212,11 @@ define([
                 unit: Unit.METERS_PER_SECOND,
                 min: 0
             },
+            POSITIVE_METERS_PER_SECOND = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.METERS_PER_SECOND,
+                min: 0.001
+            },
             METERS_PER_SECOND_SQUARED = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.METERS_PER_SECOND_SQUARED
@@ -247,9 +254,10 @@ define([
                 min: 0,
                 max: 360
             },
-            DEGREES_PER_SECOND = {
+            POSITIVE_DEGREES_PER_SECOND = {
                 baseType: BaseType.NUMBER,
-                unit: Unit.DEGREES_PER_SECOND
+                unit: Unit.DEGREES_PER_SECOND,
+                min: 0.001
             },
             DEGREES_PER_SECOND_SQUARED = {
                 baseType: BaseType.NUMBER,
@@ -281,9 +289,18 @@ define([
                 min: 0,
                 max: 1
             },
+            POSITIVE_RATIO = {
+                baseType: BaseType.NUMBER,
+                min: 0.001,
+                max: 1
+            },
             NON_NEGATIVE_NUMBER = {
                 baseType: BaseType.NUMBER,
                 min: 0
+            },
+            POSITIVE_NUMBER = {
+                baseType: BaseType.NUMBER,
+                min: 0.001
             },
             /**
              * @type Editor~TypeDescriptor
@@ -951,6 +968,9 @@ define([
             SOUND_DESCRIPTOR = {
                 baseType: BaseType.OBJECT,
                 name: "SoundDescriptor",
+                getPreviewText: function (data) {
+                    return "((" + ((data.name.length > 18) ? data.name.substring(0, 15) + "..." : data.name) + " | " + ((data.volume !== undefined) ? data.volume : 1) + "))";
+                },
                 properties: {
                     NAME: {
                         name: "name",
@@ -1014,12 +1034,12 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: NON_NEGATIVE_SCALE,
+                        type: POSITIVE_SCALE,
                         defaultValue: 1
                     },
                     DURATION: {
                         name: "duration",
-                        type: NON_NEGATIVE_MILLISECONDS
+                        type: POSITIVE_MILLISECONDS
                     }
                 }
             },
@@ -1057,6 +1077,9 @@ define([
                     }
                 }
             },
+            _projectileHasLight = function (data) {
+                return !!data.lightColor;
+            },
             /**
              * The descriptor object for projectile classes, describing their properties
              * @type Editor~ItemDescriptor
@@ -1068,11 +1091,13 @@ define([
                 },
                 DAMAGE: {
                     name: "damage",
-                    type: BaseType.NUMBER
+                    type: BaseType.NUMBER,
+                    defaultValue: 0
                 },
                 SHADER: {
                     name: "shader",
-                    type: SHADER_REFERENCE
+                    type: SHADER_REFERENCE,
+                    newValue: "billboard"
                 },
                 TEXTURE: {
                     name: "texture",
@@ -1080,7 +1105,8 @@ define([
                 },
                 SIZE: {
                     name: "size",
-                    type: NON_NEGATIVE_SCALE
+                    type: POSITIVE_SCALE,
+                    defaultValue: 1
                 },
                 MASS: {
                     name: "mass",
@@ -1088,19 +1114,23 @@ define([
                 },
                 DURATION: {
                     name: "duration",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: POSITIVE_MILLISECONDS
                 },
                 DISSIPATION_DURATION: {
                     name: "dissipationDuration",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: POSITIVE_MILLISECONDS
                 },
                 INTERSECTION_POSITIONS: {
                     name: "intersectionPositions",
-                    type: NUMBER_ARRAY
+                    type: NUMBER_ARRAY,
+                    optional: true,
+                    defaultText: "no intersections",
+                    createDefaultElement: true
                 },
                 WIDTH: {
                     name: "width",
-                    type: RATIO
+                    type: POSITIVE_RATIO,
+                    defaultValue: 1
                 },
                 MUZZLE_FLASH: {
                     name: "muzzleFlash",
@@ -1108,11 +1138,15 @@ define([
                 },
                 LIGHT_COLOR: {
                     name: "lightColor",
-                    type: BaseType.COLOR3
+                    type: BaseType.COLOR3,
+                    optional: true,
+                    newValue: [1, 1, 1],
+                    defaultText: "no light emitted"
                 },
                 LIGHT_INTENSITY: {
                     name: "lightIntensity",
-                    type: NON_NEGATIVE_NUMBER
+                    type: POSITIVE_NUMBER,
+                    isValid: _projectileHasLight
                 },
                 EXPLOSION: {
                     name: "explosion",
@@ -1376,7 +1410,8 @@ define([
                     },
                     PROJECTILE_VELOCITY: {
                         name: "projectileVelocity",
-                        type: METERS_PER_SECOND
+                        type: POSITIVE_METERS_PER_SECOND,
+                        newValue: 1
                     },
                     POSITION: {
                         name: "position",
@@ -1400,7 +1435,8 @@ define([
                 properties: {
                     AXIS: {
                         name: "axis",
-                        type: BaseType.VECTOR3
+                        type: BaseType.VECTOR3,
+                        newValue: [0, 0, 1]
                     },
                     CENTER: {
                         name: "center",
@@ -1408,21 +1444,31 @@ define([
                     },
                     RANGE: {
                         name: "range",
-                        type: BaseType.RANGE
+                        type: BaseType.RANGE,
+                        optional: true,
+                        defaultText: "360°"
                     },
                     DEFAULT_ANGLE: {
                         name: "defaultAngle",
-                        type: DEGREES
+                        type: DEGREES,
+                        defaultValue: 0
                     },
                     ROTATION_RATE: {
                         name: "rotationRate",
-                        type: DEGREES_PER_SECOND
+                        type: POSITIVE_DEGREES_PER_SECOND,
+                        newValue: 1
                     },
                     TRANSFORM_GROUP_INDEX: {
                         name: "transformGroupIndex",
                         type: NON_NEGATIVE_INTEGER
                     }
                 }
+            },
+            _getName = function (data) {
+                return data.name;
+            },
+            _weaponCanRotate = function (data) {
+                return data.rotationStyle && (data.rotationStyle !== classes.WeaponRotationStyle.NONE);
             },
             /**
              * The descriptor object for weapon classes, describing their properties
@@ -1435,11 +1481,14 @@ define([
                 },
                 FULL_NAME: {
                     name: "fullName",
-                    type: BaseType.STRING
+                    type: BaseType.STRING,
+                    optional: true,
+                    getDerivedDefault: _getName
                 },
                 SHADER: {
                     name: "shader",
-                    type: SHADER_REFERENCE
+                    type: SHADER_REFERENCE,
+                    newValue: "ship"
                 },
                 MODEL: {
                     name: "model",
@@ -1451,19 +1500,23 @@ define([
                 },
                 DEFAULT_LUMINOSITY_FACTORS: {
                     name: "defaultLuminosityFactors",
-                    type: LUMINOSITY_FACTOR_PAIRS
+                    type: LUMINOSITY_FACTOR_PAIRS,
+                    optional: true,
+                    defaultText: "all zeros"
                 },
                 COOLDOWN: {
                     name: "cooldown",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: POSITIVE_MILLISECONDS
                 },
                 BARRELS: {
                     name: "barrels",
-                    type: _createTypedArrayType(BARREL)
+                    type: _createTypedArrayType(BARREL),
+                    createDefaultElement: true
                 },
                 ATTACHMENT_POINT: {
                     name: "attachmentPoint",
-                    type: BaseType.VECTOR3
+                    type: BaseType.VECTOR3,
+                    defaultValue: [0, 0, 0]
                 },
                 ROTATION_STYLE: {
                     name: "rotationStyle",
@@ -1473,12 +1526,14 @@ define([
                 BASE_POINT: {
                     name: "basePoint",
                     type: BaseType.VECTOR3,
-                    optional: true
+                    defaultValue: [0, 0, 0],
+                    isValid: _weaponCanRotate
                 },
                 ROTATORS: {
                     name: "rotators",
-                    type: _createTypedArrayType(WEAPON_ROTATOR),
-                    optional: true
+                    type: _createTypedArrayType(WEAPON_ROTATOR, 2),
+                    isRequired: _weaponCanRotate,
+                    isValid: _weaponCanRotate
                 },
                 FIRE_SOUND: {
                     name: "fireSound",
@@ -1486,7 +1541,8 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: NON_NEGATIVE_INTEGER
+                    type: NON_NEGATIVE_INTEGER,
+                    defaultValue: 0
                 }
             },
             /**
@@ -3801,6 +3857,13 @@ define([
      */
     Type.prototype.isInteger = function () {
         return !!this._descriptor.integer;
+    };
+    /**
+     * For array types, returns their fixed length if set (undefined if not)
+     * @returns {Number}
+     */
+    Type.prototype.getFixedLength = function () {
+        return this._descriptor.fixedLength;
     };
     /**
      * Returns whether this type is a reference string (e.g. resource or class reference) type

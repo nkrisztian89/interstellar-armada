@@ -1671,12 +1671,12 @@ define([
          * The color of the light this projectile emits as a light source.
          * @type Number[3]
          */
-        this._lightColor = dataJSON ? (dataJSON.lightColor || _showMissingPropertyError(this, "lightColor")) : null;
+        this._lightColor = dataJSON ? (dataJSON.lightColor || null) : null;
         /**
          * The intensity of the light this projectile emits as a light source.
          * @type Number
          */
-        this._lightIntensity = dataJSON ? (dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity")) : 0;
+        this._lightIntensity = dataJSON ? (dataJSON.lightColor ? dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity") : 0) : 0;
         /**
          * The class of the explosion this projectile creates when it hits the armor of a spacecraft.
          * @type ExplosionClass
@@ -2435,7 +2435,7 @@ define([
          * The weapon should rotate to this angle by default (when not aiming), in radians.
          * @type Number
          */
-        this.defaultAngle = Math.radians(types.getValueOfType("WeaponRotator.defaultAngle", types.NUMBER, dataJSON.defaultAngle));
+        this.defaultAngle = Math.radians(types.getValueOfType("WeaponRotator.defaultAngle", types.NUMBER, dataJSON.defaultAngle, 0, true));
         /**
          * A shortcut flag indicating whether the angle of rotation is restricted to a specific range for this rotator (if false, the weapon 
          * can rotate freely around in 360 degrees)
@@ -2478,7 +2478,7 @@ define([
          * The full name of this class as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
+        this._fullName = dataJSON ? (dataJSON.fullName || this.getName()) : null;
         /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @type Number
@@ -2502,7 +2502,7 @@ define([
          * The position of the point in model space where the weapon should be attached to the weapon slot it is equipped to.
          * @type Number[3]
          */
-        this._attachmentPoint = dataJSON ? (dataJSON.attachmentPoint || _showMissingPropertyError(this, "attachmentPoint")) : null;
+        this._attachmentPoint = dataJSON ? (dataJSON.attachmentPoint || [0, 0, 0]) : null;
         /**
          * Indicates the number and role of rotators of the weapon, based on which a direction to point the weapon towards can be translated
          * to rotation angles corresponding to its rotators.
@@ -2520,7 +2520,7 @@ define([
          * considering all the rotators. In 4D, with a 1.0 appended to make it easier to multiply it with 4x4 matrices.
          * @type Number[4]
          */
-        this._basePoint = (dataJSON && !this._fixed) ? (dataJSON.basePoint.slice() || _showMissingPropertyError(this, "basePoint")) : null;
+        this._basePoint = (dataJSON && !this._fixed) ? (dataJSON.basePoint && dataJSON.basePoint.slice() || [0, 0, 0]) : null;
         if (this._basePoint) {
             this._basePoint.push(1);
         }
@@ -2547,7 +2547,7 @@ define([
          * The amount of score points to be added to the total score value of spacecrafts that have a weapon of this class equipped
          * @type Number
          */
-        this._scoreValue = dataJSON ? (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0) : 0;
+        this._scoreValue = dataJSON ? (dataJSON.scoreValue || 0) : 0;
         return true;
     };
     /**

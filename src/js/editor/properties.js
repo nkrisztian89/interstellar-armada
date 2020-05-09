@@ -41,7 +41,7 @@ define([
             INHERITED_PROPERTY_TEXT = "inherited",
             DEFAULT_PROPERTY_TEXT = "default",
             DERIVED_PROPERTY_TEXT = "derived",
-            UNSET_PROPERTY_TEXT = "unset",
+            UNSET_PROPERTY_TEXT = "not set",
             UNKNOWN_PROPERTY_TEXT = "unknown",
             SET_PROPERTY_BUTTON_CAPTION = "set",
             UNSET_PROPERTY_BUTTON_CAPTION = "x",
@@ -362,7 +362,7 @@ define([
      * @returns {}
      */
     function _getDefaultValue(propertyDescriptor, basedOn, parent, grandParent, topParent, undefinedIfOptionalWithNoDefault, undefinedIfOptionalOrHasDefault, typeName, arrayIndex, propertyOfArrayElement) {
-        var result, type, propertyDescriptors, propertyDescriptorNames, i, optional;
+        var result, type, propertyDescriptors, propertyDescriptorNames, i, optional, count;
         type = new descriptors.Type(propertyDescriptor.type);
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, grandParent, _item.name));
         // automatic naming - only for string type name properties (can be enum as well)
@@ -401,12 +401,19 @@ define([
             case descriptors.BaseType.BOOLEAN:
                 return false;
             case descriptors.BaseType.NUMBER:
-                return type.getMin() || 0;
+                return (type.getMin() !== undefined) ? Math.max(type.getMin(), 0) : 0;
             case descriptors.BaseType.STRING:
                 return "";
             case descriptors.BaseType.ARRAY:
                 result = [];
+                count = 0;
                 if (propertyDescriptor.createDefaultElement) {
+                    count = 1;
+                }
+                if (type.getFixedLength()) {
+                    count = type.getFixedLength();
+                }
+                while (count > 0) {
                     result.push(_getDefaultValue(
                             {type: propertyDescriptor.type.elementType},
                             null,
@@ -414,6 +421,7 @@ define([
                             parent,
                             topParent,
                             true));
+                    count--;
                 }
                 return result;
             case descriptors.BaseType.PAIRS:
@@ -468,7 +476,7 @@ define([
             if (propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) {
                 result[propertyDescriptor.name] = name;
             } else {
-                result[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, null, null, null, true, true);
+                result[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, result, null, null, true, true);
             }
         }
         return result;
@@ -504,9 +512,10 @@ define([
      * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
      * @param {Function} changeHandler 
      * @param {Boolean} [atLeastOneElementNeeded=false] For object arrays: When true, an empty array is not acceptable, at least one element always has to be set
+     * @param {Number} [fixedLength] For object arrays: The fixed length of the array, if it has one
      * @returns {Element}
      */
-    function _createObjectControl(topName, typeDescriptor, data, parent, topParent, parentPopup, changeHandler, atLeastOneElementNeeded) {
+    function _createObjectControl(topName, typeDescriptor, data, parent, topParent, parentPopup, changeHandler, atLeastOneElementNeeded, fixedLength) {
         var
                 i, button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
@@ -642,7 +651,9 @@ define([
                 indexSelector.selectedIndex += 1;
                 indexChangeHandler();
             }, MOVE_DOWN_BUTTON_TOOLTIP);
-            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], [addElementButton, duplicateElementButton, moveUpElementButton, moveDownElementButton, removeElementButton]);
+            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], fixedLength ?
+                    [moveUpElementButton, moveDownElementButton] :
+                    [addElementButton, duplicateElementButton, moveUpElementButton, moveDownElementButton, removeElementButton]);
             if (data.length > 0) {
                 addPropertiesTable(0);
             } else {
@@ -715,9 +726,13 @@ define([
      */
     function _createArrayControl(topName, elementTypeDescriptor, array, parent, topParent, parentPopup, changeHandler) {
         var
+                type = new descriptors.Type(elementTypeDescriptor),
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
-                table, addElementButton, i,
+                label, table, addElementButton, i,
+                updateLabel = function () {
+                    label.textContent = (array.length > 0) ? type.getDisplayName() + " list" : EMPTY_LIST_TEXT;
+                },
                 updateButtonText = function () {
                     button.innerHTML = ((array.length === 1) && (typeof array[0] === "string")) ? "[" + array[0] + "]" : new descriptors.Type(elementTypeDescriptor).getDisplayName() + " [" + array.length + "]";
                     if (parentPopup) {
@@ -733,10 +748,11 @@ define([
                 refreshTable,
                 addElementEditor = function (index) {
                     _addRow(table, [
-                        common.createLabel(index.toString()),
+                        common.createLabel((index + 1).toString()),
                         _createControl({name: index, type: elementTypeDescriptor}, array[index], topName, array, parent, null, topParent, parentPopup, elementChangeHandler),
                         common.createButton(REMOVE_BUTTON_CAPTION, function () {
                             array.splice(index, 1);
+                            updateLabel();
                             refreshTable();
                             popup.alignPosition();
                             _updateData(topName);
@@ -752,12 +768,15 @@ define([
         };
         addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
             array.push(_getDefaultValue({type: elementTypeDescriptor}, null, parent, null, topParent, true));
+            updateLabel();
             addElementEditor(array.length - 1);
             popup.alignPosition();
             _updateData(topName);
             elementChangeHandler();
         });
-        _addPropertyEditorHeader(popup, [], [addElementButton]);
+        label = common.createLabel();
+        updateLabel();
+        _addPropertyEditorHeader(popup, [label], [addElementButton]);
         table = document.createElement("table");
         refreshTable();
         popup.getElement().appendChild(table);
@@ -848,8 +867,11 @@ define([
         var
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
-                table, i, addPairButton,
+                label, table, i, addPairButton,
                 refreshTable,
+                updateLabel = function () {
+                    label.textContent = (data.length > 0) ? "list of pairs" : EMPTY_LIST_TEXT;
+                },
                 updateButtonText = function () {
                     button.innerHTML = new descriptors.Type(typeDescriptor).getDisplayName() + " (" + data.length + ")";
                     if (parentPopup) {
@@ -862,6 +884,7 @@ define([
                             _createControl({name: 1, type: typeDescriptor.second.type}, data[index][1], topName, data[index], null, null, topParent, parentPopup),
                             common.createButton(REMOVE_BUTTON_CAPTION, function () {
                                 data.splice(index, 1);
+                                updateLabel();
                                 updateButtonText();
                                 refreshTable();
                                 popup.alignPosition();
@@ -879,12 +902,15 @@ define([
             data.push([
                 _getDefaultValue({type: typeDescriptor.first.type}, null, null, null, topParent),
                 _getDefaultValue({type: typeDescriptor.second.type}, null, null, null, topParent)]);
+            updateLabel();
             updateButtonText();
             addPairEditor(data.length - 1);
             popup.alignPosition();
             _updateData(topName);
         });
-        _addPropertyEditorHeader(popup, [], [addPairButton]);
+        label = common.createLabel();
+        updateLabel();
+        _addPropertyEditorHeader(popup, [label], [addPairButton]);
         table = document.createElement("table");
         refreshTable();
         popup.getElement().appendChild(table);
@@ -1312,7 +1338,7 @@ define([
                 case descriptors.BaseType.ARRAY:
                     elementType = type.getElementType();
                     if (elementType.getBaseType() === descriptors.BaseType.OBJECT) {
-                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler, propertyDescriptor.createDefaultElement);
+                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler, propertyDescriptor.createDefaultElement, type.getFixedLength());
                     } else {
                         result = _createArrayControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler);
                     }
