@@ -667,6 +667,7 @@ define([
             updateButtonText();
         };
         button.popup = popup; // custom property referencing the popup
+        button.title = "Click to toggle property editor";
         return button;
     }
     /**
@@ -1145,7 +1146,7 @@ define([
      */
     function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row) {
         var result = document.createElement("div"),
-                labelText, label, button, type, optional;
+                labelText, label, button, type, optional, setProperty;
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, null, _item.name));
         if ((!parent || (parent === _item.data)) && _basedOn) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
@@ -1191,13 +1192,12 @@ define([
         }
         label.classList.add(WITH_SET_PROPERTY_BUTTON_CLASS);
         result.appendChild(label);
-        button = document.createElement("button");
-        button.type = "button";
-        button.innerHTML = SET_PROPERTY_BUTTON_CAPTION;
-        button.className = SET_PROPERTY_BUTTON_CLASS;
-        button.onclick = function () {
-            var value = _getDefaultValue(propertyDescriptor, _basedOn, parent, null, topParent),
-                    parentNode = result.parentNode, control;
+        setProperty = function () {
+            var value, parentNode = result.parentNode, control;
+            if (!parentNode) {
+                return;
+            }
+            value = _getDefaultValue(propertyDescriptor, _basedOn, parent, null, topParent);
             parentNode.removeChild(result);
             if (row) {
                 row.classList.remove(UNSET_PROPERTY_ROW_CLASS);
@@ -1207,7 +1207,14 @@ define([
             parentNode.control = control;
             _changeData(topName, value, parent, propertyDescriptor.name, changeHandler);
         };
+        button = document.createElement("button");
+        button.type = "button";
+        button.innerHTML = SET_PROPERTY_BUTTON_CAPTION;
+        button.className = SET_PROPERTY_BUTTON_CLASS;
+        button.onclick = setProperty;
         result.appendChild(button);
+        result.title = "Click to set property";
+        result.onclick = setProperty;
         if (row) {
             row.classList.add(UNSET_PROPERTY_ROW_CLASS);
         }
@@ -1361,7 +1368,7 @@ define([
         var
                 table, rows, properties, validate, generateRow, generateTable;
         generateRow = function (row, index) {
-            var valid, nameCell, valueCell, control;
+            var valid, required, nameCell, valueCell, control;
             nameCell = document.createElement("td");
             nameCell.classList.add(PROPERTY_CLASS);
             nameCell.innerHTML = itemDescriptor[properties[index]].name;
@@ -1369,7 +1376,8 @@ define([
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
             valid = !itemDescriptor[properties[index]].isValid || itemDescriptor[properties[index]].isValid(data, parent, _item.name);
-            if (!valid) {
+            required = itemDescriptor[properties[index]].isRequired && itemDescriptor[properties[index]].isRequired(data, parent, _item.name);
+            if (!valid || (row.required && !required)) {
                 delete data[itemDescriptor[properties[index]].name];
             } else if (data[itemDescriptor[properties[index]].name] === undefined) {
                 data[itemDescriptor[properties[index]].name] = _getDefaultValue(itemDescriptor[properties[index]], null, data, parent, topParent, true, true);
@@ -1380,6 +1388,7 @@ define([
             row.appendChild(valueCell);
             row.valueCell = valueCell;
             row.hidden = !valid;
+            row.required = required;
         };
         generateTable = function () {
             var i, row;

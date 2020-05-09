@@ -525,6 +525,9 @@ div.propertyControl {
     width: 100%;
     display: inline-block;
     vertical-align: middle;
+    tr.property.unset:hover & {
+        cursor: pointer;
+    }
 }
 
 div.propertyEditorHeader {
