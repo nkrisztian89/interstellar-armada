@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.6-dev:890 (2020.05.09.)",
-        "creationTime": "Sat May 09 2020 20:35:52 GMT+0200 (közép-európai nyári idő)"
+        "version": "0.4.6-dev:891 (2020.05.10.)",
+        "creationTime": "Sun May 10 2020 01:33:59 GMT+0200 (közép-európai nyári idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -2065,7 +2065,6 @@
                     "projectileVelocity": 1000,
                     "position": [-2, 25, 14]
                 }],
-            "attachmentPoint": [0, 0, 0],
             "rotationStyle": "yawPitch",
             "basePoint": [0, -5, 12],
             "rotators": [{
@@ -2104,7 +2103,6 @@
                     "projectileVelocity": 900,
                     "position": [-2, 25, 14]
                 }],
-            "attachmentPoint": [0, 0, 0],
             "rotationStyle": "yawPitch",
             "basePoint": [0, -5, 12],
             "rotators": [{
@@ -2139,7 +2137,6 @@
                     "projectileVelocity": 1000,
                     "position": [0, 100, 0]
                 }],
-            "attachmentPoint": [0, 0, 0],
             "rotationStyle": "yawPitch",
             "basePoint": [0, 5, 0],
             "rotators": [{
@@ -2175,7 +2172,6 @@
                     "projectileVelocity": 1200,
                     "position": [0, 320, 0]
                 }],
-            "attachmentPoint": [0, 0, 0],
             "rotationStyle": "rollYaw",
             "basePoint": [0, 90, 0],
             "rotators": [{
@@ -2200,7 +2196,6 @@
         }],
     "propulsionClasses": [{
             "name": "missile",
-            "fullName": "Missile propulsion",
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
@@ -2212,8 +2207,7 @@
             "thrusterSound": {
                 "name": "thruster",
                 "volume": 0.8
-            },
-            "scoreValue": 1
+            }
         }, {
             "name": "imperialDrone",
             "fullName": "Drone propulsion",

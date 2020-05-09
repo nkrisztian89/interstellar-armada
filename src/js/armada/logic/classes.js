@@ -2755,7 +2755,7 @@ define([
          * The full name of this class as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
+        this._fullName = dataJSON ? (dataJSON.fullName || this.getName()) : null;
         /**
          * A descriptor for rendering the particles shown when thrusters of the ship 
          * fire.
@@ -2794,7 +2794,7 @@ define([
          * The amount of score points to be added to the total score value of spacecrafts that have a propulsion of this class equipped
          * @type Number
          */
-        this._scoreValue = dataJSON ? (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0) : 0;
+        this._scoreValue = dataJSON ? (dataJSON.scoreValue || 0) : 0;
         return true;
     };
     /**

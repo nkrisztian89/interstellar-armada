@@ -221,6 +221,11 @@ define([
                 baseType: BaseType.NUMBER,
                 unit: Unit.METERS_PER_SECOND_SQUARED
             },
+            POSITIVE_METERS_PER_SECOND_SQUARED = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.METERS_PER_SECOND_SQUARED,
+                min: 0.001
+            },
             MILLISECONDS = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.MILLISECONDS,
@@ -262,6 +267,11 @@ define([
             DEGREES_PER_SECOND_SQUARED = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.DEGREES_PER_SECOND_SQUARED
+            },
+            POSITIVE_DEGREES_PER_SECOND_SQUARED = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.DEGREES_PER_SECOND_SQUARED,
+                min: 0.001
             },
             KILOGRAMS = {
                 baseType: BaseType.NUMBER,
@@ -1556,11 +1566,14 @@ define([
                 },
                 FULL_NAME: {
                     name: "fullName",
-                    type: BaseType.STRING
+                    type: BaseType.STRING,
+                    optional: true,
+                    getDerivedDefault: _getName
                 },
                 SHADER: {
                     name: "shader",
-                    type: SHADER_REFERENCE
+                    type: SHADER_REFERENCE,
+                    newValue: "particle"
                 },
                 TEXTURE: {
                     name: "texture",
@@ -1568,27 +1581,33 @@ define([
                 },
                 COLOR: {
                     name: "color",
-                    type: BaseType.COLOR4
+                    type: BaseType.COLOR4,
+                    newValue: [1, 1, 1, 1]
                 },
                 REFERENCE_MASS: {
                     name: "referenceMass",
-                    type: KILOGRAMS
+                    type: KILOGRAMS,
+                    newValue: 1
                 },
                 THRUST: {
                     name: "thrust",
-                    type: METERS_PER_SECOND_SQUARED
+                    type: POSITIVE_METERS_PER_SECOND_SQUARED,
+                    newValue: 1
                 },
                 ANGULAR_THRUST: {
                     name: "angularThrust",
-                    type: DEGREES_PER_SECOND_SQUARED
+                    type: POSITIVE_DEGREES_PER_SECOND_SQUARED,
+                    newValue: 1
                 },
                 MAX_MOVE_BURN_LEVEL: {
                     name: "maxMoveBurnLevel",
-                    type: RATIO
+                    type: POSITIVE_RATIO,
+                    newValue: 0.5
                 },
                 MAX_TURN_BURN_LEVEL: {
                     name: "maxTurnBurnLevel",
-                    type: RATIO
+                    type: POSITIVE_RATIO,
+                    newValue: 0.5
                 },
                 THRUSTER_SOUND: {
                     name: "thrusterSound",
@@ -1596,7 +1615,8 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: NON_NEGATIVE_INTEGER
+                    type: NON_NEGATIVE_INTEGER,
+                    defaultValue: 0
                 }
             },
             /**
