@@ -60,6 +60,7 @@ define([
             NUMERIC_INPUT_CLASS = "numericInput",
             COLOR_COMPONENT_CLASS = "colorComponent",
             COLOR_PICKER_CLASS = "colorPicker",
+            COLOR_INPUT_CLASS = "colorInput",
             COLOR_PREVIEW_CLASS = "colorPreview",
             VECTOR_COMPONENT_CLASS = "vectorComponent",
             RANGE_CHECKBOX_CLASS = "rangeCheckbox",
@@ -277,22 +278,22 @@ define([
      * @returns {Element}
      */
     function createColorPicker(data, changeHandler) {
-        var component, i, components, preview,
+        var component, i, components, input,
                 result = document.createElement("div"),
                 componentChangeHander = function (index, value) {
                     data[index] = value;
-                    preview.value = utils.getHexColor(data);
+                    input.value = utils.getHexColor(data);
                     if (changeHandler) {
                         changeHandler();
                     }
                 };
         result.classList.add(COLOR_PICKER_CLASS);
-        preview = document.createElement("input");
-        preview.type = "color";
-        preview.classList.add(COLOR_PREVIEW_CLASS);
-        preview.value = utils.getHexColor(data);
-        preview.onchange = function () {
-            var j, color = utils.getColor3FromHex(preview.value);
+        input = document.createElement("input");
+        input.type = "color";
+        input.classList.add(COLOR_INPUT_CLASS);
+        input.value = utils.getHexColor(data);
+        input.onchange = function () {
+            var j, color = utils.getColor3FromHex(input.value);
             for (j = 0; j < color.length; j++) {
                 data[j] = color[j];
                 components[j].value = color[j];
@@ -301,7 +302,7 @@ define([
                 changeHandler();
             }
         };
-        result.appendChild(preview);
+        result.appendChild(input);
         components = [];
         for (i = 0; i < data.length; i++) {
             component = createNumericInput(data[i], {allowFloats: true, min: 0, max: 1}, componentChangeHander.bind(this, i));
@@ -321,12 +322,23 @@ define([
     function setColorForPicker(element, color) {
         var
                 i,
-                preview = element.querySelector("." + COLOR_PREVIEW_CLASS),
+                input = element.querySelector("." + COLOR_INPUT_CLASS),
                 components = element.querySelectorAll("." + COLOR_COMPONENT_CLASS);
-        preview.value = utils.getHexColor(color);
+        input.value = utils.getHexColor(color);
         for (i = 0; i < components.length; i++) {
             components[i].value = color[i];
         }
+    }
+    /**
+     * 
+     * @param {Number[3]} color
+     * @returns {Element}
+     */
+    function createColorPreview(color) {
+        var preview = document.createElement("div");
+        preview.className = COLOR_PREVIEW_CLASS;
+        preview.style.backgroundColor = utils.getHexColor(color);
+        return preview;
     }
     /**
      * Creates and returns a control that can be used to edit numeric vectors
@@ -618,6 +630,7 @@ define([
         createSelector: createSelector,
         createColorPicker: createColorPicker,
         setColorForPicker: setColorForPicker,
+        createColorPreview: createColorPreview,
         createVectorEditor: createVectorEditor,
         createRangeEditor: createRangeEditor,
         Popup: Popup,

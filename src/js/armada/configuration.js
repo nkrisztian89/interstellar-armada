@@ -73,12 +73,6 @@ define([
              */
             CAMERA_SETTINGS,
             /**
-             * The definition object for editor settings that can be used to verify the data loaded from JSON as well as refer to the 
-             * individual settings later.
-             * @type Object
-             */
-            EDITOR_SETTINGS,
-            /**
              * The full prefix to use for local storage IDs of HUD settings
              * @type String
              */
@@ -1727,16 +1721,6 @@ define([
             values: camera.CameraOrientationConfiguration.PointToFallback
         }
     };
-    EDITOR_SETTINGS = {
-        DEFAULT_PARTICLE_SHADER: {
-            name: "defaultParticleShader",
-            type: "string"
-        },
-        DEFAULT_TRAIL_SHADER: {
-            name: "defaultTrailShader",
-            type: "string"
-        }
-    };
     LOCAL_STORAGE_HUD_PREFIX = MODULE_LOCAL_STORAGE_PREFIX + BATTLE_SETTINGS.HUD.name + LOCAL_STORAGE_SEPARATOR;
     LOCAL_STORAGE_BATTLE_PREFIX = MODULE_LOCAL_STORAGE_PREFIX + "battle" + LOCAL_STORAGE_SEPARATOR;
     Object.freeze(_customTypes);
@@ -1921,7 +1905,6 @@ define([
         types.getVerifiedObject("database", dataJSON.database, DATABASE_SETTINGS, this._settings);
         types.getVerifiedObject("battle", dataJSON.battle, BATTLE_SETTINGS, this._settings);
         types.getVerifiedObject("camera", dataJSON.camera, CAMERA_SETTINGS, this._settings);
-        types.getVerifiedObject("editor", dataJSON.editor, EDITOR_SETTINGS, this._settings);
         classes.requestLoad(this.getConfigurationSetting(CONFIGURATION.CLASSES_SOURCE_FILE), function () {
             this.setToReady();
         }.bind(this));
@@ -1935,7 +1918,6 @@ define([
         BATTLE_SETTINGS: BATTLE_SETTINGS,
         DATABASE_SETTINGS: DATABASE_SETTINGS,
         CAMERA_SETTINGS: CAMERA_SETTINGS,
-        EDITOR_SETTINGS: EDITOR_SETTINGS,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
         getConfigurationSetting: _context.getConfigurationSetting.bind(_context),

@@ -20,6 +20,7 @@
  * @param audio Used to set audio volume
  * @param graphics Used to access the graphics settings of the game (same are used for the preview)
  * @param config Used to access default camera configuration settings.
+ * @param constants Used to get pool names
  * @param classes Used to create an object view for the preview model.
  * @param explosion Used to manage the explosion pool.
  * @param common Used to create selectors.
@@ -36,6 +37,7 @@ define([
     "modules/scene/scene-graph",
     "armada/graphics",
     "armada/configuration",
+    "armada/logic/constants",
     "armada/logic/classes",
     "armada/logic/explosion",
     "editor/common"
@@ -43,7 +45,7 @@ define([
         utils, vec, mat,
         pools, managedGL, resources, audio,
         renderableObjects, sceneGraph,
-        graphics, config, classes, explosion,
+        graphics, config, constants, classes, explosion,
         common) {
     "use strict";
     var
@@ -830,8 +832,8 @@ define([
     }
     // initializazion
     // obtaining pool references
-    _particlePool = pools.getPool(renderableObjects.Particle);
-    _explosionPool = pools.getPool(explosion.Explosion);
+    _particlePool = pools.getPool(constants.PARTICLE_POOL_NAME, renderableObjects.Particle);
+    _explosionPool = pools.getPool(constants.EXPLOSION_POOL_NAME, explosion.Explosion);
     // ----------------------------------------------------------------------
     // The public interface of the module
     return {

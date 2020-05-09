@@ -512,7 +512,7 @@ define([
                 size = dataJSON.thrusterSlots[i].size || _showMissingPropertyError(object, "thrusterSlot array size");
                 count = dataJSON.thrusterSlots[i].count || _showMissingPropertyError(object, "thrusterSlot array count");
                 for (j = 0; j < count; j++) {
-                    thrusterSlots.push(new ThrusterSlot({ //eslint-disable-line no-use-before-define
+                    thrusterSlots.push(new ThrusterSlot({//eslint-disable-line no-use-before-define
                         position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),
                         size: size,
                         groupIndex: groupIndex,
@@ -1064,12 +1064,12 @@ define([
         var i;
         GenericClass.prototype._loadData.call(this, dataJSON);
         /**
-         * The color of the light this object emits. A directional light source with
+         * The color of the light this object emits. If given, a directional light source with
          * this color will be added to environments where this object it present, coming
          * from the object's direction.
          * @type Number[3]
          */
-        this._lightColor = dataJSON ? (dataJSON.lightColor || [1, 1, 1]) : null;
+        this._lightColor = dataJSON ? dataJSON.lightColor : null;
         /**
          * To draw the object on the background, the layers defined in this array
          * will be rendered on top of each other in order.
@@ -1077,7 +1077,7 @@ define([
          */
         this._layers = [];
         if (dataJSON) {
-            if (dataJSON.layers) {
+            if (dataJSON.layers && (dataJSON.layers.length > 0)) {
                 for (i = 0; i < dataJSON.layers.length; i++) {
                     this._layers.push(new ParticleDescriptor(dataJSON.layers[i]));
                 }
@@ -1204,6 +1204,7 @@ define([
      * @returns {Boolean}
      */
     ParticleEmitterDescriptor.prototype._loadData = function (dataJSON) {
+        var i;
         TexturedModelClass.prototype._loadData.call(this, dataJSON);
         /**
          * (enum ParticleEmitterType) The string description of the type of the described particle emitter. Based on this the proper class
@@ -1266,17 +1267,30 @@ define([
          * The duration while new particles are emitted after the initial particle spawning. (milliseconds)
          * @type Number
          */
-        this._duration = dataJSON ? (dataJSON.duration !== undefined ? dataJSON.duration : 1) : 0;
+        this._duration = dataJSON ? (dataJSON.duration || 0) : 0;
         /**
          * The duration to wait before the initial particle spawning. (milliseconds)
          * @type Number
          */
-        this._delay = dataJSON ? (dataJSON.delay !== undefined ? dataJSON.delay : 0) : 0;
+        this._delay = dataJSON ? (dataJSON.delay || 0) : 0;
         /**
          * The list of states that the generated particles should go through.
          * @type ParticleState[]
          */
-        this._particleStates = dataJSON ? (dataJSON.particleStates || []) : null;
+        this._particleStates = null;
+        if (dataJSON) {
+            this._particleStates = [];
+            if (dataJSON.particleStates && (dataJSON.particleStates.length > 0)) {
+                for (i = 0; i < dataJSON.particleStates.length; i++) {
+                    this._particleStates.push(new renderableObjects.ParticleState(
+                            dataJSON.particleStates[i].color,
+                            dataJSON.particleStates[i].size,
+                            dataJSON.particleStates[i].timeToReach));
+                }
+            } else {
+                _showMissingPropertyError(this, "particleStates");
+            }
+        }
         return true;
     };
     /**
@@ -1356,6 +1370,13 @@ define([
         return this._duration;
     };
     /**
+     * Whether this emitter keeps emitting particles continuously in a looping fashion
+     * @returns {Boolean}
+     */
+    ParticleEmitterDescriptor.prototype.isContinuous = function () {
+        return (this._spawnNumber > 0) && (this._duration === 0);
+    };
+    /**
      * Returns the duration to wait before the initial particle spawning. (milliseconds)
      * @returns {Number}
      */
@@ -1375,7 +1396,7 @@ define([
      */
     ParticleEmitterDescriptor.prototype.getParticleDuration = function () {
         var result = 0, i;
-        for (i = 0; i < this._particleStates.length; i++) {
+        for (i = 1; i < this._particleStates.length; i++) {
             result += this._particleStates[i].timeToReach;
         }
         return result;
@@ -1535,7 +1556,7 @@ define([
     ExplosionClass.prototype.isContinuous = function () {
         var i;
         for (i = 0; i < this._particleEmitterDescriptors.length; i++) {
-            if (this._particleEmitterDescriptors[i].getDuration() === 0) {
+            if (this._particleEmitterDescriptors[i].isContinuous()) {
                 return true;
             }
         }
@@ -1975,7 +1996,7 @@ define([
          * Cached calculated value of the missile's nominal range
          * @type Number
          */
-        this._nominalRange = (0.001  * this._duration * this._launchVelocity) + (this._acceleration * 0.5 * t * t); // s = v0 * t + a/2 * t^2
+        this._nominalRange = (0.001 * this._duration * this._launchVelocity) + (this._acceleration * 0.5 * t * t); // s = v0 * t + a/2 * t^2
         return true;
     };
     /**

@@ -80,7 +80,11 @@ define([
              * Using these as clip coordinates specifies a clip zone that includes the whole element.
              * @type Number[4]
              */
-            CLIP_COORDINATES_NO_CLIP = [0, 1, 0, 1];
+            CLIP_COORDINATES_NO_CLIP = [0, 1, 0, 1],
+            /**
+             * @type Number[4]
+             */
+            DEFAULT_PARTICLE_STATE_COLOR = [1, 1, 1, 1];
     // -------------------------------------------------------------------------
     // Private functions
     /**
@@ -1683,24 +1687,24 @@ define([
      * @struct Stores the attributes of a particle for a given state
      * @param {Number[4]} color
      * @param {Number} size
-     * @param {Number} timeToReach
+     * @param {Number} [timeToReach=0]
      */
     function ParticleState(color, size, timeToReach) {
         /**
          * When in this state, the particle is rendered using this color for modulation of the texture color
          * @type Number[4]
          */
-        this.color = color;
+        this.color = color || DEFAULT_PARTICLE_STATE_COLOR;
         /**
          * When in this state, the particle is rendered in this size
          * @type Number
          */
-        this.size = size;
+        this.size = (size !== undefined) ? size : 1;
         /**
          * How many milliseconds does it take for the particle to transition to this state
          * @type Number
          */
-        this.timeToReach = timeToReach;
+        this.timeToReach = timeToReach || 0;
     }
     /**
      * @class Visual object that renders a 2D billboard positioned in 3D space and can
@@ -1841,19 +1845,21 @@ define([
      * first particle state.
      */
     Particle.prototype.init = function (model, shader, textures, positionMatrix, states, looping, instancedShader, initialSize) {
-        var i;
         RenderableObject3D.prototype.init.call(this, shader, false, true, positionMatrix, mat.IDENTITY4, mat.IDENTITY4, instancedShader);
         this.setTextures(textures);
         this._model = model;
         if (states) {
-            for (i = 0; i < states[0].color.length; i++) {
-                this._color[i] = states[0].color[i];
-            }
+            this._color[0] = states[0].color[0];
+            this._color[1] = states[0].color[1];
+            this._color[2] = states[0].color[2];
+            this._color[3] = states[0].color[3];
+            this._states = states;
+        } else {
+            this._states = utils.EMPTY_ARRAY;
         }
         this._size = (initialSize !== undefined) ? initialSize : (states ? states[0].size : 0);
         this._relativeSize = 1;
         this._calculateSize();
-        this._states = states || [];
         this._calculateDuration();
         this._currentStateIndex = 0;
         this._looping = (looping === true);
@@ -1874,11 +1880,8 @@ define([
      */
     Particle.prototype._calculateDuration = function () {
         var i;
-        if (this._states.length <= 1) {
-            return 0;
-        }
         this._duration = 0;
-        for (i = 0; i < this._states.length; i++) {
+        for (i = 1; i < this._states.length; i++) {
             this._duration += this._states[i].timeToReach;
         }
     };
@@ -2096,7 +2099,7 @@ define([
             this._currentStateIndex = (nextStateIndex === 0) ? (this._states.length - 1) : (nextStateIndex - 1);
             // calculate the relative progress
             stateProgress = this._timeSinceLastTransition / this._states[nextStateIndex].timeToReach;
-            for (i = 0; i < this._color.length; i++) {
+            for (i = 0; i < 4; i++) {
                 this._color[i] = (this._states[this._currentStateIndex].color[i] * (1.0 - stateProgress)) + (this._states[nextStateIndex].color[i] * stateProgress);
             }
             this._size = this._states[this._currentStateIndex].size * (1.0 - stateProgress) + this._states[nextStateIndex].size * stateProgress;

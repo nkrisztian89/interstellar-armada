@@ -186,14 +186,29 @@ define([
                 unit: Unit.TIMES,
                 min: 0
             },
+            POSITIVE_SCALE = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.TIMES,
+                min: 0.001
+            },
             DISTANCE = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.METERS,
                 min: 0
             },
+            POSITIVE_DISTANCE = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.METERS,
+                min: 1
+            },
             METERS_PER_SECOND = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.METERS_PER_SECOND
+            },
+            NON_NEGATIVE_METERS_PER_SECOND = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.METERS_PER_SECOND,
+                min: 0
             },
             METERS_PER_SECOND_SQUARED = {
                 baseType: BaseType.NUMBER,
@@ -210,6 +225,12 @@ define([
                 integer: true,
                 min: 0
             },
+            POSITIVE_MILLISECONDS = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.MILLISECONDS,
+                integer: true,
+                min: 1
+            },
             PER_SECOND = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.PER_SECOND
@@ -218,6 +239,12 @@ define([
                 baseType: BaseType.NUMBER,
                 unit: Unit.DEGREES,
                 min: -360,
+                max: 360
+            },
+            NON_NEGATIVE_DEGREES = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.DEGREES,
+                min: 0,
                 max: 360
             },
             DEGREES_PER_SECOND = {
@@ -671,7 +698,8 @@ define([
                 },
                 SHADER: {
                     name: "shader",
-                    type: SHADER_REFERENCE
+                    type: SHADER_REFERENCE,
+                    newValue: "skybox"
                 },
                 CUBEMAP: {
                     name: "cubemap",
@@ -687,11 +715,13 @@ define([
                 properties: {
                     SIZE: {
                         name: "size",
-                        type: NON_NEGATIVE_SCALE
+                        type: POSITIVE_SCALE,
+                        defaultValue: 1
                     },
                     SHADER: {
                         name: "shader",
-                        type: SHADER_REFERENCE
+                        type: SHADER_REFERENCE,
+                        newValue: "backgroundBillboard"
                     },
                     TEXTURE: {
                         name: "texture",
@@ -699,7 +729,8 @@ define([
                     },
                     COLOR: {
                         name: "color",
-                        type: BaseType.COLOR4
+                        type: BaseType.COLOR4,
+                        defaultValue: [1, 1, 1, 1]
                     }
                 }
             },
@@ -714,11 +745,14 @@ define([
                 },
                 LIGHT_COLOR: {
                     name: "lightColor",
-                    type: BaseType.COLOR3
+                    type: BaseType.COLOR3,
+                    optional: true,
+                    defaultText: "no light emitted"
                 },
                 LAYERS: {
                     name: "layers",
-                    type: _createTypedArrayType(BACKGROUND_OBJECT_LAYER)
+                    type: _createTypedArrayType(BACKGROUND_OBJECT_LAYER),
+                    createDefaultElement: true
                 }
             },
             /**
@@ -732,7 +766,8 @@ define([
                 },
                 SHADER: {
                     name: "shader",
-                    type: SHADER_REFERENCE
+                    type: SHADER_REFERENCE,
+                    newValue: "dust"
                 },
                 NUMBER_OF_PARTICLES: {
                     name: "numberOfParticles",
@@ -740,11 +775,12 @@ define([
                 },
                 RANGE: {
                     name: "range",
-                    type: DISTANCE
+                    type: POSITIVE_DISTANCE
                 },
                 COLOR: {
                     name: "color",
-                    type: BaseType.COLOR4
+                    type: BaseType.COLOR3,
+                    defaultValue: [1, 1, 1]
                 }
             },
             /**
@@ -753,6 +789,9 @@ define([
             PARTICLE_EMITTER_TYPE = {
                 baseType: BaseType.ENUM,
                 values: classes.ParticleEmitterType
+            },
+            _particleStateIsNotFirst = function (data, parent) {
+                return data !== parent.particleStates[0];
             },
             /**
              * @type Editor~TypeDescriptor
@@ -763,17 +802,30 @@ define([
                 properties: {
                     COLOR: {
                         name: "color",
-                        type: BaseType.COLOR4
+                        type: BaseType.COLOR4,
+                        defaultValue: [1, 1, 1, 1]
                     },
                     SIZE: {
                         name: "size",
-                        type: NON_NEGATIVE_NUMBER
+                        type: NON_NEGATIVE_NUMBER,
+                        defaultValue: 1
                     },
                     TIME_TO_REACH: {
                         name: "timeToReach",
-                        type: NON_NEGATIVE_MILLISECONDS
+                        type: NON_NEGATIVE_MILLISECONDS,
+                        defaultValue: 0,
+                        isValid: _particleStateIsNotFirst
                     }
                 }
+            },
+            _emitterHasProjectileModel = function (data) {
+                return data.hasProjectileModel;
+            },
+            _emitterHasDirection = function (data) {
+                return data.type && (data.type !== classes.ParticleEmitterType.OMNIDIRECTIONAL);
+            },
+            _emitterIsSpawning = function (data) {
+                return data.spawnNumber > 0;
             },
             /**
              * @type Editor~TypeDescriptor
@@ -784,7 +836,8 @@ define([
                 properties: {
                     TYPE: {
                         name: "type",
-                        type: PARTICLE_EMITTER_TYPE
+                        type: PARTICLE_EMITTER_TYPE,
+                        defaultValue: classes.ParticleEmitterType.OMNIDIRECTIONAL
                     },
                     HAS_PROJECTILE_MODEL: {
                         name: "hasProjectileModel",
@@ -795,13 +848,15 @@ define([
                         name: "projectileModelWidth",
                         type: RATIO,
                         optional: true,
-                        defaultValue: 1
+                        defaultValue: 1,
+                        isValid: _emitterHasProjectileModel
                     },
                     PROJECTILE_MODEL_INTERSECTION: {
                         name: "projectileModelIntersection",
                         type: BaseType.NUMBER,
                         optional: true,
-                        defaultValue: 0
+                        defaultValue: 0,
+                        isValid: _emitterHasProjectileModel
                     },
                     DIMENSIONS: {
                         name: "dimensions",
@@ -810,8 +865,9 @@ define([
                     },
                     DIRECTION_SPREAD: {
                         name: "directionSpread",
-                        type: DEGREES,
-                        defaultValue: 0
+                        type: NON_NEGATIVE_DEGREES,
+                        defaultValue: 0,
+                        isValid: _emitterHasDirection
                     },
                     VELOCITY: {
                         name: "velocity",
@@ -820,7 +876,7 @@ define([
                     },
                     VELOCITY_SPREAD: {
                         name: "velocitySpread",
-                        type: METERS_PER_SECOND,
+                        type: NON_NEGATIVE_METERS_PER_SECOND,
                         defaultValue: 0
                     },
                     INITIAL_NUMBER: {
@@ -835,13 +891,16 @@ define([
                     },
                     SPAWN_TIME: {
                         name: "spawnTime",
-                        type: NON_NEGATIVE_MILLISECONDS,
-                        defaultValue: 1
+                        type: POSITIVE_MILLISECONDS,
+                        defaultValue: 1,
+                        isValid: _emitterIsSpawning
                     },
                     DURATION: {
                         name: "duration",
-                        type: NON_NEGATIVE_MILLISECONDS,
-                        defaultValue: 1
+                        type: POSITIVE_MILLISECONDS,
+                        optional: true,
+                        isValid: _emitterIsSpawning,
+                        defaultText: "infinite"
                     },
                     DELAY: {
                         name: "delay",
@@ -851,8 +910,7 @@ define([
                     SHADER: {
                         name: "shader",
                         type: SHADER_REFERENCE,
-                        globalDefault: true,
-                        settingName: config.EDITOR_SETTINGS.DEFAULT_PARTICLE_SHADER
+                        newValue: "particle"
                     },
                     TEXTURE: {
                         name: "texture",
@@ -874,7 +932,8 @@ define([
                 properties: {
                     COLOR: {
                         name: "color",
-                        type: BaseType.COLOR3
+                        type: BaseType.COLOR3,
+                        newValue: [1, 1, 1]
                     },
                     INTENSITY: {
                         name: "intensity",
@@ -915,18 +974,21 @@ define([
                 },
                 PARTICLE_EMITTERS: {
                     name: "particleEmitters",
-                    type: _createTypedArrayType(PARTICLE_EMITTER)
+                    type: _createTypedArrayType(PARTICLE_EMITTER),
+                    createDefaultElement: true
                 },
                 LIGHT_STATES: {
                     name: "lightStates",
                     type: _createTypedArrayType(LIGHT_STATE),
                     optional: true,
-                    createDefaultElement: true
+                    createDefaultElement: true,
+                    defaultText: "no light emitted"
                 },
                 SOUND_EFFECT: {
                     name: "soundEffect",
                     type: SOUND_DESCRIPTOR,
-                    optional: true
+                    optional: true,
+                    defaultText: "no sound"
                 }
             },
             /**
@@ -939,8 +1001,7 @@ define([
                     SHADER: {
                         name: "shader",
                         type: SHADER_REFERENCE,
-                        globalDefault: true,
-                        settingName: config.EDITOR_SETTINGS.DEFAULT_PARTICLE_SHADER
+                        newValue: "particle"
                     },
                     TEXTURE: {
                         name: "texture",
@@ -972,8 +1033,7 @@ define([
                     SHADER: {
                         name: "shader",
                         type: SHADER_REFERENCE,
-                        globalDefault: true,
-                        settingName: config.EDITOR_SETTINGS.DEFAULT_TRAIL_SHADER
+                        newValue: "trail"
                     },
                     TEXTURE: {
                         name: "texture",

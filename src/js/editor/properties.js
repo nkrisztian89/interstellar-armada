@@ -1146,7 +1146,7 @@ define([
      */
     function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row) {
         var result = document.createElement("div"),
-                labelText, label, button, type, optional, setProperty;
+                labelText, label, button, type, optional, setProperty, limit = false;
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, null, _item.name));
         if ((!parent || (parent === _item.data)) && _basedOn) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
@@ -1165,20 +1165,28 @@ define([
                     labelText = propertyDescriptor.defaultValue ? "yes" : "no";
                 } else if (typeof propertyDescriptor.defaultValue === "string") {
                     labelText = propertyDescriptor.defaultValue;
+                    limit = true;
                 } else if (Array.isArray(propertyDescriptor.defaultValue)) {
                     if (propertyDescriptor.defaultValue.length === 0) {
                         labelText = "empty list";
                     } else {
                         if ((typeof propertyDescriptor.defaultValue[0] === "number") || (typeof propertyDescriptor.defaultValue[0] === "string")) {
                             labelText = propertyDescriptor.defaultValue.join(", ");
+                            if ((propertyDescriptor.type === descriptors.BaseType.COLOR3) || (propertyDescriptor.type === descriptors.BaseType.COLOR4)) {
+                                labelText = common.createColorPreview(propertyDescriptor.defaultValue).outerHTML + labelText;
+                                limit = false;
+                            } else {
+                                limit = true;
+                            }
                         } else if (typeof propertyDescriptor.defaultValue[0] === "boolean") {
                             labelText = propertyDescriptor.defaultValue.map((boolean) => (boolean ? "yes" : "no")).join(", ");
+                            limit = true;
                         }
                     }
                 }
             }
-            if (labelText.length > 15) {
-                labelText = labelText.substring(0, 12) + "...";
+            if (limit && (labelText.length > 20)) {
+                labelText = labelText.substring(0, 17) + "...";
             }
             label = _createDefaultControl(labelText);
         } else if (propertyDescriptor.getDerivedDefault) {

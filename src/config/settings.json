@@ -1020,10 +1020,6 @@
             "defaultSpanRange": [0.2, 0.2],
             "defaultBaseOrientation": "positionFollowedObjects",
             "defaultPointToFallback": "positionFollowedObjectOrWorld"
-        },
-        "editor": {
-            "defaultParticleShader": "particle",
-            "defaultTrailShader": "trail"
         }
     },
     "control": {

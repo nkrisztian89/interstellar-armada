@@ -26,6 +26,7 @@
  * @param properties Used to generate the content of the Properties window
  * @param shaderPreview Used to create previews for shader resources
  * @param skyboxPreview Used to create previews for skybox classes
+ * @param backgroundObjectPreview Used to create previews for background object classes
  * @param explosionPreview Used to create previews for explosion classes
  * @param projectilePreview Used to create previews for projectile classes
  * @param weaponPreview Used to create previews for weapon classes
@@ -52,6 +53,7 @@ define([
     "editor/properties",
     "editor/preview/shader-preview",
     "editor/preview/skybox-preview",
+    "editor/preview/backgroundObject-preview",
     "editor/preview/explosion-preview",
     "editor/preview/projectile-preview",
     "editor/preview/weapon-preview",
@@ -67,7 +69,7 @@ define([
         control, strings,
         common, descriptors, properties,
         shaderPreview,
-        skyboxPreview, explosionPreview, projectilePreview, weaponPreview, missilePreview, spacecraftPreview, environmentPreview, missionPreview) {
+        skyboxPreview, backgroundObjectPreview, explosionPreview, projectilePreview, weaponPreview, missilePreview, spacecraftPreview, environmentPreview, missionPreview) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -129,6 +131,7 @@ define([
             _previews = {
                 "shaders": shaderPreview,
                 "skyboxClasses": skyboxPreview,
+                "backgroundObjectClasses": backgroundObjectPreview,
                 "explosionClasses": explosionPreview,
                 "projectileClasses": projectilePreview,
                 "weaponClasses": weaponPreview,
@@ -978,9 +981,14 @@ define([
             if (getItems) {
                 common.setSelectorOptions(newItemBase, ["none"].concat(getItems(newItemCategory.value)));
                 if (newItemType.value === common.ItemType.MISSION) {
-                    newItemName.value = "newMission";
+                    newItemName.value = "mission";
                 } else {
                     newItemName.value = newItemCategory.value;
+                    if (newItemName.value.indexOf("Classes") >= 0) {
+                        newItemName.value = newItemName.value.substring(0, newItemName.value.indexOf("Classes"));
+                    } else if (newItemName.value[newItemName.value.length - 1] === "s") {
+                        newItemName.value = newItemName.value.substring(0, newItemName.value.length - 1);
+                    }
                 }
             }
         };

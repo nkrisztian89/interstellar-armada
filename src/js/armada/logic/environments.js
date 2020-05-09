@@ -155,9 +155,12 @@ define([
      * Adds the layered texture object and the light source belonging to this
      * object to the passed scene.
      * @param {Scene} scene
+     * @param {Boolean} [withoutLight=false]
      */
-    BackgroundObject.prototype.addToScene = function (scene) {
-        scene.addDirectionalLightSource(new lights.DirectionalLightSource(this._class.getLightColor(), this._direction));
+    BackgroundObject.prototype.addToScene = function (scene, withoutLight) {
+        if (!withoutLight && this._class.getLightColor()) {
+            scene.addDirectionalLightSource(new lights.DirectionalLightSource(this._class.getLightColor(), this._direction));
+        }
         this._class.acquireResources();
         resources.executeWhenReady(function () {
             var i, layers, layerParticle;
@@ -472,7 +475,7 @@ define([
             this._skyboxes[i].addToScene(scene);
         }
         for (i = 0; i < this._backgroundObjects.length; i++) {
-            this._backgroundObjects[i].addToScene(scene);
+            this._backgroundObjects[i].addToScene(scene, false);
         }
         for (i = 0; i < this._dustClouds.length; i++) {
             this._dustClouds[i].addToScene(scene);
@@ -616,6 +619,7 @@ define([
         createEnvironment: _context.createEnvironment.bind(_context),
         executeForAllEnvironments: _context.executeForAllEnvironments.bind(_context),
         Skybox: Skybox,
+        BackgroundObject: BackgroundObject,
         Environment: Environment
     };
 });

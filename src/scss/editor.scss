@@ -101,10 +101,18 @@ select.withJumpButton, select.withUnsetButton {
     display: inline-block;
 }
 
-.colorPreview {
+.colorInput {
     display: inline-block;
     width: 1.1em;
     height: 1.4em;
+    margin-bottom: 0;
+    margin-right: 0.28em;
+}
+
+.colorPreview {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
     margin-bottom: 0;
     margin-right: 0.28em;
 }

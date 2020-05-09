@@ -13,6 +13,7 @@
  * @param pools Used for displaying info about the particle pool state
  * @param renderableObjects Used to access the pool for particles
  * @param lights Used for creating the light sources for the preview scene
+ * @param constants Used to get pool names
  * @param explosion Used to create the preview explosions
  * @param common Used for creating option elements
  * @param preview This module is based on the common WebGL preview module
@@ -22,10 +23,11 @@ define([
     "modules/pools",
     "modules/scene/renderable-objects",
     "modules/scene/lights",
+    "armada/logic/constants",
     "armada/logic/explosion",
     "editor/common",
     "editor/preview/webgl-preview"
-], function (mat, pools, renderableObjects, lights, explosion, common, preview) {
+], function (mat, pools, renderableObjects, lights, constants, explosion, common, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -228,7 +230,7 @@ define([
     });
     // initializazion
     // obtaining pool references
-    _particlePool = pools.getPool(renderableObjects.Particle);
+    _particlePool = pools.getPool(constants.PARTICLE_POOL_NAME, renderableObjects.Particle);
     // ----------------------------------------------------------------------
     // The public interface of the module
     return {

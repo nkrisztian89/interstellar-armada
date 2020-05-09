@@ -1,6 +1,6 @@
 /**
  * Copyright 2016, 2020 Krisztián Nagy
- * @file Provides the setup and event-handling for the preview window used for skybox classes within the Interstellar Armada editor.
+ * @file Provides the setup and event-handling for the preview window used for background object classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  * @version 1.0
@@ -9,7 +9,7 @@
 /*global define, document, window */
 
 /**
- * @param environments Used to create the skybox
+ * @param environments Used to create the background object
  * @param preview Used for common WebGL preview functionality
  */
 define([
@@ -25,8 +25,8 @@ define([
              * @type String[]
              */
             CANVAS_UPDATE_PROPERTIES = [
-                "shader",
-                "cubemap"],
+                "layers"
+            ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
              * @type String[]
@@ -42,17 +42,17 @@ define([
             // ----------------------------------------------------------------------
             // Private variables
             /**
-             * An instance to preview the currently selected skybox class
-             * @type Skybox
+             * An instance to preview the currently selected background object class
+             * @type BackgroundObject
              */
-            _skybox,
+            _backgroundObject,
             /**
-             * A reference to the displayed skybox class
-             * @type SkyboxClass
+             * A reference to the displayed background object class
+             * @type BackgroundObjectClass
              */
-            _skyboxClass,
+            _backgroundObjectClass,
             /**
-             * Stores the WebGL preview context information for skybox class previews
+             * Stores the WebGL preview context information for background object class previews
              * @type WebGLPreviewContext
              */
             _previewContext;
@@ -62,9 +62,9 @@ define([
      * For the functions.clear property of the preview context
      */
     function _clear() {
-        if (_skybox) {
-            _skybox.destroy();
-            _skybox = null;
+        if (_backgroundObject) {
+            _backgroundObject.destroy();
+            _backgroundObject = null;
         }
     }
     /**
@@ -77,9 +77,9 @@ define([
         params = params || {};
         shouldReload = !params.preserve || params.reload;
         if (shouldReload) {
-            _skybox = new environments.Skybox(_skyboxClass);
+            _backgroundObject = new environments.BackgroundObject(_backgroundObjectClass, 600, 0, -90, 180);
         }
-        _skybox.addToScene(preview.getScene());
+        _backgroundObject.addToScene(preview.getScene(), true);
     }
     /**
      * For the functions.clearSettingsForNewItem property of the preview context
@@ -103,15 +103,15 @@ define([
     // Public Functions
     /**
      * The main function that sets up the preview window (both options and the preview canvas) for the editor to show the selected 
-     * skybox class.
+     * background object class.
      * @param {Editor~RefreshElements} elements References to the HTML elements that can be used for the preview.
-     * @param {SkyboxClass} skyboxClass The skybox class to preview
+     * @param {SpacecraftClass} backgroundObjectClass The background object class to preview
      * @param {Editor~RefreshParams} params Additional parameters 
      */
-    function refresh(elements, skyboxClass, params) {
-        var sameClass = (_skyboxClass === skyboxClass);
+    function refresh(elements, backgroundObjectClass, params) {
+        var sameClass = (_backgroundObjectClass === backgroundObjectClass);
         preview.setContext(_previewContext);
-        _skyboxClass = skyboxClass;
+        _backgroundObjectClass = backgroundObjectClass;
         if (sameClass) {
             if (!params) {
                 params = {
