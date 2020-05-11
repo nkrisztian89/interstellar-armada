@@ -194,6 +194,7 @@ define([
         environmentChanged = params.environmentName !== _environmentName;
         shouldReload = !params.preserve || params.reload;
         if ((environmentChanged || params.clearScene || shouldReload) && !params.environmentName) {
+            preview.getScene().setAmbientColor([0, 0, 0]);
             for (i = 0; i < LIGHT_SOURCES.length; i++) {
                 preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
             }
@@ -231,6 +232,7 @@ define([
         }
         if (params.environmentName && (environmentChanged || shouldReload)) {
             environments.getEnvironment(params.environmentName).addToScene(preview.getScene());
+            environments.getEnvironment(params.environmentName).addParticleEffectsToScene(preview.getScene());
         }
         _environmentName = params.environmentName;
         _updateEngineStateEditor();
