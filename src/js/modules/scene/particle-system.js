@@ -415,11 +415,13 @@ define([
      * Emitters that are set to produce particles forever will keep on doing so.
      * @param {Boolean} [carriesParticles=false] Whether to carry the emitted particles as subnodes in the scene graph or
      * add them directly to the scene root.
+     * @param {Boolean} [relativeOrientation=false] When the particles are not carried, whether to rotate them according to
+     * the orientation set for the system when created
      * @param {Number} [minimumCountForInstancing=0] If greater than zero, then having at least this many particles of the types emitted
      * by this particle system will turn on instancing for their render queue.
      * @param {Number} [particleCountFactor=1] The number of particles created by this particle system will be multiplied by this factor
      */
-    function ParticleSystem(positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing, particleCountFactor) {
+    function ParticleSystem(positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, relativeOrientation, minimumCountForInstancing, particleCountFactor) {
         renderableObjects.RenderableObject3D.call(this, null, false, true, positionMatrix, orientationMatrix, scalingMatrix, undefined, 1, true);
         /**
          * The 4x4 translation matrix describing the velocity of the particle system (m/s)
@@ -454,6 +456,12 @@ define([
          */
         this._carriesParticles = (carriesParticles === true);
         /**
+         * When the particles are not carried, whether to rotate them according to
+         * the orientation set for the system when created
+         * @type Boolean
+         */
+        this._hasRelativeOrientation = (relativeOrientation === true);
+        /**
          * If greater than zero, then having at least this many particles of the types emitted by this particle system will turn on 
          * instancing for their render queue.
          * @type Number
@@ -480,11 +488,13 @@ define([
      * Emitters that are set to produce particles forever will keep on doing so.
      * @param {Boolean} [carriesParticles=false] Whether to carry the emitted particles as subnodes in the scene graph or
      * add them directly to the scene root.
+     * @param {Boolean} [relativeOrientation=false] When the particles are not carried, whether to rotate them according to
+     * the orientation set for the system when created
      * @param {Number} [minimumCountForInstancing=0] If greater than zero, then having at least this many particles of the types emitted
      * by this particle system will turn on instancing for their render queue.
      * @param {Number} [particleCountFactor=1] The number of particles created by this particle system will be multiplied by this factor
      */
-    ParticleSystem.prototype.init = function (positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, minimumCountForInstancing, particleCountFactor) {
+    ParticleSystem.prototype.init = function (positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, relativeOrientation, minimumCountForInstancing, particleCountFactor) {
         renderableObjects.RenderableObject3D.prototype.init.call(this, null, false, true, positionMatrix, orientationMatrix, scalingMatrix, undefined, 1, true);
         this._velocityMatrix = velocityMatrix;
         this._emitters = emitters;
@@ -492,6 +502,7 @@ define([
         this._duration = duration;
         this._keepAlive = (keepAlive === true);
         this._carriesParticles = (carriesParticles === true);
+        this._hasRelativeOrientation = (relativeOrientation === true);
         this._minimumCountForInstancing = minimumCountForInstancing;
         this._particleCountFactor = (particleCountFactor !== undefined) ? particleCountFactor : 1;
         this._calculateSize();
@@ -546,12 +557,18 @@ define([
                     for (j = 0; j < particles.length; j++) {
                         this.getNode().addSubnode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, this._minimumCountForInstancing));
                     }
-                } else {
+                } else if (this._hasRelativeOrientation) {
                     modelMatrix = this.getModelMatrix();
                     orientationMatrix = mat.matrix3from4Aux(modelMatrix);
                     for (j = 0; j < particles.length; j++) {
                         particles[j].translateByMatrix(modelMatrix);
                         particles[j].rotateByMatrix3(orientationMatrix);
+                        this.getNode().getScene().addNode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, this._minimumCountForInstancing));
+                    }
+                } else {
+                    modelMatrix = this.getModelMatrix();
+                    for (j = 0; j < particles.length; j++) {
+                        particles[j].translateByMatrix(modelMatrix);
                         this.getNode().getScene().addNode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, this._minimumCountForInstancing));
                     }
                 }

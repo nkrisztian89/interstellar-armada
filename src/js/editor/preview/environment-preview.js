@@ -29,7 +29,7 @@ define([
              * @type String[]
              */
             CANVAS_UPDATE_PROPERTIES = [
-                "skyboxes", "backgroundObjects", "dustClouds"],
+                "skyboxes", "backgroundObjects", "dustClouds", "particleEffects"],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
              * @type String[]
@@ -104,6 +104,7 @@ define([
             }
         }
         _environment.addToScene(preview.getScene());
+        _environment.addParticleEffectsToScene(preview.getScene());
         _cameraSpeed = params.cameraSpeed;
     }
     /**

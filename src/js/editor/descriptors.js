@@ -2429,6 +2429,9 @@ define([
             SKYBOX = {
                 baseType: BaseType.OBJECT,
                 name: "Skybox",
+                getName: function (data) {
+                    return data.class;
+                },
                 properties: {
                     CLASS: {
                         name: "class",
@@ -2442,6 +2445,9 @@ define([
             BACKGROUND_OBJECT_POSITION = {
                 baseType: BaseType.OBJECT,
                 name: "BackgroundObjectPosition",
+                getPreviewText: function (data) {
+                    return data.angleAlpha + "°, " + data.angleBeta + "°" + ((data.angleGamma !== undefined) ? ", " + data.angleGamma + "°" : "");
+                },
                 properties: {
                     ANGLE_ALPHA: {
                         name: "angleAlpha",
@@ -2464,6 +2470,9 @@ define([
             BACKGROUND_OBJECT = {
                 baseType: BaseType.OBJECT,
                 name: "BackgroundObject",
+                getName: function (data) {
+                    return data.class + "::" + data.size;
+                },
                 properties: {
                     CLASS: {
                         name: "class",
@@ -2486,10 +2495,51 @@ define([
             DUST_CLOUD = {
                 baseType: BaseType.OBJECT,
                 name: "DustCloud",
+                getName: function (data) {
+                    return data.class;
+                },
                 properties: {
                     CLASS: {
                         name: "class",
                         type: DUST_CLOUD_CLASS_REFERENCE
+                    }
+                }
+            },
+            _effectIsRelative = function (data) {
+                return data.relativeToCamera !== false;
+            },
+            PARTICLE_EFFECT = {
+                baseType: BaseType.OBJECT,
+                name: "ParticleEffect",
+                getName: function (data) {
+                    return data.class;
+                },
+                properties: {
+                    CLASS: {
+                        name: "class",
+                        type: EXPLOSION_CLASS_REFERENCE,
+                        newValue: "blueNebula"
+                    },
+                    POSITION: {
+                        name: "position",
+                        type: BaseType.VECTOR3,
+                        defaultValue: [0, 0, 0]
+                    },
+                    RELATIVE_TO_CAMERA: {
+                        name: "relativeToCamera",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: true
+                    },
+                    DIRECTION: {
+                        name: "direction",
+                        type: BaseType.VECTOR3,
+                        defaultValue: [0, 0, 1]
+                    },
+                    RELATIVE_DIRECTION: {
+                        name: "relativeDirection",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false,
+                        isValid: _effectIsRelative
                     }
                 }
             },
@@ -2500,15 +2550,31 @@ define([
             ENVIRONMENT = {
                 SKYBOXES: {
                     name: "skyboxes",
-                    type: _createTypedArrayType(SKYBOX)
+                    type: _createTypedArrayType(SKYBOX),
+                    optional: true,
+                    defaultText: "none",
+                    createDefaultElement: true
                 },
                 BACKGROUND_OBJECTS: {
                     name: "backgroundObjects",
-                    type: _createTypedArrayType(BACKGROUND_OBJECT)
+                    type: _createTypedArrayType(BACKGROUND_OBJECT),
+                    optional: true,
+                    defaultText: "none",
+                    createDefaultElement: true
                 },
                 DUST_CLOUDS: {
                     name: "dustClouds",
-                    type: _createTypedArrayType(DUST_CLOUD)
+                    type: _createTypedArrayType(DUST_CLOUD),
+                    optional: true,
+                    defaultText: "none",
+                    createDefaultElement: true
+                },
+                PARTICLE_EFFECTS: {
+                    name: "particleEffects",
+                    type: _createTypedArrayType(PARTICLE_EFFECT),
+                    optional: true,
+                    defaultText: "none",
+                    createDefaultElement: true
                 }
             },
             /**

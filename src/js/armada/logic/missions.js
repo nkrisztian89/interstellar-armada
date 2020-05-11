@@ -3143,6 +3143,19 @@ define([
         return actionEntry.delay > 0;
     };
     /**
+     * Call after resources have been loaded and the mission is ready to be started to finish off preparations.
+     * Adds the particle systems to the scene and sets up their initial position.
+     * @param {Scene} scene
+     * @returns {Boolean}
+     */
+    Mission.prototype.prepareScene = function (scene) {
+        if (this._environment.addParticleEffectsToScene(scene)) {
+            this._environment.simulate();
+            return true;
+        }
+        return false;
+    };
+    /**
      * Performs the physics and game logic simulation of all the object in the mission.
      * @param {Number} dt The time passed since the last simulation step, in milliseconds.
      * @param {Scene} mainScene When given, this scene is updated according to the simulation.

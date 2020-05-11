@@ -5044,6 +5044,7 @@ define([
         getSkyboxClass: getSkyboxClass,
         getBackgroundObjectClass: getBackgroundObjectClass,
         getDustCloudClass: getDustCloudClass,
+        getExplosionClass: getExplosionClass,
         getMissileClass: getMissileClass,
         getWeaponClass: getWeaponClass,
         getPropulsionClass: getPropulsionClass,

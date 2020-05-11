@@ -2770,6 +2770,7 @@ define([
                         this._physicalModel.getOrientationMatrix(),
                         mat.getRowC43(this._physicalModel.getPositionMatrix()),
                         true,
+                        true,
                         this._physicalModel.getVelocityMatrix());
                 this._explosion.addToScene(this._visualModel.getNode().getScene().getRootNode(), this.getSoundSource());
                 for (i = 0; i < this._activeDamageIndicators; i++) {

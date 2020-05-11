@@ -1032,7 +1032,7 @@
                         "key": "space"
                     }, {
                         "action": "launchMissile",
-                        "key": "ctrl"
+                        "key": "enter"
                     }, {
                         "action": "changeMissile",
                         "key": "alt"

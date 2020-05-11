@@ -1942,6 +1942,18 @@ define([
         return this._velocityVector && ((this._velocityVector[0] !== 0) || (this._velocityVector[1] !== 0) || (this._velocityVector[2] !== 0));
     };
     /**
+     * @override
+     * @param {Float32Array} matrix
+     */
+    Particle.prototype.rotateByMatrix3 = function (matrix) {
+        if (this._velocityVector) {
+            vec.mulVec3Mat3(this._velocityVector, matrix);
+            this._updateVelocity();
+        } else {
+            RenderableObject3D.prototype.rotateByMatrix3.call(this, matrix);
+        }
+    };
+    /**
      * Updates the _shouldAnimate cache variable.
      */
     Particle.prototype._updateShouldAnimate = function () {

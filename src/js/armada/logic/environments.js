@@ -20,6 +20,7 @@
  * @param sceneGraph Creating and managing the scene graph for visual simulation is done using this module
  * @param graphics Used to access graphics settings
  * @param classes Used to load and access the classes of Interstellar Armada
+ * @param explosion Used to create particle effects
  * @param config Used to access game settings/configuration
  * @param strings Used for translation support
  */
@@ -35,6 +36,7 @@ define([
     "modules/scene/scene-graph",
     "armada/graphics",
     "armada/logic/classes",
+    "armada/logic/explosion",
     "armada/configuration",
     "armada/strings",
     "utils/polyfill"
@@ -42,7 +44,7 @@ define([
         utils, vec, mat,
         application, asyncResource, resources,
         renderableObjects, lights, sceneGraph,
-        graphics, classes, config, strings) {
+        graphics, classes, explosion, config, strings) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -356,6 +358,92 @@ define([
     };
     // #########################################################################
     /**
+     * @typedef {Object} ParticleEffectDescriptor
+     * @property {String} class
+     * @property {Number[3]} [position]
+     * @property {Boolean} [relativeToCamera] Whether the position and orientation
+     * of the particle effect needs to be calculated relative to the camera
+     * @property {Number[3]} [direction] The direction vector passed to the particle
+     * emitters (e.g. unidirectional or planar emitters will use this)
+     * @property {Boolean} [relativeDirection] If the effect is relative to the camera,
+     * whether to make the direction vector passed to the emitters relative as well
+     */
+    /**
+     * @class
+     * An effect that uses a particle system, part of the environment. Can be 
+     * positioned relative to the camera or globally in the scene.
+     * @param {ParticleEffectDescriptor} dataJSON
+     */
+    function ParticleEffect(dataJSON) {
+        /**
+         * The position vector storing the original position (whether relative or
+         * absolute) of the effect.
+         * @type Number[4]
+         */
+        this._origin = dataJSON.position ? dataJSON.position.slice() : [0, 0, 0];
+        this._origin.push(1);
+        /**
+         * The calculated current world position of the particle effect (used if
+         * the effect is relative to camera)
+         * @type Number[4]
+         */
+        this._position = [0, 0, 0, 1];
+        /**
+         * If true, the effect is always positioned and oriented relative to the 
+         * camera of the scene it is added to
+         * @type Boolean
+         */
+        this._relativeToCamera = (dataJSON.relativeToCamera !== false);
+        /**
+         * The explosion object managing the particle system
+         * @type Explosion
+         */
+        this._effect = new explosion.Explosion(classes.getExplosionClass(dataJSON.class), this._relativeToCamera ? undefined : mat.translation4v(this._origin), undefined, dataJSON.direction || [0, 0, 1], false, (dataJSON.relativeDirection === true), undefined, true);
+    }
+    /**
+     * Call this before resources are loaded to make sure the resources needed for
+     * this particle effect are marked for loading
+     * @param {Scene} scene
+     */
+    ParticleEffect.prototype.addResourcesToScene = function (scene) {
+        this._effect.addResourcesToScene(scene);
+    };
+    /**
+     * Call this after the resources have been loaded to add the effect to the passed scene.
+     * @param {Scene} scene
+     */
+    ParticleEffect.prototype.addToScene = function (scene) {
+        this._effect.addToScene(scene.getRootNode());
+    };
+    /**
+     * Updates the position and orientation of the effect based on the current state of the
+     * passed camera (if relative)
+     * @param {Camera} camera
+     */
+    ParticleEffect.prototype.simulate = function (camera) {
+        var orientation;
+        if (this._relativeToCamera) {
+            vec.setVector4(this._position, this._origin);
+            orientation = camera.getCameraOrientationMatrix();
+            vec.mulVec4Mat4(this._position, orientation);
+            vec.add3(this._position, camera.getCameraPositionVector());
+            this._effect.getVisualModel().setPositionv(this._position);
+            this._effect.getVisualModel().setOrientationM4(orientation);
+        }
+    };
+    /**
+     * Remove all object references from the effect
+     */
+    ParticleEffect.prototype.destroy = function () {
+        this._origin = null;
+        this._position = null;
+        if (this._effect) {
+            this._effect.destroy();
+        }
+        this._effect = null;
+    };
+    // #########################################################################
+    /**
      * @class Represents an environment that can be used to build a visual 
      * representation and perform the game logic on a virtual environment where 
      * the game takes place.
@@ -390,6 +478,11 @@ define([
          */
         this._dustClouds = null;
         /**
+         * The list of particle effects this environment contains.
+         * @type ParticleEffect[]
+         */
+        this._particleEffects = null;
+        /**
          * The camera relative to which the environment is rendered.
          * @type Camera
          */
@@ -415,28 +508,38 @@ define([
         this._name = dataJSON.name;
         this._location = dataJSON.location;
         this._skyboxes = [];
-        for (i = 0; i < dataJSON.skyboxes.length; i++) {
-            this._skyboxes.push(new Skybox(classes.getSkyboxClass(dataJSON.skyboxes[i].class)));
-        }
-
-        this._backgroundObjects = [];
-        for (i = 0; i < dataJSON.backgroundObjects.length; i++) {
-            backgroundObjectClass = classes.getBackgroundObjectClass(dataJSON.backgroundObjects[i].class);
-            if (!dataJSON.backgroundObjects[i].position) {
-                application.showError("No position specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR);
+        if (dataJSON.skyboxes) {
+            for (i = 0; i < dataJSON.skyboxes.length; i++) {
+                this._skyboxes.push(new Skybox(classes.getSkyboxClass(dataJSON.skyboxes[i].class)));
             }
-            this._backgroundObjects.push(new BackgroundObject(
-                    backgroundObjectClass,
-                    dataJSON.backgroundObjects[i].size || application.showError("No size specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR) || 0,
-                    (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleAlpha) || 0,
-                    (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleBeta) || 0,
-                    (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleGamma) || 0
-                    ));
         }
-
+        this._backgroundObjects = [];
+        if (dataJSON.backgroundObjects) {
+            for (i = 0; i < dataJSON.backgroundObjects.length; i++) {
+                backgroundObjectClass = classes.getBackgroundObjectClass(dataJSON.backgroundObjects[i].class);
+                if (!dataJSON.backgroundObjects[i].position) {
+                    application.showError("No position specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR);
+                }
+                this._backgroundObjects.push(new BackgroundObject(
+                        backgroundObjectClass,
+                        dataJSON.backgroundObjects[i].size || application.showError("No size specified for background object of class '" + backgroundObjectClass.getName() + "' in environment '" + this._name + "'!", application.ErrorSeverity.MINOR) || 0,
+                        (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleAlpha) || 0,
+                        (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleBeta) || 0,
+                        (dataJSON.backgroundObjects[i].position && dataJSON.backgroundObjects[i].position.angleGamma) || 0
+                        ));
+            }
+        }
         this._dustClouds = [];
-        for (i = 0; i < dataJSON.dustClouds.length; i++) {
-            this._dustClouds.push(new DustCloud(classes.getDustCloudClass(dataJSON.dustClouds[i].class)));
+        if (dataJSON.dustClouds) {
+            for (i = 0; i < dataJSON.dustClouds.length; i++) {
+                this._dustClouds.push(new DustCloud(classes.getDustCloudClass(dataJSON.dustClouds[i].class)));
+            }
+        }
+        this._particleEffects = [];
+        if (dataJSON.particleEffects) {
+            for (i = 0; i < dataJSON.particleEffects.length; i++) {
+                this._particleEffects.push(new ParticleEffect(dataJSON.particleEffects[i]));
+            }
         }
     };
     /**
@@ -480,7 +583,24 @@ define([
         for (i = 0; i < this._dustClouds.length; i++) {
             this._dustClouds[i].addToScene(scene);
         }
+        for (i = 0; i < this._particleEffects.length; i++) {
+            this._particleEffects[i].addResourcesToScene(scene);
+        }
         this._camera = scene.getCamera();
+    };
+    /**
+     * This needs to be called after all loading is done and we are ready to start
+     * simulating and rendering the scene. Adds the particle systems for the particle
+     * effects to the scene.
+     * @param {Scene} scene
+     * @returns {Boolean} Whether any particle effects have been added
+     */
+    Environment.prototype.addParticleEffectsToScene = function (scene) {
+        var i;
+        for (i = 0; i < this._particleEffects.length; i++) {
+            this._particleEffects[i].addToScene(scene);
+        }
+        return this._particleEffects.length > 0;
     };
     /**
      * Performs a simulation step to update the state of the environment.
@@ -491,10 +611,13 @@ define([
             for (i = 0; i < this._dustClouds.length; i++) {
                 this._dustClouds[i].simulate(this._camera);
             }
+            for (i = 0; i < this._particleEffects.length; i++) {
+                this._particleEffects[i].simulate(this._camera);
+            }
         }
     };
     /**
-     * Removes references that are only neded while the environment is added to a scenes
+     * Removes references that are only neded while the environment is added to a scene
      */
     Environment.prototype.removeFromScene = function () {
         this._camera = null;
@@ -524,6 +647,13 @@ define([
                 this._dustClouds[i] = null;
             }
             this._dustClouds = null;
+        }
+        if (this._particleEffects) {
+            for (i = 0; i < this._particleEffects.length; i++) {
+                this._particleEffects[i].destroy();
+                this._particleEffects[i] = null;
+            }
+            this._particleEffects = null;
         }
         this._camera = null;
     };

@@ -120,7 +120,7 @@ define([
                 preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
             }
             if (shouldReload) {
-                _explosion = new explosion.Explosion(_explosionClass, mat.identity4(), orientationMatrix, [0, 1, 0], true, mat.identity4());
+                _explosion = new explosion.Explosion(_explosionClass, mat.identity4(), orientationMatrix, [0, 1, 0], true, true, mat.identity4());
             }
             _explosion.addResourcesToScene(preview.getScene(), false);
             _explosion.addToScene(preview.getScene().getRootNode(), null, false, function (model) {

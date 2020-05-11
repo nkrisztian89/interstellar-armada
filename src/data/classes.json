@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.6-dev:891 (2020.05.10.)",
-        "creationTime": "Sun May 10 2020 01:33:59 GMT+0200 (közép-európai nyári idő)"
+        "version": "0.4.6-dev:893 (2020.05.10.)",
+        "creationTime": "Mon May 11 2020 20:18:51 GMT+0200 (közép-európai nyári idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -175,6 +175,12 @@
             "numberOfParticles": 450,
             "range": 25,
             "color": [0.8, 0.8, 0.8]
+        }, {
+            "name": "blueNebula",
+            "shader": "dust",
+            "numberOfParticles": 200,
+            "range": 25,
+            "color": [0.9, 0.9, 1]
         }],
     "explosionClasses": [{
             "name": "smallHitExplosion",
@@ -1758,6 +1764,89 @@
                 "name": "shieldHit",
                 "volume": 2
             }
+        }, {
+            "name": "blueNebula",
+            "particleEmitters": [{
+                    "dimensions": [800, 1000, 800],
+                    "velocity": 2,
+                    "velocitySpread": 3,
+                    "spawnNumber": 4,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [0, 1, 1, 0],
+                            "size": 60
+                        }, {
+                            "color": [0, 0, 0.75, 1],
+                            "size": 80,
+                            "timeToReach": 1000
+                        }, {
+                            "color": [0, 0, 0.5, 0],
+                            "size": 120,
+                            "timeToReach": 3000
+                        }],
+                    "spawnTime": 100
+                }, {
+                    "dimensions": [800, 1000, 800],
+                    "velocity": 2,
+                    "velocitySpread": 3,
+                    "spawnNumber": 8,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [0, 0, 1, 0],
+                            "size": 120
+                        }, {
+                            "color": [0, 0, 0.25, 1],
+                            "size": 140,
+                            "timeToReach": 2000
+                        }, {
+                            "color": [0, 0, 0.15, 0],
+                            "size": 180,
+                            "timeToReach": 3000
+                        }],
+                    "spawnTime": 100
+                }, {
+                    "dimensions": [1000, 1200, 1000],
+                    "velocity": 3,
+                    "velocitySpread": 3,
+                    "spawnNumber": 2,
+                    "shader": "particle",
+                    "texture": "paleBlueNebula",
+                    "particleStates": [{
+                            "color": [1, 1, 1, 0],
+                            "size": 300
+                        }, {
+                            "color": [0.7, 0.7, 1, 1],
+                            "size": 350,
+                            "timeToReach": 1500
+                        }, {
+                            "color": [0.4, 0.4, 0.7, 0],
+                            "size": 500,
+                            "timeToReach": 5500
+                        }],
+                    "spawnTime": 100
+                }, {
+                    "dimensions": [800, 1000, 800],
+                    "velocity": 2,
+                    "velocitySpread": 3,
+                    "spawnNumber": 2,
+                    "shader": "particle-blend",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [0, 1, 1, 0],
+                            "size": 100
+                        }, {
+                            "color": [0, 0.5, 1, 0.5],
+                            "size": 150,
+                            "timeToReach": 750
+                        }, {
+                            "color": [0, 0.5, 1, 0],
+                            "size": 200,
+                            "timeToReach": 1750
+                        }],
+                    "spawnTime": 100
+                }]
         }],
     "projectileClasses": [{
             "name": "training",

@@ -634,7 +634,7 @@ define([
         power = Math.min(this._timeLeft / this._class.getDissipationDuration(), 1);
         physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
         exp = explosion.getExplosion();
-        exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, physicalHitObject.getVelocityMatrix());
+        exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, true, physicalHitObject.getVelocityMatrix());
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObject.getSoundSource(), true);
         hitObject.damage(power * this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, false, offset);
         this._timeLeft = 0;
@@ -1497,7 +1497,7 @@ define([
         var exp;
         this._target = null;
         exp = explosion.getExplosion();
-        exp.init(explosionClass, positionMatrix, mat.IDENTITY4, direction, true, velocityMatrix);
+        exp.init(explosionClass, positionMatrix, mat.IDENTITY4, direction, true, true, velocityMatrix);
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), soundSource, isHit);
         this._visualModel.markAsReusable(true);
         if (this._startSound) {
@@ -4667,6 +4667,7 @@ define([
                     this._spacecraft.getPhysicalOrientationMatrix(),
                     mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
                     true,
+                    true,
                     mat.IDENTITY4);
             exp.addToSceneNow(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
             this._originalScalingMatrix = mat.matrix4(this._spacecraft.getVisualModel().getScalingMatrix());
@@ -4744,6 +4745,7 @@ define([
                             this._spacecraft.getPhysicalPositionMatrix(),
                             this._spacecraft.getPhysicalOrientationMatrix(),
                             mat.getRowC43(this._spacecraft.getPhysicalPositionMatrix()),
+                            true,
                             true,
                             mat.IDENTITY4);
                     exp.addToSceneNow(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());

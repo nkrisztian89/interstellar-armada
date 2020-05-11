@@ -114,9 +114,13 @@ define([
      * particles towards or perpendicular to this vector)
      * @param {Boolean} carriesParticles If true, the particles emitted by the explosion will belong to it as subnodes,
      * and change position and/or orientation with it, even after they have been emitted
+     * @param {Boolean} [relativeOrientation=false] When the particles are not carried, whether to rotate them according to
+     * the orientation set for the system when created
      * @param {Float32Array} [velocityMatrix] A 4x4 translation matrix describing the velocity of this explosion in world space, m/s.
+     * @param {Boolean} [ignoreParticleCountFactor=false] Whether to always emit the number of particles defined by the emitters,
+     * ignoring the particleCountFactor setting value
      */
-    function Explosion(explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles, velocityMatrix) {
+    function Explosion(explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles, relativeOrientation, velocityMatrix, ignoreParticleCountFactor) {
         /**
          * The class that contains the general attributes of the type of explosion the instance represents.
          * @type ExplosionClass
@@ -145,10 +149,22 @@ define([
          */
         this._carriesParticles = (carriesParticles === true);
         /**
+         * When the particles are not carried, whether to rotate them according to
+         * the orientation set for the system when created
+         * @type Boolean
+         */
+        this._hasRelativeOrientation = (relativeOrientation === true);
+        /**
          * A 4x4 translation matrix describing the velocity of this explosion in world space, m/s.
          * @type Float32Array
          */
         this._velocityMatrix = velocityMatrix || mat.identity4();
+        /**
+         * Whether to always emit the number of particles defined by the emitters,
+         * ignoring the particleCountFactor setting value
+         * @type Boolean
+         */
+        this._ignoreParticleCountFactor = (ignoreParticleCountFactor === true);
         /**
          * Holds a reference to the particle system that is used to visualize the explosion.
          * @type ParticleSystem
@@ -165,14 +181,20 @@ define([
      * particles towards or perpendicular to this vector)
      * @param {Boolean} carriesParticles If true, the particles emitted by the explosion will belong to it as subnodes,
      * and change position and/or orientation with it, even after they have been emitted
+     * @param {Boolean} [relativeOrientation=false] When the particles are not carried, whether to rotate them according to
+     * the orientation set for the system when created
      * @param {Float32Array} [velocityMatrix] A 4x4 translation matrix describing the velocity of this explosion in world space, m/s.
+     * @param {Boolean} [ignoreParticleCountFactor=false] Whether to always emit the number of particles defined by the emitters,
+     * ignoring the particleCountFactor setting value
      */
-    Explosion.prototype.init = function (explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles, velocityMatrix) {
+    Explosion.prototype.init = function (explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles, relativeOrientation, velocityMatrix, ignoreParticleCountFactor) {
         this._class = explosionClass;
         mat.copyTranslation4(this._positionMatrix, positionMatrix);
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
         this._direction = direction;
         this._carriesParticles = (carriesParticles === true);
+        this._hasRelativeOrientation = (relativeOrientation === true);
+        this._ignoreParticleCountFactor = (ignoreParticleCountFactor === true);
         mat.copyTranslation4(this._velocityMatrix, velocityMatrix || mat.IDENTITY4);
     };
     /**
@@ -191,8 +213,9 @@ define([
                 this._class ? this._class.getTotalDuration() : 0,
                 this._class ? this._class.isContinuous() : false,
                 this._carriesParticles,
+                this._hasRelativeOrientation,
                 _minimumParticleCountForInstancing,
-                graphics.getParticleCountFactor());
+                this._ignoreParticleCountFactor ? 1 : graphics.getParticleCountFactor());
     };
     /**
      * Returns whether this explosion object instance is no longer needed for its current use, and can be reused.
@@ -309,8 +332,9 @@ define([
                     this._class.getTotalDuration(),
                     this._class.isContinuous(),
                     this._carriesParticles,
+                    this._hasRelativeOrientation,
                     _minimumParticleCountForInstancing,
-                    graphics.getParticleCountFactor());
+                    this._ignoreParticleCountFactor ? 1 : graphics.getParticleCountFactor());
         }
     };
     /**

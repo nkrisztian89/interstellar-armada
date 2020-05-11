@@ -898,6 +898,31 @@
                 "a_texCoord": "texCoord"
             }
         }, {
+            "name": "particle-blend-instanced",
+            "vertexShaderSource": "billboard/particle-instanced.vert",
+            "fragmentShaderSource": "billboard/particle-instanced.frag",
+            "blendMode": "mix",
+            "instanceAttributeRoles": {
+                "i_position": "u_position",
+                "i_color": "u_color"
+            },
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        }, {
+            "name": "particle-blend",
+            "variants": {
+                "instanced": "particle-blend-instanced"
+            },
+            "vertexShaderSource": "billboard/particle.vert",
+            "fragmentShaderSource": "billboard/particle.frag",
+            "blendMode": "mix",
+            "vertexAttributeRoles": {
+                "a_position": "position",
+                "a_texCoord": "texCoord"
+            }
+        }, {
             "name": "backgroundBillboard",
             "vertexShaderSource": "billboard/backgroundBillboard.vert",
             "fragmentShaderSource": "billboard/particle.frag",

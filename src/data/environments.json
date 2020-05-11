@@ -3,8 +3,8 @@
         "name": "environments",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.0-dev:527 (2017.03.11.)",
-        "creationTime": "Sat Mar 11 2017 18:17:26 GMT+0100 (CET)"
+        "version": "0.4.6-dev:893 (2020.05.10.)",
+        "creationTime": "Mon May 11 2020 20:36:15 GMT+0200 (közép-európai nyári idő)"
     },
     "environments": [{
             "name": "cathagan",
@@ -278,6 +278,31 @@
                 }],
             "dustClouds": [{
                     "class": "standard"
+                }]
+        }, {
+            "name": "arberon",
+            "location": "Arberon",
+            "backgroundObjects": [{
+                    "class": "bigBlueStar",
+                    "position": {
+                        "angleAlpha": -45,
+                        "angleBeta": 85
+                    },
+                    "size": 350
+                }, {
+                    "class": "bigBlueStar",
+                    "position": {
+                        "angleAlpha": 135,
+                        "angleBeta": -95
+                    },
+                    "size": 250
+                }],
+            "dustClouds": [{
+                    "class": "blueNebula"
+                }],
+            "particleEffects": [{
+                    "class": "blueNebula",
+                    "position": [0, 0, -500]
                 }]
         }]
 }

@@ -113,6 +113,17 @@ define([
              */
             INITIAL_CAMERA_FOV = 40,
             INITIAL_CAMERA_SPAN = 0.2,
+            /**
+             * If the scene (environment) contains particle system effects, the scene will be rendered this many times in preparation before
+             * starting the battle, to achieve a stable particle system state
+             * @type Number
+             */
+            PREPARE_SCENE_COUNT = 20,
+            /**
+             * When the scene is rendered in preparation (see PREPARE_SCENE_COUNT), this will be the dt value passed for each render
+             * @type Number
+             */
+            PREPARE_SCENE_DT = 100,
             /** @type String */
             HUD_ELEMENT_CLASS_NAME = "hudElementClass",
             HUD_ELEMENT_MODEL_NAME_PREFIX = "squareModel",
@@ -4576,6 +4587,13 @@ define([
                     _timeSinceLastFire = 0;
                     _missileLocked = false;
                     audio.playMusic(_mission.noHostilesPresent() ? AMBIENT_THEME : _anticipationTheme);
+                    if (_mission.prepareScene(_battleScene)) {
+                        _battleScene.setShouldAnimate(true);
+                        for (i = 0; i < PREPARE_SCENE_COUNT; i++) {
+                            this._render(PREPARE_SCENE_DT);
+                        }
+                        _battleScene.setShouldAnimate(false);
+                    }
                 }.bind(this));
             }.bind(this));
             resources.requestResourceLoad();
