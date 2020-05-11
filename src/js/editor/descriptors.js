@@ -2575,6 +2575,16 @@ define([
                     optional: true,
                     defaultText: "none",
                     createDefaultElement: true
+                },
+                SHADOWS: {
+                    name: "shadows",
+                    type: BaseType.BOOLEAN,
+                    defaultValue: true
+                },
+                AMBIENT_COLOR: {
+                    name: "ambientColor",
+                    type: BaseType.COLOR3,
+                    defaultValue: [0, 0, 0]
                 }
             },
             /**

@@ -1,5 +1,5 @@
 {
-    "version": "0.4.6-dev:893 (2020.05.11.)",
+    "version": "0.4.6-dev:894 (2020.05.12.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4", "0.4.5"],
@@ -240,7 +240,7 @@
                         "requiredAttributeVectors": 7,
                         "requiredVaryingVectors": 4,
                         "requiredTextureUnits": 2,
-                        "requiredFragmentUniformVectors": 3,
+                        "requiredFragmentUniformVectors": 4,
                         "requiredFragmentUniformVectorsPer": {
                             "dirLight": 2
                         }
@@ -264,7 +264,7 @@
                         "requiredAttributeVectors": 7,
                         "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
-                        "requiredFragmentUniformVectors": 5,
+                        "requiredFragmentUniformVectors": 6,
                         "requiredFragmentUniformVectorsPer": {
                             "dirLight": 2
                         }
@@ -288,7 +288,7 @@
                         "requiredAttributeVectors": 7,
                         "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
-                        "requiredFragmentUniformVectors": 5,
+                        "requiredFragmentUniformVectors": 6,
                         "requiredFragmentUniformVectorsPer": {
                             "dirLight": 2
                         }
@@ -312,7 +312,7 @@
                         "requiredAttributeVectors": 7,
                         "requiredVaryingVectors": 5,
                         "requiredTextureUnits": 3,
-                        "requiredFragmentUniformVectors": 5,
+                        "requiredFragmentUniformVectors": 6,
                         "requiredFragmentUniformVectorsPer": {
                             "dirLight": 2
                         }

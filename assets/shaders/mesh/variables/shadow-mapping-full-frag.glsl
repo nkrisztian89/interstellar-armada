@@ -1,3 +1,4 @@
+#include "mesh/variables/ambient-light.glsl"
 #include "mesh/variables/dir-lights-shadows.glsl"
 #include "mesh/variables/shadow-mapping-frag.glsl"
 

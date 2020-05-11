@@ -71,6 +71,7 @@ define([
             /**
              * @type String
              */
+            UNIFORM_AMBIENT_COLOR_NAME = "ambientColor",
             UNIFORM_NUM_DIRECTIONAL_LIGHTS_NAME = "numDirLights",
             UNIFORM_DIRECTIONAL_LIGHTS_ARRAY_NAME = "dirLights",
             UNIFORM_NUM_POINT_LIGHTS_NAME = "numPointLights",
@@ -1122,6 +1123,11 @@ define([
          */
         this._objectsToMove = null;
         /**
+         * The color of ambient light in the scene
+         * @type Number[3]
+         */
+        this._ambientColor = [0, 0, 0];
+        /**
          * The list of directional light sources that are available to all objects in the scene.
          * @type DirectionalLightSource[]
          */
@@ -1480,10 +1486,20 @@ define([
         SIDE_BY_SIDE: "sideBySide"
     };
     /**
+     * Set the color of ambient light in the scene
+     * @param {Number[3]} value
+     */
+    Scene.prototype.setAmbientColor = function (value) {
+        this._ambientColor = value;
+    };
+    /**
      * Sets the uniform value functions for the scene that can be used to set all the uniforms referring to data that belongs to the whole
      * scene. After this, any shader used when rendering objects of this scene using any of these uniforms will get the data.
      */
     Scene.prototype._setGeneralUniformValueFunctions = function () {
+        this.setUniformValueFunction(UNIFORM_AMBIENT_COLOR_NAME, function () {
+            return this._ambientColor;
+        });
         this.setUniformValueFunction(UNIFORM_NUM_DIRECTIONAL_LIGHTS_NAME, function () {
             return this._renderedDirectionalLights;
         });

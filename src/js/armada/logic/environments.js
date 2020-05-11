@@ -483,6 +483,17 @@ define([
          */
         this._particleEffects = null;
         /**
+         * Whether the directional lights in the environments should cast shadows (if enabled
+         * by the graphics settings)
+         * @type Boolean
+         */
+        this._shadows = false;
+        /**
+         * The color of the ambient light in this environment
+         * @type Number[3]
+         */
+        this._ambientColor = null;
+        /**
          * The camera relative to which the environment is rendered.
          * @type Camera
          */
@@ -541,6 +552,8 @@ define([
                 this._particleEffects.push(new ParticleEffect(dataJSON.particleEffects[i]));
             }
         }
+        this._shadows = (dataJSON.shadows !== false);
+        this._ambientColor = dataJSON.ambientColor || [0, 0, 0];
     };
     /**
      * Returns a string that can be displayed to the player to represent this environment as a location for a mission.
@@ -552,6 +565,13 @@ define([
                     systemName: this._location
                 }) :
                 strings.get(strings.LOCATION.UNKNOWN);
+    };
+    /**
+     * Whether the directional lights in the environment should cast shadows
+     * @returns {Boolean}
+     */
+    Environment.prototype.hasShadows = function () {
+        return this._shadows;
     };
     /**
      * Returns the object this environment was initialized from
@@ -587,6 +607,7 @@ define([
             this._particleEffects[i].addResourcesToScene(scene);
         }
         this._camera = scene.getCamera();
+        scene.setAmbientColor(this._ambientColor);
     };
     /**
      * This needs to be called after all loading is done and we are ready to start

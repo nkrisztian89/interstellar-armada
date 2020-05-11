@@ -4512,7 +4512,7 @@ define([
             this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_RESOURCES_START_PROGRESS);
             resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
             resources.executeWhenReady(function () {
-                _battleScene.setShadowMapping(graphics.getShadowMappingSettings());
+                _battleScene.setShadowMapping(_mission.hasShadows() ? graphics.getShadowMappingSettings() : null);
                 if (graphics.isAnaglyphRenderingEnabled()) {
                     _battleScene.setAnaglyphRendering(graphics.getAnaglyphRenderingSettings());
                 }

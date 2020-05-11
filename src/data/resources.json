@@ -716,7 +716,7 @@
             "variants": {
                 "withoutDynamicLights": "ship-no-advanced-lighting"
             },
-            "vertexShaderSource": "mesh/ship.vert",
+            "vertexShaderSource": "mesh/ship-no-shadows.vert",
             "fragmentShaderSource": "mesh/ship-veryHigh-no-shadows.frag",
             "blendMode": "mix",
             "vertexAttributeRoles": {

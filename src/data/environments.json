@@ -45,7 +45,8 @@
                 }],
             "dustClouds": [{
                     "class": "standard"
-                }]
+                }],
+            "ambientColor": [0.1, 0.1, 0.1]
         }, {
             "name": "reddim",
             "location": "Reddim",
@@ -101,7 +102,8 @@
                 }],
             "dustClouds": [{
                     "class": "standard"
-                }]
+                }],
+            "ambientColor": [0.1, 0.1, 0.1]
         }, {
             "name": "mera",
             "location": "Mera",
@@ -157,7 +159,8 @@
                 }],
             "dustClouds": [{
                     "class": "standard"
-                }]
+                }],
+            "ambientColor": [0.15, 0.15, 0.15]
         }, {
             "name": "luxilian",
             "location": "Luxilian",
@@ -197,7 +200,8 @@
                 }],
             "dustClouds": [{
                     "class": "standard"
-                }]
+                }],
+            "ambientColor": [0.2, 0.2, 0.2]
         }, {
             "name": "corice",
             "location": "Corice",
@@ -229,7 +233,8 @@
                 }],
             "dustClouds": [{
                     "class": "standard"
-                }]
+                }],
+            "ambientColor": [0.1, 0.1, 0.1]
         }, {
             "name": "sheenuba",
             "location": "Sheenuba",
@@ -261,7 +266,8 @@
                 }],
             "dustClouds": [{
                     "class": "standard"
-                }]
+                }],
+            "ambientColor": [0.2, 0.2, 0.2]
         }, {
             "name": "shadowTest",
             "location": "Shadow Test",
@@ -289,13 +295,6 @@
                         "angleBeta": 85
                     },
                     "size": 350
-                }, {
-                    "class": "bigBlueStar",
-                    "position": {
-                        "angleAlpha": 135,
-                        "angleBeta": -95
-                    },
-                    "size": 250
                 }],
             "dustClouds": [{
                     "class": "blueNebula"
@@ -303,6 +302,8 @@
             "particleEffects": [{
                     "class": "blueNebula",
                     "position": [0, 0, -500]
-                }]
+                }],
+            "shadows": false,
+            "ambientColor": [0.2, 0.5, 0.85]
         }]
 }

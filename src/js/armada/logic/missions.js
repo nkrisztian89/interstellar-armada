@@ -2587,6 +2587,13 @@ define([
         return this._referenceScore;
     };
     /**
+     * Whether the directional lights in the mission environment should cast shadows
+     * @returns {Boolean}
+     */
+    Mission.prototype.hasShadows = function () {
+        return this._environment.hasShadows();
+    };
+    /**
      * Loads all the data describing this mission from the passed JSON object.
      * @param {Object} dataJSON
      * @param {String} difficulty The string ID of the difficulty level to use
