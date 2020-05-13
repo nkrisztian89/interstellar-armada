@@ -2552,6 +2552,7 @@
             "length": 0.7,
             "homingMode": "continuous",
             "mass": 10,
+            "dragFactor": 0.05,
             "launchVelocity": 60,
             "ignitionTime": 50,
             "acceleration": 400,
@@ -2636,6 +2637,7 @@
             "length": 1,
             "homingMode": "continuous",
             "mass": 50,
+            "dragFactor": 0.05,
             "launchVelocity": 25,
             "ignitionTime": 500,
             "acceleration": 250,
@@ -2720,6 +2722,7 @@
             "length": 3,
             "homingMode": "initial",
             "mass": 150,
+            "dragFactor": 0.05,
             "launchVelocity": 35,
             "ignitionTime": 750,
             "acceleration": 150,
@@ -3239,6 +3242,7 @@
             "texture": "libra",
             "factionColor": [0.8, 0.2, 0.2, 1],
             "mass": 500,
+            "dragFactor": 5,
             "lockingTimeFactor": 1,
             "bodies": [{
                     "position": [0, 0, 0],
@@ -3284,6 +3288,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [16, 1]],
             "mass": 10000,
+            "dragFactor": 0.5,
             "lockingTimeFactor": 1.2,
             "bodies": [{
                     "position": [0, 0, 5],
@@ -3812,6 +3817,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [18, 1]],
             "mass": 45000,
+            "dragFactor": 0.75,
             "lockingTimeFactor": 0.9,
             "bodies": [{
                     "position": [0, 15, 5],
@@ -4422,6 +4428,7 @@
             "texture": "rhino",
             "factionColor": [0.8, 0.2, 0.2, 1],
             "mass": 50000,
+            "dragFactor": 0.4,
             "lockingTimeFactor": 0.85,
             "bodies": [{
                     "position": [0, 1, 0],
@@ -4887,6 +4894,7 @@
             "texture": "libra",
             "factionColor": [0.8, 0.2, 0.2, 1],
             "mass": 2000,
+            "dragFactor": 0.75,
             "lockingTimeFactor": 1,
             "bodies": [{
                     "position": [0, 2, 0.3],
@@ -5241,6 +5249,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
             "mass": 9000000,
+            "dragFactor": 0.4,
             "lockingTimeFactor": 0.5,
             "bodies": [{
                     "position": [0, 70, 0],
@@ -5639,6 +5648,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
             "mass": 20000000,
+            "dragFactor": 1.5,
             "lockingTimeFactor": 0.5,
             "bodies": [{
                     "position": [0, 65, 55],
@@ -6160,6 +6170,7 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
             "mass": 250000000,
+            "dragFactor": 1,
             "lockingTimeFactor": 0.5,
             "bodies": [{
                     "position": [0, 250, 0],
@@ -6851,6 +6862,7 @@
             "texture": "wolf",
             "factionColor": [0, 0, 0, 1],
             "mass": 25000,
+            "dragFactor": 0.2,
             "lockingTimeFactor": 1,
             "bodies": [{
                     "position": [0, 10, 0],

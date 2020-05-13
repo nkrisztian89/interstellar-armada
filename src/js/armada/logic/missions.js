@@ -18,7 +18,8 @@
  * @param resources Used to access the loaded media (graphics and sound) resources
  * @param resourceManager Used for storing the mission descriptors in a resource manager 
  * @param pools Used to access the pools for particles and projectiles
- * @param egomModel
+ * @param egomModel Used to create models (e.g. grid) for mission preview
+ * @param physics Used to set up global drag based on mission environment
  * @param camera Used for creating camera configurations for views
  * @param renderableObjects Used for creating visual models for game objects
  * @param constants Used for Accessing global localStorage prefixes
@@ -45,6 +46,7 @@ define([
     "modules/media-resources",
     "modules/pools",
     "modules/egom-model",
+    "modules/physics",
     "modules/scene/camera",
     "modules/scene/renderable-objects",
     "armada/constants",
@@ -62,7 +64,7 @@ define([
     "utils/polyfill"
 ], function (
         utils, types, mat,
-        application, game, asyncResource, resourceManager, resources, pools, egomModel,
+        application, game, asyncResource, resourceManager, resources, pools, egomModel, physics,
         camera, renderableObjects,
         constants, graphics, classes, config, strings,
         logicConstants, environments, SpacecraftEvents, spacecraft, equipment, explosion, ai) {
@@ -2608,6 +2610,7 @@ define([
         spacecraft.resetRandomSeed();
         this._nextMissionName = dataJSON.nextMission || null;
         this.loadEnvironment(dataJSON);
+        physics.setDrag(this._environment.getDrag(), this._environment.getAngularDrag());
         this._anticipationTheme = dataJSON.anticipationTheme;
         this._combatTheme = dataJSON.combatTheme;
         this._teams = [];

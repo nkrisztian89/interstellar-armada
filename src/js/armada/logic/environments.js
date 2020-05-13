@@ -494,6 +494,16 @@ define([
          */
         this._ambientColor = null;
         /**
+         * The coefficient to use for drag forces reducing the velocity of objects in this environment over time.
+         * @type Number
+         */
+        this._drag = 0;
+        /**
+         * The coefficient to use for drag torques forces reducing the spinning of objects in this environment over time.
+         * @type Number
+         */
+        this._angularDrag = 0;
+        /**
          * The camera relative to which the environment is rendered.
          * @type Camera
          */
@@ -554,6 +564,8 @@ define([
         }
         this._shadows = (dataJSON.shadows !== false);
         this._ambientColor = dataJSON.ambientColor || [0, 0, 0];
+        this._drag = dataJSON.drag || 0;
+        this._angularDrag = dataJSON.angularDrag || 0;
     };
     /**
      * Returns a string that can be displayed to the player to represent this environment as a location for a mission.
@@ -572,6 +584,20 @@ define([
      */
     Environment.prototype.hasShadows = function () {
         return this._shadows;
+    };
+    /**
+     * The coefficient used for drag forces reducing the velocity of objects in this environment over time.
+     * @returns {Number}
+     */
+    Environment.prototype.getDrag = function () {
+        return this._drag;
+    };
+    /**
+     * The coefficient used for drag torques forces reducing the spinning of objects in this environment over time.
+     * @returns {Number}
+     */
+    Environment.prototype.getAngularDrag = function () {
+        return this._angularDrag;
     };
     /**
      * Returns the object this environment was initialized from

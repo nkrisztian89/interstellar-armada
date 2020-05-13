@@ -575,6 +575,12 @@ define([
          * @type Number
          */
         this._burnForAngularVelocityChangeFactor = 0;
+        /**
+         * Cached value of the calculated top speed of the spacecraft, using the currently equipped
+         * propulsion and the globally set drag coefficient (zero if there is no drag)
+         * @type Number
+         */
+        this._topSpeed = 0;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray);
@@ -642,7 +648,10 @@ define([
                 orientationMatrix || mat.identity4(),
                 mat.identity4(),
                 mat.identity4(),
-                this._class.getBodies());
+                this._class.getBodies(),
+                false,
+                false,
+                this._class.getDragFactor());
         this._weapons = [];
         this._missileLaunchers = [];
         this._missileClasses = [];
@@ -951,6 +960,12 @@ define([
      */
     Spacecraft.prototype.isBadAgainst = function (otherCraft) {
         return this._class.getSpacecraftType().isBadAgainst(otherCraft.getClass().getSpacecraftType());
+    };
+    /**
+     * Resets the drag factor of the physical model of the spacecraft to to its original value based on the spacecraft's class
+     */
+    Spacecraft.prototype.resetDrag = function () {
+        return this._physicalModel.setDragFactor(this._class.getDragFactor());
     };
     /**
      * Returns the (first) object view associated with this spacecraft that has the given name.
@@ -1395,6 +1410,14 @@ define([
      */
     Spacecraft.prototype.getNeededBurnForAngularVelocityChange = function (angularVelocityDifference, duration) {
         return angularVelocityDifference * this._burnForAngularVelocityChangeFactor / duration;
+    };
+    /**
+     * Calculated top speed of the spacecraft, using the currently equipped
+     * propulsion and the globally set drag coefficient (zero if there is no drag)
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getTopSpeed = function () {
+        return this._topSpeed;
     };
     // methods
     /**
@@ -2105,6 +2128,7 @@ define([
         this._propulsion = new equipment.Propulsion(propulsionClass, this._physicalModel);
         this._maneuveringComputer.updateForNewPropulsion();
         this._maneuveringComputer.updateTurningLimit();
+        this._topSpeed = (physics.getDrag() && this._class.getDragFactor()) ? Math.sqrt(this.getMaxAcceleration() / (physics.getDrag() * this._class.getDragFactor())) : 0;
         this._updateBurnNeedFactors();
     };
     /**

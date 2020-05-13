@@ -1122,6 +1122,11 @@ define([
                     name: "mass",
                     type: KILOGRAMS
                 },
+                DRAG_FACTOR: {
+                    name: "dragFactor",
+                    type: NON_NEGATIVE_SCALE,
+                    defaultValue: 0
+                },
                 DURATION: {
                     name: "duration",
                     type: POSITIVE_MILLISECONDS
@@ -1316,6 +1321,11 @@ define([
                 MASS: {
                     name: "mass",
                     type: KILOGRAMS
+                },
+                DRAG_FACTOR: {
+                    name: "dragFactor",
+                    type: NON_NEGATIVE_SCALE,
+                    defaultValue: 1
                 },
                 LAUNCH_VELOCITY: {
                     name: "launchVelocity",
@@ -2352,6 +2362,11 @@ define([
                     type: KILOGRAMS,
                     newValue: 1
                 },
+                DRAG_FACTOR: {
+                    name: "dragFactor",
+                    type: NON_NEGATIVE_SCALE,
+                    defaultValue: 1
+                },
                 LOCKING_TIME_FACTOR: {
                     name: "lockingTimeFactor",
                     type: NON_NEGATIVE_SCALE,
@@ -2585,6 +2600,16 @@ define([
                     name: "ambientColor",
                     type: BaseType.COLOR3,
                     defaultValue: [0, 0, 0]
+                },
+                DRAG: {
+                    name: "drag",
+                    type: NON_NEGATIVE_NUMBER,
+                    defaultValue: 0
+                },
+                ANGULAR_DRAG: {
+                    name: "angularDrag",
+                    type: NON_NEGATIVE_NUMBER,
+                    defaultValue: 0
                 }
             },
             /**

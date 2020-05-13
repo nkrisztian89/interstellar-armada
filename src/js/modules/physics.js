@@ -44,7 +44,46 @@ define([
              * The minimum amount of time required for the effect of a force or torque to be taken into account, in milliseconds.
              * @type Number
              */
-            MINIMUM_EFFECT_DURATION = 0.1;
+            MINIMUM_EFFECT_DURATION = 0.1,
+            /**
+             * The drag force will affect objects with a velocity higher than this, meters / second
+             * @type Number
+             */
+            MINIMUM_DRAG_VELOCITY = 0.1,
+            /**
+             * The angular drag torque will affect objects with an angular velocity higher than this, radians / ANGULAR_VELOCITY_MATRIX_DURATION milliseconds
+             * @type Number
+             */
+            MINIMUM_DRAG_ANGLE = 0.001,
+            // ----------------------------------------------------------------------
+            // module variables
+            /**
+             * The global drag coefficient
+             * @type Number
+             */
+            _drag = 0,
+            /**
+             * The global angular drag coefficient
+             * @type Number
+             */
+            _angularDrag = 0;
+    // #########################################################################
+    /**
+     * The global drag coefficient
+     * @returns {Number}
+     */
+    function getDrag() {
+        return _drag;
+    }
+    /**
+     * Sets the global drag and angular drag coefficients
+     * @param {Number} drag
+     * @param {Number} angularDrag
+     */
+    function setDrag(drag, angularDrag) {
+        _drag = drag;
+        _angularDrag = angularDrag;
+    }
     // #########################################################################
     /**
      * @class Represents a force affecting a physical object, causing it to 
@@ -120,11 +159,11 @@ define([
     /**
      * Returns the vector corresponding to the acceleration this force causes on 
      * an object that has the passed mass.
-     * @param {Number} mass The mass of the object to accelerate, in kg.
+     * @param {Number} inverseMass The reciprocal of the mass of the object to accelerate, in kg.
      * @returns {Number[3]} The acceleration vector, in m/s^2.
      */
-    Force.prototype.getAccelerationVector = function (mass) {
-        return vec.scaled3(this._direction, this._strength / mass);
+    Force.prototype.getAccelerationVector = function (inverseMass) {
+        return vec.scaled3(this._direction, this._strength * inverseMass);
     };
     /**
      * Returns whether this force object can be reused as the force represented is no longer in effect.
@@ -209,14 +248,14 @@ define([
      * this torque causes on an object that has the passed mass if exerted for
      * the given time.
      * Uses an auxiliary matrix, only use when the result is needed temporarily!
-     * @param {Number} mass The mass of the object to accelerate, in kg.
+     * @param {Number} inverseMass The reciprocal of the mass of the object to accelerate, in kg.
      * @param {Number} t The time of exertion, in seconds.
-     * @returns {Float32Array} A 4x4 rotation matrix.
+     * @returns {Float32Array} A 3x3 rotation matrix.
      */
-    Torque.prototype.getAngularAccelerationMatrixOverTime = function (mass, t) {
+    Torque.prototype.getAngularAccelerationMatrixOverTime = function (inverseMass, t) {
         // in reality, the shape of the object should be taken into account,
         // for simplicity, the mass is taken as the only coefficient
-        return mat.rotation3Aux(this._axis, this._strength / mass * t);
+        return mat.rotation3Aux(this._axis, this._strength * inverseMass * t);
     };
     /**
      * Returns whether this torque object can be reused as the torque represented is no longer in effect.
@@ -481,8 +520,11 @@ define([
      * @param {Body[]} [bodies] The array of bodies this object is comprised of.
      * @param {Boolean} [fixedOrientation=false] When true, the orientation of the object cannot change during simulation steps as the 
      * related calculations are not performed (for optimization)
+     * @param {Boolean} [fixedVelocity=false] When true, the velocity of the object is not changed by any added forces (can still be 
+     * changed by directly applying forces)
+     * @param {Number} [dragFactor=1] If there is a global drag coefficient set, the drag experienced by this object will be multiplied by this factor
      */
-    function PhysicalObject(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation) {
+    function PhysicalObject(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation, fixedVelocity, dragFactor) {
         /**
          * The mass in kilograms.
          * @type Number
@@ -607,6 +649,11 @@ define([
          */
         this._fixedOrientation = false;
         /**
+         * If there is a global drag coefficient set, the drag experienced by this object will be multiplied by this factor
+         * @type Number
+         */
+        this._dragFactor = 0;
+        /**
          * Cached value of the reciprocal of the current X scaling
          * @type Number
          */
@@ -617,7 +664,7 @@ define([
          */
         this._inverseMass = 0;
         if (positionMatrix) {
-            this.init(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation);
+            this.init(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation, fixedVelocity, dragFactor);
         }
     }
     /**
@@ -631,8 +678,9 @@ define([
      * related calculations are not performed (for optimization)
      * @param {Boolean} [fixedVelocity=false] When true, the velocity of the object is not changed by any added forces (can still be 
      * changed by directly applying forces)
+     * @param {Number} [dragFactor=1] If there is a global drag coefficient set, the drag experienced by this object will be multiplied by this factor
      */
-    PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation, fixedVelocity) {
+    PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation, fixedVelocity, dragFactor) {
         this._mass = mass;
         this._inverseMass = 1 / mass;
         mat.copyTranslation4(this._positionMatrix, positionMatrix);
@@ -656,6 +704,7 @@ define([
         this._calculateBodySize();
         this._fixedOrientation = !!fixedOrientation;
         this._fixedVelocity = !!fixedVelocity;
+        this._dragFactor = (dragFactor !== undefined) ? dragFactor : 1;
     };
     /**
      * Removes all forces, torques, velocity and angular velocity from the object.
@@ -673,6 +722,13 @@ define([
      */
     PhysicalObject.prototype.getMass = function () {
         return this._mass;
+    };
+    /**
+     * If there is a global drag coefficient set, the drag experienced by this object will be multiplied by this factor
+     * @param {Number} value
+     */
+    PhysicalObject.prototype.setDragFactor = function (value) {
+        this._dragFactor = value;
     };
     /**
      * Returns the 4x4 translation matrix describing the position of the object.
@@ -1050,8 +1106,19 @@ define([
      * milliseconds.
      */
     PhysicalObject.prototype.simulate = function (dt) {
-        var i, a, t, force, nextForce, torque, nextTorque;
+        var i, a, s, t, force, nextForce, torque, nextTorque, matrix;
         if (dt > 0) {
+            if ((_drag > 0) && (this._dragFactor > 0)) {
+                s = (this._velocityMatrix[12] * this._velocityMatrix[12] + this._velocityMatrix[13] * this._velocityMatrix[13] + this._velocityMatrix[14] * this._velocityMatrix[14]);
+                if (s > MINIMUM_DRAG_VELOCITY) {
+                    a = _drag * this._dragFactor * s;
+                    s = 1 / Math.sqrt(s);
+                    a = -s * a * dt * 0.001;
+                    this._velocityMatrix[12] += a * this._velocityMatrix[12];
+                    this._velocityMatrix[13] += a * this._velocityMatrix[13];
+                    this._velocityMatrix[14] += a * this._velocityMatrix[14];
+                }
+            }
             // first calculate the movement that happened in the past dt
             // milliseconds as a result of the velocity sampled in the previous step
             // the velocity matrix is in m/s
@@ -1072,7 +1139,7 @@ define([
                         } else {
                             t = force.exert(dt) * 0.001; // t is in seconds
                             if (t > 0) {
-                                a = force.getAccelerationVector(this._mass);
+                                a = force.getAccelerationVector(this._inverseMass);
                                 mat.translateByVector(
                                         this._positionMatrix,
                                         vec.scaled3Aux(a, 0.5 * t * t));
@@ -1093,6 +1160,20 @@ define([
                 mat.straightenTranslation(this._velocityMatrix, VELOCITY_MATRIX_ERROR_THRESHOLD);
             }
             if (!this._fixedOrientation) {
+                if ((_drag > 0) && (this._dragFactor > 0)) {
+                    matrix = mat.identity3Aux();
+                    s = _angularDrag * this._dragFactor * dt * 0.001;
+                    if (vec.angle2y(this._angularVelocityMatrix[4], this._angularVelocityMatrix[5]) > MINIMUM_DRAG_ANGLE) {
+                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Z, (this._angularVelocityMatrix[4] > 0) ? -s : s));
+                    }
+                    if (vec.angle2x(this._angularVelocityMatrix[5], this._angularVelocityMatrix[6]) > MINIMUM_DRAG_ANGLE) {
+                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_X, (this._angularVelocityMatrix[6] > 0) ? s : -s));
+                    }
+                    if (vec.angle2x(this._angularVelocityMatrix[0], this._angularVelocityMatrix[2]) > MINIMUM_DRAG_ANGLE) {
+                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Y, (this._angularVelocityMatrix[2] > 0) ? -s : s));
+                    }
+                    mat.mulRotation43(this._angularVelocityMatrix, matrix);
+                }
                 // the same process with rotation and torques
                 // the angular velocity matrix represents the rotation that happens
                 // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
@@ -1120,11 +1201,11 @@ define([
                             if (t > 0) {
                                 mat.mulRotation43(
                                         this._orientationMatrix,
-                                        torque.getAngularAccelerationMatrixOverTime(this._mass, 0.5 * t * t));
+                                        torque.getAngularAccelerationMatrixOverTime(this._inverseMass, 0.5 * t * t));
                                 // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
                                 mat.mul3(
                                         this._angularAccelerationMatrix,
-                                        torque.getAngularAccelerationMatrixOverTime(this._mass, ANGULAR_VELOCITY_MATRIX_DURATION * t * 0.001));
+                                        torque.getAngularAccelerationMatrixOverTime(this._inverseMass, ANGULAR_VELOCITY_MATRIX_DURATION * t * 0.001));
                             }
                         }
                     }
@@ -1145,6 +1226,8 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        getDrag: getDrag,
+        setDrag: setDrag,
         Body: Body,
         Force: Force,
         Torque: Torque,

@@ -1644,6 +1644,11 @@ define([
          */
         this._mass = dataJSON ? (dataJSON.mass || _showMissingPropertyError(this, "mass")) : 0;
         /**
+         * If there is drag in the environment, its effect on this projectile will be multiplied by this factor
+         * @type Number
+         */
+        this._dragFactor = dataJSON ? (dataJSON.dragFactor || 0) : 0;
+        /**
          * The length of life of the projectile in milliseconds, after which it will 
          * disappear. In milliseconds.
          * @type Number
@@ -1727,6 +1732,12 @@ define([
      */
     ProjectileClass.prototype.getMass = function () {
         return this._mass;
+    };
+    /**
+     * @returns {Number}
+     */
+    ProjectileClass.prototype.getDragFactor = function () {
+        return this._dragFactor;
     };
     /**
      * @returns {Number}
@@ -1857,6 +1868,11 @@ define([
          * @type Number
          */
         this._mass = dataJSON ? (dataJSON.mass || _showMissingPropertyError(this, "mass")) : 0;
+        /**
+         * If there is drag in the environment, its effect on this missile will be multiplied by this factor
+         * @type Number
+         */
+        this._dragFactor = dataJSON ? ((dataJSON.dragFactor !== undefined) ? dataJSON.dragFactor : 1) : 0;
         /**
          * The velocity at which the missile is ejected from its launch tube, in m/s
          * @type Number
@@ -2118,6 +2134,12 @@ define([
      */
     MissileClass.prototype.getMass = function () {
         return this._mass;
+    };
+    /**
+     * @returns {Number}
+     */
+    MissileClass.prototype.getDragFactor = function () {
+        return this._dragFactor;
     };
     /**
      * @returns {Number}
@@ -4535,6 +4557,13 @@ define([
                 (dataJSON.mass || otherSpacecraftClass._mass) :
                 (dataJSON.mass || _showMissingPropertyError(this, "mass"));
         /**
+         * If there is drag in the environment, its effect on this spacecraft will be multiplied by this factor
+         * @type Number
+         */
+        this._dragFactor = otherSpacecraftClass ?
+                ((dataJSON.dragFactor !== undefined) ? dataJSON.dragFactor : otherSpacecraftClass._dragFactor) :
+                ((dataJSON.dragFactor !== undefined) ? dataJSON.dragFactor : 1);
+        /**
          * The physical bodies that model the spacecraft's shape for hit checks.
          * @type Body[]
          */
@@ -4799,6 +4828,12 @@ define([
      */
     SpacecraftClass.prototype.getMass = function () {
         return this._mass;
+    };
+    /**
+     * @returns {Number}
+     */
+    SpacecraftClass.prototype.getDragFactor = function () {
+        return this._dragFactor;
     };
     /**
      * @returns {Body[]}

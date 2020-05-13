@@ -521,7 +521,8 @@ define([
                 velocityMatrix,
                 utils.EMPTY_ARRAY,
                 true,
-                true);
+                true,
+                projectileClass.getDragFactor());
         this._timeLeft = projectileClass.getDuration();
         this._origin = spacecraft;
     };
@@ -1061,7 +1062,8 @@ define([
                 velocityMatrix,
                 utils.EMPTY_ARRAY,
                 false,
-                false);
+                false,
+                missileClass.getDragFactor());
         this._timeLeft = missileClass.getDuration();
         this._timeLeftForIgnition = missileClass.getIgnitionTime();
         this._origin = spacecraft;
@@ -4564,7 +4566,7 @@ define([
      * The threshold for tolerating drift / speed difference when aligning the velocity of the spacecraft for preparation
      * @type Number
      */
-    JumpEngine.VELOCITY_TOLERANCE = 0.01;
+    JumpEngine.VELOCITY_TOLERANCE = 1;
     /**
      * @enum Defines the possible states a jump engine can be in
      * @type Object
@@ -4676,6 +4678,7 @@ define([
             // calculate and set the starting velocity based on the set final velocity and total deceleration during the jump in sequence
             physicalModel.setVelocityMatrix(mat.translation4v(vec.scaled3(directionVector, this._class.getJumpInVelocity() + this._class.getJumpInDeceleration() * this._class.getJumpInDuration() / 1000)));
             physicalModel.addForce(new physics.Force(physicalModel.getMass() * this._class.getJumpInDeceleration(), vec.scaled3(directionVector, -1), this._class.getJumpInDuration()));
+            physicalModel.setDragFactor(0);
             this._soundClip = this._class.createJumpInSoundClip(this._spacecraft.getSoundSource());
             if (this._soundClip) {
                 this._soundClip.play();
@@ -4689,13 +4692,14 @@ define([
      * @param {Number} dt The amount of time passed since the last simulation step, in milliseonds
      */
     JumpEngine.prototype.simulate = function (dt) {
-        var velocityMatrix, directionVector, exp, physicalModel;
+        var velocityMatrix, directionVector, exp, physicalModel, speedTarget;
         switch (this._state) {
             case JumpEngine.JumpState.ALIGNING_VELOCITY:
                 velocityMatrix = this._spacecraft.getRelativeVelocityMatrix();
+                speedTarget = this._spacecraft.getTopSpeed() ? Math.min(this._spacecraft.getTopSpeed(), this._class.getPrepareVelocity()) : this._class.getPrepareVelocity();
                 if ((Math.abs(velocityMatrix[12]) < JumpEngine.VELOCITY_TOLERANCE) &&
                         (Math.abs(velocityMatrix[14]) < JumpEngine.VELOCITY_TOLERANCE) &&
-                        (Math.abs(velocityMatrix[13] - this._class.getPrepareVelocity()) < JumpEngine.VELOCITY_TOLERANCE)) {
+                        (Math.abs(velocityMatrix[13] - speedTarget) < JumpEngine.VELOCITY_TOLERANCE)) {
                     // switching to next state if the alignment is reached
                     this._state = JumpEngine.JumpState.PREPARING;
                     this._timeLeft = this._class.getPrepareDuration();
@@ -4722,6 +4726,7 @@ define([
                     physicalModel = this._spacecraft.getPhysicalModel();
                     directionVector = mat.getRowB4(physicalModel.getOrientationMatrix());
                     physicalModel.addForce(new physics.Force(physicalModel.getMass() * this._class.getJumpOutAcceleration(), directionVector, this._class.getJumpOutDuration()));
+                    physicalModel.setDragFactor(0);
                     // make sure the forward engines of the spacecraft are firing during the jump out sequence, despite the high velocity it will reach
                     this._spacecraft.unlockManeuvering();
                     this._spacecraft.setSpeedTarget(Number.MAX_VALUE);
@@ -4770,6 +4775,7 @@ define([
                     this._spacecraft.unlockManeuvering();
                     this._spacecraft.enableFiring();
                     this._spacecraft.handleEvent(SpacecraftEvents.ARRIVED);
+                    this._spacecraft.resetDrag();
                 }
                 this._timeLeft -= dt;
                 break;
