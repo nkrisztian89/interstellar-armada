@@ -9,16 +9,21 @@
 /*global define, document, window */
 
 /**
+ * @param resources Used for waiting for resource load
  * @param control Used for accessing the camer controller
+ * @param graphics Used to set graphics settings according to the environment
  * @param common Used to create the option elements
  * @param preview This module is based on the common WebGL preview module
  */
 define([
+    "modules/media-resources",
     "armada/control",
+    "armada/graphics",
     "editor/common",
     "editor/preview/webgl-preview"
 ], function (
-        control,
+        resources,
+        control, graphics,
         common, preview) {
     "use strict";
     var
@@ -97,14 +102,26 @@ define([
      * @param {Editor~EnvironmentRefreshParams} params
      */
     function _load(params) {
+        var shadows;
         params = params || {};
         if (params.preserve) {
             if (params.cameraSpeed === undefined) {
                 params.cameraSpeed = _cameraSpeed;
             }
         }
+        shadows = graphics.isShadowMappingEnabled();
+        if (_environment.hasShadows()) {
+            graphics.setShadowMapping();
+        } else {
+            graphics.setShadowMapping(false, false);
+        }
+        if (shadows !== graphics.isShadowMappingEnabled()) {
+            graphics.handleSettingsChanged();
+        }
         _environment.addToScene(preview.getScene());
-        _environment.addParticleEffectsToScene(preview.getScene());
+        if (_environment.addParticleEffectsToScene(preview.getScene())) {
+            resources.executeWhenReady(preview.startAnimating);
+        }
         _cameraSpeed = params.cameraSpeed;
     }
     /**

@@ -396,8 +396,7 @@ define([
                 _model.rotate(axisB, rotA);
                 _model.rotate(axisA, rotB);
                 if (_wireframeModel) {
-                    _wireframeModel.rotate(axisB, rotA);
-                    _wireframeModel.rotate(axisA, rotB);
+                    _wireframeModel.setOrientationMatrix(_model.getOrientationMatrix());
                 }
                 mat.setMatrix4(_currentContext.modelOrientationMatrix, _model.getOrientationMatrix());
                 if (_currentContext.functions.onModelRotate) {
@@ -658,7 +657,9 @@ define([
         if (_context && !params.preserve) {
             requestRender();
         }
-        _currentContext.functions.load(params, _currentContext.modelOrientationMatrix);
+        if (_currentContext.functions.load(params, _currentContext.modelOrientationMatrix)) {
+            shouldReload = true;
+        }
         _context = _context || new managedGL.ManagedGLContext(MANAGED_CONTEXT_NAME, _elements.canvas, graphics.getAntialiasing(), true, graphics.getFiltering());
         resources.executeWhenReady(function () {
             var view;

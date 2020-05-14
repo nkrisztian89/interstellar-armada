@@ -3037,12 +3037,12 @@ define([
         _scoreFactorForKill = config.getSetting(config.BATTLE_SETTINGS.SCORE_FRACTION_FOR_KILL);
         resetRandomSeed();
         graphics.executeWhenReady(handleGraphicsSettingsChanged);
+        graphics.onSettingsChange(handleGraphicsSettingsChanged);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         SpacecraftFormation: SpacecraftFormation,
-        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
         resetRandomSeed: resetRandomSeed,
         Spacecraft: Spacecraft
     };

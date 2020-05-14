@@ -4662,6 +4662,7 @@ define([
             screens.setAnaglyphTextRendering(true, graphics.getAnaglyphOriginalColorRatio(), graphics.getAnaglyphCyanFactor(), graphics.getAnaglyphGamma());
         }
     });
+    graphics.onSettingsChange(handleGraphicsSettingsChanged);
     // -------------------------------------------------------------------------
     // The public interface of the module
     _battle.getBattleScreen = function () {
@@ -4678,7 +4679,6 @@ define([
     _battle.showHUD = showHUD;
     _battle.hideHUD = hideHUD;
     _battle.toggleHUDVisibility = toggleHUDVisibility;
-    _battle.handleGraphicsSettingsChanged = handleGraphicsSettingsChanged;
     _battle.HUDSection = HUDSection;
     _battle.HUDSectionState = HUDSectionState;
     return _battle;

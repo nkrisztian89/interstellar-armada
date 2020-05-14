@@ -11,9 +11,11 @@
 /**
  * @param utils Used for enum value listing, async execution.
  * @param mat Used for copying matrices
+ * @param resources Used for waiting for resource load
  * @param renderableObjects Used for accessing uniform name constants
  * @param lights Used for creating the light sources for the preview scene
  * @param config Used to access default camera configuration settings
+ * @param graphics Used to set graphics settings according to the environment
  * @param environments Used to access the environments
  * @param SpacecraftEvents Used to set spacecraft event handlers
  * @param spacecraft Used to create the spacecraft for preview
@@ -24,9 +26,11 @@
 define([
     "utils/utils",
     "utils/matrices",
+    "modules/media-resources",
     "modules/scene/renderable-objects",
     "modules/scene/lights",
     "armada/configuration",
+    "armada/graphics",
     "armada/logic/environments",
     "armada/logic/SpacecraftEvents",
     "armada/logic/spacecraft",
@@ -35,8 +39,8 @@ define([
     "editor/preview/webgl-preview"
 ], function (
         utils, mat,
-        renderableObjects, lights,
-        config, environments, SpacecraftEvents, spacecraft,
+        resources, renderableObjects, lights,
+        config, graphics, environments, SpacecraftEvents, spacecraft,
         common, descriptors, preview) {
     "use strict";
     var
@@ -255,12 +259,15 @@ define([
      * Updates the content of the preview canvas according to the current preview settings
      * @param {Editor~SpacecraftClassRefreshParams} params
      * @param {Float32Array} orientationMatrix
+     * @returns {Boolean}
      */
     function _load(params, orientationMatrix) {
         var
                 environmentChanged,
+                environment,
                 loadoutChanged,
                 shouldReload,
+                shadows,
                 i;
         params = params || {};
         if (params.preserve) {
@@ -274,15 +281,35 @@ define([
         environmentChanged = params.environmentName !== _environmentName;
         loadoutChanged = params.loadoutName !== _loadoutName;
         shouldReload = !params.preserve || params.reload;
-        if ((environmentChanged || shouldReload) && !params.environmentName) {
-            preview.getScene().setAmbientColor([0, 0, 0]);
-            for (i = 0; i < LIGHT_SOURCES.length; i++) {
-                preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
+        if (environmentChanged || shouldReload) {
+            shadows = graphics.isShadowMappingEnabled();
+            if (params.environmentName) {
+                environment = environments.getEnvironment(params.environmentName);
+                if (environment.hasShadows()) {
+                    graphics.setShadowMapping();
+                } else {
+                    graphics.setShadowMapping(false, false);
+                }
+            } else {
+                preview.getScene().setAmbientColor([0, 0, 0]);
+                for (i = 0; i < LIGHT_SOURCES.length; i++) {
+                    preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
+                }
+                graphics.setShadowMapping();
+            }
+            if (shadows !== graphics.isShadowMappingEnabled()) {
+                graphics.handleSettingsChanged();
+                shouldReload = true;
             }
         }
         if (shouldReload) {
-            _spacecraft = new spacecraft.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
-            _wireframeSpacecraft = new spacecraft.Spacecraft(_spacecraftClass, undefined, undefined, params.reload ? orientationMatrix : undefined);
+            _clear();
+            _spacecraft = new spacecraft.Spacecraft(_spacecraftClass);
+            _wireframeSpacecraft = new spacecraft.Spacecraft(_spacecraftClass);
+        }
+        if (orientationMatrix) {
+            _spacecraft.setPhysicalOrientationMatrix(mat.matrix4(orientationMatrix));
+            _wireframeSpacecraft.setPhysicalOrientationMatrix(_spacecraft.getPhysicalOrientationMatrix());
         }
         if (loadoutChanged || environmentChanged || shouldReload) {
             if (_loadoutName) {
@@ -326,11 +353,14 @@ define([
                     preview.setupWireframeModel(model);
                 });
         if (params.environmentName && (environmentChanged || shouldReload)) {
-            environments.getEnvironment(params.environmentName).addToScene(preview.getScene());
-            environments.getEnvironment(params.environmentName).addParticleEffectsToScene(preview.getScene());
+            environment.addToScene(preview.getScene());
+            if (environment.addParticleEffectsToScene(preview.getScene())) {
+                resources.executeWhenReady(preview.startAnimating);
+            }
         }
         _environmentName = params.environmentName;
         _updateEngineStateEditor();
+        return shouldReload;
     }
     /**
      * Resets the preview settings (those handled through the options, not the ones connected to the canvas) to their default values.

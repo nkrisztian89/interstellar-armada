@@ -12,7 +12,7 @@
  * @param vec Used for vector operations
  * @param mat Used for matrix operations
  * @param lights Used for creating the light sources for the preview scene
- * @param graphics Used to acquire wireframe shader
+ * @param graphics Used to acquire wireframe shader and update settings based on the environment
  * @param environments Used to access the environments
  * @param equipment Used to create the preview missiles
  * @param common Used to create selectors
@@ -143,14 +143,14 @@ define([
      * Adds a trail based on the current orientation of the missile to show how it would look
      */
     function _addTrail() {
-        var 
-            trailEmitter = _missile._trailEmitter,
-            growthRate = trailEmitter._descriptor.getGrowthRate(),
-            duration = trailEmitter._descriptor.getDuration(),
-            model = _missile.getVisualModel(),
-            enginePosition, direction, length, count, segmentLength, dt, i;
+        var
+                trailEmitter = _missile._trailEmitter,
+                growthRate = trailEmitter._descriptor.getGrowthRate(),
+                duration = trailEmitter._descriptor.getDuration(),
+                model = _missile.getVisualModel(),
+                enginePosition, direction, length, count, segmentLength, dt, i;
         enginePosition = model.getPositionVector();
-        vec.add3(enginePosition, vec.prodVec3Mat3Aux(_missileClass.getEnginePosition(), mat.prodScalingRotation3Aux(model.getScalingMatrix(), model.getOrientationMatrix())));    
+        vec.add3(enginePosition, vec.prodVec3Mat3Aux(_missileClass.getEnginePosition(), mat.prodScalingRotation3Aux(model.getScalingMatrix(), model.getOrientationMatrix())));
         direction = vec.normal3(enginePosition);
         length = _missileClass.getLength() * 5;
         count = 3;
@@ -179,11 +179,14 @@ define([
      * Updates the content of the preview canvas according to the current preview settings
      * @param {Editor~RefreshParams} params
      * @param {Float32Array} orientationMatrix
+     * @returns {Boolean}
      */
     function _load(params, orientationMatrix) {
         var
                 environmentChanged,
+                environment,
                 shouldReload,
+                shadows,
                 i;
         params = params || {};
         if (params.preserve) {
@@ -193,28 +196,45 @@ define([
         }
         environmentChanged = params.environmentName !== _environmentName;
         shouldReload = !params.preserve || params.reload;
-        if ((environmentChanged || params.clearScene || shouldReload) && !params.environmentName) {
-            preview.getScene().setAmbientColor([0, 0, 0]);
-            for (i = 0; i < LIGHT_SOURCES.length; i++) {
-                preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
+        if (environmentChanged || shouldReload) {
+            shadows = graphics.isShadowMappingEnabled();
+            if (params.environmentName) {
+                environment = environments.getEnvironment(params.environmentName);
+                if (environment.hasShadows()) {
+                    graphics.setShadowMapping();
+                } else {
+                    graphics.setShadowMapping(false, false);
+                }
+            } else {
+                preview.getScene().setAmbientColor([0, 0, 0]);
+                for (i = 0; i < LIGHT_SOURCES.length; i++) {
+                    preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
+                }
+                graphics.setShadowMapping();
+            }
+            if (shadows !== graphics.isShadowMappingEnabled()) {
+                graphics.handleSettingsChanged();
+                shouldReload = true;
             }
         }
         if (shouldReload) {
+            _clear();
             _missile = new equipment.Missile(_missileClass);
             _wireframeMissile = new equipment.Missile(_missileClass);
+        }
+        if (orientationMatrix) {
+            _missile.getPhysicalModel().setOrientationMatrix(mat.matrix4(orientationMatrix));
+            _wireframeMissile.getPhysicalModel().setOrientationMatrix(_missile.getPhysicalModel().getOrientationMatrix());
         }
         if (params.clearScene || shouldReload) {
             _missileClass.acquireResources({missileOnly: false, sound: true, trail: true});
             graphics.getShader(preview.getWireframeShaderName());
-            _missile.addToScene(preview.getScene(), false, undefined, 
+            _missile.addToScene(preview.getScene(), false, undefined,
                     undefined,
                     true,
                     shouldReload ?
                     function (model) {
                         preview.setModel(model);
-                        if (orientationMatrix) {
-                            model.setOrientationMatrix(orientationMatrix);
-                        }
                         _missile._trailEmitter.addResourcesToScene(preview.getScene());
                     } :
                     null);
@@ -224,18 +244,21 @@ define([
                     shouldReload ?
                     function (model) {
                         preview.setWireframeModel(model);
-                        if (orientationMatrix) {
-                            model.setOrientationMatrix(orientationMatrix);
-                        }
                     } :
                     null);
+        } else {
+            preview.setModel(_missile.getVisualModel());
+            preview.setWireframeModel(_wireframeMissile.getVisualModel());
         }
         if (params.environmentName && (environmentChanged || shouldReload)) {
-            environments.getEnvironment(params.environmentName).addToScene(preview.getScene());
-            environments.getEnvironment(params.environmentName).addParticleEffectsToScene(preview.getScene());
+            environment.addToScene(preview.getScene());
+            if (environment.addParticleEffectsToScene(preview.getScene())) {
+                preview.startAnimating();
+            }
         }
         _environmentName = params.environmentName;
         _updateEngineStateEditor();
+        return shouldReload;
     }
     /**
      * For the WebGL preview context.
@@ -256,10 +279,10 @@ define([
                 button = document.createElement("button"),
                 popup = new common.Popup(button, null, {}),
                 values = [
-                    descriptors.ThrusterUse.FORWARD, 
-                    descriptors.ThrusterUse.YAW_LEFT, 
-                    descriptors.ThrusterUse.YAW_RIGHT, 
-                    descriptors.ThrusterUse.PITCH_UP, 
+                    descriptors.ThrusterUse.FORWARD,
+                    descriptors.ThrusterUse.YAW_LEFT,
+                    descriptors.ThrusterUse.YAW_RIGHT,
+                    descriptors.ThrusterUse.PITCH_UP,
                     descriptors.ThrusterUse.PITCH_DOWN
                 ],
                 table, row, cell, propertyEditor, i,
@@ -317,7 +340,7 @@ define([
                 clearScene: true,
                 environmentName: (_optionElements.environmentSelector.value !== "none") ? _optionElements.environmentSelector.value : null
             });
-            
+
         });
         _elements.options.appendChild(preview.createSetting(_optionElements.environmentSelector, "Environment:"));
         // engine state editor

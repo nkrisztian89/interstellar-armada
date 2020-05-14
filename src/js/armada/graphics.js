@@ -766,6 +766,12 @@ define([
              */
             SHADER_VARIANT_WITHOUT_DYNAMIC_LIGHTS_NAME = "withoutDynamicLights",
             /**
+             * Callbacks to execute when the graphics settings change (not called automatically, call handleSettingsChanged() to execute when after
+             * all the changes needed were done)
+             * @type Function[]
+             */
+            _changeHandlers = [],
+            /**
              * Stores a default context the methods of which are exposed in the interface of this module.
              * @type GraphicsSettingsContext
              */
@@ -1868,13 +1874,22 @@ define([
      * Sets whether shadow mapping should be enabled. Also checks whether enabling shadow mapping is possible at the current settings 
      * (shader requirements would be satisfied at least using the closest shadow distance) and only enables it if possible, also ensuring
      * that the requirements are met by lowering the shadow distance level, if needed.
-     * @param {Boolean} value
+     * @param {Boolean} [value] If undefined, the setting will be restored from local storage or the stored JSON
      * @param {Boolean} [saveToLocalStorage=true]
      * @param {Boolean} [ignoreRequirements=false] If true, the requirements are not checked and the shadow mapping is set to the desired
      * value in any case.
      * @returns {Boolean} Whether shadow mapping has been successfully set to the passed value.
      */
     GraphicsSettingsContext.prototype.setShadowMapping = function (value, saveToLocalStorage, ignoreRequirements) {
+        if (value === undefined) {
+            if (localStorage[SHADOW_MAPPING_LOCAL_STORAGE_ID] !== undefined) {
+                value = localStorage[SHADOW_MAPPING_LOCAL_STORAGE_ID];
+            } else {
+                value = types.getBooleanValue(this._dataJSON.context.shadowMapping, {name: "settings.graphics.context.shadowMapping"});
+            }
+            saveToLocalStorage = false;
+            ignoreRequirements = false;
+        }
         if (saveToLocalStorage === undefined) {
             saveToLocalStorage = true;
         }
@@ -2482,6 +2497,22 @@ define([
     function getLispsmNearFactor() {
         return parseFloat(_context.getShaderConfig(SHADER_CONFIG.LISPSM_NEAR_FACTOR));
     }
+    /**
+     * Add the passed callback function to be executed whenever handleSettingsChanged() is called
+     * @param {Function} handler
+     */
+    function onSettingsChange(handler) {
+        _changeHandlers.push(handler);
+    }
+    /**
+     * Execute all the callback functions added via onSettingsChange()
+     */
+    function handleSettingsChanged() {
+        var i;
+        for (i = 0; i < _changeHandlers.length; i++) {
+            _changeHandlers[i]();
+        }
+    }
     _context = new GraphicsSettingsContext();
     // -------------------------------------------------------------------------
     // The public interface of the module
@@ -2576,6 +2607,8 @@ define([
         getSideBySideLeftShader: getSideBySideLeftShader,
         getSideBySideRightShader: getSideBySideRightShader,
         getShadowMapDebugShader: getShadowMapDebugShader,
+        onSettingsChange: onSettingsChange,
+        handleSettingsChanged: handleSettingsChanged,
         executeWhenReady: _context.executeWhenReady.bind(_context)
     };
 });

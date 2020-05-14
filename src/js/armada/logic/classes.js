@@ -5053,16 +5053,13 @@ define([
                 });
         _classFolder = classSourceFileDescriptor.folder;
     }
-    /**
-     * Updates all classes for the case when the graphics settings have been changed (i.e. clears cached values depending on graphics 
-     * settings)
-     */
-    function handleGraphicsSettingsChanged() {
+    _classManager = new resourceManager.ResourceManager();
+    // Update all classes for the case when the graphics settings have been changed (i.e. clear cached values depending on graphics settings)
+    graphics.onSettingsChange(function () {
         _classManager.executeForAllResources(function (resource) {
             resource.handleGraphicsSettingsChanged();
         });
-    }
-    _classManager = new resourceManager.ResourceManager();
+    });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -5096,7 +5093,6 @@ define([
         ObjectView: ObjectView,
         SceneView: SceneView,
         requestLoad: requestLoad,
-        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
         executeWhenReady: _classManager.executeWhenReady.bind(_classManager),
         executeForAllClasses: _classManager.executeForAllResources.bind(_classManager),
         renameClass: _classManager.renameResource.bind(_classManager),

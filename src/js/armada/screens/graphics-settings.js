@@ -18,11 +18,6 @@
  * @param strings Used for translation support.
  * @param armadaScreens Used for common screen constants.
  * @param graphics Used for accessing the graphics settings and setting options.
- * @param classes Used to notify classes about graphics settings change
- * @param equipment Used to notify it about graphics settings change
- * @param spacecraft Used to notify it about graphics settings change
- * @param explosion Used to notify it about graphics settings change
- * @param battle Used to notify HUD element classes about graphics settings change
  */
 define([
     "utils/utils",
@@ -34,15 +29,10 @@ define([
     "armada/strings",
     "armada/screens/shared",
     "armada/graphics",
-    "armada/logic/classes",
-    "armada/logic/equipment",
-    "armada/logic/spacecraft",
-    "armada/logic/explosion",
-    "armada/screens/battle",
     "utils/polyfill"
 ], function (utils,
         application, components, screens, managedGL, game,
-        strings, armadaScreens, graphics, classes, equipment, spacecraft, explosion, battle) {
+        strings, armadaScreens, graphics) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -366,11 +356,7 @@ define([
         graphics.setMissilesInLaunchersVisible((this._missilesInLaunchersSelector.getSelectedIndex() === SETTING_ON_INDEX));
         graphics.setParticleAmount(_getParticleAmountSettingValues()[this._particleAmountSelector.getSelectedIndex()][1]);
         graphics.setDustParticleAmount(_getDustParticleAmountSettingValues()[this._dustParticleAmountSelector.getSelectedIndex()][1]);
-        classes.handleGraphicsSettingsChanged();
-        equipment.handleGraphicsSettingsChanged();
-        spacecraft.handleGraphicsSettingsChanged();
-        explosion.handleGraphicsSettingsChanged();
-        battle.handleGraphicsSettingsChanged();
+        graphics.handleSettingsChanged();
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };
     /**

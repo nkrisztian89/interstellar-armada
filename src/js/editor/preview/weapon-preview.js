@@ -10,14 +10,16 @@
 
 /**
  * @param lights Used for creating the light sources for the preview scene
+ * @param graphics Used to set graphics settings
  * @param equipment Used to create the preview weapons
  * @param preview
  */
 define([
     "modules/scene/lights",
+    "armada/graphics",
     "armada/logic/equipment",
     "editor/preview/webgl-preview"
-], function (lights, equipment, preview) {
+], function (lights, graphics, equipment, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -88,12 +90,20 @@ define([
     function _load(params, orientationMatrix) {
         var
                 shouldReload,
+                shadows,
                 i;
         params = params || {};
         shouldReload = !params.preserve || params.reload;
         if (params.clearScene || shouldReload) {
+            shadows = graphics.isShadowMappingEnabled();
+            preview.getScene().setAmbientColor([0, 0, 0]);
             for (i = 0; i < LIGHT_SOURCES.length; i++) {
                 preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
+            }
+            graphics.setShadowMapping();
+            if (shadows !== graphics.isShadowMappingEnabled()) {
+                graphics.handleSettingsChanged();
+                shouldReload = true;
             }
             if (shouldReload) {
                 _weapon = new equipment.Weapon(_weaponClass);

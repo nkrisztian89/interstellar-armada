@@ -417,11 +417,11 @@ define([
         _hitSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_VOLUME_FACTOR);
         _minimumParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_PARTICLE_COUNT_FOR_INSTANCING);
         graphics.executeWhenReady(handleGraphicsSettingsChanged);
+        graphics.onSettingsChange(handleGraphicsSettingsChanged);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
         getExplosion: getExplosion,
         Explosion: Explosion
     };

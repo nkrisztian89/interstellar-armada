@@ -1149,6 +1149,13 @@ define([
         return this._visualModel;
     };
     /**
+     * Returns the physical model of the missile.
+     * @returns {PhysicalObject}
+     */
+    Missile.prototype.getPhysicalModel = function () {
+        return this._physicalModel;
+    };
+    /**
      * Returns the target the missile is homing in on
      * @returns {Spacecraft}
      */
@@ -4975,13 +4982,13 @@ define([
         _fireSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_TIME_THRESHOLD);
         _fireSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.FIRE_SOUND_STACKING_VOLUME_FACTOR);
         graphics.executeWhenReady(handleGraphicsSettingsChanged);
+        graphics.onSettingsChange(handleGraphicsSettingsChanged);
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         FlightMode: FlightMode,
         ThrusterUse: ThrusterUse,
-        handleGraphicsSettingsChanged: handleGraphicsSettingsChanged,
         handleDifficultySet: handleDifficultySet,
         Projectile: Projectile,
         Missile: Missile,
