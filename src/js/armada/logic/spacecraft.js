@@ -270,9 +270,9 @@ define([
      * spacecraft. If not given, the spacecraft will not be equipped.
      * @param {Spacecraft[]} spacecraftArray The array of spacecrafts participating
      * in the same battle simulation as this one.
-     * @returns {Spacecraft}
+     * @param {Environment} [environment] The environment the spacecraft is situated in
      */
-    function Spacecraft(spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray) {
+    function Spacecraft(spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray, environment) {
         // ---------------------------------------
         // basic info
         /**
@@ -583,7 +583,7 @@ define([
         this._topSpeed = 0;
         // initializing the properties based on the parameters
         if (spacecraftClass) {
-            this._init(spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray);
+            this._init(spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray, environment);
         }
     }
     /**
@@ -632,9 +632,10 @@ define([
      * @param {Float32Array} [orientationMatrix]
      * @param {String} [loadoutName]
      * @param {Spacecraft[]} [spacecraftArray]
+     * @param {Environment} [environment]
      * @see Spacecraft
      */
-    Spacecraft.prototype._init = function (spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray) {
+    Spacecraft.prototype._init = function (spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray, environment) {
         var i, blinkerDescriptors;
         this._class = spacecraftClass;
         this._name = name || "";
@@ -656,7 +657,7 @@ define([
         this._missileLaunchers = [];
         this._missileClasses = [];
         this._activeMissileLauncherIndex = -1;
-        this._targetingComputer = new equipment.TargetingComputer(this, spacecraftArray);
+        this._targetingComputer = new equipment.TargetingComputer(this, spacecraftArray, environment);
         this._firingDisabled = false;
         this._maneuveringComputer = new equipment.ManeuveringComputer(this);
         this._blinkers = [];
@@ -1426,8 +1427,10 @@ define([
      * @param {Object} dataJSON
      * @param {Spacecraft[]} [spacecraftArray=null] The array of spacecrafts
      * participating in the same battle.
+     * @param {Environment} [environment] The environment the spacecraft is 
+     * situated in
      */
-    Spacecraft.prototype.loadFromJSON = function (dataJSON, spacecraftArray) {
+    Spacecraft.prototype.loadFromJSON = function (dataJSON, spacecraftArray, environment) {
         var loadout, squadData;
         this._init(
                 classes.getSpacecraftClass(dataJSON.class),
@@ -1435,7 +1438,8 @@ define([
                 dataJSON.position ? mat.translation4v(dataJSON.position) : null,
                 mat.rotation4FromJSON(dataJSON.rotations),
                 undefined,
-                spacecraftArray);
+                spacecraftArray,
+                environment);
         if (dataJSON.squad) {
             squadData = dataJSON.squad.split(" ");
             this.setSquad(squadData[0], parseInt(squadData[1], 10));

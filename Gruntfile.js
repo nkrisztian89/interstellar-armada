@@ -165,7 +165,9 @@ module.exports = function (grunt) {
                 ["dissipationDuration"],
                 ["wireframe", "is"],
                 ["test", "is"],
-                ["custom", "is"]
+                ["custom", "is"],
+                ["dragFactor"],
+                ["angularDrag"]
             ].map(
             function (replacement) {
                 // create the replacements for each simple getter

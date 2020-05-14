@@ -2682,7 +2682,7 @@ define([
         // loading spacecrafts from expanded array
         for (i = 0; i < spacecrafts.length; i++) {
             craft = new spacecraft.Spacecraft();
-            craft.loadFromJSON(spacecrafts[i], this._hitObjects);
+            craft.loadFromJSON(spacecrafts[i], this._hitObjects, this._environment);
             if (!demoMode && spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
                 craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());

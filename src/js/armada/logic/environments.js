@@ -504,6 +504,11 @@ define([
          */
         this._angularDrag = 0;
         /**
+         * Missile locking times are multiplied by this factor within this environment
+         * @type Number
+         */
+        this._lockingTimeFactor = 0;
+        /**
          * The camera relative to which the environment is rendered.
          * @type Camera
          */
@@ -566,6 +571,7 @@ define([
         this._ambientColor = dataJSON.ambientColor || [0, 0, 0];
         this._drag = dataJSON.drag || 0;
         this._angularDrag = dataJSON.angularDrag || 0;
+        this._lockingTimeFactor = (dataJSON.lockingTimeFactor !== undefined) ? dataJSON.lockingTimeFactor : 1;
     };
     /**
      * Returns a string that can be displayed to the player to represent this environment as a location for a mission.
@@ -598,6 +604,13 @@ define([
      */
     Environment.prototype.getAngularDrag = function () {
         return this._angularDrag;
+    };
+    /**
+     * Missile locking times are multiplied by this factor within this environment
+     * @returns {Number}
+     */
+    Environment.prototype.getLockingTimeFactor = function () {
+        return this._lockingTimeFactor;
     };
     /**
      * Returns the object this environment was initialized from

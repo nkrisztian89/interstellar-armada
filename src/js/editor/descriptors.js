@@ -2610,6 +2610,11 @@ define([
                     name: "angularDrag",
                     type: NON_NEGATIVE_NUMBER,
                     defaultValue: 0
+                },
+                LOCKING_TIME_FACTOR: {
+                    name: "lockingTimeFactor",
+                    type: NON_NEGATIVE_SCALE,
+                    defaultValue: 1
                 }
             },
             /**

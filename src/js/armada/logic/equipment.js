@@ -2846,8 +2846,9 @@ define([
      * is equipped on.
      * @param {Spacecraft} spacecraft The spacecraft this computer is equipped on
      * @param {Spacecraft[]} spacecraftArray The list of spacecrafts from which this computer can choose its target
+     * @param {Environment} [environment] The environment the host spacecraft is situated in
      */
-    function TargetingComputer(spacecraft, spacecraftArray) {
+    function TargetingComputer(spacecraft, spacecraftArray, environment) {
         /**
          * The spacecraft this computer is equipped on
          * @type Spacecraft
@@ -2903,12 +2904,17 @@ define([
          * @type Number
          */
         this._lockTimeLeft = 1;
+        /**
+         * Missile locking time is multiplied by this factor
+         * @type Number
+         */
+        this._lockingTimeFactor = environment ? environment.getLockingTimeFactor() : 1;
     }
     /**
      * Reset locking time and time remaining according to missile launcher and target characteristics
      */
     TargetingComputer.prototype._resetMissileLock = function () {
-        this._lockTime = (this._target && this._missileLauncher) ? (this._target.getLockingTimeFactor() * this._missileLauncher.getLockingTime()) : 1;
+        this._lockTime = (this._target && this._missileLauncher) ? (this._target.getLockingTimeFactor() * this._lockingTimeFactor * this._missileLauncher.getLockingTime()) : 1;
         this._lockTimeLeft = this._lockTime;
     };
     /**
