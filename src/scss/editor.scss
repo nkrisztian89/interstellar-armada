@@ -263,6 +263,7 @@ div#properties {
 
 div#items > div.windowContent {
     height: calc(100% - #{$title-height + $toolbar-height});
+    scroll-behavior: smooth;
 }
 
 div#preview > div.windowContent {
@@ -370,6 +371,7 @@ span.element {
 
 span.element.selected {
     font-weight: bold;
+    color: #66bbff;
 }
 
 li.element {

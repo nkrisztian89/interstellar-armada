@@ -186,11 +186,21 @@ define([
     // ------------------------------------------------------------------------------
     // Private functions
     /**
-     * Expands a (sub)list
+     * Expands a (sub)list, optionally scrolling to make sure the specified item is visible
      * @param {Element} listElement The HTML element representing the list. (e.g. <ul>)
+     * @param {Element} [itemElement] The HTML element representing the item to scroll to
      */
-    function _expandList(listElement) {
+    function _expandList(listElement, itemElement) {
+        var parent;
         listElement.hidden = false;
+        if (itemElement) {
+            parent = document.getElementById(ITEMS_WINDOW_ID).querySelector("." + WINDOW_CONTENT_CLASS);
+            if (itemElement.offsetTop < parent.scrollTop) {
+                parent.scrollTop = itemElement.offsetTop;
+            } else if (itemElement.offsetTop + itemElement.offsetHeight > parent.scrollTop + parent.clientHeight) {
+                parent.scrollTop = itemElement.offsetTop + itemElement.offsetHeight - parent.clientHeight;
+            }
+        }
     }
     /**
      * Toggles a (sub)list between expanded / collapsed state.
@@ -455,12 +465,13 @@ define([
         common.removePopups();
         _loadProperties();
         _loadPreview();
-        _expandList(_itemElements[_selectedItem.type][_selectedItem.category]._list);
         if (!element) {
             element = _itemElements[_selectedItem.type][_selectedItem.category][_selectedItem.name];
         }
+        _expandList(_itemElements[_selectedItem.type][_selectedItem.category]._list, element);
         _selectedItemElement = element;
         _selectedItemElement.classList.add(SELECTED_CLASS);
+        location.hash = type + "/" + category + "/" + name;
     }
     /**
      * Sets up the variables and handlers for the history back / forward buttons (to be called at startup)
@@ -1097,6 +1108,7 @@ define([
                 environments.executeWhenReady(function () {
                     missions.requestLoad(true);
                     missions.executeWhenReady(function () {
+                        var hash;
                         application.log("Game settings loaded.", 1);
                         localStorage[constants.VERSION_LOCAL_STORAGE_ID] = application.getVersion();
                         application.log("Initialization completed.");
@@ -1105,6 +1117,14 @@ define([
                         _loadItems();
                         _loadHistoryButtons();
                         _loadDialogs();
+                        if (location.hash) {
+                            hash = location.hash.substring(1).split("/");
+                            if (hash.length > 3) {
+                                _selectItem(hash[0], location.hash.substring(3 + hash[0].length + hash[1].length), hash[1]);
+                            } else if (hash.length === 3) {
+                                _selectItem(hash[0], hash[2], hash[1]);
+                            }
+                        }
                     });
                 });
             });
