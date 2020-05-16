@@ -1078,14 +1078,14 @@ define([
         this._pitchUp.thrusters.length = 0;
         this._pitchDown.thrusters.length = 0;
         this.addThrusters(missileClass.getThrusterSlots());
-        this._burnForAngularVelocityChangeFactor = (1 / physics.ANGULAR_VELOCITY_MATRIX_DURATION_S * missileClass.getMass() / missileClass.getAngularThrust() * 1000);
+        this._homing = (missileClass.getHomingMode() !== classes.MissileHomingMode.NONE);
+        this._burnForAngularVelocityChangeFactor = this._homing ? (1 / physics.ANGULAR_VELOCITY_MATRIX_DURATION_S * missileClass.getMass() / missileClass.getAngularThrust() * 1000) : 0;
         this._target = target || null;
         this._targetHitPositionValid = false;
         this._yawTorque = null;
         this._pitchTorque = null;
         this._mainBurn = false;
         this._started = false;
-        this._homing = (missileClass.getHomingMode() !== classes.MissileHomingMode.NONE);
         this._stopHoming = false;
         this._startSound = null;
     };
@@ -1186,7 +1186,7 @@ define([
         for (i = 0; i < this._thrusters.length; i++) {
             this._thrusters[i].addToScene(this._visualModel.getNode(), true);
         }
-        if (_dynamicLights) {
+        if (_dynamicLights && this._class.getLightColor()) {
             if (!this._lightSource) {
                 this._lightSource = new lights.PointLightSource(this._class.getLightColor(), 0, vec.NULL3, [this._visualModel]);
             }

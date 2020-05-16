@@ -88,21 +88,22 @@ define([
     /**
      * Returns the game class (resource / class) the passed item references
      * @param {Editor~Item} item
+     * @param {Boolean} [allowNullResult=false]
      * @returns {GenericResource|GenericClass}
      */
-    function getItemReference(item) {
-        var result;
+    function getItemReference(item, allowNullResult) {
+        var result, params = allowNullResult ? {allowNullResult: true} : null;
         switch (item.type) {
             case ItemType.RESOURCE:
-                return resources.getResource(item.category, item.name);
+                return resources.getResource(item.category, item.name, params);
             case ItemType.CLASS:
-                return classes.getClass(item.category, item.name);
+                return classes.getClass(item.category, item.name, params);
             case ItemType.ENVIRONMENT:
                 return environments.getEnvironment(item.name);
             case ItemType.MISSION:
                 missions.requestMissionDescriptor(item.name, function (missionDescriptor) {
                     result = missionDescriptor;
-                });
+                }, params);
                 return result;
             default:
                 document.crash();

@@ -3912,9 +3912,10 @@ define([
      * callback with the descriptor as its argument when it is loaded
      * @param {String} name
      * @param {Function} callback
+     * @param {Object} [params]
      */
-    MissionContext.prototype.requestMissionDescriptor = function (name, callback) {
-        var missionDescriptor = this._missionManager.getResource(MISSION_ARRAY_NAME, name);
+    MissionContext.prototype.requestMissionDescriptor = function (name, callback, params) {
+        var missionDescriptor = this._missionManager.getResource(MISSION_ARRAY_NAME, name, params);
         if (missionDescriptor) {
             this._missionManager.requestResourceLoad();
             this._missionManager.executeWhenReady(function () {
@@ -3988,6 +3989,7 @@ define([
         ActionType: ActionType,
         MissionState: MissionState,
         ObjectiveState: ObjectiveState,
+        SubjectGroup: SubjectGroup,
         createCondition: createCondition,
         FAILED_MISSION_PERFORMACE: FAILED_MISSION_PERFORMACE,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),

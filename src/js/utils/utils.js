@@ -367,9 +367,11 @@ define(function () {
      */
     exports.getSafeEnumValueForKey = function (enumObject, key, defaultValue) {
         defaultValue = (defaultValue !== undefined) ? exports.getSafeEnumValue(enumObject, defaultValue) : null;
-        key = exports.constantName(key);
-        if (enumObject.hasOwnProperty(key)) {
-            return enumObject[key];
+        if (key) {
+            key = exports.constantName(key);
+            if (enumObject.hasOwnProperty(key)) {
+                return enumObject[key];
+            }
         }
         return (defaultValue !== undefined) ? defaultValue : null;
     };

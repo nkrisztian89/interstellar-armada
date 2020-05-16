@@ -121,8 +121,6 @@ define([
              * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
              * @property {String} [settingName] If globalDefault is true, the name of the setting from where the default value is retrieved from can be given here
              * @property {} [newValue] When a new object is created having this property, this value will be set as its value.
-             * @property {Boolean} [createDefaultElement] If the property is of an array type, its default value should be an array with one
-             * element having its default value (instead of an empty array)
              * @property {String} [defaultText] The text to show in the editor when the property is unset and has no default value or it is better to show
              * some explanation instead of the default value
              */
@@ -134,14 +132,16 @@ define([
             /**
              * Returns a type descriptor describing an array type that has elements of the passed type
              * @param {Editor~TypeDescriptor} elementType
-             * @param {Number} [fixedLength]
+             * @param {Object} [length]
              * @returns {Editor~TypeDescriptor}
              */
-            _createTypedArrayType = function (elementType, fixedLength) {
+            _createTypedArrayType = function (elementType, length) {
                 return {
                     baseType: BaseType.ARRAY,
                     elementType: elementType,
-                    fixedLength: fixedLength
+                    fixedLength: length && length.fixed,
+                    minLength: length && length.min,
+                    maxLength: length && length.max
                 };
             },
             /**
@@ -188,6 +188,11 @@ define([
                 unit: Unit.TIMES,
                 min: 0
             },
+            GROWTH_RATE = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.TIMES,
+                min: 1
+            },
             POSITIVE_SCALE = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.TIMES,
@@ -202,6 +207,11 @@ define([
                 baseType: BaseType.NUMBER,
                 unit: Unit.METERS,
                 min: 1
+            },
+            POSITIVE_LENGTH = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.METERS,
+                min: 0.001
             },
             METERS_PER_SECOND = {
                 baseType: BaseType.NUMBER,
@@ -243,6 +253,12 @@ define([
                 integer: true,
                 min: 1
             },
+            SPAWN_INTERVAL = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.MILLISECONDS,
+                integer: true,
+                min: 10
+            },
             PER_SECOND = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.PER_SECOND
@@ -259,14 +275,16 @@ define([
                 min: 0,
                 max: 360
             },
+            POSITIVE_DEGREES_180 = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.DEGREES,
+                min: 0.1,
+                max: 180
+            },
             POSITIVE_DEGREES_PER_SECOND = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.DEGREES_PER_SECOND,
                 min: 0.001
-            },
-            DEGREES_PER_SECOND_SQUARED = {
-                baseType: BaseType.NUMBER,
-                unit: Unit.DEGREES_PER_SECOND_SQUARED
             },
             POSITIVE_DEGREES_PER_SECOND_SQUARED = {
                 baseType: BaseType.NUMBER,
@@ -778,8 +796,7 @@ define([
                 },
                 LAYERS: {
                     name: "layers",
-                    type: _createTypedArrayType(BACKGROUND_OBJECT_LAYER),
-                    createDefaultElement: true
+                    type: _createTypedArrayType(BACKGROUND_OBJECT_LAYER, {min: 1})
                 }
             },
             /**
@@ -918,8 +935,9 @@ define([
                     },
                     SPAWN_TIME: {
                         name: "spawnTime",
-                        type: POSITIVE_MILLISECONDS,
-                        defaultValue: 1,
+                        type: SPAWN_INTERVAL,
+                        newValue: 1000,
+                        isRequired: _emitterIsSpawning,
                         isValid: _emitterIsSpawning
                     },
                     DURATION: {
@@ -945,8 +963,7 @@ define([
                     },
                     PARTICLE_STATES: {
                         name: "particleStates",
-                        type: _createTypedArrayType(PARTICLE_STATE),
-                        createDefaultElement: true
+                        type: _createTypedArrayType(PARTICLE_STATE, {min: 2})
                     }
                 }
             },
@@ -1004,14 +1021,12 @@ define([
                 },
                 PARTICLE_EMITTERS: {
                     name: "particleEmitters",
-                    type: _createTypedArrayType(PARTICLE_EMITTER),
-                    createDefaultElement: true
+                    type: _createTypedArrayType(PARTICLE_EMITTER, {min: 1})
                 },
                 LIGHT_STATES: {
                     name: "lightStates",
-                    type: _createTypedArrayType(LIGHT_STATE),
+                    type: _createTypedArrayType(LIGHT_STATE, {min: 1}),
                     optional: true,
-                    createDefaultElement: true,
                     defaultText: "no light emitted"
                 },
                 SOUND_EFFECT: {
@@ -1071,23 +1086,27 @@ define([
                     },
                     COLOR: {
                         name: "color",
-                        type: BaseType.COLOR4
+                        type: BaseType.COLOR4,
+                        defaultValue: [1, 1, 1, 1]
                     },
                     SIZE: {
                         name: "size",
-                        type: NON_NEGATIVE_SCALE
+                        type: POSITIVE_SCALE,
+                        defaultValue: 1
                     },
                     DURATION: {
                         name: "duration",
-                        type: NON_NEGATIVE_MILLISECONDS
+                        type: POSITIVE_MILLISECONDS,
+                        newValue: 500
                     },
                     GROWTH_RATE: {
                         name: "growthRate",
-                        type: SCALE
+                        type: GROWTH_RATE,
+                        newValue: 2
                     }
                 }
             },
-            _projectileHasLight = function (data) {
+            _hasLight = function (data) {
                 return !!data.lightColor;
             },
             /**
@@ -1137,10 +1156,9 @@ define([
                 },
                 INTERSECTION_POSITIONS: {
                     name: "intersectionPositions",
-                    type: NUMBER_ARRAY,
+                    type: _createTypedArrayType(BaseType.NUMBER, {min: 1}),
                     optional: true,
-                    defaultText: "no intersections",
-                    createDefaultElement: true
+                    defaultText: "no intersections"
                 },
                 WIDTH: {
                     name: "width",
@@ -1161,7 +1179,7 @@ define([
                 LIGHT_INTENSITY: {
                     name: "lightIntensity",
                     type: POSITIVE_NUMBER,
-                    isValid: _projectileHasLight
+                    isValid: _hasLight
                 },
                 EXPLOSION: {
                     name: "explosion",
@@ -1258,6 +1276,19 @@ define([
                 baseType: BaseType.ENUM,
                 values: utils.getEnumObject(utils.getEnumKeys(classes.MissileHomingMode))
             },
+            _getName = function (data) {
+                return data.name;
+            },
+            _getShortName = function (data) {
+                var name = data.fullName || data.name;
+                return name.split(" ")[0].substring(0, 5);
+            },
+            _missileIsHoming = function (data) {
+                return !!data.homingMode && (classes.MissileHomingMode[utils.constantName(data.homingMode)] !== classes.MissileHomingMode.NONE);
+            },
+            _missileNeedsLocking = function (data) {
+                return !!data.lockingTime;
+            },
             /**
              * The descriptor object for missile classes, describing their properties
              * @type Editor~ItemDescriptor
@@ -1269,25 +1300,33 @@ define([
                 },
                 FULL_NAME: {
                     name: "fullName",
-                    type: BaseType.STRING
+                    type: BaseType.STRING,
+                    optional: true,
+                    getDerivedDefault: _getName,
+                    updateOnValidate: true
                 },
                 SHORT_NAME: {
                     name: "shortName",
-                    type: BaseType.STRING
+                    type: BaseType.STRING,
+                    optional: true,
+                    getDerivedDefault: _getShortName,
+                    updateOnValidate: true
                 },
                 MODEL: {
                     name: "model",
-                    type: MODEL_REFERENCE
+                    type: MODEL_REFERENCE,
+                    newValue: "mediumMissile"
                 },
                 MODEL_SCALE: {
                     name: "modelScale",
-                    type: NON_NEGATIVE_SCALE,
+                    type: POSITIVE_SCALE,
                     optional: true,
                     defaultValue: 1
                 },
                 SHADER: {
                     name: "shader",
-                    type: SHADER_REFERENCE
+                    type: SHADER_REFERENCE,
+                    newValue: "ship"
                 },
                 TEXTURE: {
                     name: "texture",
@@ -1300,7 +1339,8 @@ define([
                 },
                 DAMAGE: {
                     name: "damage",
-                    type: BaseType.NUMBER
+                    type: BaseType.NUMBER,
+                    defaultValue: 0
                 },
                 SIZE: {
                     name: "size",
@@ -1308,19 +1348,24 @@ define([
                 },
                 CAPACITY: {
                     name: "capacity",
-                    type: NON_NEGATIVE_INTEGER
+                    type: POSITIVE_INTEGER,
+                    defaultValue: 1
                 },
                 LENGTH: {
                     name: "length",
-                    type: DISTANCE
+                    type: POSITIVE_LENGTH,
+                    newValue: 1
                 },
                 HOMING_MODE: {
                     name: "homingMode",
-                    type: MISSILE_HOMING_MODE
+                    type: MISSILE_HOMING_MODE,
+                    optional: true,
+                    defaultText: "not homing"
                 },
                 MASS: {
                     name: "mass",
-                    type: KILOGRAMS
+                    type: KILOGRAMS,
+                    newValue: 1
                 },
                 DRAG_FACTOR: {
                     name: "dragFactor",
@@ -1329,60 +1374,83 @@ define([
                 },
                 LAUNCH_VELOCITY: {
                     name: "launchVelocity",
-                    type: METERS_PER_SECOND
+                    type: NON_NEGATIVE_METERS_PER_SECOND,
+                    defaultValue: 0
                 },
                 IGNITION_TIME: {
                     name: "ignitionTime",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS,
+                    defaultValue: 0
                 },
                 ACCELERATION: {
                     name: "acceleration",
-                    type: METERS_PER_SECOND_SQUARED
+                    type: POSITIVE_METERS_PER_SECOND_SQUARED,
+                    newValue: 100
                 },
                 ANGULAR_ACCELERATION: {
                     name: "angularAcceleration",
-                    type: DEGREES_PER_SECOND_SQUARED
+                    type: POSITIVE_DEGREES_PER_SECOND_SQUARED,
+                    newValue: 90,
+                    isRequired: _missileIsHoming,
+                    isValid: _missileIsHoming
                 },
                 MAIN_BURN_ANGLE_THRESHOLD: {
                     name: "mainBurnAngleThreshold",
-                    type: DEGREES
+                    type: POSITIVE_DEGREES_180,
+                    newValue: 1,
+                    isRequired: _missileIsHoming,
+                    isValid: _missileIsHoming
                 },
                 DURATION: {
                     name: "duration",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: POSITIVE_MILLISECONDS,
+                    newValue: 1000
                 },
                 LOCKING_TIME: {
                     name: "lockingTime",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: NON_NEGATIVE_MILLISECONDS,
+                    defaultValue: 0,
+                    isValid: _missileIsHoming
                 },
                 LOCKING_ANGLE: {
                     name: "lockingAngle",
-                    type: DEGREES
+                    type: POSITIVE_DEGREES_180,
+                    optional: true,
+                    defaultText: "unlimited",
+                    isValid: _missileNeedsLocking
                 },
                 COOLDOWN: {
                     name: "cooldown",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: POSITIVE_MILLISECONDS,
+                    newValue: 1000
                 },
                 SALVO_COOLDOWN: {
                     name: "salvoCooldown",
-                    type: NON_NEGATIVE_MILLISECONDS,
-                    defaultDerived: true
+                    type: POSITIVE_MILLISECONDS,
+                    optional: true,
+                    defaultText: "same as cooldown"
                 },
                 PROXIMITY_RANGE: {
                     name: "proximityRange",
-                    type: DISTANCE
+                    type: DISTANCE,
+                    defaultValue: 0
                 },
                 KINETIC_FACTOR: {
                     name: "kineticFactor",
-                    type: NON_NEGATIVE_SCALE
+                    type: POSITIVE_SCALE,
+                    defaultValue: 1
                 },
                 LIGHT_COLOR: {
                     name: "lightColor",
-                    type: BaseType.COLOR3
+                    type: BaseType.COLOR3,
+                    optional: true,
+                    newValue: [1, 1, 1],
+                    defaultText: "no light emitted"
                 },
                 LIGHT_INTENSITY: {
                     name: "lightIntensity",
-                    type: NON_NEGATIVE_NUMBER
+                    type: POSITIVE_NUMBER,
+                    isValid: _hasLight
                 },
                 TRAIL: {
                     name: "trail",
@@ -1395,10 +1463,6 @@ define([
                 SHIELD_EXPLOSION: {
                     name: "shieldExplosion",
                     type: EXPLOSION_CLASS_REFERENCE
-                },
-                SCORE_VALUE: {
-                    name: "scoreValue",
-                    type: NON_NEGATIVE_INTEGER
                 },
                 LAUNCH_SOUND: {
                     name: "launchSound",
@@ -1415,6 +1479,11 @@ define([
                 THRUSTER_SLOTS: {
                     name: "thrusterSlots",
                     type: _createTypedArrayType(THRUSTER_SLOT)
+                },
+                SCORE_VALUE: {
+                    name: "scoreValue",
+                    type: NON_NEGATIVE_INTEGER,
+                    defaultValue: 0
                 }
             },
             /**
@@ -1484,9 +1553,6 @@ define([
                     }
                 }
             },
-            _getName = function (data) {
-                return data.name;
-            },
             _weaponCanRotate = function (data) {
                 return data.rotationStyle && (data.rotationStyle !== classes.WeaponRotationStyle.NONE);
             },
@@ -1503,7 +1569,8 @@ define([
                     name: "fullName",
                     type: BaseType.STRING,
                     optional: true,
-                    getDerivedDefault: _getName
+                    getDerivedDefault: _getName,
+                    updateOnValidate: true
                 },
                 SHADER: {
                     name: "shader",
@@ -1530,8 +1597,7 @@ define([
                 },
                 BARRELS: {
                     name: "barrels",
-                    type: _createTypedArrayType(BARREL),
-                    createDefaultElement: true
+                    type: _createTypedArrayType(BARREL, {min: 1})
                 },
                 ATTACHMENT_POINT: {
                     name: "attachmentPoint",
@@ -1551,7 +1617,7 @@ define([
                 },
                 ROTATORS: {
                     name: "rotators",
-                    type: _createTypedArrayType(WEAPON_ROTATOR, 2),
+                    type: _createTypedArrayType(WEAPON_ROTATOR, {fixed: 2}),
                     isRequired: _weaponCanRotate,
                     isValid: _weaponCanRotate
                 },
@@ -1578,7 +1644,8 @@ define([
                     name: "fullName",
                     type: BaseType.STRING,
                     optional: true,
-                    getDerivedDefault: _getName
+                    getDerivedDefault: _getName,
+                    updateOnValidate: true
                 },
                 SHADER: {
                     name: "shader",
@@ -2565,31 +2632,27 @@ define([
             ENVIRONMENT = {
                 SKYBOXES: {
                     name: "skyboxes",
-                    type: _createTypedArrayType(SKYBOX),
+                    type: _createTypedArrayType(SKYBOX, {min: 1}),
                     optional: true,
-                    defaultText: "none",
-                    createDefaultElement: true
+                    defaultText: "none"
                 },
                 BACKGROUND_OBJECTS: {
                     name: "backgroundObjects",
-                    type: _createTypedArrayType(BACKGROUND_OBJECT),
+                    type: _createTypedArrayType(BACKGROUND_OBJECT, {min: 1}),
                     optional: true,
-                    defaultText: "none",
-                    createDefaultElement: true
+                    defaultText: "none"
                 },
                 DUST_CLOUDS: {
                     name: "dustClouds",
-                    type: _createTypedArrayType(DUST_CLOUD),
+                    type: _createTypedArrayType(DUST_CLOUD, {min: 1}),
                     optional: true,
-                    defaultText: "none",
-                    createDefaultElement: true
+                    defaultText: "none"
                 },
                 PARTICLE_EFFECTS: {
                     name: "particleEffects",
-                    type: _createTypedArrayType(PARTICLE_EFFECT),
+                    type: _createTypedArrayType(PARTICLE_EFFECT, {min: 1}),
                     optional: true,
-                    defaultText: "none",
-                    createDefaultElement: true
+                    defaultText: "none"
                 },
                 SHADOWS: {
                     name: "shadows",
@@ -2918,7 +2981,8 @@ define([
                 return (data.type === missions.ConditionType.DESTROYED) || (data.type === missions.ConditionType.COUNT);
             },
             _conditionCanHaveParams = function (data) {
-                return (data.type === missions.ConditionType.DESTROYED) || (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME);
+                return ((data.type === missions.ConditionType.DESTROYED) && data.subjects && new missions.SubjectGroup(data.subjects).isMulti()) || 
+                        (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME);
             },
             _conditionMustHaveParams = function (data) {
                 return (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME);
@@ -3040,9 +3104,8 @@ define([
                 properties: {
                     CONDITIONS: {
                         name: "conditions",
-                        type: _createTypedArrayType(CONDITION),
-                        optional: true,
-                        createDefaultElement: true
+                        type: _createTypedArrayType(CONDITION, {min: 1}),
+                        optional: true
                     },
                     WHICH: {
                         name: "which",
@@ -3990,6 +4053,20 @@ define([
      */
     Type.prototype.getFixedLength = function () {
         return this._descriptor.fixedLength;
+    };
+    /**
+     * For array types, returns their min length if set (undefined if not)
+     * @returns {Number}
+     */
+    Type.prototype.getMinLength = function () {
+        return this._descriptor.minLength;
+    };
+    /**
+     * For array types, returns their max length if set (undefined if not)
+     * @returns {Number}
+     */
+    Type.prototype.getMaxLength = function () {
+        return this._descriptor.maxLength;
     };
     /**
      * Returns whether this type is a reference string (e.g. resource or class reference) type

@@ -436,10 +436,11 @@ define([
      * the given name (id).
      * @param {String} category
      * @param {String} name
+     * @param {Object} [params]
      * @returns {}
      */
-    function getClass(category, name) {
-        return _classManager.getResource(category, name);
+    function getClass(category, name, params) {
+        return _classManager.getResource(category, name, params);
     }
     // ------------------------------------------------------------------------------
     // private functions
@@ -993,13 +994,13 @@ define([
          * The thickness of the trail (scaling perpendicular to the scale path)
          * @type Number
          */
-        this._size = dataJSON ? (dataJSON.size || _showMissingPropertyError(this, "size")) : 0;
+        this._size = dataJSON ? (dataJSON.size || 1) : 0;
         /**
          * The color that can be passed to the shader to modulate the texture with
          * while rendering. [red,green,blue, alpha]
          * @type Number[4]
          */
-        this._color = dataJSON ? (dataJSON.color || _showMissingPropertyError(this, "color")) : null;
+        this._color = dataJSON ? (dataJSON.color || [1, 1, 1, 1]) : null;
         /**
          * The duration of any given point of the trail (the trail will end where the object leaving
          * it passed this much time ago), in milliseconds
@@ -1815,12 +1816,12 @@ define([
          * The full name of this class as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
+        this._fullName = dataJSON ? (dataJSON.fullName || this.getName()) : null;
         /**
          * The short name of this class to be displayed on the HUD showing the missile info
          * @type String
          */
-        this._shortName = dataJSON ? (dataJSON.shortName || _showMissingPropertyError(this, "shortName")) : null;
+        this._shortName = dataJSON ? (dataJSON.shortName || (this._fullName && this._fullName.split(" ")[0].substring(0, 5))) : null;
         /**
          * Whether this missile is supposed to be used against ships (and not fighters)
          * @type Boolean
@@ -1847,7 +1848,7 @@ define([
          * in a launch tube (i.e. this represents the length of the missile)
          * @type Number
          */
-        this._capacity = dataJSON ? (dataJSON.capacity || _showMissingPropertyError(this, "capacity")) : 0;
+        this._capacity = dataJSON ? (dataJSON.capacity || 1) : 0;
         /**
          * The actual length of a missile, i.e. the offset between two missiles behind each other
          * in the same launch tube, in meters.
@@ -1858,10 +1859,7 @@ define([
          * (enum MissileHomingMode) Determines the homing mechanism of the missile
          * @type Number
          */
-        this._homingMode = dataJSON ? utils.getSafeEnumValueForKey(MissileHomingMode, dataJSON.homingMode || _showMissingPropertyError(this, "homingMode"), null) : null;
-        if (dataJSON && (this._homingMode === null)) {
-            _showMissingPropertyError(this, "homingMode");
-        }
+        this._homingMode = dataJSON ? utils.getSafeEnumValueForKey(MissileHomingMode, dataJSON.homingMode, MissileHomingMode.NONE) : null;
         /**
          * Mass of the missile in kilograms. Determines the forces / torques it
          * exerts when launching and hitting targets and its acceleration.
@@ -1877,12 +1875,12 @@ define([
          * The velocity at which the missile is ejected from its launch tube, in m/s
          * @type Number
          */
-        this._launchVelocity = dataJSON ? (dataJSON.launchVelocity || _showMissingPropertyError(this, "launchVelocity")) : 0;
+        this._launchVelocity = dataJSON ? (dataJSON.launchVelocity || 0) : 0;
         /**
          * The thrusters of the missile are ignited this much time after launching, in milliseconds
          * @type Number
          */
-        this._ignitionTime = dataJSON ? (dataJSON.ignitionTime || _showMissingPropertyError(this, "ignitionTime")) : 0;
+        this._ignitionTime = dataJSON ? (dataJSON.ignitionTime || 0) : 0;
         /**
          * The forward acceleration of the missile when the main thruster is firing, in m/s^2
          * @type Number
@@ -1899,7 +1897,7 @@ define([
          * respective direction (yaw / pitch), in rad/s^2
          * @type Number
          */
-        this._angularAcceleration = dataJSON ? (Math.radians(dataJSON.angularAcceleration) || _showMissingPropertyError(this, "angularAcceleration")) : 0;
+        this._angularAcceleration = (this._homingMode !== MissileHomingMode.NONE) ? (dataJSON ? (Math.radians(dataJSON.angularAcceleration) || _showMissingPropertyError(this, "angularAcceleration")) : 0) : 0;
         /**
          * Determines the amount of torque the maneuvering thrusters can exert on the missile in their 
          * respective direction (yaw / pitch), in kg*rad/s^2
@@ -1911,7 +1909,7 @@ define([
          * and pitch angles towards the target are within this threshold (radians)
          * @type Number
          */
-        this._mainBurnAngleThreshold = dataJSON ? (Math.radians(dataJSON.mainBurnAngleThreshold) || _showMissingPropertyError(this, "mainBurnAngleThreshold")) : 0;
+        this._mainBurnAngleThreshold = (this._homingMode !== MissileHomingMode.NONE) ? (dataJSON ? (Math.radians(dataJSON.mainBurnAngleThreshold) || _showMissingPropertyError(this, "mainBurnAngleThreshold")) : 0) : 0;
         /**
          * The length of life of the missile in milliseconds, after which it will explode (harmlessly),
          * counted right from the launch.
@@ -1922,13 +1920,13 @@ define([
          * The amount of waiting time needed before being locked to the target while in range and within locking angle, in ms.
          * @type Number
          */
-        this._lockingTime = dataJSON ? (dataJSON.lockingTime || _showMissingPropertyError(this, "lockingTime")) : 0;
+        this._lockingTime = (this._homingMode !== MissileHomingMode.NONE) ? (dataJSON ? (dataJSON.lockingTime || 0) : 0) : 0;
         /**
          * The targeting computer can only lock on to the target (for homing missiles) while its bearing, both yaw and pitch is within this angle, 
          * measured from the estimated position of the missile when it will ignite, in radians.
          * @type Number
          */
-        this._lockingAngle = dataJSON ? ((dataJSON.lockingAngle !== undefined) ? Math.radians(dataJSON.lockingAngle) : _showMissingPropertyError(this, "lockingAngle")) : 0;
+        this._lockingAngle = (this._lockingTime > 0) ? (dataJSON ? (Math.radians(dataJSON.lockingAngle || 0)) : 0) : 0;
         /**
          * The amount of waiting time needed between launching two missiles, in ms.
          * @type Number
@@ -1943,24 +1941,24 @@ define([
          * The missile will explode and deal damage within this range of enemy ships, in meters.
          * @type Number
          */
-        this._proximityRange = dataJSON ? (dataJSON.proximityRange || _showMissingPropertyError(this, "proximityRange")) : 0;
+        this._proximityRange = dataJSON ? (dataJSON.proximityRange || 0) : 0;
         /**
          * The ratio of kinetic energy of the missile to transfer to the target upon exploding.
          * (the force and torque exerted on the target will be based on the momentum/angular momentum 
          * multiplied by this factor)
          * @type Number
          */
-        this._kineticFactor = dataJSON ? (dataJSON.kineticFactor || _showMissingPropertyError(this, "kineticFactor")) : 0;
+        this._kineticFactor = dataJSON ? (dataJSON.kineticFactor || 1) : 0;
         /**
          * The color of the light this missile emits as a light source.
          * @type Number[3]
          */
-        this._lightColor = dataJSON ? (dataJSON.lightColor || _showMissingPropertyError(this, "lightColor")) : null;
+        this._lightColor = dataJSON ? (dataJSON.lightColor || null) : null;
         /**
          * The intensity of the light this missile emits as a light source.
          * @type Number
          */
-        this._lightIntensity = dataJSON ? (dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity")) : 0;
+        this._lightIntensity = dataJSON ? (dataJSON.lightColor ? dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity") : 0) : 0;
         /**
          * The characteristics of the trail the missile leaves behind when using its main engine
          * @type TrailDescriptor
@@ -1981,7 +1979,7 @@ define([
          * The amount of score points to be added to the total score value of spacecrafts for each missile of this class equipped
          * @type Number
          */
-        this._scoreValue = dataJSON ? (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0) : 0;
+        this._scoreValue = dataJSON ? (dataJSON.scoreValue || 0) : 0;
         /**
          * The descriptor of the sound effect to be played when this missile launches.
          * @type Object
@@ -2007,6 +2005,10 @@ define([
         } else if (dataJSON) {
             _showMissingPropertyError(this, "thrusterSlots");
         }
+        /**
+         * @type Number[3]
+         */
+        this._enginePosition = (this._thrusterSlots && (this._thrusterSlots.length > 0)) ? this._thrusterSlots[0].positionVector : [0, 0, 0];
         t = 0.001 * (this._duration - this._ignitionTime);
         /**
          * Cached calculated value of the missile's nominal range
@@ -2309,7 +2311,7 @@ define([
      * @returns {Number[4]}
      */
     MissileClass.prototype.getEnginePosition = function () {
-        return this._thrusterSlots[0].positionVector;
+        return this._enginePosition;
     };
     /**
      * Returns the estimated time it would take for a missile of this class to reach

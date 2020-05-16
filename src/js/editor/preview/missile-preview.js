@@ -46,7 +46,7 @@ define([
              * @type String[]
              */
             CANVAS_UPDATE_PROPERTIES = [
-                "model", "shader", "texture",
+                "model", "modelScale", "shader", "texture",
                 "trail", "thrusterSlots"
             ],
             /**
@@ -151,7 +151,7 @@ define([
                 enginePosition, direction, length, count, segmentLength, dt, i;
         enginePosition = model.getPositionVector();
         vec.add3(enginePosition, vec.prodVec3Mat3Aux(_missileClass.getEnginePosition(), mat.prodScalingRotation3Aux(model.getScalingMatrix(), model.getOrientationMatrix())));
-        direction = vec.normal3(enginePosition);
+        direction = (vec.length3Squared(enginePosition) > 0) ? vec.normal3(enginePosition) : mat.getRowB43Neg(model.getOrientationMatrix());
         length = _missileClass.getLength() * 5;
         count = 3;
         segmentLength = length / count;

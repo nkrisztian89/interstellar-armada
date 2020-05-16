@@ -373,6 +373,12 @@ define([
         }
     }
     /**
+     * Updates the URL hash to describe the currently selected item
+     */
+    function _updateHash() {
+        location.hash = _selectedItem.type + "/" + _selectedItem.category + "/" + _selectedItem.name;
+    }
+    /**
      * Creates and returns a function that can be used when the name of an item is changed
      * @param {String} oldName
      * @param {String} newName
@@ -413,11 +419,13 @@ define([
                     application.showError("Name change not supported for this type of item!");
                     return;
             }
+            _selectedItem.name = newName;
             _itemElements[_selectedItem.type][_selectedItem.category][newName] = _itemElements[_selectedItem.type][_selectedItem.category][oldName];
             delete _itemElements[_selectedItem.type][_selectedItem.category][oldName];
             resources.executeForAllResources(nameChangeHandler);
             classes.executeForAllClasses(nameChangeHandler);
             environments.executeForAllEnvironments(nameChangeHandler);
+            _updateHash();
         }
     }
     /**
@@ -451,27 +459,31 @@ define([
      * @param {Element} [element] The HTML element (<span>) that references the item in the category list (if not given, will be looked up from the _itemElements object)
      */
     function _loadItem(type, name, category, element) {
+        var reference;
         _newItemDialog.hidden = true;
         _exportDialog.hidden = true;
-        if (_selectedItemElement) {
-            _selectedItemElement.classList.remove(SELECTED_CLASS);
+        reference = common.getItemReference({type, name, category}, true);
+        if (reference) {
+            if (_selectedItemElement) {
+                _selectedItemElement.classList.remove(SELECTED_CLASS);
+            }
+            _clearPreview();
+            _selectedItem.type = type;
+            _selectedItem.name = name;
+            _selectedItem.category = category;
+            _selectedItem.reference = reference;
+            _selectedItem.data = reference.getData();
+            common.removePopups();
+            _loadProperties();
+            _loadPreview();
+            if (!element) {
+                element = _itemElements[_selectedItem.type][_selectedItem.category][_selectedItem.name];
+            }
+            _expandList(_itemElements[_selectedItem.type][_selectedItem.category]._list, element);
+            _selectedItemElement = element;
+            _selectedItemElement.classList.add(SELECTED_CLASS);
+            _updateHash();
         }
-        _clearPreview();
-        _selectedItem.type = type;
-        _selectedItem.name = name;
-        _selectedItem.category = category;
-        _selectedItem.reference = common.getItemReference(_selectedItem);
-        _selectedItem.data = _selectedItem.reference.getData();
-        common.removePopups();
-        _loadProperties();
-        _loadPreview();
-        if (!element) {
-            element = _itemElements[_selectedItem.type][_selectedItem.category][_selectedItem.name];
-        }
-        _expandList(_itemElements[_selectedItem.type][_selectedItem.category]._list, element);
-        _selectedItemElement = element;
-        _selectedItemElement.classList.add(SELECTED_CLASS);
-        location.hash = type + "/" + category + "/" + name;
     }
     /**
      * Sets up the variables and handlers for the history back / forward buttons (to be called at startup)
@@ -483,14 +495,14 @@ define([
             var item;
             _historyIndex--;
             item = _itemHistory[_historyIndex];
-            _loadItem(item.type, item.name, item.category, item.element);
+            _loadItem(item.type, item.name, item.category);
             _updateHistoryButtons();
         };
         _forwardButton.onclick = function () {
             var item;
             _historyIndex++;
             item = _itemHistory[_historyIndex];
-            _loadItem(item.type, item.name, item.category, item.element);
+            _loadItem(item.type, item.name, item.category);
             _updateHistoryButtons();
         };
     }

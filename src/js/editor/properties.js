@@ -407,11 +407,10 @@ define([
             case descriptors.BaseType.ARRAY:
                 result = [];
                 count = 0;
-                if (propertyDescriptor.createDefaultElement) {
-                    count = 1;
-                }
                 if (type.getFixedLength()) {
                     count = type.getFixedLength();
+                } else if (type.getMinLength()) {
+                    count = type.getMinLength();
                 }
                 while (count > 0) {
                     result.push(_getDefaultValue(
@@ -511,11 +510,10 @@ define([
      * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this object property editor is displayed within a popup, give a reference to that popup here
      * @param {Function} changeHandler 
-     * @param {Boolean} [atLeastOneElementNeeded=false] For object arrays: When true, an empty array is not acceptable, at least one element always has to be set
-     * @param {Number} [fixedLength] For object arrays: The fixed length of the array, if it has one
+     * @param {Type} [arrayType] For object arrays: The type object created from the type descriptor of the array
      * @returns {Element}
      */
-    function _createObjectControl(topName, typeDescriptor, data, parent, topParent, parentPopup, changeHandler, atLeastOneElementNeeded, fixedLength) {
+    function _createObjectControl(topName, typeDescriptor, data, parent, topParent, parentPopup, changeHandler, arrayType) {
         var
                 i, button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
@@ -523,7 +521,9 @@ define([
                 type = new descriptors.Type(typeDescriptor),
                 indices, indexLabel, indexSelector,
                 addElementButton, removeElementButton, moveUpElementButton, moveDownElementButton, duplicateElementButton,
-                propertiesTable, getIndexText, addPropertiesTable, indexChangeHandler, updateButtonText, refreshIndices, update;
+                propertiesTable, getIndexText, addPropertiesTable, indexChangeHandler, updateButtonText, refreshIndices, update,
+                minCount = (arrayType ? arrayType.getMinLength() || 0 : 0),
+                maxCount = (arrayType ? arrayType.getMaxLength() || 0 : 0);
         getIndexText = function (index) {
             var instanceName = ((index >= 0) && data[index]) ? type.getInstanceName(data[index]) : "";
             return (index + 1).toString() + (instanceName ? ": " + instanceName : "");
@@ -550,13 +550,15 @@ define([
                 addPropertiesTable(index);
                 indexLabel.textContent = typeDescriptor.name;
                 indexSelector.hidden = false;
-                removeElementButton.hidden = !!atLeastOneElementNeeded && (data.length <= 1);
+                addElementButton.hidden = !!maxCount && (data.length >= maxCount);
+                removeElementButton.hidden = (data.length <= minCount);
                 duplicateElementButton.hidden = false;
                 moveUpElementButton.hidden = (data.length < 2) || (index === 0);
                 moveDownElementButton.hidden = (data.length < 2) || (index === (data.length - 1));
             } else {
                 indexLabel.textContent = EMPTY_LIST_TEXT;
                 indexSelector.hidden = true;
+                addElementButton.hidden = false;
                 removeElementButton.hidden = true;
                 duplicateElementButton.hidden = true;
                 moveUpElementButton.hidden = true;
@@ -651,7 +653,7 @@ define([
                 indexSelector.selectedIndex += 1;
                 indexChangeHandler();
             }, MOVE_DOWN_BUTTON_TOOLTIP);
-            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], fixedLength ?
+            _addPropertyEditorHeader(popup, [indexLabel, indexSelector], (arrayType && arrayType.getFixedLength()) ?
                     [moveUpElementButton, moveDownElementButton] :
                     [addElementButton, duplicateElementButton, moveUpElementButton, moveDownElementButton, removeElementButton]);
             if (data.length > 0) {
@@ -1338,7 +1340,7 @@ define([
                 case descriptors.BaseType.ARRAY:
                     elementType = type.getElementType();
                     if (elementType.getBaseType() === descriptors.BaseType.OBJECT) {
-                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler, propertyDescriptor.createDefaultElement, type.getFixedLength());
+                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler, type);
                     } else {
                         result = _createArrayControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler);
                     }
