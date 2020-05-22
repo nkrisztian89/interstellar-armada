@@ -790,7 +790,7 @@
             "name": "skybox",
             "vertexShaderSource": "billboard/skybox.vert",
             "fragmentShaderSource": "billboard/skybox.frag",
-            "blendMode": "none",
+            "blendMode": "add",
             "vertexAttributeRoles": {
                 "a_position": "position"
             }

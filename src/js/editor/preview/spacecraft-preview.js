@@ -98,6 +98,10 @@ define([
              */
             _spacecraft, _wireframeSpacecraft,
             /**
+             * @type Environment
+             */
+            _environment,
+            /**
              * A reference to the object storing the HTML elements to be used for the preview
              * @type Object
              */
@@ -264,7 +268,6 @@ define([
     function _load(params, orientationMatrix) {
         var
                 environmentChanged,
-                environment,
                 loadoutChanged,
                 shouldReload,
                 shadows,
@@ -284,13 +287,15 @@ define([
         if (environmentChanged || shouldReload) {
             shadows = graphics.isShadowMappingEnabled();
             if (params.environmentName) {
-                environment = environments.getEnvironment(params.environmentName);
-                if (environment.hasShadows()) {
+                _environment = environments.getEnvironment(params.environmentName);
+                if (_environment.hasShadows()) {
                     graphics.setShadowMapping();
                 } else {
                     graphics.setShadowMapping(false, false);
                 }
             } else {
+                _environment = null;
+                preview.getScene().setClearColor([0, 0, 0, 1]);
                 preview.getScene().setAmbientColor([0, 0, 0]);
                 for (i = 0; i < LIGHT_SOURCES.length; i++) {
                     preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
@@ -353,8 +358,8 @@ define([
                     preview.setupWireframeModel(model);
                 });
         if (params.environmentName && (environmentChanged || shouldReload)) {
-            environment.addToScene(preview.getScene());
-            if (environment.addParticleEffectsToScene(preview.getScene())) {
+            _environment.addToScene(preview.getScene());
+            if (_environment.addParticleEffectsToScene(preview.getScene())) {
                 resources.executeWhenReady(preview.startAnimating);
             }
         }
@@ -506,6 +511,9 @@ define([
     function _animate(dt) {
         if (_spacecraft) {
             _spacecraft.simulate(dt, SPACECRAFT_SIMULATE_PARAMS);
+        }
+        if (_environment) {
+            _environment.simulate();
         }
     }
     /**

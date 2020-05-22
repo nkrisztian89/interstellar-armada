@@ -78,6 +78,7 @@ define([
             SETTING_CLASS = "setting",
             SETTING_LABEL_CLASS = "settingLabel",
             CANVAS_BACKGROUND_COLOR = [0, 0, 0, 1],
+            AMBIENT_COLOR = [0, 0, 0],
             MANAGED_CONTEXT_NAME = "context",
             DEFAULT_DISTANCE_FACTOR = 1.5,
             DEFAULT_CAMERA_DIRECTION = [0, -1, 0],
@@ -651,6 +652,8 @@ define([
         } else {
             if (params.clearScene || shouldReload) {
                 _scene.clear(true);
+                _scene.setClearColor(CANVAS_BACKGROUND_COLOR);
+                _scene.setAmbientColor(AMBIENT_COLOR);
             }
         }
         // clear the previous render

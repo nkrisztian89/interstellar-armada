@@ -1486,6 +1486,13 @@ define([
         SIDE_BY_SIDE: "sideBySide"
     };
     /**
+     * Set the color to use when clearing the buffer (RGBA components).
+     * @param {Number[4]} value
+     */
+    Scene.prototype.setClearColor = function (value) {
+        this._clearColor = value;
+    };
+    /**
      * Set the color of ambient light in the scene
      * @param {Number[3]} value
      */

@@ -96,6 +96,7 @@ define([
         shouldReload = !params.preserve || params.reload;
         if (params.clearScene || shouldReload) {
             shadows = graphics.isShadowMappingEnabled();
+            preview.getScene().setClearColor([0, 0, 0, 1]);
             preview.getScene().setAmbientColor([0, 0, 0]);
             for (i = 0; i < LIGHT_SOURCES.length; i++) {
                 preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));

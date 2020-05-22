@@ -1767,50 +1767,10 @@
         }, {
             "name": "blueNebula",
             "particleEmitters": [{
-                    "dimensions": [800, 1000, 800],
-                    "velocity": 2,
-                    "velocitySpread": 3,
-                    "spawnNumber": 4,
-                    "shader": "particle",
-                    "texture": "explosion",
-                    "particleStates": [{
-                            "color": [0, 1, 1, 0],
-                            "size": 60
-                        }, {
-                            "color": [0, 0, 0.75, 1],
-                            "size": 80,
-                            "timeToReach": 1000
-                        }, {
-                            "color": [0, 0, 0.5, 0],
-                            "size": 120,
-                            "timeToReach": 3000
-                        }],
-                    "spawnTime": 100
-                }, {
-                    "dimensions": [800, 1000, 800],
-                    "velocity": 2,
-                    "velocitySpread": 3,
-                    "spawnNumber": 8,
-                    "shader": "particle",
-                    "texture": "explosion",
-                    "particleStates": [{
-                            "color": [0, 0, 1, 0],
-                            "size": 120
-                        }, {
-                            "color": [0, 0, 0.25, 1],
-                            "size": 140,
-                            "timeToReach": 2000
-                        }, {
-                            "color": [0, 0, 0.15, 0],
-                            "size": 180,
-                            "timeToReach": 3000
-                        }],
-                    "spawnTime": 100
-                }, {
                     "dimensions": [1000, 1200, 1000],
                     "velocity": 3,
                     "velocitySpread": 3,
-                    "spawnNumber": 2,
+                    "spawnNumber": 1,
                     "shader": "particle",
                     "texture": "paleBlueNebula",
                     "particleStates": [{

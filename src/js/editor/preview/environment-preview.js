@@ -34,7 +34,8 @@ define([
              * @type String[]
              */
             CANVAS_UPDATE_PROPERTIES = [
-                "skyboxes", "backgroundObjects", "dustClouds", "particleEffects"],
+                "color", "skyboxes", "backgroundObjects", "dustClouds", "particleEffects"
+            ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
              * @type String[]

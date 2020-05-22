@@ -2630,6 +2630,11 @@ define([
              * @type Editor~ItemDescriptor
              */
             ENVIRONMENT = {
+                COLOR: {
+                    name: "color",
+                    type: BaseType.COLOR4,
+                    defaultValue: [0, 0, 0, 0]
+                },
                 SKYBOXES: {
                     name: "skyboxes",
                     type: _createTypedArrayType(SKYBOX, {min: 1}),

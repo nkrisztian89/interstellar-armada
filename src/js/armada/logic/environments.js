@@ -463,6 +463,11 @@ define([
          */
         this._location = null;
         /**
+         * The background color. The scene the environment is added to will be cleared with this color.
+         * @tpye Number[4]
+         */
+        this._color = null;
+        /**
          * The list of skyboxes this environment contains as background.
          * @type Skybox[]
          */
@@ -533,6 +538,7 @@ define([
         this._dataJSON = dataJSON;
         this._name = dataJSON.name;
         this._location = dataJSON.location;
+        this._color = dataJSON.color || [0, 0, 0, 0];
         this._skyboxes = [];
         if (dataJSON.skyboxes) {
             for (i = 0; i < dataJSON.skyboxes.length; i++) {
@@ -633,6 +639,7 @@ define([
      */
     Environment.prototype.addToScene = function (scene) {
         var i;
+        scene.setClearColor(this._color);
         for (i = 0; i < this._skyboxes.length; i++) {
             this._skyboxes[i].addToScene(scene);
         }

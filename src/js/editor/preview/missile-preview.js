@@ -11,6 +11,7 @@
 /**
  * @param vec Used for vector operations
  * @param mat Used for matrix operations
+ * @param resources Used for waiting for resource load
  * @param lights Used for creating the light sources for the preview scene
  * @param graphics Used to acquire wireframe shader and update settings based on the environment
  * @param environments Used to access the environments
@@ -22,6 +23,7 @@
 define([
     "utils/vectors",
     "utils/matrices",
+    "modules/media-resources",
     "modules/scene/lights",
     "armada/graphics",
     "armada/logic/environments",
@@ -29,7 +31,7 @@ define([
     "editor/common",
     "editor/descriptors",
     "editor/preview/webgl-preview"
-], function (vec, mat, lights, graphics, environments, equipment, common, descriptors, preview) {
+], function (vec, mat, resources, lights, graphics, environments, equipment, common, descriptors, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -68,6 +70,10 @@ define([
              * @type Missile
              */
             _missile, _wireframeMissile,
+            /**
+             * @type Environment
+             */
+            _environment,
             /**
              * A reference to the object storing the HTML elements to be used for the preview
              * @type Object
@@ -184,7 +190,6 @@ define([
     function _load(params, orientationMatrix) {
         var
                 environmentChanged,
-                environment,
                 shouldReload,
                 shadows,
                 i;
@@ -199,13 +204,15 @@ define([
         if (environmentChanged || shouldReload) {
             shadows = graphics.isShadowMappingEnabled();
             if (params.environmentName) {
-                environment = environments.getEnvironment(params.environmentName);
-                if (environment.hasShadows()) {
+                _environment = environments.getEnvironment(params.environmentName);
+                if (_environment.hasShadows()) {
                     graphics.setShadowMapping();
                 } else {
                     graphics.setShadowMapping(false, false);
                 }
             } else {
+                _environment = null;
+                preview.getScene().setClearColor([0, 0, 0, 1]);
                 preview.getScene().setAmbientColor([0, 0, 0]);
                 for (i = 0; i < LIGHT_SOURCES.length; i++) {
                     preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
@@ -251,9 +258,9 @@ define([
             preview.setWireframeModel(_wireframeMissile.getVisualModel());
         }
         if (params.environmentName && (environmentChanged || shouldReload)) {
-            environment.addToScene(preview.getScene());
-            if (environment.addParticleEffectsToScene(preview.getScene())) {
-                preview.startAnimating();
+            _environment.addToScene(preview.getScene());
+            if (_environment.addParticleEffectsToScene(preview.getScene())) {
+                resources.executeWhenReady(preview.startAnimating);
             }
         }
         _environmentName = params.environmentName;
@@ -348,6 +355,14 @@ define([
         _elements.options.appendChild(preview.createSetting(_optionElements.engineStateEditor, "Thrusters:"));
     }
     /**
+     * The animation step
+     */
+    function _animate() {
+        if (_environment) {
+            _environment.simulate();
+        }
+    }
+    /**
      * For the WebGL preview context.
      */
     function _updateForRefresh() {
@@ -421,6 +436,7 @@ define([
     }, {
         clear: _clear,
         load: _load,
+        animate: _animate,
         updateForRefresh: _updateForRefresh,
         getInfo: _getInfo,
         clearSettingsForNewItem: _clearSettingsForNewItem,
