@@ -1696,6 +1696,24 @@ define([
                     defaultValue: 0
                 }
             },
+            _getDefaultJumpInDeceleration = function (data) {
+                return data.jumpOutAcceleration + " " + METERS_PER_SECOND_SQUARED.unit;
+            },
+            _getDefaultJumpInDuration = function (data) {
+                return data.jumpOutDuration + " " + MILLISECONDS.unit;
+            },
+            _getDefaultJumpInVelocity = function (data) {
+                return data.prepareVelocity + " " + METERS_PER_SECOND.unit;
+            },
+            _getDefaultJumpInScaling = function (data) {
+                return (data.jumpOutScaling || 1) + " " + SCALE.unit;
+            },
+            _getDefaultJumpInSound = function (data) {
+                return SOUND_DESCRIPTOR.getPreviewText(data.jumpOutSound);
+            },
+            _getDefaultJumpInExplosion = function (data) {
+                return data.jumpOutExplosion;
+            },
             /**
              * The descriptor object for jump engine classes, describing their properties
              * @type Editor~ItemDescriptor
@@ -1715,7 +1733,7 @@ define([
                 },
                 PREPARE_VELOCITY: {
                     name: "prepareVelocity",
-                    type: METERS_PER_SECOND
+                    type: NON_NEGATIVE_METERS_PER_SECOND
                 },
                 PREPARE_DURATION: {
                     name: "prepareDuration",
@@ -1731,15 +1749,16 @@ define([
                 },
                 JUMP_OUT_ACCELERATION: {
                     name: "jumpOutAcceleration",
-                    type: METERS_PER_SECOND_SQUARED
+                    type: POSITIVE_METERS_PER_SECOND_SQUARED
                 },
                 JUMP_OUT_DURATION: {
                     name: "jumpOutDuration",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: POSITIVE_MILLISECONDS
                 },
                 JUMP_OUT_SCALING: {
                     name: "jumpOutScaling",
-                    type: SCALE
+                    type: POSITIVE_SCALE,
+                    defaultValue: 1
                 },
                 JUMP_OUT_SOUND: {
                     name: "jumpOutSound",
@@ -1751,27 +1770,45 @@ define([
                 },
                 JUMP_IN_DECELERATION: {
                     name: "jumpInDeceleration",
-                    type: METERS_PER_SECOND_SQUARED
+                    type: POSITIVE_METERS_PER_SECOND_SQUARED,
+                    optional: true,
+                    getDerivedDefault: _getDefaultJumpInDeceleration,
+                    updateOnValidate: true
                 },
                 JUMP_IN_DURATION: {
                     name: "jumpInDuration",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: POSITIVE_MILLISECONDS,
+                    optional: true,
+                    getDerivedDefault: _getDefaultJumpInDuration,
+                    updateOnValidate: true
                 },
                 JUMP_IN_VELOCITY: {
                     name: "jumpInVelocity",
-                    type: METERS_PER_SECOND
+                    type: METERS_PER_SECOND,
+                    optional: true,
+                    getDerivedDefault: _getDefaultJumpInVelocity,
+                    updateOnValidate: true
                 },
                 JUMP_IN_SCALING: {
                     name: "jumpInScaling",
-                    type: SCALE
+                    type: POSITIVE_SCALE,
+                    optional: true,
+                    getDerivedDefault: _getDefaultJumpInScaling,
+                    updateOnValidate: true
                 },
                 JUMP_IN_SOUND: {
                     name: "jumpInSound",
-                    type: SOUND_DESCRIPTOR
+                    type: SOUND_DESCRIPTOR,
+                    optional: true,
+                    getDerivedDefault: _getDefaultJumpInSound,
+                    updateOnValidate: true
                 },
                 JUMP_IN_EXPLOSION: {
                     name: "jumpInExplosion",
-                    type: EXPLOSION_CLASS_REFERENCE
+                    type: EXPLOSION_CLASS_REFERENCE,
+                    optional: true,
+                    getDerivedDefault: _getDefaultJumpInExplosion,
+                    updateOnValidate: true
                 }
             },
             /**

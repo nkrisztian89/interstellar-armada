@@ -2787,16 +2787,7 @@
                 "name": "jump_swoosh",
                 "volume": 2
             },
-            "jumpOutExplosion": "fighterJumpFlash",
-            "jumpInDeceleration": 2500,
-            "jumpInDuration": 500,
-            "jumpInVelocity": 100,
-            "jumpInScaling": 3,
-            "jumpInSound": {
-                "name": "jump_swoosh",
-                "volume": 2
-            },
-            "jumpInExplosion": "fighterJumpFlash"
+            "jumpOutExplosion": "fighterJumpFlash"
         }, {
             "name": "imperialSmallShipMk1",
             "engageSound": {
@@ -2824,16 +2815,7 @@
                 "name": "jump_swoosh",
                 "volume": 10
             },
-            "jumpOutExplosion": "smallShipJumpFlash",
-            "jumpInDeceleration": 7000,
-            "jumpInDuration": 500,
-            "jumpInVelocity": 120,
-            "jumpInScaling": 2,
-            "jumpInSound": {
-                "name": "jump_swoosh",
-                "volume": 10
-            },
-            "jumpInExplosion": "smallShipJumpFlash"
+            "jumpOutExplosion": "smallShipJumpFlash"
         }, {
             "name": "imperialLargeShipMk1",
             "engageSound": {
@@ -2861,16 +2843,7 @@
                 "name": "jump_swoosh",
                 "volume": 20
             },
-            "jumpOutExplosion": "largeShipJumpFlash",
-            "jumpInDeceleration": 20000,
-            "jumpInDuration": 500,
-            "jumpInVelocity": 150,
-            "jumpInScaling": 1.5,
-            "jumpInSound": {
-                "name": "jump_swoosh",
-                "volume": 20
-            },
-            "jumpInExplosion": "largeShipJumpFlash"
+            "jumpOutExplosion": "largeShipJumpFlash"
         }, {
             "name": "pirateFighterMk1",
             "engageSound": {
@@ -2898,16 +2871,7 @@
                 "name": "jump_swoosh",
                 "volume": 2
             },
-            "jumpOutExplosion": "fighterJumpFlash",
-            "jumpInDeceleration": 2500,
-            "jumpInDuration": 500,
-            "jumpInVelocity": 100,
-            "jumpInScaling": 3,
-            "jumpInSound": {
-                "name": "jump_swoosh",
-                "volume": 2
-            },
-            "jumpInExplosion": "fighterJumpFlash"
+            "jumpOutExplosion": "fighterJumpFlash"
         }],
     "shieldClasses": [{
             "name": "imperialFighterMk1",

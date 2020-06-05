@@ -2939,12 +2939,12 @@ define([
          * The forward velocity that should be set as the speed target for the spacecraft for the jump preparation, in m/s.
          * @type Number
          */
-        this._prepareVelocity = dataJSON ? (dataJSON.prepareVelocity || _showMissingPropertyError(this, "prepareVelocity")) : 0;
+        this._prepareVelocity = dataJSON ? ((dataJSON.prepareVelocity !== undefined) ? dataJSON.prepareVelocity : _showMissingPropertyError(this, "prepareVelocity")) : 0;
         /**
          * The duration such a jump engine takes to initiate the jump, after eliminating drift vectors, in milliseconds.
          * @type Number
          */
-        this._prepareDuration = dataJSON ? (dataJSON.prepareDuration || _showMissingPropertyError(this, "prepareDuration")) : 0;
+        this._prepareDuration = dataJSON ? ((dataJSON.prepareDuration !== undefined) ? dataJSON.prepareDuration : _showMissingPropertyError(this, "prepareDuration")) : 0;
         /**
          * The descriptor of the sound effect to be played when a jump engine of this class is preparing to jump out.
          * @type Object
@@ -2964,7 +2964,7 @@ define([
          * The factor by which to stretch the jumping spacecraft along the Y axis at the end of the jump out sequence (linearly increasing from 1.0)
          * @type Number
          */
-        this._jumpOutScaling = dataJSON ? (dataJSON.jumpOutScaling || _showMissingPropertyError(this, "jumpOutScaling")) : 0;
+        this._jumpOutScaling = dataJSON ? (dataJSON.jumpOutScaling || 1) : 0;
         /**
          * The duration of the outward jump itself (from initiating the jump to the particle effect), in milliseconds.
          * @type Number
@@ -2984,32 +2984,32 @@ define([
          * The backward acceleration that is added to the spacecraft (by exerting an appropriate force) when initiating a jump in, in m/s.
          * @type Number
          */
-        this._jumpInDeceleration = dataJSON ? (dataJSON.jumpInDeceleration || _showMissingPropertyError(this, "jumpInDeceleration")) : 0;
+        this._jumpInDeceleration = dataJSON ? (dataJSON.jumpInDeceleration || this._jumpOutAcceleration) : 0;
         /**
          * The forward velocity that should the spacecraft should arrive to at the end of the jump in sequence, in m/s.
          * @type Number
          */
-        this._jumpInVelocity = dataJSON ? (dataJSON.jumpInVelocity || _showMissingPropertyError(this, "jumpInVelocity")) : 0;
+        this._jumpInVelocity = dataJSON ? ((dataJSON.jumpInVelocity !== undefined) ? dataJSON.jumpInVelocity : this._prepareVelocity) : 0;
         /**
          * The factor by which to stretch the jumping spacecraft along the Y axis at the beginning of the jump in sequence (linearly decreasing to 1.0)
          * @type Number
          */
-        this._jumpInScaling = dataJSON ? (dataJSON.jumpInScaling || _showMissingPropertyError(this, "jumpInScaling")) : 0;
+        this._jumpInScaling = dataJSON ? (dataJSON.jumpInScaling || this._jumpOutScaling) : 0;
         /**
          * The duration of the inward jump itself (from the particle effect to arrival), in milliseconds.
          * @type Number
          */
-        this._jumpInDuration = dataJSON ? (dataJSON.jumpInDuration || _showMissingPropertyError(this, "jumpInDuration")) : 0;
+        this._jumpInDuration = dataJSON ? (dataJSON.jumpInDuration || this._jumpOutDuration) : 0;
         /**
          * The descriptor of the sound effect to be played when the inward jump is initiated.
          * @type Object
          */
-        this._jumpInSound = dataJSON ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].jumpInSound", dataJSON.jumpInSound, SOUND_EFFECT_3D) : null;
+        this._jumpInSound = dataJSON ? (dataJSON.jumpInSound ? types.getVerifiedObject("JumpEngineClasses['" + this._name + "'].jumpInSound", dataJSON.jumpInSound, SOUND_EFFECT_3D) : this._jumpOutSound) : null;
         /**
          * The class of the explosion that is created at the beginning of the jump in sequence.
          * @type ExplosionClass
          */
-        this._jumpInExplosionClass = dataJSON ? (getExplosionClass(dataJSON.jumpInExplosion || _showMissingPropertyError(this, "jumpInExplosion")) || application.crash()) : null;
+        this._jumpInExplosionClass = dataJSON ? (dataJSON.jumpInExplosion ? getExplosionClass(dataJSON.jumpInExplosion) || application.crash() : this._jumpOutExplosionClass) : null;
         return true;
     };
     /**
