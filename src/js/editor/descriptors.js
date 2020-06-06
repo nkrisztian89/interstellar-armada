@@ -259,9 +259,10 @@ define([
                 integer: true,
                 min: 10
             },
-            PER_SECOND = {
+            POSITIVE_PER_SECOND = {
                 baseType: BaseType.NUMBER,
-                unit: Unit.PER_SECOND
+                unit: Unit.PER_SECOND,
+                min: 0.001
             },
             DEGREES = {
                 baseType: BaseType.NUMBER,
@@ -1822,11 +1823,14 @@ define([
                 },
                 FULL_NAME: {
                     name: "fullName",
-                    type: BaseType.STRING
+                    type: BaseType.STRING,
+                    optional: true,
+                    getDerivedDefault: _getName,
+                    updateOnValidate: true
                 },
                 CAPACITY: {
                     name: "capacity",
-                    type: NON_NEGATIVE_NUMBER
+                    type: POSITIVE_INTEGER
                 },
                 RECHARGE_DELAY: {
                     name: "rechargeDelay",
@@ -1834,15 +1838,16 @@ define([
                 },
                 RECHARGE_RATE: {
                     name: "rechargeRate",
-                    type: PER_SECOND
+                    type: POSITIVE_PER_SECOND
                 },
                 RECHARGE_COLOR: {
                     name: "rechargeColor",
-                    type: BaseType.COLOR3
+                    type: BaseType.COLOR3,
+                    defaultValue: [1, 1, 1]
                 },
                 RECHARGE_ANIMATION_DURATION: {
                     name: "rechargeAnimationDuration",
-                    type: NON_NEGATIVE_MILLISECONDS
+                    type: POSITIVE_MILLISECONDS
                 },
                 RECHARGE_START_SOUND: {
                     name: "rechargeStartSound",
@@ -1850,7 +1855,8 @@ define([
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
-                    type: NON_NEGATIVE_NUMBER
+                    type: NON_NEGATIVE_INTEGER,
+                    defaultValue: 0
                 }
             },
             /**
@@ -1872,11 +1878,15 @@ define([
                 },
                 IS_FIGHTER_TYPE: {
                     name: "isFighterType",
-                    type: BaseType.BOOLEAN
+                    type: BaseType.BOOLEAN,
+                    defaultValue: false
                 },
                 FULL_NAME: {
                     name: "fullName",
-                    type: BaseType.STRING
+                    type: BaseType.STRING,
+                    optional: true,
+                    getDerivedDefault: _getName,
+                    updateOnValidate: true
                 },
                 DESCRIPTION: {
                     name: "description",
@@ -1884,11 +1894,15 @@ define([
                 },
                 GOOD_AGAINST: {
                     name: "goodAgainst",
-                    type: SPACECRAFT_TYPES
+                    type: SPACECRAFT_TYPES,
+                    optional: true,
+                    defaultText: "none"
                 },
                 BAD_AGAINST: {
                     name: "badAgainst",
-                    type: SPACECRAFT_TYPES
+                    type: SPACECRAFT_TYPES,
+                    optional: true,
+                    defaultText: "none"
                 }
             },
             /**

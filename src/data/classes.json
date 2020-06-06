@@ -3058,18 +3058,13 @@
         }],
     "spacecraftTypes": [{
             "name": "container",
-            "isFighterType": false,
             "fullName": "Container",
-            "description": "",
-            "goodAgainst": [],
-            "badAgainst": []
+            "description": ""
         }, {
             "name": "drone",
             "isFighterType": true,
             "fullName": "Drone",
-            "description": "Unmanned space fighters were in widespread use within the military for most of the last century. Their superior maneuverability, cost-effectiveness and the low casualties greatly outweighed the effect of occasional disputes around the ethical and moral concerns regarding their use when it resulted in the loss of civilian lives. All changed when Earth was brought down to its knees as a skilled team of separatist hackers managed to break the thought-to-be-unbreakable safety protocols and took over the control of almost two thirds of the united government's space forces. Drones are still used in the military today, but to a much more limited degree.",
-            "goodAgainst": [],
-            "badAgainst": []
+            "description": "Unmanned space fighters were in widespread use within the military for most of the last century. Their superior maneuverability, cost-effectiveness and the low casualties greatly outweighed the effect of occasional disputes around the ethical and moral concerns regarding their use when it resulted in the loss of civilian lives. All changed when Earth was brought down to its knees as a skilled team of separatist hackers managed to break the thought-to-be-unbreakable safety protocols and took over the control of almost two thirds of the united government's space forces. Drones are still used in the military today, but to a much more limited degree."
         }, {
             "name": "interceptor",
             "isFighterType": true,
@@ -3107,46 +3102,39 @@
             "badAgainst": ["corvette", "destroyer", "cruiser", "battleship", "frigate", "interceptor"]
         }, {
             "name": "torpedoBoat",
-            "isFighterType": false,
             "fullName": "Torpedo boat",
             "description": "Along with armed transports, torpedo boats are the smallest military spacecrafts larger than fighters. Unlike the former, these ships carry a large amount of deadly torpedoes instead of boarding parties in their bay, making them a dangerous opponent against even the largest enemy warships. However as they lack anti-fighter defences, if left unescorted, they are easily taken out by enemy interceptors, bombers or heavy fighters since due to their low maneuverability, they provide an easy target.",
             "goodAgainst": ["corvette", "frigate", "cruiser"],
             "badAgainst": ["reconFighter", "heavyFighter", "destroyer"]
         }, {
             "name": "corvette",
-            "isFighterType": false,
             "fullName": "Corvette",
             "description": "Corvettes are the smallest and most lightly armored real warships of contemporary fleets. Due to the limited cargo capacity given their small hull, these ships cannot be sent on long missions alone. They are often found in local patrols and as escort ships in fleets, as their weaponry is usually most effective against fighters and bombers. They are not powerful enough to engage larger enemy warships but can provide supportive precision fire.",
             "goodAgainst": ["reconFighter", "heavyFighter", "interceptor", "bomber", "torpedoBoat", "multiroleFighter"],
             "badAgainst": ["frigate", "destroyer", "cruiser", "battleship"]
         }, {
             "name": "frigate",
-            "isFighterType": false,
             "fullName": "Frigate",
             "description": "Frigates are the first warships in size that are big enough to carry a cosiderable amount of supplies and mount devastating firepower. Due to this, their usual weapon arrangement focuses on getting most out of this fact and enables them to successully take on larger ships at the expence of worse defence against fighters, for which they rely on escort. Leading strike teams, these ships can be utilized for longer term missions, engaging critical targets ahead of the larger force, disrupting enemy supply lines or securing poorly defended sectors.",
             "goodAgainst": ["corvette", "destroyer", "cruiser"],
             "badAgainst": ["reconFighter", "heavyFighter", "interceptor", "bomber", "torpedoBoat"]
         }, {
             "name": "destroyer",
-            "isFighterType": false,
             "fullName": "Destroyer",
             "description": "Destroyers, serving as the lead for battle groups, are the most versatile of all warships. Their large size provides a lot of options for configuring their equipment: they can balance fair anti-fighter and anti-ship firepower or lean towards one side, but can also be equipped for long-range artillery fire or provide larger hangar bays for fighters, bombers or transports. Destroyers, depending on their configuration, are suitable for all types of missions and against most enemy craft up to their size. Without proper escort, concentrated fire from anti-ship weapons can wear them out, and the loss of a destroyer can easily change the tide in a battle. ",
             "goodAgainst": ["heavyFighter", "torpedoBoat", "corvette", "multiroleFighter"],
             "badAgainst": ["bomber", "frigate", "cruiser", "battleship"]
         }, {
             "name": "cruiser",
-            "isFighterType": false,
             "fullName": "Cruiser",
             "description": "Cruisers are currently the largest warships in service, representing the pinnacle of starship design and engineering. They are used as flagships of whole fleets, in the role of remote command center, base of operations for a sector or leading planetary sieges or defences. Their large size and advanced weaponry enables them to safely house a large amount of supplies, fighter craft, transports, ground assault forces or equipment and resources for establishing new planetary outposts. They have the strongest armor and shields and no compromises need to be taken when mounting them with anti-fighter and anti-ship weaponry. Due to their important role, they are also among the priority targets for the enemy and when battling a larger force, it is crucial to defend them well against torpedoes and anti-ship fire.",
             "goodAgainst": ["corvette", "destroyer"],
             "badAgainst": ["torpedoBoat"]
         }, {
             "name": "battleship",
-            "isFighterType": false,
             "fullName": "Battleship",
             "description": "",
-            "goodAgainst": ["corvette", "destroyer", "cruiser"],
-            "badAgainst": []
+            "goodAgainst": ["corvette", "destroyer", "cruiser"]
         }],
     "spacecraftClasses": [{
             "name": "container",

@@ -458,6 +458,14 @@ define([
                 (((typeof classInstance._name) === "string") ?
                         "The error happened while initializing '" + classInstance._name + "'" : ""));
     }
+    function _missingNumber(classInstance, propertyName) {
+        _showMissingPropertyError(classInstance, propertyName);
+        return 0;
+    }
+    function _missingString(classInstance, propertyName) {
+        _showMissingPropertyError(classInstance, propertyName);
+        return "";
+    }
     /**
      * Marks the sound effect resource corresponding to the passed descriptor for loading and saves a reference to it within the descriptor
      * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
@@ -3170,32 +3178,32 @@ define([
          * The full name of this class as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
+        this._fullName = dataJSON ? (dataJSON.fullName || this.getName()) : null;
         /**
          * The overall maximum capacity (amount of damage absorbed when fully charged)
          * @type Number
          */
-        this._capacity = dataJSON ? (dataJSON.capacity || _showMissingPropertyError(this, "capacity")) : 0;
+        this._capacity = dataJSON ? (dataJSON.capacity || _missingNumber(this, "capacity")) : 0;
         /**
          * The shield starts recharging this much time after it gets hit, in milliseconds.
          * @type Number
          */
-        this._rechargeDelay = dataJSON ? (dataJSON.rechargeDelay || _showMissingPropertyError(this, "rechargeDelay")) : 0;
+        this._rechargeDelay = dataJSON ? ((dataJSON.rechargeDelay !== undefined) ? dataJSON.rechargeDelay : _missingNumber(this, "rechargeDelay")) : 0;
         /**
          * While recharging, the shield regains this much capacity over one second.
          * @type Number
          */
-        this._rechargeRate = dataJSON ? (dataJSON.rechargeRate || _showMissingPropertyError(this, "rechargeRate")) : 0;
+        this._rechargeRate = dataJSON ? (dataJSON.rechargeRate || _missingNumber(this, "rechargeRate")) : 0;
         /**
          * Color of the recharge start animation.
          * @type Number[3]
          */
-        this._rechargeColor = dataJSON ? (dataJSON.rechargeColor || _showMissingPropertyError(this, "rechargeColor")) : null;
+        this._rechargeColor = dataJSON ? (dataJSON.rechargeColor || [1, 1, 1]) : null;
         /**
          * The duration of the animation displayed at the start of shield recharge.
          * @type Number
          */
-        this._rechargeAnimationDuration = dataJSON ? (dataJSON.rechargeAnimationDuration || _showMissingPropertyError(this, "rechargeAnimationDuration")) : 0;
+        this._rechargeAnimationDuration = dataJSON ? (dataJSON.rechargeAnimationDuration || _missingNumber(this, "rechargeAnimationDuration")) : 0;
         /**
          * The descriptor of the sound effect to be played when a shield of this class starts to recharge.
          * @type Object
@@ -3205,7 +3213,7 @@ define([
          * The amount of score points to be added to the total score value of spacecrafts that have a shield of this class equipped
          * @type Number
          */
-        this._scoreValue = dataJSON ? (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0) : 0;
+        this._scoreValue = dataJSON ? (dataJSON.scoreValue || 0) : 0;
         return true;
     };
     /**
@@ -3296,16 +3304,16 @@ define([
         /**
          * @type Boolean
          */
-        this._isFighterType = dataJSON ? (typeof (dataJSON.isFighterType) === "boolean" ? dataJSON.isFighterType : _showMissingPropertyError(this, "isFighterType")) : false;
+        this._isFighterType = dataJSON ? (dataJSON.isFighterType === true) : false;
         /**
          * The full name of this type as displayed in the game.
          * @type String
          */
-        this._fullName = dataJSON ? (dataJSON.fullName || _showMissingPropertyError(this, "fullName")) : null;
+        this._fullName = dataJSON ? (dataJSON.fullName || this.getName()) : null;
         /**
          * @type String
          */
-        this._description = dataJSON ? ((typeof dataJSON.description) === "string" ? dataJSON.description : _showMissingPropertyError(this, "description")) : null;
+        this._description = dataJSON ? ((typeof dataJSON.description) === "string" ? dataJSON.description : _missingString(this, "description")) : null;
         /**
          * @type String[]
          */
