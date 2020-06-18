@@ -1934,6 +1934,9 @@ define([
                     }
                 }
             },
+            _isArray = function (data) {
+                return data.count > 1;
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -1943,29 +1946,18 @@ define([
                 properties: {
                     POSITION: {
                         name: "position",
-                        type: BaseType.VECTOR3,
-                        optional: true,
-                        defaultValue: [0, 0, 0]
-                    },
-                    ARRAY: {
-                        name: "array",
-                        type: BaseType.BOOLEAN,
-                        defaultValue: false
+                        type: BaseType.VECTOR3
                     },
                     COUNT: {
                         name: "count",
                         type: POSITIVE_INTEGER,
-                        optional: true
+                        defaultValue: 1
                     },
-                    START_POSITION: {
-                        name: "startPosition",
+                    VECTOR: {
+                        name: "vector",
                         type: BaseType.VECTOR3,
-                        optional: true
-                    },
-                    TRANSLATION_VECTOR: {
-                        name: "translationVector",
-                        type: BaseType.VECTOR3,
-                        optional: true
+                        isValid: _isArray,
+                        isRequired: _isArray
                     },
                     ROTATIONS: {
                         name: "rotations",
@@ -1977,21 +1969,24 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            MISSILE_TUBE_ARRAY = {
+            MISSILE_TUBE = {
                 baseType: BaseType.OBJECT,
-                name: "MissileTubeArray",
+                name: "MissileTube",
                 properties: {
-                    START_POSITION: {
-                        name: "startPosition",
+                    POSITION: {
+                        name: "position",
                         type: BaseType.VECTOR3
                     },
-                    TRANSLATION_VECTOR: {
-                        name: "translationVector",
-                        type: BaseType.VECTOR3
+                    VECTOR: {
+                        name: "vector",
+                        type: BaseType.VECTOR3,
+                        isValid: _isArray,
+                        isRequired: _isArray
                     },
                     COUNT: {
                         name: "count",
-                        type: POSITIVE_INTEGER
+                        type: POSITIVE_INTEGER,
+                        defaultValue: 1
                     }
                 }
             },
@@ -2002,14 +1997,9 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "MissileLauncher",
                 properties: {
-                    TUBE_POSITIONS: {
-                        name: "tubePositions",
-                        type: _createTypedArrayType(BaseType.VECTOR3)
-                    },
-                    TUBE_ARRAYS: {
-                        name: "tubeArrays",
-                        type: _createTypedArrayType(MISSILE_TUBE_ARRAY),
-                        optional: true
+                    TUBES: {
+                        name: "tubes",
+                        type: _createTypedArrayType(MISSILE_TUBE)
                     },
                     SIZE: {
                         name: "size",
@@ -2017,7 +2007,7 @@ define([
                     },
                     CAPACITY: {
                         name: "capacity",
-                        type: NON_NEGATIVE_INTEGER
+                        type: POSITIVE_INTEGER
                     },
                     SALVO: {
                         name: "salvo",
@@ -3835,8 +3825,7 @@ define([
                     ROTATIONS: {
                         name: "rotations",
                         type: BaseType.ROTATIONS,
-                        optional: true,
-                        defaultText: "none"
+                        optional: true
                     },
                     LOADOUT: {
                         name: "loadout",

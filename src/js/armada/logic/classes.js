@@ -466,6 +466,14 @@ define([
         _showMissingPropertyError(classInstance, propertyName);
         return "";
     }
+    function _missingVector3(classInstance, propertyName) {
+        _showMissingPropertyError(classInstance, propertyName);
+        return [0, 0, 0];
+    }
+    function _missingArray(classInstance, propertyName) {
+        _showMissingPropertyError(classInstance, propertyName);
+        return [];
+    }
     /**
      * Marks the sound effect resource corresponding to the passed descriptor for loading and saves a reference to it within the descriptor
      * @param {Object} soundEffectDescriptor An object with the structure defined by SOUND_EFFECT_3D
@@ -3397,7 +3405,7 @@ define([
          * The translation matrix for the position of the slot relative to the ship.
          * @type Float32Array
          */
-        this.positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || _showMissingPropertyError(this, "position"))) : null;
+        this.positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || _missingVector3(this, "position"))) : null;
         /**
          * The rotation matrix describing the orientation of the weapon slot 
          * relative to the ship.
@@ -3413,7 +3421,7 @@ define([
      * @param {Object} [dataJSON]
      */
     function MissileLauncherDescriptor(dataJSON) {
-        var i, j, tubeArray;
+        var i, j, tube;
         /**
          * The translation vectors for the positions of the tubes of the launcher,
          * relative to the ship.
@@ -3422,17 +3430,16 @@ define([
          * has the amount of capacity defined for the launcher)
          * @type Array.<Number[3]>
          */
-        this.tubePositions = dataJSON ? ((dataJSON.tubePositions && []) || _showMissingPropertyError(this, "tubePositions")) : null;
+        this.tubePositions = dataJSON ? ((dataJSON.tubes ? [] : _missingArray(this, "tubes"))) : null;
         if (this.tubePositions) {
-            for (i = 0; i < dataJSON.tubePositions.length; i++) {
-                this.tubePositions.push(dataJSON.tubePositions[i].slice());
-            }
-            if (dataJSON.tubeArrays) {
-                for (i = 0; i < dataJSON.tubeArrays.length; i++) {
-                    tubeArray = dataJSON.tubeArrays[i];
-                    for (j = 0; j < tubeArray.count; j++) {
-                        this.tubePositions.push(vec.sum3(tubeArray.startPosition, vec.scaled3Aux(tubeArray.translationVector, j)));
+            for (i = 0; i < dataJSON.tubes.length; i++) {
+                tube = dataJSON.tubes[i];
+                if (tube.count > 1) {
+                    for (j = 0; j < tube.count; j++) {
+                        this.tubePositions.push(vec.sum3(tube.position, vec.scaled3Aux(tube.vector, j)));
                     }
+                } else {
+                    this.tubePositions.push(tube.position);
                 }
             }
         }
@@ -4595,11 +4602,11 @@ define([
         this._weaponSlots = (otherSpacecraftClass && !dataJSON.weaponSlots) ? otherSpacecraftClass._weaponSlots : [];
         if (dataJSON.weaponSlots) {
             for (i = 0; i < dataJSON.weaponSlots.length; i++) {
-                if (dataJSON.weaponSlots[i].array) {
-                    startPosition = dataJSON.weaponSlots[i].startPosition || _showMissingPropertyError(this, "weaponSlot array startPosition");
-                    translationVector = dataJSON.weaponSlots[i].translationVector || _showMissingPropertyError(this, "weaponSlot array translationVector");
+                if (dataJSON.weaponSlots[i].count > 1) {
+                    startPosition = dataJSON.weaponSlots[i].position || _missingVector3(this, "weaponSlot array position");
+                    translationVector = dataJSON.weaponSlots[i].vector || _missingVector3(this, "weaponSlot array vector");
                     rotations = dataJSON.weaponSlots[i].rotations;
-                    count = dataJSON.weaponSlots[i].count || _showMissingPropertyError(this, "weaponSlot array count");
+                    count = dataJSON.weaponSlots[i].count;
                     for (j = 0; j < count; j++) {
                         this._weaponSlots.push(new WeaponSlot({
                             position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),

@@ -42,6 +42,7 @@ define([
             DEFAULT_PROPERTY_TEXT = "default",
             DERIVED_PROPERTY_TEXT = "derived",
             UNSET_PROPERTY_TEXT = "not set",
+            NONE_PROPERTY_TEXT = "none",
             UNKNOWN_PROPERTY_TEXT = "unknown",
             SET_PROPERTY_BUTTON_CAPTION = "set",
             UNSET_PROPERTY_BUTTON_CAPTION = "x",
@@ -1174,7 +1175,7 @@ define([
      */
     function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row) {
         var result = document.createElement("div"),
-                labelText, label, button, type, optional, setProperty, limit = false;
+                labelText, label, button, type = new descriptors.Type(propertyDescriptor.type), optional, setProperty, limit = false;
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, null, _item.name));
         if ((!parent || (parent === _item.data)) && _basedOn) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
@@ -1185,7 +1186,6 @@ define([
             } else {
                 if (typeof propertyDescriptor.defaultValue === "number") {
                     labelText = propertyDescriptor.defaultValue.toString();
-                    type = new descriptors.Type(propertyDescriptor.type);
                     if (type.getUnit()) {
                         labelText += " " + type.getUnit();
                     }
@@ -1222,7 +1222,11 @@ define([
         } else if (propertyDescriptor.defaultDerived) {
             label = _createDefaultControl(DERIVED_PROPERTY_TEXT);
         } else if (optional) {
-            label = _createDefaultControl(UNSET_PROPERTY_TEXT);
+            if (type.getBaseType() === descriptors.BaseType.ROTATIONS) {
+                label = _createDefaultControl(NONE_PROPERTY_TEXT);
+            } else {
+                label = _createDefaultControl(UNSET_PROPERTY_TEXT);
+            }
         } else {
             label = _createDefaultControl(UNKNOWN_PROPERTY_TEXT);
         }

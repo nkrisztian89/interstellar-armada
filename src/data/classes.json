@@ -3217,11 +3217,15 @@
                     "position": [-22, 9, 1.85]
                 }],
             "missileLaunchers": [{
-                    "tubePositions": [[11, 18, 6]],
+                    "tubes": [{
+                            "position": [11, 18, 6]
+                        }],
                     "size": "medium",
                     "capacity": 10
                 }, {
-                    "tubePositions": [[-11, 18, 6]],
+                    "tubes": [{
+                            "position": [-11, 18, 6]
+                        }],
                     "size": "medium",
                     "capacity": 10
                 }],
@@ -4250,72 +4254,76 @@
             "blinkers": [],
             "scoreValue": 80,
             "missileLaunchers": [{
-                    "tubePositions": [[20.4, 15, 0]],
+                    "tubes": [{
+                            "position": [20.4, 15, 0]
+                        }],
                     "size": "large",
                     "capacity": 4
                 }, {
-                    "tubePositions": [[-20.4, 15, 0]],
+                    "tubes": [{
+                            "position": [-20.4, 15, 0]
+                        }],
                     "size": "large",
                     "capacity": 4
                 }, {
-                    "tubePositions": [[12, 3, 12]],
+                    "tubes": [{
+                            "position": [12, 3, 12]
+                        }],
                     "size": "large",
                     "capacity": 4
                 }, {
-                    "tubePositions": [[-12, 3, 12]],
+                    "tubes": [{
+                            "position": [-12, 3, 12]
+                        }],
                     "size": "large",
                     "capacity": 4
                 }, {
-                    "tubePositions": [],
-                    "tubeArrays": [{
-                            "startPosition": [16.658, 3.4, 17.4979],
-                            "translationVector": [1.618, -1.6, 1.17557],
+                    "tubes": [{
+                            "position": [16.658, 3.4, 17.4979],
+                            "vector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }, {
-                            "startPosition": [15.3531, 1, 19.2939],
-                            "translationVector": [1.618, -1.6, 1.17557],
+                            "position": [15.3531, 1, 19.2939],
+                            "vector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }],
                     "size": "small",
                     "capacity": 8,
                     "salvo": 6
                 }, {
-                    "tubePositions": [],
-                    "tubeArrays": [{
-                            "startPosition": [-16.658, 3.4, 17.4979],
-                            "translationVector": [-1.618, -1.6, 1.17557],
+                    "tubes": [{
+                            "position": [-16.658, 3.4, 17.4979],
+                            "vector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }, {
-                            "startPosition": [-15.3531, 1, 19.2939],
-                            "translationVector": [-1.618, -1.6, 1.17557],
+                            "position": [-15.3531, 1, 19.2939],
+                            "vector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }],
                     "size": "small",
                     "capacity": 8,
                     "salvo": 6
                 }, {
-                    "tubePositions": [],
-                    "tubeArrays": [{
-                            "startPosition": [18.66823, 3.4, 14.73108],
-                            "translationVector": [1.618, -1.6, 1.17557],
+                    "tubes": [{
+                            "position": [18.66823, 3.4, 14.73108],
+                            "vector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }, {
-                            "startPosition": [19.973115, 1, 12.93506],
-                            "translationVector": [1.618, -1.6, 1.17557],
+                            "position": [19.973115, 1, 12.93506],
+                            "vector": [1.618, -1.6, 1.17557],
                             "count": 6
                         }],
                     "size": "small",
                     "capacity": 8,
                     "salvo": 6
                 }, {
-                    "tubePositions": [],
-                    "tubeArrays": [{
-                            "startPosition": [-18.66823, 3.4, 14.73108],
-                            "translationVector": [-1.618, -1.6, 1.17557],
+                    "tubes": [{
+                            "position": [-18.66823, 3.4, 14.73108],
+                            "vector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }, {
-                            "startPosition": [-19.973115, 1, 12.93506],
-                            "translationVector": [-1.618, -1.6, 1.17557],
+                            "position": [-19.973115, 1, 12.93506],
+                            "vector": [-1.618, -1.6, 1.17557],
                             "count": 6
                         }],
                     "size": "small",
@@ -4488,55 +4496,47 @@
             "blinkers": [],
             "scoreValue": 100,
             "weaponSlots": [{
-                    "position": [7, -6, 0.7],
-                    "array": false
+                    "position": [7, -6, 0.7]
                 }, {
-                    "position": [-7, -6, 0.7],
-                    "array": false
+                    "position": [-7, -6, 0.7]
                 }, {
-                    "position": [4, 3, -1],
-                    "array": false
+                    "position": [4, 3, -1]
                 }, {
-                    "position": [-4, 3, -1],
-                    "array": false
+                    "position": [-4, 3, -1]
                 }, {
                     "position": [4, 3, 1],
-                    "array": false,
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
                         }]
                 }, {
                     "position": [-4, 3, 1],
-                    "array": false,
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
                         }]
                 }],
             "missileLaunchers": [{
-                    "tubePositions": [],
-                    "tubeArrays": [{
-                            "startPosition": [2.81, 6.175, 0.325],
-                            "translationVector": [0.486, -0.4, 0],
+                    "tubes": [{
+                            "position": [2.81, 6.175, 0.325],
+                            "vector": [0.486, -0.4, 0],
                             "count": 5
                         }, {
-                            "startPosition": [2.81, 6.175, -0.325],
-                            "translationVector": [0.486, -0.4, 0],
+                            "position": [2.81, 6.175, -0.325],
+                            "vector": [0.486, -0.4, 0],
                             "count": 5
                         }],
                     "size": "small",
                     "capacity": 8,
                     "salvo": 5
                 }, {
-                    "tubePositions": [],
-                    "tubeArrays": [{
-                            "startPosition": [-2.81, 6.175, 0.325],
-                            "translationVector": [-0.486, -0.4, 0],
+                    "tubes": [{
+                            "position": [-2.81, 6.175, 0.325],
+                            "vector": [-0.486, -0.4, 0],
                             "count": 5
                         }, {
-                            "startPosition": [-2.81, 6.175, -0.325],
-                            "translationVector": [-0.486, -0.4, 0],
+                            "position": [-2.81, 6.175, -0.325],
+                            "vector": [-0.486, -0.4, 0],
                             "count": 5
                         }],
                     "size": "small",
@@ -6111,47 +6111,41 @@
                     "size": [1650, 900, 300]
                 }],
             "weaponSlots": [{
-                    "array": true,
                     "count": 3,
-                    "startPosition": [720, -150, 0],
-                    "translationVector": [0, 400, 0],
+                    "position": [720, -150, 0],
+                    "vector": [0, 400, 0],
                     "rotations": [{
                             "axis": "Z",
                             "degrees": 90
                         }]
                 }, {
-                    "array": true,
                     "count": 3,
-                    "startPosition": [-720, -150, 0],
-                    "translationVector": [0, 400, 0],
+                    "position": [-720, -150, 0],
+                    "vector": [0, 400, 0],
                     "rotations": [{
                             "axis": "Z",
                             "degrees": -90
                         }]
                 }, {
-                    "array": true,
                     "count": 3,
-                    "startPosition": [60, -150, 410],
-                    "translationVector": [0, 400, 0]
+                    "position": [60, -150, 410],
+                    "vector": [0, 400, 0]
                 }, {
-                    "array": true,
                     "count": 3,
-                    "startPosition": [-60, -150, 410],
-                    "translationVector": [0, 400, 0]
+                    "position": [-60, -150, 410],
+                    "vector": [0, 400, 0]
                 }, {
-                    "array": true,
                     "count": 3,
-                    "startPosition": [60, -150, -410],
-                    "translationVector": [0, 400, 0],
+                    "position": [60, -150, -410],
+                    "vector": [0, 400, 0],
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
                         }]
                 }, {
-                    "array": true,
                     "count": 3,
-                    "startPosition": [-60, -150, -410],
-                    "translationVector": [0, 400, 0],
+                    "position": [-60, -150, -410],
+                    "vector": [0, 400, 0],
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
@@ -6925,29 +6919,32 @@
             "blinkers": [],
             "scoreValue": 40,
             "weaponSlots": [{
-                    "position": [0, 5, -26],
-                    "array": false
+                    "position": [0, 5, -26]
                 }, {
                     "position": [48.44, -1, -6.42],
-                    "array": false,
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 80
                         }]
                 }, {
                     "position": [-48.44, -1, -6.42],
-                    "array": false,
                     "rotations": [{
                             "axis": "Y",
                             "degrees": -80
                         }]
                 }],
             "missileLaunchers": [{
-                    "tubePositions": [[0, 5, -9]],
+                    "tubes": [{
+                            "position": [0, 5, -9]
+                        }],
                     "size": "medium",
                     "capacity": 10
                 }, {
-                    "tubePositions": [[2.9, 5, -9], [-2.9, 5, -9]],
+                    "tubes": [{
+                            "position": [2.9, 5, -9]
+                        }, {
+                            "position": [-2.9, 5, -9]
+                        }],
                     "size": "small",
                     "capacity": 14
                 }],
