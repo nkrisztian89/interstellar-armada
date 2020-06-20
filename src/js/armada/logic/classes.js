@@ -3716,12 +3716,12 @@ define([
          * Whether the position of the view is changeable by the player.
          * @type Boolean
          */
-        this._movable = dataJSON ? ((typeof dataJSON.movable) === "boolean" ? dataJSON.movable : _showMissingPropertyError(this, "movable")) : false;
+        this._movable = dataJSON ? (dataJSON.movable === true) : false;
         /**
          * Whether the direction of the view is changeable by the player.
          * @type Boolean
          */
-        this._turnable = dataJSON ? ((typeof dataJSON.turnable) === "boolean" ? dataJSON.turnable : _showMissingPropertyError(this, "turnable")) : false;
+        this._turnable = dataJSON ? (dataJSON.turnable === true) : false;
         /**
          * The translation matrix describing the relative position to the object.
          * @type Float32Array
@@ -3743,17 +3743,11 @@ define([
          */
         this._betaRange = (dataJSON && this._fps) ? (dataJSON.betaRange || [-90, 90]) : [0, 0];
         /**
-         * The initial (horizontal) span of the view in degrees. Null value means that a default value should be asked from the logic module
+         * The initial (horizontal) span of the view in degrees. Zero value means that a default value should be asked from the logic module
          * upon the creation of a camera configuration.
          * @type Number
          */
         this._span = dataJSON ? (dataJSON.span || 0) : 0;
-        /**
-         * The minimum and maximum of the (horizontal) span of the view in degrees. Null value means that a default value should be asked 
-         * from the logic module upon the creation of a camera configuration.
-         * @type Number[2]
-         */
-        this._spanRange = dataJSON ? (dataJSON.spanRange || null) : null;
         /**
          * If given, the movement of the camera using a configuration created based on this view will be limited to the specified ranges on 
          * the 3 axes, respectively. It is possible to specify confinement on select axes only, in which case null should be passed as range 
@@ -3828,12 +3822,6 @@ define([
      */
     GenericView.prototype.getSpan = function () {
         return this._span;
-    };
-    /**
-     * @returns {Number[2]|null}
-     */
-    GenericView.prototype.getSpanRange = function () {
-        return this._spanRange;
     };
     /**
      * @returns {Boolean}
@@ -3912,7 +3900,6 @@ define([
         this._orientationMatrix = null;
         this._alphaRange = null;
         this._betaRange = null;
-        this._spanRange = null;
         this._confines = null;
     };
     // ##############################################################################
@@ -3923,30 +3910,31 @@ define([
      * @param {Object} dataJSON
      */
     function ObjectView(dataJSON) {
+        var lookAt;
         GenericView.call(this, dataJSON);
+        lookAt = utils.getSafeEnumValue(ObjectViewLookAtMode, dataJSON.lookAt, ObjectViewLookAtMode.NONE);
         /**
          * Whether this view is an aiming view, meaning it points towards the same direction as the weapons of the followed object (spacecraft).
          * @type Boolean
          */
-        this._isAimingView = (typeof dataJSON.isAimingView) === "boolean" ? dataJSON.isAimingView : _showMissingPropertyError(this, "isAimingView");
+        this._isAimingView = dataJSON.aimingView === true;
         /**
          * Whether the position of the view should follow the position of the object it is associated with (making the set position relative
          * to it)
          * @type Boolean
          */
-        this._followsPosition = (typeof dataJSON.followsPosition) === "boolean" ? dataJSON.followsPosition : _showMissingPropertyError(this, "followsPosition");
-        dataJSON.lookAt = utils.getSafeEnumValue(ObjectViewLookAtMode, dataJSON.lookAt, ObjectViewLookAtMode.NONE);
+        this._followsPosition = (dataJSON.followsPosition !== undefined) ? dataJSON.followsPosition : (lookAt !== ObjectViewLookAtMode.SELF);
         /**
          * Whether the orienration of the view should follow the orientation of the object it is associated with (making the set orientation relative
          * to it). It defaults to true, however, the default changes to false if a lookAt mode is set.
          * @type Boolean
          */
-        this._followsOrientation = (typeof dataJSON.followsOrientation) === "boolean" ? dataJSON.followsOrientation : (dataJSON.lookAt === ObjectViewLookAtMode.NONE);
+        this._followsOrientation = (dataJSON.followsOrientation !== undefined) ? dataJSON.followsOrientation : (lookAt === ObjectViewLookAtMode.NONE);
         /**
          * Whether the view's orientation should always be centered on the associated object
          * @type Boolean
          */
-        this._lookAtSelf = (dataJSON.lookAt === ObjectViewLookAtMode.SELF) ?
+        this._lookAtSelf = (lookAt === ObjectViewLookAtMode.SELF) ?
                 ((this._followsPosition || this._followsOrientation || this._turnable) ?
                         application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'self' if followsPosition, followsOrientation or turnable are true!") :
                         true) :
@@ -3955,7 +3943,7 @@ define([
          * Whether the view's orientation should always be centered on the target of the associated object
          * @type Boolean
          */
-        this._lookAtTarget = (dataJSON.lookAt === ObjectViewLookAtMode.TARGET) ?
+        this._lookAtTarget = (lookAt === ObjectViewLookAtMode.TARGET) ?
                 ((this._followsOrientation || this._turnable) ?
                         application.showError("Invalid view configuration ('" + this._name + "'): lookAt mode cannot be 'target' if followsOrientation or turnable are true!") :
                         true) :
@@ -3970,9 +3958,7 @@ define([
                                 application.showError("Invalid view configuration ('" + this._name + "'): rotationCenterIsObject with lookAtSelf or without followsPosition!") :
                                 true) :
                         false) :
-                ((this._lookAtSelf || !this._followsPosition) ? // if a conflicting setting has been set, we will default to false, otherwise as explicit setting is needed
-                        false :
-                        _showMissingPropertyError(this, "rotationCenterIsObject"));
+                false;
         /**
          * Whether instead of continuously following the object's position, it should only be considered when creating or resetting a camera
          * configuration, and the configuration should have absolute position afterwards
@@ -4083,13 +4069,11 @@ define([
      * @param {String} defaultCameraBaseOrientation (enum CameraOrientationConfiguration.BaseOrientation)
      * @param {String} defaultCameraPointToFallback (enum CameraOrientationConfiguration.PointToFallback)
      * @param {Number} defaultFOV
-     * @param {Number[2]} defaultFOVRange
      * @param {Number} defaultSpan
-     * @param {Number[2]} defaultSpanRange
      * @returns {CameraConfiguration} The created camera configuration.
      */
     ObjectView.prototype.createCameraConfiguration = function (model, defaultCameraBaseOrientation,
-            defaultCameraPointToFallback, defaultFOV, defaultFOVRange, defaultSpan, defaultSpanRange) {
+            defaultCameraPointToFallback, defaultFOV, defaultSpan) {
         var positionConfiguration, orientationConfiguration, angles = mat.getYawAndPitch(this.getOrientationMatrix());
         positionConfiguration = new camera.CameraPositionConfiguration(
                 !this.isMovable(),
@@ -4116,9 +4100,8 @@ define([
                 this.getName(),
                 positionConfiguration, orientationConfiguration,
                 this.getFOV() || defaultFOV,
-                this.getFOVRange() || defaultFOVRange,
+                this.getFOVRange(),
                 this.getSpan() || defaultSpan,
-                this.getSpanRange() || defaultSpanRange,
                 this.resetsOnFocusChange(),
                 this.shouldExcludeFromCycle());
     };

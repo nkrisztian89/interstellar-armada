@@ -1698,17 +1698,9 @@ define([
             name: "defaultFOV",
             type: "number"
         },
-        DEFAULT_FOV_RANGE: {
-            name: "defaultFOVRange",
-            type: types.VECTOR2
-        },
         DEFAULT_SPAN: {
             name: "defaultSpan",
             type: "number"
-        },
-        DEFAULT_SPAN_RANGE: {
-            name: "defaultSpanRange",
-            type: types.VECTOR2
         },
         DEFAULT_BASE_ORIENTATION: {
             name: "defaultBaseOrientation",
@@ -1847,25 +1839,11 @@ define([
         return this.getSetting(CAMERA_SETTINGS.DEFAULT_FOV);
     };
     /**
-     * Returns the default minimum and maximum field of view values for camera configurations, in degrees
-     * @returns {Number[2]}
-     */
-    ConfigurationContext.prototype.getDefaultCameraFOVRange = function () {
-        return this.getSetting(CAMERA_SETTINGS.DEFAULT_FOV_RANGE);
-    };
-    /**
      * Returns the default starting span value for camera configurations, in meters
      * @returns {Number}
      */
     ConfigurationContext.prototype.getDefaultCameraSpan = function () {
         return this.getSetting(CAMERA_SETTINGS.DEFAULT_SPAN);
-    };
-    /**
-     * Returns the default minimum and maximum span values for camera configurations, in meters
-     * @returns {Number[2]}
-     */
-    ConfigurationContext.prototype.getDefaultCameraSpanRange = function () {
-        return this.getSetting(CAMERA_SETTINGS.DEFAULT_SPAN_RANGE);
     };
     /**
      * (enum CameraOrientationConfiguration.BaseOrientation) Returns the default base orientation mode to use for camera 
@@ -1929,9 +1907,7 @@ define([
         resetHUDSettings: _context.resetHUDSettings.bind(_context),
         resetBattleSettings: _context.resetBattleSettings.bind(_context),
         getDefaultCameraFOV: _context.getDefaultCameraFOV.bind(_context),
-        getDefaultCameraFOVRange: _context.getDefaultCameraFOVRange.bind(_context),
         getDefaultCameraSpan: _context.getDefaultCameraSpan.bind(_context),
-        getDefaultCameraSpanRange: _context.getDefaultCameraSpanRange.bind(_context),
         getDefaultCameraBaseOrientation: _context.getDefaultCameraBaseOrientation.bind(_context),
         getDefaultCameraPointToFallback: _context.getDefaultCameraPointToFallback.bind(_context),
         getDefaultCamerConfigurationName: _context.getDefaultCamerConfigurationName.bind(_context),

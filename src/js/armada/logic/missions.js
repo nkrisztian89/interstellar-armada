@@ -2880,9 +2880,8 @@ define([
                 view.getName(),
                 positionConfiguration, orientationConfiguration,
                 view.getFOV() || config.getDefaultCameraFOV(),
-                view.getFOVRange() || config.getDefaultCameraFOVRange(),
+                view.getFOVRange(),
                 view.getSpan() || config.getDefaultCameraSpan(),
-                view.getSpanRange() || config.getDefaultCameraSpanRange(),
                 view.resetsOnFocusChange());
     };
     /**

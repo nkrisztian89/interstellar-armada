@@ -3159,16 +3159,13 @@
             "thrusterSlots": [],
             "views": [{
                     "name": "free",
-                    "isAimingView": false,
                     "fov": 45,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
                     "rotationCenterIsObject": true,
                     "distanceRange": [6, 25],
-                    "position": [0, -10, 0],
-                    "lookAt": "none"
+                    "position": [0, -10, 0]
                 }],
             "loadouts": [{
                     "name": "default",
@@ -3388,50 +3385,26 @@
                 }],
             "views": [{
                     "name": "near",
-                    "isAimingView": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -28, 6.5],
-                    "lookAt": "none"
+                    "aimingView": true,
+                    "position": [0, -28, 6.5]
                 }, {
                     "name": "far",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -50, 15],
-                    "lookAt": "none"
+                    "position": [0, -50, 15]
                 }, {
                     "name": "cockpit",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
                     "fps": true,
-                    "followsPosition": true,
-                    "movable": false,
                     "turnable": true,
                     "alphaRange": [-120, 120],
                     "betaRange": [-80, 50],
-                    "rotationCenterIsObject": false,
                     "position": [0, 3.82, 0.95],
-                    "resetsOnFocusChange": true,
-                    "lookAt": "none"
+                    "resetsOnFocusChange": true
                 }, {
                     "name": "front",
-                    "isAimingView": false,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
                     "position": [0, 32, 12.5],
                     "rotations": [{
                             "axis": "Z",
@@ -3439,56 +3412,37 @@
                         }, {
                             "axis": "X",
                             "degrees": -10
-                        }],
-                    "lookAt": "none"
+                        }]
                 }, {
                     "name": "free",
-                    "isAimingView": false,
                     "fov": 45,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
                     "rotationCenterIsObject": true,
                     "distanceRange": [15, 75],
-                    "position": [0, -40, 0],
-                    "lookAt": "none"
+                    "position": [0, -40, 0]
                 }, {
                     "name": "flyby",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
-                    "followsPosition": false,
-                    "baseOrientation": "orientationFollowedObject",
                     "startsWithRelativePosition": true,
                     "lookAt": "self",
-                    "movable": false,
-                    "turnable": false,
                     "position": [15, 150, 10],
                     "distanceRange": [15, 200]
                 }, {
                     "name": "jump",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 75,
-                    "fovRange": [75, 75],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
                     "position": [0, -12, 6],
-                    "lookAt": "none",
                     "excludeFromCycle": true
                 }, {
                     "name": "target",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 55,
                     "fovRange": [30, 55],
-                    "followsPosition": true,
                     "lookAt": "target",
                     "movable": true,
-                    "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -40, 7.5],
                     "distanceRange": [25, 80]
@@ -3937,50 +3891,26 @@
                 }],
             "views": [{
                     "name": "near",
-                    "isAimingView": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -39, 9.5],
-                    "lookAt": "none"
+                    "aimingView": true,
+                    "position": [0, -39, 9.5]
                 }, {
                     "name": "far",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -68, 18.5],
-                    "lookAt": "none"
+                    "position": [0, -68, 18.5]
                 }, {
                     "name": "cockpit",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
                     "fps": true,
-                    "followsPosition": true,
-                    "movable": false,
                     "turnable": true,
                     "alphaRange": [-120, 120],
                     "betaRange": [-80, 45],
-                    "rotationCenterIsObject": false,
                     "position": [0, 5.25, 1.9],
-                    "resetsOnFocusChange": true,
-                    "lookAt": "none"
+                    "resetsOnFocusChange": true
                 }, {
                     "name": "front",
-                    "isAimingView": false,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
                     "position": [0, 37, 13.5],
                     "rotations": [{
                             "axis": "Z",
@@ -3988,56 +3918,37 @@
                         }, {
                             "axis": "X",
                             "degrees": -10
-                        }],
-                    "lookAt": "none"
+                        }]
                 }, {
                     "name": "free",
-                    "isAimingView": false,
                     "fov": 45,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
                     "rotationCenterIsObject": true,
                     "distanceRange": [22, 85],
-                    "position": [0, -55, 0],
-                    "lookAt": "none"
+                    "position": [0, -55, 0]
                 }, {
                     "name": "flyby",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
-                    "followsPosition": false,
-                    "baseOrientation": "orientationFollowedObject",
                     "startsWithRelativePosition": true,
                     "lookAt": "self",
-                    "movable": false,
-                    "turnable": false,
                     "position": [20, 150, 15],
                     "distanceRange": [22, 200]
                 }, {
                     "name": "jump",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 75,
-                    "fovRange": [75, 75],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
                     "position": [0, -17, 7.5],
-                    "lookAt": "none",
                     "excludeFromCycle": true
                 }, {
                     "name": "target",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 55,
                     "fovRange": [30, 55],
-                    "followsPosition": true,
                     "lookAt": "target",
                     "movable": true,
-                    "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -48, 13.5],
                     "distanceRange": [33, 90]
@@ -4360,57 +4271,26 @@
                 }],
             "views": [{
                     "name": "near",
-                    "isAimingView": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "span": 0.2,
-                    "spanRange": [0.2, 0.2],
-                    "fps": false,
-                    "followsPosition": true,
-                    "baseOrientation": "world",
-                    "lookAt": "none",
-                    "movable": false,
-                    "turnable": false,
-                    "alphaRange": [0, 0],
-                    "betaRange": [0, 0],
-                    "rotationCenterIsObject": true,
-                    "position": [0, -38, 9.5],
-                    "movesRelativeToObject": false
+                    "aimingView": true,
+                    "position": [0, -38, 9.5]
                 }, {
                     "name": "far",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -50, 15],
-                    "lookAt": "none"
+                    "position": [0, -50, 15]
                 }, {
                     "name": "cockpit",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
                     "fps": true,
-                    "followsPosition": true,
-                    "movable": false,
                     "turnable": true,
                     "alphaRange": [-120, 120],
                     "betaRange": [-80, 50],
-                    "rotationCenterIsObject": false,
                     "position": [0, 6.4, 1.45],
-                    "resetsOnFocusChange": true,
-                    "lookAt": "none"
+                    "resetsOnFocusChange": true
                 }, {
                     "name": "front",
-                    "isAimingView": false,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
                     "position": [0, 32, 12.5],
                     "rotations": [{
                             "axis": "Z",
@@ -4418,56 +4298,37 @@
                         }, {
                             "axis": "X",
                             "degrees": -8
-                        }],
-                    "lookAt": "none"
+                        }]
                 }, {
                     "name": "free",
-                    "isAimingView": false,
                     "fov": 45,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
                     "rotationCenterIsObject": true,
                     "distanceRange": [15, 75],
-                    "position": [0, -40, 0],
-                    "lookAt": "none"
+                    "position": [0, -40, 0]
                 }, {
                     "name": "flyby",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
-                    "followsPosition": false,
-                    "baseOrientation": "orientationFollowedObject",
                     "startsWithRelativePosition": true,
                     "lookAt": "self",
-                    "movable": false,
-                    "turnable": false,
                     "position": [24, 150, 7.5],
                     "distanceRange": [15, 200]
                 }, {
                     "name": "jump",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 75,
-                    "fovRange": [75, 75],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
                     "position": [0, -12, 6],
-                    "lookAt": "none",
                     "excludeFromCycle": true
                 }, {
                     "name": "target",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 55,
                     "fovRange": [30, 55],
-                    "followsPosition": true,
                     "lookAt": "target",
                     "movable": true,
-                    "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -40, 7.5],
                     "distanceRange": [25, 80]
@@ -4946,62 +4807,36 @@
                 }],
             "views": [{
                     "name": "near",
-                    "isAimingView": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -32, 8],
-                    "lookAt": "none"
+                    "aimingView": true,
+                    "position": [0, -32, 8]
                 }, {
                     "name": "forward",
-                    "isAimingView": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
-                    "position": [0, 1, 2.5],
-                    "lookAt": "none"
+                    "aimingView": true,
+                    "position": [0, 1, 2.5]
                 }, {
                     "name": "free",
-                    "isAimingView": false,
                     "fov": 45,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
                     "rotationCenterIsObject": true,
                     "distanceRange": [15, 75],
-                    "position": [0, -40, 0],
-                    "lookAt": "none"
+                    "position": [0, -40, 0]
                 }, {
                     "name": "flyby",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
-                    "followsPosition": false,
-                    "baseOrientation": "orientationFollowedObject",
                     "startsWithRelativePosition": true,
                     "lookAt": "self",
-                    "movable": false,
-                    "turnable": false,
                     "position": [15, 150, 10],
                     "distanceRange": [15, 200]
                 }, {
                     "name": "target",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 55,
                     "fovRange": [30, 55],
-                    "followsPosition": true,
                     "lookAt": "target",
                     "movable": true,
-                    "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -40, 7.5],
                     "distanceRange": [25, 80]
@@ -5306,49 +5141,26 @@
                 }],
             "views": [{
                     "name": "near",
-                    "isAimingView": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -40, 20],
-                    "lookAt": "none"
+                    "aimingView": true,
+                    "position": [0, -40, 20]
                 }, {
                     "name": "far",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -165, 45],
-                    "lookAt": "none"
+                    "position": [0, -165, 45]
                 }, {
                     "name": "bridge",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
                     "fps": true,
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
-                    "rotationCenterIsObject": false,
                     "betaRange": [-80, 50],
                     "position": [0, 40, 6.7],
-                    "confines": [[-5, 5], [30, 41.2], [6.6, 6.6]],
-                    "lookAt": "none"
+                    "confines": [[-5, 5], [30, 41.2], [6.6, 6.6]]
                 }, {
                     "name": "front",
-                    "isAimingView": false,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
                     "position": [0, 126, 38],
                     "rotations": [{
                             "axis": "Z",
@@ -5356,56 +5168,37 @@
                         }, {
                             "axis": "X",
                             "degrees": -12
-                        }],
-                    "lookAt": "none"
+                        }]
                 }, {
                     "name": "free",
-                    "isAimingView": false,
                     "fov": 45,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
                     "rotationCenterIsObject": true,
                     "distanceRange": [100, 250],
-                    "position": [0, -120, 0],
-                    "lookAt": "none"
+                    "position": [0, -120, 0]
                 }, {
                     "name": "flyby",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
-                    "followsPosition": false,
-                    "baseOrientation": "orientationFollowedObject",
                     "startsWithRelativePosition": true,
                     "lookAt": "self",
-                    "movable": false,
-                    "turnable": false,
                     "position": [85, 300, 40],
                     "distanceRange": [90, 500]
                 }, {
                     "name": "jump",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 75,
-                    "fovRange": [75, 75],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
                     "position": [0, -110, 30],
-                    "lookAt": "none",
                     "excludeFromCycle": true
                 }, {
                     "name": "target",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 55,
                     "fovRange": [30, 55],
-                    "followsPosition": true,
                     "lookAt": "target",
                     "movable": true,
-                    "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -125, 35],
                     "distanceRange": [90, 240]
@@ -5784,64 +5577,35 @@
                 }],
             "views": [{
                     "name": "near",
-                    "isAimingView": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, 8, 24],
-                    "lookAt": "none"
+                    "aimingView": true,
+                    "position": [0, 8, 24]
                 }, {
                     "name": "center",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fps": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "followsPosition": true,
-                    "movable": false,
                     "turnable": true,
                     "alphaRange": [-45, 45],
                     "betaRange": [-10, 20],
-                    "rotationCenterIsObject": false,
                     "position": [0, 15, 2],
-                    "resetsOnFocusChange": true,
-                    "lookAt": "none"
+                    "resetsOnFocusChange": true
                 }, {
                     "name": "far",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -255, 60],
-                    "lookAt": "none"
+                    "position": [0, -255, 60]
                 }, {
                     "name": "bridge",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fps": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
-                    "rotationCenterIsObject": false,
                     "betaRange": [-80, 50],
                     "position": [0, 35, 15.9],
-                    "confines": [[-6, 6], [28, 37.6], [15.9, 15.9]],
-                    "lookAt": "none"
+                    "confines": [[-6, 6], [28, 37.6], [15.9, 15.9]]
                 }, {
                     "name": "front",
-                    "isAimingView": false,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
                     "position": [0, 200, 60],
                     "rotations": [{
                             "axis": "Z",
@@ -5849,44 +5613,31 @@
                         }, {
                             "axis": "X",
                             "degrees": -10
-                        }],
-                    "lookAt": "none"
+                        }]
                 }, {
                     "name": "free",
-                    "isAimingView": false,
                     "fov": 45,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
                     "rotationCenterIsObject": true,
                     "distanceRange": [120, 320],
-                    "position": [0, -175, 0],
-                    "lookAt": "none"
+                    "position": [0, -175, 0]
                 }, {
                     "name": "flyby",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
-                    "followsPosition": false,
-                    "baseOrientation": "orientationFollowedObject",
                     "startsWithRelativePosition": true,
                     "lookAt": "self",
-                    "movable": false,
-                    "turnable": false,
                     "position": [115, 400, 50],
                     "distanceRange": [120, 580]
                 }, {
                     "name": "target",
-                    "isAimingView": false,
                     "fov": 55,
                     "fovRange": [30, 55],
                     "fps": true,
-                    "followsPosition": true,
                     "lookAt": "target",
                     "movable": true,
-                    "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -185, 45],
                     "distanceRange": [150, 320]
@@ -6439,37 +6190,20 @@
                 }],
             "views": [{
                     "name": "near",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fps": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
-                    "position": [0, -145, 115],
-                    "lookAt": "none"
+                    "position": [0, -145, 115]
                 }, {
                     "name": "far",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fps": true,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
                     "turnable": true,
                     "rotationCenterIsObject": true,
-                    "position": [0, -1150, 250],
-                    "lookAt": "none"
+                    "position": [0, -1150, 250]
                 }, {
                     "name": "front",
-                    "isAimingView": false,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
                     "position": [0, 1250, 500],
                     "rotations": [{
                             "axis": "Z",
@@ -6477,32 +6211,19 @@
                         }, {
                             "axis": "X",
                             "degrees": -10
-                        }],
-                    "lookAt": "none"
+                        }]
                 }, {
                     "name": "front-hangar",
-                    "isAimingView": false,
                     "fps": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "followsPosition": true,
-                    "movable": false,
                     "turnable": true,
-                    "rotationCenterIsObject": false,
                     "betaRange": [-45, 45],
                     "position": [0, 400, -30],
-                    "resetsOnFocusChange": true,
-                    "lookAt": "none"
+                    "resetsOnFocusChange": true
                 }, {
                     "name": "back-hangar",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
                     "turnable": true,
-                    "rotationCenterIsObject": false,
                     "betaRange": [-80, 50],
                     "position": [-20, -267, 3],
                     "rotations": [{
@@ -6511,57 +6232,39 @@
                         }, {
                             "axis": "Z",
                             "degrees": -95
-                        }],
-                    "lookAt": "none"
+                        }]
                 }, {
                     "name": "turrets",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 60,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
-                    "movable": false,
                     "turnable": true,
-                    "rotationCenterIsObject": false,
                     "betaRange": [-90, 0],
-                    "position": [0, 50, 82],
-                    "lookAt": "none"
+                    "position": [0, 50, 82]
                 }, {
                     "name": "free",
-                    "isAimingView": false,
                     "fov": 45,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
                     "rotationCenterIsObject": true,
                     "distanceRange": [700, 2000],
-                    "position": [0, -1050, 0],
-                    "lookAt": "none"
+                    "position": [0, -1050, 0]
                 }, {
                     "name": "flyby",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
-                    "followsPosition": false,
-                    "baseOrientation": "orientationFollowedObject",
                     "startsWithRelativePosition": true,
                     "lookAt": "self",
-                    "movable": false,
-                    "turnable": false,
                     "position": [650, 1700, 250],
                     "distanceRange": [650, 2400]
                 }, {
                     "name": "target",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 55,
                     "fovRange": [30, 55],
-                    "followsPosition": true,
                     "lookAt": "target",
                     "movable": true,
-                    "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -750, 240],
                     "distanceRange": [700, 1300]
@@ -6783,57 +6486,26 @@
                 }],
             "views": [{
                     "name": "near",
-                    "isAimingView": true,
-                    "fov": 40,
-                    "fovRange": [40, 40],
-                    "span": 0.2,
-                    "spanRange": [0.2, 0.2],
-                    "fps": false,
-                    "followsPosition": true,
-                    "baseOrientation": "world",
-                    "lookAt": "none",
-                    "movable": false,
-                    "turnable": false,
-                    "alphaRange": [0, 0],
-                    "betaRange": [0, 0],
-                    "rotationCenterIsObject": true,
-                    "position": [0, -30, 6],
-                    "movesRelativeToObject": false
+                    "aimingView": true,
+                    "position": [0, -30, 6]
                 }, {
                     "name": "far",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
-                    "position": [0, -50, 15],
-                    "lookAt": "none"
+                    "position": [0, -50, 15]
                 }, {
                     "name": "cockpit",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
                     "fps": true,
-                    "followsPosition": true,
-                    "movable": false,
                     "turnable": true,
                     "alphaRange": [-120, 120],
                     "betaRange": [-80, 50],
-                    "rotationCenterIsObject": false,
                     "position": [0, 1.4, 1.6],
-                    "resetsOnFocusChange": true,
-                    "lookAt": "none"
+                    "resetsOnFocusChange": true
                 }, {
                     "name": "front",
-                    "isAimingView": false,
                     "fov": 55,
-                    "fovRange": [55, 55],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": false,
                     "position": [0, 32, 12.5],
                     "rotations": [{
                             "axis": "Z",
@@ -6841,56 +6513,37 @@
                         }, {
                             "axis": "X",
                             "degrees": -8
-                        }],
-                    "lookAt": "none"
+                        }]
                 }, {
                     "name": "free",
-                    "isAimingView": false,
                     "fov": 45,
                     "fovRange": [30, 60],
-                    "followsPosition": true,
                     "movable": true,
                     "turnable": true,
                     "rotationCenterIsObject": true,
                     "distanceRange": [15, 75],
-                    "position": [0, -40, 0],
-                    "lookAt": "none"
+                    "position": [0, -40, 0]
                 }, {
                     "name": "flyby",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 45,
-                    "fovRange": [45, 45],
-                    "followsPosition": false,
-                    "baseOrientation": "orientationFollowedObject",
                     "startsWithRelativePosition": true,
                     "lookAt": "self",
-                    "movable": false,
-                    "turnable": false,
                     "position": [24, 150, 7.5],
                     "distanceRange": [15, 200]
                 }, {
                     "name": "jump",
-                    "isAimingView": true,
+                    "aimingView": true,
                     "fov": 75,
-                    "fovRange": [75, 75],
-                    "followsPosition": true,
-                    "movable": false,
-                    "turnable": false,
-                    "rotationCenterIsObject": true,
                     "position": [0, -12, 6],
-                    "lookAt": "none",
                     "excludeFromCycle": true
                 }, {
                     "name": "target",
-                    "isAimingView": false,
                     "fps": true,
                     "fov": 55,
                     "fovRange": [30, 55],
-                    "followsPosition": true,
                     "lookAt": "target",
                     "movable": true,
-                    "turnable": false,
                     "rotationCenterIsObject": true,
                     "position": [0, -40, 7.5],
                     "distanceRange": [25, 80]

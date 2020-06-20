@@ -1015,10 +1015,8 @@
         },
         "camera": {
             "defaultFOV": 40,
-            "defaultFOVRange": [5, 100],
             "defaultSpan": 0.2,
-            "defaultSpanRange": [0.2, 0.2],
-            "defaultBaseOrientation": "positionFollowedObjects",
+            "defaultBaseOrientation": "orientationFollowedObject",
             "defaultPointToFallback": "positionFollowedObjectOrWorld"
         }
     },

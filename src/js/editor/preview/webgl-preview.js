@@ -699,9 +699,7 @@ define([
                                 config.getDefaultCameraBaseOrientation(),
                                 config.getDefaultCameraPointToFallback(),
                                 config.getDefaultCameraFOV(),
-                                config.getDefaultCameraFOVRange(),
-                                config.getDefaultCameraSpan(),
-                                config.getDefaultCameraSpanRange()));
+                                config.getDefaultCameraSpan()));
                     } else {
                         if (!params.preserve) {
                             _scene.getCamera().moveToPosition([0, 0, FREE_CAMERA_INITIAL_HEIGHT], 0);

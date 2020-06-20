@@ -57,16 +57,6 @@ define([
              */
             FOV_INCREASE_FACTOR = 1.05,
             /**
-             * When decreased by one step, the span of a camera will be multiplied by this factor
-             * @type Number
-             */
-            SPAN_DECREASE_FACTOR = 0.95,
-            /**
-             * When increased by one step, the span of a camera will be multiplied by this factor
-             * @type Number
-             */
-            SPAN_INCREASE_FACTOR = 1.05,
-            /**
              * The camera used for rendering the distance render queues will have a view distance that is the view distance of the regular
              * camera multiplied by this factor.
              * @type Number
@@ -1248,13 +1238,12 @@ define([
      * @param {Number} span The starting span of the camera. This is the world-space distance that the camera sees
      * horizontally or vertically at depth 0, depending on camera setting. The other value will be calculated basen on the aspect of the 
      * camera. In meters.
-     * @param {Number} spanRange The minimum and maximum span that can be set for a camera using this configuration.
      * @param {Boolean} resetsOnFocusChange An indicator whether this configuration should automatically reset to default state when the camera 
      * switches to it or when the camera controls go out of focus (after being in focus)
      * @param {Boolean} shouldExcludeFromCycle When true, this configuration should be skipped when switching using cycling (switching to 
      * next / previous configuration), and should only be possible to invoke it by switching to it explicitly 
      */
-    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, fovRange, span, spanRange, resetsOnFocusChange, shouldExcludeFromCycle) {
+    function CameraConfiguration(name, positionConfiguration, orientationConfiguration, fov, fovRange, span, resetsOnFocusChange, shouldExcludeFromCycle) {
         object3D.Object3D.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         /**
          * An optional, descriptive name of this configuration by which it can be found and referred to.
@@ -1285,17 +1274,12 @@ define([
          * The minimum value to which the field of view can be set in this configuration, in degrees.
          * @type Number
          */
-        this._minFOV = fovRange ? fovRange[0] : 0;
+        this._minFOV = fovRange ? fovRange[0] : fov;
         /**
          * The maximum value to which the field of view can be set in this configuration, in degrees.
          * @type Number
          */
-        this._maxFOV = fovRange ? fovRange[1] : 0;
-        /**
-         * The starting span, in meters is stored so the configuration can be reset to defaults later.
-         * @type Number
-         */
-        this._defaultSpan = span;
+        this._maxFOV = fovRange ? fovRange[1] : fov;
         /**
          * The current span, in meters. This is the world-space distance that the camera sees
          * horizontally or vertically at depth 0, depending on camera setting. The other value
@@ -1303,16 +1287,6 @@ define([
          * @type Number
          */
         this._span = span;
-        /**
-         * The minimum value to which the span can be set in this configuration, in meters.
-         * @type Number
-         */
-        this._minSpan = spanRange ? spanRange[0] : 0;
-        /**
-         * The maximum value to which the span can be set in this configuration, in meters.
-         * @type Number
-         */
-        this._maxSpan = spanRange ? spanRange[1] : 0;
         /**
          * An indicator whether this configuration should automatically reset to default state when the camera switches to it or when the 
          * camera controls go out of focus (after being in focus)
@@ -1342,25 +1316,21 @@ define([
      * @param {Number} span The starting span of the camera. This is the world-space distance that the camera sees
      * horizontally or vertically at depth 0, depending on camera setting. The other value will be calculated basen on the aspect of the 
      * camera. In meters.
-     * @param {Number} spanRange The minimum and maximum span that can be set for a camera using this configuration.
      * @param {Boolean} resetsOnFocusChange An indicator whether this configuration should automatically reset to default state when the camera 
      * switches to it or when the camera controls go out of focus (after being in focus)
      * @param {Boolean} shouldExcludeFromCycle When true, this configuration should be skipped when switching using cycling (switching to 
      * next / previous configuration), and should only be possible to invoke it by switching to it explicitly 
      */
-    CameraConfiguration.prototype.init = function (name, positionConfiguration, orientationConfiguration, fov, fovRange, span, spanRange, resetsOnFocusChange, shouldExcludeFromCycle) {
+    CameraConfiguration.prototype.init = function (name, positionConfiguration, orientationConfiguration, fov, fovRange, span, resetsOnFocusChange, shouldExcludeFromCycle) {
         object3D.Object3D.prototype.init.call(this, positionConfiguration._positionMatrix, orientationConfiguration._orientationMatrix);
         this._name = name;
         this._positionConfiguration = positionConfiguration;
         this._orientationConfiguration = orientationConfiguration;
         this._defaultFOV = fov;
         this._fov = fov;
-        this._minFOV = fovRange ? fovRange[0] : 0;
-        this._maxFOV = fovRange ? fovRange[1] : 0;
-        this._defaultSpan = span;
+        this._minFOV = fovRange ? fovRange[0] : fov;
+        this._maxFOV = fovRange ? fovRange[1] : fov;
         this._span = span;
-        this._minSpan = spanRange ? spanRange[0] : 0;
-        this._maxSpan = spanRange ? spanRange[1] : 0;
         this._resetsOnFocusChange = resetsOnFocusChange;
         this._excludeFromCycle = shouldExcludeFromCycle;
         this._camera = null;
@@ -1380,8 +1350,7 @@ define([
                 this._orientationConfiguration.copy(transitionCopy),
                 this._fov,
                 [this._minFOV, this._maxFOV],
-                this._span,
-                [this._minSpan, this._maxSpan]);
+                this._span);
         result.setPositionMatrix(mat.matrix4(this.getPositionMatrix()));
         result.setOrientationMatrix(mat.matrix4(this.getOrientationMatrix()));
         return result;
@@ -1486,51 +1455,10 @@ define([
         return this._fov;
     };
     /**
-     * Sets the configuration's span.
-     * @param {Number} span The new desired span in meters.
-     * @param {Boolean} [doNotNotifyCamera=false] Do not call the method of the camera using this configuration that alerts it about this change
-     */
-    CameraConfiguration.prototype.setSpan = function (span, doNotNotifyCamera) {
-        if (this._camera && !doNotNotifyCamera) {
-            this._camera.configurationWillChange();
-        }
-        this._span = Math.min(Math.max(span, this._minSpan), this._maxSpan);
-    };
-    /**
      * Returns the currently set span, in meters.
      * @returns {Number}
      */
     CameraConfiguration.prototype.getSpan = function () {
-        return this._span;
-    };
-    /**
-     * Returns the minimum span that can be set, in meters.
-     * @returns {Number}
-     */
-    CameraConfiguration.prototype.getMinSpan = function () {
-        return this._minSpan;
-    };
-    /**
-     * Returns the maximum span that can be set, in meters.
-     * @returns {Number}
-     */
-    CameraConfiguration.prototype.getMaxSpan = function () {
-        return this._maxSpan;
-    };
-    /**
-     * Decreases the span of the configuration by a small amount (but not below the set minimum).
-     * @returns {Number} The resulting new value of the span. (in meters)
-     */
-    CameraConfiguration.prototype.decreaseSpan = function () {
-        this.setSpan(this._span * SPAN_DECREASE_FACTOR, true);
-        return this._span;
-    };
-    /**
-     * Increases the span of the configuration by a small amount (but not above the set maximum).
-     * @returns {Number} The resulting new value of the span. (in meters)
-     */
-    CameraConfiguration.prototype.increaseSpan = function () {
-        this.setSpan(this._span * SPAN_INCREASE_FACTOR, true);
         return this._span;
     };
     /**
@@ -1557,7 +1485,6 @@ define([
             this._camera.configurationWillChange();
         }
         this.setFOV(this._defaultFOV, true);
-        this.setSpan(this._defaultSpan, true);
         this._positionConfiguration.resetToDefaults(true);
         this._orientationConfiguration.resetToDefaults(true);
     };
@@ -1620,11 +1547,9 @@ define([
      * @param {Number} minFOV The minimum field of view that can be set for this configuration, in degrees.
      * @param {Number} maxFOV The maximum field of view that can be set for this configuration, in degrees.
      * @param {Number} span The initial span, in meters.
-     * @param {Number} minSpan The minimum span that can be set for this configuration, in meters.
-     * @param {Number} maxSpan The maximum span that can be set for this configuration, in meters.
      * @returns {CameraConfiguration}
      */
-    CameraConfiguration.prototype.setToFree = function (fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV, span, minSpan, maxSpan) {
+    CameraConfiguration.prototype.setToFree = function (fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV, span) {
         var angles = mat.getYawAndPitch(orientationMatrix);
         this._positionConfiguration.init(false, false, false, [], false, positionMatrix, null, null, false);
         this._orientationConfiguration.init(false, false, fps, [], orientationMatrix, Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined,
@@ -1635,7 +1560,7 @@ define([
                 this._positionConfiguration,
                 this._orientationConfiguration,
                 fov, [minFOV, maxFOV],
-                span, [minSpan, maxSpan]);
+                span);
     };
     /**
      * Removes all references stored by this object
@@ -1656,11 +1581,9 @@ define([
      * @param {Number} minFOV The minimum field of view that can be set for this configuration, in degrees.
      * @param {Number} maxFOV The maximum field of view that can be set for this configuration, in degrees.
      * @param {Number} span The initial span, in meters.
-     * @param {Number} minSpan The minimum span that can be set for this configuration, in meters.
-     * @param {Number} maxSpan The maximum span that can be set for this configuration, in meters.
      * @returns {CameraConfiguration}
      */
-    function getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV, span, minSpan, maxSpan) {
+    function getFreeCameraConfiguration(fps, positionMatrix, orientationMatrix, fov, minFOV, maxFOV, span) {
         var angles = mat.getYawAndPitch(orientationMatrix);
         return new CameraConfiguration(
                 utils.EMPTY_STRING,
@@ -1669,7 +1592,7 @@ define([
                         CameraOrientationConfiguration.BaseOrientation.WORLD,
                         CameraOrientationConfiguration.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD),
                 fov, [minFOV, maxFOV],
-                span, [minSpan, maxSpan]);
+                span);
     }
     // #########################################################################
     /**
@@ -2282,38 +2205,6 @@ define([
         return this._span;
     };
     /**
-     * Sets the camera's span.
-     * @param {Number} span The new desired span in meters.
-     * @param {Number} [duration] The duration of the new transition in milliseconds. If not given, the camera default will be used. If zero
-     * is given, the new configuration will be applied instantly.
-     * @param {String} [style] (enum Camera.TransitionStyle) The style of the new transition to use. If not given, the camera 
-     * default will be used.
-     */
-    Camera.prototype.setSpan = function (span, duration, style) {
-        duration = (duration === undefined) ? this._defaultTransitionDuration : duration;
-        if (duration > 0) {
-            this.transitionToSameConfiguration(duration, style);
-        } else {
-            this._span = span;
-        }
-        this._currentConfiguration.setSpan(span, true);
-        this._projectionMatrixValid = false;
-    };
-    /**
-     * Decreases the camera's span by a small step, but not below the minimum allowed by the current configuration.
-     */
-    Camera.prototype.decreaseSpan = function () {
-        this._span = this._currentConfiguration.decreaseSpan();
-        this._projectionMatrixValid = false;
-    };
-    /**
-     * Increases the camera's span by a small step, but not above the maximum allowed by the current configuration.
-     */
-    Camera.prototype.increaseSpan = function () {
-        this._span = this._currentConfiguration.increaseSpan();
-        this._projectionMatrixValid = false;
-    };
-    /**
      * Sets a new controlled velocity vector for the camera. Typically a camera controller would call this.
      * @param {Number[3]} value
      */
@@ -2352,9 +2243,7 @@ define([
                 this.getFOV(),
                 this._currentConfiguration.getMinFOV(),
                 this._currentConfiguration.getMaxFOV(),
-                this.getSpan(),
-                this._currentConfiguration.getMinSpan(),
-                this._currentConfiguration.getMaxSpan());
+                this.getSpan());
     };
     /**
      * Directly sets a new configuration to use for this camera. The new configuration is applied instantly, without transition.

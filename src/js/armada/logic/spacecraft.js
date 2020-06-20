@@ -2042,9 +2042,7 @@ define([
                 config.getDefaultCameraBaseOrientation(),
                 config.getDefaultCameraPointToFallback(),
                 config.getDefaultCameraFOV(),
-                config.getDefaultCameraFOVRange(),
-                config.getDefaultCameraSpan(),
-                config.getDefaultCameraSpanRange());
+                config.getDefaultCameraSpan());
     };
     /**
      * Adds camera configuration objects that correspond to the views defined for this 

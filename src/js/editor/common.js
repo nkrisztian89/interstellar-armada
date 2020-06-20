@@ -188,7 +188,7 @@ define([
     }
     /**
      * @typedef {Object} NumericParams
-     * @property {Boolean} allowFloats If true, float values are allowed (otherwise only integer values)
+     * @property {Boolean} integer If true, only integer values are allowed (otherwise floats as well)
      * @property {Number} [min] Minimum allowed value
      * @property {Number} [max] Maximum allowed value
      */
@@ -205,7 +205,7 @@ define([
         result.type = "text";
         result.value = data;
         result.onchange = function () {
-            var number = params.allowFloats ? parseFloat(result.value) : parseInt(result.value, 10);
+            var number = params.integer ? parseInt(result.value, 10) : parseFloat(result.value);
             if (isNaN(number)) {
                 number = 0;
             }
@@ -306,7 +306,7 @@ define([
         result.appendChild(input);
         components = [];
         for (i = 0; i < data.length; i++) {
-            component = createNumericInput(data[i], {allowFloats: true, min: 0, max: 1}, componentChangeHander.bind(this, i));
+            component = createNumericInput(data[i], {min: 0, max: 1}, componentChangeHander.bind(this, i));
             component.classList.add(COLOR_COMPONENT_CLASS);
             result.appendChild(component);
             components.push(component);
@@ -358,7 +358,7 @@ define([
                 };
         components = [];
         for (i = 0; i < data.length; i++) {
-            component = createNumericInput(data[i], {allowFloats: true}, componentChangeHander.bind(this, i));
+            component = createNumericInput(data[i], {}, componentChangeHander.bind(this, i));
             component.classList.add(VECTOR_COMPONENT_CLASS);
             result.appendChild(component);
             components.push(component);
@@ -368,11 +368,13 @@ define([
     /**
      * Creates and returns a control that can be used to edit numeric ranges.
      * @param {Number[2]} data A reference to the range that can be edited.
+     * @param {Object} options
      * @param {Function} [changeHandler] If given, this function will be called every time the range is changed by the control
      * @returns {Element}
      */
-    function createRangeEditor(data, changeHandler) {
-        var result = document.createElement("div"), minCheckbox, maxCheckbox, minEditor, maxEditor, dash;
+    function createRangeEditor(data, options, changeHandler) {
+        var result = document.createElement("div"), minCheckbox, maxCheckbox, minEditor, maxEditor, dash,
+                minRequired = !!options.minRequired, maxRequired = !!options.maxRequired, elementType = options.elementType || {};
         minCheckbox = createBooleanInput(data[0] !== undefined, function () {
             data[0] = minCheckbox.checked ? minEditor.value : undefined;
             minEditor.disabled = !minCheckbox.checked;
@@ -381,7 +383,7 @@ define([
             }
         });
         minCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
-        minEditor = createNumericInput(data[0] || 0, {allowFloats: true}, function (value) {
+        minEditor = createNumericInput(data[0] || ((elementType.min > 0) ? elementType.min : 0), elementType, function (value) {
             data[0] = minCheckbox.checked ? value : undefined;
             if (changeHandler) {
                 changeHandler();
@@ -399,7 +401,7 @@ define([
             }
         });
         maxCheckbox.classList.add(RANGE_CHECKBOX_CLASS);
-        maxEditor = createNumericInput(data[1] || 0, {allowFloats: true}, function (value) {
+        maxEditor = createNumericInput(data[1] || ((elementType.min > 0) ? elementType.min : 0), elementType, function (value) {
             data[1] = maxCheckbox.checked ? value : undefined;
             if (changeHandler) {
                 changeHandler();
@@ -409,12 +411,19 @@ define([
         if (data[1] === undefined) {
             maxEditor.disabled = true;
         }
-        dash = createLabel("-");
-        result.appendChild(minCheckbox);
+        dash = createLabel((elementType.unit ? elementType.unit + " " : "") + "-");
+        if (!minRequired) {
+            result.appendChild(minCheckbox);
+        }
         result.appendChild(minEditor);
         result.appendChild(dash);
-        result.appendChild(maxCheckbox);
+        if (!maxRequired) {
+            result.appendChild(maxCheckbox);
+        }
         result.appendChild(maxEditor);
+        if (elementType.unit) {
+            result.appendChild(createLabel(elementType.unit));
+        }
         return result;
     }
     /**

@@ -276,7 +276,7 @@ define([
      * Creates and returns a control that can be used to edit numeric properties.
      * @param {String} topName Name of the top property being edited
      * @param {Number} data The starting value
-     * @param {Boolean} allowFloats If true, float values are allowed (otherwise only integer values)
+     * @param {Boolean} integer If true, only integer values are allowed (otherwise floats as well)
      * @param {NumberControl~changeHandler} [changeHandler] The function that should be run on the change event of the control, after 
      * checking the value to be a number
      * @param {Object} [parent] See _changeData
@@ -286,9 +286,9 @@ define([
      * @param {Number} [max] The minimum allowed value for this number
      * @returns {Element}
      */
-    function _createNumberControl(topName, data, allowFloats, changeHandler, parent, name, unit, min, max) {
+    function _createNumberControl(topName, data, integer, changeHandler, parent, name, unit, min, max) {
         var result = document.createElement("div"),
-                input = common.createNumericInput(data, {allowFloats, min, max}, function (value) {
+                input = common.createNumericInput(data, {integer, min, max}, function (value) {
                     _changeData(topName, value, parent, name, changeHandler);
                 });
         result.appendChild(input);
@@ -338,11 +338,15 @@ define([
     /**
      * Creates and returns a control that can be used to edit numeric range properties.
      * @param {String} name Name of the property to edit
+     * @param {Editor~TypeDescriptor} typeDescriptor
      * @param {Number[2]} data The reference to the property to edit
      * @returns {Element}
      */
-    function _createRangeControl(name, data) {
-        return common.createRangeEditor(data, function () {
+    function _createRangeControl(name, typeDescriptor, data) {
+        if ((typeof typeDescriptor) !== "object") {
+            typeDescriptor = {};
+        }
+        return common.createRangeEditor(data, typeDescriptor, function () {
             _updateData(name);
         });
     }
@@ -1026,7 +1030,7 @@ define([
                 default:
                     axis = i.toString();
             }
-            _addRow(table, [common.createLabel(axis), _createRangeControl(topName, data[i])]);
+            _addRow(table, [common.createLabel(axis), _createRangeControl(topName, {elementType: {unit: descriptors.Unit.METERS}}, data[i])]);
         }
         popup.getElement().appendChild(table);
         popup.addToPage();
@@ -1175,7 +1179,7 @@ define([
      */
     function _createUnsetControl(propertyDescriptor, topName, parent, topParent, parentPopup, changeHandler, row) {
         var result = document.createElement("div"),
-                labelText, label, button, type = new descriptors.Type(propertyDescriptor.type), optional, setProperty, limit = false;
+                labelText, defaultValue, label, button, type = new descriptors.Type(propertyDescriptor.type), optional, setProperty, limit = false;
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, null, _item.name));
         if ((!parent || (parent === _item.data)) && _basedOn) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
@@ -1184,30 +1188,34 @@ define([
             if (propertyDescriptor.defaultText) {
                 labelText = propertyDescriptor.defaultText;
             } else {
-                if (typeof propertyDescriptor.defaultValue === "number") {
-                    labelText = propertyDescriptor.defaultValue.toString();
+                defaultValue = propertyDescriptor.defaultValue;
+                if ((defaultValue === undefined) && propertyDescriptor.globalDefault && propertyDescriptor.settingName) {
+                    defaultValue = config.getSetting(propertyDescriptor.settingName);
+                }
+                if (typeof defaultValue === "number") {
+                    labelText = defaultValue.toString();
                     if (type.getUnit()) {
                         labelText += " " + type.getUnit();
                     }
-                } else if (typeof propertyDescriptor.defaultValue === "boolean") {
-                    labelText = propertyDescriptor.defaultValue ? "yes" : "no";
-                } else if (typeof propertyDescriptor.defaultValue === "string") {
-                    labelText = propertyDescriptor.defaultValue;
+                } else if (typeof defaultValue === "boolean") {
+                    labelText = defaultValue ? "yes" : "no";
+                } else if (typeof defaultValue === "string") {
+                    labelText = defaultValue;
                     limit = true;
-                } else if (Array.isArray(propertyDescriptor.defaultValue)) {
-                    if (propertyDescriptor.defaultValue.length === 0) {
+                } else if (Array.isArray(defaultValue)) {
+                    if (defaultValue.length === 0) {
                         labelText = "empty list";
                     } else {
-                        if ((typeof propertyDescriptor.defaultValue[0] === "number") || (typeof propertyDescriptor.defaultValue[0] === "string")) {
-                            labelText = propertyDescriptor.defaultValue.join(", ");
+                        if ((typeof defaultValue[0] === "number") || (typeof defaultValue[0] === "string")) {
+                            labelText = defaultValue.join((propertyDescriptor.type === descriptors.BaseType.RANGE) ? " - " : ", ");
                             if ((propertyDescriptor.type === descriptors.BaseType.COLOR3) || (propertyDescriptor.type === descriptors.BaseType.COLOR4)) {
-                                labelText = common.createColorPreview(propertyDescriptor.defaultValue).outerHTML + labelText;
+                                labelText = common.createColorPreview(defaultValue).outerHTML + labelText;
                                 limit = false;
                             } else {
                                 limit = true;
                             }
-                        } else if (typeof propertyDescriptor.defaultValue[0] === "boolean") {
-                            labelText = propertyDescriptor.defaultValue.map((boolean) => (boolean ? "yes" : "no")).join(", ");
+                        } else if (typeof defaultValue[0] === "boolean") {
+                            labelText = defaultValue.map((boolean) => (boolean ? "yes" : "no")).join(", ");
                             limit = true;
                         }
                     }
@@ -1296,7 +1304,7 @@ define([
                     result = _createBooleanControl(topName, data, parent, propertyDescriptor.name, changeHandler);
                     break;
                 case descriptors.BaseType.NUMBER:
-                    result = _createNumberControl(topName, data, !type.isInteger(), changeHandler, parent, propertyDescriptor.name, type.getUnit(), type.getMin(), type.getMax());
+                    result = _createNumberControl(topName, data, type.isInteger(), changeHandler, parent, propertyDescriptor.name, type.getUnit(), type.getMin(), type.getMax());
                     break;
                 case descriptors.BaseType.STRING:
                     if (type.isLong()) {
@@ -1327,7 +1335,7 @@ define([
                     result = _createVectorControl(topName, data);
                     break;
                 case descriptors.BaseType.RANGE:
-                    result = _createRangeControl(topName, data);
+                    result = _createRangeControl(topName, propertyDescriptor.type, data);
                     break;
                 case descriptors.BaseType.PAIRS:
                     result = _createPairsControl(topName, propertyDescriptor.type, data, topParent, parentPopup);
@@ -1408,21 +1416,21 @@ define([
         var
                 table, rows, properties, validate, generateRow, generateTable;
         generateRow = function (row, index) {
-            var valid, required, nameCell, valueCell, control;
+            var valid, required, nameCell, valueCell, control, propertyDescriptor = itemDescriptor[properties[index]];
             nameCell = document.createElement("td");
             nameCell.classList.add(PROPERTY_CLASS);
-            nameCell.innerHTML = itemDescriptor[properties[index]].name;
-            nameCell.title = itemDescriptor[properties[index]].name;
+            nameCell.innerHTML = propertyDescriptor.name;
+            nameCell.title = propertyDescriptor.name;
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
-            valid = !itemDescriptor[properties[index]].isValid || itemDescriptor[properties[index]].isValid(data, parent, _item.name);
-            required = itemDescriptor[properties[index]].isRequired && itemDescriptor[properties[index]].isRequired(data, parent, _item.name);
+            valid = !propertyDescriptor.isValid || propertyDescriptor.isValid(data, parent, _item.name);
+            required = !propertyDescriptor.optional && !propertyDescriptor.globalDefault && !propertyDescriptor.defaultDerived && !propertyDescriptor.getDerivedDefault && (propertyDescriptor.defaultValue === undefined) && (!propertyDescriptor.isRequired || propertyDescriptor.isRequired(data, parent, _item.name));
             if (!valid || (row.required && !required)) {
-                delete data[itemDescriptor[properties[index]].name];
-            } else if (data[itemDescriptor[properties[index]].name] === undefined) {
-                data[itemDescriptor[properties[index]].name] = _getDefaultValue(itemDescriptor[properties[index]], null, data, parent, topParent, true, true);
+                delete data[propertyDescriptor.name];
+            } else if (required && (data[propertyDescriptor.name] === undefined)) {
+                data[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, data, parent, topParent, true, true);
             }
-            control = _createControl(itemDescriptor[properties[index]], data[itemDescriptor[properties[index]].name], topName, data, null, parent, topParent, parentPopup, validate.bind(this, row), row);
+            control = _createControl(propertyDescriptor, data[propertyDescriptor.name], topName, data, null, parent, topParent, parentPopup, validate.bind(this, row), row);
             valueCell.appendChild(control);
             valueCell.control = control;
             row.appendChild(valueCell);

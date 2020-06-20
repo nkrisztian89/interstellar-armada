@@ -155,6 +155,21 @@ define([
                     elementType: elementType
                 };
             },
+            /**
+             * Returns a type descriptor describing an range type
+             * @param {Boolean} minRequired
+             * @param {Boolean} maxRequired
+             * @param {Editor~TypeDescriptor} [elementType] from enum Unit
+             * @returns {Editor~TypeDescriptor}
+             */
+            _createRangeType = function (minRequired, maxRequired, elementType) {
+                return {
+                    baseType: BaseType.RANGE,
+                    minRequired: minRequired,
+                    maxRequired: maxRequired,
+                    elementType: elementType
+                };
+            },
             // ------------------------------------------------------------------------------
             // Constants
             NAME_PROPERTY_NAME = "name",
@@ -1534,7 +1549,7 @@ define([
                     },
                     RANGE: {
                         name: "range",
-                        type: BaseType.RANGE,
+                        type: _createRangeType(true, true, DEGREES),
                         optional: true,
                         defaultText: "360°"
                     },
@@ -1999,7 +2014,7 @@ define([
                 properties: {
                     TUBES: {
                         name: "tubes",
-                        type: _createTypedArrayType(MISSILE_TUBE)
+                        type: _createTypedArrayType(MISSILE_TUBE, {min: 1})
                     },
                     SIZE: {
                         name: "size",
@@ -2037,6 +2052,60 @@ define([
                 baseType: BaseType.ENUM,
                 values: classes.ObjectViewLookAtMode
             },
+            _isFPS = function (data) {
+                return !!data.fps;
+            },
+            _noLookAtSelf = function (data) {
+                return data.lookAt !== classes.ObjectViewLookAtMode.SELF;
+            },
+            _followsPosition = function (data) {
+                return (data.followsPosition !== undefined) ? data.followsPosition : _noLookAtSelf(data);
+            },
+            _pointsTowardObjects = function (data) {
+                return !!data.lookAt && (data.lookAt !== classes.ObjectViewLookAtMode.NONE);
+            },
+            _canMove = function (data) {
+                return !_followsPosition(data) || data.movable;
+            },
+            _canTurn = function (data) {
+                return !_pointsTowardObjects(data);
+            },
+            _followsOrientation = function (data) {
+                return (data.followsOrientation !== undefined) ? data.followsOrientation : _canTurn(data);
+            },
+            _canRotateAroundObject = function (data) {
+                return _noLookAtSelf(data) && _followsPosition(data) && (!_followsOrientation(data) || data.turnable || data.rotations);
+            },
+            _turnableFPS = function (data) {
+                return _isFPS(data) && !!data.turnable;
+            },
+            _canLookAt = function (data) {
+                return !_followsOrientation(data) && !data.turnable;
+            },
+            _canStartRelative = function (data) {
+                return !_followsPosition(data) && !data.rotationCenterIsObject;
+            },
+            _relativePosition = function (data) {
+                return _followsPosition(data) || data.startsWithRelativePosition;
+            },
+            _canResetWhenLeavingConfines = function (data) {
+                return (data.distanceRange || data.confines) && _relativePosition(data);
+            },
+            _requiresDistanceRange = function (data) {
+                return (data.rotationCenterIsObject || _pointsTowardObjects(data)) && data.movable;
+            },
+            _canMoveRelative = function (data) {
+                return _followsPosition(data) && _followsOrientation(data) && !data.rotationCenterIsObject && data.movable;
+            },
+            _canHaveDistanceRange = function (data) {
+                return _canMove(data) && (_relativePosition(data) || _canTurn(data) || !data.confines);
+            },
+            _canHaveConfines = function (data) {
+                return _canMove(data) && (_relativePosition(data) || _canTurn(data) || !data.distanceRange);
+            },
+            _canResetOnFocusChange = function (data) {
+                return (_canMove(data) || data.turnable) && !(_pointsTowardObjects(data) && data.startsWithRelativePosition);
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -2048,33 +2117,28 @@ define([
                         name: "name",
                         type: BaseType.STRING
                     },
-                    IS_AIMING_VIEW: {
-                        name: "isAimingView",
-                        type: BaseType.BOOLEAN
+                    AIMING_VIEW: {
+                        name: "aimingView",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
                     },
                     FOV: {
                         name: "fov",
-                        type: DEGREES,
+                        type: POSITIVE_DEGREES_180,
                         globalDefault: true,
                         settingName: config.CAMERA_SETTINGS.DEFAULT_FOV
                     },
                     FOV_RANGE: {
                         name: "fovRange",
-                        type: BaseType.RANGE,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_FOV_RANGE
+                        type: _createRangeType(true, true, POSITIVE_DEGREES_180),
+                        optional: true,
+                        defaultText: "fixed"
                     },
                     SPAN: {
                         name: "span",
-                        type: DISTANCE,
+                        type: POSITIVE_LENGTH,
                         globalDefault: true,
                         settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN
-                    },
-                    SPAN_RANGE: {
-                        name: "spanRange",
-                        type: BaseType.RANGE,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN_RANGE
                     },
                     FPS: {
                         name: "fps",
@@ -2083,64 +2147,91 @@ define([
                     },
                     FOLLOWS_POSITION: {
                         name: "followsPosition",
-                        type: BaseType.BOOLEAN
+                        type: BaseType.BOOLEAN,
+                        defaultValue: true,
+                        isValid: _noLookAtSelf
+                    },
+                    FOLLOWS_ORIENTATION: {
+                        name: "followsOrientation",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: true,
+                        isValid: _canTurn
                     },
                     BASE_ORIENTATION: {
                         name: "baseOrientation",
                         type: BASE_ORIENTATION,
-                        defaultDerived: true
+                        globalDefault: true,
+                        settingName: config.CAMERA_SETTINGS.DEFAULT_BASE_ORIENTATION,
+                        isValid: _isFPS
                     },
                     POINT_TO_FALLBACK: {
                         name: "pointToFallback",
                         type: POINT_TO_FALLBACK,
-                        optional: true
+                        globalDefault: true,
+                        settingName: config.CAMERA_SETTINGS.DEFAULT_POINT_TO_FALLBACK,
+                        isValid: _pointsTowardObjects
                     },
                     STARTS_WITH_RELATIVE_POSITION: {
                         name: "startsWithRelativePosition",
                         type: BaseType.BOOLEAN,
-                        optional: true
+                        defaultValue: false,
+                        isValid: _canStartRelative
                     },
                     LOOK_AT: {
                         name: "lookAt",
-                        type: OBJECT_VIEW_LOOK_AT_MODE
+                        type: OBJECT_VIEW_LOOK_AT_MODE,
+                        defaultValue: classes.ObjectViewLookAtMode.NONE,
+                        isValid: _canLookAt
                     },
                     MOVABLE: {
                         name: "movable",
-                        type: BaseType.BOOLEAN
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
                     },
                     TURNABLE: {
                         name: "turnable",
-                        type: BaseType.BOOLEAN
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false,
+                        isValid: _canTurn
                     },
                     ALPHA_RANGE: {
                         name: "alphaRange",
-                        type: BaseType.RANGE,
-                        defaultDerived: true
+                        type: _createRangeType(true, true, DEGREES),
+                        defaultDerived: true,
+                        isValid: _turnableFPS
                     },
                     BETA_RANGE: {
                         name: "betaRange",
-                        type: BaseType.RANGE,
-                        defaultDerived: true
+                        type: _createRangeType(true, true, DEGREES),
+                        defaultDerived: true,
+                        isValid: _turnableFPS
                     },
                     ROTATION_CENTER_IS_OBJECT: {
                         name: "rotationCenterIsObject",
                         type: BaseType.BOOLEAN,
-                        defaultDerived: true
+                        defaultValue: false,
+                        isValid: _canRotateAroundObject
                     },
                     DISTANCE_RANGE: {
                         name: "distanceRange",
-                        type: BaseType.RANGE,
-                        optional: true
+                        type: _createRangeType(false, false, DISTANCE),
+                        isRequired: _requiresDistanceRange,
+                        updateOnValidate: true,
+                        defaultText: "unlimited",
+                        isValid: _canHaveDistanceRange
                     },
                     CONFINES: {
                         name: "confines",
                         type: BaseType.CONFINES,
-                        optional: true
+                        optional: true,
+                        defaultText: "no confines",
+                        isValid: _canHaveConfines
                     },
                     RESETS_WHEN_LEAVING_CONFINES: {
                         name: "resetsWhenLeavingConfines",
                         type: BaseType.BOOLEAN,
-                        optional: true
+                        defaultValue: false,
+                        isValid: _canResetWhenLeavingConfines
                     },
                     POSITION: {
                         name: "position",
@@ -2154,17 +2245,19 @@ define([
                     MOVES_RELATIVE_TO_OBJECT: {
                         name: "movesRelativeToObject",
                         type: BaseType.BOOLEAN,
-                        defaultValue: false
+                        defaultValue: false,
+                        isValid: _canMoveRelative
                     },
                     RESETS_ON_FOCUS_CHANGE: {
                         name: "resetsOnFocusChange",
                         type: BaseType.BOOLEAN,
-                        optional: true
+                        defaultValue: false,
+                        isValid: _canResetOnFocusChange
                     },
                     EXCLUDE_FROM_CYCLE: {
                         name: "excludeFromCycle",
                         type: BaseType.BOOLEAN,
-                        optional: true
+                        defaultValue: false
                     }
                 }
             },
@@ -3527,7 +3620,6 @@ define([
                     SUBJECTS: {
                         name: "subjects",
                         type: SUBJECT_GROUP,
-                        optional: true,
                         isRequired: _actionCanHaveSubjects,
                         isValid: _actionCanHaveSubjects
                     },
@@ -3615,12 +3707,6 @@ define([
                         type: DISTANCE,
                         globalDefault: true,
                         settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN
-                    },
-                    SPAN_RANGE: {
-                        name: "spanRange",
-                        type: BaseType.RANGE,
-                        globalDefault: true,
-                        settingName: config.CAMERA_SETTINGS.DEFAULT_SPAN_RANGE
                     },
                     FPS: {
                         name: "fps",
@@ -4282,6 +4368,7 @@ define([
     // The public interface of the module
     return {
         BaseType: BaseType,
+        Unit: Unit,
         ThrusterUse: ThrusterUse,
         NAME_PROPERTY_NAME: NAME_PROPERTY_NAME,
         BASED_ON_PROPERTY_NAME: BASED_ON_PROPERTY_NAME,

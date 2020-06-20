@@ -1038,7 +1038,6 @@ define([
      * @property {Number} [fov]
      * @property {Number[2]} [fovRange]
      * @property {Number} [span]
-     * @property {Number[2]} [spanRange]
      * @property {Number} [transitionDuration]
      * @property {String} [transitionStyle] (enum Camera.TransitionStyle)
      */
@@ -1217,9 +1216,7 @@ define([
                         cameraSettings.fov,
                         (cameraSettings.fovRange && cameraSettings.fovRange[0]) || cameraSettings.fov,
                         (cameraSettings.fovRange && cameraSettings.fovRange[1]) || cameraSettings.fov,
-                        cameraSettings.span,
-                        (cameraSettings.spanRange && cameraSettings.spanRange[0]) || cameraSettings.span,
-                        (cameraSettings.spanRange && cameraSettings.spanRange[1]) || cameraSettings.span),
+                        cameraSettings.span),
                 cameraSettings.transitionDuration,
                 cameraSettings.transitionStyle);
         /**

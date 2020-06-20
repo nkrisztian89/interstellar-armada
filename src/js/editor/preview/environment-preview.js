@@ -137,7 +137,7 @@ define([
      */
     function _createOptions() {
         // environment selector
-        _optionElements.cameraSpeedEditor = common.createNumericInput(_cameraSpeed, {allowFloats: true}, function (value) {
+        _optionElements.cameraSpeedEditor = common.createNumericInput(_cameraSpeed, {}, function (value) {
             preview.updateCanvas({
                 preserve: true,
                 clearScene: true,
