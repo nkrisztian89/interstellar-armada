@@ -117,7 +117,6 @@ define([
              * Use this for properties for which the game logic actually replaces undefined values with a proper value upon loading.
              * When a new object is created having this property, this default value will be set for it. (unless an explicit newValue is 
              * specified)
-             * @property {Boolean} [defaultDerived] If the value is undefined, the value of the property will be derived (calculated) from other properties
              * @property {Boolean} [globalDefault] If the value is undefined, the value of the property will be set from a global (configuration) variable
              * @property {String} [settingName] If globalDefault is true, the name of the setting from where the default value is retrieved from can be given here
              * @property {} [newValue] When a new object is created having this property, this value will be set as its value.
@@ -297,6 +296,12 @@ define([
                 min: 0.1,
                 max: 180
             },
+            DEGREES_BETA = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.DEGREES,
+                min: -90,
+                max: 90
+            },
             POSITIVE_DEGREES_PER_SECOND = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.DEGREES_PER_SECOND,
@@ -316,6 +321,13 @@ define([
                 baseType: BaseType.NUMBER,
                 unit: Unit.PERCENT,
                 min: 0,
+                max: 100
+            },
+            POSITIVE_INT_PERCENT = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.PERCENT,
+                integer: true,
+                min: 1,
                 max: 100
             },
             NON_NEGATIVE_INTEGER = {
@@ -2197,13 +2209,14 @@ define([
                     ALPHA_RANGE: {
                         name: "alphaRange",
                         type: _createRangeType(true, true, DEGREES),
-                        defaultDerived: true,
+                        optional: true,
+                        defaultText: "unlimited",
                         isValid: _turnableFPS
                     },
                     BETA_RANGE: {
                         name: "betaRange",
-                        type: _createRangeType(true, true, DEGREES),
-                        defaultDerived: true,
+                        type: _createRangeType(true, true, DEGREES_BETA),
+                        defaultValue: [-90, 90],
                         isValid: _turnableFPS
                     },
                     ROTATION_CENTER_IS_OBJECT: {
@@ -2267,6 +2280,9 @@ define([
             WEAPON = {
                 baseType: BaseType.OBJECT,
                 name: "Weapon",
+                getName: function (data) {
+                    return data.class;
+                },
                 properties: {
                     CLASS: {
                         name: "class",
@@ -2276,7 +2292,7 @@ define([
                         name: "slotIndex",
                         type: NON_NEGATIVE_INTEGER,
                         optional: true,
-                        defaultDerived: true
+                        defaultText: "auto"
                     }
                 }
             },
@@ -2286,6 +2302,9 @@ define([
             MISSILE = {
                 baseType: BaseType.OBJECT,
                 name: "Missile",
+                getName: function (data) {
+                    return data.class + " (" + data.amount + ")";
+                },
                 properties: {
                     CLASS: {
                         name: "class",
@@ -2299,7 +2318,7 @@ define([
                         name: "launcherIndex",
                         type: NON_NEGATIVE_INTEGER,
                         optional: true,
-                        defaultDerived: true
+                        defaultText: "auto"
                     }
                 }
             },
@@ -2309,6 +2328,9 @@ define([
             PROPULSION = {
                 baseType: BaseType.OBJECT,
                 name: "Propulsion",
+                getPreviewText: function (instance) {
+                    return instance.class;
+                },
                 properties: {
                     CLASS: {
                         name: "class",
@@ -2322,6 +2344,9 @@ define([
             JUMP_ENGINE = {
                 baseType: BaseType.OBJECT,
                 name: "JumpEngine",
+                getPreviewText: function (instance) {
+                    return instance.class;
+                },
                 properties: {
                     CLASS: {
                         name: "class",
@@ -2335,6 +2360,9 @@ define([
             SHIELD = {
                 baseType: BaseType.OBJECT,
                 name: "Shield",
+                getPreviewText: function (instance) {
+                    return instance.class;
+                },
                 properties: {
                     CLASS: {
                         name: "class",
@@ -2351,33 +2379,37 @@ define([
                 properties: {
                     NAME: {
                         name: "name",
-                        type: BaseType.STRING,
-                        defaultValue: "custom"
+                        type: BaseType.STRING
                     },
                     WEAPONS: {
                         name: "weapons",
                         type: _createTypedArrayType(WEAPON),
-                        optional: true
+                        optional: true,
+                        defaultText: "none"
                     },
                     MISSILES: {
                         name: "missiles",
                         type: _createTypedArrayType(MISSILE),
-                        optional: true
+                        optional: true,
+                        defaultText: "none"
                     },
                     PROPULSION: {
                         name: "propulsion",
                         type: PROPULSION,
-                        optional: true
+                        optional: true,
+                        defaultText: "none"
                     },
                     JUMP_ENGINE: {
                         name: "jumpEngine",
                         type: JUMP_ENGINE,
-                        optional: true
+                        optional: true,
+                        defaultText: "none"
                     },
                     SHIELD: {
                         name: "shield",
                         type: SHIELD,
-                        optional: true
+                        optional: true,
+                        defaultText: "none"
                     }
                 }
             },
@@ -2387,10 +2419,13 @@ define([
             DAMAGE_INDICATOR = {
                 baseType: BaseType.OBJECT,
                 name: "DamageIndicator",
+                getName: function (data) {
+                    return data.hullIntegrity + "% - " + data.class;
+                },
                 properties: {
                     HULL_INTEGRITY: {
                         name: "hullIntegrity",
-                        type: PERCENT,
+                        type: POSITIVE_INT_PERCENT,
                         newValue: 50
                     },
                     CLASS: {
@@ -3716,7 +3751,9 @@ define([
                     BASE_ORIENTATION: {
                         name: "baseOrientation",
                         type: BASE_ORIENTATION,
-                        defaultDerived: true
+                        globalDefault: true,
+                        settingName: config.CAMERA_SETTINGS.DEFAULT_BASE_ORIENTATION,
+                        isValid: _isFPS
                     },
                     POINT_TO_FALLBACK: {
                         name: "pointToFallback",
@@ -3733,13 +3770,16 @@ define([
                     },
                     ALPHA_RANGE: {
                         name: "alphaRange",
-                        type: BaseType.RANGE,
-                        defaultDerived: true
+                        type: _createRangeType(true, true, DEGREES),
+                        optional: true,
+                        defaultText: "unlimited",
+                        isValid: _turnableFPS
                     },
                     BETA_RANGE: {
                         name: "betaRange",
-                        type: BaseType.RANGE,
-                        defaultDerived: true
+                        type: _createRangeType(true, true, DEGREES_BETA),
+                        defaultValue: [-90, 90],
+                        isValid: _turnableFPS
                     },
                     CONFINES: {
                         name: "confines",

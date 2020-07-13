@@ -40,7 +40,6 @@ define([
             EMPTY_LIST_TEXT = "empty list",
             INHERITED_PROPERTY_TEXT = "inherited",
             DEFAULT_PROPERTY_TEXT = "default",
-            DERIVED_PROPERTY_TEXT = "derived",
             UNSET_PROPERTY_TEXT = "not set",
             NONE_PROPERTY_TEXT = "none",
             UNKNOWN_PROPERTY_TEXT = "unknown",
@@ -1207,7 +1206,14 @@ define([
                         labelText = "empty list";
                     } else {
                         if ((typeof defaultValue[0] === "number") || (typeof defaultValue[0] === "string")) {
-                            labelText = defaultValue.join((propertyDescriptor.type === descriptors.BaseType.RANGE) ? " - " : ", ");
+                            if (type.getBaseType() === descriptors.BaseType.RANGE) {
+                                labelText = defaultValue.map(function (element) {
+                                    var elementType = type.getElementType();
+                                    return element + ((elementType && elementType.getUnit()) ? " " + elementType.getUnit() : "");
+                                }).join(" - ");
+                            } else {
+                                labelText = defaultValue.join(", ");
+                            }
                             if ((propertyDescriptor.type === descriptors.BaseType.COLOR3) || (propertyDescriptor.type === descriptors.BaseType.COLOR4)) {
                                 labelText = common.createColorPreview(defaultValue).outerHTML + labelText;
                                 limit = false;
@@ -1227,8 +1233,6 @@ define([
             label = _createDefaultControl(labelText);
         } else if (propertyDescriptor.getDerivedDefault) {
             label = _createDefaultControl(propertyDescriptor.getDerivedDefault(parent, null, _item.name));
-        } else if (propertyDescriptor.defaultDerived) {
-            label = _createDefaultControl(DERIVED_PROPERTY_TEXT);
         } else if (optional) {
             if (type.getBaseType() === descriptors.BaseType.ROTATIONS) {
                 label = _createDefaultControl(NONE_PROPERTY_TEXT);
@@ -1370,7 +1374,7 @@ define([
                 row.classList.remove(UNSET_PROPERTY_ROW_CLASS);
             }
             // add unset button for optional values
-            if (!required && (optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultDerived || propertyDescriptor.getDerivedDefault ||
+            if (!required && (optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.getDerivedDefault ||
                     ((!parent || (parent === _item.data)) && _basedOn && (propertyDescriptor.name !== descriptors.NAME_PROPERTY_NAME))) && (propertyDescriptor.name !== descriptors.BASED_ON_PROPERTY_NAME)) {
                 if (!control) {
                     control = result;
@@ -1424,7 +1428,7 @@ define([
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
             valid = !propertyDescriptor.isValid || propertyDescriptor.isValid(data, parent, _item.name);
-            required = !propertyDescriptor.optional && !propertyDescriptor.globalDefault && !propertyDescriptor.defaultDerived && !propertyDescriptor.getDerivedDefault && (propertyDescriptor.defaultValue === undefined) && (!propertyDescriptor.isRequired || propertyDescriptor.isRequired(data, parent, _item.name));
+            required = !propertyDescriptor.optional && !propertyDescriptor.globalDefault && !propertyDescriptor.getDerivedDefault && (propertyDescriptor.defaultValue === undefined) && (!propertyDescriptor.isRequired || propertyDescriptor.isRequired(data, parent, _item.name));
             if (!valid || (row.required && !required)) {
                 delete data[propertyDescriptor.name];
             } else if (required && (data[propertyDescriptor.name] === undefined)) {
