@@ -4233,12 +4233,12 @@ define([
          * The amount of hull integrity below which this indicator should be presented. (percentage)
          * @type Number
          */
-        this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || _showMissingPropertyError(this, "hullIntegrity")) : 0;
+        this.hullIntegrity = dataJSON ? (dataJSON.hullIntegrity || _missingNumber(this, "hullIntegrity")) : 0;
         /**
          * The class of the explosion that should be created to display this indicator.
          * @type ExplosionClass
          */
-        this.explosionClass = dataJSON ? (getExplosionClass(dataJSON.class || _showMissingPropertyError(this, "class")) || application.crash()) : null;
+        this.explosionClass = dataJSON ? (getExplosionClass(dataJSON.class || _missingString(this, "class")) || application.crash()) : null;
     }
     /**
      * @struct Describes the properties of a light source based on which an actual light source object can be added to a scene.
@@ -4249,15 +4249,15 @@ define([
         /**
          * @type Number[3]
          */
-        this.position = dataJSON ? (dataJSON.position || _showMissingPropertyError(this, "position")) : null;
+        this.position = dataJSON ? (dataJSON.position || _missingVector3(this, "position")) : null;
         /**
          * @type Number[3]
          */
-        this.color = dataJSON ? (dataJSON.color || _showMissingPropertyError(this, "color")) : null;
+        this.color = dataJSON ? (dataJSON.color || [1, 1, 1]) : null;
         /**
          * @type Number
          */
-        this.intensity = dataJSON ? (dataJSON.intensity || _showMissingPropertyError(this, "intensity")) : 0;
+        this.intensity = dataJSON ? (dataJSON.intensity || _missingNumber(this, "intensity")) : 0;
         // spot light properties are optional
         /**
          * @type Number[3]
@@ -4293,22 +4293,22 @@ define([
          * The relative position on the spacecraft.
          * @type Number[3]
          */
-        this._position = dataJSON ? (dataJSON.position || _showMissingPropertyError(this, "position")) : null;
+        this._position = dataJSON ? (dataJSON.position || _missingVector3(this, "position")) : null;
         /**
          * The duration of one cycle that keeps repeating, in milliseconds.
          * @type Number
          */
-        this._period = dataJSON ? (dataJSON.period || _showMissingPropertyError(this, "period")) : 0;
+        this._period = dataJSON ? (dataJSON.period || _missingNumber(this, "period")) : 0;
         /**
          * Within one cycle, there can be several blinks, that starting times of which are stored in this array.
          * @type Number[]
          */
-        this._blinks = dataJSON ? (dataJSON.blinks || _showMissingPropertyError(this, "blinks")) : null;
+        this._blinks = dataJSON ? (dataJSON.blinks || _missingArray(this, "blinks")) : null;
         /**
          * The intensity of the light emitted by the associated light source. If zero, there will be no light source added for this blinker.
          * @type Number
          */
-        this._intensity = dataJSON ? (dataJSON.intensity || _showMissingPropertyError(this, "intensity")) : 0;
+        this._intensity = dataJSON ? (dataJSON.intensity || _missingNumber(this, "intensity")) : 0;
         /**
          * The particle color needs an alpha component but the light color does not
          * @type Number[3]
@@ -4374,7 +4374,7 @@ define([
                 result.push(new renderableObjects.ParticleState(this._particle.getColor(), 0, (i < (this._blinks.length - 1)) ? (this._blinks[i + 1] - time) : (this._period - time)));
             }
         } else {
-            result.push(new renderableObjects.ParticleState(this._particle.getColor(), 0, 0));
+            result.push(new renderableObjects.ParticleState(this._particle.getColor(), this._particle.getSize(), 0));
         }
         return result;
     };
@@ -4418,7 +4418,7 @@ define([
         } else {
             result.push({
                 color: this.getLightColor(),
-                intensity: 0,
+                intensity: this._intensity,
                 timeToReach: 0
             });
         }

@@ -728,11 +728,14 @@ define([
      * @param {Object} topParent The top level object we are editing
      * @param {Popup} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
      * @param {Function} [changeHandler]
+     * @param {Type} [arrayType] The type object created from the type descriptor of the array
      * @returns {Element}
      */
-    function _createArrayControl(topName, elementTypeDescriptor, array, parent, topParent, parentPopup, changeHandler) {
+    function _createArrayControl(topName, elementTypeDescriptor, array, parent, topParent, parentPopup, changeHandler, arrayType) {
         var
                 type = new descriptors.Type(elementTypeDescriptor),
+                minCount = arrayType.getMinLength() || 0,
+                maxCount = arrayType.getMaxLength() || 0,
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
                 label, table, addElementButton, i,
@@ -753,29 +756,33 @@ define([
                 },
                 refreshTable,
                 addElementEditor = function (index) {
-                    _addRow(table, [
+                    var elements = [
                         common.createLabel((index + 1).toString()),
-                        _createControl({name: index, type: elementTypeDescriptor}, array[index], topName, array, parent, null, topParent, parentPopup, elementChangeHandler),
-                        common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                        _createControl({name: index, type: elementTypeDescriptor}, array[index], topName, array, parent, null, topParent, parentPopup, elementChangeHandler)
+                    ];
+                    if ((minCount === 0) || (array.length > minCount)) {
+                        elements.push(common.createButton(REMOVE_BUTTON_CAPTION, function () {
                             array.splice(index, 1);
                             updateLabel();
                             refreshTable();
                             popup.alignPosition();
                             _updateData(topName);
                             elementChangeHandler();
-                        })
-                    ]);
+                        }));
+                    }
+                    _addRow(table, elements);
                 };
         refreshTable = function () {
             table.innerHTML = "";
             for (i = 0; i < array.length; i++) {
                 addElementEditor(i);
             }
+            addElementButton.hidden = (maxCount > 0) && (array.length >= maxCount);
         };
         addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
             array.push(_getDefaultValue({type: elementTypeDescriptor}, null, parent, null, topParent, true));
             updateLabel();
-            addElementEditor(array.length - 1);
+            refreshTable();
             popup.alignPosition();
             _updateData(topName);
             elementChangeHandler();
@@ -1358,7 +1365,7 @@ define([
                     if (elementType.getBaseType() === descriptors.BaseType.OBJECT) {
                         result = _createObjectControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler, type);
                     } else {
-                        result = _createArrayControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler);
+                        result = _createArrayControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler, type);
                     }
                     break;
                 case descriptors.BaseType.ASSOCIATIVE_ARRAY:

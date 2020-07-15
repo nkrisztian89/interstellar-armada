@@ -177,10 +177,6 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            NUMBER_ARRAY = _createTypedArrayType(BaseType.NUMBER),
-            /**
-             * @type Editor~TypeDescriptor
-             */
             STRING_ARRAY = _createTypedArrayType(BaseType.STRING),
             /**
              * @type Editor~TypeDescriptor
@@ -317,12 +313,6 @@ define([
                 unit: Unit.KILOGRAMS,
                 min: 0.001
             },
-            PERCENT = {
-                baseType: BaseType.NUMBER,
-                unit: Unit.PERCENT,
-                min: 0,
-                max: 100
-            },
             POSITIVE_INT_PERCENT = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.PERCENT,
@@ -358,6 +348,10 @@ define([
                 baseType: BaseType.NUMBER,
                 min: 0.001
             },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            NON_NEGATIVE_MILLISECONDS_ARRAY = _createTypedArrayType(NON_NEGATIVE_MILLISECONDS, {min: 1}),
             /**
              * @type Editor~TypeDescriptor
              */
@@ -2434,6 +2428,9 @@ define([
                     }
                 }
             },
+            _isSpotLight = function (data) {
+                return !!data.spotDirection;
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -2447,27 +2444,32 @@ define([
                     },
                     COLOR: {
                         name: "color",
-                        type: BaseType.COLOR3
+                        type: BaseType.COLOR3,
+                        defaultValue: [1, 1, 1]
                     },
                     INTENSITY: {
                         name: "intensity",
-                        type: NON_NEGATIVE_NUMBER,
-                        defaultValue: 1
+                        type: POSITIVE_NUMBER,
+                        newValue: 10
                     },
                     SPOT_DIRECTION: {
                         name: "spotDirection",
                         type: BaseType.VECTOR3,
-                        optional: true
+                        optional: true,
+                        newValue: [0, 1, 0],
+                        defaultText: "point light"
                     },
                     SPOT_CUTOFF_ANGLE: {
                         name: "spotCutoffAngle",
-                        type: DEGREES,
-                        optional: true
+                        type: NON_NEGATIVE_DEGREES,
+                        isValid: _isSpotLight,
+                        newValue: 25
                     },
                     SPOT_FULL_INTENSITY_ANGLE: {
                         name: "spotFullIntensityAngle",
-                        type: DEGREES,
-                        optional: true
+                        type: NON_NEGATIVE_DEGREES,
+                        isValid: _isSpotLight,
+                        newValue: 5
                     }
                 }
             },
@@ -2488,17 +2490,17 @@ define([
                     },
                     PERIOD: {
                         name: "period",
-                        type: NON_NEGATIVE_MILLISECONDS,
-                        defaultValue: 1
+                        type: POSITIVE_MILLISECONDS,
+                        newValue: 1000
                     },
                     BLINKS: {
                         name: "blinks",
-                        type: NUMBER_ARRAY
+                        type: NON_NEGATIVE_MILLISECONDS_ARRAY
                     },
                     INTENSITY: {
                         name: "intensity",
-                        type: NON_NEGATIVE_NUMBER,
-                        defaultValue: 1
+                        type: POSITIVE_NUMBER,
+                        newValue: 10
                     }
                 }
             },
