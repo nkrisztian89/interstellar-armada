@@ -378,7 +378,7 @@ define([
             _factionColorChanged = false;
         }
         if (!_factionColorChanged) {
-            _factionColor = _spacecraftClass.getFactionColor().slice();
+            _factionColor = _spacecraftClass.getFactionColor() ? _spacecraftClass.getFactionColor().slice() : [0, 0, 0, 0];
         }
         _activeEngineUses = [];
         _showHitbox = false;

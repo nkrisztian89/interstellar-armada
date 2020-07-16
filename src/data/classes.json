@@ -3140,23 +3140,17 @@
             "name": "container",
             "type": "container",
             "fullName": "SMCU-11 Container",
-            "description": "-",
             "showInDatabase": false,
             "hitpoints": 5,
-            "armor": 0,
             "model": "box",
             "shader": "ship",
             "texture": "libra",
-            "factionColor": [0.8, 0.2, 0.2, 1],
             "mass": 500,
             "dragFactor": 5,
-            "lockingTimeFactor": 1,
             "bodies": [{
                     "position": [0, 0, 0],
                     "size": [4, 4, 4]
                 }],
-            "weaponSlots": [],
-            "thrusterSlots": [],
             "views": [{
                     "name": "free",
                     "fov": 45,
@@ -3167,25 +3161,15 @@
                     "distanceRange": [6, 25],
                     "position": [0, -10, 0]
                 }],
-            "loadouts": [{
-                    "name": "default",
-                    "weapons": []
-                }],
-            "defaultLoadout": "default",
             "explosion": "containerExplosion",
             "showTimeRatioDuringExplosion": 0.25,
-            "damageIndicators": [],
-            "lights": [],
-            "blinkers": [],
             "scoreValue": 5
         }, {
             "name": "falcon",
             "type": "interceptor",
             "fullName": "Falcon",
             "description": "The latest generation of interceptors, which recently became the new standard in the fleets of the Galactic Empire. Excellent for dogfighting, with a thin cross-section making it difficult to hit and a good variety of battle equipment it can carry.",
-            "showInDatabase": true,
             "hitpoints": 20,
-            "armor": 0,
             "model": "falcon",
             "shader": "ship",
             "texture": "falcon",
@@ -3666,16 +3650,13 @@
                     "spotCutoffAngle": 11,
                     "spotFullIntensityAngle": 5
                 }],
-            "blinkers": [],
             "scoreValue": 50
         }, {
             "name": "viper",
             "type": "bomber",
             "fullName": "Viper",
             "description": "A light bomber class that has good self-defence and precision strike capabilities thanks to the large amount of smaller missiles it can carry and its relatively heavy armor and shielding.",
-            "showInDatabase": true,
             "hitpoints": 45,
-            "armor": 0,
             "model": "viper",
             "shader": "ship",
             "texture": "viper",
@@ -4162,7 +4143,6 @@
                     "spotCutoffAngle": 11,
                     "spotFullIntensityAngle": 5
                 }],
-            "blinkers": [],
             "scoreValue": 80,
             "missileLaunchers": [{
                     "tubes": [{
@@ -4246,7 +4226,6 @@
             "type": "heavyFighter",
             "fullName": "Rhino",
             "description": "As the Empire started to encounter more serious resistance during its expansion, it became apparent that fighter squadrons composed of Falcons and Vipers could not operate optimally without proper cover. The Rhino heavy fighter was introduced as an answer to this challenge. While it is the least maneuverable fighter in service, this is an intentional choice. It more than makes up for this weakness with its armor, shielding, and primary armament, which all surpass that of any other current fighter class. The Rhino provides itself as an easy target for the enemy only because it can tank the shots while the interceptors and bombers complete their mission. Rhino pilots are  regarded by many as the bravest within the Empire. According to others, they are simply insane.",
-            "showInDatabase": true,
             "hitpoints": 60,
             "armor": 0.5,
             "model": "rhino",
@@ -4354,7 +4333,6 @@
                     "spotCutoffAngle": 11,
                     "spotFullIntensityAngle": 5
                 }],
-            "blinkers": [],
             "scoreValue": 100,
             "weaponSlots": [{
                     "position": [7, -6, 0.7]
@@ -4451,8 +4429,7 @@
                         }, {
                             "position": [-10, -10.2, 0],
                             "size": 3
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 1,
                     "uses": ["reverse"],
@@ -4468,8 +4445,7 @@
                         }, {
                             "position": [-10, -4.8, 0],
                             "size": 3
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 3,
                     "uses": ["strafeLeft", "yawRight", "rollLeft"],
@@ -4479,8 +4455,7 @@
                         }, {
                             "position": [1.6, -3.5, 4.2],
                             "size": 1.2
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 4,
                     "uses": ["strafeRight", "yawLeft", "rollRight"],
@@ -4490,8 +4465,7 @@
                         }, {
                             "position": [-1.6, -3.5, 4.2],
                             "size": 1.2
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 5,
                     "uses": ["strafeLeft", "yawRight", "rollRight"],
@@ -4501,8 +4475,7 @@
                         }, {
                             "position": [1.6, -3.5, -4.2],
                             "size": 1.2
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 6,
                     "uses": ["strafeRight", "yawLeft", "rollLeft"],
@@ -4512,8 +4485,7 @@
                         }, {
                             "position": [-1.6, -3.5, -4.2],
                             "size": 1.2
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 7,
                     "uses": ["raise", "rollLeft", "pitchDown"],
@@ -4523,8 +4495,7 @@
                         }, {
                             "position": [10, -7, -1.95],
                             "size": 1.6
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 8,
                     "uses": ["lower", "rollRight", "pitchUp"],
@@ -4534,8 +4505,7 @@
                         }, {
                             "position": [10, -7, 1.65],
                             "size": 1.6
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 9,
                     "uses": ["raise", "rollRight", "pitchDown"],
@@ -4545,8 +4515,7 @@
                         }, {
                             "position": [-10, -7, -1.95],
                             "size": 1.6
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 10,
                     "uses": ["lower", "rollLeft", "pitchUp"],
@@ -4556,8 +4525,7 @@
                         }, {
                             "position": [-10, -7, 1.65],
                             "size": 1.6
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 11,
                     "uses": ["lower", "pitchDown"],
@@ -4573,8 +4541,7 @@
                         }, {
                             "position": [-2, 4, 1.5],
                             "size": 1.5
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 12,
                     "uses": ["raise", "pitchUp"],
@@ -4590,24 +4557,21 @@
                         }, {
                             "position": [-2, 4, -1.5],
                             "size": 1.5
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 13,
                     "uses": ["strafeLeft", "yawLeft"],
                     "thrusters": [{
                             "position": [5.75, 3.2, 0],
                             "size": 2.2
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 14,
                     "uses": ["strafeRight", "yawRight"],
                     "thrusters": [{
                             "position": [-5.75, 3.2, 0],
                             "size": 2.2
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 15,
                     "uses": ["lower", "pitchUp"],
@@ -4617,8 +4581,7 @@
                         }, {
                             "position": [-2, -6.2, 2.5],
                             "size": 1.6
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 16,
                     "uses": ["raise", "pitchDown"],
@@ -4628,24 +4591,21 @@
                         }, {
                             "position": [-2, -6.2, -0.5],
                             "size": 1.6
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 17,
                     "uses": ["strafeLeft"],
                     "thrusters": [{
                             "position": [12, -8, 0],
                             "size": 1.8
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 18,
                     "uses": ["strafeRight"],
                     "thrusters": [{
                             "position": [-12, -8, 0],
                             "size": 1.8
-                        }],
-                    "array": false
+                        }]
                 }],
             "defaultLuminosityFactors": [[19, 1]],
             "defaultLoadout": "imperial-tier1"
@@ -4654,16 +4614,12 @@
             "type": "drone",
             "fullName": "Training drone",
             "description": "These drones are used for target practice exercises during the training of imperial fighter pilots. Cheap and easy to construct, they are assembled in a way to ensure they quickly fall to pieces when hit by the low-energy charges of training guns. These pieces are then collected and used for building new drones, thus providing a way of practicing that is both economical and closer to real life situations than a simulator.",
-            "showInDatabase": true,
             "hitpoints": 10,
-            "armor": 0,
             "model": "drone",
             "shader": "ship",
             "texture": "libra",
-            "factionColor": [0.8, 0.2, 0.2, 1],
             "mass": 2000,
             "dragFactor": 0.75,
-            "lockingTimeFactor": 1,
             "bodies": [{
                     "position": [0, 2, 0.3],
                     "size": [2, 10, 2.8]
@@ -4875,7 +4831,6 @@
                     "hullIntegrity": 10,
                     "class": "smallFire"
                 }],
-            "lights": [],
             "blinkers": [{
                     "particle": {
                         "size": 0.8,
@@ -4979,7 +4934,6 @@
             "type": "corvette",
             "fullName": "Aries",
             "description": "The most common patrol ship of the Empire. Equipped with two rapid fire precision turrets, it is very efficient at taking out enemy fighters and light bombers. It is only lightly armored, which leaves good maneuverability its main protection against larger ships. ",
-            "showInDatabase": true,
             "hitpoints": 500,
             "armor": 1,
             "turnStyle": "rollPitch",
@@ -5256,7 +5210,6 @@
                     "hullIntegrity": 10,
                     "class": "mediumFire"
                 }],
-            "lights": [],
             "blinkers": [{
                     "particle": {
                         "size": 1.5,
@@ -5336,7 +5289,6 @@
             "type": "frigate",
             "fullName": "Taurus",
             "description": "A small warship fully dedicated to armor and firepower. Its main job is to take on the larger, more powerful ships of the enemy fleet and keep them under constant fire, drawing their attention from smaller and more vulnerable units.",
-            "showInDatabase": true,
             "hitpoints": 1200,
             "armor": 1,
             "turnStyle": "yawPitch",
@@ -5712,7 +5664,6 @@
                     "hullIntegrity": 10,
                     "class": "mediumFire"
                 }],
-            "lights": [],
             "blinkers": [{
                     "particle": {
                         "shader": "particle",
@@ -5816,7 +5767,6 @@
             "type": "cruiser",
             "fullName": "Libra",
             "description": "The main capital ship class of the imperial armada, well equipped with protection against various threats. It sports heavy armor paired with both large caliber and small, precision turrets. Its two battle hangars can house up to 48 fighters to battle off more maneuverable enemies, or can also be configured for bombers to support the already significant firepower of the cruiser.",
-            "showInDatabase": true,
             "hitpoints": 8000,
             "armor": 3,
             "turnStyle": "rollYaw",
@@ -5828,7 +5778,6 @@
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
             "mass": 250000000,
-            "dragFactor": 1,
             "lockingTimeFactor": 0.5,
             "bodies": [{
                     "position": [0, 250, 0],
@@ -5905,146 +5854,128 @@
             "thrusterSlots": [{
                     "group": 1,
                     "uses": ["yawRight", "strafeLeft", "rollLeft"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [309, -1335, 641],
-                    "translationVector": [0, -80, 0],
+                    "position": [309, -1335, 641],
+                    "vector": [0, -80, 0],
                     "size": 14.6
                 }, {
                     "group": 2,
                     "uses": ["yawRight", "strafeLeft", "rollRight"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [309, -1335, -641],
-                    "translationVector": [0, -80, 0],
+                    "position": [309, -1335, -641],
+                    "vector": [0, -80, 0],
                     "size": 14.6
                 }, {
                     "group": 3,
                     "uses": ["yawLeft", "strafeRight", "rollRight"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [-309, -1335, 641],
-                    "translationVector": [0, -80, 0],
+                    "position": [-309, -1335, 641],
+                    "vector": [0, -80, 0],
                     "size": 14.6
                 }, {
                     "group": 4,
                     "uses": ["yawLeft", "strafeRight", "rollLeft"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [-309, -1335, -641],
-                    "translationVector": [0, -80, 0],
+                    "position": [-309, -1335, -641],
+                    "vector": [0, -80, 0],
                     "size": 14.6
                 }, {
                     "group": 5,
                     "uses": ["reverse"],
-                    "array": true,
                     "count": 3,
-                    "startPosition": [172.88, -1032, 445],
-                    "translationVector": [-5, -30, 80],
+                    "position": [172.88, -1032, 445],
+                    "vector": [-5, -30, 80],
                     "size": 23.3
                 }, {
                     "group": 5,
                     "uses": ["reverse"],
-                    "array": true,
                     "count": 3,
-                    "startPosition": [-172.88, -1032, 445],
-                    "translationVector": [5, -30, 80],
+                    "position": [-172.88, -1032, 445],
+                    "vector": [5, -30, 80],
                     "size": 23.3
                 }, {
                     "group": 5,
                     "uses": ["reverse"],
-                    "array": true,
                     "count": 3,
-                    "startPosition": [172.88, -1032, -445],
-                    "translationVector": [-5, -30, -80],
+                    "position": [172.88, -1032, -445],
+                    "vector": [-5, -30, -80],
                     "size": 23.3
                 }, {
                     "group": 5,
                     "uses": ["reverse"],
-                    "array": true,
                     "count": 3,
-                    "startPosition": [-172.88, -1032, -445],
-                    "translationVector": [5, -30, -80],
+                    "position": [-172.88, -1032, -445],
+                    "vector": [5, -30, -80],
                     "size": 23.3
                 }, {
                     "group": 6,
                     "uses": ["forward", "pitchUp", "lower"],
-                    "array": true,
                     "count": 10,
-                    "startPosition": [-315, -2620, 135],
-                    "translationVector": [70, 0, 0],
+                    "position": [-315, -2620, 135],
+                    "vector": [70, 0, 0],
                     "size": 16.6
                 }, {
                     "group": 7,
                     "uses": ["forward", "pitchDown", "raise"],
-                    "array": true,
                     "count": 10,
-                    "startPosition": [-315, -2620, -135],
-                    "translationVector": [70, 0, 0],
+                    "position": [-315, -2620, -135],
+                    "vector": [70, 0, 0],
                     "size": 16.6
                 }, {
                     "group": 8,
                     "uses": ["forward"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [100, -2795, 0],
-                    "translationVector": [110, 20, 0],
+                    "position": [100, -2795, 0],
+                    "vector": [110, 20, 0],
                     "size": 30
                 }, {
                     "group": 8,
                     "uses": ["forward"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [-100, -2795, 0],
-                    "translationVector": [-110, 20, 0],
+                    "position": [-100, -2795, 0],
+                    "vector": [-110, 20, 0],
                     "size": 30
                 }, {
                     "group": 9,
                     "uses": ["pitchDown", "rollRight", "lower"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [300, 1830, 150],
-                    "translationVector": [0, 80, -5.3],
+                    "position": [300, 1830, 150],
+                    "vector": [0, 80, -5.3],
                     "size": 21.3
                 }, {
                     "group": 10,
                     "uses": ["pitchUp", "rollLeft", "raise"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [300, 1830, -150],
-                    "translationVector": [0, 80, 5.3],
+                    "position": [300, 1830, -150],
+                    "vector": [0, 80, 5.3],
                     "size": 21.3
                 }, {
                     "group": 11,
                     "uses": ["yawLeft", "strafeLeft"],
-                    "array": true,
                     "count": 6,
-                    "startPosition": [395, 2205, 0],
-                    "translationVector": [-18, 70, 0],
+                    "position": [395, 2205, 0],
+                    "vector": [-18, 70, 0],
                     "size": 16.6
                 }, {
                     "group": 12,
                     "uses": ["pitchDown", "rollLeft", "lower"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [-300, 1830, 150],
-                    "translationVector": [0, 80, -5.3],
+                    "position": [-300, 1830, 150],
+                    "vector": [0, 80, -5.3],
                     "size": 21.3
                 }, {
                     "group": 13,
                     "uses": ["pitchUp", "rollRight", "raise"],
-                    "array": true,
                     "count": 4,
-                    "startPosition": [-300, 1830, -150],
-                    "translationVector": [0, 80, 5.3],
+                    "position": [-300, 1830, -150],
+                    "vector": [0, 80, 5.3],
                     "size": 21.3
                 }, {
                     "group": 14,
                     "uses": ["yawRight", "strafeRight"],
-                    "array": true,
                     "count": 6,
-                    "startPosition": [-395, 2205, 0],
-                    "translationVector": [18, 70, 0],
+                    "position": [-395, 2205, 0],
+                    "vector": [18, 70, 0],
                     "size": 16.6
                 }],
             "dockingSpaces": [{
@@ -6458,16 +6389,12 @@
             "type": "multiroleFighter",
             "fullName": "Wolf",
             "description": "A modified version of the original Phoenix class fighters which were the most common strike craft from the earlier days of the empire up until recently. The Phoenixes were versatile fighters capable of carrying out both atmospheric and deep space operations. The large cargo space and jump engine capacity for its size enables it to be used in missions of extended duration. As the empire started to face increasing internal and external threats, the Phoenix multirole fighters were superseded by the more specialized Dragonfly, Falcon, Rhino and Viper classes, as those all outmatch it in their respective roles. Most of the Phoenixes were converted for civilian use, but there is an increasing number of reports about pirates showing up with a modified version of the class, which has been designated as Wolf.",
-            "showInDatabase": true,
             "hitpoints": 25,
-            "armor": 0,
             "model": "wolf",
             "shader": "ship",
             "texture": "wolf",
-            "factionColor": [0, 0, 0, 1],
             "mass": 25000,
             "dragFactor": 0.2,
-            "lockingTimeFactor": 1,
             "bodies": [{
                     "position": [0, 10, 0],
                     "size": [15, 100, 10]
@@ -6569,7 +6496,6 @@
                     "spotCutoffAngle": 11,
                     "spotFullIntensityAngle": 5
                 }],
-            "blinkers": [],
             "scoreValue": 40,
             "weaponSlots": [{
                     "position": [0, 5, -26]
@@ -6722,9 +6648,7 @@
                         }, {
                             "position": [-46.47, -10.2, -6.08],
                             "size": 2
-                        }],
-                    "array": false,
-                    "size": 1
+                        }]
                 }, {
                     "group": 2,
                     "uses": ["yawLeft"],
@@ -6734,8 +6658,7 @@
                         }, {
                             "position": [-46.47, 8.2, -6.08],
                             "size": 2
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 3,
                     "uses": ["rollRight"],
@@ -6751,8 +6674,7 @@
                         }, {
                             "position": [-46, -3.3, -8.74],
                             "size": 1.6
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 4,
                     "uses": ["rollLeft"],
@@ -6768,8 +6690,7 @@
                         }, {
                             "position": [-46.94, -3.3, -3.42],
                             "size": 1.6
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 5,
                     "uses": ["pitchDown", "lower"],
@@ -6779,8 +6700,7 @@
                         }, {
                             "position": [-5, 45.5, 1.2],
                             "size": 1.5
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 6,
                     "uses": ["pitchUp", "raise"],
@@ -6790,8 +6710,7 @@
                         }, {
                             "position": [-5, 45.5, -1.2],
                             "size": 1.5
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 7,
                     "uses": ["reverse"],
@@ -6807,8 +6726,7 @@
                         }, {
                             "position": [-3, -5.8, 12],
                             "size": 1.8
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 8,
                     "uses": ["forward"],
@@ -6821,8 +6739,7 @@
                         }, {
                             "position": [0, -40.5, 0],
                             "size": 2.75
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 9,
                     "uses": ["strafeLeft"],
@@ -6838,8 +6755,7 @@
                         }, {
                             "position": [6.25, -15.5, 12],
                             "size": 1.1
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 10,
                     "uses": ["strafeRight"],
@@ -6855,24 +6771,21 @@
                         }, {
                             "position": [-6.25, -15.5, 12],
                             "size": 1.1
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 11,
                     "uses": ["pitchUp", "lower"],
                     "thrusters": [{
                             "position": [0, -30, 8.75],
                             "size": 1.7
-                        }],
-                    "array": false
+                        }]
                 }, {
                     "group": 12,
                     "uses": ["raise", "pitchDown"],
                     "thrusters": [{
                             "position": [0, -30, -8.75],
                             "size": 1.7
-                        }],
-                    "array": false
+                        }]
                 }],
             "defaultLuminosityFactors": [[18, 1]]
         }, {

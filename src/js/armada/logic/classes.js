@@ -523,11 +523,11 @@ define([
         for (i = 0; i < dataJSON.thrusterSlots.length; i++) {
             groupIndex = dataJSON.thrusterSlots[i].group;
             uses = dataJSON.thrusterSlots[i].uses;
-            if (dataJSON.thrusterSlots[i].array) {
-                startPosition = dataJSON.thrusterSlots[i].startPosition || _showMissingPropertyError(object, "thrusterSlot array startPosition");
-                translationVector = dataJSON.thrusterSlots[i].translationVector || _showMissingPropertyError(object, "thrusterSlot array translationVector");
-                size = dataJSON.thrusterSlots[i].size || _showMissingPropertyError(object, "thrusterSlot array size");
-                count = dataJSON.thrusterSlots[i].count || _showMissingPropertyError(object, "thrusterSlot array count");
+            if (dataJSON.thrusterSlots[i].count > 0) {
+                startPosition = dataJSON.thrusterSlots[i].position || _missingVector3(object, "thrusterSlot array position");
+                translationVector = dataJSON.thrusterSlots[i].vector || _missingVector3(object, "thrusterSlot array vector");
+                size = dataJSON.thrusterSlots[i].size || _missingNumber(object, "thrusterSlot array size");
+                count = dataJSON.thrusterSlots[i].count;
                 for (j = 0; j < count; j++) {
                     thrusterSlots.push(new ThrusterSlot({//eslint-disable-line no-use-before-define
                         position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),
@@ -3480,7 +3480,7 @@ define([
          * The coordinates of the position of the slot relative to the ship.
          * @type Number[4]
          */
-        this.positionVector = dataJSON ? (dataJSON.position.slice() || _showMissingPropertyError(this, "position")) : null;
+        this.positionVector = dataJSON ? (dataJSON.position.slice() || _missingVector3(this, "position")) : null;
         if (this.positionVector) {
             this.positionVector.push(1.0);
         }
@@ -3497,7 +3497,7 @@ define([
          * yawLeft,yawRight,pitchUp,pitchDown,rollLeft,rollRight
          * @type String[]
          */
-        this.uses = dataJSON ? (dataJSON.uses || _showMissingPropertyError(this, "uses")) : null;
+        this.uses = dataJSON ? (dataJSON.uses || _missingArray(this, "uses")) : null;
         /**
          * The index of the thruster group this slot belongs to.
          * Members of the same group should have the same uses list. The parts of the
@@ -3505,7 +3505,7 @@ define([
          * index, allowing to manipulate their appearance using uniform arrays.
          * @type Number
          */
-        this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : _showMissingPropertyError(this, "groupIndex")) : 0;
+        this.group = dataJSON ? ((typeof dataJSON.groupIndex) === "number" ? dataJSON.groupIndex : _missingNumber(this, "groupIndex")) : 0;
     }
     // ##############################################################################
     /**
@@ -4459,41 +4459,41 @@ define([
          */
         this._spacecraftType = otherSpacecraftClass ?
                 (dataJSON.type ? getSpacecraftType(dataJSON.type) : otherSpacecraftClass._spacecraftType) :
-                getSpacecraftType(dataJSON.type || _showMissingPropertyError(this, "type"));
+                getSpacecraftType(dataJSON.type || _missingString(this, "type"));
         /**
          * The full name of this class as displayed in the game.
          * @type String
          */
         this._fullName = otherSpacecraftClass ?
                 (dataJSON.fullName || otherSpacecraftClass._fullName) :
-                (dataJSON.fullName || _showMissingPropertyError(this, "fullName"));
-        /**
-         * The description of this class as can be viewed in the game.
-         * @type String
-         */
-        this._description = otherSpacecraftClass ?
-                (dataJSON.description || otherSpacecraftClass._description) :
-                (dataJSON.description || _showMissingPropertyError(this, "description"));
+                (dataJSON.fullName || this.getName());
         /**
          * Whether this spacecraft class should show up in the database
          * @type Boolean
          */
         this._showInDatabase = otherSpacecraftClass ?
                 (((typeof dataJSON.showInDatabase) === "boolean") ? dataJSON.showInDatabase : otherSpacecraftClass._showInDatabase) :
-                (((typeof dataJSON.showInDatabase) === "boolean") ? dataJSON.showInDatabase : _showMissingPropertyError(this, "showInDatabase"));
+                (((typeof dataJSON.showInDatabase) === "boolean") ? dataJSON.showInDatabase : true);
+        /**
+         * The description of this class as can be viewed in the game.
+         * @type String
+         */
+        this._description = otherSpacecraftClass ?
+                (dataJSON.description || otherSpacecraftClass._description) :
+                (dataJSON.description || (this._showInDatabase ? _missingString(this, "description") : ""));
         /**
          * The amount of damage a ship of this class can take before being destroyed.
          * @type Number
          */
         this._hitpoints = otherSpacecraftClass ?
                 (dataJSON.hitpoints || otherSpacecraftClass._hitpoints) :
-                (dataJSON.hitpoints || _showMissingPropertyError(this, "hitpoints") || 0);
+                (dataJSON.hitpoints || _missingNumber(this, "hitpoints"));
         /**
          * The thickness of the armor of this spacecraft, which is subtracted from the damage every time the spacecraft is hit.
          * @type Number
          */
         this._armor = ((typeof dataJSON.armor) === "number") ? dataJSON.armor :
-                (otherSpacecraftClass ? otherSpacecraftClass._armor : (_showMissingPropertyError(this, "armor") || 0));
+                (otherSpacecraftClass ? otherSpacecraftClass._armor : 0);
         /**
          * The color stored in the spacecraft model that corresponds to the faction color (and is to be replaced by the actual faction color
          * of the teams spacecrafts of this class belong to)
@@ -4501,7 +4501,7 @@ define([
          */
         this._factionColor = otherSpacecraftClass ?
                 (dataJSON.factionColor || otherSpacecraftClass._factionColor) :
-                (dataJSON.factionColor || _showMissingPropertyError(this, "factionColor") || [0, 0, 0, 0]);
+                (dataJSON.factionColor || null);
         /**
          * When controlled by the AI, the spacecraft should orient itself into specific position using this turning style.
          * (enum SpacecraftTurnStyle)
@@ -4555,7 +4555,7 @@ define([
          */
         this._mass = otherSpacecraftClass ?
                 (dataJSON.mass || otherSpacecraftClass._mass) :
-                (dataJSON.mass || _showMissingPropertyError(this, "mass"));
+                (dataJSON.mass || _missingNumber(this, "mass"));
         /**
          * If there is drag in the environment, its effect on this spacecraft will be multiplied by this factor
          * @type Number
@@ -4571,7 +4571,7 @@ define([
         if (dataJSON.bodies) {
             for (i = 0; i < dataJSON.bodies.length; i++) {
                 this._bodies.push(new physics.Body(
-                        mat.translation4v(dataJSON.bodies[i].position || _showMissingPropertyError(this, "bodies[i].position")),
+                        mat.translation4v(dataJSON.bodies[i].position || _missingVector3(this, "bodies[i].position")),
                         mat.rotation4FromJSON(dataJSON.bodies[i].rotations),
                         dataJSON.bodies[i].size));
             }
@@ -4670,14 +4670,14 @@ define([
          */
         this._explosionClass = otherSpacecraftClass ?
                 (dataJSON.explosion ? getExplosionClass(dataJSON.explosion) : otherSpacecraftClass._explosionClass) :
-                getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion"));
+                getExplosionClass(dataJSON.explosion || _missingString(this, "explosion"));
         /**
          * How long should spacecraft be displayed during its explosion (as a ratio compared to the explosion duration)
          * @type Number
          */
-        this._showTimeRatioDuringExplosion = otherSpacecraftClass ?
-                (dataJSON.showTimeRatioDuringExplosion || otherSpacecraftClass._showTimeRatioDuringExplosion) :
-                (dataJSON.showTimeRatioDuringExplosion || _showMissingPropertyError(this, "showTimeRatioDuringExplosion"));
+        this._showTimeRatioDuringExplosion = (dataJSON.showTimeRatioDuringExplosion !== undefined) ?
+                dataJSON.showTimeRatioDuringExplosion :
+                (otherSpacecraftClass ? otherSpacecraftClass._showTimeRatioDuringExplosion : _missingNumber(this, "showTimeRatioDuringExplosion"));
         /**
          * The damage indicators (fires, sparks) that progressively appear as the ship loses hull integrity
          * @type DamageIndicator[]
@@ -4687,8 +4687,6 @@ define([
             for (i = 0; i < dataJSON.damageIndicators.length; i++) {
                 this._damageIndicators.push(new DamageIndicator(dataJSON.damageIndicators[i]));
             }
-        } else if (!otherSpacecraftClass) {
-            _showMissingPropertyError(this, "damageIndicators");
         }
         /**
          * The light sources that can be added to a scene along with this spacecraft.
@@ -4699,8 +4697,6 @@ define([
             for (i = 0; i < dataJSON.lights.length; i++) {
                 this._lightSources.push(new LightSourceDescriptor(dataJSON.lights[i]));
             }
-        } else if (!otherSpacecraftClass) {
-            _showMissingPropertyError(this, "lights");
         }
         /**
          * The descriptors for the blinking lights that can be added to the scene along with this spacecraft.
@@ -4711,24 +4707,22 @@ define([
             for (i = 0; i < dataJSON.blinkers.length; i++) {
                 this._blinkerDescriptors.push(new BlinkerDescriptor(dataJSON.blinkers[i]));
             }
-        } else if (!otherSpacecraftClass) {
-            _showMissingPropertyError(this, "blinkers");
         }
         /**
          * When locking on to this spacecraft with a missile, the time it takes to achieve lock is multiplied by this factor
          * (smaller for larger ships, larger for more stealthy ships)
          * @type Number
          */
-        this._lockingTimeFactor = otherSpacecraftClass ?
-                (dataJSON.lockingTimeFactor || otherSpacecraftClass._lockingTimeFactor) :
-                (dataJSON.lockingTimeFactor || _showMissingPropertyError(this, "lockingTimeFactor") || 0);
+        this._lockingTimeFactor = (dataJSON.lockingTimeFactor !== undefined) ?
+                dataJSON.lockingTimeFactor :
+                (otherSpacecraftClass ? otherSpacecraftClass._lockingTimeFactor : 1);
         /**
          * The basic (without any equipment) amount of score points destroying a spacecraft of this type is worth 
          * @type Number
          */
         this._scoreValue = otherSpacecraftClass ?
                 (dataJSON.scoreValue || otherSpacecraftClass._scoreValue) :
-                (dataJSON.scoreValue || _showMissingPropertyError(this, "scoreValue") || 0);
+                (dataJSON.scoreValue || 0);
     };
     /**
      * @override

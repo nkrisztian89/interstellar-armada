@@ -83,6 +83,11 @@ define([
              */
             HITBOX_BODY_MODEL_NAME = "hitBox",
             /**
+             * A nonexistent color to set the original faction color uniform to when there is no faction color set
+             * @type Number[4]
+             */
+            FACTION_COLOR_NONE = [-1, -1, -1, -1],
+            /**
              * The name (without prefixes and suffixes) of the uniform variable that stores the original faction color (the color included
              * in the model file) of spacecraft models.
              * @type String
@@ -1829,7 +1834,7 @@ define([
             if (this._name) {
                 visualModel.setName(this._name);
             }
-            originalFactionColor = this._class.getFactionColor();
+            originalFactionColor = this._class.getFactionColor() || FACTION_COLOR_NONE;
             replacementFactionColor = params.factionColor || (this._team && this._team.getColor()) || originalFactionColor;
             visualModel.setUniformValueFunction(UNIFORM_ORIGINAL_FACTION_COLOR_NAME, function () {
                 return originalFactionColor;

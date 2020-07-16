@@ -286,6 +286,12 @@ define([
                 min: 0,
                 max: 360
             },
+            NON_NEGATIVE_DEGREES_180 = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.DEGREES,
+                min: 0,
+                max: 180
+            },
             POSITIVE_DEGREES_180 = {
                 baseType: BaseType.NUMBER,
                 unit: Unit.DEGREES,
@@ -1225,7 +1231,8 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: NON_NEGATIVE_SCALE
+                        type: POSITIVE_SCALE,
+                        newValue: 1
                     }
                 }
             },
@@ -1236,6 +1243,12 @@ define([
                 baseType: BaseType.SET,
                 name: "ThrusterUses",
                 values: ThrusterUse
+            },
+            _hasNoCount = function (data) {
+                return !data.count;
+            },
+            _hasCount = function (data) {
+                return data.count > 0;
             },
             /**
              * @type Editor~TypeDescriptor
@@ -1254,33 +1267,30 @@ define([
                     },
                     THRUSTERS: {
                         name: "thrusters",
-                        type: _createTypedArrayType(THRUSTER),
-                        optional: true
-                    },
-                    ARRAY: {
-                        name: "array",
-                        type: BaseType.BOOLEAN,
-                        defaultValue: false
+                        type: _createTypedArrayType(THRUSTER, {min: 1}),
+                        isValid: _hasNoCount
                     },
                     COUNT: {
                         name: "count",
                         type: POSITIVE_INTEGER,
-                        optional: true
+                        optional: true,
+                        defaultText: "not an array"
                     },
-                    START_POSITION: {
-                        name: "startPosition",
+                    POSITION: {
+                        name: "position",
                         type: BaseType.VECTOR3,
-                        optional: true
+                        isValid: _hasCount
                     },
-                    TRANSLATION_VECTOR: {
-                        name: "translationVector",
+                    VECTOR: {
+                        name: "vector",
                         type: BaseType.VECTOR3,
-                        optional: true
+                        isValid: _hasCount
                     },
                     SIZE: {
                         name: "size",
-                        type: NON_NEGATIVE_SCALE,
-                        optional: true
+                        type: POSITIVE_SCALE,
+                        newValue: 1,
+                        isValid: _hasCount
                     }
                 }
             },
@@ -2518,6 +2528,15 @@ define([
                     return [];
                 }
             },
+            _shownInDatabase = function (data) {
+                return data.showInDatabase !== false;
+            },
+            _isShip = function (data) {
+                return !!data.type && !classes.getSpacecraftType(data.type).isFighterType();
+            },
+            _hasLoadouts = function (data) {
+                return !!data.loadouts && (data.loadouts.length > 0);
+            },
             /**
              * The descriptor object for spacecraft classes, describing their properties
              * @type Editor~ItemDescriptor
@@ -2530,7 +2549,8 @@ define([
                 BASED_ON: {
                     name: "basedOn",
                     type: SPACECRAFT_CLASS_REFERENCE,
-                    optional: true
+                    optional: true,
+                    defaultText: "none"
                 },
                 TYPE: {
                     name: "type",
@@ -2539,39 +2559,46 @@ define([
                 FULL_NAME: {
                     name: "fullName",
                     type: BaseType.STRING,
-                    newValue: "unnamed"
+                    optional: true,
+                    getDerivedDefault: _getName,
+                    updateOnValidate: true
+                },
+                SHOW_IN_DATABASE: {
+                    name: "showInDatabase",
+                    type: BaseType.BOOLEAN,
+                    defaultValue: true
                 },
                 DESCRIPTION: {
                     name: "description",
                     type: LONG_STRING,
+                    isValid: _shownInDatabase,
                     newValue: "-"
-                },
-                SHOW_IN_DATABASE: {
-                    name: "showInDatabase",
-                    type: BaseType.BOOLEAN
                 },
                 HITPOINTS: {
                     name: "hitpoints",
-                    type: NON_NEGATIVE_NUMBER,
-                    newValue: 1
+                    type: POSITIVE_INTEGER
                 },
                 ARMOR: {
                     name: "armor",
-                    type: NON_NEGATIVE_NUMBER
+                    type: NON_NEGATIVE_NUMBER,
+                    defaultValue: 0
                 },
                 TURN_STYLE: {
                     name: "turnStyle",
                     type: SPACECRAFT_TURN_STYLE,
+                    isValid: _isShip,
                     defaultValue: classes.SpacecraftTurnStyle.YAW_PITCH
                 },
                 ATTACK_VECTOR: {
                     name: "attackVector",
                     type: BaseType.VECTOR3,
+                    isValid: _isShip,
                     defaultValue: [0, 1, 0]
                 },
                 ATTACK_THRESHOLD_ANGLE: {
                     name: "attackThresholdAngle",
-                    type: DEGREES,
+                    type: NON_NEGATIVE_DEGREES_180,
+                    isValid: _isShip,
                     defaultValue: 0
                 },
                 MODEL: {
@@ -2588,17 +2615,20 @@ define([
                 },
                 FACTION_COLOR: {
                     name: "factionColor",
-                    type: BaseType.COLOR4
+                    type: BaseType.COLOR4,
+                    optional: true,
+                    defaultText: "none"
                 },
                 DEFAULT_LUMINOSITY_FACTORS: {
                     name: "defaultLuminosityFactors",
                     type: LUMINOSITY_FACTOR_PAIRS,
-                    optional: true
+                    optional: true,
+                    defaultText: "all zeros"
                 },
                 MASS: {
                     name: "mass",
                     type: KILOGRAMS,
-                    newValue: 1
+                    newValue: 10000
                 },
                 DRAG_FACTOR: {
                     name: "dragFactor",
@@ -2608,46 +2638,53 @@ define([
                 LOCKING_TIME_FACTOR: {
                     name: "lockingTimeFactor",
                     type: NON_NEGATIVE_SCALE,
-                    newValue: 1
+                    defaultValue: 1
                 },
                 BODIES: {
                     name: "bodies",
-                    type: _createTypedArrayType(BODY)
+                    type: _createTypedArrayType(BODY, {min: 1})
                 },
                 WEAPON_SLOTS: {
                     name: "weaponSlots",
-                    type: _createTypedArrayType(WEAPON_SLOT),
-                    optional: true
+                    type: _createTypedArrayType(WEAPON_SLOT, {min: 1}),
+                    optional: true,
+                    defaultText: "none"
                 },
                 MISSILE_LAUNCHERS: {
                     name: "missileLaunchers",
-                    type: _createTypedArrayType(MISSILE_LAUNCHER),
-                    optional: true
+                    type: _createTypedArrayType(MISSILE_LAUNCHER, {min: 1}),
+                    optional: true,
+                    defaultText: "none"
                 },
                 THRUSTER_SLOTS: {
                     name: "thrusterSlots",
-                    type: _createTypedArrayType(THRUSTER_SLOT),
-                    optional: true
+                    type: _createTypedArrayType(THRUSTER_SLOT, {min: 1}),
+                    optional: true,
+                    defaultText: "none"
                 },
                 VIEWS: {
                     name: "views",
-                    type: _createTypedArrayType(VIEW)
+                    type: _createTypedArrayType(VIEW, {min: 1})
                 },
                 LOADOUTS: {
                     name: "loadouts",
-                    type: _createTypedArrayType(LOADOUT),
-                    optional: true
+                    type: _createTypedArrayType(LOADOUT, {min: 1}),
+                    optional: true,
+                    defaultText: "none"
                 },
                 DEFAULT_LOADOUT: {
                     name: "defaultLoadout",
                     type: LOADOUT_REFERENCE,
+                    isValid: _hasLoadouts,
                     optional: true,
+                    defaultText: "none",
                     updateOnValidate: true
                 },
                 HUM_SOUND: {
                     name: "humSound",
                     type: SOUND_DESCRIPTOR,
-                    optional: true
+                    optional: true,
+                    defaultText: "none"
                 },
                 EXPLOSION: {
                     name: "explosion",
@@ -2656,24 +2693,30 @@ define([
                 SHOW_TIME_RATIO_DURING_EXPLOSION: {
                     name: "showTimeRatioDuringExplosion",
                     type: RATIO,
-                    newValue: 1
+                    newValue: 0.5
                 },
                 DAMAGE_INDICATORS: {
                     name: "damageIndicators",
-                    type: _createTypedArrayType(DAMAGE_INDICATOR)
+                    type: _createTypedArrayType(DAMAGE_INDICATOR, {min: 1}),
+                    optional: true,
+                    defaultText: "none"
                 },
                 LIGHTS: {
                     name: "lights",
-                    type: _createTypedArrayType(SPACECRAFT_LIGHT)
+                    type: _createTypedArrayType(SPACECRAFT_LIGHT, {min: 1}),
+                    optional: true,
+                    defaultText: "none"
                 },
                 BLINKERS: {
                     name: "blinkers",
-                    type: _createTypedArrayType(BLINKER)
+                    type: _createTypedArrayType(BLINKER, {min: 1}),
+                    optional: true,
+                    defaultText: "none"
                 },
                 SCORE_VALUE: {
                     name: "scoreValue",
                     type: NON_NEGATIVE_INTEGER,
-                    newValue: 1
+                    defaultValue: 0
                 }
             },
             /**

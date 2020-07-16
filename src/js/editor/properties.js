@@ -1438,7 +1438,7 @@ define([
             required = !propertyDescriptor.optional && !propertyDescriptor.globalDefault && !propertyDescriptor.getDerivedDefault && (propertyDescriptor.defaultValue === undefined) && (!propertyDescriptor.isRequired || propertyDescriptor.isRequired(data, parent, _item.name));
             if (!valid || (row.required && !required)) {
                 delete data[propertyDescriptor.name];
-            } else if (required && (data[propertyDescriptor.name] === undefined)) {
+            } else if (required && (data[propertyDescriptor.name] === undefined) && (!_basedOn || (data !== _item.data))) {
                 data[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, data, parent, topParent, true, true);
             }
             control = _createControl(propertyDescriptor, data[propertyDescriptor.name], topName, data, null, parent, topParent, parentPopup, validate.bind(this, row), row);
