@@ -2742,16 +2742,18 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "BackgroundObjectPosition",
                 getPreviewText: function (data) {
-                    return data.angleAlpha + "°, " + data.angleBeta + "°" + ((data.angleGamma !== undefined) ? ", " + data.angleGamma + "°" : "");
+                    return (data.angleAlpha || 0) + "°, " + (data.angleBeta || 0) + "°" + ((data.angleGamma !== undefined) ? ", " + data.angleGamma + "°" : "");
                 },
                 properties: {
                     ANGLE_ALPHA: {
                         name: "angleAlpha",
-                        type: DEGREES
+                        type: DEGREES,
+                        defaultValue: 0
                     },
                     ANGLE_BETA: {
                         name: "angleBeta",
-                        type: DEGREES
+                        type: DEGREES,
+                        defaultValue: 0
                     },
                     ANGLE_GAMMA: {
                         name: "angleGamma",
@@ -2767,7 +2769,7 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "BackgroundObject",
                 getName: function (data) {
-                    return data.class + "::" + data.size;
+                    return data.class + " (" + data.size + ")";
                 },
                 properties: {
                     CLASS: {
@@ -2776,7 +2778,7 @@ define([
                     },
                     SIZE: {
                         name: "size",
-                        type: NON_NEGATIVE_SCALE,
+                        type: POSITIVE_SCALE,
                         newValue: 100
                     },
                     POSITION: {
@@ -2844,6 +2846,14 @@ define([
              * @type Editor~ItemDescriptor
              */
             ENVIRONMENT = {
+                NAME: {
+                    name: "name",
+                    type: BaseType.STRING
+                },
+                LOCATION: {
+                    name: "location",
+                    type: BaseType.STRING
+                },
                 COLOR: {
                     name: "color",
                     type: BaseType.COLOR4,
