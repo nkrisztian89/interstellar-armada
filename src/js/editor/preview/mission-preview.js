@@ -194,11 +194,18 @@ define([
      * @returns {String}
      */
     function _getInfo() {
-        var result, spacecrafts, pilotedCraft, i, friendlyPresent = 0, friendlyTotal = 0, hostilePresent = 0, hostileTotal = 0;
+        var result, performanceLevelScores, performanceLevels, spacecrafts, pilotedCraft, i, friendlyPresent = 0, friendlyTotal = 0, hostilePresent = 0, hostileTotal = 0;
         result = "";
         if (_mission) {
             result = '<span class="objectives">[show objectives]<div class="objectives popup">' + _missionDescriptor.getMissionObjectives().join('<br>') + '</div></span>';
-            result += " Reference score: " + Math.round(_mission.getReferenceScore());
+            performanceLevelScores = _mission.getPerformanceLevelScores();
+            performanceLevels = Object.keys(performanceLevelScores);
+            result += "  Score requirements:";
+            for (i = 0; i < performanceLevels.length; i++) {
+                if (performanceLevelScores[performanceLevels[i]] > 0) {
+                    result += " " + performanceLevels[i] + ": " + performanceLevelScores[performanceLevels[i]];
+                }
+            }
             spacecrafts = _mission.getSpacecrafts();
             pilotedCraft = _mission.getPilotedSpacecraft();
             if (pilotedCraft) {

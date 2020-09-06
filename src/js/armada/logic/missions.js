@@ -2848,6 +2848,14 @@ define([
         };
     };
     /**
+     * Returns an object containing the required scores for the mission for all the stored mission performance levels.
+     * The keys are the IDs of the performance levels and the values are the scores.
+     * @returns {Object}
+     */
+    Mission.prototype.getPerformanceLevelScores = function () {
+        return _context.getPerformanceLevelScores(this);
+    };
+    /**
      * Creates and returns a camera configuration for this given view set up according to the scene view's parameters.
      * @param {SceneView} view
      * @param {Scene} scene
@@ -3750,6 +3758,19 @@ define([
         result.performance = (i > 0) ? this._missionPerformanceLevels[i - 1].getName() : FAILED_MISSION_PERFORMACE;
         result.nextPerformance = (i < length) ? this._missionPerformanceLevels[i].getName() : null;
         result.nextPerformanceScore = result.nextPerformance ? this._missionPerformanceLevels[i].getRequiredScore(mission) : 0;
+        return result;
+    };
+    /**
+     * Returns an object containing the required scores for the passed mission for all the stored mission performance levels.
+     * The keys are the IDs of the performance levels and the values are the scores.
+     * @param {Mission} mission
+     * @returns {Object}
+     */
+    MissionContext.prototype.getPerformanceLevelScores = function (mission) {
+        var i, result = {};
+        for (i = 0; i < this._missionPerformanceLevels.length; i++) {
+            result[this._missionPerformanceLevels[i].getName()] = this._missionPerformanceLevels[i].getRequiredScore(mission);
+        }
         return result;
     };
     /**
