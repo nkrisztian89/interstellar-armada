@@ -466,6 +466,10 @@ define([
         _showMissingPropertyError(classInstance, propertyName);
         return "";
     }
+    function _missingVector2(classInstance, propertyName) {
+        _showMissingPropertyError(classInstance, propertyName);
+        return [0, 0];
+    }
     function _missingVector3(classInstance, propertyName) {
         _showMissingPropertyError(classInstance, propertyName);
         return [0, 0, 0];
@@ -473,6 +477,10 @@ define([
     function _missingArray(classInstance, propertyName) {
         _showMissingPropertyError(classInstance, propertyName);
         return [];
+    }
+    function _missingObject(classInstance, propertyName) {
+        _showMissingPropertyError(classInstance, propertyName);
+        return null;
     }
     /**
      * Marks the sound effect resource corresponding to the passed descriptor for loading and saves a reference to it within the descriptor
@@ -597,7 +605,7 @@ define([
          */
         this._shaderName = otherShadedClass ?
                 ((dataJSON && dataJSON.shader) ? dataJSON.shader : otherShadedClass._shaderName) :
-                (dataJSON ? (dataJSON.shader || _showMissingPropertyError(this, "shader")) : null);
+                (dataJSON ? (dataJSON.shader || _missingString(this, "shader")) : null);
         /**
          * @type ShaderResource
          */
@@ -772,7 +780,7 @@ define([
         /**
          * @type String
          */
-        this._cubemapName = dataJSON ? (dataJSON.cubemap || _showMissingPropertyError(this, "cubemap")) : null;
+        this._cubemapName = dataJSON ? (dataJSON.cubemap || _missingString(this, "cubemap")) : null;
         /**
          * @type CubemapResource
          */
@@ -832,7 +840,7 @@ define([
          */
         this._textureName = otherTexturedModelClass ?
                 ((dataJSON && dataJSON.texture) ? dataJSON.texture : otherTexturedModelClass._textureName) :
-                (dataJSON ? (dataJSON.texture || _showMissingPropertyError(this, "texture")) : null);
+                (dataJSON ? (dataJSON.texture || _missingString(this, "texture")) : null);
         /**
          * @type TextureResource
          */
@@ -1022,12 +1030,12 @@ define([
          * it passed this much time ago), in milliseconds
          * @type Number
          */
-        this._duration = dataJSON ? (dataJSON.duration || _showMissingPropertyError(this, "duration")) : null;
+        this._duration = dataJSON ? (dataJSON.duration || _missingNumber(this, "duration")) : null;
         /**
          * Determines how fast does a newly created trail section grow to full duration / length
          * @type Number
          */
-        this._growthRate = dataJSON ? (dataJSON.growthRate || _showMissingPropertyError(this, "growthRate")) : null;
+        this._growthRate = dataJSON ? (dataJSON.growthRate || _missingNumber(this, "growthRate")) : null;
         return true;
     };
     /**
@@ -1163,7 +1171,7 @@ define([
          * class is instantiated.
          * @type Number
          */
-        this._numberOfParticles = dataJSON ? (dataJSON.numberOfParticles || _showMissingPropertyError(this, "numberOfParticles")) : 0;
+        this._numberOfParticles = dataJSON ? (dataJSON.numberOfParticles || _missingNumber(this, "numberOfParticles")) : 0;
         /**
          * The color of the particles in the dust clouds of this class.
          * @type Number[3]
@@ -1174,7 +1182,7 @@ define([
          * from the camera along any axis.
          * @type Number
          */
-        this._range = dataJSON ? (dataJSON.range || _showMissingPropertyError(this, "range")) : 0;
+        this._range = dataJSON ? (dataJSON.range || _missingNumber(this, "range")) : 0;
         return true;
     };
     /**
@@ -1659,7 +1667,7 @@ define([
          * shot from weapons.
          * @type Number
          */
-        this._mass = dataJSON ? (dataJSON.mass || _showMissingPropertyError(this, "mass")) : 0;
+        this._mass = dataJSON ? (dataJSON.mass || _missingNumber(this, "mass")) : 0;
         /**
          * If there is drag in the environment, its effect on this projectile will be multiplied by this factor
          * @type Number
@@ -1670,12 +1678,12 @@ define([
          * disappear. In milliseconds.
          * @type Number
          */
-        this._duration = dataJSON ? (dataJSON.duration || _showMissingPropertyError(this, "duration")) : 0;
+        this._duration = dataJSON ? (dataJSON.duration || _missingNumber(this, "duration")) : 0;
         /**
          * The length of time while the projetile dissipates at the end of its duration, bringing down its power linearly to zero, in milliseconds.
          * @type Number
          */
-        this._dissipationDuration = dataJSON ? (dataJSON.dissipationDuration || _showMissingPropertyError(this, "dissipationDuration")) : 0;
+        this._dissipationDuration = dataJSON ? (dataJSON.dissipationDuration || _missingNumber(this, "dissipationDuration")) : 0;
         /**
          * A descriptor for the properties of the muzzle flash particle which is 
          * created when this projectile is shot from a weapon. 
@@ -1698,17 +1706,17 @@ define([
          * The intensity of the light this projectile emits as a light source.
          * @type Number
          */
-        this._lightIntensity = dataJSON ? (dataJSON.lightColor ? dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity") : 0) : 0;
+        this._lightIntensity = dataJSON ? (dataJSON.lightColor ? dataJSON.lightIntensity || _missingNumber(this, "lightIntensity") : 0) : 0;
         /**
          * The class of the explosion this projectile creates when it hits the armor of a spacecraft.
          * @type ExplosionClass
          */
-        this._explosionClass = dataJSON ? (getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion")) || application.crash()) : null;
+        this._explosionClass = dataJSON ? (getExplosionClass(dataJSON.explosion || _missingString(this, "explosion")) || application.crash()) : null;
         /**
          * The class of the explosion this projectile creates when it hits the shield of a spacecraft.
          * @type ExplosionClass
          */
-        this._shieldExplosionClass = dataJSON ? (getExplosionClass(dataJSON.shieldExplosion || _showMissingPropertyError(this, "shieldExplosion")) || application.crash()) : null;
+        this._shieldExplosionClass = dataJSON ? (getExplosionClass(dataJSON.shieldExplosion || _missingString(this, "shieldExplosion")) || application.crash()) : null;
         return true;
     };
     /**
@@ -1858,7 +1866,7 @@ define([
          * has the same size (i.e. this represents the radius category of the missile)
          * @type String
          */
-        this._size = dataJSON ? utils.getSafeEnumValue(MissileSize, dataJSON.size, null) || _showMissingPropertyError(this, "size") : null;
+        this._size = dataJSON ? utils.getSafeEnumValue(MissileSize, dataJSON.size, null) || _missingString(this, "size") : null;
         /**
          * How much capacity is taken up by one missile of this class, when put
          * in a launch tube (i.e. this represents the length of the missile)
@@ -1870,7 +1878,7 @@ define([
          * in the same launch tube, in meters.
          * @type Number
          */
-        this._length = dataJSON ? (dataJSON.length || _showMissingPropertyError(this, "length")) : 0;
+        this._length = dataJSON ? (dataJSON.length || _missingNumber(this, "length")) : 0;
         /**
          * (enum MissileHomingMode) Determines the homing mechanism of the missile
          * @type Number
@@ -1881,7 +1889,7 @@ define([
          * exerts when launching and hitting targets and its acceleration.
          * @type Number
          */
-        this._mass = dataJSON ? (dataJSON.mass || _showMissingPropertyError(this, "mass")) : 0;
+        this._mass = dataJSON ? (dataJSON.mass || _missingNumber(this, "mass")) : 0;
         /**
          * If there is drag in the environment, its effect on this missile will be multiplied by this factor
          * @type Number
@@ -1901,19 +1909,19 @@ define([
          * The forward acceleration of the missile when the main thruster is firing, in m/s^2
          * @type Number
          */
-        this._acceleration = dataJSON ? (dataJSON.acceleration || _showMissingPropertyError(this, "acceleration")) : 0;
+        this._acceleration = dataJSON ? (dataJSON.acceleration || _missingNumber(this, "acceleration")) : 0;
         /**
          * The thrust that the main thruster of the missile exerts for accelerating the missile towards
          * the target, in newtons (kg*m/s^2)
          * @type Number
          */
-        this._thrust = dataJSON ? ((this._mass * dataJSON.acceleration) || _showMissingPropertyError(this, "acceleration")) : 0;
+        this._thrust = dataJSON ? ((this._mass * dataJSON.acceleration) || _missingNumber(this, "acceleration")) : 0;
         /**
          * The maximum angular acceleration the maneuvering thrusters of the missile can achieve in their
          * respective direction (yaw / pitch), in rad/s^2
          * @type Number
          */
-        this._angularAcceleration = (this._homingMode !== MissileHomingMode.NONE) ? (dataJSON ? (Math.radians(dataJSON.angularAcceleration) || _showMissingPropertyError(this, "angularAcceleration")) : 0) : 0;
+        this._angularAcceleration = (this._homingMode !== MissileHomingMode.NONE) ? (dataJSON ? (Math.radians(dataJSON.angularAcceleration) || _missingNumber(this, "angularAcceleration")) : 0) : 0;
         /**
          * Determines the amount of torque the maneuvering thrusters can exert on the missile in their 
          * respective direction (yaw / pitch), in kg*rad/s^2
@@ -1925,13 +1933,13 @@ define([
          * and pitch angles towards the target are within this threshold (radians)
          * @type Number
          */
-        this._mainBurnAngleThreshold = (this._homingMode !== MissileHomingMode.NONE) ? (dataJSON ? (Math.radians(dataJSON.mainBurnAngleThreshold) || _showMissingPropertyError(this, "mainBurnAngleThreshold")) : 0) : 0;
+        this._mainBurnAngleThreshold = (this._homingMode !== MissileHomingMode.NONE) ? (dataJSON ? (Math.radians(dataJSON.mainBurnAngleThreshold) || _missingNumber(this, "mainBurnAngleThreshold")) : 0) : 0;
         /**
          * The length of life of the missile in milliseconds, after which it will explode (harmlessly),
          * counted right from the launch.
          * @type Number
          */
-        this._duration = dataJSON ? (dataJSON.duration || _showMissingPropertyError(this, "duration")) : 0;
+        this._duration = dataJSON ? (dataJSON.duration || _missingNumber(this, "duration")) : 0;
         /**
          * The amount of waiting time needed before being locked to the target while in range and within locking angle, in ms.
          * @type Number
@@ -1947,7 +1955,7 @@ define([
          * The amount of waiting time needed between launching two missiles, in ms.
          * @type Number
          */
-        this._cooldown = dataJSON ? (dataJSON.cooldown || _showMissingPropertyError(this, "cooldown")) : 0;
+        this._cooldown = dataJSON ? (dataJSON.cooldown || _missingNumber(this, "cooldown")) : 0;
         /**
          * The amount of waiting time needed between launching two missiles in the same salvo, in ms.
          * @type Number
@@ -1974,23 +1982,23 @@ define([
          * The intensity of the light this missile emits as a light source.
          * @type Number
          */
-        this._lightIntensity = dataJSON ? (dataJSON.lightColor ? dataJSON.lightIntensity || _showMissingPropertyError(this, "lightIntensity") : 0) : 0;
+        this._lightIntensity = dataJSON ? (dataJSON.lightColor ? dataJSON.lightIntensity || _missingNumber(this, "lightIntensity") : 0) : 0;
         /**
          * The characteristics of the trail the missile leaves behind when using its main engine
          * @type TrailDescriptor
          */
-        this._trailDescriptor = dataJSON ? (dataJSON.trail ? new TrailDescriptor(dataJSON.trail) : _showMissingPropertyError(this, "trail")) : null;
+        this._trailDescriptor = dataJSON ? (dataJSON.trail ? new TrailDescriptor(dataJSON.trail) : _missingObject(this, "trail")) : null;
         /**
          * The class of the explosion this missile creates when it hits the armor of a spacecraft or
          * when it explodes harmlessly because of exceeding maximum duration.
          * @type ExplosionClass
          */
-        this._explosionClass = dataJSON ? (getExplosionClass(dataJSON.explosion || _showMissingPropertyError(this, "explosion")) || application.crash()) : null;
+        this._explosionClass = dataJSON ? (getExplosionClass(dataJSON.explosion || _missingString(this, "explosion")) || application.crash()) : null;
         /**
          * The class of the explosion this missile creates when it hits the shield of a spacecraft.
          * @type ExplosionClass
          */
-        this._shieldExplosionClass = dataJSON ? (getExplosionClass(dataJSON.shieldExplosion || _showMissingPropertyError(this, "shieldExplosion")) || application.crash()) : null;
+        this._shieldExplosionClass = dataJSON ? (getExplosionClass(dataJSON.shieldExplosion || _missingString(this, "shieldExplosion")) || application.crash()) : null;
         /**
          * The amount of score points to be added to the total score value of spacecrafts for each missile of this class equipped
          * @type Number
@@ -2010,7 +2018,7 @@ define([
          * The propulsion class to use for initializing thruster visuals (the missile class has its own thrust values, the ones from the propulsion are ignored)
          * @type PropulsionClass
          */
-        this._propulsionClass = dataJSON ? (getPropulsionClass(dataJSON.propulsion || _showMissingPropertyError(this, "propulsion")) || application.crash()) : null;
+        this._propulsionClass = dataJSON ? (getPropulsionClass(dataJSON.propulsion || _missingString(this, "propulsion")) || application.crash()) : null;
         /**
          * The thruster slots for creating and managing thruster visuals
          * @type ThrusterSlot[]
@@ -2371,18 +2379,18 @@ define([
          * The class of the projectile being shot from this barrel.
          * @type ProjectileClass
          */
-        this._projectileClass = dataJSON ? (getProjectileClass(dataJSON.projectile || _showMissingPropertyError(this, "projectile")) || application.crash()) : null;
+        this._projectileClass = dataJSON ? (getProjectileClass(dataJSON.projectile || _missingString(this, "projectile")) || application.crash()) : null;
         /**
          * The relative velocity that a projectile shot from this barrel should gain from the force of firing.
          * @type Number
          */
-        this._projectileVelocity = dataJSON ? (dataJSON.projectileVelocity || _showMissingPropertyError(this, "projectileVelocity")) : 0;
+        this._projectileVelocity = dataJSON ? (dataJSON.projectileVelocity || _missingNumber(this, "projectileVelocity")) : 0;
         /**
          * The coordinates of the barrel's position relative to the weapon itself. Reading a 3 element vector and complementing it with a 
          * 1.0 to make it 4 element, as it is used in multiplication with 4x4 matrices.
          * @type Number[4]
          */
-        this._positionVector = dataJSON ? (dataJSON.position.slice() || _showMissingPropertyError(this, "position")) : null;
+        this._positionVector = dataJSON ? (dataJSON.position ? dataJSON.position.slice() : _missingVector3(this, "position")) : null;
         if (this._positionVector) {
             this._positionVector.push(1);
         }
@@ -2523,7 +2531,7 @@ define([
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @type Number
          */
-        this._cooldown = dataJSON ? (dataJSON.cooldown || _showMissingPropertyError(this, "cooldown")) : 0;
+        this._cooldown = dataJSON ? (dataJSON.cooldown || _missingNumber(this, "cooldown")) : 0;
         /**
          * The list of barrels of this weapon.
          * @type Barrel[]
@@ -2807,24 +2815,24 @@ define([
          * fired in one direction, measured in newtons.
          * @type Number
          */
-        this._thrust = dataJSON ? ((referenceMass * dataJSON.thrust) || _showMissingPropertyError(this, "thrust")) : 0;
+        this._thrust = dataJSON ? ((referenceMass * dataJSON.thrust) || _missingNumber(this, "thrust")) : 0;
         /**
          * The strength of the torque applied to the ship when the thrusters are 
          * used to turn it, in kg*rad/s^2 (mass is considered instead of a
          * calculated coefficient based on shape, for simplicity)
          * @type Number
          */
-        this._angularThrust = dataJSON ? ((referenceMass * Math.radians(dataJSON.angularThrust)) || _showMissingPropertyError(this, "angularThrust")) : 0;
+        this._angularThrust = dataJSON ? ((referenceMass * Math.radians(dataJSON.angularThrust)) || _missingNumber(this, "angularThrust")) : 0;
         /**
          * Maximum thrust for acceleration is applied at this burn level.
          * @type Number
          */
-        this._maxMoveBurnLevel = dataJSON ? (dataJSON.maxMoveBurnLevel || _showMissingPropertyError(this, "maxMoveBurnLevel")) : 0;
+        this._maxMoveBurnLevel = dataJSON ? (dataJSON.maxMoveBurnLevel || _missingNumber(this, "maxMoveBurnLevel")) : 0;
         /**
          * Maximum angular thrust for turning is applied at this burn level.
          * @type Number
          */
-        this._maxTurnBurnLevel = dataJSON ? (dataJSON.maxTurnBurnLevel || _showMissingPropertyError(this, "maxTurnBurnLevel")) : 0;
+        this._maxTurnBurnLevel = dataJSON ? (dataJSON.maxTurnBurnLevel || _missingNumber(this, "maxTurnBurnLevel")) : 0;
         /**
          * The descriptor of the sound effect to be played when the thrusters of this propulsion fire.
          * @type Object
@@ -2955,12 +2963,12 @@ define([
          * The forward velocity that should be set as the speed target for the spacecraft for the jump preparation, in m/s.
          * @type Number
          */
-        this._prepareVelocity = dataJSON ? ((dataJSON.prepareVelocity !== undefined) ? dataJSON.prepareVelocity : _showMissingPropertyError(this, "prepareVelocity")) : 0;
+        this._prepareVelocity = dataJSON ? ((dataJSON.prepareVelocity !== undefined) ? dataJSON.prepareVelocity : _missingNumber(this, "prepareVelocity")) : 0;
         /**
          * The duration such a jump engine takes to initiate the jump, after eliminating drift vectors, in milliseconds.
          * @type Number
          */
-        this._prepareDuration = dataJSON ? ((dataJSON.prepareDuration !== undefined) ? dataJSON.prepareDuration : _showMissingPropertyError(this, "prepareDuration")) : 0;
+        this._prepareDuration = dataJSON ? ((dataJSON.prepareDuration !== undefined) ? dataJSON.prepareDuration : _missingNumber(this, "prepareDuration")) : 0;
         /**
          * The descriptor of the sound effect to be played when a jump engine of this class is preparing to jump out.
          * @type Object
@@ -2975,7 +2983,7 @@ define([
          * The forward acceleration that is added to the spacecraft (by exerting an appropriate force) when initiating a jump out, in m/s.
          * @type Number
          */
-        this._jumpOutAcceleration = dataJSON ? (dataJSON.jumpOutAcceleration || _showMissingPropertyError(this, "jumpOutAcceleration")) : 0;
+        this._jumpOutAcceleration = dataJSON ? (dataJSON.jumpOutAcceleration || _missingNumber(this, "jumpOutAcceleration")) : 0;
         /**
          * The factor by which to stretch the jumping spacecraft along the Y axis at the end of the jump out sequence (linearly increasing from 1.0)
          * @type Number
@@ -2985,7 +2993,7 @@ define([
          * The duration of the outward jump itself (from initiating the jump to the particle effect), in milliseconds.
          * @type Number
          */
-        this._jumpOutDuration = dataJSON ? (dataJSON.jumpOutDuration || _showMissingPropertyError(this, "jumpOutDuration")) : 0;
+        this._jumpOutDuration = dataJSON ? (dataJSON.jumpOutDuration || _missingNumber(this, "jumpOutDuration")) : 0;
         /**
          * The descriptor of the sound effect to be played when the outward jump is initiated.
          * @type Object
@@ -2995,7 +3003,7 @@ define([
          * The class of the explosion that is created when the jump out is finished.
          * @type ExplosionClass
          */
-        this._jumpOutExplosionClass = dataJSON ? (getExplosionClass(dataJSON.jumpOutExplosion || _showMissingPropertyError(this, "jumpOutExplosion")) || application.crash()) : null;
+        this._jumpOutExplosionClass = dataJSON ? (getExplosionClass(dataJSON.jumpOutExplosion || _missingString(this, "jumpOutExplosion")) || application.crash()) : null;
         /**
          * The backward acceleration that is added to the spacecraft (by exerting an appropriate force) when initiating a jump in, in m/s.
          * @type Number
@@ -3454,14 +3462,14 @@ define([
          * be loaded into this launcher.
          * @type String
          */
-        this.size = dataJSON ? utils.getSafeEnumValue(MissileSize, dataJSON.size, null) || _showMissingPropertyError(this, "size") : null;
+        this.size = dataJSON ? utils.getSafeEnumValue(MissileSize, dataJSON.size, null) || _missingString(this, "size") : null;
         /**
          * Determines the maximum amout of missiles that can be loaded into a single tube of this launcher.
          * (i.e. the length of a launching tube)
          * Different missile classes can have different amounts of capacity used up by one missile.
          * @type Number
          */
-        this.capacity = dataJSON ? (dataJSON.capacity || _showMissingPropertyError(this, "capacity")) : 0;
+        this.capacity = dataJSON ? (dataJSON.capacity || _missingNumber(this, "capacity")) : 0;
         /**
          * The amount of missiles to launch on one salvo
          * @type Number
@@ -3519,7 +3527,7 @@ define([
          * The name of the class of the weapon to be equipped.
          * @type String
          */
-        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
+        this.className = dataJSON ? (dataJSON.class || _missingString(this, "class")) : null;
         /**
          * The index of the weapon slot the weapon should be equipped to. (not given or -1 means to equip to the next free slot)
          * @type Number
@@ -3537,7 +3545,7 @@ define([
          * The name of the class of the missiles to be equipped.
          * @type String
          */
-        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
+        this.className = dataJSON ? (dataJSON.class || _missingString(this, "class")) : null;
         /**
          * The index of the missile launcher the missiles should be equipped to.
          * (not given or -1 means to equip into the next free and suitable launcher)
@@ -3548,7 +3556,7 @@ define([
          * The amount of missiles to be equipped
          * @Number
          */
-        this.amount = dataJSON ? (dataJSON.amount || _showMissingPropertyError(this, "amount")) : 0;
+        this.amount = dataJSON ? (dataJSON.amount || _missingNumber(this, "amount")) : 0;
     }
     // ##############################################################################
     /**
@@ -3562,7 +3570,7 @@ define([
          * The name of the class of the propulsion to be equipped.
          * @type String
          */
-        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
+        this.className = dataJSON ? (dataJSON.class || _missingString(this, "class")) : null;
     }
     // ##############################################################################
     /**
@@ -3575,7 +3583,7 @@ define([
          * The name of the class of the jump engine to be equipped.
          * @type String
          */
-        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
+        this.className = dataJSON ? (dataJSON.class || _missingString(this, "class")) : null;
     }
     // ##############################################################################
     /**
@@ -3588,7 +3596,7 @@ define([
          * The name of the class of the shield to be equipped.
          * @type String
          */
-        this.className = dataJSON ? (dataJSON.class || _showMissingPropertyError(this, "class")) : null;
+        this.className = dataJSON ? (dataJSON.class || _missingString(this, "class")) : null;
     }
     // ##############################################################################
     /**
@@ -3694,7 +3702,7 @@ define([
          * A desciptive name for the view, e.g. "cockpit"
          * @type String
          */
-        this._name = dataJSON ? (dataJSON.name || _showMissingPropertyError(this, "name")) : null;
+        this._name = dataJSON ? (dataJSON.name || _missingString(this, "name")) : null;
         /**
          * Whether turning the view should happen in FPS mode (around axes relative to the followed object / world, and not the camera itself)
          * @type Boolean
@@ -3726,7 +3734,7 @@ define([
          * The translation matrix describing the relative position to the object.
          * @type Float32Array
          */
-        this._positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || _showMissingPropertyError(this, "position"))) : null;
+        this._positionMatrix = dataJSON ? (mat.translation4v(dataJSON.position || _missingVector3(this, "position"))) : null;
         /**
          * The rotation matrix describing the relative orientation to the object. 
          * @type Float32Array
@@ -3974,7 +3982,7 @@ define([
          * @type Number[2]
          */
         this._distanceRange = ((this._rotationCenterIsObject || this._lookAtSelf || this._lookAtTarget) && this._movable) ?
-                (dataJSON.distanceRange || _showMissingPropertyError(this, "distanceRange")) :
+                (dataJSON.distanceRange || _missingVector2(this, "distanceRange")) :
                 (dataJSON.distanceRange || null);
         /**
          * Whether movement of the camera should happen along the axes of the followed object instead of its own
@@ -4139,7 +4147,7 @@ define([
          * The minimum and maximum distance this view can be moved to from the objects it turns around.
          * @type Number[2]
          */
-        this._distanceRange = ((this._turnAroundAll || this._lookAtAll) && this._movable) ? (dataJSON.distanceRange || _showMissingPropertyError(this, "distanceRange")) : (dataJSON.distanceRange || null);
+        this._distanceRange = ((this._turnAroundAll || this._lookAtAll) && this._movable) ? (dataJSON.distanceRange || _missingVector2(this, "distanceRange")) : (dataJSON.distanceRange || null);
         /**
          * Whether instead of continuously following the object's position, it should only be considered when creating or resetting a camera
          * configuration, and the configuration should have absolute position afterwards
