@@ -446,11 +446,11 @@ define([
      */
     function getStatsFormatString() {
         return strings.get(strings.DATABASE.LENGTH) + ": {length}<br/>" +
-                strings.get(strings.DATABASE.MASS) + ": {mass}<br/>" +
                 strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": {armor} (" +
                 strings.get(strings.SPACECRAFT_STATS.ARMOR_RATING) + ")<br/>" +
                 strings.get(strings.DATABASE.WEAPON_SLOTS) + ": {weaponSlots}<br/>" +
-                strings.get(strings.DATABASE.MISSILE_LAUNCHERS) + ": {missileLaunchers}";
+                strings.get(strings.DATABASE.MISSILE_LAUNCHERS) + ": {missileLaunchers}<br/>" +
+                strings.get(strings.DATABASE.LOCK_RESIST) + ": {lockResist}<br/>";
     }
     /**
      * Stops the ongoing loops and closes the database screen.
@@ -562,11 +562,11 @@ define([
         }
         this._itemStatsParagraph.setContent(getStatsFormatString(), {
             length: (_currentItemLengthInMeters && utils.getLengthString(_currentItemLengthInMeters)) || "-",
-            mass: utils.getMassString(shipClass.getMass()) || "-",
             armor: shipClass.getHitpoints() || "-",
             rating: shipClass.getArmor() || "0",
             weaponSlots: shipClass.getWeaponSlots().length || "-",
-            missileLaunchers: (shipClass.getMissileLaunchers().length > 0) ? missileLaunchersText : "-"
+            missileLaunchers: (shipClass.getMissileLaunchers().length > 0) ? missileLaunchersText : "-",
+            lockResist: shipClass.getLockingTimeFactor() || "-"
         });
         // descriptions can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise an info about the missing description is displayed

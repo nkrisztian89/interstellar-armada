@@ -447,9 +447,9 @@
             "initializing": "Adatbázis inicializálása..."
         },
         "length": "Hosszúság",
-        "mass": "Tömeg",
         "weaponSlots": "Fegyverek",
         "missileLaunchers": "Rakétavetők",
+        "lockResist": "Célbefogás nehézsége",
         "missingSpacecraftTypeDescription": "A leírás nem érhető el ehhez a hajótípushoz ({spacecraftType}) magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
         "missingSpacecraftClassDescription": "A leírás nem érhető el ehhez a hajóosztályhoz ({spacecraftClass}) magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}"
     },
