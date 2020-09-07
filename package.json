@@ -29,7 +29,7 @@
     "grunt-contrib-watch": "^1.1.0",
     "grunt-eslint": "^19.0.0",
     "grunt-json-minify": "^1.1.0",
-    "grunt-replace": "^1.0.1",
+    "grunt-replace-lts": "^1.1.0",
     "grunt-sync": "^0.8.2"
   }
 }
