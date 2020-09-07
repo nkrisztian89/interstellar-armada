@@ -103,8 +103,8 @@ define([
                                 armadaScreens.openDialog({
                                     header: strings.get(strings.FIRST_RUN_NOTE.HEADER),
                                     message: utils.formatString(strings.get(strings.FIRST_RUN_NOTE.MESSAGE), {
-                                        chrome: '<a target="_blank" href="https://www.google.com/chrome/">Google Chrome</a>',
-                                        facebook: '<a target="_blank" href="https://www.facebook.com/interstellar.armada">facebook</a>'
+                                        chrome: '<a target="_blank" rel="noopener" href="https://www.google.com/chrome/">Google Chrome</a>',
+                                        facebook: '<a target="_blank" rel="noopener" href="https://www.facebook.com/interstellar.armada">facebook</a>'
                                     }),
                                     buttons: [{
                                             caption: strings.get(strings.FIRST_RUN_NOTE.BUTTON),
@@ -129,7 +129,7 @@ define([
                                     }
                                 } else {
                                     message += utils.formatString(strings.get(strings.RELEASE_NOTES.NO_NEWS), {
-                                        github: '<a target="_blank" href="https://github.com/nkrisztian89/interstellar-armada/releases">Github</a>'
+                                        github: '<a target="_blank" rel="noopener" href="https://github.com/nkrisztian89/interstellar-armada/releases">Github</a>'
                                     });
                                 }
                                 armadaScreens.openDialog({

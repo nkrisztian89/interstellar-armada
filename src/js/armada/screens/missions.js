@@ -300,7 +300,7 @@ define([
             this._missionTitle.setContent(strings.get(strings.MISSIONS.NO_SELECTED_NAME));
             this._missionLocation.setContent("");
             this._missionDescription.setContent(strings.get(custom ? strings.MISSIONS.CUSTOM_DESCRIPTION : strings.MISSIONS.NO_SELECTED_DESCRIPTION), {
-                editor: '<a target="_blank" href="editor.html">Interstellar Armada editor</a>'
+                editor: '<a target="_blank" rel="noopener" href="editor.html">Interstellar Armada editor</a>'
             });
             this._missionObjectivesTitle.hide();
             this._missionObjectives.hide();

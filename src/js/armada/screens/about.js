@@ -34,6 +34,9 @@ define([
     function _compareNames(a, b) {
         return a.textContent.localeCompare(b.textContent);
     }
+    function _link(url, name) {
+        return '<a target="_blank" rel="noopener" href="' + url + '">' + name + '</a>';
+    }
     // ##############################################################################
     /**
      * @class A class to represent the "About" screen in the game. Describes the dynamic behaviour on that screen.
@@ -87,41 +90,41 @@ define([
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._versionParagraph.customizeContent({version: game.getVersion()});
         this._aboutGameDevParagraph.customizeContent({
-            facebook: '<a target="_blank" href="https://www.facebook.com/interstellar.armada">facebook</a>',
-            github: '<a target="_blank" href="https://github.com/nkrisztian89/interstellar-armada">github</a>',
-            email: '<a target="_blank" href="mailto:armada.galactic.ace@gmail.com">email</a>'
+            facebook: _link("https://www.facebook.com/interstellar.armada", "facebook"),
+            github: _link("https://github.com/nkrisztian89/interstellar-armada", "github"),
+            email: _link("mailto:armada.galactic.ace@gmail.com", "email")
         });
         this._aboutUsedSoftwareParagraph.customizeContent({
-            inkscape: '<a target="_blank" href="https://inkscape.org">Inkscape</a>',
-            blender: '<a target="_blank" href="https://www.blender.org/">Blender</a>',
-            gimp: '<a target="_blank" href="https://www.gimp.org">GIMP</a>',
-            audacity: '<a target="_blank" href="http://www.audacityteam.org">Audacity</a>',
-            bfxr: '<a target="_blank" href="http://www.bfxr.net">Bfxr</a>',
-            lmms: '<a target="_blank" href="https://lmms.io">LMMS</a>',
-            fontforge: '<a target="_blank" href="https://fontforge.github.io/en-US/">FontForge</a>',
-            netbeans: '<a target="_blank" href="https://netbeans.org/">Netbeans</a>',
-            git: '<a target="_blank" href="https://git-scm.com/">git</a>',
-            npm: '<a target="_blank" href="https://www.npmjs.com/">npm</a>',
-            grunt: '<a target="_blank" href="https://gruntjs.com/">Grunt</a>',
-            sass: '<a target="_blank" href="http://sass-lang.com/">Sass</a>',
-            lazarus: '<a target="_blank" href="http://www.lazarus-ide.org/">Lazarus</a>',
-            chrome: '<a target="_blank" href="https://www.google.com/chrome">Google Chrome</a>',
-            firefox: '<a target="_blank" href="https://www.mozilla.org/firefox">Firefox</a>',
-            ubuntu: '<a target="_blank" href="http://www.ubuntu.com/desktop">Ubuntu</a>',
-            eslint: '<a target="_blank" href="http://plugins.netbeans.org/plugin/63486/eslint">ESLint</a>',
-            glsl: '<a target="_blank" href="http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter">GLSL Syntax Highlighter</a>',
-            markdown: '<a target="_blank" href="http://plugins.netbeans.org/plugin/50964/markdown-support">Markdown Support</a>'
+            inkscape: _link("https://inkscape.org", "Inkscape"),
+            blender: _link("https://www.blender.org/", "Blender"),
+            gimp: _link("https://www.gimp.org", "GIMP"),
+            audacity: _link("http://www.audacityteam.org", "Audacity"),
+            bfxr: _link("http://www.bfxr.net", "Bfxr"),
+            lmms: _link("https://lmms.io", "LMMS"),
+            fontforge: _link("https://fontforge.github.io/en-US/", "FontForge"),
+            netbeans: _link("https://netbeans.org/", "Netbeans"),
+            git: _link("https://git-scm.com/", "git"),
+            npm: _link("https://www.npmjs.com/", "npm"),
+            grunt: _link("https://gruntjs.com/", "Grunt"),
+            sass: _link("http://sass-lang.com/", "Sass"),
+            lazarus: _link("http://www.lazarus-ide.org/", "Lazarus"),
+            chrome: _link("https://www.google.com/chrome", "Google Chrome"),
+            firefox: _link("https://www.mozilla.org/firefox", "Firefox"),
+            ubuntu: _link("http://www.ubuntu.com/desktop", "Ubuntu"),
+            eslint: _link("http://plugins.netbeans.org/plugin/63486/eslint", "ESLint"),
+            glsl: _link("http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter", "GLSL Syntax Highlighter"),
+            markdown: _link("http://plugins.netbeans.org/plugin/50964/markdown-support", "Markdown Support")
         });
         this._aboutLicenseParagraph.customizeContent({
-            license: '<a target="_blank" href="http://www.gnu.org/licenses/gpl-3.0-standalone.html">GNU GPLv3</a>',
-            sansation: '<a target="_blank" href="http://www.dafont.com/sansation.font">Sansation</a>',
-            aldrich: '<a target="_blank" href="https://fonts.google.com/specimen/Aldrich">Aldrich</a>',
-            audiowide: '<a target="_blank" href="https://fonts.google.com/specimen/Audiowide">Audiowide</a>',
-            fontlog: '<a target="_blank" href="assets/fonts/FONTLOG.txt">fontlog</a>',
-            requireJS: '<a target="_blank" href="http://requirejs.org/">RequireJS</a>',
-            requireJSLicense: '<a target="_blank" href="license/RequireJS-License.txt">' + strings.get(strings.ABOUT.REQUIRE_JS_LICENSE) + '</a>',
-            assetLicense: '<a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>',
-            soundLicense: '<a target="_blank" href="license/sfx-license.txt">' + strings.get(strings.ABOUT.HERE) + '</a>'
+            license: _link("http://www.gnu.org/licenses/gpl-3.0-standalone.html", "GNU GPLv3"),
+            sansation: _link("http://www.dafont.com/sansation.font", "Sansation"),
+            aldrich: _link("https://fonts.google.com/specimen/Aldrich", "Aldrich"),
+            audiowide: _link("https://fonts.google.com/specimen/Audiowide", "Audiowide"),
+            fontlog: _link("assets/fonts/FONTLOG.txt", "fontlog"),
+            requireJS: _link("http://requirejs.org/", "RequireJS"),
+            requireJSLicense: _link("license/RequireJS-License.txt", strings.get(strings.ABOUT.REQUIRE_JS_LICENSE)),
+            assetLicense: _link("https://creativecommons.org/licenses/by/4.0/", "CC BY 4.0"),
+            soundLicense: _link("license/sfx-license.txt", strings.get(strings.ABOUT.HERE))
         });
         // reversing the order of names if needed based on the current language
         // selecting the names that need to be reversed
