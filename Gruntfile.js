@@ -313,7 +313,7 @@ module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         _requirejs: {
-            compile: {
+            game: {
                 options: {
                     baseUrl: "js",
                     name: "main",
@@ -326,12 +326,22 @@ module.exports = function (grunt) {
                     out: "js/main.js",
                     preserveLicenseComments: false
                 }
+            },
+            editor: {
+                options: {
+                    baseUrl: "js",
+                    name: "editor-main",
+                    optimize: "none",
+                    out: "js/editor-main.js",
+                    preserveLicenseComments: false
+                }
             }
         },
         _clean: {
             full: ["config/", "css/", "data/", "js/"],
             editor: ["js/editor", "js/editor*"],
-            dist: ["js/*", "!js/main.js"]
+            dist: ["js/*", "!js/main.js"],
+            distWithEditor: ["js/*", "!js/main.js", "!js/editor-main.js"]
         },
         _copy: {
             devData: {
@@ -461,7 +471,7 @@ module.exports = function (grunt) {
                     usePrefix: false
                 },
                 files: [
-                    {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
+                    {expand: true, cwd: 'js/', src: ['**', '!editor', '!editor*'], dest: 'js/'}
                 ]
             },
             // replacing some widely and frequently used one-line getter calls with the direct access of their respective properties to
@@ -492,7 +502,7 @@ module.exports = function (grunt) {
                     usePrefix: false
                 },
                 files: [
-                    {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
+                    {expand: true, cwd: 'js/', src: ['**', '!editor', '!editor*'], dest: 'js/'}
                 ]
             },
             postOptimize: {
@@ -567,7 +577,7 @@ module.exports = function (grunt) {
                     usePrefix: false
                 },
                 files: [
-                    {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
+                    {expand: true, cwd: 'js/', src: ['**', '!editor', '!editor*'], dest: 'js/'}
                 ]
             },
             sass: {
@@ -604,7 +614,8 @@ module.exports = function (grunt) {
         _concurrent: {
             watch: ['_watch:dev', '_watch:sass'],
             dev: [['_sass:dev', '_replace:sass'], '_copy:devData', '_copy:js'],
-            build: ['_sass:dist', ['_copy:distData', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimize', '_replace:optimize', '_requirejs', '_clean:dist', '_replace:postOptimize']]
+            build: ['_sass:dist', ['_copy:distData', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimize', '_replace:optimize', '_requirejs:game', '_clean:dist', '_replace:postOptimize']],
+            buildWithEditor: ['_sass:dist', ['_copy:distData', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_requirejs:editor', '_replace:preOptimize', '_replace:optimize', '_requirejs:game', '_clean:distWithEditor', '_replace:postOptimize']]
         }
     });
     // Plugins
@@ -632,6 +643,7 @@ module.exports = function (grunt) {
     // "Public" tasks (meant to be run directly)
     grunt.registerTask('default', ['build']);
     grunt.registerTask('build', ['_concurrent:build']);
+    grunt.registerTask('build-with-editor', ['_concurrent:buildWithEditor']);
     grunt.registerTask('clean', ['_clean:full']);
     grunt.registerTask('lint', ['_eslint']);
     grunt.registerTask('dev-build', ['_concurrent:dev']);
