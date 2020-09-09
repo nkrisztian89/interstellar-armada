@@ -3389,6 +3389,13 @@ define([
         return this._dataJSON.description || "";
     };
     /**
+     * Returns the author who created this mission (for custom missions).
+     * @returns {String}
+     */
+    MissionDescriptor.prototype.getAuthor = function () {
+        return this._dataJSON.info ? this._dataJSON.info.author : null;
+    };
+    /**
      * Returns the user-friendly, translated and fallback protected version of the description of this mission.
      * @returns {String} 
      */

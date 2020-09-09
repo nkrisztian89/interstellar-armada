@@ -60,6 +60,7 @@ define([
         NO_SELECTED_DESCRIPTION: {name: "missions.noSelectedDescription"},
         CUSTOM_DESCRIPTION: {name: "missions.customDescription"},
         LOCATION: {name: "missions.location"},
+        CREATED_BY: {name: "missions.createdBy"},
         LOADING_DESCRIPTION: {name: "missions.loadingDescription"},
         NO_TRANSLATED_DESCRIPTION: {name: "missions.noTranslatedDescription"},
         NO_DESCRIPTION: {name: "missions.noDescription"},

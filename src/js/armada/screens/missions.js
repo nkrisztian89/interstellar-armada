@@ -232,8 +232,9 @@ define([
                         return "<li>" + objective + "</li>";
                     });
                     this._missionLocation.setContent(strings.get(strings.MISSIONS.LOCATION) + " " + missionDescriptor.getEnvironment().getDisplayName());
-                    this._missionDescription.setContent((missionDescriptor.isCustom() && missionDescriptor.getDescription()) ?
-                            missionDescriptor.getDescription() :
+                    this._missionDescription.setContent(missionDescriptor.isCustom() ?
+                            (missionDescriptor.getAuthor() ? utils.formatString(strings.get(strings.MISSIONS.CREATED_BY), {author: missionDescriptor.getAuthor()}) + "<br><br>" : "") +
+                            (missionDescriptor.getDescription() || missionDescriptor.getDisplayDescription()) :
                             missionDescriptor.getDisplayDescription());
                     this._missionObjectives.setContent(objectives.join(""));
                     if (_spacecraft) {

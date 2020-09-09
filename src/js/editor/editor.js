@@ -647,20 +647,28 @@ define([
         };
     }
     /**
-     * Returns the stringified info object that can be embedded at the beginning of exported files (e.g. classes)
+     * Returns the info object that can be embedded at the beginning of exported files (e.g. classes)
      * @param {String} name The name to be included in the info
      * @param {String} author The author to be included in the info
-     * @returns {String}
+     * @returns {Object}
      */
-    function _getInfoString(name, author) {
-        var info = {
+    function _getInfoObject(name, author) {
+        return {
             name: name,
             author: author,
             comment: "Created by Interstellar Armada editor",
             version: application.getVersion(),
             creationTime: new Date().toString()
         };
-        return JSON.stringify(info);
+    }
+    /**
+     * Returns the stringified info object that can be embedded at the beginning of exported files (e.g. classes)
+     * @param {String} name The name to be included in the info
+     * @param {String} author The author to be included in the info
+     * @returns {String}
+     */
+    function _getInfoString(name, author) {
+        return JSON.stringify(_getInfoObject(name, author));
     }
     /**
      * Returns the string that can be used as the content of an exported file 
@@ -772,7 +780,7 @@ define([
                     break;
                 case common.ItemType.MISSION:
                     missions.requestMissionDescriptor(missions.getMissionNames()[exportItem.selectedIndex], function (missionDescriptor) {
-                        var data = Object.assign({}, missionDescriptor.getData());
+                        var data = Object.assign({info: _getInfoObject(missionDescriptor.getName(), exportAuthor.value)}, missionDescriptor.getData());
                         delete data.name;
                         _exportString(
                                 exportItem.value,

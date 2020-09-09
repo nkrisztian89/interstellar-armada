@@ -72,6 +72,7 @@
         "noSelectedDescription": "Choose a mission from the list.",
         "customDescription": "Select a mission file created in the {editor} to play it.",
         "location": "Location: ",
+        "createdBy": "Created by: {author}",
         "loadingDescription": "Loading...",
         "noTranslatedDescription": "{originalDescription}",
         "noDescription": "No mission description available.",
