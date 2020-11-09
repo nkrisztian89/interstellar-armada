@@ -2912,14 +2912,23 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            TEAM_NAME = {
+            TEAM_FACTION = {
                 baseType: BaseType.ENUM,
                 getValues: function () {
-                    var prefix = strings.TEAM.PREFIX.name, prefixLength = prefix.length;
+                    var prefix = strings.FACTION.PREFIX.name, prefixLength = prefix.length;
                     return strings.getKeys(prefix).map(function (key) {
                         return key.substring(prefixLength);
                     });
                 }
+            },
+            _teamHasNoName = function (data) {
+                return !data.name;
+            },
+            _teamHasNoFaction = function (data) {
+                return !data.faction;
+            },
+            _getDefaultTeamName = function (data) {
+                return data.faction;
             },
             /**
              * @type Editor~TypeDescriptor
@@ -2929,20 +2938,26 @@ define([
                 name: "Team",
                 unpack: function (stringValue) {
                     return {
-                        id: stringValue,
-                        name: stringValue
+                        name: stringValue,
+                        faction: stringValue
                     };
                 },
+                getName: function (instance) {
+                    return instance.name || instance.faction;
+                },
                 properties: {
-                    ID: {
-                        name: "id",
-                        type: BaseType.STRING,
-                        optional: true
-                    },
                     NAME: {
                         name: "name",
-                        type: TEAM_NAME,
-                        optional: true
+                        type: BaseType.STRING,
+                        isRequired: _teamHasNoFaction,
+                        getDerivedDefault: _getDefaultTeamName,
+                        updateOnValidate: true
+                    },
+                    FACTION: {
+                        name: "faction",
+                        type: TEAM_FACTION,
+                        isRequired: _teamHasNoName,
+                        updateOnValidate: true
                     },
                     COLOR: {
                         name: "color",
@@ -3024,9 +3039,9 @@ define([
                 getValues: function (parent, topParent) {
                     if (topParent.teams) {
                         return topParent.teams.filter(function (team) {
-                            return !!team.id || !!team.name;
+                            return !!team.name || !!team.faction;
                         }).map(function (team) {
-                            return team.id || team.name;
+                            return team.name || team.faction;
                         });
                     }
                     return [];

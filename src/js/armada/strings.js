@@ -133,8 +133,8 @@ define([
         DESCRIPTION_SUFFIX: {name: ".description", optional: true},
         MESSAGES_SUFFIX: {name: ".messages.", optional: true}
     };
-    strings.TEAM = {
-        PREFIX: {name: "team.", optional: true}
+    strings.FACTION = {
+        PREFIX: {name: "faction.", optional: true}
     };
     strings.SQUAD = {
         PREFIX: {name: "squad.", optional: true}

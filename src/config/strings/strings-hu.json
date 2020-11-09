@@ -165,8 +165,8 @@
         "armor": "Páncélzat",
         "armorRating": "szint: {rating}"
     },
-    "team": {
-        "team": "{id}. csapat",
+    "faction": {
+        "numbered": "{index}. csapat",
         "empire": "Galaktikus Birodalom",
         "rebels": "Szeparatista lázadók",
         "pirates": "Kalózok",

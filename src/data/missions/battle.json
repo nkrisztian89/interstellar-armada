@@ -21,7 +21,7 @@
     "teams": [
         "empire",
         {
-            "name": "rebels",
+            "faction": "rebels",
             "color": [0.2, 0.2, 0.8, 1.0]
         }
     ],

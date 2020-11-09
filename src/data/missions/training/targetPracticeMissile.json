@@ -18,7 +18,7 @@
     ],
     "teams": [
         "empire",
-        "practiceTargets"
+        "targets"
     ],
     "events": [{
             "trigger": {
@@ -153,7 +153,7 @@
             "loadout": "training"
         },
         {
-            "team": "practiceTargets",
+            "team": "targets",
             "class": "drone",
             "squad": "drone 1",
             "ai": "fighter",
@@ -162,7 +162,7 @@
             "loadout": "unarmed"
         },
         {
-            "team": "practiceTargets",
+            "team": "targets",
             "class": "aries",
             "name": "Tisza",
             "ai": "ship",
@@ -170,7 +170,7 @@
             "loadout": "unarmed"
         },
         {
-            "team": "practiceTargets",
+            "team": "targets",
             "class": "drone",
             "squad": "theta",
             "count": 7,

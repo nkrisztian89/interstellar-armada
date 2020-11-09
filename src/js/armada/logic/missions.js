@@ -183,10 +183,10 @@ define([
             MISSION_ARRAY_NAME = "missions",
             /**
              * When adding ships without a team to a mission in demo mode, they will be automatically put into a team with
-             * this name, with an ID that equals the index of the spacecraft added + 1 (converted to string).
+             * this faction, with an index that equals the index of the spacecraft added + 1 (converted to string).
              * @type String
              */
-            GENERIC_TEAM_NAME = "team",
+            NUMBERED_FACTION_NAME = "numbered",
             GRID_MODEL_NAME = "grid",
             MARKER_MODEL_NAME = "marker",
             // ------------------------------------------------------------------------------
@@ -269,31 +269,39 @@ define([
     /**
      * @class
      * A team to which spacecrafts can belong to that determines which spacecrafts are hostile and friendly towards each other.
-     * @param {String|Object} idOrParams
+     * @param {String|Object} nameOrParams
      */
-    function Team(idOrParams) {
+    function Team(nameOrParams) {
         /**
-         * The unique string ID of this team.
-         * @type String
-         */
-        this._id = null;
-        /**
-         * A string name of this team to be used for chosing the translated displayed name.
+         * The unique string ID of this team, also used for choosing the translated displayed name.
          * @type String
          */
         this._name = null;
+        /**
+         * Which faction this team belongs to.
+         * @type String
+         */
+        this._faction = null;
+        /**
+         * The replacements to pass when formatting the display name for this team
+         * @type Number
+         */
+        this._displayNameReplacements = {
+            index: -1
+        };
         /**
          * The color to use when replacing original faction colors of spacecrafts belonging to this team.
          * @tpye Number[4]
          */
         this._color = null;
-        if (typeof idOrParams === "string") {
-            this._id = idOrParams;
-            this._name = idOrParams;
-        } else if (typeof idOrParams === "object") {
-            this._id = idOrParams.id || idOrParams.name || application.showError("Team defined without a name or id!");
-            this._name = idOrParams.name || idOrParams.id;
-            this._color = idOrParams.color || null;
+        if (typeof nameOrParams === "string") {
+            this._name = nameOrParams;
+            this._faction = nameOrParams;
+        } else if (typeof nameOrParams === "object") {
+            this._name = nameOrParams.name || nameOrParams.faction || application.showError("Team defined without a name or faction!");
+            this._faction = nameOrParams.faction;
+            this._displayNameReplacements.index = nameOrParams.index;
+            this._color = nameOrParams.color || null;
         } else {
             application.showError("Invalid parameter specified for Team constructor!");
         }
@@ -314,17 +322,15 @@ define([
      * Returns the unique string ID of this team.
      * @returns {String}
      */
-    Team.prototype.getID = function () {
-        return this._id;
+    Team.prototype.getName = function () {
+        return this._name;
     };
     /**
      * Returns the translated, human-readable unique name of this team.
      * @returns {String}
      */
     Team.prototype.getDisplayName = function () {
-        return utils.formatString(strings.get(strings.TEAM.PREFIX, this._name, this._name || this._id), {
-            id: this._id
-        });
+        return utils.formatString(strings.get(strings.FACTION.PREFIX, this._faction, this._faction || this._name), this._displayNameReplacements);
     };
     /**
      * Returns the color to use when replacing original faction colors of spacecrafts belonging to this team.
@@ -640,7 +646,7 @@ define([
     SubjectGroup.prototype.has = function (spacecraft) {
         return (this._descriptor.spacecrafts && (this._descriptor.spacecrafts.indexOf(spacecraft.getID()) >= 0)) ||
                 (this._descriptor.squads && (this._descriptor.squads.indexOf(spacecraft.getSquad()) >= 0)) ||
-                (this._descriptor.teams && (this._descriptor.teams.indexOf(spacecraft.getTeam().getID()) >= 0));
+                (this._descriptor.teams && (this._descriptor.teams.indexOf(spacecraft.getTeam().getName()) >= 0));
     };
     /**
      * Gathers and caches references to the spacecrafts in the passed mission that are in this subject group, for faster future use
@@ -717,7 +723,7 @@ define([
      * @returns {String}
      */
     SubjectGroup._mapTeamID = function (subjectID) {
-        subjectID = strings.get(strings.TEAM.PREFIX, subjectID, subjectID);
+        subjectID = strings.get(strings.FACTION.PREFIX, subjectID, subjectID);
         return strings.getDefiniteArticleForWord(subjectID) + " <strong>" + subjectID + "</strong>";
     };
     /**
@@ -795,7 +801,7 @@ define([
                 if (this._descriptor.teams.length > 1) {
                     this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_TEAMS), {count: this._descriptor.teams.length});
                 } else {
-                    this._shortString = strings.get(strings.TEAM.PREFIX, this._descriptor.teams[0], this._descriptor.teams[0]);
+                    this._shortString = strings.get(strings.FACTION.PREFIX, this._descriptor.teams[0], this._descriptor.teams[0]);
                 }
             } else {
                 this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
@@ -2409,17 +2415,17 @@ define([
     };
     /**
      * Returns the team with the given ID from the list of teams added to this mission.
-     * @param {String} id
+     * @param {String} name
      * @returns {Team}
      */
-    Mission.prototype.getTeam = function (id) {
+    Mission.prototype.getTeam = function (name) {
         var i;
         for (i = 0; i < this._teams.length; i++) {
-            if (this._teams[i].getID() === id) {
+            if (this._teams[i].getName() === name) {
                 return this._teams[i];
             }
         }
-        application.showError("No team exists with ID '" + id + "'!");
+        application.showError("No team exists with name '" + name + "'!");
         return null;
     };
     /**
@@ -2625,7 +2631,7 @@ define([
         this._teams = [];
         if (dataJSON.teams) {
             for (i = 0; i < dataJSON.teams.length; i++) {
-                this._teams.push(new Team(dataJSON.teams[i]));
+                this._teams.push(new Team((typeof dataJSON.teams[i] === "string") ? dataJSON.teams[i] : Object.assign({index: (i + 1).toString()}, dataJSON.teams[i])));
             }
         }
         this._views = [];
@@ -2706,8 +2712,8 @@ define([
                 }
             } else if (demoMode) {
                 team = new Team({
-                    name: GENERIC_TEAM_NAME,
-                    id: (this._teams.length + 1).toString()
+                    faction: NUMBERED_FACTION_NAME,
+                    index: (this._teams.length + 1).toString()
                 });
                 this._teams.push(team);
                 craft.setTeam(team);

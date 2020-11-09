@@ -282,8 +282,8 @@
             }
         }
     },
-    "team": {
-        "team": "Team {id}",
+    "faction": {
+        "numbered": "Team {index}",
         "empire": "Galactic Empire",
         "rebels": "Separatist rebels",
         "pirates": "Pirates",
