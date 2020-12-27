@@ -119,10 +119,6 @@ define([
                 REPEAT: "repeat"
             },
             ActionType = {
-                /** Executing this action marks the mission as complete */
-                WIN: "win",
-                /** Executing this action marks the mission as failed */
-                LOSE: "lose",
                 /** Executing this action queues a message to be displayed on the HUD */
                 MESSAGE: "message",
                 /** Executing this action clears the HUD message queue */
@@ -130,7 +126,11 @@ define([
                 /** Executing this action sends a command to the subject spacecrafts (to be processed by their AIs) */
                 COMMAND: "command",
                 /** Executing this action changes the state of the HUD on the piloted spacecraft (e.g. hide / show / highlight an element) */
-                HUD: "hud"
+                HUD: "hud",
+                /** Executing this action marks the mission as complete */
+                WIN: "win",
+                /** Executing this action marks the mission as failed */
+                LOSE: "lose"
             },
             MissionState = {
                 // in progress states
