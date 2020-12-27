@@ -1564,7 +1564,7 @@ define([
                 }
             }
             text = (this._conditions.length > 0) ? this._conditions[0].getObjectiveStateString(strings.BATTLE.OBJECTIVE_LOSE_PREFIX, multi) : "";
-            state = satisfied ? ObjectiveState.FAILED : (impossible || missionEnded) ? ObjectiveState.COMPLETED : ObjectiveState.IN_PROGRESS;
+            state = satisfied ? ObjectiveState.FAILED : (impossible || missionEnded || (mission.getState() === MissionState.COMPLETED)) ? ObjectiveState.COMPLETED : ObjectiveState.IN_PROGRESS;
             if (state === ObjectiveState.IN_PROGRESS) {
                 for (i = 1; i < this._conditions.length; i++) {
                     if (this._conditions[i].isActive()) {
