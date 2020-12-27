@@ -466,7 +466,7 @@
             "class": "taurus",
             "name": "Danube",
             "ai": "ship",
-            "position": [-200, -50, 100],
+            "position": [-200, -850, -200],
             "loadout": "imperial-half",
             "excludeFromReferenceScore": true
         }, {
@@ -474,7 +474,7 @@
             "class": "taurus",
             "name": "Vistula",
             "ai": "ship",
-            "position": [200, -50, 100],
+            "position": [200, -850, -200],
             "loadout": "imperial-half",
             "excludeFromReferenceScore": true
         }, {
@@ -514,7 +514,7 @@
             "class": "aries",
             "name": "Volga",
             "ai": "ship",
-            "position": [0, 3950, 0],
+            "position": [0, 4150, 0],
             "rotations": ["z+180"],
             "loadout": "rebel",
             "excludeFromReferenceScore": true
@@ -523,7 +523,7 @@
             "class": "aries",
             "name": "Thames",
             "ai": "ship",
-            "position": [-200, 4150, -50],
+            "position": [-200, 4350, -50],
             "rotations": ["z+180"],
             "loadout": "rebel",
             "excludeFromReferenceScore": true

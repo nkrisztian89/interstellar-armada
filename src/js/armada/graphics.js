@@ -1883,7 +1883,7 @@ define([
     GraphicsSettingsContext.prototype.setShadowMapping = function (value, saveToLocalStorage, ignoreRequirements) {
         if (value === undefined) {
             if (localStorage[SHADOW_MAPPING_LOCAL_STORAGE_ID] !== undefined) {
-                value = localStorage[SHADOW_MAPPING_LOCAL_STORAGE_ID];
+                value = (localStorage[SHADOW_MAPPING_LOCAL_STORAGE_ID] === "true");
             } else {
                 value = types.getBooleanValue(this._dataJSON.context.shadowMapping, {name: "settings.graphics.context.shadowMapping"});
             }
