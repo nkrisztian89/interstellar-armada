@@ -4399,6 +4399,8 @@ define([
                 if (!custom) {
                     _analyticsState = null;
                     analytics.sendEvent("start", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty});
+                } else {
+                    analytics.sendEvent("customstart");
                 }
             }
             _displayedMissionState = _mission.getState();

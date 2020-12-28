@@ -13,6 +13,7 @@
  * @param game Used for navigation and displaying the game version
  * @param screens The about screen is a subclass of HTMLScreen
  * @param components A ListComponent is used to select missions
+ * @param analytics Used for reporting custom mission load events
  * @param strings Used for translation support
  * @param audio Used for music management (switching track when launching a mission)
  * @param armadaScreens Used for navigation
@@ -24,12 +25,13 @@ define([
     "modules/game",
     "modules/screens",
     "modules/components",
+    "modules/analytics",
     "armada/strings",
     "armada/audio",
     "armada/screens/shared",
     "armada/logic/spacecraft",
     "armada/logic/missions"
-], function (utils, game, screens, components, strings, audio, armadaScreens, spacecraft, missions) {
+], function (utils, game, screens, components, analytics, strings, audio, armadaScreens, spacecraft, missions) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -461,6 +463,7 @@ define([
                                 captionID: strings.MISSIONS.CUSTOM_MISSION_CAPTION.name,
                                 subcaptionID: strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION.name
                             });
+                            analytics.sendEvent("customload");
                         }
                     }
                 }.bind(this)).catch(function () {
