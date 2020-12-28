@@ -1,8 +1,8 @@
 {
-    "version": "0.4.6-dev:921 (2020.12.27.)",
+    "version": "0.4.6-dev:922 (2020.12.28.)",
     "debugVersion": false,
     "logVerbosity": 1,
-    "releases": ["0.4.3", "0.4.4", "0.4.5"],
+    "releases": ["0.4.3", "0.4.4", "0.4.5", "0.4.6"],
     "folders": {
         "config": "config/",
         "strings": "{{config}}/strings/",

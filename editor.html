@@ -20,6 +20,7 @@
                 <button type="button" id="forwardButton" class="toolbarButton" disabled>&gt;</button>
                 <button type="button" id="newItemButton" class="toolbarButton">New</button>
                 <button type="button" id="exportButton" class="toolbarButton">Export</button>
+                <button type="button" id="importButton" class="toolbarButton">Import</button>
             </div>
             <div class="windowContent">
                 <div class="windowLabel">loading...</div>
@@ -89,6 +90,21 @@
             <div class="dialogButtonRow">
                 <button type="button" id="exportExport">Export</button>
                 <button type="button" id="exportCancel">Cancel</button>
+            </div>
+        </div>
+
+        <div id="importDialog" class="dialog" hidden>
+            <div class="dialogEntry">
+                <span class="dialogLabel">Item type:</span>
+                <select id="importType"></select>
+            </div>
+            <div class="dialogEntry">
+                <span class="dialogLabel">File:</span>
+                <input type="file" id="importFile" accept="application/json"/>
+            </div>
+            <div class="dialogButtonRow">
+                <button type="button" id="importImport">Import</button>
+                <button type="button" id="importCancel">Cancel</button>
             </div>
         </div>
 

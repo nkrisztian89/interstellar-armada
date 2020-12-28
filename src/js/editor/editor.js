@@ -100,6 +100,13 @@ define([
             EXPORT_AUTHOR_ID = "exportAuthor",
             EXPORT_EXPORT_BUTTON_ID = "exportExport",
             EXPORT_CANCEL_BUTTON_ID = "exportCancel",
+            // import items
+            IMPORT_BUTTON_ID = "importButton",
+            IMPORT_DIALOG_ID = "importDialog",
+            IMPORT_TYPE_ID = "importType",
+            IMPORT_FILE_ID = "importFile",
+            IMPORT_IMPORT_BUTTON_ID = "importImport",
+            IMPORT_CANCEL_BUTTON_ID = "importCancel",
             // classes
             WINDOW_LABEL_CLASS = "windowLabel",
             WINDOW_CONTENT_CLASS = "windowContent",
@@ -181,6 +188,7 @@ define([
             _selectItem,
             _newItemDialog,
             _exportDialog,
+            _importDialog,
             _initNewItemDialog,
             _initExportDialog;
     // ------------------------------------------------------------------------------
@@ -813,6 +821,48 @@ define([
         };
     }
     /**
+     * Sets up the event handlers for the elements in the import dialog
+     */
+    function _loadImportDialog() {
+        var
+                importType = document.getElementById(IMPORT_TYPE_ID),
+                importFile = document.getElementById(IMPORT_FILE_ID),
+                importImport = document.getElementById(IMPORT_IMPORT_BUTTON_ID),
+                importCancel = document.getElementById(IMPORT_CANCEL_BUTTON_ID),
+                typeOptions = [common.ItemType.MISSION];
+        common.setSelectorOptions(importType, typeOptions);
+        importImport.onclick = function () {
+            switch (importType.value) {
+                case common.ItemType.MISSION:
+                    var file = importFile.files[0];
+                    if (file) {
+                        file.text().then(function (text) {
+                            var data = JSON.parse(text);
+                            if (data) {
+                                data.name = file.name;
+                                if (missions.getMissionNames().indexOf(data.name) >= 0) {
+                                    application.showError("A mission with this filename already exists!", application.ErrorSeverity.MINOR);
+                                } else {
+                                    missions.createMissionDescriptor(data);
+                                    _loadItems();
+                                    _selectItem(importType.value, data.name, common.ItemType.MISSION);
+                                }
+                            }
+                        }.bind(this)).catch(function () {
+                            application.showError("The selected file doesn't seem to be a valid mission file!", application.ErrorSeverity.MINOR);
+                        });
+                    }
+                    break;
+                default:
+                    application.showError("Importing " + importType.value + " is not yet implemented!");
+            }
+            _importDialog.hidden = true;
+        };
+        importCancel.onclick = function () {
+            _importDialog.hidden = true;
+        };
+    }
+    /**
      * Creates and returns a collapsable list (<ul> tag) containing the categories of the game items belonging to the passed type.
      * @param {String} itemType (enum ItemType)
      * @returns {Element}
@@ -1090,11 +1140,13 @@ define([
     function _loadDialogs() {
         _newItemDialog = document.getElementById(NEW_ITEM_DIALOG_ID);
         _exportDialog = document.getElementById(EXPORT_DIALOG_ID);
+        _importDialog = document.getElementById(IMPORT_DIALOG_ID);
         document.getElementById(NEW_ITEM_BUTTON_ID).onclick = function () {
             _newItemDialog.hidden = !_newItemDialog.hidden;
             if (!_newItemDialog.hidden) {
                 _initNewItemDialog();
                 _exportDialog.hidden = true;
+                _importDialog.hidden = true;
             }
         };
         _loadNewItemDialog();
@@ -1104,9 +1156,19 @@ define([
             if (!_exportDialog.hidden) {
                 _initExportDialog();
                 _newItemDialog.hidden = true;
+                _importDialog.hidden = true;
             }
         };
         _loadExportDialog();
+
+        document.getElementById(IMPORT_BUTTON_ID).onclick = function () {
+            _importDialog.hidden = !_importDialog.hidden;
+            if (!_importDialog.hidden) {
+                _newItemDialog.hidden = true;
+                _exportDialog.hidden = true;
+            }
+        };
+        _loadImportDialog();
     }
     /**
      * Sends an asynchronous request to get the JSON file describing the game settings and sets the callback function to set them and
