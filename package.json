@@ -1,6 +1,6 @@
 {
   "name": "interstellar-armada",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "The Interstellar Armada WebGL space combat game.",
   "main": "main.js",
   "scripts": {

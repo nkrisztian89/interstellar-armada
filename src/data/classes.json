@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.6-dev:893 (2020.05.10.)",
-        "creationTime": "Mon May 11 2020 20:18:51 GMT+0200 (közép-európai nyári idő)"
+        "version": "0.4.7:925-dev (2021.01.02.)",
+        "creationTime": "Sun Jan 03 2021 15:23:08 GMT+0100 (közép-európai téli idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -1807,6 +1807,189 @@
                         }],
                     "spawnTime": 100
                 }]
+        }, {
+            "name": "smallStationExplosion",
+            "particleEmitters": [{
+                    "initialNumber": 1,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 0.7, 1],
+                            "size": 60
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 0,
+                            "timeToReach": 400
+                        }]
+                }, {
+                    "dimensions": [5, 5, 40],
+                    "initialNumber": 1,
+                    "spawnNumber": 1,
+                    "spawnTime": 500,
+                    "duration": 500,
+                    "delay": 300,
+                    "shader": "particle",
+                    "texture": "flare",
+                    "particleStates": [{
+                            "color": [1, 1, 0.7, 1],
+                            "size": 50
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 0,
+                            "timeToReach": 350
+                        }]
+                }, {
+                    "dimensions": [15, 15, 30],
+                    "velocity": 80,
+                    "velocitySpread": 15,
+                    "initialNumber": 5,
+                    "spawnNumber": 5,
+                    "spawnTime": 250,
+                    "duration": 500,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "size": 0.6
+                        }, {
+                            "color": [1, 1, 0, 1],
+                            "size": 1.2,
+                            "timeToReach": 500
+                        }, {
+                            "color": [1, 0, 0, 1],
+                            "size": 0,
+                            "timeToReach": 300
+                        }],
+                    "delay": 300
+                }, {
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [15, 15, 30],
+                    "velocity": 80,
+                    "velocitySpread": 15,
+                    "initialNumber": 10,
+                    "spawnNumber": 10,
+                    "spawnTime": 250,
+                    "duration": 500,
+                    "shader": "coloredBillboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "size": 1.5
+                        }, {
+                            "color": [1, 1, 0, 1],
+                            "size": 2.5,
+                            "timeToReach": 500
+                        }, {
+                            "color": [1, 0, 0, 1],
+                            "size": 0,
+                            "timeToReach": 300
+                        }],
+                    "delay": 300
+                }, {
+                    "dimensions": [10, 10, 30],
+                    "velocity": 25,
+                    "velocitySpread": 10,
+                    "initialNumber": 5,
+                    "spawnNumber": 3,
+                    "spawnTime": 100,
+                    "duration": 700,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 0.5, 0, 1],
+                            "size": 15
+                        }, {
+                            "color": [1, 1, 0.3, 1],
+                            "size": 6,
+                            "timeToReach": 600
+                        }, {
+                            "color": [1, 0.3, 0, 1],
+                            "size": 0,
+                            "timeToReach": 200
+                        }]
+                }, {
+                    "dimensions": [8, 8, 50],
+                    "velocity": 5,
+                    "velocitySpread": 1,
+                    "initialNumber": 10,
+                    "spawnNumber": 5,
+                    "spawnTime": 100,
+                    "duration": 700,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 1, 0.4, 1],
+                            "size": 0
+                        }, {
+                            "color": [1, 0.7, 0, 1],
+                            "size": 14,
+                            "timeToReach": 450
+                        }, {
+                            "color": [1, 0.2, 0, 0],
+                            "size": 4,
+                            "timeToReach": 450
+                        }]
+                }, {
+                    "hasProjectileModel": true,
+                    "projectileModelWidth": 0.35,
+                    "projectileModelIntersection": 0.875,
+                    "dimensions": [5, 5, 20],
+                    "velocity": 80,
+                    "velocitySpread": 15,
+                    "initialNumber": 20,
+                    "shader": "coloredBillboard",
+                    "texture": "spark",
+                    "particleStates": [{
+                            "size": 1.2
+                        }, {
+                            "color": [1, 1, 0, 1],
+                            "size": 0,
+                            "timeToReach": 1000
+                        }]
+                }, {
+                    "dimensions": [22, 18, 6],
+                    "velocity": 5,
+                    "velocitySpread": 1,
+                    "initialNumber": 8,
+                    "spawnNumber": 6,
+                    "spawnTime": 100,
+                    "duration": 400,
+                    "shader": "particle",
+                    "texture": "explosion",
+                    "particleStates": [{
+                            "color": [1, 1, 0.4, 1],
+                            "size": 0
+                        }, {
+                            "color": [1, 0.7, 0, 1],
+                            "size": 14,
+                            "timeToReach": 450
+                        }, {
+                            "color": [1, 0.2, 0, 0],
+                            "size": 4,
+                            "timeToReach": 450
+                        }]
+                }],
+            "lightStates": [{
+                    "color": [0.3, 0.9, 1],
+                    "intensity": 57600,
+                    "timeToReach": 0
+                }, {
+                    "color": [1, 1, 0.4],
+                    "intensity": 14400,
+                    "timeToReach": 350
+                }, {
+                    "color": [1, 0.7, 0],
+                    "intensity": 14400,
+                    "timeToReach": 550
+                }, {
+                    "color": [1, 0.2, 0],
+                    "intensity": 0,
+                    "timeToReach": 400
+                }],
+            "soundEffect": {
+                "name": "smallShipExplosion",
+                "volume": 18
+            }
         }],
     "projectileClasses": [{
             "name": "training",
@@ -2497,6 +2680,21 @@
                 "volume": 1.4
             },
             "scoreValue": 10
+        }, {
+            "name": "smallStation",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "referenceMass": 70000,
+            "thrust": 5,
+            "angularThrust": 100,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.5
+            },
+            "scoreValue": 5
         }],
     "missileClasses": [{
             "name": "smallMissile",
@@ -3135,6 +3333,10 @@
             "fullName": "Battleship",
             "description": "",
             "goodAgainst": ["corvette", "destroyer", "cruiser"]
+        }, {
+            "name": "station",
+            "fullName": "Station",
+            "description": ""
         }],
     "spacecraftClasses": [{
             "name": "container",
@@ -6796,5 +6998,210 @@
             "texture": "ruby_blade",
             "scoreValue": 100,
             "defaultLuminosityFactors": [[0, 1], [18, 1]]
+        }, {
+            "name": "commRelay",
+            "type": "station",
+            "fullName": "Communications Relay",
+            "showInDatabase": false,
+            "hitpoints": 30,
+            "model": "commrelay",
+            "shader": "ship",
+            "texture": "libra",
+            "mass": 70000,
+            "dragFactor": 5,
+            "bodies": [{
+                    "position": [0, 0, 0],
+                    "size": [18, 15, 4]
+                }, {
+                    "position": [0, 0, 0],
+                    "size": [3, 3, 42]
+                }, {
+                    "position": [0, 0, 17],
+                    "size": [4, 13, 7]
+                }, {
+                    "position": [0, 0, -17],
+                    "size": [4, 13, 7]
+                }],
+            "views": [{
+                    "name": "free",
+                    "fov": 45,
+                    "fovRange": [30, 60],
+                    "movable": true,
+                    "turnable": true,
+                    "rotationCenterIsObject": true,
+                    "distanceRange": [30, 70],
+                    "position": [0, -50, 0]
+                }],
+            "explosion": "smallStationExplosion",
+            "showTimeRatioDuringExplosion": 0.32,
+            "scoreValue": 10,
+            "blinkers": [{
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 0, 0, 1],
+                        "duration": 200
+                    },
+                    "position": [0, 0, 24.5],
+                    "period": 2000,
+                    "blinks": [0],
+                    "intensity": 100
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 0, 0, 1],
+                        "duration": 200
+                    },
+                    "position": [0, 0, -24.5],
+                    "period": 2000,
+                    "blinks": [0],
+                    "intensity": 100
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 1, 1],
+                        "duration": 200
+                    },
+                    "position": [0, 16.5, 0],
+                    "period": 2000,
+                    "blinks": [1000],
+                    "intensity": 100
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 1, 1],
+                        "duration": 200
+                    },
+                    "position": [0, -16.5, 0],
+                    "period": 2000,
+                    "blinks": [1000],
+                    "intensity": 100
+                }],
+            "humSound": {
+                "name": "spacecraftHum",
+                "volume": 0.65
+            },
+            "damageIndicators": [{
+                    "hullIntegrity": 40,
+                    "class": "smallFire"
+                }, {
+                    "hullIntegrity": 15,
+                    "class": "smallFire"
+                }],
+            "thrusterSlots": [{
+                    "group": 1,
+                    "uses": ["reverse", "strafeLeft"],
+                    "thrusters": [{
+                            "position": [5.7, 5.7, 0],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 2,
+                    "uses": ["strafeRight", "forward"],
+                    "thrusters": [{
+                            "position": [-5.7, -5.7, 0],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 3,
+                    "uses": ["forward", "strafeLeft"],
+                    "thrusters": [{
+                            "position": [5.7, -5.7, 0],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 4,
+                    "uses": ["reverse", "strafeRight"],
+                    "thrusters": [{
+                            "position": [-5.7, 5.7, 0],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 5,
+                    "uses": ["lower", "pitchDown", "rollRight"],
+                    "thrusters": [{
+                            "position": [3.75, 3.75, 2.5],
+                            "size": 2
+                        }]
+                }, {
+                    "group": 6,
+                    "uses": ["raise", "pitchUp", "rollLeft"],
+                    "thrusters": [{
+                            "position": [3.75, 3.75, -2.5],
+                            "size": 2
+                        }]
+                }, {
+                    "group": 7,
+                    "uses": ["lower", "pitchUp", "rollLeft"],
+                    "thrusters": [{
+                            "position": [-3.75, -3.75, 2.5],
+                            "size": 2
+                        }]
+                }, {
+                    "group": 8,
+                    "uses": ["raise", "pitchDown", "rollRight"],
+                    "thrusters": [{
+                            "position": [-3.75, -3.75, -2.5],
+                            "size": 2
+                        }]
+                }, {
+                    "group": 9,
+                    "uses": ["lower", "rollRight", "pitchUp"],
+                    "thrusters": [{
+                            "position": [3.75, -3.75, 2.5],
+                            "size": 2
+                        }]
+                }, {
+                    "group": 10,
+                    "uses": ["raise", "pitchDown", "rollLeft"],
+                    "thrusters": [{
+                            "position": [3.75, -3.75, -2.5],
+                            "size": 2
+                        }]
+                }, {
+                    "group": 11,
+                    "uses": ["lower", "pitchDown", "rollLeft"],
+                    "thrusters": [{
+                            "position": [-3.75, 3.75, 2.5],
+                            "size": 2
+                        }]
+                }, {
+                    "group": 12,
+                    "uses": ["raise", "pitchUp", "rollRight"],
+                    "thrusters": [{
+                            "position": [-3.75, 3.75, -2.5],
+                            "size": 2
+                        }]
+                }, {
+                    "group": 13,
+                    "uses": ["yawLeft"],
+                    "thrusters": [{
+                            "position": [1.7, 8.4, 0],
+                            "size": 2.75
+                        }, {
+                            "position": [-1.7, -8.4, 0],
+                            "size": 2.75
+                        }]
+                }, {
+                    "group": 14,
+                    "uses": ["yawRight"],
+                    "thrusters": [{
+                            "position": [-1.7, 8.4, 0],
+                            "size": 2.75
+                        }, {
+                            "position": [1.7, -8.4, 0],
+                            "size": 2.75
+                        }]
+                }],
+            "loadouts": [{
+                    "name": "default",
+                    "propulsion": {
+                        "class": "smallStation"
+                    }
+                }],
+            "defaultLoadout": "default"
         }]
 }
