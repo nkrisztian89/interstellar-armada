@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Provides various basic renderable object classes that can be added to scenes inside renderable nodes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -259,7 +259,7 @@ define([
             } else if (this._textures[role] instanceof managedGL.ManagedCubemap) {
                 uniformName = managedGL.getUniformName(managedGL.getCubemapUniformRawName(role));
             } else {
-                application.showError("Attemtping to add a texture of unknown type (" + this._textures[role].constructor.name + ") to the GL context.");
+                application.showError("Attempting to add a texture of unknown type (" + this._textures[role].constructor.name + ") to the GL context.");
                 continue;
             }
             // reusing functions created before
@@ -753,6 +753,30 @@ define([
             return renderParameters.parent.wasRenderedToShadowMap();
         }
         return this.isInsideShadowRegion(renderParameters.light);
+    };
+    // #########################################################################
+    /**
+     * @class This object is not itself rendered, but mirrors the visible size 
+     * of its parent, so children can be added to it as if added to the parent,
+     * they can share the shader of this object and can be toggled by toggling
+     * this object. Used for containing visualized hitboxes.
+     * @constructor
+     * @extends RenderableObject3D
+     * @param {ManagedShader} shader
+     */
+    function ContainerObject(shader) {
+        RenderableObject3D.call(this, shader);   
+    }
+    ContainerObject.prototype = new RenderableObject3D();
+    ContainerObject.prototype.constructor = ContainerObject;
+    /**
+     * @override
+     * @param {RenderParameters} renderParameters
+     * @returns {Boolean}
+     */
+    ContainerObject.prototype.shouldBeRendered = function (renderParameters) {
+        this._visibleSize = renderParameters.parent.getVisibleSize();
+        return false;
     };
     // #########################################################################
     /**
@@ -2609,6 +2633,7 @@ define([
         CLIP_COORDINATES_NO_CLIP: CLIP_COORDINATES_NO_CLIP,
         RenderableObject: RenderableObject,
         RenderableObject3D: RenderableObject3D,
+        ContainerObject: ContainerObject,
         CubemapSampledFVQ: CubemapSampledFVQ,
         ShadedLODMesh: ShadedLODMesh,
         ParameterizedMesh: ParameterizedMesh,

@@ -55,6 +55,10 @@ span.propertyControl.withSetButton {
     margin-right: 3.5em;
 }
 
+button.propertyControl {
+    overflow: hidden;
+}
+
 .withUnsetButton {
     margin-right: 1.6em;
 }

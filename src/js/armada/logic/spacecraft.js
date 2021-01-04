@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Implementation of the Spacecraft game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1866,10 +1866,7 @@ define([
         if (addSupplements.hitboxes === true) {
             shader = shader || (params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader());
             // add the parent objects for the hitboxes
-            this._hitbox = new sceneGraph.RenderableNode(new renderableObjects.RenderableObject3D(
-                    shader,
-                    false,
-                    false), false);
+            this._hitbox = new sceneGraph.RenderableNode(new renderableObjects.ContainerObject(shader), false);
             // add the models for the hitboxes themselves
             for (i = 0; i < this._class.getBodies().length; i++) {
                 this._addHitboxModel(i);

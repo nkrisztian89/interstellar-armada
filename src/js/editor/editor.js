@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2020 Krisztián Nagy
+ * Copyright 2016-2021 Krisztián Nagy
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -821,48 +821,6 @@ define([
         };
     }
     /**
-     * Sets up the event handlers for the elements in the import dialog
-     */
-    function _loadImportDialog() {
-        var
-                importType = document.getElementById(IMPORT_TYPE_ID),
-                importFile = document.getElementById(IMPORT_FILE_ID),
-                importImport = document.getElementById(IMPORT_IMPORT_BUTTON_ID),
-                importCancel = document.getElementById(IMPORT_CANCEL_BUTTON_ID),
-                typeOptions = [common.ItemType.MISSION];
-        common.setSelectorOptions(importType, typeOptions);
-        importImport.onclick = function () {
-            switch (importType.value) {
-                case common.ItemType.MISSION:
-                    var file = importFile.files[0];
-                    if (file) {
-                        file.text().then(function (text) {
-                            var data = JSON.parse(text);
-                            if (data) {
-                                data.name = file.name;
-                                if (missions.getMissionNames().indexOf(data.name) >= 0) {
-                                    application.showError("A mission with this filename already exists!", application.ErrorSeverity.MINOR);
-                                } else {
-                                    missions.createMissionDescriptor(data);
-                                    _loadItems();
-                                    _selectItem(importType.value, data.name, common.ItemType.MISSION);
-                                }
-                            }
-                        }.bind(this)).catch(function () {
-                            application.showError("The selected file doesn't seem to be a valid mission file!", application.ErrorSeverity.MINOR);
-                        });
-                    }
-                    break;
-                default:
-                    application.showError("Importing " + importType.value + " is not yet implemented!");
-            }
-            _importDialog.hidden = true;
-        };
-        importCancel.onclick = function () {
-            _importDialog.hidden = true;
-        };
-    }
-    /**
      * Creates and returns a collapsable list (<ul> tag) containing the categories of the game items belonging to the passed type.
      * @param {String} itemType (enum ItemType)
      * @returns {Element}
@@ -973,6 +931,48 @@ define([
         windowContent.appendChild(_missionList);
     }
     /**
+     * Sets up the event handlers for the elements in the import dialog
+     */
+    function _loadImportDialog() {
+        var
+                importType = document.getElementById(IMPORT_TYPE_ID),
+                importFile = document.getElementById(IMPORT_FILE_ID),
+                importImport = document.getElementById(IMPORT_IMPORT_BUTTON_ID),
+                importCancel = document.getElementById(IMPORT_CANCEL_BUTTON_ID),
+                typeOptions = [common.ItemType.MISSION];
+        common.setSelectorOptions(importType, typeOptions);
+        importImport.onclick = function () {
+            switch (importType.value) {
+                case common.ItemType.MISSION:
+                    var file = importFile.files[0];
+                    if (file) {
+                        file.text().then(function (text) {
+                            var data = JSON.parse(text);
+                            if (data) {
+                                data.name = file.name;
+                                if (missions.getMissionNames().indexOf(data.name) >= 0) {
+                                    application.showError("A mission with this filename already exists!", application.ErrorSeverity.MINOR);
+                                } else {
+                                    missions.createMissionDescriptor(data);
+                                    _loadItems();
+                                    _selectItem(importType.value, data.name, common.ItemType.MISSION);
+                                }
+                            }
+                        }.bind(this)).catch(function () {
+                            application.showError("The selected file doesn't seem to be a valid mission file!", application.ErrorSeverity.MINOR);
+                        });
+                    }
+                    break;
+                default:
+                    application.showError("Importing " + importType.value + " is not yet implemented!");
+            }
+            _importDialog.hidden = true;
+        };
+        importCancel.onclick = function () {
+            _importDialog.hidden = true;
+        };
+    }
+    /**
      * Loads the default values and sets the change handlers for the contents of the New item dialog
      */
     function _loadNewItemDialog() {
@@ -996,7 +996,9 @@ define([
                                 utils.deepCopy(resources.getResource(newItemCategory.value, newItemBase.value).getData()) :
                                 properties.getDefaultItemData(
                                         descriptors.itemDescriptors[newItemCategory.value],
-                                        newItemName.value));
+                                        newItemName.value,
+                                        newItemType.value,
+                                        newItemCategory.value));
                         newItemData.name = newItemName.value;
                         resources.createResource(newItemCategory.value, newItemData);
                     };
@@ -1009,7 +1011,9 @@ define([
                                 utils.deepCopy(classes.getClass(newItemCategory.value, newItemBase.value).getData()) :
                                 properties.getDefaultItemData(
                                         descriptors.itemDescriptors[newItemCategory.value],
-                                        newItemName.value));
+                                        newItemName.value,
+                                        newItemType.value,
+                                        newItemCategory.value));
                         newItemData.name = newItemName.value;
                         classes.createClass(newItemCategory.value, newItemData);
                     };
@@ -1022,7 +1026,9 @@ define([
                                 utils.deepCopy(environments.getEnvironment(newItemBase.value).getData()) :
                                 properties.getDefaultItemData(
                                         descriptors.itemDescriptors[newItemCategory.value],
-                                        newItemName.value));
+                                        newItemName.value,
+                                        newItemType.value,
+                                        newItemCategory.value));
                         newItemData.name = newItemName.value;
                         environments.createEnvironment(newItemData);
                     };
@@ -1043,7 +1049,9 @@ define([
                         } else {
                             newItemData = utils.deepCopy(properties.getDefaultItemData(
                                     descriptors.itemDescriptors[newItemCategory.value],
-                                    newItemName.value));
+                                    newItemName.value,
+                                    newItemType.value,
+                                    newItemCategory.value));
                             newItemData.name = newItemName.value;
                             missions.createMissionDescriptor(newItemData);
                             callback();

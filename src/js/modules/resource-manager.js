@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, 2017, 2020 Krisztián Nagy
+ * Copyright 2014-2015, 2017, 2020-2021 Krisztián Nagy
  * @file Provides a class that can hold and manage asynchronously loaded resources.
  * Usage:
  * - subclass GenericResource to implement a kind of resource you want to manage e.g. TextFileResource (see the class description for details)
@@ -300,7 +300,7 @@ define([
     ResourceHolder.prototype.addResource = function (resource, unlisted) {
         var resourceName = resource.getName();
         if (this._resources[resourceName]) {
-            application.showError("Attemtping to add a resource named '" + resourceName + "' that already exists! Data will be overwritten.");
+            application.showError("Attempting to add a resource named '" + resourceName + "' that already exists! Data will be overwritten.");
         } else if (!unlisted) {
             this._resourceNames.push(resourceName);
         }

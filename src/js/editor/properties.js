@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2020 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2021 Krisztián Nagy
  * @file Provides the content and event handlers for the Properties window of the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -470,10 +470,19 @@ define([
      * be set to default values
      * @param {Editor~ItemDescriptor} itemDescriptor
      * @param {String} name The value to set for the name property in the created object
+     * @param {String} type (enum ItemType) The type of the item to create data for
+     * @param {String} category The category of the item to create the data for
      * @returns {Object}
      */
-    function getDefaultItemData(itemDescriptor, name) {
+    function getDefaultItemData(itemDescriptor, name, type, category) {
         var result = {}, i, propertyDescriptor, propertyDescriptorNames = Object.keys(itemDescriptor);
+        _item = {
+            type: type,
+            name: name,
+            category: category,
+            reference: null,
+            data: null
+        };
         for (i = 0; i < propertyDescriptorNames.length; i++) {
             propertyDescriptor = itemDescriptor[propertyDescriptorNames[i]];
             if (propertyDescriptor.name === descriptors.NAME_PROPERTY_NAME) {
