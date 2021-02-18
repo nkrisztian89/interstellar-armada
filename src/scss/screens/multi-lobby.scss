@@ -1,0 +1,60 @@
+@import "../_common.scss";
+
+.multiLobby.pageContent {
+    width: 100%;
+    height: calc(100% - #{2*$separator-height+3*$page-padding});
+    margin-top: $page-padding;
+}
+
+table.multiPlayers {
+    max-width: 90%;
+    text-align: left;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.chatContainer {
+    width: 100%;
+    padding-bottom: 1em;
+    position: absolute;
+    bottom: 0;
+    text-align: center;
+}
+
+.chatLog {
+    @include bordered;
+    @include styled-scrollbar;
+    background: $panel-back-color;
+    width: 38em;
+    height: 10em;
+    margin: 1em auto;
+    padding: 0;
+}
+
+.chatLog>p {
+    margin: 0.2em;
+    padding: 0.2em;
+    background: $panel-front-color;
+    transition: background 0.75s;
+}
+
+input.chatMessage {
+    width: 30em;
+    height: 2em;
+    margin-left: 0;
+    margin-right: 0.8em;
+}
+
+button.chatSend {
+    min-width: 6em;
+    height: 1.6em;
+    padding: 0;
+}
+
+.multi-message-sender {
+    color: $highlight-color;
+}
+
+.multi-message-system {
+    color: $dark-text-color;
+}

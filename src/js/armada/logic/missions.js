@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Implementation of loading and managing missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2161,6 +2161,13 @@ define([
         return this._name;
     };
     /**
+     * Returns the mission title as given in the data JSON
+     * @returns {String} 
+     */
+    Mission.prototype.getTitle = function () {
+        return this._title;
+    };
+    /**
      * Returns the name of the mission that should be played after completing this one (typically same as the filename e.g. someMission.json)
      * @returns {String}
      */
@@ -2614,6 +2621,7 @@ define([
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
         spacecraft.resetRandomSeed();
+        this._title = dataJSON.title || "";
         this._nextMissionName = dataJSON.nextMission || null;
         this.loadEnvironment(dataJSON);
         shadows = graphics.isShadowMappingEnabled();
@@ -2701,6 +2709,9 @@ define([
             if (!demoMode && spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
                 craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
+            }
+            if (spacecrafts[i].multi) {
+                craft.setAsMultiControlled(spacecrafts[i].piloted);
             }
             teamID = spacecrafts[i].team;
             if (teamID) {
@@ -3191,8 +3202,9 @@ define([
      * Performs the physics and game logic simulation of all the object in the mission.
      * @param {Number} dt The time passed since the last simulation step, in milliseconds.
      * @param {Scene} mainScene When given, this scene is updated according to the simulation.
+     * @param {Boolean} [multi=false] Whether the game is multiplayer
      */
-    Mission.prototype.tick = function (dt, mainScene) {
+    Mission.prototype.tick = function (dt, mainScene, multi) {
         var i, v, octree, index;
         if (this._environment) {
             this._environment.simulate();
@@ -3217,9 +3229,11 @@ define([
                 }
                 if (this._spacecrafts[i].canBeReused()) {
                     this._spacecrafts[i].destroy(true);
-                    this._spacecrafts[i] = null;
-                    this._spacecrafts.splice(i, 1);
-                    i--;
+                    if (!multi) {
+                        this._spacecrafts[i] = null;
+                        this._spacecrafts.splice(i, 1);
+                        i--;
+                    }
                 }
             } else if (_showHitboxesForHitchecks) {
                 this._spacecrafts[i].hideHitbox();
@@ -3983,6 +3997,16 @@ define([
     MissionContext.prototype.createMissionDescriptor = function (data) {
         this._missionManager.createResource(MISSION_ARRAY_NAME, data);
     };
+    /**
+     * Creates and returns a new Mission based on the passed data object and settings without saving it into the mission resource manager
+     * @param {Object} data The JSON object data describing the mission
+     * @param {String} difficulty The string ID of the difficulty level to use
+     * @param {Boolean} demoMode Whether to load the created mission in demo mode
+     * @returns {Mission} 
+     */
+    MissionContext.prototype.createMission = function (data, difficulty, demoMode) {
+        return new MissionDescriptor(data).createMission(difficulty, demoMode);
+    };
     // initializazion
     // obtaining pool references
     _particlePool = pools.getPool(logicConstants.PARTICLE_POOL_NAME, renderableObjects.Particle);
@@ -4039,6 +4063,7 @@ define([
         getMissionDescriptors: _context.getMissionDescriptors.bind(_context),
         requestMissionDescriptor: _context.requestMissionDescriptor.bind(_context),
         requestMission: _context.requestMission.bind(_context),
-        createMissionDescriptor: _context.createMissionDescriptor.bind(_context)
+        createMissionDescriptor: _context.createMissionDescriptor.bind(_context),
+        createMission: _context.createMission.bind(_context)
     };
 });

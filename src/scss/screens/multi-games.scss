@@ -1,0 +1,49 @@
+@import "../_common.scss";
+
+$horizontal-margin: 1em;
+
+.multiGames.pageContent {
+    width: calc(100% - #{$horizontal-margin});
+    height: calc(100% - #{2*$separator-height+3*$page-padding});
+    margin-top: $page-padding;
+}
+
+div.onlinePlayersContainer, 
+div.noAvailableGamesLabel, 
+div.connectingLabel {
+    margin-left: auto;
+    margin-right: auto;
+    &:not([hidden]) {
+        display: table;
+    }
+}
+
+table.multiGames {
+    max-width: 90%;
+    text-align: left;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.createGamePopupBackground, .playerPopupBackground {
+    background-color: $overlay-background-color;
+}
+
+.createGamePopup, .playerPopup {
+    text-align: center;
+    position: relative;
+    white-space: normal;
+    padding: 0.6em;
+}
+
+.createGamePopupContent, .playerPopupContent {
+    position: relative;
+    margin: 1em auto;
+    max-width: 95%;
+    text-align: center;
+}
+
+.createGamePopupHeader {
+    margin: 0.4em auto;
+    padding: 0;
+}

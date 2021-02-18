@@ -51,7 +51,8 @@
         "cancel": "Cancel"
     },
     "mainMenu": {
-        "newGame": "New game",
+        "singlePlayer": "Single player",
+        "multiplayer": "Multiplayer",
         "database": "Database",
         "settings": "Settings",
         "about": "About",
@@ -111,6 +112,68 @@
     "location": {
         "unknown": "Unknown",
         "system": "{systemName} system"  
+    },
+    "multiGames": {
+        "backButton": "Back to menu",
+        "refreshButton": "Refresh",
+        "createGameButton": "Create game",
+        "title": "Multiplayer",
+        "connectingLabel": "Connecting to the game server...",
+        "onlinePlayersLabel": "Online players:",
+        "serverPingLabel": "Server ping:",
+        "noAvailableGamesLabel": "There are no available games right now.",
+        "availableGamesTitle": "Available games",
+        "gameNameColumn": "Game name",
+        "hostingPlayerColumn": "Hosting player",
+        "playersColumn": "Players",
+        "startedColumn": "Started",
+        "started": {
+            "yes": "yes",
+            "no": "no"
+        },
+        "joinButton": "Join",
+        "createGameHeader": "Create game",
+        "createGameNameLabel": "Game name:",
+        "createGameCreateButton": "Create",
+        "createGameCancelButton": "Cancel",
+        "playerOkButton": "Ok",
+        "playerCancelButton": "Cancel",
+        "playerNameLabel": "Player name:",
+        "disconnectMessage": "Connection to the game server has been closed.",
+        "cannotConnectMessage": "Cannot connect to the game server.",
+        "gameNotFoundError": "Error: Game not found!",
+        "gameIsFullError": "Error: Game is full!",
+        "gameAlreadyStartedError": "Error: Game has already started!",
+        "playerNameAlreadyExistsError": "Error: Game already has a player with the same name!",
+        "gameNameAlreadyExistsError": "Error: A game with the same name already exists!",
+        "invalidGameSettingsError": "Error: Invalid game settings!"
+    },
+    "multiLobby": {
+        "leaveButton": "Leave game",
+        "readyButton": "Ready",
+        "startButton": "Start game",
+        "title": "Multiplayer",
+        "gameTitle": "Game lobby - {name}",
+        "playerNameColumn": "Name",
+        "connectionColumn": "Connection",
+        "connection": {
+            "server": "server",
+            "direct": "direct"
+        },
+        "pingColumn": "Ping",
+        "readyColumn": "Ready",
+        "ready": {
+            "yes": "yes",
+            "no": "no"
+        },
+        "kickButton": "Kick",
+        "chatSend": "Send",
+        "hostLeftMessage": "The host has left the game.",
+        "kickedMessage": "You have been kicked out of the game by the host.",
+        "playerJoinedMessage": "{name} joined the game!",
+        "playerLeftMessage": "{name} has left the game!",
+        "playerReadyMessage": "{name} is ready to play!",
+        "playerKickedMessage": "{name} has been kicked out of the game by the host!"
     },
     "settings": {
         "general": "General settings",
@@ -367,6 +430,11 @@
                 "preparing": "JUMP ENGINES ENGAGED\nPreparing...\n{timeLeft}\nPress {controlStrings/keyboard/jumpOut} to cancel"
             },
             "newHostiles": "New hostiles have arrived!"
+        },
+        "multi": {
+            "waitingForOtherPlayers": "Waiting for other players...",
+            "hostLeftMessage": "Host {host} left the game!",
+            "playerLeftMessage": "Player {player} left the game!"
         }
     },
     "performanceLevel": {

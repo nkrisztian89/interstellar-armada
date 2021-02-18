@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -25,12 +25,14 @@
  * @param armadaScreens Used for common screen constants.
  * @param graphics Used for accessing graphics settings.
  * @param audio Used for controlling volume (muting when opening the menu)
+ * @param networking Used for multiplayer
  * @param classes Used for HUD elements for convenient acquiry of their resources.
  * @param config Used to access game setting / configuration.
  * @param control Used for global game control functions.
  * @param SpacecraftEvents used for setting spacecraft event handlers
  * @param missions Used for creating the Mission object, accessing enums.
  * @param equipment Used to access flight mode constants
+ * @param spacecraft Used for multiplayer data messaging and state setup
  * @param ai Used for performing the AI control operations in the battle simulation loop.
  */
 define([
@@ -50,12 +52,14 @@ define([
     "armada/screens/shared",
     "armada/graphics",
     "armada/audio",
+    "armada/networking",
     "armada/logic/classes",
     "armada/configuration",
     "armada/control",
     "armada/logic/SpacecraftEvents",
     "armada/logic/missions",
     "armada/logic/equipment",
+    "armada/logic/spacecraft",
     "armada/logic/ai",
     "utils/polyfill"
 ], function (
@@ -63,8 +67,8 @@ define([
         application, game, components, screens, resources, egomModel,
         renderableObjects, sceneGraph,
         analytics,
-        strings, armadaScreens, graphics, audio, classes, config, control,
-        SpacecraftEvents, missions, equipment, ai) {
+        strings, armadaScreens, graphics, audio, networking, classes, config, control,
+        SpacecraftEvents, missions, equipment, spacecraft, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -102,6 +106,7 @@ define([
             /** @type Number */
             LOOP_CANCELED = -1,
             LOOP_REQUESTANIMFRAME = -2,
+            NETWORK_UPDATE_INTERVAL = 50,
             LOADING_BUILDING_SCENE_PROGRESS = 10,
             LOADING_RESOURCES_START_PROGRESS = 20,
             LOADING_RESOURCE_PROGRESS = 60,
@@ -185,6 +190,12 @@ define([
              */
             _simulationLoop = LOOP_CANCELED,
             /**
+             * The time elapsed since the last multiplayer game update message has been sent to the guests
+             * (in ms; to be used by the host)
+             * @type Number
+             */
+            _timeSinceNetworkUpdate = 0,
+            /**
              * This stores the value of the cursor as it was used in the battle, while some menu is active
              * @type String
              */
@@ -225,6 +236,11 @@ define([
              */
             _missionSourceFilename,
             /**
+             * The timestamp taken when loading of the mission starts
+             * @type DOMHighResTimeStamp;
+             */
+            _loadingStartTime,
+            /**
              * The string ID of the difficulty level on which the battle is currently played.
              * @type String
              */
@@ -234,6 +250,11 @@ define([
              * @type Boolean
              */
             _demoMode,
+            /**
+             * Whether we are playing a multiplayer game
+             * @type Boolean
+             */
+            _multi,
             /**
              * The translated gameplay tip text displayed in the loading box.
              * @type String
@@ -1145,11 +1166,21 @@ define([
         if (_simulationLoop !== LOOP_CANCELED) {
             curDate = performance.now();
             dt = curDate - _prevDate;
+            _timeSinceNetworkUpdate += dt;
             control.control(dt);
+            if (_multi && !networking.isHost()) {
+                if (!_mission.getPilotedSpacecraft().canBeReused()) {
+                    networking.sendGuestUpdate(_mission.getPilotedSpacecraft());
+                }
+            }
             ai.control(dt);
             followedCraft = _mission.getFollowedSpacecraftForScene(_battleScene);
             if (!_isTimeStopped) {
-                _mission.tick(dt, _battleScene);
+                _mission.tick(dt, _battleScene, _multi);
+                if (_multi && networking.isHost() && (_timeSinceNetworkUpdate >= NETWORK_UPDATE_INTERVAL)) {
+                    _timeSinceNetworkUpdate = 0;
+                    networking.sendHostUpdate(_mission.getSpacecrafts());
+                }
                 _elapsedTime += dt;
                 if (!_mission.isFinished() && !_mission.noHostilesPresent()) {
                     _timeSinceLastFire += dt;
@@ -1225,7 +1256,7 @@ define([
      */
     function _chooseTipText() {
         var
-                tipIDs = missions.getMissionDescriptor(_missionSourceFilename).getTipIDs() || missions.getTipIDs(),
+                tipIDs = _missionSourceFilename && missions.getMissionDescriptor(_missionSourceFilename).getTipIDs() || missions.getTipIDs(),
                 i = Math.min(Math.floor(Math.random() * tipIDs.length), tipIDs.length - 1);
         _tipText = strings.get(strings.TIP.PREFIX, tipIDs[i]);
     }
@@ -2382,6 +2413,10 @@ define([
      */
     BattleScreen.prototype.hide = function () {
         if (screens.HTMLScreenWithCanvases.prototype.hide.call(this)) {
+            if (_multi) {
+                networking.onDisconnect(null);
+                networking.disconnect();
+            }
             this.pauseBattle();
             _clearData();
             return true;
@@ -4174,18 +4209,20 @@ define([
                 /**@type MissionDescriptor */ missionDescriptor;
         craft = _mission.getPilotedSpacecraft();
         victory = _mission.getState() === missions.MissionState.COMPLETED;
-        missionDescriptor = missions.getMissionDescriptor(_mission.getName());
-        // NONE state mission playthrough count is increased right when the mission starts
-        if (_mission.getState() !== missions.MissionState.NONE) {
-            missionDescriptor.increasePlaythroughCount(victory);
-        }
         hitRatio = craft ? craft.getHitRatio() : 0;
         // calculating score from base score and bonuses
         perfStats = craft ? _mission.getPerformanceStatistics() : {};
-        if (victory && !missionDescriptor.isCustom()) {
-            // updating the record if needed
-            isRecord = missionDescriptor.updateBestScore(perfStats.score, perfStats.performance);
-            analytics.sendEvent("score", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty, score: perfStats.score});
+        if (_missionSourceFilename) {
+            missionDescriptor = missions.getMissionDescriptor(_mission.getName());
+            // NONE state mission playthrough count is increased right when the mission starts
+            if (_mission.getState() !== missions.MissionState.NONE) {
+                missionDescriptor.increasePlaythroughCount(victory);
+            }
+            if (victory && !missionDescriptor.isCustom()) {
+                // updating the record if needed
+                isRecord = missionDescriptor.updateBestScore(perfStats.score, perfStats.performance);
+                analytics.sendEvent("score", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty, score: perfStats.score});
+            }
         }
         game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
             missionState: _mission.getState(),
@@ -4223,7 +4260,8 @@ define([
                 /**@type Spacecraft*/ craft,
                 /**@type Number */ time,
                 /**@type Object */ analyticsParams,
-                /**@type ModelDebugStats*/ mainStats, shadowStats;
+                /**@type ModelDebugStats*/ mainStats, shadowStats,
+                /**@type DialogScreen~ButtonData[] */ buttons;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -4277,7 +4315,7 @@ define([
                     if (_timeSinceGameStateChanged >= config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = _mission.getState() === missions.MissionState.COMPLETED;
                         time = Math.round(_elapsedTime / 1000);
-                        if (!missions.getMissionDescriptor(_mission.getName()).isCustom()) {
+                        if (_missionSourceFilename && !missions.getMissionDescriptor(_mission.getName()).isCustom()) {
                             analyticsParams = {difficulty: _difficulty, time: time};
                             if (_analyticsState) {
                                 if (_analyticsState.win) {
@@ -4303,27 +4341,32 @@ define([
                             }, true);
                         } else {
                             this.pauseBattle(false, true);
+                            buttons = [{
+                                    caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_DEBRIEFING),
+                                    action: _goToDebriefing
+                                }];
+                            if (!_multi) {
+                                buttons.push({
+                                    caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_RESTART),
+                                    action: function () {
+                                        game.closeSuperimposedScreen();
+                                        this.startNewBattle({
+                                            restart: true
+                                        });
+                                    }.bind(this)
+                                });
+                            }
+                            buttons.push({
+                                caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_SPECTATE),
+                                action: function () {
+                                    game.closeSuperimposedScreen();
+                                    this.resumeBattle();
+                                }.bind(this)
+                            });
                             armadaScreens.openDialog({
                                 header: strings.get(strings.BATTLE.MESSAGE_DEFEAT_HEADER),
                                 message: strings.get(strings.BATTLE.MESSAGE_DEFEAT_MESSAGE),
-                                buttons: [{
-                                        caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_DEBRIEFING),
-                                        action: _goToDebriefing
-                                    }, {
-                                        caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_RESTART),
-                                        action: function () {
-                                            game.closeSuperimposedScreen();
-                                            this.startNewBattle({
-                                                restart: true
-                                            });
-                                        }.bind(this)
-                                    }, {
-                                        caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_SPECTATE),
-                                        action: function () {
-                                            game.closeSuperimposedScreen();
-                                            this.resumeBattle();
-                                        }.bind(this)
-                                    }],
+                                buttons: buttons,
                                 onClose: function () {
                                     this.resumeBattle();
                                 }.bind(this)
@@ -4346,48 +4389,16 @@ define([
         }
     };
     /**
-     * @typedef {Object} BattleScreen~BattleParams
-     * @property {String} [missionSourceFilename]
-     * @property {String} [difficulty]  The string ID of the difficulty level to use
-     * @property {Boolean} [demoMode] If true, AIs are added to all spacecrafts and the piloted spacecraft is not set, when loading the mission.
-     * @property {Boolean} [restart]
+     * @private
+     * @param {Mission} mission
      */
-    /**
-     * Loads the specified mission description file and sets a callback to create a new game-logic model and scene for the simulated battle
-     * based on the mission description and current settings
-     * @param {BattleScreen~BattleParams} [params]
-     */
-    BattleScreen.prototype.startNewBattle = function (params) {
-        var
-                loadingStartTime = performance.now(),
-                canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
-        params = params || {};
-        if (params.restart) {
-            this.pauseBattle();
-        }
-        if (params.missionSourceFilename !== undefined) {
-            _missionSourceFilename = params.missionSourceFilename;
-        }
-        if (params.difficulty !== undefined) {
-            _difficulty = params.difficulty;
-        }
-        if (params.demoMode !== undefined) {
-            _demoMode = params.demoMode;
-        }
-        _clearData();
-        _chooseTipText();
-        document.body.classList.add("wait");
-        this._loadingBox.show();
-        this.resizeCanvases();
-        control.setScreenCenter(
-                canvas.width / 2,
-                canvas.height / 2);
-        this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_MISSION), 0);
-        missions.requestMission(_missionSourceFilename, _difficulty, _demoMode, function (createdMission) {
-            var missionDescriptor, custom, anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex, i;
-            _mission = createdMission;
-            _targets = _mission.getTargetSpacecrafts();
-            _escorts = _mission.getEscortedSpacecrafts();
+    BattleScreen.prototype._startBattle = function (mission) {
+        var missionDescriptor, custom, anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex, i, canvas;
+        canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
+        _mission = mission;
+        _targets = _mission.getTargetSpacecrafts();
+        _escorts = _mission.getEscortedSpacecrafts();
+        if (_missionSourceFilename) {
             missionDescriptor = missions.getMissionDescriptor(_mission.getName());
             custom = missionDescriptor.isCustom();
             // for missions that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
@@ -4403,203 +4414,301 @@ define([
                     analytics.sendEvent("customstart");
                 }
             }
-            _displayedMissionState = _mission.getState();
-            _timeSinceGameStateChanged = config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY);
-            _timeSincePlayerLeft = 0;
-            this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
-            if (graphics.shouldUseShadowMapping()) {
-                graphics.getShadowMappingShader();
-            }
+        } else {
+            custom = true;
+        }
+        _displayedMissionState = _mission.getState();
+        _timeSinceGameStateChanged = config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY);
+        _timeSincePlayerLeft = 0;
+        this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
+        if (graphics.shouldUseShadowMapping()) {
+            graphics.getShadowMappingShader();
+        }
+        if (graphics.isAnaglyphRenderingEnabled()) {
+            graphics.getAnaglyphRedShader();
+            graphics.getAnaglyphCyanShader();
+        }
+        if (graphics.isSideBySideRenderingEnabled()) {
+            graphics.getSideBySideLeftShader();
+            graphics.getSideBySideRightShader();
+        }
+        if (graphics.isShadowMapDebuggingEnabled()) {
+            graphics.getShadowMapDebugShader();
+        }
+        _battleScene = new sceneGraph.Scene(
+                0, 0, 1, 1,
+                true, [true, true, true, true],
+                [0, 0, 0, 1], true,
+                graphics.getLODContext(),
+                graphics.getMaxDirLights(),
+                graphics.getMaxPointLights(),
+                graphics.getMaxSpotLights(),
+                {
+                    useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                    viewDistance: config.getSetting(config.BATTLE_SETTINGS.VIEW_DISTANCE),
+                    fov: INITIAL_CAMERA_FOV,
+                    span: INITIAL_CAMERA_SPAN,
+                    transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
+                    transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
+                });
+        // we manually update the camera separately before the HUD rendering to make sure it is up-to-date
+        _battleScene.setShouldUpdateCamera(false);
+        _targetScene = new sceneGraph.Scene(
+                _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),
+                _targetViewLayout.getPositiveBottom(canvas.width, canvas.height),
+                _targetViewLayout.getPositiveWidth(canvas.width, canvas.height),
+                _targetViewLayout.getPositiveHeight(canvas.width, canvas.height),
+                false, [true, true, true, true],
+                [0, 0, 0, 0], true,
+                graphics.getLODContext(),
+                0,
+                0,
+                0,
+                {
+                    useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                    viewDistance: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_VIEW_DISTANCE),
+                    fov: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_FOV),
+                    span: config.getSetting(config.CAMERA_SETTINGS.DEFAULT_SPAN),
+                    transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
+                    transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
+                },
+                false);
+        _targetScene.getCamera().moveToPosition([0, 0, config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_CAMERA_DISTANCE)], 0);
+        _mission.addToScene(_battleScene, _targetScene);
+        _addHUDToScene();
+        _hudSectionStates = new Array(Object.keys(HUDSection).length);
+        for (i = 0; i < _hudSectionStates.length; i++) {
+            _hudSectionStates[i] = HUDSectionState.VISIBLE;
+        }
+        _hudHighlightTime = 0;
+        _shipIndicatorHighlightTime = 0;
+        this._addUITexts();
+        _messageQueues = _messageQueues || {};
+        this.clearHUDMessageQueues();
+        // initializing music
+        audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.AMBIENT_MUSIC), AMBIENT_THEME, true);
+        // choose the anticipation music track
+        anticipationMusicNames = config.getSetting(config.BATTLE_SETTINGS.ANTICIPATION_MUSIC);
+        // check if there is a specific track given for the mission
+        anticipationMusic = _mission.getAnticipationTheme();
+        if (anticipationMusic) {
+            // check if the specific track is also listed among the general anticipation tracks (if so, it might already be loaded)
+            anticipationMusicIndex = anticipationMusicNames.indexOf(anticipationMusicNames);
+        } else {
+            // choose a track randomly, if no specific one was given
+            anticipationMusicIndex = Math.min(Math.floor(Math.random() * anticipationMusicNames.length), anticipationMusicNames.length - 1);
+            anticipationMusic = anticipationMusicNames[anticipationMusicIndex];
+        }
+        // set the theme ID based on whether it is a listed or custom combat theme
+        _anticipationTheme = (anticipationMusicIndex >= 0) ? ANTICIPATION_THEME_PREFIX + anticipationMusicIndex : anticipationMusic;
+        // choose the combat music track
+        combatMusicNames = config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC);
+        // check if there is a specific track given for the mission
+        combatMusic = _mission.getCombatTheme();
+        if (combatMusic) {
+            // check if the specific track is also listed among the general combat tracks (if so, it might already be loaded)
+            combatMusicIndex = combatMusicNames.indexOf(combatMusic);
+        } else {
+            // choose a track randomly, if no specific one was given
+            combatMusicIndex = Math.min(Math.floor(Math.random() * combatMusicNames.length), combatMusicNames.length - 1);
+            combatMusic = combatMusicNames[combatMusicIndex];
+        }
+        // set the theme ID based on whether it is a listed or custom combat theme
+        _combatTheme = (combatMusicIndex >= 0) ? COMBAT_THEME_PREFIX + combatMusicIndex : combatMusic;
+        // load the selected music, associating it with the selected theme ID
+        audio.initMusic(anticipationMusic, _anticipationTheme, true);
+        audio.initMusic(combatMusic, _combatTheme, true);
+        audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC), VICTORY_THEME, false);
+        audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEFEAT_MUSIC), DEFEAT_THEME, false);
+        audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_VICTORY_MUSIC), armadaScreens.DEBRIEFING_VICTORY_THEME, true);
+        audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_DEFEAT_MUSIC), armadaScreens.DEBRIEFING_DEFEAT_THEME, true);
+        control.getController(control.GENERAL_CONTROLLER_NAME).setMission(_mission);
+        control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
+        control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());
+        this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_RESOURCES_START_PROGRESS);
+        resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
+        resources.executeWhenReady(function () {
+            _battleScene.setShadowMapping(_mission.hasShadows() ? graphics.getShadowMappingSettings() : null);
             if (graphics.isAnaglyphRenderingEnabled()) {
-                graphics.getAnaglyphRedShader();
-                graphics.getAnaglyphCyanShader();
+                _battleScene.setAnaglyphRendering(graphics.getAnaglyphRenderingSettings());
             }
             if (graphics.isSideBySideRenderingEnabled()) {
-                graphics.getSideBySideLeftShader();
-                graphics.getSideBySideRightShader();
+                _battleScene.setSideBySideRendering(graphics.getSideBySideRenderingSettings());
             }
             if (graphics.isShadowMapDebuggingEnabled()) {
-                graphics.getShadowMapDebugShader();
+                _battleScene.setupShadowMapDebugging(graphics.getShadowMapDebuggingSettings());
             }
-            _battleScene = new sceneGraph.Scene(
-                    0, 0, 1, 1,
-                    true, [true, true, true, true],
-                    [0, 0, 0, 1], true,
-                    graphics.getLODContext(),
-                    graphics.getMaxDirLights(),
-                    graphics.getMaxPointLights(),
-                    graphics.getMaxSpotLights(),
-                    {
-                        useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
-                        viewDistance: config.getSetting(config.BATTLE_SETTINGS.VIEW_DISTANCE),
-                        fov: INITIAL_CAMERA_FOV,
-                        span: INITIAL_CAMERA_SPAN,
-                        transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
-                        transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
-                    });
-            // we manually update the camera separately before the HUD rendering to make sure it is up-to-date
-            _battleScene.setShouldUpdateCamera(false);
-            _targetScene = new sceneGraph.Scene(
-                    _targetViewLayout.getPositiveLeft(canvas.width, canvas.height),
-                    _targetViewLayout.getPositiveBottom(canvas.width, canvas.height),
-                    _targetViewLayout.getPositiveWidth(canvas.width, canvas.height),
-                    _targetViewLayout.getPositiveHeight(canvas.width, canvas.height),
-                    false, [true, true, true, true],
-                    [0, 0, 0, 0], true,
-                    graphics.getLODContext(),
-                    0,
-                    0,
-                    0,
-                    {
-                        useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
-                        viewDistance: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_VIEW_DISTANCE),
-                        fov: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_FOV),
-                        span: config.getSetting(config.CAMERA_SETTINGS.DEFAULT_SPAN),
-                        transitionDuration: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_DURATION),
-                        transitionStyle: config.getSetting(config.BATTLE_SETTINGS.CAMERA_DEFAULT_TRANSITION_STYLE)
-                    },
-                    false);
-            _targetScene.getCamera().moveToPosition([0, 0, config.getHUDSetting(config.BATTLE_SETTINGS.HUD.TARGET_VIEW_CAMERA_DISTANCE)], 0);
-            _mission.addToScene(_battleScene, _targetScene);
-            _addHUDToScene();
-            _hudSectionStates = new Array(Object.keys(HUDSection).length);
-            for (i = 0; i < _hudSectionStates.length; i++) {
-                _hudSectionStates[i] = HUDSectionState.VISIBLE;
-            }
-            _hudHighlightTime = 0;
-            _shipIndicatorHighlightTime = 0;
-            this._addUITexts();
-            _messageQueues = _messageQueues || {};
-            this.clearHUDMessageQueues();
-            // initializing music
-            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.AMBIENT_MUSIC), AMBIENT_THEME, true);
-            // choose the anticipation music track
-            anticipationMusicNames = config.getSetting(config.BATTLE_SETTINGS.ANTICIPATION_MUSIC);
-            // check if there is a specific track given for the mission
-            anticipationMusic = _mission.getAnticipationTheme();
-            if (anticipationMusic) {
-                // check if the specific track is also listed among the general anticipation tracks (if so, it might already be loaded)
-                anticipationMusicIndex = anticipationMusicNames.indexOf(anticipationMusicNames);
-            } else {
-                // choose a track randomly, if no specific one was given
-                anticipationMusicIndex = Math.min(Math.floor(Math.random() * anticipationMusicNames.length), anticipationMusicNames.length - 1);
-                anticipationMusic = anticipationMusicNames[anticipationMusicIndex];
-            }
-            // set the theme ID based on whether it is a listed or custom combat theme
-            _anticipationTheme = (anticipationMusicIndex >= 0) ? ANTICIPATION_THEME_PREFIX + anticipationMusicIndex : anticipationMusic;
-            // choose the combat music track
-            combatMusicNames = config.getSetting(config.BATTLE_SETTINGS.COMBAT_MUSIC);
-            // check if there is a specific track given for the mission
-            combatMusic = _mission.getCombatTheme();
-            if (combatMusic) {
-                // check if the specific track is also listed among the general combat tracks (if so, it might already be loaded)
-                combatMusicIndex = combatMusicNames.indexOf(combatMusic);
-            } else {
-                // choose a track randomly, if no specific one was given
-                combatMusicIndex = Math.min(Math.floor(Math.random() * combatMusicNames.length), combatMusicNames.length - 1);
-                combatMusic = combatMusicNames[combatMusicIndex];
-            }
-            // set the theme ID based on whether it is a listed or custom combat theme
-            _combatTheme = (combatMusicIndex >= 0) ? COMBAT_THEME_PREFIX + combatMusicIndex : combatMusic;
-            // load the selected music, associating it with the selected theme ID
-            audio.initMusic(anticipationMusic, _anticipationTheme, true);
-            audio.initMusic(combatMusic, _combatTheme, true);
-            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.VICTORY_MUSIC), VICTORY_THEME, false);
-            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEFEAT_MUSIC), DEFEAT_THEME, false);
-            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_VICTORY_MUSIC), armadaScreens.DEBRIEFING_VICTORY_THEME, true);
-            audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.DEBRIEFING_DEFEAT_MUSIC), armadaScreens.DEBRIEFING_DEFEAT_THEME, true);
-            control.getController(control.GENERAL_CONTROLLER_NAME).setMission(_mission);
-            control.getController(control.GENERAL_CONTROLLER_NAME).setBattle(_battle);
-            control.getController(control.CAMERA_CONTROLLER_NAME).setControlledCamera(_battleScene.getCamera());
-            this._updateLoadingStatus(strings.get(strings.LOADING.RESOURCES_START), LOADING_RESOURCES_START_PROGRESS);
-            resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
-            resources.executeWhenReady(function () {
-                _battleScene.setShadowMapping(_mission.hasShadows() ? graphics.getShadowMappingSettings() : null);
-                if (graphics.isAnaglyphRenderingEnabled()) {
-                    _battleScene.setAnaglyphRendering(graphics.getAnaglyphRenderingSettings());
-                }
-                if (graphics.isSideBySideRenderingEnabled()) {
-                    _battleScene.setSideBySideRendering(graphics.getSideBySideRenderingSettings());
-                }
-                if (graphics.isShadowMapDebuggingEnabled()) {
-                    _battleScene.setupShadowMapDebugging(graphics.getShadowMapDebuggingSettings());
-                }
-                this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
-                utils.executeAsync(function () {
-                    this.setAntialiasing(graphics.getAntialiasing());
-                    this.setFiltering(graphics.getFiltering());
-                    this.clearSceneCanvasBindings();
-                    this.bindSceneToCanvas(_battleScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
-                    this.bindSceneToCanvas(_targetScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
-                    _targetScene.clearNodes(true);
-                    this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
-                    application.log("Game data loaded in " + ((performance.now() - loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
-                    _smallHeaderText.setText(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
-                    document.body.classList.remove("wait");
-                    control.switchToSpectatorMode(false, true);
-                    this.setHeaderContent(custom ?
-                            missionDescriptor.getTitle() || utils.getFilenameWithoutExtension(_missionSourceFilename) :
-                            strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(_missionSourceFilename) + strings.MISSION.NAME_SUFFIX.name));
-                    _battleCursor = document.body.style.cursor;
+            this._updateLoadingStatus(strings.get(strings.LOADING.INIT_WEBGL), LOADING_INIT_WEBGL_PROGRESS);
+            utils.executeAsync(function () {
+                this.setAntialiasing(graphics.getAntialiasing());
+                this.setFiltering(graphics.getFiltering());
+                this.clearSceneCanvasBindings();
+                this.bindSceneToCanvas(_battleScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
+                this.bindSceneToCanvas(_targetScene, this.getScreenCanvas(BATTLE_CANVAS_ID));
+                _targetScene.clearNodes(true);
+                this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
+                application.log("Game data loaded in " + ((performance.now() - _loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
+                _smallHeaderText.setText(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
+                document.body.classList.remove("wait");
+                control.switchToSpectatorMode(false, true);
+                this.setHeaderContent(custom ?
+                        _mission.getTitle() || utils.getFilenameWithoutExtension(_missionSourceFilename) :
+                        strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(_missionSourceFilename) + strings.MISSION.NAME_SUFFIX.name));
+                _battleCursor = document.body.style.cursor;
+                if (!_multi) {
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
                         menuKey: _getMenuKeyHTMLString()
                     }));
-                    _mission.applyToSpacecrafts(function (spacecraft) {
-                        spacecraft.addEventHandler(SpacecraftEvents.FIRED, _handleSpacecraftFired.bind(spacecraft));
-                        if (spacecraft === _mission.getPilotedSpacecraft()) {
-                            spacecraft.addEventHandler(SpacecraftEvents.JUMP_ENGAGED, _handlePilotedSpacecraftJumpEngaged.bind(spacecraft));
-                            spacecraft.addEventHandler(SpacecraftEvents.JUMP_CANCELLED, _handlePilotedSpacecraftJumpCancelled.bind(spacecraft));
-                            spacecraft.addEventHandler(SpacecraftEvents.PREPARING_JUMP, _handlePilotedSpacecraftPreparingJump.bind(spacecraft));
-                            spacecraft.addEventHandler(SpacecraftEvents.HUD, _handleHUDEvent.bind(spacecraft));
-                        } else {
-                            spacecraft.addEventHandler(SpacecraftEvents.JUMP_OUT_STARTED, _handleSpacecraftJumpOutStarted.bind(spacecraft));
-                            spacecraft.addEventHandler(SpacecraftEvents.ARRIVED, _handleSpacecraftArrived.bind(spacecraft));
-                        }
-                    });
-                    _missileLoadedSound = resources.getSoundEffect(
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOADED_SOUND).name).createSoundClip(
-                            resources.SoundCategory.SOUND_EFFECT,
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOADED_SOUND).volume);
-                    _missileLockingSoundsPlayed = 0;
-                    _missileLockingSound = resources.getSoundEffect(
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).name).createSoundClip(
-                            resources.SoundCategory.SOUND_EFFECT,
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).volume);
-                    _missileLockedSound = resources.getSoundEffect(
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).name).createSoundClip(
-                            resources.SoundCategory.SOUND_EFFECT,
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).volume);
-                    _messageSound = resources.getSoundEffect(
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
-                            resources.SoundCategory.SOUND_EFFECT,
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).volume);
-                    _messageTypeSound = resources.getSoundEffect(
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name).createSoundClip(
-                            resources.SoundCategory.SOUND_EFFECT,
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).volume,
-                            true);
-                    _newHostilesAlertSound = resources.getSoundEffect(
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name).createSoundClip(
-                            resources.SoundCategory.SOUND_EFFECT,
-                            config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).volume);
-                    this._loadingBox.hide();
-                    showHUD();
-                    this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
-                    _elapsedTime = 0;
-                    _timeSinceLastFire = 0;
-                    _missileLocked = false;
-                    audio.playMusic(_mission.noHostilesPresent() ? AMBIENT_THEME : _anticipationTheme);
-                    if (_mission.prepareScene(_battleScene)) {
-                        _battleScene.setShouldAnimate(true);
-                        for (i = 0; i < PREPARE_SCENE_COUNT; i++) {
-                            this._render(PREPARE_SCENE_DT);
-                        }
-                        _battleScene.setShouldAnimate(false);
+                }
+                _mission.applyToSpacecrafts(function (craft) {
+                    craft.addEventHandler(SpacecraftEvents.FIRED, _handleSpacecraftFired.bind(craft));
+                    if (craft === _mission.getPilotedSpacecraft()) {
+                        craft.addEventHandler(SpacecraftEvents.JUMP_ENGAGED, _handlePilotedSpacecraftJumpEngaged.bind(craft));
+                        craft.addEventHandler(SpacecraftEvents.JUMP_CANCELLED, _handlePilotedSpacecraftJumpCancelled.bind(craft));
+                        craft.addEventHandler(SpacecraftEvents.PREPARING_JUMP, _handlePilotedSpacecraftPreparingJump.bind(craft));
+                        craft.addEventHandler(SpacecraftEvents.HUD, _handleHUDEvent.bind(craft));
+                    } else {
+                        craft.addEventHandler(SpacecraftEvents.JUMP_OUT_STARTED, _handleSpacecraftJumpOutStarted.bind(craft));
+                        craft.addEventHandler(SpacecraftEvents.ARRIVED, _handleSpacecraftArrived.bind(craft));
                     }
-                }.bind(this));
+                });
+                _missileLoadedSound = resources.getSoundEffect(
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOADED_SOUND).name).createSoundClip(
+                        resources.SoundCategory.SOUND_EFFECT,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOADED_SOUND).volume);
+                _missileLockingSoundsPlayed = 0;
+                _missileLockingSound = resources.getSoundEffect(
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).name).createSoundClip(
+                        resources.SoundCategory.SOUND_EFFECT,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKING_SOUND).volume);
+                _missileLockedSound = resources.getSoundEffect(
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).name).createSoundClip(
+                        resources.SoundCategory.SOUND_EFFECT,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MISSILE_LOCKED_SOUND).volume);
+                _messageSound = resources.getSoundEffect(
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name).createSoundClip(
+                        resources.SoundCategory.SOUND_EFFECT,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).volume);
+                _messageTypeSound = resources.getSoundEffect(
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name).createSoundClip(
+                        resources.SoundCategory.SOUND_EFFECT,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).volume,
+                        true);
+                _newHostilesAlertSound = resources.getSoundEffect(
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name).createSoundClip(
+                        resources.SoundCategory.SOUND_EFFECT,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).volume);
+                if (!_multi) {
+                    this._loadingBox.hide();
+                } else {
+                    this._updateLoadingStatus(strings.get(strings.MULTI_BATTLE.WAITING_FOR_OTHER_PLAYERS));
+                    networking.onGameStart(function () {
+                        this._loadingBox.hide();
+                        this.resumeBattle();
+                        resumeTime();
+                        control.switchToPilotMode(_mission.getPilotedSpacecraft(), true);
+                        networking.onGameUpdate(!networking.isHost() ?
+                                function (data) {
+                                    var i, spacecrafts = _mission.getSpacecrafts();
+                                    for (i = 0; i < spacecrafts.length; i++) {
+                                        spacecrafts[i].applyMultiHostData(data, i * spacecraft.MULTI_HOST_DATA_LENGTH);
+                                    }
+                                } :
+                                function (data) {
+                                    _mission.getSpacecrafts()[1].applyMultiGuestData(data);
+                                });
+                    }.bind(this));
+                    networking.onDisconnect(function () {
+                        _multi = false;
+                        this.showMessage(strings.get(strings.MULTI_GAMES.DISCONNECT_MESSAGE));
+                    }.bind(this));
+                    networking.onHostLeft(function () {
+                        _multi = false;
+                        this.showMessage(utils.formatString(strings.get(strings.MULTI_BATTLE.HOST_LEFT_MESSAGE), {
+                            host: networking.getHostName()
+                        }));
+                        networking.onDisconnect(null);
+                        networking.disconnect();
+                    }.bind(this));
+                    networking.onPlayerLeave(function (player) {
+                        _multi = false;
+                        this.showMessage(utils.formatString(strings.get(strings.MULTI_BATTLE.PLAYER_LEFT_MESSAGE), {
+                            player: player.name
+                        }));
+                        networking.onDisconnect(null);
+                        networking.disconnect();
+                    }.bind(this));
+                    networking.markLoaded();
+                }
+                showHUD();
+                this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
+                _elapsedTime = 0;
+                _timeSinceLastFire = 0;
+                _missileLocked = false;
+                audio.playMusic(_mission.noHostilesPresent() ? AMBIENT_THEME : _anticipationTheme);
+                if (_mission.prepareScene(_battleScene)) {
+                    _battleScene.setShouldAnimate(true);
+                    for (i = 0; i < PREPARE_SCENE_COUNT; i++) {
+                        this._render(PREPARE_SCENE_DT);
+                    }
+                    _battleScene.setShouldAnimate(false);
+                }
             }.bind(this));
-            resources.requestResourceLoad();
         }.bind(this));
+        resources.requestResourceLoad();
+    };
+    /**
+     * @typedef {Object} BattleScreen~BattleParams
+     * @property {String} [missionSourceFilename] The file to load the mission description data from. Not needed if the battle is being restarted
+     * or the mission data is passed directly in the missionData field
+     * @property {String} [missionData] The mission description JSON data if passed directly. Otherwise the data will be loaded from file based
+     * on the missionSourceFilename field, or reloaded again as the last one when restarting the battle
+     * @property {String} [difficulty]  The string ID of the difficulty level to use
+     * @property {Boolean} [demoMode] If true, AIs are added to all spacecrafts and the piloted spacecraft is not set, when loading the mission.
+     * @property {Boolean} [restart] Whether to restart the same battle that has been loaded last time
+     * @property {Boolean} [multi] Whether the game is multiplayer
+     */
+    /**
+     * If a mission description file is given: loads the specified mission description file and sets a callback to create a new game-logic model 
+     * and scene for the simulated battle based on the mission description and current settings.
+     * If the mission description data is given directly: does all the same loading and setup synchronously.
+     * @param {BattleScreen~BattleParams} [params]
+     */
+    BattleScreen.prototype.startNewBattle = function (params) {
+        var canvas;
+        _loadingStartTime = performance.now();
+        canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
+        params = params || {};
+        if (params.restart) {
+            this.pauseBattle();
+        }
+        if (params.missionData !== undefined) {
+            _missionSourceFilename = null;
+        } else if (params.missionSourceFilename !== undefined) {
+            _missionSourceFilename = params.missionSourceFilename;
+        }
+        if (params.difficulty !== undefined) {
+            _difficulty = params.difficulty;
+        }
+        if (params.demoMode !== undefined) {
+            _demoMode = params.demoMode;
+        }
+        _multi = params.multi;
+        spacecraft.setMultiGuest(_multi && !networking.isHost());
+        _clearData();
+        _chooseTipText();
+        document.body.classList.add("wait");
+        this._loadingBox.show();
+        this.resizeCanvases();
+        control.setScreenCenter(
+                canvas.width / 2,
+                canvas.height / 2);
+        this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_LOADING_MISSION), 0);
+        if (_missionSourceFilename) {
+            missions.requestMission(_missionSourceFilename, _difficulty, _demoMode, this._startBattle.bind(this));
+        } else {
+            this._startBattle(missions.createMission(params.missionData, _difficulty, _demoMode));
+        }
     };
     // -------------------------------------------------------------------------
     // Caching frequently needed setting values

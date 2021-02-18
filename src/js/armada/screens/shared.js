@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2020 Krisztián Nagy
+ * Copyright 2016-2021 Krisztián Nagy
  * @file Contains the common constants and functions accessible to all screens of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -66,6 +66,12 @@ define([
                 MISSIONS_SCREEN_SOURCE: "missions.html",
                 MISSIONS_SCREEN_CSS: "missions.css",
                 MISSIONS_LIST_CONTAINER_ID: "missionListContainer",
+                MULTI_GAMES_SCREEN_NAME: "multiGames",
+                MULTI_GAMES_SCREEN_SOURCE: "multi-games.html",
+                MULTI_GAMES_SCREEN_CSS: "multi-games.css",
+                MULTI_LOBBY_SCREEN_NAME: "multiLobby",
+                MULTI_LOBBY_SCREEN_SOURCE: "multi-lobby.html",
+                MULTI_LOBBY_SCREEN_CSS: "multi-lobby.css",
                 BATTLE_SCREEN_NAME: "battle",
                 BATTLE_SCREEN_SOURCE: "battle.html",
                 BATTLE_SCREEN_CSS: "battle.css",

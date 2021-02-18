@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2021 Krisztián Nagy
  * @file Augments the template provided by the game module to define the basic structure and initialization process of the Interstellar
  * Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -22,9 +22,12 @@
  * @param missions Used to load the missions
  * @param control Used to load the control configuration and setings of the game and access main functionality
  * @param strings Used to load the game translation strings
+ * @param networking Used to initialize multiplayer backend config
  * @param armadaScreens Used for screen constants
  * @param menus Used to create menu screens
  * @param missionsScreen Used to create the mission chooser screen
+ * @param multiGames Used to create the multiplayer game chooser screen
+ * @param multiLobby Used to create the multiplayer game lobby screen
  * @param battle Used to create the battle screen
  * @param debriefing Used to create the debriefing screen
  * @param database Used to create the database screen
@@ -49,9 +52,12 @@ define([
     "armada/logic/missions",
     "armada/control",
     "armada/strings",
+    "armada/networking",
     "armada/screens/shared",
     "armada/screens/menus",
     "armada/screens/missions",
+    "armada/screens/multi-games",
+    "armada/screens/multi-lobby",
     "armada/screens/battle",
     "armada/screens/debriefing",
     "armada/screens/database",
@@ -64,8 +70,8 @@ define([
     "armada/screens/dialog"
 ], function (
         game, components, analytics, lights,
-        constants, graphics, audio, config, environments, missions, control, strings,
-        armadaScreens, menus, missionsScreen, battle, debriefing, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen) {
+        constants, graphics, audio, config, environments, missions, control, strings, networking,
+        armadaScreens, menus, missionsScreen, multiGames, multiLobby, battle, debriefing, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -117,6 +123,7 @@ define([
         if (configJSON.analyticsEnabled) {
             analytics.init(configJSON.analyticsUrl);
         }
+        networking.init(configJSON.multiUrl);
         game.showError = function (message, severity, details) {
             analytics.sendEvent("error", undefined, {message: (message.length > 120) ? message.substr(0, 120) + "..." : message});
             showError(message, severity, details);
@@ -126,6 +133,8 @@ define([
     game._buildScreensAndExecuteCallback = function (callback) {
         game.addScreen(menus.getMainMenuScreen());
         game.addScreen(missionsScreen.getMissionsScreen());
+        game.addScreen(multiGames.getMultiGamesScreen());
+        game.addScreen(multiLobby.getMultiLobbyScreen());
         game.addScreen(battle.getBattleScreen());
         game.addScreen(debriefing.getDebriefingScreen());
         game.addScreen(database.getDatabaseScreen());

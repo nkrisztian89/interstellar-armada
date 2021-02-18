@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2021 Krisztián Nagy
  * @file Provides various classes that can be used integrated with the Screen module as components on screens. Also manages a shader cache
  * for storing the downloaded source (HTML and CSS) files of the created components.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -915,6 +915,13 @@ define([
         } else {
             application.log_DEBUG("WARNING! Attempting to update the message of info box" + this._name + " before appending it to the page!");
         }
+    };
+    /**
+     * Set a new event handler callback for when the OK button is clicked
+     * @param {Function} onButtonClick
+     */
+    InfoBox.prototype.onButtonClick = function (onButtonClick) {
+        this._onButtonClick = onButtonClick;
     };
     // #########################################################################
     /**

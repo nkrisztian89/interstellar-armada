@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Implementations of the various classes that represent all the different types of equipment to be added to spacecrafts
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -3945,6 +3945,41 @@ define([
          * @type Number
          */
         this._maxTurnBurnLevel = 0;
+        /**
+         * Keeps the value of yawTarget after it is reset in controlThrusters() to be used
+         * for the rest of the simulation step (e.g. to use if for sending control messages
+         * to the host in multiplayer games)
+         * @type Number
+         */
+        this._lastYawTarget = 0;
+        /**
+         * Keeps the value of pitchTarget after it is reset in controlThrusters() to be used
+         * for the rest of the simulation step (e.g. to use if for sending control messages
+         * to the host in multiplayer games)
+         * @type Number
+         */
+        this._lastPitchTarget = 0;
+        /**
+         * Keeps the value of rollTarget after it is reset in controlThrusters() to be used
+         * for the rest of the simulation step (e.g. to use if for sending control messages
+         * to the host in multiplayer games)
+         * @type Number
+         */
+        this._lastRollTarget = 0;
+        /**
+         * Keeps the value of strafeTarget after it is reset in controlThrusters() to be used
+         * for the rest of the simulation step (e.g. to use if for sending control messages
+         * to the host in multiplayer games)
+         * @type Number
+         */
+        this._lastStrafeTarget = 0;
+        /**
+         * Keeps the value of liftTarget after it is reset in controlThrusters() to be used
+         * for the rest of the simulation step (e.g. to use if for sending control messages
+         * to the host in multiplayer games)
+         * @type Number
+         */
+        this._lastLiftTarget = 0;
         this.updateForNewPropulsion();
     }
     /**
@@ -4314,6 +4349,34 @@ define([
         return this._speedTarget;
     };
     /**
+     * Returns the value of strafe target (m/s target speed along the X axis) that has been last used in controlThrusters()
+     * @returns {Number}
+     */
+    ManeuveringComputer.prototype.getLastStrafeTarget = function () {
+        return this._lastStrafeTarget;
+    };
+    /**
+     * Directly sets the strafe target (m/s target speed along the X axis)
+     * @param {Number} value
+     */
+    ManeuveringComputer.prototype.setStrafeTarget = function (value) {
+        this._strafeTarget = value;
+    };
+    /**
+     * Returns the value of lift target (m/s target speed along the Z axis) that has been last used in controlThrusters()
+     * @returns {Number}
+     */
+    ManeuveringComputer.prototype.getLastLiftTarget = function () {
+        return this._lastLiftTarget;
+    };
+    /**
+     * Directly sets the lift target (m/s target speed along the Z axis)
+     * @param {Number} value
+     */
+    ManeuveringComputer.prototype.setLiftTarget = function (value) {
+        this._liftTarget = value;
+    };
+    /**
      * Returns whether the maneuvering computer has a meaningful speed target in its current flight mode.
      * @returns {Boolean}
      */
@@ -4326,6 +4389,48 @@ define([
      */
     ManeuveringComputer.prototype.getMaxSpeed = function () {
         return this._assisted ? (this._restricted ? this._maxCruiseForwardSpeed : this._maxCombatForwardSpeed) : undefined;
+    };
+    /**
+     * Returns the value of yaw target (target spin around the Z axis) that has been last used in controlThrusters()
+     * @returns {Number}
+     */
+    ManeuveringComputer.prototype.getLastYawTarget = function () {
+        return this._lastYawTarget;
+    };
+    /**
+     * Directly sets the yaw target (target spin around the Z axis)
+     * @param {Number} value
+     */
+    ManeuveringComputer.prototype.setYawTarget = function (value) {
+        this._yawTarget = value;
+    };
+    /**
+     * Returns the value of pitch target (target spin around the X axis) that has been last used in controlThrusters()
+     * @returns {Number}
+     */
+    ManeuveringComputer.prototype.getLastPitchTarget = function () {
+        return this._lastPitchTarget;
+    };
+    /**
+     * Directly sets the pitch target (target spin around the X axis)
+     * @param {Number} value
+     */
+    ManeuveringComputer.prototype.setPitchTarget = function (value) {
+        this._pitchTarget = value;
+    };
+    /**
+     * Returns the value of roll target (target spin around the Y axis) that has been last used in controlThrusters()
+     * @returns {Number}
+     */
+    ManeuveringComputer.prototype.getLastRollTarget = function () {
+        return this._lastRollTarget;
+    };
+    /**
+     * Directly sets the roll target (target spin around the Y axis)
+     * @param {Number} value
+     */
+    ManeuveringComputer.prototype.setRollTarget = function (value) {
+        this._rollTarget = value;
     };
     /**
      * Sets the target angular velocity to yaw to the left with the given intensity 
@@ -4441,8 +4546,10 @@ define([
      * current flight mode, flight parameters and control actions issued by the 
      * pilot.
      * @param {Number} dt The elapsed time in this simulation step, in milliseconds.
+     * @param {Boolean} [keepTargets=false] Whether to keep the speed and spin targets
+     * after using them to control the thrusters
      */
-    ManeuveringComputer.prototype.controlThrusters = function (dt) {
+    ManeuveringComputer.prototype.controlThrusters = function (dt, keepTargets) {
         var
                 // grab flight parameters for velocity control
                 relativeVelocityMatrix = this._spacecraft.getRelativeVelocityMatrix(),
@@ -4513,14 +4620,23 @@ define([
             }
         }
         propulsion.updateVisuals();
+        // keep the targets available for the latter part of the simulation step,
+        // even if they are reset here
+        this._lastYawTarget = this._yawTarget;
+        this._lastPitchTarget = this._pitchTarget;
+        this._lastRollTarget = this._rollTarget;
+        this._lastStrafeTarget = this._strafeTarget;
+        this._lastLiftTarget = this._liftTarget;
         // reset the targets, as new controls are needed from the pilot in the
         // next step to keep these targets up (e.g. continuously pressing the
         // key, moving the mouse or keeping the mouse displaced from center)
-        this._yawTarget = 0;
-        this._pitchTarget = 0;
-        this._rollTarget = 0;
-        this._strafeTarget = 0;
-        this._liftTarget = 0;
+        if (!keepTargets) {
+            this._yawTarget = 0;
+            this._pitchTarget = 0;
+            this._rollTarget = 0;
+            this._strafeTarget = 0;
+            this._liftTarget = 0;
+        }
     };
     /**
      * Removes all references stored by this object
@@ -4879,6 +4995,18 @@ define([
         return this._capacity / this._class.getCapacity();
     };
     /**
+     * Directly set the integrity of the shield to specified ratio. Is smaller
+     * than the current value, it will be taken as if the shield was hit.
+     * @param {Number} ratio
+     */
+    Shield.prototype.setIntegrity = function (ratio) {
+        var value = ratio * this._class.getCapacity();
+        if (value < this._capacity) {
+            this._timeSinceHit = 0;
+        }
+        this._capacity = value;
+    };
+    /**
      * Returns the shield's current capacity
      * @returns {Number}
      */
@@ -4902,12 +5030,16 @@ define([
     /**
      * Call when the shield (the spacecraft that has the shield) is damaged
      * @param {Number} damage The amount of damage (to be) dealt to the spacecraft
+     * @param {Boolean} [isMultiGuest=false] Whether we are playing a multiplayer game as a guest (guests cannot modify shield or hull integrities,
+     * just synchronize their values from the host)
      * @returns {Number} The amount of damage that should be dealt to the armor of the spacecraft (original minus the amount absorbed by the shield)
      */
-    Shield.prototype.damage = function (damage) {
+    Shield.prototype.damage = function (damage, isMultiGuest) {
         var absorbed = Math.min(this._capacity, damage);
         this._timeSinceHit = 0;
-        this._capacity -= absorbed;
+        if (!isMultiGuest) {
+            this._capacity -= absorbed;
+        }
         return damage - absorbed;
     };
     /**
@@ -4923,8 +5055,10 @@ define([
     /**
      * Call in every simulation step to update the internal state and initiate the appropriate events / effects
      * @param {Number} dt The amount of time passed since the last simulation step, in milliseonds
+     * @param {Boolean} [isMultiGuest=false] Whether we are playing a multiplayer game as a guest (guests cannot modify shield or hull integrities,
+     * just synchronize their values from the host)
      */
-    Shield.prototype.simulate = function (dt) {
+    Shield.prototype.simulate = function (dt, isMultiGuest) {
         var duration = this._class.getRechargeAnimationDuration();
         if (this._capacity < this._class.getCapacity()) {
             if (this._timeSinceHit < this._class.getRechargeDelay()) {
@@ -4934,7 +5068,9 @@ define([
                 }
             } else {
                 // recharging
-                this._capacity = Math.min(this._class.getCapacity(), this._capacity + this._class.getRechargeRate() * dt * 0.001); // sec -> ms
+                if (!isMultiGuest) {
+                    this._capacity = Math.min(this._class.getCapacity(), this._capacity + this._class.getRechargeRate() * dt * 0.001); // sec -> ms
+                }
             }
         }
         this._timeSinceRecharge = Math.min(duration, this._timeSinceRecharge + dt);

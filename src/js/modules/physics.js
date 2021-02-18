@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2021 Krisztián Nagy
  * @file Provides a basic physics engine with Newtonian mechanics
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -793,12 +793,46 @@ define([
         this._velocityMatrix = value;
     };
     /**
+     * Sets a new velocity for the object (in m/s)
+     * @param {Number} x New velocity along the X axis
+     * @param {Number} y New velocity along the Y axis
+     * @param {Number} z New velocity along the Z axis
+     */
+    PhysicalObject.prototype.setVelocity = function (x, y, z) {
+        this._velocityMatrix[12] = x;
+        this._velocityMatrix[13] = y;
+        this._velocityMatrix[14] = z;
+    };
+    /**
      * Returns the 4x4 rotation matrix describing the rotation the current angular
      * velocity of the object causes over ANGULAR_VELOCITY_MATRIX_DURATION milliseconds.
      * @returns {Float32Array}
      */
     PhysicalObject.prototype.getAngularVelocityMatrix = function () {
         return this._angularVelocityMatrix;
+    };
+    /**
+     * Sets a new angular velocity for the object by modifying its angular velocity matrix.
+     * @param {Number} xx
+     * @param {Number} xy
+     * @param {Number} xz
+     * @param {Number} yx
+     * @param {Number} yy
+     * @param {Number} yz
+     * @param {Number} zx
+     * @param {Number} zy
+     * @param {Number} zz
+     */
+    PhysicalObject.prototype.setAngularVelocity = function (xx, xy, xz, yx, yy, yz, zx, zy, zz) {
+        this._angularVelocityMatrix[0] = xx;
+        this._angularVelocityMatrix[1] = xy;
+        this._angularVelocityMatrix[2] = xz;
+        this._angularVelocityMatrix[4] = yx;
+        this._angularVelocityMatrix[5] = yy;
+        this._angularVelocityMatrix[6] = yz;
+        this._angularVelocityMatrix[8] = zx;
+        this._angularVelocityMatrix[9] = zy;
+        this._angularVelocityMatrix[10] = zz;
     };
     /**
      * Adds a force that will affect this object from now on.
@@ -878,6 +912,29 @@ define([
         if (value) {
             this._orientationMatrix = value;
         }
+        this._rotationMatrixInverseValid = false;
+        this._modelMatrixInverseValid = false;
+    };
+    /**
+     * Sets a new orientation for the object based on the passed forward (axis Y)
+     * and up (axis Z) vectors
+     * @param {Number} forwardX
+     * @param {Number} forwardY
+     * @param {Number} forwardZ
+     * @param {Number} upX
+     * @param {Number} upY
+     * @param {Number} upZ
+     */
+    PhysicalObject.prototype.setOrientation = function (forwardX, forwardY, forwardZ, upX, upY, upZ) {
+        this._orientationMatrix[0] = forwardY * upZ - forwardZ * upY;
+        this._orientationMatrix[1] = forwardZ * upX - forwardX * upZ;
+        this._orientationMatrix[2] = forwardX * upY - forwardY * upX;
+        this._orientationMatrix[4] = forwardX;
+        this._orientationMatrix[5] = forwardY;
+        this._orientationMatrix[6] = forwardZ;
+        this._orientationMatrix[8] = upX;
+        this._orientationMatrix[9] = upY;
+        this._orientationMatrix[10] = upZ;
         this._rotationMatrixInverseValid = false;
         this._modelMatrixInverseValid = false;
     };

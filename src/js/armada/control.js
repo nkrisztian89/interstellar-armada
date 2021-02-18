@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Provides functionality to load and access control configuration and settings for Interstellar Armada.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -247,7 +247,7 @@ define([
         // properties should have been created
         // fire the primary weapons of the fighter
         this.setActionFunction("fire", true, function (i, source) {
-            this._controlledSpacecraft.fire(false, i);
+            this._controlledSpacecraft.requestFire(false, i);
             if (source === _mouseInputInterpreter) {
                 _context.enableMouseTurning();
             }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2021 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
  * catch and process input from the keyboard.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -339,6 +339,7 @@ define([
         control.InputInterpreter.prototype.stopListening.call(this);
         document.onkeydown = null;
         document.onkeyup = null;
+        document.onkeypress = null;
     };
     /**
      * @override

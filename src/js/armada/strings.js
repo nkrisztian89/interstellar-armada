@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2020 Krisztián Nagy
+ * Copyright 2016-2021 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -38,7 +38,8 @@ define([
         CANCEL: {name: "screen.cancel"}
     };
     strings.MAIN_MENU = {
-        NEW_GAME: {name: "mainMenu.newGame"},
+        SINGLE_PLAYER: {name: "mainMenu.singlePlayer"},
+        MULTIPLAYER: {name: "mainMenu.multiplayer"},
         DATABASE: {name: "mainMenu.database"},
         SETTINGS: {name: "mainMenu.settings"},
         ABOUT: {name: "mainMenu.about"},
@@ -77,6 +78,35 @@ define([
         OBJECTIVE_SUBJECTS_TEAMS: {name: "missions.objectiveSubjects.teams"},
         OBJECTIVE_WIN_PREFIX: {name: "missions.winObjective.", optional: true},
         OBJECTIVE_LOSE_PREFIX: {name: "missions.loseObjective.", optional: true}
+    };
+    strings.MULTI_GAMES = {
+        BACK: {name: "multiGames.backButton"},
+        TITLE: {name: "multiGames.title"},
+        STARTED_YES: {name: "multiGames.started.yes"},
+        STARTED_NO: {name: "multiGames.started.no"},
+        JOIN_BUTTON: {name: "multiGames.joinButton"},
+        DISCONNECT_MESSAGE: {name: "multiGames.disconnectMessage"},
+        CANNOT_CONNECT_MESSAGE: {name: "multiGames.cannotConnectMessage"},
+        GAME_NOT_FOUND_ERROR: {name: "multiGames.gameNotFoundError"},
+        GAME_IS_FULL_ERROR: {name: "multiGames.gameIsFullError"},
+        GAME_ALREADY_STARTED_ERROR: {name: "multiGames.gameAlreadyStartedError"},
+        PLAYER_NAME_ALREADY_EXISTS_ERROR: {name: "multiGames.playerNameAlreadyExistsError"},
+        GAME_NAME_ALREADY_EXISTS_ERROR: {name: "multiGames.gameNameAlreadyExistsError"},
+        INVALID_GAME_SETTINGS_ERROR: {name: "multiGames.invalidGameSettingsError"}
+    };
+    strings.MULTI_LOBBY = {
+        GAME_TITLE: {name: "multiLobby.gameTitle"},
+        CONNECTION_SERVER: {name: "multiLobby.connection.server"},
+        CONNECTION_DIRECT: {name: "multiLobby.connection.direct"},
+        READY_YES: {name: "multiLobby.ready.yes"},
+        READY_NO: {name: "multiLobby.ready.no"},
+        KICK_BUTTON: {name: "multiLobby.kickButton"},
+        HOST_LEFT_MESSAGE: {name: "multiLobby.hostLeftMessage"},
+        KICKED_MESSAGE: {name: "multiLobby.kickedMessage"},
+        PLAYER_JOINED_MESSAGE: {name: "multiLobby.playerJoinedMessage"},
+        PLAYER_LEFT_MESSAGE: {name: "multiLobby.playerLeftMessage"},
+        PLAYER_READY_MESSAGE: {name: "multiLobby.playerReadyMessage"},
+        PLAYER_KICKED_MESSAGE: {name: "multiLobby.playerKickedMessage"}
     };
     strings.OBJECTIVE = {
         DESTROY_ALL_SUFFIX: {name: "destroyAll", optional: true},
@@ -172,6 +202,11 @@ define([
         MESSAGE_JUMP_ENGAGED: {name: "battle.message.jump.engaged"},
         MESSAGE_JUMP_PREPARING: {name: "battle.message.jump.preparing"},
         MESSAGE_NEW_HOSTILES: {name: "battle.message.newHostiles"}
+    };
+    strings.MULTI_BATTLE = {
+        WAITING_FOR_OTHER_PLAYERS: {name: "battle.multi.waitingForOtherPlayers"},
+        HOST_LEFT_MESSAGE: {name: "battle.multi.hostLeftMessage"},
+        PLAYER_LEFT_MESSAGE: {name: "battle.multi.playerLeftMessage"}
     };
     strings.PERFORMANCE_LEVEL = {
         PREFIX: {name: "performanceLevel.", optional: true}

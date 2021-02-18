@@ -1,5 +1,5 @@
 {
-    "version": "0.4.7:927-dev (2021.01.04.)",
+    "version": "0.4.7:928-dev (2021.02.19.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4", "0.4.5", "0.4.6"],
@@ -20,6 +20,7 @@
     },
     "analyticsEnabled": true,
     "analyticsUrl": "https://armada-analytics.herokuapp.com/",
+    "multiUrl": "wss://armada-multi.herokuapp.com/",
     "defaultLanguage": "English",
     "configFiles": {
         "settings": {

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018, 2020 Krisztián Nagy
+Copyright (C) 2017-2018, 2020-2021 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -328,6 +328,7 @@ button {
         color: $text-disabled-color;
         background-color: $panel-disabled-color;
         cursor: $cursor, default;
+        pointer-events: none;
     }
     &:hover:not(.disabled):not(.menu), &.selected {
         background-color: $panel-front-color;
@@ -522,6 +523,23 @@ progress[value] {
             relDarken($highlight-color,0.333)
             );
         box-shadow: $faint-glow;
+    }
+}
+
+/******************************************************************************************/
+/* Styling of text inputs */
+
+input[type=text] {
+    color: $text-color;
+    font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
+    font-size: 2.2vmin;
+    background: $panel-back-color;
+    margin: 0 0.5em;
+    @include bordered;
+    outline: none;
+    &:active,&:focus {
+        @include glowing;
+        outline: none;
     }
 }
 

@@ -130,6 +130,16 @@ define([
              * @type Number
              */
             MINIMUM_DISTANCE_FOR_DAMAGE_INDICATOR_HITCHECK_SQUARED = 0.01,
+            /**
+             * Length of the Float32Array section that contains a game update message for a spacecraft by the multiplayer host
+             * @type Number
+             */
+            MULTI_HOST_DATA_LENGTH = 30,
+            /**
+             * Length of the Float32Array section that contains a game control message for a spacecraft by a multiplayer guest
+             * @type Number
+             */
+            MULTI_GUEST_DATA_LENGTH = 7,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -172,7 +182,12 @@ define([
              * A random function with a specific seed
              * @type Function
              */
-            _random;
+            _random,
+            /**
+             * Whether we are playing multiplayer as a guest (not host)
+             * @type Boolean
+             */
+            _isMultiGuest = false;
     // #########################################################################
     /**
      * Needs to be executed whenever the settings in the graphics module change
@@ -188,6 +203,13 @@ define([
     }
     function resetRandomSeed() {
         _random = Math.seed(config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED));
+    }
+    /**
+     * Set whether we are playing multiplayer as a guest (not host)
+     * @param {Boolean} value
+     */
+    function setMultiGuest(value) {
+        _isMultiGuest = value;
     }
     // #########################################################################
     /**
@@ -586,6 +608,39 @@ define([
          * @type Number
          */
         this._topSpeed = 0;
+        // ---------------------------------------
+        // multiplayer
+        /**
+         * Whether we should set the "fired" flag for this spacecraft in the next game update message
+         * (if we are host) or game control message (if we are guest)
+         * @type Boolean
+         */
+        this._fired = false;
+        /**
+         * This flag is true if the local client is the guest in a multiplayer game and this spacecraft
+         * is piloted by the local player
+         * @type Boolean
+         */
+        this._guestPiloted = false;
+        /**
+         * This flag is true if this spacecraft is controlled by messages received through the network
+         * in a multiplayer game (true for all player-controlled spacecrafts except the spacecraft of
+         * the host on the host machine)
+         * @type Boolean
+         */
+        this._multiControlled = false;
+        /**
+         * A reusable array that is updated (when queried) with the data the host sends in its game 
+         * update message to the guests about this spacecraft in a multiplayer game 
+         * @type Float32Array
+         */
+        this._multiHostData = new Float32Array(MULTI_HOST_DATA_LENGTH);
+        /**
+         * A reusable array that is updated (when queried) with the data the guest sends in its game
+         * control message to the host about this spacecraft in a multiplayer game 
+         * @type Float32Array
+         */
+        this._multiGuestData = new Float32Array(MULTI_GUEST_DATA_LENGTH);
         // initializing the properties based on the parameters
         if (spacecraftClass) {
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray, environment);
@@ -816,6 +871,15 @@ define([
         return (spacecraft.getTeam() !== this._team);
     };
     /**
+     * Set whether this spacecraft is controlled through network messages (either control
+     * messages by a guest or update messages by the host) in a multiplayer game
+     * @param {Boolean} piloted Whether the spacecraft is piloted by the local player
+     */
+    Spacecraft.prototype.setAsMultiControlled = function (piloted) {
+        this._guestPiloted = piloted;
+        this._multiControlled = !piloted;
+    };
+    /**
      * Returns the object describing class of this spacecraft.
      * @returns {SpacecraftClass}
      */
@@ -859,6 +923,14 @@ define([
         return this._hitpoints / this._maxHitpoints;
     };
     /**
+     * Directly set the hull integrity ratio of the spacecraft.
+     * @param {Number} ratio A number between 0.0 (indicating zero integrity at which the spacecraft is destroyed) 
+     * and 1.0 (indicating full hull integrity)
+     */
+    Spacecraft.prototype.setHullIntegrity = function (ratio) {
+        this._hitpoints = ratio * this._maxHitpoints;
+    };
+    /**
      * Returns whether the spacecraft has a shield equipped.
      * @returns {Boolean}
      */
@@ -878,6 +950,16 @@ define([
      */
     Spacecraft.prototype.getShieldIntegrity = function () {
         return this._shield ? this._shield.getIntegrity() : 0;
+    };
+    /**
+     * Directly set the shiled integrity ratio of the spacecraft. Setting it to lower than the current value will
+     * count as if the shield has been hit
+     * @param {Number} ratio A number between 0.0 (indicating a depleted shield) and 1.0 (indicating a fully charged shield).
+     */
+    Spacecraft.prototype.setShieldIntegrity = function (ratio) {
+        if (this._shield) {
+            this._shield.setIntegrity(ratio);
+        }
     };
     /**
      * Returns the current capacity of the equipped shield (if any)
@@ -1457,7 +1539,7 @@ define([
             // if a custom loadout is specified, simply create it from the given object, and equip that
             loadout = new classes.Loadout(dataJSON.equipment);
             this.equipLoadout(loadout);
-        // if there is no equipment specified, attempt to load the default loadout
+            // if there is no equipment specified, attempt to load the default loadout
         } else if (this._class.getDefaultLoadout()) {
             this.equipLoadout(this._class.getLoadout(this._class.getDefaultLoadout()));
         }
@@ -2246,6 +2328,22 @@ define([
                 }
                 this.handleEvent(SpacecraftEvents.FIRED);
             }
+            if (!this._guestPiloted) {
+                this._fired = true;
+            }
+        }
+    };
+    /**
+     * Fire the ship's weapons, or if we are a guest in a multiplayer game, notify the host in the next control message that we would
+     * like to fire
+     * @param {Boolean} onlyIfAimedOrFixed Only those weapons are fired which are fixed (cannot be rotated) and those that can be rotated
+     * and are currently aimed at their target.
+     */
+    Spacecraft.prototype.requestFire = function (onlyIfAimedOrFixed) {
+        if (this._guestPiloted) {
+            this._fired = true;
+        } else {
+            this.fire(onlyIfAimedOrFixed);
         }
     };
     /**
@@ -2558,10 +2656,11 @@ define([
      * the hitbox sides have been extended outward)
      */
     Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy, byMissile, offset) {
-        var i, damageIndicator, hitpointThreshold, exp, liveHit, scoreValue, damageIndicatorPosition, dirToCenter, distToCenter;
+        var originalHitpoints, i, damageIndicator, hitpointThreshold, exp, liveHit, scoreValue, damageIndicatorPosition, dirToCenter, distToCenter;
+        originalHitpoints = this._hitpoints;
         // shield absorbs damage
         if (this._shield) {
-            damage = this._shield.damage(damage);
+            damage = this._shield.damage(damage, _isMultiGuest);
         }
         // armor rating decreases damage
         damage = Math.max(0, damage - this._class.getArmor());
@@ -2569,21 +2668,23 @@ define([
         // logic simulation: modify hitpoints
         this._hitpoints -= damage;
         if (this._hitpoints <= 0) {
-            // granting kill and score to the spacecraft that destroyed this one
-            if (liveHit && hitBy && this.isHostile(hitBy)) {
-                scoreValue = this.getScoreValue();
-                damage += this._hitpoints; // this subtracts the overkill hitpoints
-                hitBy.gainDamageDealt(damage, byMissile);
-                // gain score for dealing the damage
-                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._maxHitpoints * scoreValue);
-                // gain score and kill for delivering the final hit
-                hitBy.gainScore(_scoreFactorForKill * scoreValue);
-                hitBy.gainKill();
+            if (!_isMultiGuest) {
+                // granting kill and score to the spacecraft that destroyed this one
+                if (liveHit && hitBy && this.isHostile(hitBy)) {
+                    scoreValue = this.getScoreValue();
+                    damage += this._hitpoints; // this subtracts the overkill hitpoints
+                    hitBy.gainDamageDealt(damage, byMissile);
+                    // gain score for dealing the damage
+                    hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._maxHitpoints * scoreValue);
+                    // gain score and kill for delivering the final hit
+                    hitBy.gainScore(_scoreFactorForKill * scoreValue);
+                    hitBy.gainKill();
+                }
             }
             this._hitpoints = 0;
         } else {
             // visual simulation: add damage indicators if needed
-            for (i = 0; i < this._class.getDamageIndicators().length; i++) {
+            for (i = this._activeDamageIndicators.length; i < this._class.getDamageIndicators().length; i++) {
                 damageIndicator = this._class.getDamageIndicators()[i];
                 hitpointThreshold = damageIndicator.hullIntegrity / 100 * this._maxHitpoints;
                 if ((this._hitpoints <= hitpointThreshold) && (this._hitpoints + damage > hitpointThreshold)) {
@@ -2625,10 +2726,12 @@ define([
                     this._activeDamageIndicators.push(exp);
                 }
             }
-            // granting score to the spacecraft that hit this one for the damage
-            if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
-                hitBy.gainDamageDealt(damage, byMissile);
-                hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._maxHitpoints * this.getScoreValue());
+            if (!_isMultiGuest) {
+                // granting score to the spacecraft that hit this one for the damage
+                if (liveHit && hitBy && hitBy.isAlive() && this.isHostile(hitBy)) {
+                    hitBy.gainDamageDealt(damage, byMissile);
+                    hitBy.gainScore((1 - _scoreFactorForKill) * damage / this._maxHitpoints * this.getScoreValue());
+                }
             }
         }
         // callbacks
@@ -2641,8 +2744,12 @@ define([
                 spacecraft: this
             });
         }
-        if (this.isHostile(hitBy)) {
-            hitBy.increaseHitsOnEnemies(byMissile);
+        if (!_isMultiGuest) {
+            if (this.isHostile(hitBy)) {
+                hitBy.increaseHitsOnEnemies(byMissile);
+            }
+        } else {
+            this._hitpoints = originalHitpoints;
         }
     };
     /**
@@ -2827,7 +2934,7 @@ define([
             }
             if (this._propulsion) {
                 if (params.controlThrusters) {
-                    this._maneuveringComputer.controlThrusters(dt);
+                    this._maneuveringComputer.controlThrusters(dt, this._multiControlled);
                 }
                 this._propulsion.simulate(dt, this._soundSource, params.applyThrusterForces);
             }
@@ -2835,7 +2942,7 @@ define([
                 this._jumpEngine.simulate(dt);
             }
             if (this._shield) {
-                this._shield.simulate(dt);
+                this._shield.simulate(dt, _isMultiGuest);
             }
             if (this._class.hasHumSound()) {
                 if (!this._humSoundClip) {
@@ -2950,6 +3057,125 @@ define([
         return this._class.getLockingTimeFactor();
     };
     /**
+     * Return the data to be sent to the guests by the host in the next game update message to synchronize the 
+     * state of this spacecraft in a multiplayer game
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getMultiHostData = function () {
+        var position, orientation, velocity, angularVelocity;
+        if (!this._alive) {
+            return this._multiHostData;
+        }
+        position = this._physicalModel.getPositionMatrix();
+        orientation = this._physicalModel.getOrientationMatrix();
+        velocity = this._physicalModel.getVelocityMatrix();
+        angularVelocity = this._physicalModel.getAngularVelocityMatrix();
+        this._multiHostData[0] = position[12];
+        this._multiHostData[1] = position[13];
+        this._multiHostData[2] = position[14];
+        this._multiHostData[3] = orientation[4];
+        this._multiHostData[4] = orientation[5];
+        this._multiHostData[5] = orientation[6];
+        this._multiHostData[6] = orientation[8];
+        this._multiHostData[7] = orientation[9];
+        this._multiHostData[8] = orientation[10];
+        this._multiHostData[9] = this.getHullIntegrity();
+        this._multiHostData[10] = this.getShieldIntegrity();
+        this._multiHostData[11] = this._fired ? 1 : 0;
+        this._multiHostData[12] = velocity[12];
+        this._multiHostData[13] = velocity[13];
+        this._multiHostData[14] = velocity[14];
+        this._multiHostData[15] = angularVelocity[0];
+        this._multiHostData[16] = angularVelocity[1];
+        this._multiHostData[17] = angularVelocity[2];
+        this._multiHostData[18] = angularVelocity[4];
+        this._multiHostData[19] = angularVelocity[5];
+        this._multiHostData[20] = angularVelocity[6];
+        this._multiHostData[21] = angularVelocity[8];
+        this._multiHostData[22] = angularVelocity[9];
+        this._multiHostData[23] = angularVelocity[10];
+        this._multiHostData[24] = this._maneuveringComputer.getSpeedTarget();
+        this._multiHostData[25] = this._maneuveringComputer.getLastStrafeTarget();
+        this._multiHostData[26] = this._maneuveringComputer.getLastLiftTarget();
+        this._multiHostData[27] = this._maneuveringComputer.getLastYawTarget();
+        this._multiHostData[28] = this._maneuveringComputer.getLastPitchTarget();
+        this._multiHostData[29] = this._maneuveringComputer.getLastRollTarget();
+        this._fired = false;
+        return this._multiHostData;
+    };
+    /**
+     * Synchronize the state of this spacecraft to the host based on the data received from it in the
+     * last game update message in a multiplayer game
+     * @param {Float32Array} data The last game update message received from the host
+     * @param {Number} offset The index where the data segment about this spacecraft starts within the
+     * message
+     */
+    Spacecraft.prototype.applyMultiHostData = function (data, offset) {
+        if (!this._alive) {
+            return;
+        }
+        this.setPhysicalPosition([data[offset], data[offset + 1], data[offset + 2]]);
+        this._physicalModel.setOrientation(
+                data[offset + 3], data[offset + 4], data[offset + 5],
+                data[offset + 6], data[offset + 7], data[offset + 8]);
+        this.setHullIntegrity(data[offset + 9]);
+        this.setShieldIntegrity(data[offset + 10]);
+        if (data[offset + 11]) {
+            this.fire(false);
+        }
+        this._physicalModel.setVelocity(data[offset + 12], data[offset + 13], data[offset + 14]);
+        this._physicalModel.setAngularVelocity(
+                data[offset + 15], data[offset + 16], data[offset + 17],
+                data[offset + 18], data[offset + 19], data[offset + 20],
+                data[offset + 21], data[offset + 22], data[offset + 23]);
+        if (this._multiControlled) {
+            this._maneuveringComputer.setSpeedTarget(data[offset + 24]);
+            this._maneuveringComputer.setStrafeTarget(data[offset + 25]);
+            this._maneuveringComputer.setLiftTarget(data[offset + 26]);
+            this._maneuveringComputer.setRollTarget(data[offset + 29]);
+            this._maneuveringComputer.setYawTarget(data[offset + 27]);
+            this._maneuveringComputer.setPitchTarget(data[offset + 28]);
+        }
+    };
+    /**
+     * Return the data to be sent to the host by the guest in the next game control message to synchronize the 
+     * control state of this spacecraft in a multiplayer game
+     * @returns {Float32Array}
+     */
+    Spacecraft.prototype.getMultiGuestData = function () {
+        if (!this._alive) {
+            return this._multiGuestData;
+        }
+        this._multiGuestData[0] = this._maneuveringComputer.getSpeedTarget();
+        this._multiGuestData[1] = this._maneuveringComputer.getLastStrafeTarget();
+        this._multiGuestData[2] = this._maneuveringComputer.getLastLiftTarget();
+        this._multiGuestData[3] = this._maneuveringComputer.getLastYawTarget();
+        this._multiGuestData[4] = this._maneuveringComputer.getLastPitchTarget();
+        this._multiGuestData[5] = this._maneuveringComputer.getLastRollTarget();
+        this._multiGuestData[6] = this._fired ? 1 : 0;
+        this._fired = false;
+        return this._multiGuestData;
+    };
+    /**
+     * Synchronize the control state of this spacecraft to the guest based on the data received from it in the
+     * last game control message in a multiplayer game
+     * @param {Float32Array} data
+     */
+    Spacecraft.prototype.applyMultiGuestData = function (data) {
+        if (!this._alive) {
+            return;
+        }
+        this._maneuveringComputer.setSpeedTarget(data[0]);
+        this._maneuveringComputer.setStrafeTarget(data[1]);
+        this._maneuveringComputer.setLiftTarget(data[2]);
+        this._maneuveringComputer.setYawTarget(data[3]);
+        this._maneuveringComputer.setPitchTarget(data[4]);
+        this._maneuveringComputer.setRollTarget(data[5]);
+        if (data[6]) {
+            this.fire(false);
+        }
+    };
+    /**
      * Cancels the held references and marks the renderable object, its node and its subtree as reusable.
      * @param {Boolean} [preserveClass=false] If true, the reference to the spacecraft's class is preserved (spacecraft classes objects are 
      * not destroyed during the game anyway, and this way it can be known, what type of spacecraft this was (for example for showing 
@@ -3042,8 +3268,11 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        MULTI_HOST_DATA_LENGTH: MULTI_HOST_DATA_LENGTH,
+        MULTI_GUEST_DATA_LENGTH: MULTI_GUEST_DATA_LENGTH,
         SpacecraftFormation: SpacecraftFormation,
         resetRandomSeed: resetRandomSeed,
+        setMultiGuest: setMultiGuest,
         Spacecraft: Spacecraft
     };
 });

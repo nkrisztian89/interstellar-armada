@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2020 Krisztián Nagy
+ * Copyright 2016-2021 Krisztián Nagy
  * @file Provides the menu screens of the Interstellar Armada game which are simply instances of MenuScreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -41,11 +41,18 @@ define([
             // Private variables
             _releaseNotesShown = false,
             _mainMenuOptions = [{
-                    id: strings.MAIN_MENU.NEW_GAME.name,
+                    id: strings.MAIN_MENU.SINGLE_PLAYER.name,
                     action: function () {
                         analytics.sendEvent("newgame");
                         audio.resume();
                         game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
+                    }
+                }, {
+                    id: strings.MAIN_MENU.MULTIPLAYER.name,
+                    action: function () {
+                        analytics.sendEvent("multi");
+                        audio.resume();
+                        game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
                     }
                 }, {
                     id: strings.MAIN_MENU.DATABASE.name,

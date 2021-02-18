@@ -65,7 +65,8 @@
         "cancel": "Mégse"
     },
     "mainMenu": {
-        "newGame": "Új játék",
+        "singlePlayer": "Egyjátékos",
+        "multiplayer": "Többjátékos",
         "database": "Adatbázis",
         "settings": "Beállítások",
         "about": "Információ",
@@ -125,6 +126,68 @@
     "location": {
         "unknown": "Ismeretlen",
         "system": "{systemName} rendszer"  
+    },
+    "multiGames": {
+        "backButton": "Vissza a menübe",
+        "refreshButton": "Frissítés",
+        "createGameButton": "Új játék",
+        "title": "Többjátékos mód",
+        "connectingLabel": "Csatlakozás a szerverhez...",
+        "onlinePlayersLabel": "Aktív játékosok:",
+        "serverPingLabel": "Szerver ping:",
+        "noAvailableGamesLabel": "Jelenleg nincsenek aktív játékok.",
+        "availableGamesTitle": "Aktív játékok",
+        "gameNameColumn": "Játék neve",
+        "hostingPlayerColumn": "Házigazda",
+        "playersColumn": "Játékosok",
+        "startedColumn": "Elindult",
+        "started": {
+            "yes": "igen",
+            "no": "nem"
+        },
+        "joinButton": "Csatlakozás",
+        "createGameHeader": "Játék létrehozása",
+        "createGameNameLabel": "Játék neve:",
+        "createGameCreateButton": "Létrehozás",
+        "createGameCancelButton": "Mégse",
+        "playerOkButton": "Ok",
+        "playerCancelButton": "Mégse",
+        "playerNameLabel": "Játékos neve:",
+        "disconnectMessage": "Lezárult a kapcsolat a játékszerverrel.",
+        "cannotConnectMessage": "Nem sikerült kapcsolódni a szerverhez.",
+        "gameNotFoundError": "Hiba: A keresett játék nem létezik!",
+        "gameIsFullError": "Hiba: A játékban már nincs szabad hely új játékosnak!",
+        "gameAlreadyStartedError": "Hiba: A játék már megkezdődött!",
+        "playerNameAlreadyExistsError": "Hiba: Már létezik azonos nevű játékos a választott játékban!",
+        "gameNameAlreadyExistsError": "Hiba: Ilyen nevű játék már létezik!",
+        "invalidGameSettingsError": "Hiba: Érvénytelen játékbeállítások!"
+    },
+    "multiLobby": {
+        "leaveButton": "Kilépés",
+        "readyButton": "Kész",
+        "startButton": "Játék indítása",
+        "title": "Többjátékos mód",
+        "gameTitle": "Váróterem - {name}",
+        "playerNameColumn": "Név",
+        "connectionColumn": "Kapcsolat",
+        "connection": {
+            "server": "szerver",
+            "direct": "közvetlen"
+        },
+        "pingColumn": "Ping",
+        "readyColumn": "Kész",
+        "ready": {
+            "yes": "igen",
+            "no": "nem"
+        },
+        "kickButton": "Kirúgás",
+        "chatSend": "Küldés",
+        "hostLeftMessage": "A házigazda kilépett a játékból.",
+        "kickedMessage": "A házigazda kirúgott a játékból.",
+        "playerJoinedMessage": "{name} csatlakozott a játékhoz!",
+        "playerLeftMessage": "{name} kilépett a játékból!",
+        "playerReadyMessage": "{name} készen áll!",
+        "playerKickedMessage": "A házigazda kirúgta {name}-t a játékból!"
     },
     "settings": {
         "general": "Általános",
@@ -398,6 +461,11 @@
                 "preparing": "TÉRUGRÓ HAJTÓMŰ AKTIVÁLVA\nFelkészülés...\n{timeLeft}\nMegszakítás: {controlStrings/keyboard/jumpOut}"
             },
             "newHostiles": "Ellenséges gépek érkeztek!"
+        },
+        "multi": {
+            "waitingForOtherPlayers": "Várakozás a többi játékosra...",
+            "hostLeftMessage": "A házigazda, {host} kilépett a játékból!",
+            "playerLeftMessage": "{player} kilépett a játékból!"
         }
     },
     "performanceLevel": {
