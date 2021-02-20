@@ -182,6 +182,7 @@
         },
         "kickButton": "Kirúgás",
         "chatSend": "Küldés",
+        "locationLabel": "Helyszín:",
         "hostLeftMessage": "A házigazda kilépett a játékból.",
         "kickedMessage": "A házigazda kirúgott a játékból.",
         "playerJoinedMessage": "{name} csatlakozott a játékhoz!",

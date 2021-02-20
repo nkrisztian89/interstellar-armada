@@ -18,6 +18,7 @@
  * game server
  * @param strings Used for translation
  * @param armadaScreens Used for navigation
+ * @param environments Used to load the list of environments to select from
  */
 define([
     "utils/utils",
@@ -27,8 +28,9 @@ define([
     "armada/audio",
     "armada/networking",
     "armada/strings",
-    "armada/screens/shared"
-], function (utils, game, components, screens, audio, networking, strings, armadaScreens) {
+    "armada/screens/shared",
+    "armada/logic/environments"
+], function (utils, game, components, screens, audio, networking, strings, armadaScreens, environments) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -41,9 +43,18 @@ define([
             CHAT_LOG_ID = "chatLog",
             CHAT_MESSAGE_ID = "chatMessage",
             CHAT_SEND_ID = "chatSend",
-            INFO_BOX_ID = "infoBox";
-    // ------------------------------------------------------------------------------
-    // private variables
+            INFO_BOX_ID = "infoBox",
+            KICK_BUTTON_CLASS = "kickPlayer",
+            HOST_SETTINGS_ID = "hostSettings",
+            GUEST_SETTINGS_ID = "guestSettings",
+            LOCATION_VALUE_ID = "locationValue",
+            LOCATION_SELECTOR_ID = "locationSelector";
+    function _mapLocationName(environment) {
+        return environments.getEnvironment(environment).getDisplayName();
+    }
+    function _getLocationValues() {
+        return environments.getEnvironmentNames().map(_mapLocationName);
+    }
     // #########################################################################
     /**
      * @class Provides the behaviour for the Multiplayer Lobby screen
@@ -83,8 +94,16 @@ define([
         this._chatMessage = this.registerSimpleComponent(CHAT_MESSAGE_ID);
         /** @type SimpleComponent */
         this._chatSend = this.registerSimpleComponent(CHAT_SEND_ID);
+        /** @type SimpleComponent */
+        this._hostSettings = this.registerSimpleComponent(HOST_SETTINGS_ID);
+        /** @type SimpleComponent */
+        this._guestSettings = this.registerSimpleComponent(GUEST_SETTINGS_ID);
+        /** @type SimpleComponent */
+        this._locationValue = this.registerSimpleComponent(LOCATION_VALUE_ID);
         /** @type Number */
         this._pingInterval = -1;
+        /** @type Selector*/
+        this._locationSelector = null;
         /**
          * @type InfoBox
          */
@@ -98,6 +117,21 @@ define([
                     buttonselect: armadaScreens.playButtonSelectSound,
                     buttonclick: armadaScreens.playButtonClickSound
                 }));
+        environments.executeWhenReady(function () {
+            this._locationSelector = this.registerExternalComponent(
+                    new components.Selector(
+                            LOCATION_SELECTOR_ID,
+                            armadaScreens.SELECTOR_SOURCE,
+                            {
+                                cssFilename: armadaScreens.SELECTOR_CSS,
+                                selectorClassName: "smallSelector",
+                                propertyContainerClassName: "smallSelectorPropertyContainer"
+                            },
+                            {id: strings.MULTI_LOBBY.LOCATION_LABEL.name},
+                            _getLocationValues()),
+                    HOST_SETTINGS_ID);
+        }.bind(this));
+
     }
     MultiLobbyScreen.prototype = new screens.HTMLScreen();
     MultiLobbyScreen.prototype.constructor = MultiLobbyScreen;
@@ -148,6 +182,9 @@ define([
                 this._showMessage(strings.get(strings.MULTI_GAMES.DISCONNECT_MESSAGE), function () {
                     game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
                 }.bind(this));
+            }.bind(this));
+            networking.onGameSettingsChanged(function () {
+                this._updateGameSettings();
             }.bind(this));
             networking.onPlayerJoin(function (playerName) {
                 this._updatePlayersList();
@@ -208,6 +245,9 @@ define([
             this._chatMessage.getElement().value = "";
             this._chatSend.disable();
             this._pingInterval = setInterval(networking.ping, 3000);
+            this._updateGameSettings();
+            this._hostSettings.setVisible(networking.isHost());
+            this._guestSettings.setVisible(!networking.isHost());
         } else {
             this._cancelInterval();
         }
@@ -260,6 +300,18 @@ define([
                 }
             }
         }.bind(this);
+        this._locationSelector.onChange = function () {
+            networking.updateGameSettings({
+                environment: environments.getEnvironmentNames()[this._locationSelector.getSelectedIndex()]
+            });
+        }.bind(this);
+    };
+    /**
+     * @override
+     */
+    MultiLobbyScreen.prototype._updateComponents = function () {
+        screens.HTMLScreen.prototype._updateComponents.call(this);
+        this._locationSelector.setValueList(_getLocationValues());
     };
     /**
      * Update the player list display with the current player information
@@ -277,7 +329,7 @@ define([
                     `<td>${player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)}</td>` +
                     `<td>${player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")}</td>` +
                     `<td>${strings.get(player.ready ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)}</td>` +
-                    `<td>${networking.isHost() && !player.me ? '<button id="' + getKickButtonId(index) + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : ""}</td>` +
+                    `<td>${networking.isHost() && !player.me ? '<button id="' + getKickButtonId(index) + '" class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : ""}</td>` +
                     `</tr>`;
         }).join(""));
         if (networking.isHost()) {
@@ -291,6 +343,16 @@ define([
                 this._startButton.disable();
             }
         }
+    };
+    /**
+     * Update the game settings display with the values from the current general
+     * game settings
+     */
+    MultiLobbyScreen.prototype._updateGameSettings = function () {
+        var settings = networking.getGameSettings(), location;
+        location = environments.getEnvironment(settings.environment).getDisplayName();
+        this._locationValue.setContent(location);
+        this._locationSelector.selectValue(location);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

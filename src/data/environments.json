@@ -269,23 +269,6 @@
                 }],
             "ambientColor": [0.2, 0.2, 0.2]
         }, {
-            "name": "shadowTest",
-            "location": "Shadow Test",
-            "skyboxes": [{
-                    "class": "stars_medium"
-                }],
-            "backgroundObjects": [{
-                    "class": "standardSun",
-                    "position": {
-                        "angleAlpha": 90,
-                        "angleBeta": 90
-                    },
-                    "size": 300
-                }],
-            "dustClouds": [{
-                    "class": "standard"
-                }]
-        }, {
             "name": "arberon",
             "location": "Arberon",
             "color": [0.125, 0.3, 0.65, 1],

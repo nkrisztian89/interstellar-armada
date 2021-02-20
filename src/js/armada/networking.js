@@ -53,16 +53,27 @@
  * messages as Float32Array
  */
 /**
+ * @typedef {Object} GameSettings
+ * @property {String} environment The string ID of the environment to load for
+ * the game
+ */
+/**
  * @typedef {Object} Game The model of the game state as kept on this client
  * @property {String} name The name of the game (unique within all games)
  * @property {String} host The name of the hosting player
  * @property {Player[]} players
  * @property {Number} maxPlayers Number of maximum allowed players, with the
  * host included
+ * @property {GameSettings} settings The general settings for the game which
+ * the host can change
  * @property {Boolean} started Whether the game has passed the lobby stage and
  * has already started (cannot join past this point)
  * @property {Boolean} own Marks the game the current client is in within the
  * list of games received from the server
+ */
+/**
+ * @typedef {Game} GameInfo
+ * @property {Number} players
  */
 
 /**
@@ -98,6 +109,7 @@ define([
             MSG_TYPE_PEER_CONNECTED = 14,
             MSG_TYPE_PEER_DISCONNECTED = 15,
             MSG_TYPE_HEARTBEAT = 16,
+            MSG_TYPE_GAME_SETTING = 17,
             // --------------------------------
             // error codes
             ERROR_CODE_GAME_NOT_FOUND = 0,
@@ -150,6 +162,8 @@ define([
             /** @type Function */
             _onPlayerUpdate,
             /** @type Function */
+            _onGameSettingsChanged,
+            /** @type Function */
             _onKicked,
             /** @type Function */
             _onText,
@@ -191,7 +205,7 @@ define([
      * the passed callback when the first message with the same type as 
      * specified in the JSON arrives.
      * @param {Object} data
-     * @param {Function} callback
+     * @param {Function} [callback]
      * @param {Boolean} [replace=false] Whether to replace any previously added
      * callbacks for this message type with the passed one instead of adding it
      * to them
@@ -263,6 +277,14 @@ define([
             }
         }
         return result;
+    }
+    /**
+     * Return whether the passed game is our own game (in which the local client
+     * is taking part)
+     * @param {Game} game
+     */
+    function _gameIsOwn(game) {
+        return game.own === true;
     }
     /**
      * Stop sending heartbeat messages through the socket
@@ -554,6 +576,7 @@ define([
         _onPlayerReady = null;
         _onPlayerKicked = null;
         _onPlayerUpdate = null;
+        _onGameSettingsChanged = null;
         _onKicked = null;
         _onText = null;
         _onHostLeft = null;
@@ -724,6 +747,14 @@ define([
                     }
                 }
                 break;
+            case MSG_TYPE_GAME_SETTING:
+                if (_game && !_game.started) {
+                    Object.assign(_game.settings, data.settings);
+                    if (_onGameSettingsChanged) {
+                        _onGameSettingsChanged();
+                    }
+                }
+                break;
         }
         if (_messageHandlers[data.type]) {
             for (i = 0; i < _messageHandlers[data.type].length; i++) {
@@ -860,6 +891,13 @@ define([
         return _game ? _game.name : "";
     }
     /**
+     * Returns the general game settings, which the host has authority to change
+     * @returns {GameSettings}
+     */
+    function getGameSettings() {
+        return _game ? _game.settings : null;
+    }
+    /**
      * Returns the name of the hosting player of the current (hosted or joined)
      * game
      * @returns {String}
@@ -901,9 +939,8 @@ define([
             gameName: params.gameName,
             maxPlayers: params.maxPlayers
         }, function (data) {
-            var gameInfo = data.games.find(function (game) {
-                return game.own === true;
-            });
+            /** @type GameInfo */
+            var gameInfo = data.games.find(_gameIsOwn);
             if (!gameInfo) {
                 application.log_DEBUG("Game could not be created!", 1);
                 return;
@@ -913,11 +950,26 @@ define([
                 name: gameInfo.name,
                 players: [{name: _playerName, ping: 0, peer: false, ready: true, me: true}],
                 maxPlayers: gameInfo.maxPlayers,
+                settings: gameInfo.settings,
                 started: false
             };
             _isHost = true;
             callback();
         }, true);
+    }
+    /**
+     * As a host, update the general game settings and notify the guests about
+     * the update
+     * @param {GameSettings} updatedSettings
+     */
+    function updateGameSettings(updatedSettings) {
+        if (_isHost) {
+            Object.assign(_game.settings, updatedSettings);
+            _sendJSONtoSocket({
+                type: MSG_TYPE_GAME_SETTING,
+                settings: updatedSettings
+            });
+        }
     }
     /**
      * Set the callback to be executed once the client has successfully 
@@ -990,6 +1042,14 @@ define([
         _onPlayerUpdate = callback;
     }
     /**
+     * Set the callback to be executed whenever the general game settings are
+     * changed by the host (will only be called at the guests)
+     * @param {Function} callback
+     */
+    function onGameSettingsChanged(callback) {
+        _onGameSettingsChanged = callback;
+    }
+    /**
      * Set the callback to be executed when the local player is kicked from the 
      * current game by the host
      * @param {Function} callback
@@ -1056,6 +1116,7 @@ define([
             _game = {
                 name: data.gameName,
                 players: data.players,
+                settings: data.settings,
                 started: false
             };
             for (i = 0; i < _game.players.length; i++) {
@@ -1213,7 +1274,7 @@ define([
     function getMissionData() {
         return {
             title: _game.name,
-            environment: "reddim",
+            environment: _game.settings.environment,
             teams: [{
                     name: "Team 1",
                     color: [0.8, 0.2, 0.2, 1.0]
@@ -1303,9 +1364,11 @@ define([
         setPlayerName: setPlayerName,
         isHost: isHost,
         getGameName: getGameName,
+        getGameSettings: getGameSettings,
         getHostName: getHostName,
         listGames: listGames,
         createGame: createGame,
+        updateGameSettings: updateGameSettings,
         joinGame: joinGame,
         onConnect: onConnect,
         onDisconnect: onDisconnect,
@@ -1315,6 +1378,7 @@ define([
         onPlayerReady: onPlayerReady,
         onPlayerKicked: onPlayerKicked,
         onPlayerUpdate: onPlayerUpdate,
+        onGameSettingsChanged: onGameSettingsChanged,
         onKicked: onKicked,
         onText: onText,
         onHostLeft: onHostLeft,

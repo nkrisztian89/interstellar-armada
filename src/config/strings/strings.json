@@ -168,6 +168,7 @@
         },
         "kickButton": "Kick",
         "chatSend": "Send",
+        "locationLabel": "Location:",
         "hostLeftMessage": "The host has left the game.",
         "kickedMessage": "You have been kicked out of the game by the host.",
         "playerJoinedMessage": "{name} joined the game!",

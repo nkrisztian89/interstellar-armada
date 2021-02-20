@@ -101,6 +101,7 @@ define([
         READY_YES: {name: "multiLobby.ready.yes"},
         READY_NO: {name: "multiLobby.ready.no"},
         KICK_BUTTON: {name: "multiLobby.kickButton"},
+        LOCATION_LABEL: {name: "multiLobby.locationLabel"},
         HOST_LEFT_MESSAGE: {name: "multiLobby.hostLeftMessage"},
         KICKED_MESSAGE: {name: "multiLobby.kickedMessage"},
         PLAYER_JOINED_MESSAGE: {name: "multiLobby.playerJoinedMessage"},
