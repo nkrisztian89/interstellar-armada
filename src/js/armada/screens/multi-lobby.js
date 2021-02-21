@@ -48,12 +48,44 @@ define([
             HOST_SETTINGS_ID = "hostSettings",
             GUEST_SETTINGS_ID = "guestSettings",
             LOCATION_VALUE_ID = "locationValue",
-            LOCATION_SELECTOR_ID = "locationSelector";
+            LOCATION_SELECTOR_ID = "locationSelector",
+            PLAYER_COLORS = [
+                [0.8, 0.2, 0.2],
+                [0.2, 0.2, 0.8],
+                [0.2, 0.8, 0.2],
+                [0.8, 0.8, 0.2],
+                [0.8, 0.2, 0.8],
+                [0.1, 0.1, 0.1],
+                [0.9, 0.9, 0.9]
+            ];
     function _mapLocationName(environment) {
         return environments.getEnvironment(environment).getDisplayName();
     }
     function _getLocationValues() {
         return environments.getEnvironmentNames().map(_mapLocationName);
+    }
+    function _getCSSColor(color) {
+        return "rgb(" + Math.round(color[0] * 255) + "," + Math.round(color[1] * 255) + "," + Math.round(color[2] * 255) + ")";
+    }
+    function _colorsEqual(a, b) {
+        var epsilon = 0.05;
+        return (Math.abs(a[0] - b[0]) < epsilon) && (Math.abs(a[1] - b[1]) < epsilon) && (Math.abs(a[2] - b[2]) < epsilon);
+    }
+    function _getNextAvailableColor(color) {
+        var index, i, players = networking.getPlayers();
+        for (index = 0; index < PLAYER_COLORS.length; index++) {
+            if (_colorsEqual(color, PLAYER_COLORS[index])) {
+                break;
+            }
+        }
+        index = (index >= PLAYER_COLORS.length) ? 0 : ((index + 1) % PLAYER_COLORS.length);
+        for (i = 0; i < players.length; i++) {
+            if (!players[i].me && _colorsEqual(PLAYER_COLORS[index], players[i].settings.color)) {
+                i = -1;
+                index = (index + 1) % PLAYER_COLORS.length;
+            }
+        }
+        return PLAYER_COLORS[index];
     }
     // #########################################################################
     /**
@@ -318,6 +350,14 @@ define([
      */
     MultiLobbyScreen.prototype._updatePlayersList = function () {
         var i, button, players = networking.getPlayers(),
+                colorSelectorId = "player-color-selector",
+                colorSelectorAction = function () {
+                    var color = _getNextAvailableColor(networking.getPlayerSettings().color);
+                    networking.updatePlayerSettings({
+                        color: color
+                    });
+                    this._updatePlayersList();
+                },
                 getKickButtonId = function (index) {
                     return "kick-player-" + index;
                 },
@@ -326,12 +366,14 @@ define([
                 };
         this._playersList.setContent(players.map(function (player, index) {
             return `<tr><td>${player.name}</td>` +
+                    `<td><div ${player.me ? 'id="' + colorSelectorId + '"' : ''} class="colorIndicator${(player.me && !player.ready) ? ' colorSelector' : ''}" style="background-color: ${_getCSSColor(player.settings.color)}"></div></td>` +
                     `<td>${player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)}</td>` +
                     `<td>${player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")}</td>` +
-                    `<td>${strings.get(player.ready ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)}</td>` +
+                    `<td>${(index === 0) ? "" : strings.get(player.ready ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)}</td>` +
                     `<td>${networking.isHost() && !player.me ? '<button id="' + getKickButtonId(index) + '" class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : ""}</td>` +
                     `</tr>`;
         }).join(""));
+        document.getElementById(colorSelectorId).onclick = colorSelectorAction.bind(this);
         if (networking.isHost()) {
             for (i = 1; i < players.length; i++) {
                 button = document.getElementById(getKickButtonId(i));

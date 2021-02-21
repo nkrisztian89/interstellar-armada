@@ -37,11 +37,18 @@
 
 /*global define */
 
+/**
+ * @typedef {Object} PlayerSettings
+ * @property {Number[3]} color The RGB color to be used as the player's faction
+ * color
+ */
 /** 
  * @typedef {Object} Player The model of a player as kept on this client
  * @property {String} name The name of the player (unique within the game)
  * @property {Boolean} peer Whether there is a peer to peer connection open
  * to this player (with the correct data channels set up and open)
+ * @property {PlayerSettings} settings The settings the player sets for 
+ * themselves
  * @property {Boolean} ready Whether the player is marked ready to play
  * @property {Number} ping The round trip time of messages to this player, in ms
  * @property {Boolean} waitPong Whether a ping message has been sent to the
@@ -70,10 +77,6 @@
  * has already started (cannot join past this point)
  * @property {Boolean} own Marks the game the current client is in within the
  * list of games received from the server
- */
-/**
- * @typedef {Game} GameInfo
- * @property {Number} players
  */
 
 /**
@@ -110,6 +113,7 @@ define([
             MSG_TYPE_PEER_DISCONNECTED = 15,
             MSG_TYPE_HEARTBEAT = 16,
             MSG_TYPE_GAME_SETTING = 17,
+            MSG_TYPE_PLAYER_SETTING = 18,
             // --------------------------------
             // error codes
             ERROR_CODE_GAME_NOT_FOUND = 0,
@@ -605,10 +609,10 @@ define([
                 break;
             case MSG_TYPE_JOIN:
                 if (_game) {
-                    player = {name: data.playerName, peer: false, ready: false, me: false};
+                    player = {name: data.player.name, peer: false, ready: false, me: false, settings: data.player.settings};
                     _game.players.push(player);
                     if (_onPlayerJoin) {
-                        _onPlayerJoin(data.playerName);
+                        _onPlayerJoin(data.player.name);
                     }
                     if (_isHost) {
                         _createPeerConnection(player);
@@ -755,6 +759,19 @@ define([
                     }
                 }
                 break;
+            case MSG_TYPE_PLAYER_SETTING:
+                if (_game) {
+                    player = _findPlayer(data.playerName);
+                    if (player) {
+                        Object.assign(player.settings, data.settings);
+                        if (_onPlayerUpdate) {
+                            _onPlayerUpdate(player);
+                        }
+                    } else {
+                        application.log_DEBUG("Could not find player '" + data.playerName + "'!", 1);
+                    }
+                }
+                break;
         }
         if (_messageHandlers[data.type]) {
             for (i = 0; i < _messageHandlers[data.type].length; i++) {
@@ -877,6 +894,27 @@ define([
         _playerName = value;
     }
     /**
+     * Returns the currently set settings for the local player
+     * @returns {PlayerSettings}
+     */
+    function getPlayerSettings() {
+        return _findMe().settings;
+    }
+    /**
+     * Update the player settings and notify the other players about the update.
+     * Only works before marking ready to play.
+     * @param {PlayerSettings} updatedSettings
+     */
+    function updatePlayerSettings(updatedSettings) {
+        if (!_findMe().ready) {
+            Object.assign(_findMe().settings, updatedSettings);
+            _sendJSONtoSocket({
+                type: MSG_TYPE_PLAYER_SETTING,
+                settings: updatedSettings
+            });
+        }
+    }
+    /**
      * Whether the local player is the host of the game they are in
      * @returns {Boolean}
      */
@@ -939,7 +977,7 @@ define([
             gameName: params.gameName,
             maxPlayers: params.maxPlayers
         }, function (data) {
-            /** @type GameInfo */
+            /** @type Game */
             var gameInfo = data.games.find(_gameIsOwn);
             if (!gameInfo) {
                 application.log_DEBUG("Game could not be created!", 1);
@@ -948,7 +986,7 @@ define([
             _game = {
                 host: gameInfo.host,
                 name: gameInfo.name,
-                players: [{name: _playerName, ping: 0, peer: false, ready: true, me: true}],
+                players: [{name: _playerName, ping: 0, peer: false, ready: false, me: true, settings: gameInfo.players[0].settings}],
                 maxPlayers: gameInfo.maxPlayers,
                 settings: gameInfo.settings,
                 started: false
@@ -1277,10 +1315,10 @@ define([
             environment: _game.settings.environment,
             teams: [{
                     name: "Team 1",
-                    color: [0.8, 0.2, 0.2, 1.0]
+                    color: _game.players[0].settings.color.concat(1)
                 }, {
                     name: "Team 2",
-                    color: [0.2, 0.2, 0.8, 1.0]
+                    color: _game.players[1].settings.color.concat(1)
                 }],
             spacecrafts: [{
                     name: _game.players[0].name,
@@ -1362,6 +1400,8 @@ define([
         getServerPing: getServerPing,
         getPlayerName: getPlayerName,
         setPlayerName: setPlayerName,
+        getPlayerSettings: getPlayerSettings,
+        updatePlayerSettings: updatePlayerSettings,
         isHost: isHost,
         getGameName: getGameName,
         getGameSettings: getGameSettings,

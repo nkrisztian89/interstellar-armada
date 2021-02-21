@@ -349,9 +349,9 @@ define([
             this._gamesList.setContent(games.map(function (game, index) {
                 return `<tr><td>${game.name}</td>` +
                         `<td>${game.host}</td>` +
-                        `<td>${game.players}/${game.maxPlayers}</td>` +
+                        `<td>${game.playerCount}/${game.maxPlayers}</td>` +
                         `<td>${strings.get(game.started ? strings.MULTI_GAMES.STARTED_YES : strings.MULTI_GAMES.STARTED_NO)}</td>` +
-                        `<td>${((game.players < game.maxPlayers) && !game.started) ?
+                        `<td>${((game.playerCount < game.maxPlayers) && !game.started) ?
                         '<button id="' + getJoinButtonId(index) + '">' + strings.get(strings.MULTI_GAMES.JOIN_BUTTON) + '</button>' :
                         ""}</td>` +
                         `</tr>`;

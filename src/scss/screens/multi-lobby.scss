@@ -30,6 +30,19 @@ table.multiPlayers {
     margin-right: auto;
 }
 
+.colorIndicator {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 0;
+    padding: 0;
+    margin: 0.2em;
+}
+
+.colorSelector:hover {
+    @include glowing;
+}
+
 .hostSettings button {
     width: 10em;
 }
