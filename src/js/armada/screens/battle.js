@@ -4615,7 +4615,7 @@ define([
                                     }
                                 } :
                                 function (data) {
-                                    _mission.getSpacecrafts()[1].applyMultiGuestData(data);
+                                    _mission.getSpacecrafts()[data[0]].applyMultiGuestData(data);
                                 });
                     }.bind(this));
                     networking.onDisconnect(function () {
@@ -4631,12 +4631,16 @@ define([
                         networking.disconnect();
                     }.bind(this));
                     networking.onPlayerLeave(function (player) {
-                        _multi = false;
-                        this.showMessage(utils.formatString(strings.get(strings.MULTI_BATTLE.PLAYER_LEFT_MESSAGE), {
-                            player: player.name
-                        }));
-                        networking.onDisconnect(null);
-                        networking.disconnect();
+                        _battleScreen.queueHUDMessage({
+                            text: utils.formatString(strings.get(strings.MULTI_BATTLE.PLAYER_LEFT_MESSAGE), {
+                                player: player.name
+                            })
+                        });
+                        if (networking.getPlayers().length <= 1) {
+                            _multi = false;
+                            networking.onDisconnect(null);
+                            networking.disconnect();
+                        }
                     }.bind(this));
                     networking.markLoaded();
                 }

@@ -305,7 +305,7 @@ define([
         this._createGameCreateButton.getElement().onclick = function () {
             networking.createGame({
                 gameName: this._createGameNameInput.getElement().value,
-                maxPlayers: 2
+                maxPlayers: 4
             }, function () {
                 game.closeOrNavigateTo(armadaScreens.MULTI_LOBBY_SCREEN_NAME);
             });
@@ -358,7 +358,9 @@ define([
             }).join(""));
             for (i = 0; i < games.length; i++) {
                 button = document.getElementById(getJoinButtonId(i));
-                button.onclick = joinButtonAction.bind(this, i);
+                if (button) {
+                    button.onclick = joinButtonAction.bind(this, i);
+                }
             }
             this._gamesTable.show();
             this._noAvailableGamesLabel.hide();

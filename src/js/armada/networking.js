@@ -253,6 +253,17 @@ define([
         return null;
     }
     /**
+     * Returns the index of the local player within the players array of the
+     * game
+     * @returns {Number}
+     */
+    function _getPlayerIndex() {
+        if (_game) {
+            return _game.players.findIndex(_playerIsMe);
+        }
+        return -1;
+    }
+    /**
      * Returns the player model corresponding to the player with the passed name
      * within the current game
      * @param {String} name
@@ -1310,34 +1321,37 @@ define([
      * @returns {Object}
      */
     function getMissionData() {
+        var
+                radius = 500,
+                playerCount = _game.players.length,
+                getAngle = function (index) {
+                    return index / playerCount * Math.PI * 2;
+                },
+                playerIndex = _getPlayerIndex(),
+                teams = _game.players.map(function (player, index) {
+                    return {
+                        name: "Team " + (index + 1),
+                        color: player.settings.color.concat(1)
+                    };
+                }),
+                spacecrafts = _game.players.map(function (player, index) {
+                    var angle = getAngle(index);
+                    return {
+                        name: player.name,
+                        team: "Team " + (index + 1),
+                        class: "falcon",
+                        piloted: index === playerIndex,
+                        multi: !(_isHost && (index === 0)),
+                        position: [radius * Math.sin(angle), radius * -Math.cos(angle), 0],
+                        rotations: ["z-" + Math.round(Math.degrees(angle))],
+                        loadout: "imperial-tier1"
+                    };
+                });
         return {
             title: _game.name,
             environment: _game.settings.environment,
-            teams: [{
-                    name: "Team 1",
-                    color: _game.players[0].settings.color.concat(1)
-                }, {
-                    name: "Team 2",
-                    color: _game.players[1].settings.color.concat(1)
-                }],
-            spacecrafts: [{
-                    name: _game.players[0].name,
-                    team: "Team 1",
-                    class: "falcon",
-                    piloted: _isHost,
-                    multi: !_isHost,
-                    position: [0, -500, 0],
-                    loadout: "imperial-tier1"
-                }, {
-                    name: _game.players[1].name,
-                    team: "Team 2",
-                    class: "falcon",
-                    piloted: !_isHost,
-                    multi: true,
-                    position: [0, 500, 0],
-                    rotations: ["z+180"],
-                    loadout: "imperial-tier1"
-                }]
+            teams: teams,
+            spacecrafts: spacecrafts
         };
 
     }

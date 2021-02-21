@@ -139,7 +139,7 @@ define([
              * Length of the Float32Array section that contains a game control message for a spacecraft by a multiplayer guest
              * @type Number
              */
-            MULTI_GUEST_DATA_LENGTH = 7,
+            MULTI_GUEST_DATA_LENGTH = 8,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -874,10 +874,12 @@ define([
      * Set whether this spacecraft is controlled through network messages (either control
      * messages by a guest or update messages by the host) in a multiplayer game
      * @param {Boolean} piloted Whether the spacecraft is piloted by the local player
+     * @param {Number} index The index of this spacecraft in the spacecrafts array
      */
-    Spacecraft.prototype.setAsMultiControlled = function (piloted) {
+    Spacecraft.prototype.setAsMultiControlled = function (piloted, index) {
         this._guestPiloted = piloted;
         this._multiControlled = !piloted;
+        this._multiGuestData[0] = index;
     };
     /**
      * Returns the object describing class of this spacecraft.
@@ -3146,13 +3148,13 @@ define([
         if (!this._alive) {
             return this._multiGuestData;
         }
-        this._multiGuestData[0] = this._maneuveringComputer.getSpeedTarget();
-        this._multiGuestData[1] = this._maneuveringComputer.getLastStrafeTarget();
-        this._multiGuestData[2] = this._maneuveringComputer.getLastLiftTarget();
-        this._multiGuestData[3] = this._maneuveringComputer.getLastYawTarget();
-        this._multiGuestData[4] = this._maneuveringComputer.getLastPitchTarget();
-        this._multiGuestData[5] = this._maneuveringComputer.getLastRollTarget();
-        this._multiGuestData[6] = this._fired ? 1 : 0;
+        this._multiGuestData[1] = this._maneuveringComputer.getSpeedTarget();
+        this._multiGuestData[2] = this._maneuveringComputer.getLastStrafeTarget();
+        this._multiGuestData[3] = this._maneuveringComputer.getLastLiftTarget();
+        this._multiGuestData[4] = this._maneuveringComputer.getLastYawTarget();
+        this._multiGuestData[5] = this._maneuveringComputer.getLastPitchTarget();
+        this._multiGuestData[6] = this._maneuveringComputer.getLastRollTarget();
+        this._multiGuestData[7] = this._fired ? 1 : 0;
         this._fired = false;
         return this._multiGuestData;
     };
@@ -3165,13 +3167,13 @@ define([
         if (!this._alive) {
             return;
         }
-        this._maneuveringComputer.setSpeedTarget(data[0]);
-        this._maneuveringComputer.setStrafeTarget(data[1]);
-        this._maneuveringComputer.setLiftTarget(data[2]);
-        this._maneuveringComputer.setYawTarget(data[3]);
-        this._maneuveringComputer.setPitchTarget(data[4]);
-        this._maneuveringComputer.setRollTarget(data[5]);
-        if (data[6]) {
+        this._maneuveringComputer.setSpeedTarget(data[1]);
+        this._maneuveringComputer.setStrafeTarget(data[2]);
+        this._maneuveringComputer.setLiftTarget(data[3]);
+        this._maneuveringComputer.setYawTarget(data[4]);
+        this._maneuveringComputer.setPitchTarget(data[5]);
+        this._maneuveringComputer.setRollTarget(data[6]);
+        if (data[7]) {
             this.fire(false);
         }
     };

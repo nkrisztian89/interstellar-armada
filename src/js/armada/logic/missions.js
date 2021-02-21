@@ -2711,7 +2711,7 @@ define([
                 craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
             }
             if (spacecrafts[i].multi) {
-                craft.setAsMultiControlled(spacecrafts[i].piloted);
+                craft.setAsMultiControlled(spacecrafts[i].piloted, i);
             }
             teamID = spacecrafts[i].team;
             if (teamID) {
