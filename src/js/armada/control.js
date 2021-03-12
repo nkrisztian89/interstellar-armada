@@ -568,7 +568,7 @@ define([
                 config.getDefaultCamerConfigurationName(pilotedSpacecraft));
         this.disableAction("followNext");
         this.disableAction("followPrevious");
-        game.getScreen().setHeaderContent("");
+        game.getScreen(armadaScreens.BATTLE_SCREEN_NAME).setHeaderContent("");
         if (this.getInputInterpreter(MOUSE_NAME).isEnabled()) {
             document.body.style.cursor = 'none';
         }
@@ -590,7 +590,7 @@ define([
             }
             this.enableAction("followNext");
             this.enableAction("followPrevious");
-            game.getScreen().setHeaderContent(strings.get(strings.BATTLE.SPECTATOR_MODE));
+            game.getScreen(armadaScreens.BATTLE_SCREEN_NAME).setHeaderContent(strings.get(strings.BATTLE.SPECTATOR_MODE));
             document.body.style.cursor = game.getDefaultCursor();
         }
     };

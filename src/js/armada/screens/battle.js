@@ -2416,6 +2416,7 @@ define([
             if (_multi) {
                 networking.onDisconnect(null);
                 networking.disconnect();
+                _multi = false;
             }
             this.pauseBattle();
             _clearData();
@@ -2455,14 +2456,16 @@ define([
         control.stopListening();
         _battleCursor = document.body.style.cursor;
         document.body.style.cursor = game.getDefaultCursor();
-        if (_simulationLoop !== LOOP_REQUESTANIMFRAME) {
-            clearInterval(_simulationLoop);
+        if (!_multi) {
+            if (_simulationLoop !== LOOP_REQUESTANIMFRAME) {
+                clearInterval(_simulationLoop);
+            }
+            _simulationLoop = LOOP_CANCELED;
+            if (_battleScene) {
+                _battleScene.setShouldAnimate(false);
+            }
+            this.stopRenderLoop();
         }
-        _simulationLoop = LOOP_CANCELED;
-        if (_battleScene) {
-            _battleScene.setShouldAnimate(false);
-        }
-        this.stopRenderLoop();
         if (dimMusic !== false) {
             audio.resetMusicVolume();
             audio.setMusicVolume(config.getSetting(config.BATTLE_SETTINGS.MUSIC_VOLUME_IN_MENUS) * audio.getMusicVolume(), false);
@@ -2480,28 +2483,34 @@ define([
     };
     /**
      * Resumes the simulation and control of the battle and the render loop
+     * @param {Boolean} [start=false] Whether this is the start of the battle 
+     * (as opposed to resuming after a pause)
      */
-    BattleScreen.prototype.resumeBattle = function () {
+    BattleScreen.prototype.resumeBattle = function (start) {
         document.body.style.cursor = _battleCursor || game.getDefaultCursor();
-        if (_simulationLoop === LOOP_CANCELED) {
-            _prevDate = performance.now();
-            if (_battleScene) {
-                if (!_isTimeStopped) {
-                    _battleScene.setShouldAnimate(true);
-                }
-            }
-            if (config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME)) {
-                _simulationLoop = LOOP_REQUESTANIMFRAME;
-            } else {
-                _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (config.getSetting(config.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
-            }
+        if (_multi && !start) {
             control.startListening();
-            this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
         } else {
-            application.showError(
-                    "Trying to resume simulation while it is already going on!",
-                    application.ErrorSeverity.MINOR,
-                    "No action was taken, to avoid double-running the simulation.");
+            if (_simulationLoop === LOOP_CANCELED) {
+                _prevDate = performance.now();
+                if (_battleScene) {
+                    if (!_isTimeStopped) {
+                        _battleScene.setShouldAnimate(true);
+                    }
+                }
+                if (config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME)) {
+                    _simulationLoop = LOOP_REQUESTANIMFRAME;
+                } else {
+                    _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (config.getSetting(config.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
+                }
+                control.startListening();
+                this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
+            } else {
+                application.showError(
+                        "Trying to resume simulation while it is already going on!",
+                        application.ErrorSeverity.MINOR,
+                        "No action was taken, to avoid double-running the simulation.");
+            }
         }
         audio.resetMusicVolume();
         audio.resetSFXVolume();
@@ -4260,8 +4269,7 @@ define([
                 /**@type Spacecraft*/ craft,
                 /**@type Number */ time,
                 /**@type Object */ analyticsParams,
-                /**@type ModelDebugStats*/ mainStats, shadowStats,
-                /**@type DialogScreen~ButtonData[] */ buttons;
+                /**@type ModelDebugStats*/ mainStats, shadowStats;
         // if we are using the RequestAnimationFrame API for the rendering loop, then the simulation
         // is performed right before each render and not in a separate loop for best performance
         if (_simulationLoop === LOOP_REQUESTANIMFRAME) {
@@ -4340,37 +4348,41 @@ define([
                                 permanent: true
                             }, true);
                         } else {
-                            this.pauseBattle(false, true);
-                            buttons = [{
-                                    caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_DEBRIEFING),
-                                    action: _goToDebriefing
-                                }];
-                            if (!_multi) {
-                                buttons.push({
-                                    caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_RESTART),
-                                    action: function () {
-                                        game.closeSuperimposedScreen();
-                                        this.startNewBattle({
-                                            restart: true
-                                        });
+                            if (_multi) {
+                                // if we die in a multiplayer match, switch to spectator mode instead of showing the
+                                // death dialog popup
+                                // first, try to switch to a new spacecraft, if there are none, switch to free camera
+                                if (!_battleScene.getCamera().followNextNode()) {
+                                    control.switchToSpectatorMode(true, true);
+                                }
+                            } else {
+                                this.pauseBattle(false, true);
+                                armadaScreens.openDialog({
+                                    header: strings.get(strings.BATTLE.MESSAGE_DEFEAT_HEADER),
+                                    message: strings.get(strings.BATTLE.MESSAGE_DEFEAT_MESSAGE),
+                                    buttons: [{
+                                            caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_DEBRIEFING),
+                                            action: _goToDebriefing
+                                        }, {
+                                            caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_RESTART),
+                                            action: function () {
+                                                game.closeSuperimposedScreen();
+                                                this.startNewBattle({
+                                                    restart: true
+                                                });
+                                            }.bind(this)
+                                        }, {
+                                            caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_SPECTATE),
+                                            action: function () {
+                                                game.closeSuperimposedScreen();
+                                                this.resumeBattle();
+                                            }.bind(this)
+                                        }],
+                                    onClose: function () {
+                                        this.resumeBattle();
                                     }.bind(this)
                                 });
                             }
-                            buttons.push({
-                                caption: strings.get(strings.BATTLE.MESSAGE_DEFEAT_SPECTATE),
-                                action: function () {
-                                    game.closeSuperimposedScreen();
-                                    this.resumeBattle();
-                                }.bind(this)
-                            });
-                            armadaScreens.openDialog({
-                                header: strings.get(strings.BATTLE.MESSAGE_DEFEAT_HEADER),
-                                message: strings.get(strings.BATTLE.MESSAGE_DEFEAT_MESSAGE),
-                                buttons: buttons,
-                                onClose: function () {
-                                    this.resumeBattle();
-                                }.bind(this)
-                            });
                         }
                         audio.playMusic(
                                 (victory ? VICTORY_THEME : DEFEAT_THEME),
@@ -4604,7 +4616,7 @@ define([
                     this._updateLoadingStatus(strings.get(strings.MULTI_BATTLE.WAITING_FOR_OTHER_PLAYERS));
                     networking.onGameStart(function () {
                         this._loadingBox.hide();
-                        this.resumeBattle();
+                        this.resumeBattle(true);
                         resumeTime();
                         control.switchToPilotMode(_mission.getPilotedSpacecraft(), true);
                         networking.onGameUpdate(!networking.isHost() ?
