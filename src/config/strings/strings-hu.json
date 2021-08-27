@@ -185,6 +185,8 @@
         "locationLabel": "Helyszín:",
         "hostLeftMessage": "A házigazda kilépett a játékból.",
         "kickedMessage": "A házigazda kirúgott a játékból.",
+        "gameCreatedMessage": "Játék ({name}) létrehozva!",
+        "joinedMessage": "Csatlakoztál a játékhoz!",
         "playerJoinedMessage": "{name} csatlakozott a játékhoz!",
         "playerLeftMessage": "{name} kilépett a játékból!",
         "playerReadyMessage": "{name} készen áll!",
@@ -212,6 +214,13 @@
             "header": "Megerősítés",
             "message": "Biztos meg akarod szakítani a küldetést? A megszakított küldetés elvesztettnek számít.",
             "quitToMissionsButton": "Kilépés a küldetésekhez",
+            "quitToMainMenuButton": "Kilépés a főmenübe"
+        },
+        "quitMulti": "Kilépés",
+        "quitMultiDialog": {
+            "header": "Megerősítés",
+            "message": "Biztos, hogy ki akarsz lépni ebből a játékból?",
+            "quitToGamesButton": "Kilépés a játékokhoz",
             "quitToMainMenuButton": "Kilépés a főmenübe"
         }
     },
@@ -466,7 +475,8 @@
         "multi": {
             "waitingForOtherPlayers": "Várakozás a többi játékosra...",
             "hostLeftMessage": "A házigazda, {host} kilépett a játékból!",
-            "playerLeftMessage": "{player} kilépett a játékból!"
+            "playerLeftMessage": "{player} kilépett a játékból!",
+            "allPlayersLeftMessage": "Minden játékos kilépett a játékból!"
         }
     },
     "performanceLevel": {

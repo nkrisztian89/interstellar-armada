@@ -318,6 +318,9 @@ button {
         display: block;
         margin: 0.2em;
         min-width: 10em;
+        &[hidden] {
+            display: none;
+        }
     }
     &.separate {
         display: table;

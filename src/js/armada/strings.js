@@ -104,6 +104,8 @@ define([
         LOCATION_LABEL: {name: "multiLobby.locationLabel"},
         HOST_LEFT_MESSAGE: {name: "multiLobby.hostLeftMessage"},
         KICKED_MESSAGE: {name: "multiLobby.kickedMessage"},
+        GAME_CREATED_MESSAGE: {name: "multiLobby.gameCreatedMessage"},
+        JOINED_MESSAGE: {name: "multiLobby.joinedMessage"},
         PLAYER_JOINED_MESSAGE: {name: "multiLobby.playerJoinedMessage"},
         PLAYER_LEFT_MESSAGE: {name: "multiLobby.playerLeftMessage"},
         PLAYER_READY_MESSAGE: {name: "multiLobby.playerReadyMessage"},
@@ -141,7 +143,11 @@ define([
         QUIT_HEADER: {name: "ingameMenu.quitDialog.header"},
         QUIT_MESSAGE: {name: "ingameMenu.quitDialog.message"},
         QUIT_TO_MISSIONS: {name: "ingameMenu.quitDialog.quitToMissionsButton"},
-        QUIT_TO_MAIN_MENU: {name: "ingameMenu.quitDialog.quitToMainMenuButton"}
+        QUIT_TO_MAIN_MENU: {name: "ingameMenu.quitDialog.quitToMainMenuButton"},
+        QUIT_MULTI: {name: "ingameMenu.quitMulti"},
+        QUIT_MULTI_HEADER: {name: "ingameMenu.quitMultiDialog.header"},
+        QUIT_MULTI_MESSAGE: {name: "ingameMenu.quitMultiDialog.message"},
+        QUIT_TO_GAMES: {name: "ingameMenu.quitMultiDialog.quitToGamesButton"}
     };
     strings.INFO_BOX = {
         HEADER: {name: "infoBox.header"},
@@ -207,7 +213,8 @@ define([
     strings.MULTI_BATTLE = {
         WAITING_FOR_OTHER_PLAYERS: {name: "battle.multi.waitingForOtherPlayers"},
         HOST_LEFT_MESSAGE: {name: "battle.multi.hostLeftMessage"},
-        PLAYER_LEFT_MESSAGE: {name: "battle.multi.playerLeftMessage"}
+        PLAYER_LEFT_MESSAGE: {name: "battle.multi.playerLeftMessage"},
+        ALL_PLAYERS_LEFT_MESSAGE: {name: "battle.multi.allPlayersLeftMessage"}
     };
     strings.PERFORMANCE_LEVEL = {
         PREFIX: {name: "performanceLevel.", optional: true}

@@ -171,6 +171,8 @@
         "locationLabel": "Location:",
         "hostLeftMessage": "The host has left the game.",
         "kickedMessage": "You have been kicked out of the game by the host.",
+        "gameCreatedMessage": "Game {name} has been created!",
+        "joinedMessage": "You have joined the game!",
         "playerJoinedMessage": "{name} joined the game!",
         "playerLeftMessage": "{name} has left the game!",
         "playerReadyMessage": "{name} is ready to play!",
@@ -198,6 +200,13 @@
             "header": "Confirmation",
             "message": "Are you sure you want to abort the mission and quit? The mission will count as failed.",
             "quitToMissionsButton": "Quit to missions",
+            "quitToMainMenuButton": "Quit to main menu"
+        },
+        "quitMulti": "Quit match",
+        "quitMultiDialog": {
+            "header": "Confirmation",
+            "message": "Are you sure you want to leave the game?",
+            "quitToGamesButton": "Quit to games",
             "quitToMainMenuButton": "Quit to main menu"
         }
     },
@@ -435,7 +444,8 @@
         "multi": {
             "waitingForOtherPlayers": "Waiting for other players...",
             "hostLeftMessage": "Host {host} left the game!",
-            "playerLeftMessage": "Player {player} left the game!"
+            "playerLeftMessage": "Player {player} left the game!",
+            "allPlayersLeftMessage": "All players have left the game!"
         }
     },
     "performanceLevel": {

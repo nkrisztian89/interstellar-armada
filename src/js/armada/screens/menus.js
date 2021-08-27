@@ -18,6 +18,7 @@
  * @param armadaScreens Used for common screen constants.
  * @param strings Used for translation support.
  * @param audio Used for volume control
+ * @param networking Used to check whether we are in a multi game
  * @param battle Used for starting / resuming the battle.
  */
 define([
@@ -30,8 +31,9 @@ define([
     "armada/screens/shared",
     "armada/strings",
     "armada/audio",
+    "armada/networking",
     "armada/screens/battle"
-], function (utils, application, screens, game, analytics, constants, armadaScreens, strings, audio, battle) {
+], function (utils, application, screens, game, analytics, constants, armadaScreens, strings, audio, networking, battle) {
     "use strict";
     var
             // --------------------------------------------------------------------------------------------
@@ -124,7 +126,7 @@ define([
                                         }]
                                 });
                                 // if running a new version for the first time, show release notes of version since the last played one
-                            } else if (application.hasVersionChanged() && !_releaseNotesShown) {
+                            } else if (!application.isFirstRun() && application.hasVersionChanged() && !_releaseNotesShown) {
                                 _releaseNotesShown = true;
                                 message = utils.formatString(strings.get(strings.RELEASE_NOTES.GENERAL), {
                                     version: application.getVersion()
@@ -246,6 +248,9 @@ define([
                             }
                         }, {
                             id: strings.INGAME_MENU.RESTART.name,
+                            isVisible: function () {
+                                return !networking.isInGame();
+                            },
                             action: function () {
                                 armadaScreens.openDialog({
                                     header: strings.get(strings.INGAME_MENU.RESTART_HEADER),
@@ -270,6 +275,9 @@ define([
                             }
                         }, {
                             id: strings.INGAME_MENU.QUIT.name,
+                            isVisible: function () {
+                                return !networking.isInGame();
+                            },
                             action: function () {
                                 armadaScreens.openDialog({
                                     header: strings.get(strings.INGAME_MENU.QUIT_HEADER),
@@ -287,6 +295,37 @@ define([
                                         }, {
                                             caption: strings.get(strings.INGAME_MENU.QUIT_TO_MAIN_MENU),
                                             action: function () {
+                                                game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                                            }
+                                        }
+                                    ]
+                                });
+                            }
+                        }, {
+                            id: strings.INGAME_MENU.QUIT_MULTI.name,
+                            isVisible: function () {
+                                return networking.isInGame();
+                            },
+                            action: function () {
+                                armadaScreens.openDialog({
+                                    header: strings.get(strings.INGAME_MENU.QUIT_MULTI_HEADER),
+                                    message: strings.get(strings.INGAME_MENU.QUIT_MULTI_MESSAGE),
+                                    buttons: [{
+                                            caption: strings.get(strings.SCREEN.CANCEL),
+                                            action: function () {
+                                                game.closeSuperimposedScreen();
+                                            }
+                                        }, {
+                                            caption: strings.get(strings.INGAME_MENU.QUIT_TO_GAMES),
+                                            action: function () {
+                                                networking.leaveGame();
+                                                game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
+                                            }
+                                        }, {
+                                            caption: strings.get(strings.INGAME_MENU.QUIT_TO_MAIN_MENU),
+                                            action: function () {
+                                                networking.onDisconnect(null);
+                                                networking.disconnect();
                                                 game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
                                             }
                                         }

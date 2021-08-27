@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Provides wrapper classes that can be used to manage (loading, assemblin, displaying, hiding, translating...) HTML based screens for
  * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -2365,6 +2365,9 @@ define([
     MenuScreen.prototype.setActive = function (active) {
         HTMLScreen.prototype.setActive.call(this, active);
         this._menuComponent.unselect();
+        if (active) {
+            this._menuComponent.refresh();
+        }
     };
     // -------------------------------------------------------------------------
     // Public functions

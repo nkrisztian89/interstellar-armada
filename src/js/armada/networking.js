@@ -926,6 +926,14 @@ define([
         }
     }
     /**
+     * Whether the local player is currently in a game (as host or guest, in the
+     * lobby or playing)
+     * @returns {Boolean}
+     */
+    function isInGame() {
+        return !!_game;
+    }
+    /**
      * Whether the local player is the host of the game they are in
      * @returns {Boolean}
      */
@@ -1416,6 +1424,7 @@ define([
         setPlayerName: setPlayerName,
         getPlayerSettings: getPlayerSettings,
         updatePlayerSettings: updatePlayerSettings,
+        isInGame: isInGame,
         isHost: isHost,
         getGameName: getGameName,
         getGameSettings: getGameSettings,

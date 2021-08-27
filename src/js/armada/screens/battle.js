@@ -2391,6 +2391,9 @@ define([
                         this.pauseBattle();
                     }.bind(this),
                     hide: function () {
+                        if (game.getScreen() !== _battleScreen) {
+                            return;
+                        }
                         this.resumeBattle();
                         resumeTime();
                         if (!_demoMode) {
@@ -2414,11 +2417,9 @@ define([
     BattleScreen.prototype.hide = function () {
         if (screens.HTMLScreenWithCanvases.prototype.hide.call(this)) {
             if (_multi) {
-                networking.onDisconnect(null);
-                networking.disconnect();
                 _multi = false;
             }
-            this.pauseBattle();
+            this.pauseBattle(true);
             _clearData();
             return true;
         }
@@ -2449,14 +2450,15 @@ define([
     /**
      * Pauses the battle by canceling all control, simulation and the render loop (e.g. for when a menu is 
      * displayed)
+     * @param {Boolean} [quit=false] Whether we are stopping the battle when quitting it altogether
      * @param {Boolean} [dimMusic=true] 
      * @param {Boolean} [dimSFX=true] 
      */
-    BattleScreen.prototype.pauseBattle = function (dimMusic, dimSFX) {
+    BattleScreen.prototype.pauseBattle = function (quit, dimMusic, dimSFX) {
         control.stopListening();
         _battleCursor = document.body.style.cursor;
         document.body.style.cursor = game.getDefaultCursor();
-        if (!_multi) {
+        if (!_multi || quit) {
             if (_simulationLoop !== LOOP_REQUESTANIMFRAME) {
                 clearInterval(_simulationLoop);
             }
@@ -2861,9 +2863,16 @@ define([
     /**
      * Shows the given message to the user in an information box.
      * @param {String} message
+     * @param {Function} [onButtonClick]
      */
-    BattleScreen.prototype.showMessage = function (message) {
+    BattleScreen.prototype.showMessage = function (message, onButtonClick) {
         this._infoBox.updateMessage(message);
+        this._infoBox.onButtonClick(function () {
+            armadaScreens.playButtonClickSound();
+            if (onButtonClick) {
+                onButtonClick();
+            }
+        });
         this._infoBox.show();
     };
     /**
@@ -4216,6 +4225,11 @@ define([
                 /**@type Number*/ hitRatio,
                 /**@type Object*/ perfStats,
                 /**@type MissionDescriptor */ missionDescriptor;
+        if (_multi) {
+            networking.leaveGame();
+            game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
+            return;
+        }
         craft = _mission.getPilotedSpacecraft();
         victory = _mission.getState() === missions.MissionState.COMPLETED;
         hitRatio = craft ? craft.getHitRatio() : 0;
@@ -4356,7 +4370,7 @@ define([
                                     control.switchToSpectatorMode(true, true);
                                 }
                             } else {
-                                this.pauseBattle(false, true);
+                                this.pauseBattle(false, false, true);
                                 armadaScreens.openDialog({
                                     header: strings.get(strings.BATTLE.MESSAGE_DEFEAT_HEADER),
                                     message: strings.get(strings.BATTLE.MESSAGE_DEFEAT_MESSAGE),
@@ -4638,9 +4652,9 @@ define([
                         _multi = false;
                         this.showMessage(utils.formatString(strings.get(strings.MULTI_BATTLE.HOST_LEFT_MESSAGE), {
                             host: networking.getHostName()
-                        }));
-                        networking.onDisconnect(null);
-                        networking.disconnect();
+                        }), function () {
+                            game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
+                        });
                     }.bind(this));
                     networking.onPlayerLeave(function (player) {
                         _battleScreen.queueHUDMessage({
@@ -4650,8 +4664,10 @@ define([
                         });
                         if (networking.getPlayers().length <= 1) {
                             _multi = false;
-                            networking.onDisconnect(null);
-                            networking.disconnect();
+                            this.showMessage(strings.get(strings.MULTI_BATTLE.ALL_PLAYERS_LEFT_MESSAGE), function () {
+                                networking.leaveGame();
+                                game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
+                            });
                         }
                     }.bind(this));
                     networking.markLoaded();

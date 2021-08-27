@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020 Krisztián Nagy
+ * Copyright 2014-2017, 2020-2021 Krisztián Nagy
  * @file A low level module with no dependencies that offers general functionality useful for managing basic application functions such
  * as accessing files from a directory structure using AJAX.
  * Usage:
@@ -279,12 +279,13 @@ define(function () {
         },
         /**
          * Returns the list of set releases which are newer than the previously run version of the application.
+         * @param {Boolean} [getAllIfFirstRun=false]
          * @returns {String[]}
          */
-        getNewReleases: function () {
+        getNewReleases: function (getAllIfFirstRun) {
             var i, result = [];
             for (i = 0; i < _releases.length; i++) {
-                if (_releases[i] > _previouslyRunVersion.substr(0, 5)) {
+                if ((getAllIfFirstRun && !_previouslyRunVersion) || (!!_previouslyRunVersion && (_releases[i] > _previouslyRunVersion.substr(0, 5)))) {
                     result.push(_releases[i]);
                 }
             }

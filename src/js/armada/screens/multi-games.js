@@ -149,11 +149,16 @@ define([
     /**
      * Shows the given message to the user in an information box.
      * @param {String} message
-     * @param {Function} onButtonClick
+     * @param {Function} [onButtonClick]
      */
     MultiGamesScreen.prototype._showMessage = function (message, onButtonClick) {
         this._infoBox.updateMessage(message);
-        this._infoBox.onButtonClick(onButtonClick);
+        this._infoBox.onButtonClick(function () {
+            armadaScreens.playButtonClickSound();
+            if (onButtonClick) {
+                onButtonClick();
+            }
+        });
         this._infoBox.show();
     };
     /**

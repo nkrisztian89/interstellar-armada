@@ -938,6 +938,7 @@ define([
      * @property {String} [caption] Static caption (non-translated)
      * @property {Function} action The function to execute
      * @property {Boolean} [enabled=true] Only enabled options can be selected, and non-enabled options have a the disabled CSS class (defined in MenuComponent~Style)
+     * @property {Function} [isVisible] A function to determine whether the menu option should be visible
      * @property {Element} [element] Set when the element is created
      */
     /**
@@ -1085,6 +1086,7 @@ define([
                 this._rootElement.appendChild(liElement);
             }
             this._rootElement.onmouseout = this.unselect.bind(this);
+            this.refresh();
         }
     };
     /**
@@ -1133,6 +1135,25 @@ define([
     MenuComponent.prototype.activateSelected = function () {
         if (this._selectedIndex >= 0) {
             this._menuOptions[this._selectedIndex].element.onclick();
+        }
+    };
+    /**
+     * Refreshes visibility and enabled / disabled state of the elements for all
+     * the menu options
+     */
+    MenuComponent.prototype.refresh = function () {
+        var i;
+        for (i = 0; i < this._menuOptions.length; i++) {
+            if (this._menuOptions[i].element) {
+                if (this._menuOptions[i].enabled) {
+                    this._menuOptions[i].element.classList.remove(this._style.disabledClassName);
+                } else {
+                    this._menuOptions[i].element.classList.add(this._style.disabledClassName);
+                }
+                if (this._menuOptions[i].isVisible) {
+                    this._menuOptions[i].element.hidden = !this._menuOptions[i].isVisible();
+                }
+            }
         }
     };
     // #########################################################################

@@ -170,11 +170,16 @@ define([
     /**
      * Shows the given message to the user in an information box.
      * @param {String} message
-     * @param {Function} onButtonClick
+     * @param {Function} [onButtonClick]
      */
     MultiLobbyScreen.prototype._showMessage = function (message, onButtonClick) {
         this._infoBox.updateMessage(message);
-        this._infoBox.onButtonClick(onButtonClick);
+        this._infoBox.onButtonClick(function () {
+            armadaScreens.playButtonClickSound();
+            if (onButtonClick) {
+                onButtonClick();
+            }
+        });
         this._infoBox.show();
     };
     /**
@@ -189,13 +194,15 @@ define([
     /**
      * Adds the passed message to the messaging log box
      * @param {String} message
-     * @param {String} sender
+     * @param {String} [sender]
      */
     MultiLobbyScreen.prototype._logMessage = function (message, sender) {
-        var element = document.createElement("p");
-        element.innerHTML = sender ?
-                '<span class="multi-message-sender">' + sender + ': </span>' + message :
-                '<span class="multi-message-system">' + message + '</span>';
+        var element = document.createElement("p"), date = new Date();
+        element.innerHTML =
+                '<span class="multi-message-time">[' + utils.getPaddedStringForNumber(date.getHours(), 2) + ':' + utils.getPaddedStringForNumber(date.getMinutes(), 2) + '] </span>' +
+                (sender ?
+                        '<span class="multi-message-sender">' + sender + ': </span>' + message :
+                        '<span class="multi-message-system">' + message + '</span>');
         this._chatLog.getElement().appendChild(element);
         element.scrollIntoView(false);
         element.style.background = "none";
@@ -274,6 +281,11 @@ define([
             this._startButton.setVisible(networking.isHost());
             this._startButton.disable();
             this._chatLog.setContent("");
+            this._logMessage(networking.isHost() ?
+                    utils.formatString(strings.get(strings.MULTI_LOBBY.GAME_CREATED_MESSAGE), {
+                        name: networking.getGameName()
+                    }) :
+                    strings.get(strings.MULTI_LOBBY.JOINED_MESSAGE));
             this._chatMessage.getElement().value = "";
             this._chatSend.disable();
             this._pingInterval = setInterval(networking.ping, 3000);

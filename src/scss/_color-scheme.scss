@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018, 2020 Krisztián Nagy
+Copyright (C) 2017-2018, 2020-2021 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ $light-highlight-color: relLighten($highlight-color,0.26);
 $text-color: #dddddd;
 $light-text-color: lighten($text-color,100%);
 $dark-text-color: darken($text-color,20%);
+$darker-text-color: darken($text-color,35%);
 $text-glow-color: #888888;
 
 $body-color: #000000;
