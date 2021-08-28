@@ -43,6 +43,36 @@ table.multiGames {
     text-align: center;
 }
 
+label.createGameName {
+    display: inline-block;
+    width: 10em;
+    text-align: left;
+}
+
+input.createGameName {
+    width: 11em;
+    margin: 0;
+}
+
+.smallNumberSelector {
+    margin-top: 0.5em;
+    margin-left: auto;
+    margin-right: auto;
+    width: 21em;
+    & .selectorPropertyContainer {
+        text-align: left;
+        font-size: 100%;
+        width: 10em;
+        margin: 0;
+    }
+    & button {
+        padding-top: 0.2em;
+        padding-bottom: 0.2em;
+        min-width: 11em;
+        font-size: 100%;
+    }
+}
+
 .createGamePopupHeader {
     margin: 0.4em auto;
     padding: 0;

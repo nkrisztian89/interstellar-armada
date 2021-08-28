@@ -132,6 +132,7 @@
             "no": "no"
         },
         "joinButton": "Join",
+        "maxPlayers": "Maximum players:",
         "createGameHeader": "Create game",
         "createGameNameLabel": "Game name:",
         "createGameCreateButton": "Create",
@@ -167,12 +168,14 @@
             "no": "no"
         },
         "kickButton": "Kick",
+        "chatMessagePlaceholder": "Message to all players",
         "chatSend": "Send",
         "locationLabel": "Location:",
         "hostLeftMessage": "The host has left the game.",
         "kickedMessage": "You have been kicked out of the game by the host.",
         "gameCreatedMessage": "Game {name} has been created!",
         "joinedMessage": "You have joined the game!",
+        "readyMessage": "You are ready to play!",
         "playerJoinedMessage": "{name} joined the game!",
         "playerLeftMessage": "{name} has left the game!",
         "playerReadyMessage": "{name} is ready to play!",

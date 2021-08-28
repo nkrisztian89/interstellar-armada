@@ -146,6 +146,7 @@
             "no": "nem"
         },
         "joinButton": "Csatlakozás",
+        "maxPlayers": "Maximum játékosok:",
         "createGameHeader": "Játék létrehozása",
         "createGameNameLabel": "Játék neve:",
         "createGameCreateButton": "Létrehozás",
@@ -181,12 +182,14 @@
             "no": "nem"
         },
         "kickButton": "Kirúgás",
+        "chatMessagePlaceholder": "Üzenet minden játékosnak",
         "chatSend": "Küldés",
         "locationLabel": "Helyszín:",
         "hostLeftMessage": "A házigazda kilépett a játékból.",
         "kickedMessage": "A házigazda kirúgott a játékból.",
         "gameCreatedMessage": "Játék ({name}) létrehozva!",
         "joinedMessage": "Csatlakoztál a játékhoz!",
+        "readyMessage": "Készen állsz a játékra!",
         "playerJoinedMessage": "{name} csatlakozott a játékhoz!",
         "playerLeftMessage": "{name} kilépett a játékból!",
         "playerReadyMessage": "{name} készen áll!",

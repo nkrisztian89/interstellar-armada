@@ -631,24 +631,26 @@ define([
                 }
                 break;
             case MSG_TYPE_LEAVE:
-                playerIndex = _game.players.findIndex(function (p) {
-                    return p.name === data.playerName;
-                });
-                if (playerIndex === 0) {
-                    application.log_DEBUG("Host " + _game.players[0].name + " left the game, the game " + _game.name + " is destroyed", 2);
-                    if (_onHostLeft) {
-                        _onHostLeft();
+                if (_game) {
+                    playerIndex = _game.players.findIndex(function (p) {
+                        return p.name === data.playerName;
+                    });
+                    if (playerIndex === 0) {
+                        application.log_DEBUG("Host " + _game.players[0].name + " left the game, the game " + _game.name + " is destroyed", 2);
+                        if (_onHostLeft) {
+                            _onHostLeft();
+                        }
+                        _destroyGame();
+                    } else if (playerIndex > 0) {
+                        player = _game.players[playerIndex];
+                        _closePeerConnection(player);
+                        _game.players.splice(playerIndex, 1);
+                        if (_onPlayerLeave) {
+                            _onPlayerLeave(player);
+                        }
+                    } else {
+                        application.log_DEBUG("Could not find player '" + data.playerName + "'!", 1);
                     }
-                    _destroyGame();
-                } else if (playerIndex > 0) {
-                    player = _game.players[playerIndex];
-                    _closePeerConnection(player);
-                    _game.players.splice(playerIndex, 1);
-                    if (_onPlayerLeave) {
-                        _onPlayerLeave(player);
-                    }
-                } else {
-                    application.log_DEBUG("Could not find player '" + data.playerName + "'!", 1);
                 }
                 break;
             case MSG_TYPE_ERROR:
@@ -842,7 +844,7 @@ define([
             _socket.binaryType = 'blob';
             _socket.onopen = function () {
                 var data;
-                application.log_DEBUG("Socket connection open!", 2);
+                application.log_DEBUG("Connected to the multiplayer server!", 1);
                 _socketOpen = true;
                 for (i = 0; i < _onOpen.length; i++) {
                     data = _onOpen[i][0];
@@ -857,7 +859,7 @@ define([
                 }
             };
             _socket.onclose = function () {
-                application.log_DEBUG("Socket connection closed!", 2);
+                application.log_DEBUG("Disconnected from the multiplayer server!", 1);
                 if (_onDisconnect) {
                     _onDisconnect(_socketOpen);
                 }
@@ -877,6 +879,7 @@ define([
             if (_game) {
                 _destroyGame();
             }
+            _socketOpen = false;
             _socket.close();
         }
     }

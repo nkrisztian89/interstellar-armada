@@ -40,6 +40,7 @@ define([
             READY_BUTTON_ID = "readyButton",
             START_BUTTON_ID = "startButton",
             PLAYERS_LIST_ID = "playersList",
+            KICK_COLUMN_ID = "kickColumn",
             CHAT_LOG_ID = "chatLog",
             CHAT_MESSAGE_ID = "chatMessage",
             CHAT_SEND_ID = "chatSend",
@@ -120,6 +121,8 @@ define([
         this._startButton = this.registerSimpleComponent(START_BUTTON_ID);
         /** @type SimpleComponent */
         this._playersList = this.registerSimpleComponent(PLAYERS_LIST_ID);
+        /** @type SimpleComponent */
+        this._kickColumn = this.registerSimpleComponent(KICK_COLUMN_ID);
         /** @type SimpleComponent */
         this._chatLog = this.registerSimpleComponent(CHAT_LOG_ID);
         /** @type SimpleComponent */
@@ -287,6 +290,7 @@ define([
                     }) :
                     strings.get(strings.MULTI_LOBBY.JOINED_MESSAGE));
             this._chatMessage.getElement().value = "";
+            this._chatMessage.getElement().placeholder = strings.get(strings.MULTI_LOBBY.CHAT_MESSAGE_PLACEHOLDER);
             this._chatSend.disable();
             this._pingInterval = setInterval(networking.ping, 3000);
             this._updateGameSettings();
@@ -321,6 +325,7 @@ define([
         }.bind(this);
         this._readyButton.getElement().onclick = function () {
             networking.markReady();
+            this._logMessage(strings.get(strings.MULTI_LOBBY.READY_MESSAGE));
             this._readyButton.disable();
             return false;
         }.bind(this);
@@ -376,13 +381,14 @@ define([
                 kickButtonAction = function (index) {
                     networking.kickPlayer(players[index].name);
                 };
+        this._kickColumn.setVisible(networking.isHost());
         this._playersList.setContent(players.map(function (player, index) {
             return `<tr><td>${player.name}</td>` +
                     `<td><div ${player.me ? 'id="' + colorSelectorId + '"' : ''} class="colorIndicator${(player.me && !player.ready) ? ' colorSelector' : ''}" style="background-color: ${_getCSSColor(player.settings.color)}"></div></td>` +
                     `<td>${player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)}</td>` +
                     `<td>${player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")}</td>` +
-                    `<td>${(index === 0) ? "" : strings.get(player.ready ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)}</td>` +
-                    `<td>${networking.isHost() && !player.me ? '<button id="' + getKickButtonId(index) + '" class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : ""}</td>` +
+                    `<td>${strings.get(((index === 0) || player.ready) ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)}</td>` +
+                    (networking.isHost() ? `<td>${!player.me ? '<button id="' + getKickButtonId(index) + '" class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : ""}</td>` : "") +
                     `</tr>`;
         }).join(""));
         document.getElementById(colorSelectorId).onclick = colorSelectorAction.bind(this);
