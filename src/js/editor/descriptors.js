@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2020 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2021 Krisztián Nagy
  * @file Provides the descriptor objects that outline the structure of properties for the various resource / class categories of 
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -2377,6 +2377,20 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            SPACECRAFT_LOADOUT_REFERENCE = {
+                baseType: BaseType.ENUM,
+                getValues: function (parent, topParent) {
+                    if (topParent.loadouts) {
+                        return topParent.loadouts.map(function (loadout) {
+                            return loadout.name;
+                        });
+                    }
+                    return [];
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             LOADOUT = {
                 baseType: BaseType.OBJECT,
                 name: "Loadout",
@@ -2384,6 +2398,12 @@ define([
                     NAME: {
                         name: "name",
                         type: BaseType.STRING
+                    },
+                    BASED_ON: {
+                        name: "basedOn",
+                        type: SPACECRAFT_LOADOUT_REFERENCE,
+                        optional: true,
+                        defaultText: "none"
                     },
                     WEAPONS: {
                         name: "weapons",

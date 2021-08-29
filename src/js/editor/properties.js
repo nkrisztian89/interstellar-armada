@@ -1196,7 +1196,7 @@ define([
         var result = document.createElement("div"),
                 labelText, defaultValue, label, button, type = new descriptors.Type(propertyDescriptor.type), optional, setProperty, limit = false;
         optional = propertyDescriptor.optional || (propertyDescriptor.isRequired && !propertyDescriptor.isRequired(parent, null, _item.name));
-        if ((!parent || (parent === _item.data)) && _basedOn) {
+        if (((!parent || (parent === _item.data)) && _basedOn) || ((parent !== _item.data) && parent[descriptors.BASED_ON_PROPERTY_NAME])) {
             label = _createDefaultControl(INHERITED_PROPERTY_TEXT);
         } else if ((propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.defaultText) {
             labelText = DEFAULT_PROPERTY_TEXT;
@@ -1391,7 +1391,7 @@ define([
             }
             // add unset button for optional values
             if (!required && (optional || (propertyDescriptor.defaultValue !== undefined) || propertyDescriptor.globalDefault || propertyDescriptor.getDerivedDefault ||
-                    ((!parent || (parent === _item.data)) && _basedOn && (propertyDescriptor.name !== descriptors.NAME_PROPERTY_NAME))) && (propertyDescriptor.name !== descriptors.BASED_ON_PROPERTY_NAME)) {
+                    ((!parent || (parent === _item.data)) && _basedOn && (propertyDescriptor.name !== descriptors.NAME_PROPERTY_NAME))) && ((parent !== _item.data) || (propertyDescriptor.name !== descriptors.BASED_ON_PROPERTY_NAME))) {
                 if (!control) {
                     control = result;
                     control.classList.add(CONTROL_CLASS);
@@ -1450,7 +1450,7 @@ define([
             } else if (required && (data[propertyDescriptor.name] === undefined) && (!_basedOn || (data !== _item.data))) {
                 data[propertyDescriptor.name] = _getDefaultValue(propertyDescriptor, null, data, parent, topParent, true, true);
             }
-            control = _createControl(propertyDescriptor, data[propertyDescriptor.name], topName, data, null, parent, topParent, parentPopup, validate.bind(this, row), row);
+            control = _createControl(propertyDescriptor, data[propertyDescriptor.name], topName, data, null, parent, topParent, parentPopup, validate.bind(this, row, propertyDescriptor.name === descriptors.BASED_ON_PROPERTY_NAME), row);
             valueCell.appendChild(control);
             valueCell.control = control;
             row.appendChild(valueCell);
@@ -1469,11 +1469,11 @@ define([
                 rows.push(row);
             }
         };
-        validate = function (sourceRow) {
+        validate = function (sourceRow, basedOn) {
             var i, valid;
             for (i = 0; i < rows.length; i++) {
                 valid = !itemDescriptor[properties[i]].isValid || itemDescriptor[properties[i]].isValid(data, parent, _item.name);
-                if ((rows[i].hidden !== !valid) || (valid && itemDescriptor[properties[i]].updateOnValidate && (sourceRow !== rows[i]))) {
+                if ((rows[i].hidden !== !valid) || (valid && (basedOn || (itemDescriptor[properties[i]].updateOnValidate && (sourceRow !== rows[i]))))) {
                     if (rows[i].valueCell.control.popup) {
                         rows[i].valueCell.control.popup.remove();
                     }

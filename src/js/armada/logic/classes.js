@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
  * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -3605,9 +3605,17 @@ define([
      * ships, by only referencing the loadout to equip all the different pieces of
      * equipment stored in it.
      * @param {Object} [dataJSON]
+     * @param {Array} [loadouts] The array of loadouts of the spacecraft class
      */
-    function Loadout(dataJSON) {
-        var i;
+    function Loadout(dataJSON, loadouts) {
+        var i, baseData, weapons, missiles;
+        if (dataJSON.basedOn && loadouts) {
+            for (i = 0; (i < loadouts.length) && !baseData; i++) {
+                if (loadouts[i].name === dataJSON.basedOn) {
+                    baseData = loadouts[i];
+                }
+            }
+        }
         /**
          * @type String
          */
@@ -3617,9 +3625,10 @@ define([
          * @type WeaponDescriptor[]
          */
         this._weaponDescriptors = [];
-        if (dataJSON.weapons) {
-            for (i = 0; i < dataJSON.weapons.length; i++) {
-                this._weaponDescriptors.push(new WeaponDescriptor(dataJSON.weapons[i]));
+        weapons = dataJSON.weapons || (baseData && baseData.weapons);
+        if (weapons) {
+            for (i = 0; i < weapons.length; i++) {
+                this._weaponDescriptors.push(new WeaponDescriptor(weapons[i]));
             }
         }
         /**
@@ -3627,26 +3636,27 @@ define([
          * @type MissileDescriptor[]
          */
         this._missileDescriptors = [];
-        if (dataJSON.missiles) {
-            for (i = 0; i < dataJSON.missiles.length; i++) {
-                this._missileDescriptors.push(new MissileDescriptor(dataJSON.missiles[i]));
+        missiles = dataJSON.missiles || (baseData && baseData.missiles);
+        if (missiles) {
+            for (i = 0; i < missiles.length; i++) {
+                this._missileDescriptors.push(new MissileDescriptor(missiles[i]));
             }
         }
         /**
          * The descriptor of the propulsion system for this loadout to be equipped.
          * @type PropulsionDescriptor
          */
-        this._propulsionDescriptor = dataJSON.propulsion ? new PropulsionDescriptor(dataJSON.propulsion) : null;
+        this._propulsionDescriptor = (dataJSON.propulsion || (baseData && baseData.propulsion)) ? new PropulsionDescriptor(dataJSON.propulsion || baseData.propulsion) : null;
         /**
          * The descriptor of the jump engine for this loadout to be equipped.
          * @type JumpEngineDescriptor
          */
-        this._jumpEngineDescriptor = dataJSON.jumpEngine ? new JumpEngineDescriptor(dataJSON.jumpEngine) : null;
+        this._jumpEngineDescriptor = (dataJSON.jumpEngine || (baseData && baseData.jumpEngine)) ? new JumpEngineDescriptor(dataJSON.jumpEngine || baseData.jumpEngine) : null;
         /**
          * The descriptor of the shield for this loadout to be equipped.
          * @type ShieldDescriptor
          */
-        this._shieldDescriptor = dataJSON.shield ? new ShieldDescriptor(dataJSON.shield) : null;
+        this._shieldDescriptor = (dataJSON.shield || (baseData && baseData.shield)) ? new ShieldDescriptor(dataJSON.shield || baseData.shield) : null;
     }
     /**
      * Returns the name of this loadout.
@@ -4649,7 +4659,7 @@ define([
         this._loadouts = (otherSpacecraftClass && !dataJSON.loadouts) ? otherSpacecraftClass._loadouts : {};
         if (dataJSON.loadouts) {
             for (i = 0; i < dataJSON.loadouts.length; i++) {
-                this._loadouts[dataJSON.loadouts[i].name] = new Loadout(dataJSON.loadouts[i]);
+                this._loadouts[dataJSON.loadouts[i].name] = new Loadout(dataJSON.loadouts[i], dataJSON.loadouts);
             }
         }
         /**
