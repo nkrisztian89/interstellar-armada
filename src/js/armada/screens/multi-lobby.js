@@ -13,6 +13,7 @@
  * @param game Used for navigation
  * @param components Used for creating the InfoBox for the screen
  * @param screens The lobby screen is a subclass of HTMLScreen
+ * @param config Used for loading multiplayer configuration
  * @param audio Used for music management
  * @param networking Used for communicating with the other game clients and the 
  * game server
@@ -25,12 +26,13 @@ define([
     "modules/game",
     "modules/components",
     "modules/screens",
+    "armada/configuration",
     "armada/audio",
     "armada/networking",
     "armada/strings",
     "armada/screens/shared",
     "armada/logic/environments"
-], function (utils, game, components, screens, audio, networking, strings, armadaScreens, environments) {
+], function (utils, game, components, screens, config, audio, networking, strings, armadaScreens, environments) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -49,7 +51,9 @@ define([
             HOST_SETTINGS_ID = "hostSettings",
             GUEST_SETTINGS_ID = "guestSettings",
             LOCATION_VALUE_ID = "locationValue",
+            LOADOUT_VALUE_ID = "loadoutValue",
             LOCATION_SELECTOR_ID = "locationSelector",
+            LOADOUT_SELECTOR_ID = "loadoutSelector",
             PLAYER_COLORS = [
                 [0.8, 0.2, 0.2],
                 [0.2, 0.2, 0.8],
@@ -64,6 +68,12 @@ define([
     }
     function _getLocationValues() {
         return environments.getEnvironmentNames().map(_mapLocationName);
+    }
+    function _mapLoadoutName(loadout) {
+        return strings.get(strings.MULTI_LOBBY.LOADOUT_PREFIX, loadout, loadout);
+    }
+    function _getLoadoutValues() {
+        return config.getSetting(config.MULTI_SETTINGS.LOADOUTS).map(_mapLoadoutName);
     }
     function _getCSSColor(color) {
         return "rgb(" + Math.round(color[0] * 255) + "," + Math.round(color[1] * 255) + "," + Math.round(color[2] * 255) + ")";
@@ -135,10 +145,14 @@ define([
         this._guestSettings = this.registerSimpleComponent(GUEST_SETTINGS_ID);
         /** @type SimpleComponent */
         this._locationValue = this.registerSimpleComponent(LOCATION_VALUE_ID);
+        /** @type SimpleComponent */
+        this._loadoutValue = this.registerSimpleComponent(LOADOUT_VALUE_ID);
         /** @type Number */
         this._pingInterval = -1;
         /** @type Selector*/
         this._locationSelector = null;
+        /** @type Selector*/
+        this._loadoutSelector = null;
         /**
          * @type InfoBox
          */
@@ -164,6 +178,20 @@ define([
                             },
                             {id: strings.MULTI_LOBBY.LOCATION_LABEL.name},
                             _getLocationValues()),
+                    HOST_SETTINGS_ID);
+        }.bind(this));
+        config.executeWhenReady(function () {
+            this._loadoutSelector = this.registerExternalComponent(
+                    new components.Selector(
+                            LOADOUT_SELECTOR_ID,
+                            armadaScreens.SELECTOR_SOURCE,
+                            {
+                                cssFilename: armadaScreens.SELECTOR_CSS,
+                                selectorClassName: "smallSelector",
+                                propertyContainerClassName: "smallSelectorPropertyContainer"
+                            },
+                            {id: strings.MULTI_LOBBY.LOADOUT_LABEL.name},
+                            _getLoadoutValues()),
                     HOST_SETTINGS_ID);
         }.bind(this));
 
@@ -354,6 +382,11 @@ define([
                 environment: environments.getEnvironmentNames()[this._locationSelector.getSelectedIndex()]
             });
         }.bind(this);
+        this._loadoutSelector.onChange = function () {
+            networking.updateGameSettings({
+                loadout: config.getSetting(config.MULTI_SETTINGS.LOADOUTS)[this._loadoutSelector.getSelectedIndex()]
+            });
+        }.bind(this);
     };
     /**
      * @override
@@ -361,6 +394,7 @@ define([
     MultiLobbyScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._locationSelector.setValueList(_getLocationValues());
+        this._loadoutSelector.setValueList(_getLoadoutValues());
     };
     /**
      * Update the player list display with the current player information
@@ -409,10 +443,13 @@ define([
      * game settings
      */
     MultiLobbyScreen.prototype._updateGameSettings = function () {
-        var settings = networking.getGameSettings(), location;
-        location = environments.getEnvironment(settings.environment).getDisplayName();
+        var settings = networking.getGameSettings(), location, loadout;
+        location = _mapLocationName(settings.environment);
+        loadout = _mapLoadoutName(settings.loadout);
         this._locationValue.setContent(location);
+        this._loadoutValue.setContent(loadout);
         this._locationSelector.selectValue(location);
+        this._loadoutSelector.selectValue(loadout);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

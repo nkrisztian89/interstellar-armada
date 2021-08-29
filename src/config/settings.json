@@ -110,6 +110,9 @@
                 "volume": 0.35
             }
         },
+        "multi": {
+            "loadouts": ["multi-tier1", "multi-tier2", "multi-tier3"]
+        },
         "database": {
             "showLoadingBoxFirstTime": true,
             "showLoadingBoxOnItemChange": true,

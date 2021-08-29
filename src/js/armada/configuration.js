@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -54,6 +54,12 @@ define([
              * @type Object
              */
             GENERAL_SETTINGS,
+            /**
+             * The definition object for multiplayer settings that can be used to verify the data loaded from JSON as well as refer to the 
+             * individual settings later.
+             * @type Object
+             */
+            MULTI_SETTINGS,
             /**
              * The definition object for database settings that can be used to verify the data loaded from JSON as well as refer to the 
              * individual settings later.
@@ -417,6 +423,15 @@ define([
         BUTTON_CLICK_SOUND: {
             name: "buttonClickSound",
             type: classes.SOUND_EFFECT
+        }
+    };
+    MULTI_SETTINGS = {
+        /**
+         * Which spacecrafts loadouts can the host choose for the players
+         */
+        LOADOUTS: {
+            name: "loadouts",
+            type: _customTypes.STRING_ARRAY
         }
     };
     DATABASE_SETTINGS = {
@@ -1880,6 +1895,7 @@ define([
      */
     ConfigurationContext.prototype.loadSettingsFromJSON = function (dataJSON) {
         this._settings = types.getVerifiedObject("general", dataJSON.general, GENERAL_SETTINGS);
+        types.getVerifiedObject("multi", dataJSON.multi, MULTI_SETTINGS, this._settings);
         types.getVerifiedObject("database", dataJSON.database, DATABASE_SETTINGS, this._settings);
         types.getVerifiedObject("battle", dataJSON.battle, BATTLE_SETTINGS, this._settings);
         types.getVerifiedObject("camera", dataJSON.camera, CAMERA_SETTINGS, this._settings);
@@ -1893,6 +1909,7 @@ define([
     return {
         CONFIGURATION: CONFIGURATION,
         GENERAL_SETTINGS: GENERAL_SETTINGS,
+        MULTI_SETTINGS: MULTI_SETTINGS,
         BATTLE_SETTINGS: BATTLE_SETTINGS,
         DATABASE_SETTINGS: DATABASE_SETTINGS,
         CAMERA_SETTINGS: CAMERA_SETTINGS,

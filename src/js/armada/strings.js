@@ -104,6 +104,8 @@ define([
         KICK_BUTTON: {name: "multiLobby.kickButton"},
         CHAT_MESSAGE_PLACEHOLDER: {name: "multiLobby.chatMessagePlaceholder"},
         LOCATION_LABEL: {name: "multiLobby.locationLabel"},
+        LOADOUT_LABEL: {name: "multiLobby.loadoutLabel"},
+        LOADOUT_PREFIX: {name: "multiLobby.loadout.", optional: true},
         HOST_LEFT_MESSAGE: {name: "multiLobby.hostLeftMessage"},
         KICKED_MESSAGE: {name: "multiLobby.kickedMessage"},
         GAME_CREATED_MESSAGE: {name: "multiLobby.gameCreatedMessage"},

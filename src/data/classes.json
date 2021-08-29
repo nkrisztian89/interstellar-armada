@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.7:925-dev (2021.01.02.)",
-        "creationTime": "Sun Jan 03 2021 15:23:08 GMT+0100 (közép-európai téli idő)"
+        "version": "0.4.7:935-dev (2021.08.29.)",
+        "creationTime": "Sun Aug 29 2021 14:50:51 GMT+0200 (közép-európai nyári idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -3822,6 +3822,15 @@
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
                     }
+                }, {
+                    "name": "multi-tier1",
+                    "basedOn": "imperial-tier1"
+                }, {
+                    "name": "multi-tier2",
+                    "basedOn": "imperial-tier2"
+                }, {
+                    "name": "multi-tier3",
+                    "basedOn": "imperial-tier3"
                 }],
             "defaultLoadout": "imperial-tier1",
             "humSound": {

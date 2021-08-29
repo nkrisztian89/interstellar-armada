@@ -21,6 +21,11 @@ h2.gameTitle {
 
 .settingsContainer {
     min-width: 16em;
+    text-align: left;
+}
+
+.hostSettings div.smallSelectorPropertyContainer {
+    width: 7em;
 }
 
 table.multiPlayers {

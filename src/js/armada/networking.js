@@ -63,6 +63,8 @@
  * @typedef {Object} GameSettings
  * @property {String} environment The string ID of the environment to load for
  * the game
+ * @property {String} loadout The string ID of the loadout to use for the player
+ * spacecrafts
  */
 /**
  * @typedef {Object} Game The model of the game state as kept on this client
@@ -127,6 +129,11 @@ define([
             SPACECRAFT_HOST_DATA_LENGTH = spacecraft.MULTI_HOST_DATA_LENGTH,
             GUEST_DATA_LENGTH = spacecraft.MULTI_GUEST_DATA_LENGTH,
             GUEST_REPEAT_INTERVAL = 100,
+            /** @type GameSettings */
+            DEFAULT_GAME_SETTINGS = {
+                environment: "reddim",
+                loadout: "multi-tier1"
+            },
             // ------------------------------------------------------------------------------
             // private variables
             /** @type String */
@@ -997,6 +1004,7 @@ define([
             type: MSG_TYPE_HOST,
             playerName: _playerName,
             gameName: params.gameName,
+            settings: DEFAULT_GAME_SETTINGS,
             maxPlayers: params.maxPlayers
         }, function (data) {
             /** @type Game */
@@ -1355,7 +1363,7 @@ define([
                         multi: !(_isHost && (index === 0)),
                         position: [radius * Math.sin(angle), radius * -Math.cos(angle), 0],
                         rotations: ["z-" + Math.round(Math.degrees(angle))],
-                        loadout: "imperial-tier1"
+                        loadout: _game.settings.loadout
                     };
                 });
         return {

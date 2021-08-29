@@ -185,6 +185,12 @@
         "chatMessagePlaceholder": "Üzenet minden játékosnak",
         "chatSend": "Küldés",
         "locationLabel": "Helyszín:",
+        "loadoutLabel": "Felszerelés:",
+        "loadout": {
+            "multi-tier1": "1. szintű",
+            "multi-tier2": "2. szintű",
+            "multi-tier3": "3. szintű"
+        },
         "hostLeftMessage": "A házigazda kilépett a játékból.",
         "kickedMessage": "A házigazda kirúgott a játékból.",
         "gameCreatedMessage": "Játék ({name}) létrehozva!",

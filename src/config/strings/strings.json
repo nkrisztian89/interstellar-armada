@@ -171,6 +171,12 @@
         "chatMessagePlaceholder": "Message to all players",
         "chatSend": "Send",
         "locationLabel": "Location:",
+        "loadoutLabel": "Loadout:",
+        "loadout": {
+            "multi-tier1": "Tier 1",
+            "multi-tier2": "Tier 2",
+            "multi-tier3": "Tier 3"
+        },
         "hostLeftMessage": "The host has left the game.",
         "kickedMessage": "You have been kicked out of the game by the host.",
         "gameCreatedMessage": "Game {name} has been created!",
