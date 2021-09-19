@@ -11,6 +11,7 @@
 /**
  * @param utils Used for string formatting
  * @param game Used for navigation
+ * @param analytics Used for registering actions for analytics
  * @param components Used for creating the InfoBox for the screen
  * @param screens The lobby screen is a subclass of HTMLScreen
  * @param config Used for loading multiplayer configuration
@@ -24,6 +25,7 @@
 define([
     "utils/utils",
     "modules/game",
+    "modules/analytics",
     "modules/components",
     "modules/screens",
     "armada/configuration",
@@ -32,7 +34,7 @@ define([
     "armada/strings",
     "armada/screens/shared",
     "armada/logic/environments"
-], function (utils, game, components, screens, config, audio, networking, strings, armadaScreens, environments) {
+], function (utils, game, analytics, components, screens, config, audio, networking, strings, armadaScreens, environments) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -299,6 +301,7 @@ define([
                 }.bind(this));
             }.bind(this));
             networking.onGameStart(function () {
+                analytics.sendEvent(networking.isHost() ? "multistarthost" : "multistartguest");
                 game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
                 game.getScreen().startNewBattle({
                     missionData: networking.getMissionData(),

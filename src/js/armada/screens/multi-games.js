@@ -10,6 +10,7 @@
 
 /**
  * @param game Used for navigation
+ * @param analytics Used for registering actions for analytics
  * @param screens The multiplayer games screen is a subclass of HTMLScreen
  * @param components Used for creating the InfoBox for the screen
  * @param audio Used for music management
@@ -20,13 +21,14 @@
  */
 define([
     "modules/game",
+    "modules/analytics",
     "modules/screens",
     "modules/components",
     "armada/audio",
     "armada/networking",
     "armada/strings",
     "armada/screens/shared"
-], function (game, screens, components, audio, networking, strings, armadaScreens) {
+], function (game, analytics, screens, components, audio, networking, strings, armadaScreens) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -330,6 +332,7 @@ define([
                 gameName: this._createGameNameInput.getElement().value,
                 maxPlayers: +this._createGameMaxPlayersSelector.getSelectedValue()
             }, function () {
+                analytics.sendEvent("multicreate");
                 game.closeOrNavigateTo(armadaScreens.MULTI_LOBBY_SCREEN_NAME);
             });
             return false;
@@ -363,6 +366,7 @@ define([
                     networking.joinGame({
                         gameName: games[index].name
                     }, function () {
+                        analytics.sendEvent("multijoin");
                         game.closeOrNavigateTo(armadaScreens.MULTI_LOBBY_SCREEN_NAME);
                     });
                 };
