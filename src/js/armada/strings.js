@@ -152,7 +152,7 @@ define([
         QUIT_MULTI: {name: "ingameMenu.quitMulti"},
         QUIT_MULTI_HEADER: {name: "ingameMenu.quitMultiDialog.header"},
         QUIT_MULTI_MESSAGE: {name: "ingameMenu.quitMultiDialog.message"},
-        QUIT_TO_GAMES: {name: "ingameMenu.quitMultiDialog.quitToGamesButton"}
+        QUIT_TO_SCORE: {name: "ingameMenu.quitMultiDialog.quitToScoreButton"}
     };
     strings.INFO_BOX = {
         HEADER: {name: "infoBox.header"},
@@ -253,6 +253,9 @@ define([
         TEAM_SURVIVAL_BONUS_LABEL_CELL: {name: "debriefing.teamSurvivalBonusLabelCell"},
         SCORE_BREAKDOWN_HEADER: {name: "debriefing.scoreBreakdownHeader"},
         RESTART_BUTTON: {name: "debriefing.restartButton"}
+    };
+    strings.MULTI_SCORE = {
+        TITLE: {name: "multiScore.title"}
     };
     strings.DATABASE = {
         BACK: {name: "database.backButton"},

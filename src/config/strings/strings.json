@@ -215,7 +215,7 @@
         "quitMultiDialog": {
             "header": "Confirmation",
             "message": "Are you sure you want to leave the game?",
-            "quitToGamesButton": "Quit to games",
+            "quitToScoreButton": "Quit to score screen",
             "quitToMainMenuButton": "Quit to main menu"
         }
     },
@@ -496,6 +496,14 @@
         "scoreBreakdownHeader": "Score breakdown",
         "restartButton": "Restart mission",
         "nextButton": "Next mission"
+    },
+    "multiScore": {
+        "backButton": "Back to games",
+        "title": "Match results: {gameName}",
+        "rankColumn": "Rank",
+        "playerNameColumn": "Player",
+        "killsColumn": "Kills",
+        "deathsColumn": "Deaths"
     },
     "database": {
         "backButton": "Back to menu",

@@ -199,6 +199,7 @@
             "jumpPrepareViewName": "jump",
             "jumpOutViewName": "flyby",
             "gameStateDisplayDelay": 2000,
+            "multiMatchQuitDelay": 2000,
             "quitDelayAfterJumpOut": 1500,
             "hud": {
                 "alwaysShowTargetHullBarAtCenter": false,

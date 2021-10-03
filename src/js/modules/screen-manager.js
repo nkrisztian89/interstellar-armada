@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020 Krisztián Nagy
+ * Copyright 2014-2017, 2020-2021 Krisztián Nagy
  * @file Provides functions to add and access HTML screens of the application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -63,7 +63,7 @@ define([
     ScreenManager.prototype.constructor = ScreenManager;
     /**
      * Returns the game screen with the specified name that the game has.
-     * @param {String} screenName
+     * @param {String} [screenName] If not given, returns the current screen
      * @returns {HTMLScreen}
      */
     ScreenManager.prototype.getScreen = function (screenName) {

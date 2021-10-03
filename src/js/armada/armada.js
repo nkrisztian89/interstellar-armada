@@ -30,6 +30,7 @@
  * @param multiLobby Used to create the multiplayer game lobby screen
  * @param battle Used to create the battle screen
  * @param debriefing Used to create the debriefing screen
+ * @param multiScore Used to create the multiplayer scoreboard screen
  * @param database Used to create the database screen
  * @param generalSettings Used to create the general settings screen
  * @param graphicsScreen Used to create the graphics settings screen
@@ -60,6 +61,7 @@ define([
     "armada/screens/multi-lobby",
     "armada/screens/battle",
     "armada/screens/debriefing",
+    "armada/screens/multi-score",
     "armada/screens/database",
     "armada/screens/general-settings",
     "armada/screens/graphics-settings",
@@ -71,7 +73,7 @@ define([
 ], function (
         game, components, analytics, lights,
         constants, graphics, audio, config, environments, missions, control, strings, networking,
-        armadaScreens, menus, missionsScreen, multiGames, multiLobby, battle, debriefing, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen) {
+        armadaScreens, menus, missionsScreen, multiGames, multiLobby, battle, debriefing, multiScore, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen) {
     "use strict";
     // -------------------------------------------------------------------------
     // local variables
@@ -137,6 +139,7 @@ define([
         game.addScreen(multiLobby.getMultiLobbyScreen());
         game.addScreen(battle.getBattleScreen());
         game.addScreen(debriefing.getDebriefingScreen());
+        game.addScreen(multiScore.getMultiScoreScreen());
         game.addScreen(database.getDatabaseScreen());
         game.addScreen(menus.getSettingsMenuScreen());
         game.addScreen(generalSettings.getGeneralSettingsScreen());

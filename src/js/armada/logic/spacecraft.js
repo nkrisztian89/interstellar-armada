@@ -25,6 +25,7 @@
  * @param config Used to access game settings/configuration
  * @param strings Used for translation support
  * @param control Used to access control sound effects
+ * @param networking Used to register kills for multiplayer games
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param constants Used for light priority values
  * @param SpacecraftEvents Used for event handling
@@ -49,6 +50,7 @@ define([
     "armada/configuration",
     "armada/strings",
     "armada/control",
+    "armada/networking",
     "armada/logic/constants",
     "armada/logic/SpacecraftEvents",
     "armada/logic/equipment",
@@ -58,7 +60,7 @@ define([
         utils, vec, mat,
         application, managedGL, egomModel, physics, resources,
         renderableObjects, lights, sceneGraph,
-        graphics, audio, classes, config, strings, control,
+        graphics, audio, classes, config, strings, control, networking,
         constants, SpacecraftEvents, equipment, explosion) {
     "use strict";
     var
@@ -131,15 +133,13 @@ define([
              */
             MINIMUM_DISTANCE_FOR_DAMAGE_INDICATOR_HITCHECK_SQUARED = 0.01,
             /**
-             * Length of the Float32Array section that contains a game update message for a spacecraft by the multiplayer host
              * @type Number
              */
-            MULTI_HOST_DATA_LENGTH = 30,
+            MULTI_HOST_DATA_LENGTH = constants.MULTI_HOST_DATA_LENGTH,
             /**
-             * Length of the Float32Array section that contains a game control message for a spacecraft by a multiplayer guest
              * @type Number
              */
-            MULTI_GUEST_DATA_LENGTH = 8,
+            MULTI_GUEST_DATA_LENGTH = constants.MULTI_GUEST_DATA_LENGTH,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -2681,6 +2681,9 @@ define([
                     // gain score and kill for delivering the final hit
                     hitBy.gainScore(_scoreFactorForKill * scoreValue);
                     hitBy.gainKill();
+                    if (networking.isInGame()) {
+                        networking.registerPlayerKill(hitBy.getID(), this.getID());
+                    }
                 }
             }
             this._hitpoints = 0;

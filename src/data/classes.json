@@ -3754,7 +3754,7 @@
                         "class": "imperialFighterMk1"
                     }
                 }, {
-                    "name": "imperial-tier1",
+                    "name": "multi-tier1",
                     "weapons": [{
                             "class": "fixedPlasmaGun"
                         }, {
@@ -3763,14 +3763,11 @@
                     "propulsion": {
                         "class": "imperialFighterMk1"
                     },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    },
                     "shield": {
                         "class": "imperialFighterMk1"
                     }
                 }, {
-                    "name": "imperial-tier2",
+                    "name": "multi-tier2",
                     "weapons": [{
                             "class": "fixedPlasmaGun"
                         }, {
@@ -3783,14 +3780,11 @@
                     "propulsion": {
                         "class": "imperialFighterMk2"
                     },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    },
                     "shield": {
                         "class": "imperialFighterMk2"
                     }
                 }, {
-                    "name": "imperial-tier3",
+                    "name": "multi-tier3",
                     "weapons": [{
                             "class": "fixedPlasmaGun"
                         }, {
@@ -3802,9 +3796,6 @@
                         }],
                     "propulsion": {
                         "class": "imperialFighterMk3"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
                     },
                     "shield": {
                         "class": "imperialFighterMk3"
@@ -3823,14 +3814,23 @@
                         "class": "imperialFighterMk1"
                     }
                 }, {
-                    "name": "multi-tier1",
-                    "basedOn": "imperial-tier1"
+                    "name": "imperial-tier1",
+                    "basedOn": "multi-tier1",
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    }
                 }, {
-                    "name": "multi-tier2",
-                    "basedOn": "imperial-tier2"
+                    "name": "imperial-tier2",
+                    "basedOn": "multi-tier2",
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    }
                 }, {
-                    "name": "multi-tier3",
-                    "basedOn": "imperial-tier3"
+                    "name": "imperial-tier3",
+                    "basedOn": "multi-tier3",
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    }
                 }],
             "defaultLoadout": "imperial-tier1",
             "humSound": {

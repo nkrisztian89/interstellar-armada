@@ -42,6 +42,11 @@
  * @property {Number[3]} color The RGB color to be used as the player's faction
  * color
  */
+/**
+ * @typedef {Object} PlayerStats
+ * @property {Number} kills
+ * @property {Number} deaths
+ */
 /** 
  * @typedef {Object} Player The model of a player as kept on this client
  * @property {String} name The name of the player (unique within the game)
@@ -58,6 +63,7 @@
  * messages as a stringified JSON
  * @property {RTCDataChannel} updateChannel To send and receive game update
  * messages as Float32Array
+ * @property {PlayerStats} stats 
  */
 /**
  * @typedef {Object} GameSettings
@@ -83,12 +89,12 @@
 
 /**
  * @param application For logging
- * @param spacecraft To get spacecraft update message data lengths
+ * @param constants To get spacecraft update message data lengths
  */
 define([
     "modules/application",
-    "armada/logic/spacecraft"
-], function (application, spacecraft) {
+    "armada/logic/constants"
+], function (application, constants) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -116,6 +122,8 @@ define([
             MSG_TYPE_HEARTBEAT = 16,
             MSG_TYPE_GAME_SETTING = 17,
             MSG_TYPE_PLAYER_SETTING = 18,
+            MSG_TYPE_PLAYER_STATS = 19,
+            MSG_TYPE_MATCH_CONCLUDED = 20,
             // --------------------------------
             // error codes
             ERROR_CODE_GAME_NOT_FOUND = 0,
@@ -126,8 +134,8 @@ define([
             ERROR_CODE_INVALID_GAME_SETTINGS = 5,
             // --------------------------------
             // other constants
-            SPACECRAFT_HOST_DATA_LENGTH = spacecraft.MULTI_HOST_DATA_LENGTH,
-            GUEST_DATA_LENGTH = spacecraft.MULTI_GUEST_DATA_LENGTH,
+            SPACECRAFT_HOST_DATA_LENGTH = constants.MULTI_HOST_DATA_LENGTH,
+            GUEST_DATA_LENGTH = constants.MULTI_GUEST_DATA_LENGTH,
             GUEST_REPEAT_INTERVAL = 100,
             /** @type GameSettings */
             DEFAULT_GAME_SETTINGS = {
@@ -184,6 +192,8 @@ define([
             _onGameStart,
             /** @type Function */
             _onGameUpdate,
+            /** @type Function */
+            _onMatchConcluded,
             /** @type DOMHighResTimeStamp */
             _serverPingTime,
             /** @type DOMHighResTimeStamp */
@@ -353,6 +363,76 @@ define([
         }
     }
     /**
+     * Process a player stat update message
+     * @param {Object} data The parsed JSON data of the message
+     */
+    function _processPlayerStats(data) {
+        var i, player;
+        if (_game) {
+            for (i = 0; i < data.players.length; i++) {
+                player = _findPlayer(data.players[i].name);
+                if (player) {
+                    Object.assign(player.stats, data.players[i].stats);
+                } else {
+                    application.log_DEBUG("Could not find player '" + data.players[i].name + "'!", 1);
+                }
+            }
+        }
+    }
+    /**
+     * Close the existing RTCDataChannels and RTCPeerConnection with the passed
+     * player if they exist and are open
+     * @param {Player} player
+     */
+    function _closePeerConnection(player) {
+        if (_playerIsPeer(player)) {
+            application.log_DEBUG("Closing peer connection with player " + player.name + "!", 2);
+            if (player.messageChannel) {
+                if (player.messageChannel.readyState === "open") {
+                    player.messageChannel.close();
+                }
+                player.messageChannel = null;
+            }
+            if (player.updateChannel) {
+                if (player.updateChannel.readyState === "open") {
+                    player.updateChannel.close();
+                }
+                player.updateChannel = null;
+            }
+            if (player.connection) {
+                player.connection.close();
+                player.connection = null;
+            }
+        }
+    }
+    /**
+     * Delete the current game state model and event callbacks and close peer 
+     * connections to all other players.
+     */
+    function _destroyGame() {
+        if (_game) {
+            _game.players.forEach(function (player) {
+                if (!_playerIsMe(player)) {
+                    _closePeerConnection(player);
+                }
+            });
+        }
+        _game = null;
+        _isHost = false;
+        _onPlayerJoin = null;
+        _onPlayerLeave = null;
+        _onPlayerReady = null;
+        _onPlayerKicked = null;
+        _onPlayerUpdate = null;
+        _onGameSettingsChanged = null;
+        _onKicked = null;
+        _onText = null;
+        _onHostLeft = null;
+        _onGameStart = null;
+        _onGameUpdate = null;
+        _onMatchConcluded = null;
+    }
+    /**
      * Set up the event listeners for an RTCDataChannel that is to be used for
      * sending / receiving general game messages (stringified JSONs) to/from
      * the passed player
@@ -408,6 +488,16 @@ define([
                     if (_onPlayerUpdate) {
                         _onPlayerUpdate(player);
                     }
+                    break;
+                case MSG_TYPE_PLAYER_STATS:
+                    _processPlayerStats(data);
+                    break;
+                case MSG_TYPE_MATCH_CONCLUDED:
+                    _processPlayerStats(data);
+                    if (_onMatchConcluded) {
+                        _onMatchConcluded();
+                    }
+                    _destroyGame();
                     break;
             }
         };
@@ -500,32 +590,6 @@ define([
         }
     }
     /**
-     * Close the existing RTCDataChannels and RTCPeerConnection with the passed
-     * player if they exist and are open
-     * @param {Player} player
-     */
-    function _closePeerConnection(player) {
-        if (_playerIsPeer(player)) {
-            application.log_DEBUG("Closing peer connection with player " + player.name + "!", 2);
-            if (player.messageChannel) {
-                if (player.messageChannel.readyState === "open") {
-                    player.messageChannel.close();
-                }
-                player.messageChannel = null;
-            }
-            if (player.updateChannel) {
-                if (player.updateChannel.readyState === "open") {
-                    player.updateChannel.close();
-                }
-                player.updateChannel = null;
-            }
-            if (player.connection) {
-                player.connection.close();
-                player.connection = null;
-            }
-        }
-    }
-    /**
      * As host, send the passed general game message object to all the guests
      * using the fastest method available (RTC if possible, WebSocket if not)
      * @param {Object} message
@@ -580,32 +644,6 @@ define([
         }
     }
     /**
-     * Delete the current game state model and event callbacks and close peer 
-     * connections to all other players.
-     */
-    function _destroyGame() {
-        if (_game) {
-            _game.players.forEach(function (player) {
-                if (!_playerIsMe(player)) {
-                    _closePeerConnection(player);
-                }
-            });
-        }
-        _game = null;
-        _isHost = false;
-        _onPlayerJoin = null;
-        _onPlayerLeave = null;
-        _onPlayerReady = null;
-        _onPlayerKicked = null;
-        _onPlayerUpdate = null;
-        _onGameSettingsChanged = null;
-        _onKicked = null;
-        _onText = null;
-        _onHostLeft = null;
-        _onGameStart = null;
-        _onGameUpdate = null;
-    }
-    /**
      * Process a general game message (a stringified JSON with a type field with
      * one of the MGS_TYPE_... constant values) Using both builtin logic to
      * maintain the game and player state models and using the appropriate
@@ -627,7 +665,7 @@ define([
                 break;
             case MSG_TYPE_JOIN:
                 if (_game) {
-                    player = {name: data.player.name, peer: false, ready: false, me: false, settings: data.player.settings};
+                    player = {name: data.player.name, peer: false, ready: false, me: false, settings: data.player.settings, stats: data.player.stats};
                     _game.players.push(player);
                     if (_onPlayerJoin) {
                         _onPlayerJoin(data.player.name);
@@ -792,6 +830,23 @@ define([
                     }
                 }
                 break;
+            case MSG_TYPE_PLAYER_STATS:
+                _processPlayerStats(data);
+                // if we have a peer connection, player stat update messages are
+                // sent through it
+                // so if we got one via the WebSocket, that means we are in a game
+                // connected through the server, so we need to switch back to game
+                // update processing after processing this message
+                _socket.binaryType = 'arraybuffer';
+                _socket.onmessage = _processGameUpdate;
+                break;
+            case MSG_TYPE_MATCH_CONCLUDED:
+                _processPlayerStats(data);
+                if (_onMatchConcluded) {
+                    _onMatchConcluded();
+                }
+                _destroyGame();
+                break;
         }
         if (_messageHandlers[data.type]) {
             for (i = 0; i < _messageHandlers[data.type].length; i++) {
@@ -870,6 +925,7 @@ define([
                 if (_onDisconnect) {
                     _onDisconnect(_socketOpen);
                 }
+                _destroyGame();
                 _socketOpen = false;
                 _socket = null;
             };
@@ -1016,7 +1072,7 @@ define([
             _game = {
                 host: gameInfo.host,
                 name: gameInfo.name,
-                players: [{name: _playerName, ping: 0, peer: false, ready: false, me: true, settings: gameInfo.players[0].settings}],
+                players: [{name: _playerName, ping: 0, peer: false, ready: false, me: true, settings: gameInfo.players[0].settings, stats: gameInfo.players[0].stats}],
                 maxPlayers: gameInfo.maxPlayers,
                 settings: gameInfo.settings,
                 started: false
@@ -1161,6 +1217,14 @@ define([
      */
     function onGameUpdate(callback) {
         _onGameUpdate = callback;
+    }
+    /**
+     * Set the callback to be executed when the match concluded message is
+     * received from the host to a guest
+     * @param {Function} callback
+     */
+    function onMatchConcluded(callback) {
+        _onMatchConcluded = callback;
     }
     /**
      * @typedef {Object} JoinGameParams
@@ -1335,6 +1399,55 @@ define([
         });
     }
     /**
+     * Update the player stats when one player kills another
+     * @param {String} killerName Name of the player who scored the kill
+     * @param {String} victimName Name of the player who has been killed
+     */
+    function registerPlayerKill(killerName, victimName) {
+        var killer, victim, players = [];
+        if (_isHost) {
+            killer = _findPlayer(killerName);
+            if (killer) {
+                killer.stats.kills++;
+                players.push({
+                    name: killerName,
+                    stats: killer.stats
+                });
+            }
+            victim = _findPlayer(victimName);
+            if (victim) {
+                victim.stats.deaths++;
+                players.push({
+                    name: victimName,
+                    stats: victim.stats
+                });
+            }
+            if (players.length > 0) {
+                _hostSend({
+                    type: MSG_TYPE_PLAYER_STATS,
+                    players: players
+                });
+            }
+        }
+    }
+    /**
+     * Concludes the current multiplayer game, sending the results to all players
+     */
+    function concludeMatch() {
+        if (_isHost) {
+            _hostSend({
+                type: MSG_TYPE_MATCH_CONCLUDED,
+                players: _game.players.map(function (player) {
+                    return {
+                        name: player.name,
+                        stats: player.stats
+                    };
+                })
+            }, true);
+            _destroyGame();
+        }
+    }
+    /**
      * Returns the MissionDescriptor JSON data to be used to load the battle for
      * the currently set up multiplayer game.
      * @returns {Object}
@@ -1466,9 +1579,12 @@ define([
         allPlayersReady: allPlayersReady,
         startGame: startGame,
         markLoaded: markLoaded,
+        registerPlayerKill: registerPlayerKill,
+        concludeMatch: concludeMatch,
         getMissionData: getMissionData,
         sendHostUpdate: sendHostUpdate,
         sendGuestUpdate: sendGuestUpdate,
-        onGameUpdate: onGameUpdate
+        onGameUpdate: onGameUpdate,
+        onMatchConcluded: onMatchConcluded
     };
 });

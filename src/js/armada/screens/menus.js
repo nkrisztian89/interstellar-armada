@@ -316,10 +316,10 @@ define([
                                                 game.closeSuperimposedScreen();
                                             }
                                         }, {
-                                            caption: strings.get(strings.INGAME_MENU.QUIT_TO_GAMES),
+                                            caption: strings.get(strings.INGAME_MENU.QUIT_TO_SCORE),
                                             action: function () {
+                                                game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
                                                 networking.leaveGame();
-                                                game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
                                             }
                                         }, {
                                             caption: strings.get(strings.INGAME_MENU.QUIT_TO_MAIN_MENU),

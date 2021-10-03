@@ -480,6 +480,8 @@ define([
         for (i = 0; i < this._externalComponentBindings.length; i++) {
             if (this._externalComponentBindings[i].parentNodeID) {
                 parentNode = this.getElement(this._externalComponentBindings[i].parentNodeID);
+            } else {
+                parentNode = null;
             }
             // otherwise just leave it undefined, nothing to pass to the method below
             this.addExternalComponent(this._externalComponentBindings[i].component, parentNode);

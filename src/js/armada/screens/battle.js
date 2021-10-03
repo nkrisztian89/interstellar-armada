@@ -295,7 +295,12 @@ define([
              */
             _timeSinceGameStateChanged,
             /**
-             * The elapsed simulation time since the the player's spacecraft jump out of the battle scene. In milliseconds
+             * The elapsed simulation time since the multiplayer match has concluded. In milliseconds
+             * @type Number
+             */
+            _timeSinceMultiMatchEnded,
+            /**
+             * The elapsed simulation time since the the player's spacecraft jumped out of the battle scene. In milliseconds
              * @type Number
              */
             _timeSincePlayerLeft,
@@ -4226,8 +4231,8 @@ define([
                 /**@type Object*/ perfStats,
                 /**@type MissionDescriptor */ missionDescriptor;
         if (_multi) {
+            game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
             networking.leaveGame();
-            game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
             return;
         }
         craft = _mission.getPilotedSpacecraft();
@@ -4404,6 +4409,15 @@ define([
                                 config.getSetting(config.BATTLE_SETTINGS.END_THEME_CROSSFADE_DURATION));
                     }
                 }
+                if (_multi && networking.isHost()) {
+                    if (_mission && _mission.noHostilesPresent()) {
+                        _timeSinceMultiMatchEnded += dt;
+                        if (_timeSinceMultiMatchEnded >= config.getSetting(config.BATTLE_SETTINGS.MULTI_MATCH_QUIT_DELAY)) {
+                            game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
+                            networking.concludeMatch();
+                        }
+                    }
+                }
             } else {
                 if (_mission && (_displayedMissionState !== _mission.getState())) {
                     _displayedMissionState = _mission.getState();
@@ -4445,6 +4459,7 @@ define([
         }
         _displayedMissionState = _mission.getState();
         _timeSinceGameStateChanged = config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY);
+        _timeSinceMultiMatchEnded = 0;
         _timeSincePlayerLeft = 0;
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
         if (graphics.shouldUseShadowMapping()) {
@@ -4646,14 +4661,21 @@ define([
                     }.bind(this));
                     networking.onDisconnect(function () {
                         _multi = false;
-                        this.showMessage(strings.get(strings.MULTI_GAMES.DISCONNECT_MESSAGE));
+                        if (game.getScreen() !== _battleScreen) {
+                            return;
+                        }
+                        game.getScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME).updateData();
+                        this.showMessage(strings.get(strings.MULTI_GAMES.DISCONNECT_MESSAGE), function () {
+                            game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
+                        });
                     }.bind(this));
                     networking.onHostLeft(function () {
                         _multi = false;
+                        game.getScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME).updateData();
                         this.showMessage(utils.formatString(strings.get(strings.MULTI_BATTLE.HOST_LEFT_MESSAGE), {
                             host: networking.getHostName()
                         }), function () {
-                            game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
+                            game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
                         });
                     }.bind(this));
                     networking.onPlayerLeave(function (player) {
@@ -4665,11 +4687,14 @@ define([
                         if (networking.getPlayers().length <= 1) {
                             _multi = false;
                             this.showMessage(strings.get(strings.MULTI_BATTLE.ALL_PLAYERS_LEFT_MESSAGE), function () {
+                                game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
                                 networking.leaveGame();
-                                game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
                             });
                         }
                     }.bind(this));
+                    networking.onMatchConcluded(function () {
+                        game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
+                    });
                     networking.markLoaded();
                 }
                 showHUD();

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Provides some constants to be used in other game logic modules
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -62,7 +62,17 @@ define(function () {
              * Name of the pool for reusable Explosion instances
              * @type String
              */
-            EXPLOSION_POOL_NAME = "Explosion";
+            EXPLOSION_POOL_NAME = "Explosion",
+            /**
+             * Length of the Float32Array section that contains a game update message for a spacecraft by the multiplayer host
+             * @type Number
+             */
+            MULTI_HOST_DATA_LENGTH = 30,
+            /**
+             * Length of the Float32Array section that contains a game control message for a spacecraft by a multiplayer guest
+             * @type Number
+             */
+            MULTI_GUEST_DATA_LENGTH = 8;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -75,6 +85,8 @@ define(function () {
         PROJECTILE_POOL_NAME: PROJECTILE_POOL_NAME,
         MISSILE_POOL_NAME: MISSILE_POOL_NAME,
         TRAIL_SEGMENT_POOL_NAME: TRAIL_SEGMENT_POOL_NAME,
-        EXPLOSION_POOL_NAME: EXPLOSION_POOL_NAME
+        EXPLOSION_POOL_NAME: EXPLOSION_POOL_NAME,
+        MULTI_HOST_DATA_LENGTH: MULTI_HOST_DATA_LENGTH,
+        MULTI_GUEST_DATA_LENGTH: MULTI_GUEST_DATA_LENGTH
     };
 });

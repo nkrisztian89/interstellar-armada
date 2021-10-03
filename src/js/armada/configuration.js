@@ -1012,6 +1012,13 @@ define([
             type: "number"
         },
         /**
+         * The amount of time to wait after the multiplayer match concludes before quitting to the score screen.
+         */
+        MULTI_MATCH_QUIT_DELAY: {
+            name: "multiMatchQuitDelay",
+            type: "number"
+        },
+        /**
          * The amount of time to wait between the player jumping out and showing the mission debriefing screen, in milliseconds.
          */
         QUIT_DELAY_AFTER_JUMP_OUT: {

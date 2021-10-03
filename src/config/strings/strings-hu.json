@@ -229,7 +229,7 @@
         "quitMultiDialog": {
             "header": "Megerősítés",
             "message": "Biztos, hogy ki akarsz lépni ebből a játékból?",
-            "quitToGamesButton": "Kilépés a játékokhoz",
+            "quitToScoreButton": "Kilépés az eredményekhez",
             "quitToMainMenuButton": "Kilépés a főmenübe"
         }
     },
@@ -527,6 +527,14 @@
         "scoreBreakdownHeader": "Pontok lebontása",
         "restartButton": "Küldetés újraindítása",
         "nextButton": "Következő küldetés"
+    },
+    "multiScore": {
+        "backButton": "Vissza a játékokhoz",
+        "title": "Végeredmény: {gameName}",
+        "rankColumn": "Helyezés",
+        "playerNameColumn": "Játékos",
+        "killsColumn": "Kilőtt",
+        "deathsColumn": "Megsemmisült"
     },
     "database": {
         "backButton": "Vissza a menübe",

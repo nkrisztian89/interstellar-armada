@@ -1,0 +1,21 @@
+@import "../_common.scss";
+
+table.multiScores {
+    max-width: 90%;
+    text-align: left;
+    margin-top: 1em;
+    margin-left: auto;
+    margin-right: auto;
+    & tr.me {
+        font-weight: bold;
+        &>td {
+           background-color: #333; 
+        }
+    }
+    & td.playerRank {
+        text-align: center;
+    }
+    & td.number {
+        text-align: right;
+    }
+}
