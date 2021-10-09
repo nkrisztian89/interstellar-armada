@@ -175,7 +175,8 @@
         "loadout": {
             "multi-tier1": "Tier 1",
             "multi-tier2": "Tier 2",
-            "multi-tier3": "Tier 3"
+            "multi-tier3": "Tier 3",
+            "multi-hardcore": "Hardcore"
         },
         "hostLeftMessage": "The host has left the game.",
         "kickedMessage": "You have been kicked out of the game by the host.",

@@ -3801,6 +3801,20 @@
                         "class": "imperialFighterMk3"
                     }
                 }, {
+                    "name": "multi-hardcore",
+                    "weapons": [{
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }, {
+                            "class": "fixedPlasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialFighterMk3"
+                    }
+                }, {
                     "name": "rebel",
                     "weapons": [{
                             "class": "pirateGun"

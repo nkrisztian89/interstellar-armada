@@ -111,7 +111,7 @@
             }
         },
         "multi": {
-            "loadouts": ["multi-tier1", "multi-tier2", "multi-tier3"]
+            "loadouts": ["multi-tier1", "multi-tier2", "multi-tier3", "multi-hardcore"]
         },
         "database": {
             "showLoadingBoxFirstTime": true,

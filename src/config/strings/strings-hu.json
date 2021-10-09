@@ -189,7 +189,8 @@
         "loadout": {
             "multi-tier1": "1. szintű",
             "multi-tier2": "2. szintű",
-            "multi-tier3": "3. szintű"
+            "multi-tier3": "3. szintű",
+            "multi-hardcore": "Hardcore"
         },
         "hostLeftMessage": "A házigazda kilépett a játékból.",
         "kickedMessage": "A házigazda kirúgott a játékból.",
