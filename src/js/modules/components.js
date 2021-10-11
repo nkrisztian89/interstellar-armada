@@ -36,6 +36,8 @@ define([
      * @property {String} [caption] A static caption to be used on the label.
      * @property {String} [id] An ID that can be used as a translation key for the
      * text on the label for auto-translation.
+     * @property {Function} [getCaption] Alternatively to static captions, this
+     * function can be used to determine captions on each component update
      */
     var
             // ------------------------------------------------------------------------------
@@ -83,6 +85,7 @@ define([
             BUTTON_CLICK_EVENT_NAME = "buttonclick",
             OPTION_SELECT_EVENT_NAME = "optionselect",
             OPTION_CLICK_EVENT_NAME = "optionclick",
+            CHANGE_EVENT_NAME = "change",
             ELEMENT_HIGHLIGHT_EVENT_NAME = "elementhighlight",
             ELEMENT_SELECT_EVENT_NAME = "elementselect",
             TRANSLATION_KEY_ATTRIBUTE = "data-translation-key",
@@ -172,7 +175,9 @@ define([
      * @returns {String}
      */
     function _getLabelText(labelDescriptor) {
-        return labelDescriptor.caption || strings.get({name: labelDescriptor.id});
+        return labelDescriptor.getCaption ?
+                labelDescriptor.getCaption() :
+                labelDescriptor.caption || strings.get({name: labelDescriptor.id});
     }
     // ------------------------------------------------------------------------------
     // public functions
@@ -602,18 +607,22 @@ define([
         }
     };
     /**
-     * If possible, updates the inner HTML text of the child elements to the translation in the current language.
-     * (it is possible, if the child element has a data-translation-key attribute with the value of the translation key)
+     * This is called when _updateComponents() is called on the screen where this
+     * component is added (i.e. when the translation language has changed)
      */
     ExternalComponent.prototype.updateComponents = function () {
         var i, elementsToTranslate;
         if (this._rootElement) {
-            elementsToTranslate = this._rootElement.querySelectorAll("[" + TRANSLATION_KEY_ATTRIBUTE + "]");
-            for (i = 0; i < elementsToTranslate.length; i++) {
-                elementsToTranslate[i].innerHTML = strings.get({
-                    name: elementsToTranslate[i].getAttribute(TRANSLATION_KEY_ATTRIBUTE),
-                    defaultValue: elementsToTranslate[i].innerHTML
-                });
+            // if the component was added inside an element on the screen, its elements are automatically
+            // translated when the screen is translated
+            if (this._rootElement.parentNode === document.body) {
+                elementsToTranslate = this._rootElement.querySelectorAll("[" + TRANSLATION_KEY_ATTRIBUTE + "]");
+                for (i = 0; i < elementsToTranslate.length; i++) {
+                    elementsToTranslate[i].innerHTML = strings.get({
+                        name: elementsToTranslate[i].getAttribute(TRANSLATION_KEY_ATTRIBUTE),
+                        defaultValue: elementsToTranslate[i].innerHTML
+                    });
+                }
             }
         } else {
             application.log_DEBUG("WARNING! Attempting to update external component " + this._name + " before appending it to the page!");
@@ -934,8 +943,6 @@ define([
      */
     /**
      * @typedef {Components~LabelDescriptor} MenuComponent~MenuOption
-     * @property {String} [id] The key for translation
-     * @property {String} [caption] Static caption (non-translated)
      * @property {Function} action The function to execute
      * @property {Boolean} [enabled=true] Only enabled options can be selected, and non-enabled options have a the disabled CSS class (defined in MenuComponent~Style)
      * @property {Function} [isVisible] A function to determine whether the menu option should be visible
@@ -1059,6 +1066,7 @@ define([
         }.bind(this);
     };
     /**
+     * @override
      * Sets up the menu by appending the buttons to the container.
      */
     MenuComponent.prototype._initializeComponents = function () {
@@ -1070,7 +1078,6 @@ define([
                 buttonElement = document.createElement("button");
                 if (this._menuOptions[i].id) {
                     buttonElement.id = this._getElementID(this._menuOptions[i].id);
-                    buttonElement.setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._menuOptions[i].id);
                 }
                 buttonElement.className = (this._style.menuClassName || "") + " " + (this._style.buttonClassName || "") + (this._menuOptions[i].enabled ? "" : this._style.disabledClassName);
                 buttonElement.innerHTML = _getLabelText(this._menuOptions[i]);
@@ -1087,6 +1094,16 @@ define([
             }
             this._rootElement.onmouseout = this.unselect.bind(this);
             this.refresh();
+        }
+    };
+    /**
+     * @override
+     */
+    MenuComponent.prototype.updateComponents = function () {
+        var i;
+        ExternalComponent.prototype.updateComponents.call(this);
+        for (i = 0; i < this._menuOptions.length; i++) {
+            this._menuOptions[i].element.innerHTML = _getLabelText(this._menuOptions[i]);
         }
     };
     /**
@@ -1155,6 +1172,120 @@ define([
                 }
             }
         }
+    };
+    // #########################################################################
+    /**
+     * @typedef {Components~LabelDescriptor} CheckGroup~Option
+     * @property {String} value The value to include in the array of currently
+     * selected values if this checkbox is checked
+     * @property {Element} [element] Set when the element is created
+     * @property {Element} [label] Set when the element is created
+     */
+    /**
+     * @class A component that consists of a container and a list of checkboxes
+     * inside
+     * @extends ExternalComponent
+     * @param {String} name See ExternalComponent.
+     * @param {String} htmlFilename See ExternalComponent
+     * @param {MenuComponent~Style} [style] See ExternalComponent
+     * @param {CheckGroup~Option[]} options An array of the available options that can be selected
+     * @param {Object.<String, Function>} [eventHandlers] The functions to execute when various events happen to this component.
+     * Currently supported events: change
+     */
+    function CheckGroup(name, htmlFilename, style, options, eventHandlers) {
+        ExternalComponent.call(this, name, htmlFilename, style);
+        /**
+         * An array of the available checkbox options
+         * @type CheckGroup~Option[]
+         */
+        this._options = options;
+        /**
+         * A function that runs whenever an option is checked / unchecked
+         * @type Function
+         */
+        this._onChange = eventHandlers ? eventHandlers[CHANGE_EVENT_NAME] : null;
+    }
+    CheckGroup.prototype = new ExternalComponent();
+    CheckGroup.prototype.constructor = CheckGroup;
+    /**
+     * @returns {Function}
+     */
+    CheckGroup.prototype._getItemChangeHandler = function () {
+        return function () {
+            if (this._onChange) {
+                this._onChange();
+            }
+        }.bind(this);
+    };
+    /**
+     * @param {Number} index 
+     * @returns {Function}
+     */
+    CheckGroup.prototype._getItemClickHandler = function (index) {
+        return function (event) {
+            this._options[index].element.click();
+            event.stopPropagation();
+            return false;
+        }.bind(this);
+    };
+    /**
+     * @override
+     * Sets up the checkbox group by appending the checkboxes to the container.
+     */
+    CheckGroup.prototype._initializeComponents = function () {
+        var i, divElement, inputElement, labelElement,
+                clickHandler = function (event) {
+                    event.stopPropagation();
+                    return true;
+                },
+                changeHandler = this._getItemChangeHandler();
+        ExternalComponent.prototype._initializeComponents.call(this);
+        if (this._rootElement) {
+            for (i = 0; i < this._options.length; i++) {
+                inputElement = document.createElement("input");
+                inputElement.type = "checkbox";
+                if (this._options[i].id) {
+                    inputElement.id = this._getElementID(this._options[i].id);
+                }
+                inputElement.onchange = changeHandler;
+                inputElement.onclick = clickHandler;
+                this._options[i].element = inputElement;
+                labelElement = document.createElement("label");
+                labelElement.innerHTML = _getLabelText(this._options[i]);
+                if (this._options[i].id) {
+                    labelElement.for = this._getElementID(this._options[i].id);
+                }
+                this._options[i].label = labelElement;
+                divElement = document.createElement("div");
+                divElement.appendChild(inputElement);
+                divElement.appendChild(labelElement);
+                divElement.onclick = this._getItemClickHandler(i);
+                this._rootElement.appendChild(divElement);
+            }
+        }
+    };
+    /**
+     * @override
+     */
+    CheckGroup.prototype.updateComponents = function () {
+        var i;
+        ExternalComponent.prototype.updateComponents.call(this);
+        for (i = 0; i < this._options.length; i++) {
+            this._options[i].label.innerHTML = _getLabelText(this._options[i]);
+        }
+    };
+    /**
+     * List of values belonging to the selected checkboxes
+     * @returns {String[]}
+     */
+    CheckGroup.prototype.getValue = function () {
+        var i, result = [];
+        for (i = 0; i < this._options.length; i++) {
+            if (this._options[i].element.checked) {
+                result.push(this._options[i].value);
+            }
+        }
+        return result;
     };
     // #########################################################################
     /**
@@ -1590,7 +1721,6 @@ define([
             }
             if (this._propertyLabelDescriptor.id) {
                 this._propertyLabel.setElementID(this._getElementID(this._propertyLabelDescriptor.id));
-                this._propertyLabel.getElement().setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._propertyLabelDescriptor.id);
             }
             this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
             if (this._style.propertyContainerClassName) {
@@ -1618,6 +1748,13 @@ define([
                 return false;
             };
         }
+    };
+    /**
+     * @override
+     */
+    Selector.prototype.updateComponents = function () {
+        ExternalComponent.prototype.updateComponents.call(this);
+        this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
     };
     /**
      * Selects the value given as parameter from the list of available values.
@@ -1801,7 +1938,6 @@ define([
         if (this._rootElement) {
             if (this._propertyLabelDescriptor.id) {
                 this._propertyLabel.setElementID(this._getElementID(this._propertyLabelDescriptor.id));
-                this._propertyLabel.getElement().setAttribute(TRANSLATION_KEY_ATTRIBUTE, this._propertyLabelDescriptor.id);
             }
             this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
 
@@ -1818,6 +1954,13 @@ define([
             this._slider.getElement().onchange = changeHandler;
             this._slider.getElement().oninput = changeHandler;
         }
+    };
+    /**
+     * @override
+     */
+    Slider.prototype.updateComponents = function () {
+        ExternalComponent.prototype.updateComponents.call(this);
+        this._propertyLabel.setContent(_getLabelText(this._propertyLabelDescriptor));
     };
     /**
      * Updated the attributes of the slider HTML element based on the properties of this object
@@ -1922,6 +2065,7 @@ define([
         LoadingBox: LoadingBox,
         InfoBox: InfoBox,
         MenuComponent: MenuComponent,
+        CheckGroup: CheckGroup,
         ListComponent: ListComponent,
         Selector: Selector,
         Slider: Slider

@@ -135,6 +135,7 @@
         "maxPlayers": "Maximum players:",
         "createGameHeader": "Create game",
         "createGameNameLabel": "Game name:",
+        "createGameSpacecraftsLabel": "Allowed spacecrafts:",
         "createGameCreateButton": "Create",
         "createGameCancelButton": "Cancel",
         "playerOkButton": "Ok",
@@ -156,6 +157,7 @@
         "title": "Multiplayer",
         "gameTitle": "Game lobby - {name}",
         "playerNameColumn": "Name",
+        "spacecraftColumn": "Spacecraft",
         "connectionColumn": "Connection",
         "connection": {
             "server": "server",

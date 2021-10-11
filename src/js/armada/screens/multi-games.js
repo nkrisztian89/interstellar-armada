@@ -13,22 +13,26 @@
  * @param analytics Used for registering actions for analytics
  * @param screens The multiplayer games screen is a subclass of HTMLScreen
  * @param components Used for creating the InfoBox for the screen
+ * @param config Used to get multiplayer settings configuration
  * @param audio Used for music management
  * @param networking Used for communicating with the game server to query the
  * list of multiplayer games and host or join them
  * @param strings Used for translation
  * @param armadaScreens Used for navigation
+ * @param classes Used to get spacecraft class names
  */
 define([
     "modules/game",
     "modules/analytics",
     "modules/screens",
     "modules/components",
+    "armada/configuration",
     "armada/audio",
     "armada/networking",
     "armada/strings",
-    "armada/screens/shared"
-], function (game, analytics, screens, components, audio, networking, strings, armadaScreens) {
+    "armada/screens/shared",
+    "armada/logic/classes"
+], function (game, analytics, screens, components, config, audio, networking, strings, armadaScreens, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -49,20 +53,38 @@ define([
             PLAYER_OK_BUTTON_ID = "playerOkButton",
             PLAYER_CANCEL_BUTTON_ID = "playerCancelButton",
             CREATE_GAME_POPUP_BACKGROUND_ID = "createGamePopupBackground",
-            CREATE_GAME_POPUP_CONTENT_ID = "createGamePopupContent",
+            CREATE_GAME_MAX_PLAYERS_CONTAINER_ID = "createGameMaxPlayersContainer",
+            CREATE_GAME_SPACECRAFTS_CONTAINER_ID = "createGameSpacecraftsContainer",
             CREATE_GAME_CREATE_BUTTON_ID = "createGameCreateButton",
             CREATE_GAME_CANCEL_BUTTON_ID = "createGameCancelButton",
             CREATE_GAME_NAME_ID = "createGameName",
             CREATE_GAME_MAX_PLAYERS_ID = "createGameMaxPlayers",
+            CREATE_GAME_SPACECRAFTS_ID = "createGameSpacecrafts",
             SMALL_NUMBER_SELECTOR_CLASS = "smallNumberSelector",
-            CREATE_GAME_MAX_PLAYERS_OPTIONS = ["2", "3", "4"],
             GAMES_REFRESH_INTERVAL = 5000,
             MIN_PLAYER_NAME_LENGTH = 2,
             MAX_PLAYER_NAME_LENGTH = 18,
             MIN_GAME_NAME_LENGTH = 3,
             MAX_GAME_NAME_LENGTH = 18;
     // ------------------------------------------------------------------------------
-    // private variables
+    // private functions
+    function _mapMaxPlayerValue(option) {
+        return option.toString();
+    }
+    function _mapSpacecraftOption(option) {
+        return {
+            getCaption: function () {
+                return classes.getSpacecraftClass(option).getDisplayName();
+            },
+            value: option
+        };
+    }
+    function _getMaxPlayerValues() {
+        return config.getSetting(config.MULTI_SETTINGS.MAX_PLAYER_OPTIONS).map(_mapMaxPlayerValue);
+    }
+    function _getSpacecraftOptions() {
+        return config.getSetting(config.MULTI_SETTINGS.SPACECRAFTS).map(_mapSpacecraftOption);
+    }
     // #########################################################################
     /**
      * @class Provides the behaviour for the Multiplayer Games screen
@@ -122,20 +144,10 @@ define([
         this._playerCancelButton = this.registerSimpleComponent(PLAYER_CANCEL_BUTTON_ID);
         /** @type SimpleComponent */
         this._playerNameInput = this.registerSimpleComponent(PLAYER_NAME_INPUT_ID);
-        /**
-         * @type Selector
-         */
-        this._createGameMaxPlayersSelector = this.registerExternalComponent(
-                new components.Selector(
-                        CREATE_GAME_MAX_PLAYERS_ID,
-                        armadaScreens.SELECTOR_SOURCE,
-                        {
-                            cssFilename: armadaScreens.SELECTOR_CSS,
-                            selectorClassName: SMALL_NUMBER_SELECTOR_CLASS
-                        },
-                        {id: strings.MULTI_GAMES.MAX_PLAYERS.name},
-                        CREATE_GAME_MAX_PLAYERS_OPTIONS),
-                CREATE_GAME_POPUP_CONTENT_ID);
+        /** @type Selector */
+        this._createGameMaxPlayersSelector = null;
+        /** @type CheckGroup */
+        this._createGameSpacecraftsCheckGroup = null;
         /**
          * @type InfoBox
          */
@@ -151,6 +163,31 @@ define([
                 }));
         /** @type Number */
         this._interval = -1;
+        config.executeWhenReady(function () {
+            this._createGameMaxPlayersSelector = this.registerExternalComponent(
+                    new components.Selector(
+                            CREATE_GAME_MAX_PLAYERS_ID,
+                            armadaScreens.SELECTOR_SOURCE,
+                            {
+                                cssFilename: armadaScreens.SELECTOR_CSS,
+                                selectorClassName: SMALL_NUMBER_SELECTOR_CLASS
+                            },
+                            {id: strings.MULTI_GAMES.MAX_PLAYERS.name},
+                            _getMaxPlayerValues()),
+                    CREATE_GAME_MAX_PLAYERS_CONTAINER_ID);
+            this._createGameSpacecraftsCheckGroup = this.registerExternalComponent(
+                    new components.CheckGroup(
+                            CREATE_GAME_SPACECRAFTS_ID,
+                            armadaScreens.CHECK_GROUP_SOURCE,
+                            {
+                                cssFilename: armadaScreens.CHECK_GROUP_CSS
+                            },
+                            _getSpacecraftOptions(),
+                            {
+                                change: this._updateCreateGameCreateButton.bind(this)
+                            }),
+                    CREATE_GAME_SPACECRAFTS_CONTAINER_ID);
+        }.bind(this));
     }
     MultiGamesScreen.prototype = new screens.HTMLScreen();
     MultiGamesScreen.prototype.constructor = MultiGamesScreen;
@@ -206,7 +243,8 @@ define([
      * to the currently entered game name
      */
     MultiGamesScreen.prototype._updateCreateGameCreateButton = function () {
-        if (this._createGameNameInput.getElement().value.length >= MIN_GAME_NAME_LENGTH) {
+        if ((this._createGameNameInput.getElement().value.length >= MIN_GAME_NAME_LENGTH) &&
+                (this._createGameSpacecraftsCheckGroup.getValue().length > 0)) {
             this._createGameCreateButton.enable();
         } else {
             this._createGameCreateButton.disable();
@@ -330,7 +368,10 @@ define([
         this._createGameCreateButton.getElement().onclick = function () {
             networking.createGame({
                 gameName: this._createGameNameInput.getElement().value,
-                maxPlayers: +this._createGameMaxPlayersSelector.getSelectedValue()
+                maxPlayers: +this._createGameMaxPlayersSelector.getSelectedValue(),
+                settings: {
+                    spacecrafts: this._createGameSpacecraftsCheckGroup.getValue()
+                }
             }, function () {
                 analytics.sendEvent("multicreate");
                 game.closeOrNavigateTo(armadaScreens.MULTI_LOBBY_SCREEN_NAME);

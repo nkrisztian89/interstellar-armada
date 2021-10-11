@@ -111,6 +111,8 @@
             }
         },
         "multi": {
+            "maxPlayerOptions": [2, 3, 4],
+            "spacecrafts": ["falcon", "viper", "rhino"],
             "loadouts": ["multi-tier1", "multi-tier2", "multi-tier3", "multi-hardcore"]
         },
         "database": {

@@ -272,6 +272,10 @@ define([
             elementType: types.VECTOR2 // relative position (within the wing layout) of the craft on the wingmen indicator panel
         }
     };
+    _customTypes.NUMBER_ARRAY = {
+        baseType: "array",
+        elementType: "number"
+    };
     _customTypes.STRING_ARRAY = {
         baseType: "array",
         elementType: "string"
@@ -426,6 +430,20 @@ define([
         }
     };
     MULTI_SETTINGS = {
+        /**
+         * Which max player number options can the host choose for a new game
+         */
+        MAX_PLAYER_OPTIONS: {
+            name: "maxPlayerOptions",
+            type: _customTypes.NUMBER_ARRAY
+        },
+        /**
+         * Which allowed spacecrafts can the host choose for a new game
+         */
+        SPACECRAFTS: {
+            name: "spacecrafts",
+            type: _customTypes.STRING_ARRAY
+        },
         /**
          * Which spacecrafts loadouts can the host choose for the players
          */

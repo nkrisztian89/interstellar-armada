@@ -20,6 +20,7 @@
  * game server
  * @param strings Used for translation
  * @param armadaScreens Used for navigation
+ * @param classes Used to get the name of the spacecraft classes to display
  * @param environments Used to load the list of environments to select from
  */
 define([
@@ -33,8 +34,9 @@ define([
     "armada/networking",
     "armada/strings",
     "armada/screens/shared",
+    "armada/logic/classes",
     "armada/logic/environments"
-], function (utils, game, analytics, components, screens, config, audio, networking, strings, armadaScreens, environments) {
+], function (utils, game, analytics, components, screens, config, audio, networking, strings, armadaScreens, classes, environments) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -49,6 +51,7 @@ define([
             CHAT_MESSAGE_ID = "chatMessage",
             CHAT_SEND_ID = "chatSend",
             INFO_BOX_ID = "infoBox",
+            SPACECRAFT_SELECTOR_BUTTON_CLASS = "selectSpacecraft",
             KICK_BUTTON_CLASS = "kickPlayer",
             HOST_SETTINGS_ID = "hostSettings",
             GUEST_SETTINGS_ID = "guestSettings",
@@ -65,6 +68,8 @@ define([
                 [0.1, 0.1, 0.1],
                 [0.9, 0.9, 0.9]
             ];
+    // ------------------------------------------------------------------------------
+    // private functions
     function _mapLocationName(environment) {
         return environments.getEnvironment(environment).getDisplayName();
     }
@@ -99,6 +104,12 @@ define([
             }
         }
         return PLAYER_COLORS[index];
+    }
+    function _getNextAvailableSpacecraft(spacecraft) {
+        var
+                spacecrafts = networking.getGameSettings().spacecrafts,
+                index = spacecrafts.indexOf(spacecraft);
+        return spacecrafts[(index + 1) % spacecrafts.length];
     }
     // #########################################################################
     /**
@@ -412,6 +423,15 @@ define([
                     });
                     this._updatePlayersList();
                 },
+                spacecraftSelector,
+                spacecraftSelectorId = "player-spacecraft-selector",
+                spacecraftSelectorAction = function () {
+                    var spacecraft = _getNextAvailableSpacecraft(networking.getPlayerSettings().spacecraft);
+                    networking.updatePlayerSettings({
+                        spacecraft: spacecraft
+                    });
+                    this._updatePlayersList();
+                },
                 getKickButtonId = function (index) {
                     return "kick-player-" + index;
                 },
@@ -422,6 +442,7 @@ define([
         this._playersList.setContent(players.map(function (player, index) {
             return `<tr><td>${player.name}</td>` +
                     `<td><div ${player.me ? 'id="' + colorSelectorId + '"' : ''} class="colorIndicator${(player.me && !player.ready) ? ' colorSelector' : ''}" style="background-color: ${_getCSSColor(player.settings.color)}"></div></td>` +
+                    `<td>${(player.me && !player.ready) ? '<button id="' + spacecraftSelectorId + '" class="' + SPACECRAFT_SELECTOR_BUTTON_CLASS + '">' : ''}${classes.getSpacecraftClass(player.settings.spacecraft).getDisplayName()}${(player.me && !player.ready) ? '</button>' : ''}</td>` +
                     `<td>${player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)}</td>` +
                     `<td>${player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")}</td>` +
                     `<td>${strings.get(((index === 0) || player.ready) ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)}</td>` +
@@ -429,6 +450,10 @@ define([
                     `</tr>`;
         }).join(""));
         document.getElementById(colorSelectorId).onclick = colorSelectorAction.bind(this);
+        spacecraftSelector = document.getElementById(spacecraftSelectorId);
+        if (spacecraftSelector) {
+            spacecraftSelector.onclick = spacecraftSelectorAction.bind(this);
+        }
         if (networking.isHost()) {
             for (i = 1; i < players.length; i++) {
                 button = document.getElementById(getKickButtonId(i));

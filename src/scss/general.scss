@@ -672,3 +672,42 @@ input[type=range] {
         background-color: transparent;
     }
 }
+
+/******************************************************************************************/
+/* Styling of checkboxes */
+
+input[type=checkbox] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: $cursor-light, default;
+    
+    height: 1.5em;
+    width: 1.1em;
+    margin: 0.5em 0.5em -0.2em 0.5em;
+    background-color: $panel-front-color;
+    border: 0.15em solid relLighten($panel-color,1.5);
+    
+    div:hover>& {
+        background-color: relLighten($panel-color,1.5);
+        border: 0.15em solid relLighten($panel-color,2.5);
+    }
+    
+    &:checked {
+        background-color: $highlight-color;
+        background-image:
+            -webkit-radial-gradient(
+            relLighten($highlight-color,0.333),
+            relDarken($highlight-color,0.333)
+            );
+        @include faint-glowing;
+        
+        div:hover>& {
+            @include glowing;
+        }
+    }
+}
+
+label {
+    cursor: $cursor, default;
+}

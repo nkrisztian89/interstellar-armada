@@ -43,8 +43,9 @@ table.multiGames {
     text-align: center;
 }
 
-label.createGameName {
+.createGameInputLabel {
     display: inline-block;
+    vertical-align: middle;
     width: 10em;
     text-align: left;
 }
@@ -52,6 +53,12 @@ label.createGameName {
 input.createGameName {
     width: 11em;
     margin: 0;
+}
+
+.createGameInputContainer>.checkgroup {
+    display: inline-block;
+    vertical-align: middle;
+    width: 11em;
 }
 
 .smallNumberSelector {

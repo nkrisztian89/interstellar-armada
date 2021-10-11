@@ -37,7 +37,7 @@
     <div id="playerPopupBackground" class="fullScreenFix playerPopupBackground pageGhost">
         <div class="anyHeightCentered outerContainer playerPopup">
             <div class="playerPopupContent">
-                <label id="playerNameLabel" for="palyerName" class="translatable"></label><input id="playerNameInput" type="text">
+                <label id="playerNameLabel" for="playerNameInput" class="translatable"></label><input id="playerNameInput" type="text">
             </div>
             <div class="horizontallyCentered horizontalMenu" >
                 <button id="playerCancelButton" class="translatable"></button>
@@ -49,7 +49,12 @@
         <div class="anyHeightCentered outerContainer createGamePopup">
             <h3 id="createGameHeader" class="createGamePopupContent createGamePopupHeader translatable"></h3>
             <div id="createGamePopupContent" class="createGamePopupContent">
-                <label id="createGameNameLabel" for="createGameName" class="createGameName translatable"></label><input id="createGameName" class="createGameName" type="text">
+                <label id="createGameNameLabel" for="createGameName" class="createGameInputLabel translatable"></label><input id="createGameName" class="createGameName" type="text">
+                <div id="createGameMaxPlayersContainer" class="createGameInputContainer">     
+                </div>
+                <div id="createGameSpacecraftsContainer" class="createGameInputContainer">
+                <div id="createGameSpacecraftsLabel" class="createGameInputLabel translatable"></div>
+                </div>
             </div>
             <div class="horizontallyCentered horizontalMenu" >
                 <button id="createGameCancelButton" class="translatable"></button>

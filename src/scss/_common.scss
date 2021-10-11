@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018, 2020 Krisztián Nagy
+Copyright (C) 2017-2018, 2020-2021 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -69,6 +69,10 @@ $input-width: $input-label-width + $input-value-width;
 
 @mixin glowing {
     box-shadow: $glow;
+}
+
+@mixin faint-glowing {
+    box-shadow: $faint-glow;
 }
 
 @mixin inner-glowing {

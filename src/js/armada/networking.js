@@ -41,6 +41,8 @@
  * @typedef {Object} PlayerSettings
  * @property {Number[3]} color The RGB color to be used as the player's faction
  * color
+ * @property {String} spacecraft The name of the spacecraft class the player is
+ * flying
  */
 /**
  * @typedef {Object} PlayerStats
@@ -1060,7 +1062,7 @@ define([
             type: MSG_TYPE_HOST,
             playerName: _playerName,
             gameName: params.gameName,
-            settings: DEFAULT_GAME_SETTINGS,
+            settings: Object.assign({}, DEFAULT_GAME_SETTINGS, params.settings),
             maxPlayers: params.maxPlayers
         }, function (data) {
             /** @type Game */
@@ -1471,7 +1473,7 @@ define([
                     return {
                         name: player.name,
                         team: "Team " + (index + 1),
-                        class: "falcon",
+                        class: player.settings.spacecraft,
                         piloted: index === playerIndex,
                         multi: !(_isHost && (index === 0)),
                         position: [radius * Math.sin(angle), radius * -Math.cos(angle), 0],

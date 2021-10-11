@@ -2569,6 +2569,38 @@
             },
             "scoreValue": 10
         }, {
+            "name": "imperialHeavyFighterMk2",
+            "fullName": "Enhanced heavy fighter propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "referenceMass": 50000,
+            "thrust": 40,
+            "angularThrust": 220,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.7
+            },
+            "scoreValue": 15
+        }, {
+            "name": "imperialHeavyFighterMk3",
+            "fullName": "Type-III/H heavy fighter propulsion",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [0, 0.8, 1, 1],
+            "referenceMass": 50000,
+            "thrust": 45,
+            "angularThrust": 240,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 1.7
+            },
+            "scoreValue": 20
+        }, {
             "name": "imperialCorvetteMk1",
             "fullName": "Standard corvette propulsion",
             "shader": "particle",
@@ -3137,6 +3169,19 @@
             },
             "scoreValue": 30
         }, {
+            "name": "imperialBomberMk3",
+            "fullName": "Heavy bomber shield",
+            "capacity": 20,
+            "rechargeDelay": 1250,
+            "rechargeRate": 2.5,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1.2
+            },
+            "scoreValue": 40
+        }, {
             "name": "imperialHeavyFighterMk1",
             "fullName": "Standard heavy fighter shield",
             "capacity": 20,
@@ -3149,6 +3194,32 @@
                 "volume": 1.2
             },
             "scoreValue": 25
+        }, {
+            "name": "imperialHeavyFighterMk2",
+            "fullName": "Medium heavy fighter shield",
+            "capacity": 30,
+            "rechargeDelay": 100,
+            "rechargeRate": 2.5,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1.2
+            },
+            "scoreValue": 35
+        }, {
+            "name": "imperialHeavyFighterMk3",
+            "fullName": "Advanced heavy fighter shield",
+            "capacity": 40,
+            "rechargeDelay": 100,
+            "rechargeRate": 3,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1.2
+            },
+            "scoreValue": 45
         }, {
             "name": "imperialCorvetteMk1",
             "fullName": "Standard corvette shield",
@@ -4278,6 +4349,67 @@
                             "amount": 24
                         }]
                 }, {
+                    "name": "multi-tier1",
+                    "weapons": [{
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialBomberMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialBomberMk1"
+                    }
+                }, {
+                    "name": "multi-tier2",
+                    "weapons": [{
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "heavyPlasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialBomberMk2"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialBomberMk2"
+                    }
+                }, {
+                    "name": "multi-tier3",
+                    "weapons": [{
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "heavyPlasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialBomberMk3"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialBomberMk3"
+                    }
+                }, {
+                    "name": "multi-hardcore",
+                    "weapons": [{
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "heavyPlasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialBomberMk3"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    }
+                }, {
                     "name": "imperial-tier1",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
@@ -4637,6 +4769,91 @@
                     },
                     "shield": {
                         "class": "imperialHeavyFighterMk1"
+                    }
+                }, {
+                    "name": "multi-tier1",
+                    "weapons": [{
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialHeavyFighterMk1"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialHeavyFighterMk1"
+                    }
+                }, {
+                    "name": "multi-tier2",
+                    "weapons": [{
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialHeavyFighterMk2"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialHeavyFighterMk2"
+                    }
+                }, {
+                    "name": "multi-tier3",
+                    "weapons": [{
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialHeavyFighterMk3"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
+                    },
+                    "shield": {
+                        "class": "imperialHeavyFighterMk3"
+                    }
+                }, {
+                    "name": "multi-hardcore",
+                    "weapons": [{
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "heavyPlasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }, {
+                            "class": "plasmaGun"
+                        }],
+                    "propulsion": {
+                        "class": "imperialHeavyFighterMk3"
+                    },
+                    "jumpEngine": {
+                        "class": "imperialFighterMk1"
                     }
                 }],
             "thrusterSlots": [{

@@ -379,6 +379,10 @@ define([
             for (i = 0; i < elements.length; i++) {
                 elements[i].setAttribute("id", this._getElementID(elements[i].getAttribute("id")));
             }
+            elements = this._container.querySelectorAll("[for]");
+            for (i = 0; i < elements.length; i++) {
+                elements[i].setAttribute("for", this._getElementID(elements[i].getAttribute("for")));
+            }
             if (this._background) {
                 parentNode.appendChild(this._background);
             }

@@ -149,6 +149,7 @@
         "maxPlayers": "Maximum játékosok:",
         "createGameHeader": "Játék létrehozása",
         "createGameNameLabel": "Játék neve:",
+        "createGameSpacecraftsLabel": "Használható űrhajók:",
         "createGameCreateButton": "Létrehozás",
         "createGameCancelButton": "Mégse",
         "playerOkButton": "Ok",
@@ -170,6 +171,7 @@
         "title": "Többjátékos mód",
         "gameTitle": "Váróterem - {name}",
         "playerNameColumn": "Név",
+        "spacecraftColumn": "Űrhajó",
         "connectionColumn": "Kapcsolat",
         "connection": {
             "server": "szerver",

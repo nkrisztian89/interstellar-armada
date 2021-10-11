@@ -41,6 +41,8 @@ define([
                 INFO_BOX_SOURCE: "infobox.html",
                 INFO_BOX_CSS: "infobox.css",
                 MENU_COMPONENT_SOURCE: "menucomponent.html",
+                CHECK_GROUP_SOURCE: "checkgroup.html",
+                CHECK_GROUP_CSS: "checkgroup.css",
                 LIST_COMPONENT_SOURCE: "listcomponent.html",
                 LIST_COMPONENT_CSS: "listcomponent.css",
                 // menu component classes

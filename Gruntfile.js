@@ -27,6 +27,7 @@ module.exports = function (grunt) {
                 "css/multi-games.css": 'src/scss/screens/multi-games.scss',
                 "css/multi-lobby.css": 'src/scss/screens/multi-lobby.scss',
                 "css/multi-score.css": 'src/scss/screens/multi-score.scss',
+                "css/checkgroup.css": 'src/scss/components/checkgroup.scss',
                 "css/dialog.css": 'src/scss/components/dialog.scss',
                 "css/infobox.css": 'src/scss/components/infobox.scss',
                 "css/listcomponent.css": 'src/scss/components/listcomponent.scss',
