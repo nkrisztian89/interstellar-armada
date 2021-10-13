@@ -19,6 +19,14 @@ h2.gameTitle {
     vertical-align: top;
 }
 
+@media screen and (min-aspect-ratio: 2/1) {
+    .playersContainer {
+        display: block;
+        position: absolute;
+        left: 0;
+    }
+}
+
 .settingsContainer {
     min-width: 16em;
     text-align: left;
@@ -58,6 +66,10 @@ table.multiPlayers {
     position: absolute;
     bottom: 0;
     text-align: center;
+    @media screen and (min-aspect-ratio: 2/1) {
+        width: auto;
+        right: 0;
+    }
 }
 
 .chatLog {

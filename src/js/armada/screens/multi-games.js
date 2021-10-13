@@ -61,6 +61,9 @@ define([
             CREATE_GAME_MAX_PLAYERS_ID = "createGameMaxPlayers",
             CREATE_GAME_SPACECRAFTS_ID = "createGameSpacecrafts",
             SMALL_NUMBER_SELECTOR_CLASS = "smallNumberSelector",
+            PLAYERS_COLUMN_CLASS = "playersColumn",
+            STARTED_COLUMN_CLASS = "startedColumn",
+            JOIN_COLUMN_CLASS = "joinColumn",
             GAMES_REFRESH_INTERVAL = 5000,
             MIN_PLAYER_NAME_LENGTH = 2,
             MAX_PLAYER_NAME_LENGTH = 18,
@@ -417,9 +420,9 @@ define([
             this._gamesList.setContent(games.map(function (game, index) {
                 return `<tr><td>${game.name}</td>` +
                         `<td>${game.host}</td>` +
-                        `<td>${game.playerCount}/${game.maxPlayers}</td>` +
-                        `<td>${strings.get(game.started ? strings.MULTI_GAMES.STARTED_YES : strings.MULTI_GAMES.STARTED_NO)}</td>` +
-                        `<td>${((game.playerCount < game.maxPlayers) && !game.started) ?
+                        `<td class="${PLAYERS_COLUMN_CLASS}">${game.playerCount}/${game.maxPlayers}</td>` +
+                        `<td class="${STARTED_COLUMN_CLASS}">${strings.get(game.started ? strings.MULTI_GAMES.STARTED_YES : strings.MULTI_GAMES.STARTED_NO)}</td>` +
+                        `<td class="${JOIN_COLUMN_CLASS}">${((game.playerCount < game.maxPlayers) && !game.started) ?
                         '<button id="' + getJoinButtonId(index) + '">' + strings.get(strings.MULTI_GAMES.JOIN_BUTTON) + '</button>' :
                         ""}</td>` +
                         `</tr>`;
