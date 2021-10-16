@@ -155,6 +155,8 @@ define([
             _socket,
             /** @type Boolean */
             _socketOpen,
+            /** @type Boolean */
+            _shouldBeConnected,
             /** @type Array */
             _onOpen,
             /** @type Function[][] */
@@ -916,10 +918,27 @@ define([
         return _socket && _socketOpen;
     }
     /**
+     * Close all WebRTC and WebSocket connections, delete local game state
+     * information (server will notify other players in the game that this 
+     * player left)
+     */
+    function disconnect() {
+        _shouldBeConnected = false;
+        _onOpen.length = 0;
+        if (_socket && _socketOpen) {
+            if (_game) {
+                _destroyGame();
+            }
+            _socketOpen = false;
+            _socket.close();
+        }
+    }
+    /**
      * Establish a connection to the WebSocket server
      */
     function connect() {
         var i;
+        _shouldBeConnected = true;
         if (!_socket) {
             _socketOpen = false;
             _socket = new WebSocket(_serverUrl);
@@ -928,6 +947,10 @@ define([
                 var data;
                 application.log_DEBUG("Connected to the multiplayer server!", 1);
                 _socketOpen = true;
+                if (!_shouldBeConnected) {
+                    disconnect();
+                    return;
+                }
                 for (i = 0; i < _onOpen.length; i++) {
                     data = _onOpen[i][0];
                     if (_onOpen[i][1]) {
@@ -950,20 +973,6 @@ define([
                 _socket = null;
             };
             _socket.onmessage = _processMessage;
-        }
-    }
-    /**
-     * Close all WebRTC and WebSocket connections, delete local game state
-     * information (server will notify other players in the game that this 
-     * player left)
-     */
-    function disconnect() {
-        if (_socket && _socketOpen) {
-            if (_game) {
-                _destroyGame();
-            }
-            _socketOpen = false;
-            _socket.close();
         }
     }
     /**

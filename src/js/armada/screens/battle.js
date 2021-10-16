@@ -4679,11 +4679,18 @@ define([
                         });
                     }.bind(this));
                     networking.onPlayerLeave(function (player) {
+                        var spacecraft;
                         _battleScreen.queueHUDMessage({
                             text: utils.formatString(strings.get(strings.MULTI_BATTLE.PLAYER_LEFT_MESSAGE), {
                                 player: player.name
                             })
                         });
+                        if (networking.isHost()) {
+                            spacecraft = mission.getSpacecraft(player.name);
+                            if (spacecraft && spacecraft.isAlive()) {
+                                spacecraft.setHullIntegrity(0);
+                            }
+                        }
                         if (networking.getActivePlayers().length <= 1) {
                             _multi = false;
                             this.showMessage(strings.get(strings.MULTI_BATTLE.ALL_PLAYERS_LEFT_MESSAGE), function () {
