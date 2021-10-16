@@ -4351,9 +4351,9 @@
                 }, {
                     "name": "multi-tier1",
                     "weapons": [{
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }],
                     "propulsion": {
                         "class": "imperialBomberMk1"
@@ -4773,13 +4773,13 @@
                 }, {
                     "name": "multi-tier1",
                     "weapons": [{
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }],
                     "propulsion": {
                         "class": "imperialHeavyFighterMk1"
@@ -4797,9 +4797,9 @@
                         }, {
                             "class": "heavyPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }],
                     "propulsion": {
                         "class": "imperialHeavyFighterMk2"
@@ -4817,13 +4817,13 @@
                         }, {
                             "class": "heavyPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }],
                     "propulsion": {
                         "class": "imperialHeavyFighterMk3"
@@ -4841,13 +4841,13 @@
                         }, {
                             "class": "heavyPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }, {
-                            "class": "plasmaGun"
+                            "class": "fixedPlasmaGun"
                         }],
                     "propulsion": {
                         "class": "imperialHeavyFighterMk3"
