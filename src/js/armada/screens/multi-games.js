@@ -45,6 +45,7 @@ define([
             CONNECTING_LABEL_ID = "connectingLabel",
             NO_AVILABLE_GAMES_ID = "noAvailableGamesLabel",
             ONLINE_PLAYERS_VALUE_ID = "onlinePlayersValue",
+            ONLINE_GAMES_COUNT_ID = "onlineGamesCount",
             SERVER_PING_VALUE_ID = "serverPingValue",
             GAMES_TABLE_ID = "gamesTable",
             GAMES_LIST_ID = "gamesList",
@@ -125,6 +126,8 @@ define([
         this._noAvailableGamesLabel = this.registerSimpleComponent(NO_AVILABLE_GAMES_ID);
         /** @type SimpleComponent */
         this._onlinePlayersValue = this.registerSimpleComponent(ONLINE_PLAYERS_VALUE_ID);
+        /** @type SimpleComponent */
+        this._onlineGamesCount = this.registerSimpleComponent(ONLINE_GAMES_COUNT_ID);
         /** @type SimpleComponent */
         this._serverPingValue = this.registerSimpleComponent(SERVER_PING_VALUE_ID);
         /** @type SimpleComponent */
@@ -415,6 +418,7 @@ define([
                     });
                 };
         this._onlinePlayersValue.setContent(data.players);
+        this._onlineGamesCount.setContent(games.length);
         this._serverPingValue.setContent(Math.round(networking.getServerPing()) + " ms");
         if (games.length > 0) {
             this._gamesList.setContent(games.map(function (game, index) {

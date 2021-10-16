@@ -122,7 +122,7 @@
         "onlinePlayersLabel": "Online players:",
         "serverPingLabel": "Server ping:",
         "noAvailableGamesLabel": "There are no available games right now.",
-        "availableGamesTitle": "Available games",
+        "onlineGamesTitle": "Online games:",
         "gameNameColumn": "Game name",
         "hostingPlayerColumn": "Hosting player",
         "playersColumn": "Players",

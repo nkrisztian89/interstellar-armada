@@ -136,7 +136,7 @@
         "onlinePlayersLabel": "Aktív játékosok:",
         "serverPingLabel": "Szerver ping:",
         "noAvailableGamesLabel": "Jelenleg nincsenek aktív játékok.",
-        "availableGamesTitle": "Aktív játékok",
+        "onlineGamesTitle": "Aktív játékok:",
         "gameNameColumn": "Játék neve",
         "hostingPlayerColumn": "Házigazda",
         "playersColumn": "Játékosok",
