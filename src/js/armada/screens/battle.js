@@ -4684,7 +4684,7 @@ define([
                                 player: player.name
                             })
                         });
-                        if (networking.getPlayers().length <= 1) {
+                        if (networking.getActivePlayers().length <= 1) {
                             _multi = false;
                             this.showMessage(strings.get(strings.MULTI_BATTLE.ALL_PLAYERS_LEFT_MESSAGE), function () {
                                 game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);

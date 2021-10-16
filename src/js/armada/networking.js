@@ -65,6 +65,7 @@
  * messages as a stringified JSON
  * @property {RTCDataChannel} updateChannel To send and receive game update
  * messages as Float32Array
+ * @property {Boolean} left Set to true when the player leaves the game
  * @property {PlayerStats} stats 
  */
 /**
@@ -166,6 +167,8 @@ define([
             _hostIsPeer,
             /** @type Game */
             _game,
+            /** @type Boolean */
+            _useArrayBuffer,
             /** @type Function */
             _onConnect,
             /** @type Function */
@@ -260,6 +263,14 @@ define([
      */
     function _playerIsPeer(player) {
         return player.peer === true;
+    }
+    /**
+     * Whether the passed player has not left the current game
+     * @param {Player} player
+     * @returns {Boolean}
+     */
+    function _playerNotLeft(player) {
+        return player.left !== true;
     }
     /**
      * Returns the player model corresponding to this game client
@@ -357,7 +368,6 @@ define([
         if (data.length === 0) {
             _socket.binaryType = 'blob';
             _socket.onmessage = _processMessage;
-            _cancelHeartbeat();
         } else {
             if (_onGameUpdate) {
                 _onGameUpdate(data);
@@ -421,6 +431,7 @@ define([
         }
         _game = null;
         _isHost = false;
+        _useArrayBuffer = false;
         _onPlayerJoin = null;
         _onPlayerLeave = null;
         _onPlayerReady = null;
@@ -433,6 +444,21 @@ define([
         _onGameStart = null;
         _onGameUpdate = null;
         _onMatchConcluded = null;
+        _cancelHeartbeat();
+    }
+    /**
+     * Process a match concluded message
+     * @param {Object} data The parsed JSON data of the message
+     */
+    function _processMatchConcluded(data) {
+        _processPlayerStats(data);
+        if (_onMatchConcluded) {
+            _onMatchConcluded();
+        }
+        _destroyGame();
+        _sendJSONtoSocket({
+            type: MSG_TYPE_MATCH_CONCLUDED
+        });
     }
     /**
      * Set up the event listeners for an RTCDataChannel that is to be used for
@@ -495,11 +521,7 @@ define([
                     _processPlayerStats(data);
                     break;
                 case MSG_TYPE_MATCH_CONCLUDED:
-                    _processPlayerStats(data);
-                    if (_onMatchConcluded) {
-                        _onMatchConcluded();
-                    }
-                    _destroyGame();
+                    _processMatchConcluded(data);
                     break;
             }
         };
@@ -602,7 +624,7 @@ define([
     function _hostSend(message, force) {
         var recipients = [];
         _game.players.forEach(function (player, index) {
-            if (index !== 0) {
+            if ((index !== 0) && !player.left) {
                 if (_playerIsPeer(player)) {
                     application.log_DEBUG("Sending to " + player.name + " via RTC", 3);
                     player.messageChannel.send(JSON.stringify(message));
@@ -691,7 +713,11 @@ define([
                     } else if (playerIndex > 0) {
                         player = _game.players[playerIndex];
                         _closePeerConnection(player);
-                        _game.players.splice(playerIndex, 1);
+                        if (!_game.started) {
+                            _game.players.splice(playerIndex, 1);
+                        } else {
+                            _game.players[playerIndex].left = true;
+                        }
                         if (_onPlayerLeave) {
                             _onPlayerLeave(player);
                         }
@@ -800,8 +826,7 @@ define([
                             serverNeeded = !_hostIsPeer;
                         }
                         if (serverNeeded) {
-                            _socket.binaryType = 'arraybuffer';
-                            _socket.onmessage = _processGameUpdate;
+                            _useArrayBuffer = true;
                         } else {
                             _setupHeartbeat();
                         }
@@ -834,20 +859,9 @@ define([
                 break;
             case MSG_TYPE_PLAYER_STATS:
                 _processPlayerStats(data);
-                // if we have a peer connection, player stat update messages are
-                // sent through it
-                // so if we got one via the WebSocket, that means we are in a game
-                // connected through the server, so we need to switch back to game
-                // update processing after processing this message
-                _socket.binaryType = 'arraybuffer';
-                _socket.onmessage = _processGameUpdate;
                 break;
             case MSG_TYPE_MATCH_CONCLUDED:
-                _processPlayerStats(data);
-                if (_onMatchConcluded) {
-                    _onMatchConcluded();
-                }
-                _destroyGame();
+                _processMatchConcluded(data);
                 break;
         }
         if (_messageHandlers[data.type]) {
@@ -855,6 +869,10 @@ define([
                 _messageHandlers[data.type][i](data);
             }
             _messageHandlers[data.type].length = 0;
+        }
+        if (_useArrayBuffer) {
+            _socket.binaryType = 'arraybuffer';
+            _socket.onmessage = _processGameUpdate;
         }
     };
     /**
@@ -1292,6 +1310,14 @@ define([
         return _game ? _game.players : [];
     }
     /**
+     * Returns the list of models of the player who have not left for the
+     * current game.
+     * @returns {Player[]}
+     */
+    function getActivePlayers() {
+        return _game ? _game.players.filter(_playerNotLeft) : [];
+    }
+    /**
      * Sends a ping message to all the other players in the game, and updates
      * the ping values in their models as the pong answers arrive. Uses the
      * fastest method available (WebRTC if possible, through the server if not)
@@ -1501,10 +1527,12 @@ define([
             data.set(spacecrafts[i].getMultiHostData(), i * SPACECRAFT_HOST_DATA_LENGTH);
         }
         for (i = 1; i < _game.players.length; i++) {
-            if (_playerIsPeer(_game.players[i])) {
-                _game.players[i].updateChannel.send(data);
-            } else {
-                socketNeeded = true;
+            if (!_game.players[i].left) {
+                if (_playerIsPeer(_game.players[i])) {
+                    _game.players[i].updateChannel.send(data);
+                } else {
+                    socketNeeded = true;
+                }
             }
         }
         if (socketNeeded) {
@@ -1575,6 +1603,7 @@ define([
         leaveGame: leaveGame,
         kickPlayer: kickPlayer,
         getPlayers: getPlayers,
+        getActivePlayers: getActivePlayers,
         ping: ping,
         sendText: sendText,
         markReady: markReady,

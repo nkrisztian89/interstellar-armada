@@ -12,6 +12,12 @@ table.multiScores {
            background-color: #333; 
         }
     }
+    & tr.left {
+        color: $dark-text-color;
+        &>td {
+            background-color: $dark-panel-color;
+        }
+    }
     & td.playerRank {
         text-align: center;
     }

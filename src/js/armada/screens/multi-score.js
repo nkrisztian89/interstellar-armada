@@ -113,12 +113,12 @@ define([
         rank = 1;
         lastScore = 0;
         this._playersList.setContent(players.map(function (player) {
-            var score = _getPlayerScore(player);
+            var score = _getPlayerScore(player), className = (player.me ? "me" : (player.left ? "left" : ""));
             if (score < lastScore) {
                 rank++;
             }
             lastScore = score;
-            return `<tr${player.me ? ' class="me"' : ""}><td class="${RANK_CELL_CLASS}">${rank}</td>` +
+            return `<tr class="${className}"><td class="${RANK_CELL_CLASS}">${rank}</td>` +
                     `<td>${player.name}</td>` +
                     `<td class="${NUMBER_CELL_CLASS}">${player.stats.kills}</td>` +
                     `<td class="${NUMBER_CELL_CLASS}">${player.stats.deaths}</td>` +

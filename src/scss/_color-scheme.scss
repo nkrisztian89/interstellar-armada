@@ -42,6 +42,8 @@ $overlay-background-color: rgba(64,64,64,0.5);
 
 $panel-color: #222222;
 
+$dark-panel-color: relDarken($panel-color,0.25);
+
 $panel-back-color: relDarken($panel-color,0.5);
 $panel-front-color: relLighten($panel-color,0.5);
 
