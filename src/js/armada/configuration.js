@@ -450,6 +450,33 @@ define([
         LOADOUTS: {
             name: "loadouts",
             type: _customTypes.STRING_ARRAY
+        },
+        /**
+         * In multiplayer, the "slow connection" message is shown to the guest
+         * player, if it doesn't get any updates from the host for this much
+         * time, in milliseconds
+         */
+        SLOW_CONNECTION_THRESHOLD: {
+            name: "slowConnectionThreshold",
+            type: "number"
+        },
+        /**
+         * In multiplayer, the "connection lost" message is shown to the guest
+         * player, if it doesn't get any updates from the host for this much
+         * time, in milliseconds
+         */
+        CONNECTION_LOST_THRESHOLD: {
+            name: "connectionLostThreshold",
+            type: "number"
+        },
+        /**
+         * In multiplayer, the guest player is automatically disconnected from
+         * the game, if it doesn't get any updates from the host (or the host
+         * from it) for this much time, in milliseconds
+         */
+        DISCONNECT_THRESHOLD: {
+            name: "disconnectThreshold",
+            type: "number"
         }
     };
     DATABASE_SETTINGS = {
@@ -1407,7 +1434,7 @@ define([
             },
             MESSAGE_TEXT: {
                 name: "messageText",
-                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["default", "jump", "alert", "controlString", "friendlySpacecraft", "hostileSpacecraft"]})
+                type: _customTypes.getCustomDescriptor(_customTypes.TEXT_DESCRIPTOR, {COLOR: ["default", "jump", "alert", "controlString", "friendlySpacecraft", "hostileSpacecraft", "slowConnection", "connectionLost"]})
             },
             MESSAGE_TEXT_MARGIN: {
                 name: "messageTextMargin",
@@ -1515,6 +1542,10 @@ define([
             },
             NEW_HOSTILES_ALERT_SOUND: {
                 name: "newHostilesAlertSound",
+                type: classes.SOUND_EFFECT
+            },
+            CONNECTION_WARNING_SOUND: {
+                name: "connectionWarningSound",
                 type: classes.SOUND_EFFECT
             },
             NEW_HOSTILES_ALERT_DURATION: {

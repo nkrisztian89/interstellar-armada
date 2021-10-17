@@ -127,6 +127,7 @@ define([
             MSG_TYPE_PLAYER_SETTING = 18,
             MSG_TYPE_PLAYER_STATS = 19,
             MSG_TYPE_MATCH_CONCLUDED = 20,
+            MSG_TYPE_GUEST_TIMEOUT = 21,
             // --------------------------------
             // error codes
             ERROR_CODE_GAME_NOT_FOUND = 0,
@@ -201,6 +202,8 @@ define([
             _onGameUpdate,
             /** @type Function */
             _onMatchConcluded,
+            /** @type Function */
+            _onGuestTimeout,
             /** @type DOMHighResTimeStamp */
             _serverPingTime,
             /** @type DOMHighResTimeStamp */
@@ -446,6 +449,7 @@ define([
         _onGameStart = null;
         _onGameUpdate = null;
         _onMatchConcluded = null;
+        _onGuestTimeout = null;
         _cancelHeartbeat();
     }
     /**
@@ -461,6 +465,42 @@ define([
         _sendJSONtoSocket({
             type: MSG_TYPE_MATCH_CONCLUDED
         });
+    }
+    /**
+     * Notifies the server that this player has left the current game. Destroys
+     * local game state data and callbacks.
+     */
+    function leaveGame() {
+        if (_game) {
+            _sendJSONtoSocket({
+                type: MSG_TYPE_LEAVE
+            });
+            _destroyGame();
+        }
+    }
+    /**
+     * Process a guest timeout message (received from the host when it didn't
+     * get an update from one of the guests from an extended period of time and
+     * as a result, that guest is kicked out of the game
+     * @param {Object} data The parsed JSON data of the message
+     */
+    function _processGuestTimeout(data) {
+        var player;
+        if (data.playerName === _playerName) {
+            if (_onGuestTimeout) {
+                _onGuestTimeout();
+            }
+            leaveGame();
+        } else {
+            player = _findPlayer(data.playerName);
+            if (player && !player.left) {
+                player.left = true;
+                _closePeerConnection(player);
+                if (_onPlayerLeave) {
+                    _onPlayerLeave(player);
+                }
+            }
+        }
     }
     /**
      * Set up the event listeners for an RTCDataChannel that is to be used for
@@ -524,6 +564,9 @@ define([
                     break;
                 case MSG_TYPE_MATCH_CONCLUDED:
                     _processMatchConcluded(data);
+                    break;
+                case MSG_TYPE_GUEST_TIMEOUT:
+                    _processGuestTimeout(data);
                     break;
             }
         };
@@ -864,6 +907,9 @@ define([
                 break;
             case MSG_TYPE_MATCH_CONCLUDED:
                 _processMatchConcluded(data);
+                break;
+            case MSG_TYPE_GUEST_TIMEOUT:
+                _processGuestTimeout(data);
                 break;
         }
         if (_messageHandlers[data.type]) {
@@ -1256,6 +1302,16 @@ define([
         _onMatchConcluded = callback;
     }
     /**
+     * Set the callback to be executed when a guest timeout message is recieved
+     * from the host (happens when the host didn't get an update from one of the
+     * guests from an extended period of time and as a result, that guest is
+     * kicked out of the game)
+     * @param {Function} callback
+     */
+    function onGuestTimeout(callback) {
+        _onGuestTimeout = callback;
+    }
+    /**
      * @typedef {Object} JoinGameParams
      * @property {String} gameName 
      */
@@ -1288,28 +1344,18 @@ define([
         }, true);
     }
     /**
-     * Notifies the server that this player has left the current game. Destroys
-     * local game state data and callbacks.
-     */
-    function leaveGame() {
-        if (_game) {
-            _sendJSONtoSocket({
-                type: MSG_TYPE_LEAVE
-            });
-            _destroyGame();
-        }
-    }
-    /**
      * Instructs the server to kick out the player with the passed name from the
      * current game. Will only have an effect if the local player is the host
      * of the game.
      * @param {String} name
      */
     function kickPlayer(name) {
-        _sendJSONtoSocket({
-            type: MSG_TYPE_KICK,
-            playerName: name
-        });
+        if (_isHost) {
+            _sendJSONtoSocket({
+                type: MSG_TYPE_KICK,
+                playerName: name
+            });
+        }
     }
     /**
      * Returns the list of player models for the current game.
@@ -1485,6 +1531,28 @@ define([
         }
     }
     /**
+     * As host, kick out a guest from the current game, because we didn't
+     * receive any updates from it for an extended period of time
+     * @param {String} playerName
+     */
+    function guestTimeout(playerName) {
+        var player;
+        if (_isHost) {
+            player = _findPlayer(playerName);
+            if (player && !player.left) {
+                _hostSend({
+                    type: MSG_TYPE_GUEST_TIMEOUT,
+                    playerName: playerName
+                }, true);
+                player.left = true;
+                _closePeerConnection(player);
+                if (_onPlayerLeave) {
+                    _onPlayerLeave(player);
+                }
+            }
+        }
+    }
+    /**
      * Returns the MissionDescriptor JSON data to be used to load the battle for
      * the currently set up multiplayer game.
      * @returns {Object}
@@ -1621,10 +1689,12 @@ define([
         markLoaded: markLoaded,
         registerPlayerKill: registerPlayerKill,
         concludeMatch: concludeMatch,
+        guestTimeout: guestTimeout,
         getMissionData: getMissionData,
         sendHostUpdate: sendHostUpdate,
         sendGuestUpdate: sendGuestUpdate,
         onGameUpdate: onGameUpdate,
-        onMatchConcluded: onMatchConcluded
+        onMatchConcluded: onMatchConcluded,
+        onGuestTimeout: onGuestTimeout
     };
 });

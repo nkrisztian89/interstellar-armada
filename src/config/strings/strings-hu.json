@@ -488,7 +488,10 @@
             "waitingForOtherPlayers": "Várakozás a többi játékosra...",
             "hostLeftMessage": "A házigazda, {host} kilépett a játékból!",
             "playerLeftMessage": "{player} kilépett a játékból!",
-            "allPlayersLeftMessage": "Minden játékos kilépett a játékból!"
+            "allPlayersLeftMessage": "Minden játékos kilépett a játékból!",
+            "slowConnection": "! LASSÚ KAPCSOLAT !",
+            "connectionLost": "!!! NINCS KAPCSOLAT !!!",
+            "connectionTimeout": "A kapcsolat a házigazdával időtúllépés miatt megszakadt!"
         }
     },
     "performanceLevel": {

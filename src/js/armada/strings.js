@@ -219,7 +219,10 @@ define([
         WAITING_FOR_OTHER_PLAYERS: {name: "battle.multi.waitingForOtherPlayers"},
         HOST_LEFT_MESSAGE: {name: "battle.multi.hostLeftMessage"},
         PLAYER_LEFT_MESSAGE: {name: "battle.multi.playerLeftMessage"},
-        ALL_PLAYERS_LEFT_MESSAGE: {name: "battle.multi.allPlayersLeftMessage"}
+        ALL_PLAYERS_LEFT_MESSAGE: {name: "battle.multi.allPlayersLeftMessage"},
+        SLOW_CONNECTION: {name: "battle.multi.slowConnection"},
+        CONNECTION_LOST: {name: "battle.multi.connectionLost"},
+        CONNECTION_TIMEOUT: {name: "battle.multi.connectionTimeout"}
     };
     strings.PERFORMANCE_LEVEL = {
         PREFIX: {name: "performanceLevel.", optional: true}

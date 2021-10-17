@@ -113,7 +113,10 @@
         "multi": {
             "maxPlayerOptions": [2, 3, 4],
             "spacecrafts": ["falcon", "viper", "rhino"],
-            "loadouts": ["multi-tier1", "multi-tier2", "multi-tier3", "multi-hardcore"]
+            "loadouts": ["multi-tier1", "multi-tier2", "multi-tier3", "multi-hardcore"],
+            "slowConnectionThreshold": 500,
+            "connectionLostThreshold": 2000,
+            "disconnectThreshold": 10000
         },
         "database": {
             "showLoadingBoxFirstTime": true,
@@ -818,7 +821,9 @@
                         "alert": [1, 0.5, 0, 1],
                         "controlString": [0, 1, 0, 1],
                         "friendlySpacecraft": [0, 1, 0, 1],
-                        "hostileSpacecraft": [1, 0, 0, 1]
+                        "hostileSpacecraft": [1, 0, 0, 1],
+                        "slowConnection": [1, 1, 0, 1],
+                        "connectionLost": [1, 0, 0, 1]
                     },
                     "fontSize": 0.16,
                     "fontName": "hudFont",
@@ -985,6 +990,10 @@
                 "newHostilesAlertSound": {
                     "name": "alert",
                     "volume": 0.15
+                },
+                "connectionWarningSound": {
+                    "name": "missile_change_denied",
+                    "volume": 0.75
                 },
                 "newHostilesAlertDuration": 3250,
                 "newHostilesAlertBlinkInterval": 500

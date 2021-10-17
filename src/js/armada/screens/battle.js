@@ -96,6 +96,11 @@ define([
                 HIDDEN: 1,
                 HIGHLIGHTED: 2
             },
+            ConnectionStatus = {
+                GOOD: 0,
+                SLOW: 1,
+                LOST: 2
+            },
             // ------------------------------------------------------------------------------
             // constants
             /** @type String */
@@ -106,7 +111,7 @@ define([
             /** @type Number */
             LOOP_CANCELED = -1,
             LOOP_REQUESTANIMFRAME = -2,
-            NETWORK_UPDATE_INTERVAL = 50,
+            HOST_UPDATE_INTERVAL = 50,
             LOADING_BUILDING_SCENE_PROGRESS = 10,
             LOADING_RESOURCES_START_PROGRESS = 20,
             LOADING_RESOURCE_PROGRESS = 60,
@@ -157,8 +162,10 @@ define([
             MISSION_QUEUE = "mission",
             /** ID for the HUD message queue for messages from the jump engine of the ship @type String */
             JUMP_QUEUE = "system",
+            /** ID for the HUD message queue for messages about multiplayer network connection status @type String */
+            CONNECTION_QUEUE = "connection",
             /** In descending priority order @type Array */
-            MESSAGE_QUEUES = [JUMP_QUEUE, MISSION_QUEUE, INFO_QUEUE, HOSTILE_ALERT_QUEUE],
+            MESSAGE_QUEUES = [CONNECTION_QUEUE, JUMP_QUEUE, MISSION_QUEUE, INFO_QUEUE, HOSTILE_ALERT_QUEUE],
             // target info section names
             /** @type String */
             TARGET_INFO_NAME = "name",
@@ -190,11 +197,25 @@ define([
              */
             _simulationLoop = LOOP_CANCELED,
             /**
-             * The time elapsed since the last multiplayer game update message has been sent to the guests
-             * (in ms; to be used by the host)
+             * For the host: the time elapsed since the last multiplayer game
+             * update message has been sent to the guests
+             * For guests: the time elapsed since the last multiplayer game
+             * update message has been received from the host
+             * In ms.
              * @type Number
              */
-            _timeSinceNetworkUpdate = 0,
+            _timeSinceHostUpdate,
+            /**
+             * For multiplayer host: an array of the times elapsed since receiving
+             * the last guest update from each of the guests in the current game
+             * @type Array
+             */
+            _timeSinceGuestUpdates,
+            /**
+             * One of ConnectionStatus
+             * @type Number
+             */
+            _connectionStatus,
             /**
              * This stores the value of the cursor as it was used in the battle, while some menu is active
              * @type String
@@ -500,6 +521,11 @@ define([
              */
             _newHostilesAlertTimeLeft,
             /**
+             * The sound played when the slow connection / connection lost warnings are shown
+             * @type SoundClip
+             */
+            _connectionWarningSound,
+            /**
              * An array holding references to the hostile spacecrafts that should be highlighted as newly arrived
              * @type Spacecraft[]
              */
@@ -535,6 +561,13 @@ define([
              * @type Number
              */
             _hudHighlightInterval,
+            /**
+             * In multiplayer, the guest player is automatically disconnected from
+             * the game, if it doesn't get any updates from the host (or the host 
+             * from it) for this much time, in milliseconds
+             * @type Number
+             */
+            _disconnectThreshold,
             // ................................................................................................
             // elements of the HUD and their stored state
             /**
@@ -1167,11 +1200,11 @@ define([
      * Executes one simulation (and control) step for the battle.
      */
     function _simulationLoopFunction() {
-        var followedCraft, curDate, dt;
+        var followedCraft, curDate, dt, i, players;
         if (_simulationLoop !== LOOP_CANCELED) {
             curDate = performance.now();
             dt = curDate - _prevDate;
-            _timeSinceNetworkUpdate += dt;
+            _timeSinceHostUpdate += dt;
             control.control(dt);
             if (_multi && !networking.isHost()) {
                 if (!_mission.getPilotedSpacecraft().canBeReused()) {
@@ -1182,9 +1215,62 @@ define([
             followedCraft = _mission.getFollowedSpacecraftForScene(_battleScene);
             if (!_isTimeStopped) {
                 _mission.tick(dt, _battleScene, _multi);
-                if (_multi && networking.isHost() && (_timeSinceNetworkUpdate >= NETWORK_UPDATE_INTERVAL)) {
-                    _timeSinceNetworkUpdate = 0;
-                    networking.sendHostUpdate(_mission.getSpacecrafts());
+                if (_multi) {
+                    if (networking.isHost()) {
+                        if (_timeSinceHostUpdate >= HOST_UPDATE_INTERVAL) {
+                            _timeSinceHostUpdate = 0;
+                            networking.sendHostUpdate(_mission.getSpacecrafts());
+                        }
+                        players = networking.getPlayers();
+                        for (i = 1; i < players.length; i++) {
+                            if (!players[i].left) {
+                                _timeSinceGuestUpdates[i] += dt;
+                                if (_timeSinceGuestUpdates[i] > _disconnectThreshold) {
+                                    networking.guestTimeout(players[i].name);
+                                }
+                            }
+                        }
+                    } else {
+                        if (_timeSinceHostUpdate > _disconnectThreshold) {
+                            _multi = false;
+                            game.getScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME).updateData();
+                            networking.leaveGame();
+                            _battleScreen.showMessage(strings.get(strings.MULTI_BATTLE.CONNECTION_TIMEOUT), function () {
+                                game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
+                            });
+                        } else if (_timeSinceHostUpdate > config.getSetting(config.MULTI_SETTINGS.CONNECTION_LOST_THRESHOLD)) {
+                            if (_connectionStatus !== ConnectionStatus.LOST) {
+                                _connectionStatus = ConnectionStatus.LOST;
+                                _battleScreen.clearHUDMessages(CONNECTION_QUEUE);
+                                _battleScreen.queueHUDMessage({
+                                    text: strings.get(strings.MULTI_BATTLE.CONNECTION_LOST),
+                                    color: _messageTextSettings.colors.connectionLost,
+                                    queue: CONNECTION_QUEUE,
+                                    permanent: true,
+                                    silent: true
+                                }, true);
+                                _connectionWarningSound.play();
+                            }
+                        } else if (_timeSinceHostUpdate > config.getSetting(config.MULTI_SETTINGS.SLOW_CONNECTION_THRESHOLD)) {
+                            if (_connectionStatus !== ConnectionStatus.SLOW) {
+                                _connectionStatus = ConnectionStatus.SLOW;
+                                _battleScreen.clearHUDMessages(CONNECTION_QUEUE);
+                                _battleScreen.queueHUDMessage({
+                                    text: strings.get(strings.MULTI_BATTLE.SLOW_CONNECTION),
+                                    color: _messageTextSettings.colors.slowConnection,
+                                    queue: CONNECTION_QUEUE,
+                                    permanent: true,
+                                    silent: true
+                                }, true);
+                                _connectionWarningSound.play();
+                            }
+                        } else {
+                            if (_connectionStatus !== ConnectionStatus.GOOD) {
+                                _connectionStatus = ConnectionStatus.GOOD;
+                                _battleScreen.clearHUDMessages(CONNECTION_QUEUE);
+                            }
+                        }
+                    }
                 }
                 _elapsedTime += dt;
                 if (!_mission.isFinished() && !_mission.noHostilesPresent()) {
@@ -2278,6 +2364,7 @@ define([
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.MESSAGE_TYPE_SOUND).name);
         resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name);
+        resources.getSoundEffect(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).name);
     }
     /**
      * Returns the HTML string to insert to messages that contains the key to open the menu in a highlighted style.
@@ -4639,14 +4726,27 @@ define([
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).name).createSoundClip(
                         resources.SoundCategory.SOUND_EFFECT,
                         config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_SOUND).volume);
+                _connectionWarningSound = resources.getSoundEffect(
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).name).createSoundClip(
+                        resources.SoundCategory.SOUND_EFFECT,
+                        config.getHUDSetting(config.BATTLE_SETTINGS.HUD.CONNECTION_WARNING_SOUND).volume);
                 if (!_multi) {
                     this._loadingBox.hide();
                 } else {
                     this._updateLoadingStatus(strings.get(strings.MULTI_BATTLE.WAITING_FOR_OTHER_PLAYERS));
                     networking.onGameStart(function () {
+                        var i, players;
                         this._loadingBox.hide();
                         this.resumeBattle(true);
                         resumeTime();
+                        _timeSinceHostUpdate = 0;
+                        if (networking.isHost()) {
+                            _timeSinceGuestUpdates = [];
+                            players = networking.getPlayers();
+                            for (i = 0; i < players.length; i++) {
+                                _timeSinceGuestUpdates.push(0);
+                            }
+                        }
                         control.switchToPilotMode(_mission.getPilotedSpacecraft(), true);
                         networking.onGameUpdate(!networking.isHost() ?
                                 function (data) {
@@ -4654,9 +4754,11 @@ define([
                                     for (i = 0; i < spacecrafts.length; i++) {
                                         spacecrafts[i].applyMultiHostData(data, i * spacecraft.MULTI_HOST_DATA_LENGTH);
                                     }
+                                    _timeSinceHostUpdate = 0;
                                 } :
                                 function (data) {
                                     _mission.getSpacecrafts()[data[0]].applyMultiGuestData(data);
+                                    _timeSinceGuestUpdates[data[0]] = 0;
                                 });
                     }.bind(this));
                     networking.onDisconnect(function () {
@@ -4701,6 +4803,13 @@ define([
                     }.bind(this));
                     networking.onMatchConcluded(function () {
                         game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
+                    });
+                    networking.onGuestTimeout(function () {
+                        _multi = false;
+                        game.getScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME).updateData();
+                        _battleScreen.showMessage(strings.get(strings.MULTI_BATTLE.CONNECTION_TIMEOUT), function () {
+                            game.setScreen(armadaScreens.MULTI_SCORE_SCREEN_NAME);
+                        });
                     });
                     networking.markLoaded();
                 }
@@ -4830,6 +4939,8 @@ define([
         _hudHighlightInterval = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.HIGHLIGHT_INTERVAL);
         // music
         _combatThemeDurationAfterFire = config.getSetting(config.BATTLE_SETTINGS.COMBAT_THEME_DURATION_AFTER_FIRE) * 1000;
+        // multi
+        _disconnectThreshold = config.getSetting(config.MULTI_SETTINGS.DISCONNECT_THRESHOLD);
     });
     // initializing anaglyph text rendering if needed
     graphics.executeWhenReady(function () {

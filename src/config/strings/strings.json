@@ -457,7 +457,10 @@
             "waitingForOtherPlayers": "Waiting for other players...",
             "hostLeftMessage": "Host {host} left the game!",
             "playerLeftMessage": "Player {player} left the game!",
-            "allPlayersLeftMessage": "All players have left the game!"
+            "allPlayersLeftMessage": "All players have left the game!",
+            "slowConnection": "! SLOW CONNECTION !",
+            "connectionLost": "!!! CONNECTION LOST !!!",
+            "connectionTimeout": "Your connection to the host has timed out!"
         }
     },
     "performanceLevel": {
