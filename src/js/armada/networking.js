@@ -146,6 +146,9 @@ define([
                 environment: "reddim",
                 loadout: "multi-tier1"
             },
+            PING_MESSAGE = {
+                type: MSG_TYPE_PING
+            },
             // ------------------------------------------------------------------------------
             // private variables
             /** @type String */
@@ -327,14 +330,6 @@ define([
             }
         }
         return result;
-    }
-    /**
-     * Return whether the passed game is our own game (in which the local client
-     * is taking part)
-     * @param {Game} game
-     */
-    function _gameIsOwn(game) {
-        return game.own === true;
     }
     /**
      * Stop sending heartbeat messages through the socket
@@ -1139,7 +1134,7 @@ define([
             maxPlayers: params.maxPlayers
         }, function (data) {
             /** @type Game */
-            var gameInfo = data.games.find(_gameIsOwn);
+            var gameInfo = data.game;
             if (!gameInfo) {
                 application.log_DEBUG("Game could not be created!", 1);
                 return;
@@ -1378,7 +1373,7 @@ define([
      * fastest method available (WebRTC if possible, through the server if not)
      */
     function ping() {
-        var i, index;
+        var i;
         if (!_game || _game.started) {
             return;
         }
@@ -1391,10 +1386,7 @@ define([
             }
             application.log_DEBUG("Host ping", 3);
             _pingTime = performance.now();
-            _hostSend({
-                type: MSG_TYPE_PING,
-                sender: 0
-            }, true);
+            _hostSend(PING_MESSAGE, true);
         } else {
             for (i = 0; i < _game.players.length; i++) {
                 if (!_playerIsMe(_game.players[i])) {
@@ -1402,16 +1394,11 @@ define([
                         return;
                     }
                     _game.players[i].waitPong = true;
-                } else {
-                    index = i;
                 }
             }
             application.log_DEBUG("Guest ping", 3);
             _pingTime = performance.now();
-            _guestSendFastest({
-                type: MSG_TYPE_PING,
-                sender: index
-            }, true);
+            _guestSendFastest(PING_MESSAGE, true);
         }
     }
     /**
@@ -1424,7 +1411,6 @@ define([
         _sendJSONtoSocket({
             type: MSG_TYPE_TEXT,
             text: text,
-            sender: _playerName,
             recipients: recipients || _getOtherPlayerIndices()
         });
     }
