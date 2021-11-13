@@ -113,10 +113,10 @@ define([
         rank = 1;
         lastScore = 0;
         this._playersList.setContent("");
-        players.forEach(function (player) {
+        players.forEach(function (player, index) {
             var tr, td, score = _getPlayerScore(player);
             if (score < lastScore) {
-                rank++;
+                rank = index + 1;
             }
             lastScore = score;
             tr = document.createElement("tr");
