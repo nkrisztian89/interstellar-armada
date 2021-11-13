@@ -162,7 +162,9 @@
         "gameAlreadyStartedError": "Hiba: A játék már megkezdődött!",
         "playerNameAlreadyExistsError": "Hiba: Már létezik azonos nevű játékos a választott játékban!",
         "gameNameAlreadyExistsError": "Hiba: Ilyen nevű játék már létezik!",
-        "invalidGameSettingsError": "Hiba: Érvénytelen játékbeállítások!"
+        "invalidGameSettingsError": "Hiba: Érvénytelen játékbeállítások!",
+        "invalidPlayerNameError": "Hiba: Érvénytelen játékosnév!",
+        "invalidTextError": "Hiba: Érvénytelen szöveges üzenet! Az üzenet nem lett elküldve."
     },
     "multiLobby": {
         "leaveButton": "Kilépés",

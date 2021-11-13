@@ -93,7 +93,9 @@ define([
         GAME_ALREADY_STARTED_ERROR: {name: "multiGames.gameAlreadyStartedError"},
         PLAYER_NAME_ALREADY_EXISTS_ERROR: {name: "multiGames.playerNameAlreadyExistsError"},
         GAME_NAME_ALREADY_EXISTS_ERROR: {name: "multiGames.gameNameAlreadyExistsError"},
-        INVALID_GAME_SETTINGS_ERROR: {name: "multiGames.invalidGameSettingsError"}
+        INVALID_GAME_SETTINGS_ERROR: {name: "multiGames.invalidGameSettingsError"},
+        INVALID_PLAYER_NAME_ERROR: {name: "multiGames.invalidPlayerNameError"},
+        INVALID_TEXT_ERROR: {name: "multiGames.invalidTextError"}
     };
     strings.MULTI_LOBBY = {
         GAME_TITLE: {name: "multiLobby.gameTitle"},

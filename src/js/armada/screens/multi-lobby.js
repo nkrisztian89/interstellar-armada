@@ -49,11 +49,13 @@ define([
             KICK_COLUMN_ID = "kickColumn",
             CHAT_LOG_ID = "chatLog",
             CHAT_MESSAGE_ID = "chatMessage",
+            REMAINING_MESSAGE_CHARS_ID = "remainingMessageChars",
             CHAT_SEND_ID = "chatSend",
             MESSAGE_TIME_CLASS = "multi-message-time",
             MESSAGE_SENDER_CLASS = "multi-message-sender",
             MESSAGE_SYSTEM_CLASS = "multi-message-system",
             MESSAGE_CLASS = "multi-message",
+            MAX_MESSAGE_LENGTH = 50,
             INFO_BOX_ID = "infoBox",
             SPACECRAFT_SELECTOR_BUTTON_CLASS = "selectSpacecraft",
             KICK_BUTTON_CLASS = "kickPlayer",
@@ -154,6 +156,8 @@ define([
         this._chatLog = this.registerSimpleComponent(CHAT_LOG_ID);
         /** @type SimpleComponent */
         this._chatMessage = this.registerSimpleComponent(CHAT_MESSAGE_ID);
+        /** @type SimpleComponent */
+        this._remainingMessageChars = this.registerSimpleComponent(REMAINING_MESSAGE_CHARS_ID);
         /** @type SimpleComponent */
         this._chatSend = this.registerSimpleComponent(CHAT_SEND_ID);
         /** @type SimpleComponent */
@@ -331,6 +335,15 @@ define([
                     multi: true
                 });
             });
+            networking.onError(function (errorCode) {
+                var message;
+                switch (errorCode) {
+                    case networking.ERROR_CODE_INVALID_TEXT:
+                        message = strings.MULTI_GAMES.INVALID_TEXT_ERROR;
+                        break;
+                }
+                this._showMessage(strings.get(message));
+            }.bind(this));
             this._readyButton.setVisible(!networking.isHost());
             this._readyButton.enable();
             this._startButton.setVisible(networking.isHost());
@@ -363,6 +376,7 @@ define([
             this._logMessage(text, networking.getPlayerName());
         }
         this._chatMessage.getElement().value = "";
+        this._remainingMessageChars.getElement().textContent = MAX_MESSAGE_LENGTH;
         this._chatSend.disable();
     };
     /**
@@ -389,6 +403,16 @@ define([
         this._chatSend.getElement().onclick = function () {
             this._sendText();
             return false;
+        }.bind(this);
+        this._chatMessage.getElement().maxLength = MAX_MESSAGE_LENGTH;
+        this._remainingMessageChars.getElement().textContent = MAX_MESSAGE_LENGTH;
+        this._chatMessage.getElement().oninput = function () {
+            var value = this._chatMessage.getElement().value;
+            if (value) {
+                this._remainingMessageChars.getElement().textContent = MAX_MESSAGE_LENGTH - value.length;
+            } else {
+                this._remainingMessageChars.getElement().textContent = MAX_MESSAGE_LENGTH;
+            }
         }.bind(this);
         this._chatMessage.getElement().onkeyup = function (event) {
             if (event.keyCode === 13) {

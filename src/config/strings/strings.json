@@ -148,7 +148,9 @@
         "gameAlreadyStartedError": "Error: Game has already started!",
         "playerNameAlreadyExistsError": "Error: Game already has a player with the same name!",
         "gameNameAlreadyExistsError": "Error: A game with the same name already exists!",
-        "invalidGameSettingsError": "Error: Invalid game settings!"
+        "invalidGameSettingsError": "Error: Invalid game settings!",
+        "invalidPlayerNameError": "Error: Invalid player name!",
+        "invalidTextError": "Error: Invalid text message! Message not sent."
     },
     "multiLobby": {
         "leaveButton": "Leave game",

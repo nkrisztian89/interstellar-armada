@@ -328,6 +328,16 @@ define([
                     case networking.ERROR_CODE_INVALID_GAME_SETTINGS:
                         message = strings.MULTI_GAMES.INVALID_GAME_SETTINGS_ERROR;
                         break;
+                    case networking.ERROR_CODE_INVALID_PLAYER_NAME:
+                        message = strings.MULTI_GAMES.INVALID_PLAYER_NAME_ERROR;
+                        callback = function () {
+                            this._createGamePopupBackground.hide();
+                            this._playerPopupBackground.show();
+                        }.bind(this);
+                        break;
+                    case networking.ERROR_CODE_INVALID_TEXT:
+                        message = strings.MULTI_GAMES.INVALID_TEXT_ERROR;
+                        break;
                 }
                 this._showMessage(strings.get(message), callback);
             }.bind(this));

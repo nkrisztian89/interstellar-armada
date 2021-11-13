@@ -89,11 +89,27 @@ table.multiPlayers {
     transition: background 0.75s;
 }
 
+div.chatMessageContainer {
+    display: inline-block;
+    position: relative;
+    margin-left: 0;
+    margin-right: 0.6em;
+}
+
 input.chatMessage {
     width: 30em;
     height: 2em;
-    margin-left: 0;
-    margin-right: 0.8em;
+    margin: 0;
+}
+
+span.remainingMessageChars {
+    display: inline-block;
+    position: absolute;
+    right: 0.2em;
+    bottom: 0.2em;
+    font-size: 65%;
+    color: $dark-text-color;
+    background-color: rgba(17, 17, 17, 0.5);
 }
 
 button.chatSend, button.kickPlayer, button.selectSpacecraft {

@@ -31,7 +31,11 @@
         </div>
         <div class="chatContainer">
             <div id="chatLog" class="chatLog"></div>
-            <input id="chatMessage" class="chatMessage" type="text"><button id="chatSend" class="chatSend translatable"></button>
+            <div class="chatMessageContainer">
+                <input id="chatMessage" class="chatMessage" type="text">
+                <span id="remainingMessageChars" class="remainingMessageChars"></span>
+            </div>
+            <button id="chatSend" class="chatSend translatable"></button>
         </div>
     </div>
     <div class="footer separatorBar">
