@@ -421,16 +421,39 @@ define([
         this._onlineGamesCount.setContent(games.length);
         this._serverPingValue.setContent(Math.round(networking.getServerPing()) + " ms");
         if (games.length > 0) {
-            this._gamesList.setContent(games.map(function (game, index) {
-                return `<tr><td>${game.name}</td>` +
-                        `<td>${game.host}</td>` +
-                        `<td class="${PLAYERS_COLUMN_CLASS}">${game.playerCount}/${game.maxPlayers}</td>` +
-                        `<td class="${STARTED_COLUMN_CLASS}">${strings.get(game.started ? strings.MULTI_GAMES.STARTED_YES : strings.MULTI_GAMES.STARTED_NO)}</td>` +
-                        `<td class="${JOIN_COLUMN_CLASS}">${((game.playerCount < game.maxPlayers) && !game.started) ?
-                        '<button id="' + getJoinButtonId(index) + '">' + strings.get(strings.MULTI_GAMES.JOIN_BUTTON) + '</button>' :
-                        ""}</td>` +
-                        `</tr>`;
-            }).join(""));
+            this._gamesList.setContent("");
+            /**
+             * @param {Game} game 
+             * @param {Number} index
+             */
+            games.forEach(function (game, index) {
+                var tr, td, button;
+                tr = document.createElement("tr");
+                td = document.createElement("td");
+                td.textContent = game.name;
+                tr.appendChild(td);
+                td = document.createElement("td");
+                td.textContent = game.host;
+                tr.appendChild(td);
+                td = document.createElement("td");
+                td.className = PLAYERS_COLUMN_CLASS;
+                td.textContent = `${game.playerCount}/${game.maxPlayers}`;
+                tr.appendChild(td);
+                td = document.createElement("td");
+                td.className = STARTED_COLUMN_CLASS;
+                td.textContent = strings.get(game.started ? strings.MULTI_GAMES.STARTED_YES : strings.MULTI_GAMES.STARTED_NO);
+                tr.appendChild(td);
+                td = document.createElement("td");
+                td.className = JOIN_COLUMN_CLASS;
+                if ((game.playerCount < game.maxPlayers) && !game.started) {
+                    button = document.createElement("button");
+                    button.id = getJoinButtonId(index);
+                    button.textContent = strings.get(strings.MULTI_GAMES.JOIN_BUTTON);
+                    td.appendChild(button);
+                }
+                tr.appendChild(td);
+                this._gamesList.getElement().appendChild(tr);
+            }.bind(this));
             for (i = 0; i < games.length; i++) {
                 button = document.getElementById(getJoinButtonId(i));
                 if (button) {

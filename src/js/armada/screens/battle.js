@@ -2956,9 +2956,10 @@ define([
      * Shows the given message to the user in an information box.
      * @param {String} message
      * @param {Function} [onButtonClick]
+     * @param {Boolean} [allowHTML=false]
      */
-    BattleScreen.prototype.showMessage = function (message, onButtonClick) {
-        this._infoBox.updateMessage(message);
+    BattleScreen.prototype.showMessage = function (message, onButtonClick, allowHTML) {
+        this._infoBox.updateMessage(message, undefined, allowHTML);
         this._infoBox.onButtonClick(function () {
             armadaScreens.playButtonClickSound();
             if (onButtonClick) {
@@ -4686,7 +4687,7 @@ define([
                 if (!_multi) {
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
                         menuKey: _getMenuKeyHTMLString()
-                    }));
+                    }), undefined, true);
                 }
                 _mission.applyToSpacecrafts(function (craft) {
                     craft.addEventHandler(SpacecraftEvents.FIRED, _handleSpacecraftFired.bind(craft));

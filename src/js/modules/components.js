@@ -917,10 +917,15 @@ define([
      * @param {String} message The new message to show.
      * @param {Object} [replacements] If given the status string will be considered a format string, and its
      * placeholders will be replaced according to the properties of this object
+     * @param {Boolean} [allowHTML=false] Whether to allow HTML code passed in the message to be parsed
      */
-    InfoBox.prototype.updateMessage = function (message, replacements) {
+    InfoBox.prototype.updateMessage = function (message, replacements, allowHTML) {
         if (this._rootElement) {
-            this._message.setContent(message, replacements);
+            if (allowHTML) {
+                this._message.setContent(message, replacements);
+            } else {
+                this._message.setTextContent(message, replacements);
+            }
         } else {
             application.log_DEBUG("WARNING! Attempting to update the message of info box" + this._name + " before appending it to the page!");
         }

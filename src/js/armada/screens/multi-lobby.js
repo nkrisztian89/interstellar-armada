@@ -50,6 +50,10 @@ define([
             CHAT_LOG_ID = "chatLog",
             CHAT_MESSAGE_ID = "chatMessage",
             CHAT_SEND_ID = "chatSend",
+            MESSAGE_TIME_CLASS = "multi-message-time",
+            MESSAGE_SENDER_CLASS = "multi-message-sender",
+            MESSAGE_SYSTEM_CLASS = "multi-message-system",
+            MESSAGE_CLASS = "multi-message",
             INFO_BOX_ID = "infoBox",
             SPACECRAFT_SELECTOR_BUTTON_CLASS = "selectSpacecraft",
             KICK_BUTTON_CLASS = "kickPlayer",
@@ -241,12 +245,18 @@ define([
      * @param {String} [sender]
      */
     MultiLobbyScreen.prototype._logMessage = function (message, sender) {
-        var element = document.createElement("p"), date = new Date();
-        element.innerHTML =
-                '<span class="multi-message-time">[' + utils.getPaddedStringForNumber(date.getHours(), 2) + ':' + utils.getPaddedStringForNumber(date.getMinutes(), 2) + '] </span>' +
-                (sender ?
-                        '<span class="multi-message-sender">' + sender + ': </span>' + message :
-                        '<span class="multi-message-system">' + message + '</span>');
+        var element = document.createElement("p"), date = new Date(), span;
+        element.innerHTML = `<span class="${MESSAGE_TIME_CLASS}">[${utils.getPaddedStringForNumber(date.getHours(), 2)}:${utils.getPaddedStringForNumber(date.getMinutes(), 2)}] </span>`;
+        if (sender) {
+            span = document.createElement("span");
+            span.textContent = sender + ": ";
+            span.className = MESSAGE_SENDER_CLASS;
+            element.appendChild(span);
+        }
+        span = document.createElement("span");
+        span.textContent = message;
+        span.className = sender ? MESSAGE_CLASS : MESSAGE_SYSTEM_CLASS;
+        element.appendChild(span);
         this._chatLog.getElement().appendChild(element);
         element.scrollIntoView(false);
         element.style.background = "none";
@@ -258,7 +268,7 @@ define([
     MultiLobbyScreen.prototype.setActive = function (active) {
         screens.HTMLScreen.prototype.setActive.call(this, active);
         if (active) {
-            this._gameTitle.setContent(strings.get(strings.MULTI_LOBBY.GAME_TITLE), {name: networking.getGameName()});
+            this._gameTitle.setTextContent(strings.get(strings.MULTI_LOBBY.GAME_TITLE), {name: networking.getGameName()});
             this._updatePlayersList();
             networking.onDisconnect(function () {
                 this._cancelInterval();
@@ -439,16 +449,22 @@ define([
                     networking.kickPlayer(players[index].name);
                 };
         this._kickColumn.setVisible(networking.isHost());
-        this._playersList.setContent(players.map(function (player, index) {
-            return `<tr><td>${player.name}</td>` +
-                    `<td><div ${player.me ? 'id="' + colorSelectorId + '"' : ''} class="colorIndicator${(player.me && !player.ready) ? ' colorSelector' : ''}" style="background-color: ${_getCSSColor(player.settings.color)}"></div></td>` +
+        this._playersList.setContent("");
+        players.forEach(function (player, index) {
+            var tr, td;
+            tr = document.createElement("tr");
+            td = document.createElement("td");
+            td.textContent = player.name;
+            tr.appendChild(td);
+            tr.innerHTML += `<td><div ${player.me ? 'id="' + colorSelectorId + '"' : ''} class="colorIndicator${(player.me && !player.ready) ? ' colorSelector' : ''}" style="background-color: ${_getCSSColor(player.settings.color)}"></div></td>` +
                     `<td>${(player.me && !player.ready) ? '<button id="' + spacecraftSelectorId + '" class="' + SPACECRAFT_SELECTOR_BUTTON_CLASS + '">' : ''}${classes.getSpacecraftClass(player.settings.spacecraft).getDisplayName()}${(player.me && !player.ready) ? '</button>' : ''}</td>` +
                     `<td>${player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)}</td>` +
                     `<td>${player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")}</td>` +
                     `<td>${strings.get(((index === 0) || player.ready) ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)}</td>` +
                     (networking.isHost() ? `<td>${!player.me ? '<button id="' + getKickButtonId(index) + '" class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : ""}</td>` : "") +
                     `</tr>`;
-        }).join(""));
+            this._playersList.getElement().appendChild(tr);
+        }.bind(this));
         document.getElementById(colorSelectorId).onclick = colorSelectorAction.bind(this);
         spacecraftSelector = document.getElementById(spacecraftSelectorId);
         if (spacecraftSelector) {
@@ -474,8 +490,8 @@ define([
         var settings = networking.getGameSettings(), location, loadout;
         location = _mapLocationName(settings.environment);
         loadout = _mapLoadoutName(settings.loadout);
-        this._locationValue.setContent(location);
-        this._loadoutValue.setContent(loadout);
+        this._locationValue.setTextContent(location);
+        this._loadoutValue.setTextContent(loadout);
         this._locationSelector.selectValue(location);
         this._loadoutSelector.selectValue(loadout);
     };

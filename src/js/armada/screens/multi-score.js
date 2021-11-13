@@ -107,23 +107,34 @@ define([
         players = networking.getPlayers().slice().sort(function (a, b) {
             return _getPlayerScore(b) - _getPlayerScore(a);
         });
-        this._title.setContent(utils.formatString(strings.get(strings.MULTI_SCORE.TITLE), {
+        this._title.setTextContent(utils.formatString(strings.get(strings.MULTI_SCORE.TITLE), {
             gameName: networking.getGameName()
         }));
         rank = 1;
         lastScore = 0;
-        this._playersList.setContent(players.map(function (player) {
-            var score = _getPlayerScore(player), className = (player.me ? "me" : (player.left ? "left" : ""));
+        this._playersList.setContent("");
+        players.forEach(function (player) {
+            var tr, td, score = _getPlayerScore(player);
             if (score < lastScore) {
                 rank++;
             }
             lastScore = score;
-            return `<tr class="${className}"><td class="${RANK_CELL_CLASS}">${rank}</td>` +
-                    `<td>${player.name}</td>` +
-                    `<td class="${NUMBER_CELL_CLASS}">${player.stats.kills}</td>` +
-                    `<td class="${NUMBER_CELL_CLASS}">${player.stats.deaths}</td>` +
-                    `</tr>`;
-        }).join(""));
+            tr = document.createElement("tr");
+            tr.className = (player.me ? "me" : (player.left ? "left" : ""));
+            tr.innerHTML = `<td class="${RANK_CELL_CLASS}">${rank}</td>`;
+            td = document.createElement("td");
+            td.textContent = player.name;
+            tr.appendChild(td);
+            td = document.createElement("td");
+            td.textContent = player.stats.kills;
+            td.className = NUMBER_CELL_CLASS;
+            tr.appendChild(td);
+            td = document.createElement("td");
+            td.textContent = player.stats.deaths;
+            td.className = NUMBER_CELL_CLASS;
+            tr.appendChild(td);
+            this._playersList.getElement().appendChild(tr);
+        }.bind(this));
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
