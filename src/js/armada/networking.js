@@ -102,8 +102,10 @@ define([
     var
             // ------------------------------------------------------------------------------
             // constants
+            API_VERSION = "1.0",
             STUN_SERVER_URL = "stun:stun.l.google.com:19302",
             HEARTBEAT_INTERVAL = 15000,
+            WELCOME_TIMEOUT = 10000,
             // --------------------------------
             // message types
             MSG_TYPE_LIST = 0,
@@ -128,6 +130,7 @@ define([
             MSG_TYPE_PLAYER_STATS = 19,
             MSG_TYPE_MATCH_CONCLUDED = 20,
             MSG_TYPE_GUEST_TIMEOUT = 21,
+            MSG_TYPE_WELCOME = 22,
             // --------------------------------
             // error codes
             ERROR_CODE_GAME_NOT_FOUND = 0,
@@ -138,6 +141,8 @@ define([
             ERROR_CODE_INVALID_GAME_SETTINGS = 5,
             ERROR_CODE_INVALID_PLAYER_NAME = 6,
             ERROR_CODE_INVALID_TEXT = 7,
+            ERROR_CODE_INCOMPATIBLE_API_VERSION = 1000,
+            ERROR_CODE_NO_WELCOME = 1001,
             // --------------------------------
             // other constants
             SPACECRAFT_HOST_DATA_LENGTH = constants.MULTI_HOST_DATA_LENGTH,
@@ -153,16 +158,24 @@ define([
             },
             // ------------------------------------------------------------------------------
             // private variables
+            /** @type Number */
+            _welcomeTimeout,
             /** @type String */
             _serverUrl,
             /** @type Number */
             _serverPing,
+            /** @type String */
+            _serverRegion,
+            /** @type String */
+            _serverApiVersion,
             /** @type WebSocket */
             _socket,
             /** @type Boolean */
             _socketOpen,
             /** @type Boolean */
             _shouldBeConnected,
+            /** @type Boolean */
+            _welcomeRecevied,
             /** @type Array */
             _onOpen,
             /** @type Function[][] */
@@ -222,7 +235,6 @@ define([
             /** @type Function */
             _processMessage;
     // -------------------------------------------------------------------------
-    // Private methods
     /**
      * Adds the passed callback to the list of functions to be called when the
      * next message with the passed type arrives
@@ -710,6 +722,40 @@ define([
         }
     }
     /**
+     * Whether the passed API version is compatible with the API version of this
+     * game client
+     * @param {String} apiVersion
+     * @returns {Boolean}
+     */
+    function _isApiVersionCompatible(apiVersion) {
+        var
+                majorClientVersion = parseInt(API_VERSION.split(".")[0], 10),
+                majorServerVersion = parseInt(apiVersion.split(".")[0], 10);
+        return !isNaN(majorServerVersion) && !isNaN(majorClientVersion) &&
+                majorClientVersion === majorServerVersion;
+    }
+    /**
+     * Close all WebRTC and WebSocket connections, delete local game state
+     * information (server will notify other players in the game that this 
+     * player left)
+     */
+    function disconnect() {
+        _shouldBeConnected = false;
+        _welcomeRecevied = false;
+        if (_welcomeTimeout !== -1) {
+            clearTimeout(_welcomeTimeout);
+            _welcomeTimeout = -1;
+        }
+        _onOpen.length = 0;
+        if (_socket && _socketOpen) {
+            if (_game) {
+                _destroyGame();
+            }
+            _socketOpen = false;
+            _socket.close();
+        }
+    }
+    /**
      * Process a general game message (a stringified JSON with a type field with
      * one of the MGS_TYPE_... constant values) Using both builtin logic to
      * maintain the game and player state models and using the appropriate
@@ -717,13 +763,48 @@ define([
      * @param {MessageEvent} event
      */
     _processMessage = function (event) {
-        var i, player, playerIndex, data, serverNeeded;
+        var i, player, playerIndex, data, queuedData, serverNeeded;
         application.log_DEBUG("Socket message received!", 3);
         application.log_DEBUG(event, 3);
         if ((typeof event.data) !== "string") {
             return;
         }
         data = JSON.parse(event.data);
+        if (!_welcomeRecevied) {
+            if (!_shouldBeConnected) {
+                disconnect();
+                return;
+            }
+            if (data.type === MSG_TYPE_WELCOME) {
+                application.log_DEBUG("Welcome received!", 1);
+                _welcomeRecevied = true;
+                _serverApiVersion = data.apiVersion;
+                if (_isApiVersionCompatible(data.apiVersion)) {
+                    _serverRegion = data.region;
+                    application.log_DEBUG("Successfully connected to game server with version " + _serverApiVersion + " from region " + _serverRegion, 1);
+                    for (i = 0; i < _onOpen.length; i++) {
+                        queuedData = _onOpen[i][0];
+                        if (_onOpen[i][1]) {
+                            _onMessage(queuedData.type, _onOpen[i][1], _onOpen[i][2]);
+                        }
+                        _socket.send(JSON.stringify(queuedData));
+                    }
+                    _onOpen.length = 0;
+                    if (_onConnect) {
+                        _onConnect();
+                    }
+                } else {
+                    application.log_DEBUG("ERROR: Incompatible API version! Client: " + API_VERSION + ", server: " + data.apiVersion, 1);
+                    if (_onError) {
+                        _onError(ERROR_CODE_INCOMPATIBLE_API_VERSION);
+                    }
+                    disconnect();
+                }
+            } else {
+                application.log_DEBUG("Message of type " + data.type + " recevied before welcome - cannot process!", 1);
+            }
+            return;
+        }
         switch (data.type) {
             case MSG_TYPE_LIST:
                 _serverPing = performance.now() - _serverPingTime;
@@ -936,8 +1017,6 @@ define([
         _lastGuestUpdate.set(data);
         _lastGuestUpdateTime = now;
     }
-    // -------------------------------------------------------------------------
-    // Public methods
     /**
      * Initialize the module (does not establish connection).
      * Call before anything else
@@ -948,10 +1027,21 @@ define([
         _serverUrl = serverUrl;
         _socket = null;
         _socketOpen = false;
+        _welcomeTimeout = -1;
+        _welcomeRecevied = false;
         _onOpen = [];
         _messageHandlers = {};
         _game = null;
         _isHost = false;
+    }
+    /**
+     * Returns the API version of this game client. Not the same as the game
+     * version. Compatible with game servers that have the same major version
+     * number (number before the first dot)
+     * @returns {String}
+     */
+    function getClientApiVersion() {
+        return API_VERSION;
     }
     /**
      * Whether there is connection open towards the server
@@ -961,50 +1051,35 @@ define([
         return _socket && _socketOpen;
     }
     /**
-     * Close all WebRTC and WebSocket connections, delete local game state
-     * information (server will notify other players in the game that this 
-     * player left)
-     */
-    function disconnect() {
-        _shouldBeConnected = false;
-        _onOpen.length = 0;
-        if (_socket && _socketOpen) {
-            if (_game) {
-                _destroyGame();
-            }
-            _socketOpen = false;
-            _socket.close();
-        }
-    }
-    /**
      * Establish a connection to the WebSocket server
      */
     function connect() {
-        var i;
         _shouldBeConnected = true;
         if (!_socket) {
             _socketOpen = false;
+            _welcomeRecevied = false;
             _socket = new WebSocket(_serverUrl);
             _socket.binaryType = 'blob';
             _socket.onopen = function () {
-                var data;
-                application.log_DEBUG("Connected to the multiplayer server!", 1);
+                application.log_DEBUG("Connected to the multiplayer server! Waiting for welcome...", 1);
                 _socketOpen = true;
                 if (!_shouldBeConnected) {
                     disconnect();
                     return;
                 }
-                for (i = 0; i < _onOpen.length; i++) {
-                    data = _onOpen[i][0];
-                    if (_onOpen[i][1]) {
-                        _onMessage(data.type, _onOpen[i][1], _onOpen[i][2]);
+                if (_welcomeTimeout !== -1) {
+                    clearTimeout(_welcomeTimeout);
+                }
+                _welcomeTimeout = setTimeout(function () {
+                    if (_shouldBeConnected && _socketOpen && !_welcomeRecevied) {
+                        application.log_DEBUG("ERROR: No welcome message received from server!", 1);
+                        if (_onError) {
+                            _onError(ERROR_CODE_NO_WELCOME);
+                        }
+                        disconnect();
                     }
-                    _socket.send(JSON.stringify(data));
-                }
-                _onOpen.length = 0;
-                if (_onConnect) {
-                    _onConnect();
-                }
+                    _welcomeTimeout = -1;
+                }, WELCOME_TIMEOUT);
             };
             _socket.onclose = function () {
                 application.log_DEBUG("Disconnected from the multiplayer server!", 1);
@@ -1024,6 +1099,20 @@ define([
      */
     function getServerPing() {
         return _serverPing;
+    }
+    /**
+     * Returns the region identifier that the server sent
+     * @returns {String}
+     */
+    function getServerRegion() {
+        return _serverRegion;
+    }
+    /**
+     * Returns the API version sent by the server
+     * @returns {String}
+     */
+    function getServerApiVersion() {
+        return _serverApiVersion;
     }
     /**
      * Returns the currently set name for the local player
@@ -1636,11 +1725,16 @@ define([
         ERROR_CODE_INVALID_GAME_SETTINGS: ERROR_CODE_INVALID_GAME_SETTINGS,
         ERROR_CODE_INVALID_PLAYER_NAME: ERROR_CODE_INVALID_PLAYER_NAME,
         ERROR_CODE_INVALID_TEXT: ERROR_CODE_INVALID_TEXT,
+        ERROR_CODE_INCOMPATIBLE_API_VERSION: ERROR_CODE_INCOMPATIBLE_API_VERSION,
+        ERROR_CODE_NO_WELCOME: ERROR_CODE_NO_WELCOME,
         init: init,
+        getClientApiVersion: getClientApiVersion,
         isConnected: isConnected,
         connect: connect,
         disconnect: disconnect,
         getServerPing: getServerPing,
+        getServerRegion: getServerRegion,
+        getServerApiVersion: getServerApiVersion,
         getPlayerName: getPlayerName,
         setPlayerName: setPlayerName,
         getPlayerSettings: getPlayerSettings,

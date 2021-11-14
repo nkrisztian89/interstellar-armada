@@ -79,6 +79,12 @@ define([
         OBJECTIVE_WIN_PREFIX: {name: "missions.winObjective.", optional: true},
         OBJECTIVE_LOSE_PREFIX: {name: "missions.loseObjective.", optional: true}
     };
+    strings.SERVER_REGION = {
+        PREFIX: {name: "serverRegion.", optional: true},
+        UNKNOWN: {name: "serverRegion.unknown"},
+        EU: {name: "serverRegion.EU"},
+        US: {name: "serverRegion.US"}
+    };
     strings.MULTI_GAMES = {
         BACK: {name: "multiGames.backButton"},
         TITLE: {name: "multiGames.title"},
@@ -95,7 +101,9 @@ define([
         GAME_NAME_ALREADY_EXISTS_ERROR: {name: "multiGames.gameNameAlreadyExistsError"},
         INVALID_GAME_SETTINGS_ERROR: {name: "multiGames.invalidGameSettingsError"},
         INVALID_PLAYER_NAME_ERROR: {name: "multiGames.invalidPlayerNameError"},
-        INVALID_TEXT_ERROR: {name: "multiGames.invalidTextError"}
+        INVALID_TEXT_ERROR: {name: "multiGames.invalidTextError"},
+        INCOMPATIBLE_API_VERSION_ERROR: {name: "multiGames.incompatibleApiVersionError"},
+        NO_WELCOME_ERROR: {name: "multiGames.noWelcomeError"}
     };
     strings.MULTI_LOBBY = {
         GAME_TITLE: {name: "multiLobby.gameTitle"},

@@ -111,7 +111,12 @@
     },
     "location": {
         "unknown": "Unknown",
-        "system": "{systemName} system"  
+        "system": "{systemName} system"
+    },
+    "serverRegion": {
+        "unknown": "unknown",
+        "EU": "Europe",
+        "US": "US"
     },
     "multiGames": {
         "backButton": "Back to menu",
@@ -119,8 +124,10 @@
         "createGameButton": "Create game",
         "title": "Multiplayer",
         "connectingLabel": "Connecting to the game server...",
+        "serverVersionLabel": "Server version:",
+        "serverRegionLabel": "Region:",
         "onlinePlayersLabel": "Online players:",
-        "serverPingLabel": "Server ping:",
+        "serverPingLabel": "Ping:",
         "noAvailableGamesLabel": "There are no available games right now.",
         "onlineGamesTitle": "Online games:",
         "gameNameColumn": "Game name",
@@ -150,7 +157,9 @@
         "gameNameAlreadyExistsError": "Error: A game with the same name already exists!",
         "invalidGameSettingsError": "Error: Invalid game settings!",
         "invalidPlayerNameError": "Error: Invalid player name!",
-        "invalidTextError": "Error: Invalid text message! Message not sent."
+        "invalidTextError": "Error: Invalid text message! Message not sent.",
+        "incompatibleApiVersionError": "Cannot connect to the game server: Game server version ({serverVersion}) not compatible with this client ({clientVersion})!",
+        "noWelcomeError": "Cannot connect to the game server: No welcome message received!"
     },
     "multiLobby": {
         "leaveButton": "Leave game",

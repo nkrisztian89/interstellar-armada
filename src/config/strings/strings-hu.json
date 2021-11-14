@@ -127,14 +127,21 @@
         "unknown": "Ismeretlen",
         "system": "{systemName} rendszer"  
     },
+    "serverRegion": {
+        "unknown": "ismeretlen",
+        "EU": "Európa",
+        "US": "USA"
+    },
     "multiGames": {
         "backButton": "Vissza a menübe",
         "refreshButton": "Frissítés",
         "createGameButton": "Új játék",
         "title": "Többjátékos mód",
         "connectingLabel": "Csatlakozás a szerverhez...",
+        "serverVersionLabel": "Szerver verzió:",
+        "serverRegionLabel": "Régió:",
         "onlinePlayersLabel": "Aktív játékosok:",
-        "serverPingLabel": "Szerver ping:",
+        "serverPingLabel": "Ping:",
         "noAvailableGamesLabel": "Jelenleg nincsenek aktív játékok.",
         "onlineGamesTitle": "Aktív játékok:",
         "gameNameColumn": "Játék neve",
@@ -164,7 +171,9 @@
         "gameNameAlreadyExistsError": "Hiba: Ilyen nevű játék már létezik!",
         "invalidGameSettingsError": "Hiba: Érvénytelen játékbeállítások!",
         "invalidPlayerNameError": "Hiba: Érvénytelen játékosnév!",
-        "invalidTextError": "Hiba: Érvénytelen szöveges üzenet! Az üzenet nem lett elküldve."
+        "invalidTextError": "Hiba: Érvénytelen szöveges üzenet! Az üzenet nem lett elküldve.",
+        "incompatibleApiVersionError": "Nem sikerült kapcsolódni a szerverhez: A szerver verziója ({serverVersion}) nem kompatibilis ezzel a játékverzióval ({clientVersion})!",
+        "noWelcomeError": "Nem sikerült kapcsolódni a szerverhez: A szerver nem küldött üdvözlő üzenetet!"
     },
     "multiLobby": {
         "leaveButton": "Kilépés",

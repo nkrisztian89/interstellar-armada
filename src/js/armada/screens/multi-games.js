@@ -9,6 +9,7 @@
 /*global define, document, setInterval, clearInterval */
 
 /**
+ * @param utils Used for string formatting
  * @param game Used for navigation
  * @param analytics Used for registering actions for analytics
  * @param screens The multiplayer games screen is a subclass of HTMLScreen
@@ -22,6 +23,7 @@
  * @param classes Used to get spacecraft class names
  */
 define([
+    "utils/utils",
     "modules/game",
     "modules/analytics",
     "modules/screens",
@@ -32,7 +34,7 @@ define([
     "armada/strings",
     "armada/screens/shared",
     "armada/logic/classes"
-], function (game, analytics, screens, components, config, audio, networking, strings, armadaScreens, classes) {
+], function (utils, game, analytics, screens, components, config, audio, networking, strings, armadaScreens, classes) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -43,7 +45,9 @@ define([
             CREATE_GAME_BUTTON_ID = "createGameButton",
             SERVER_INFO_CONTAINER_ID = "serverInfoContainer",
             CONNECTING_LABEL_ID = "connectingLabel",
-            NO_AVILABLE_GAMES_ID = "noAvailableGamesLabel",
+            NO_AVAILABLE_GAMES_ID = "noAvailableGamesLabel",
+            SERVER_VERSION_VALUE_ID = "serverVersionValue",
+            SERVER_REGION_VALUE_ID = "serverRegionValue",
             ONLINE_PLAYERS_VALUE_ID = "onlinePlayersValue",
             ONLINE_GAMES_COUNT_ID = "onlineGamesCount",
             SERVER_PING_VALUE_ID = "serverPingValue",
@@ -123,7 +127,11 @@ define([
         /** @type SimpleComponent */
         this._connectingLabel = this.registerSimpleComponent(CONNECTING_LABEL_ID);
         /** @type SimpleComponent */
-        this._noAvailableGamesLabel = this.registerSimpleComponent(NO_AVILABLE_GAMES_ID);
+        this._noAvailableGamesLabel = this.registerSimpleComponent(NO_AVAILABLE_GAMES_ID);
+        /** @type SimpleComponent */
+        this._serverVersionValue = this.registerSimpleComponent(SERVER_VERSION_VALUE_ID);
+        /** @type SimpleComponent */
+        this._serverRegionValue = this.registerSimpleComponent(SERVER_REGION_VALUE_ID);
         /** @type SimpleComponent */
         this._onlinePlayersValue = this.registerSimpleComponent(ONLINE_PLAYERS_VALUE_ID);
         /** @type SimpleComponent */
@@ -272,7 +280,9 @@ define([
      * @param {Boolean} active
      */
     MultiGamesScreen.prototype.setActive = function (active) {
-        var refresh = networking.listGames.bind(this, this._updateGamesList.bind(this));
+        var
+                disconnectErrorShown = false,
+                refresh = networking.listGames.bind(this, this._updateGamesList.bind(this));
         screens.HTMLScreen.prototype.setActive.call(this, active);
         if (active) {
             if (!networking.isConnected()) {
@@ -285,6 +295,8 @@ define([
                     refresh();
                     this._createGameButton.enable();
                     this._connectingLabel.hide();
+                    this._serverVersionValue.setTextContent(networking.getServerApiVersion());
+                    this._serverRegionValue.setTextContent(strings.get(strings.SERVER_REGION.PREFIX, networking.getServerRegion(), networking.getServerRegion()));
                     this._serverInfoContainer.show();
                 }.bind(this));
                 networking.connect();
@@ -296,13 +308,15 @@ define([
                 this._cancelInterval();
                 this._createGamePopupBackground.hide();
                 this._playerPopupBackground.hide();
-                this._showMessage(
-                        strings.get(wasConnected ?
-                                strings.MULTI_GAMES.DISCONNECT_MESSAGE :
-                                strings.MULTI_GAMES.CANNOT_CONNECT_MESSAGE),
-                        function () {
-                            game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
-                        }.bind(this));
+                if (!disconnectErrorShown) {
+                    this._showMessage(
+                            strings.get(wasConnected ?
+                                    strings.MULTI_GAMES.DISCONNECT_MESSAGE :
+                                    strings.MULTI_GAMES.CANNOT_CONNECT_MESSAGE),
+                            function () {
+                                game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                            }.bind(this));
+                }
             }.bind(this));
             networking.onError(function (errorCode) {
                 var message, callback;
@@ -338,8 +352,25 @@ define([
                     case networking.ERROR_CODE_INVALID_TEXT:
                         message = strings.MULTI_GAMES.INVALID_TEXT_ERROR;
                         break;
+                    case networking.ERROR_CODE_INCOMPATIBLE_API_VERSION:
+                        message = strings.MULTI_GAMES.INCOMPATIBLE_API_VERSION_ERROR;
+                        callback = function () {
+                            game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                        }.bind(this);
+                        disconnectErrorShown = true;
+                        break;
+                    case networking.ERROR_CODE_NO_WELCOME:
+                        message = strings.MULTI_GAMES.NO_WELCOME_ERROR;
+                        callback = function () {
+                            game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                        }.bind(this);
+                        disconnectErrorShown = true;
+                        break;
                 }
-                this._showMessage(strings.get(message), callback);
+                this._showMessage(utils.formatString(strings.get(message), {
+                    serverVersion: networking.getServerApiVersion(),
+                    clientVersion: networking.getClientApiVersion()
+                }), callback);
             }.bind(this));
             this._createGamePopupBackground.hide();
             if (!networking.getPlayerName()) {
