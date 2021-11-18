@@ -141,6 +141,7 @@ define([
             ERROR_CODE_INVALID_GAME_SETTINGS = 5,
             ERROR_CODE_INVALID_PLAYER_NAME = 6,
             ERROR_CODE_INVALID_TEXT = 7,
+            ERROR_CODE_SERVER_IS_FULL = 8,
             ERROR_CODE_INCOMPATIBLE_API_VERSION = 1000,
             ERROR_CODE_NO_WELCOME = 1001,
             // --------------------------------
@@ -175,7 +176,7 @@ define([
             /** @type Boolean */
             _shouldBeConnected,
             /** @type Boolean */
-            _welcomeRecevied,
+            _welcomeReceived,
             /** @type Array */
             _onOpen,
             /** @type Function[][] */
@@ -741,7 +742,7 @@ define([
      */
     function disconnect() {
         _shouldBeConnected = false;
-        _welcomeRecevied = false;
+        _welcomeReceived = false;
         if (_welcomeTimeout !== -1) {
             clearTimeout(_welcomeTimeout);
             _welcomeTimeout = -1;
@@ -770,14 +771,14 @@ define([
             return;
         }
         data = JSON.parse(event.data);
-        if (!_welcomeRecevied) {
+        if (!_welcomeReceived) {
             if (!_shouldBeConnected) {
                 disconnect();
                 return;
             }
             if (data.type === MSG_TYPE_WELCOME) {
                 application.log_DEBUG("Welcome received!", 1);
-                _welcomeRecevied = true;
+                _welcomeReceived = true;
                 _serverApiVersion = data.apiVersion;
                 if (_isApiVersionCompatible(data.apiVersion)) {
                     _serverRegion = data.region;
@@ -800,10 +801,11 @@ define([
                     }
                     disconnect();
                 }
-            } else {
-                application.log_DEBUG("Message of type " + data.type + " recevied before welcome - cannot process!", 1);
+                return;
+            } else if (data.type !== MSG_TYPE_ERROR) {
+                application.log_DEBUG("Message of type " + data.type + " received before welcome - cannot process!", 1);
+                return;
             }
-            return;
         }
         switch (data.type) {
             case MSG_TYPE_LIST:
@@ -1028,7 +1030,7 @@ define([
         _socket = null;
         _socketOpen = false;
         _welcomeTimeout = -1;
-        _welcomeRecevied = false;
+        _welcomeReceived = false;
         _onOpen = [];
         _messageHandlers = {};
         _game = null;
@@ -1057,7 +1059,7 @@ define([
         _shouldBeConnected = true;
         if (!_socket) {
             _socketOpen = false;
-            _welcomeRecevied = false;
+            _welcomeReceived = false;
             _socket = new WebSocket(_serverUrl);
             _socket.binaryType = 'blob';
             _socket.onopen = function () {
@@ -1071,7 +1073,7 @@ define([
                     clearTimeout(_welcomeTimeout);
                 }
                 _welcomeTimeout = setTimeout(function () {
-                    if (_shouldBeConnected && _socketOpen && !_welcomeRecevied) {
+                    if (_shouldBeConnected && _socketOpen && !_welcomeReceived) {
                         application.log_DEBUG("ERROR: No welcome message received from server!", 1);
                         if (_onError) {
                             _onError(ERROR_CODE_NO_WELCOME);
@@ -1725,6 +1727,7 @@ define([
         ERROR_CODE_INVALID_GAME_SETTINGS: ERROR_CODE_INVALID_GAME_SETTINGS,
         ERROR_CODE_INVALID_PLAYER_NAME: ERROR_CODE_INVALID_PLAYER_NAME,
         ERROR_CODE_INVALID_TEXT: ERROR_CODE_INVALID_TEXT,
+        ERROR_CODE_SERVER_IS_FULL: ERROR_CODE_SERVER_IS_FULL,
         ERROR_CODE_INCOMPATIBLE_API_VERSION: ERROR_CODE_INCOMPATIBLE_API_VERSION,
         ERROR_CODE_NO_WELCOME: ERROR_CODE_NO_WELCOME,
         init: init,

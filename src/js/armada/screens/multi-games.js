@@ -352,6 +352,13 @@ define([
                     case networking.ERROR_CODE_INVALID_TEXT:
                         message = strings.MULTI_GAMES.INVALID_TEXT_ERROR;
                         break;
+                    case networking.ERROR_CODE_SERVER_IS_FULL:
+                        message = strings.MULTI_GAMES.SERVER_IS_FULL_ERROR;
+                        callback = function () {
+                            game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                        }.bind(this);
+                        disconnectErrorShown = true;
+                        break;
                     case networking.ERROR_CODE_INCOMPATIBLE_API_VERSION:
                         message = strings.MULTI_GAMES.INCOMPATIBLE_API_VERSION_ERROR;
                         callback = function () {

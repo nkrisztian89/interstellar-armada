@@ -102,6 +102,7 @@ define([
         INVALID_GAME_SETTINGS_ERROR: {name: "multiGames.invalidGameSettingsError"},
         INVALID_PLAYER_NAME_ERROR: {name: "multiGames.invalidPlayerNameError"},
         INVALID_TEXT_ERROR: {name: "multiGames.invalidTextError"},
+        SERVER_IS_FULL_ERROR: {name: "multiGames.serverIsFullError"},
         INCOMPATIBLE_API_VERSION_ERROR: {name: "multiGames.incompatibleApiVersionError"},
         NO_WELCOME_ERROR: {name: "multiGames.noWelcomeError"}
     };

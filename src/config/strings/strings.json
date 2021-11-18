@@ -158,6 +158,7 @@
         "invalidGameSettingsError": "Error: Invalid game settings!",
         "invalidPlayerNameError": "Error: Invalid player name!",
         "invalidTextError": "Error: Invalid text message! Message not sent.",
+        "serverIsFullError": "Cannot connect to the game server: Server is currently full!",
         "incompatibleApiVersionError": "Cannot connect to the game server: Game server version ({serverVersion}) not compatible with this client ({clientVersion})!",
         "noWelcomeError": "Cannot connect to the game server: No welcome message received!"
     },
