@@ -31,6 +31,7 @@
  * @param control Used for global game control functions.
  * @param SpacecraftEvents used for setting spacecraft event handlers
  * @param missions Used for creating the Mission object, accessing enums.
+ * @param missionEvents Used for accessing enums.
  * @param equipment Used to access flight mode constants
  * @param spacecraft Used for multiplayer data messaging and state setup
  * @param ai Used for performing the AI control operations in the battle simulation loop.
@@ -58,6 +59,7 @@ define([
     "armada/control",
     "armada/logic/SpacecraftEvents",
     "armada/logic/missions",
+    "armada/logic/missions/events",
     "armada/logic/equipment",
     "armada/logic/spacecraft",
     "armada/logic/ai",
@@ -68,9 +70,12 @@ define([
         renderableObjects, sceneGraph,
         analytics,
         strings, armadaScreens, graphics, audio, networking, classes, config, control,
-        SpacecraftEvents, missions, equipment, spacecraft, ai) {
+        SpacecraftEvents, missions, missionEvents, equipment, spacecraft, ai) {
     "use strict";
     var
+            // ------------------------------------------------------------------------------
+            // imports
+            ObjectiveState = missionEvents.ObjectiveState,
             // ------------------------------------------------------------------------------
             // enums
             HUDSection = {
@@ -306,7 +311,7 @@ define([
              */
             _timeInSameView,
             /**
-             * (enum missions.MissionState) The last mission state that the player has been made aware of.
+             * (enum missionEvents.MissionState) The last mission state that the player has been made aware of.
              * @type String
              */
             _displayedMissionState,
@@ -3474,13 +3479,13 @@ define([
                         if (i < objectivesState.length) {
                             _objectivesTexts[i].setText(objectivesState[i].text);
                             switch (objectivesState[i].state) {
-                                case missions.ObjectiveState.IN_PROGRESS:
+                                case ObjectiveState.IN_PROGRESS:
                                     _objectivesTexts[i].setColor(colors.inProgress);
                                     break;
-                                case missions.ObjectiveState.COMPLETED:
+                                case ObjectiveState.COMPLETED:
                                     _objectivesTexts[i].setColor(colors.completed);
                                     break;
-                                case missions.ObjectiveState.FAILED:
+                                case ObjectiveState.FAILED:
                                     _objectivesTexts[i].setColor(colors.failed);
                                     break;
                             }
@@ -4306,7 +4311,7 @@ define([
      * @returns {Boolean} Whether the objective is completed
      */
     function _mapObjectiveState(object) {
-        return object.state === missions.ObjectiveState.COMPLETED;
+        return object.state === ObjectiveState.COMPLETED;
     }
     /**
      * Sets up and navigates to the debriefing screen according to the current state of the mission.
@@ -4324,14 +4329,14 @@ define([
             return;
         }
         craft = _mission.getPilotedSpacecraft();
-        victory = _mission.getState() === missions.MissionState.COMPLETED;
+        victory = _mission.getState() === missionEvents.MissionState.COMPLETED;
         hitRatio = craft ? craft.getHitRatio() : 0;
         // calculating score from base score and bonuses
         perfStats = craft ? _mission.getPerformanceStatistics() : {};
         if (_missionSourceFilename) {
             missionDescriptor = missions.getMissionDescriptor(_mission.getName());
             // NONE state mission playthrough count is increased right when the mission starts
-            if (_mission.getState() !== missions.MissionState.NONE) {
+            if (_mission.getState() !== missionEvents.MissionState.NONE) {
                 missionDescriptor.increasePlaythroughCount(victory);
             }
             if (victory && !missionDescriptor.isCustom()) {
@@ -4428,7 +4433,7 @@ define([
                 } else if (_timeSinceGameStateChanged < config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                     _timeSinceGameStateChanged += dt;
                     if (_timeSinceGameStateChanged >= config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
-                        victory = _mission.getState() === missions.MissionState.COMPLETED;
+                        victory = _mission.getState() === missionEvents.MissionState.COMPLETED;
                         time = Math.round(_elapsedTime / 1000);
                         if (_missionSourceFilename && !missions.getMissionDescriptor(_mission.getName()).isCustom()) {
                             analyticsParams = {difficulty: _difficulty, time: time};
@@ -4509,7 +4514,7 @@ define([
             } else {
                 if (_mission && (_displayedMissionState !== _mission.getState())) {
                     _displayedMissionState = _mission.getState();
-                    if (_displayedMissionState === missions.MissionState.ENDED) {
+                    if (_displayedMissionState === missionEvents.MissionState.ENDED) {
                         audio.playMusic(AMBIENT_THEME);
                     }
                 }
@@ -4532,7 +4537,7 @@ define([
             // for missions that are already won or lost at the very beginning (no enemies / controlled craft), we do not display the
             // victory / defeat message
             if (!_demoMode) {
-                if ((!_mission.getPilotedSpacecraft() || (_mission.getState() === missions.MissionState.NONE))) {
+                if ((!_mission.getPilotedSpacecraft() || (_mission.getState() === missionEvents.MissionState.NONE))) {
                     missionDescriptor.increasePlaythroughCount(true);
                 }
                 if (!custom) {

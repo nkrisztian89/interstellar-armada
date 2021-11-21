@@ -1,5 +1,5 @@
 {
-    "version": "0.4.7-dev:953 (2021.11.19.)",
+    "version": "0.4.7-dev:954 (2021.11.22.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4", "0.4.5", "0.4.6"],
@@ -11,7 +11,7 @@
         "data": "data/",
         "screen": "{{data}}/screens/",
         "component": "{{data}}/components/",
-       "model": "{{asset}}/models/",
+        "model": "{{asset}}/models/",
         "shader": "{{asset}}/shaders/",
         "texture": "{{asset}}/textures/",
         "soundEffect": "{{asset}}/sfx/",

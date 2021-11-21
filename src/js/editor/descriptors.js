@@ -21,6 +21,9 @@
  * @param classes Used to access enums and retrieve class name lists
  * @param environments Used to retrieve environment name lists
  * @param missions Used to access enums
+ * @param conditions Used to access enums
+ * @param missionActions Used to access enums
+ * @param missionEvents Used to access enums
  * @param equipment Used to access enums 
  * @param spacecraft Used to access enums 
  * @param ai Used to access the list of valid AI types
@@ -39,14 +42,29 @@ define([
     "armada/logic/classes",
     "armada/logic/environments",
     "armada/logic/missions",
+    "armada/logic/missions/conditions",
+    "armada/logic/missions/actions",
+    "armada/logic/missions/events",
     "armada/logic/equipment",
     "armada/logic/spacecraft",
     "armada/logic/ai",
     "armada/screens/battle",
     "editor/common"
-], function (utils, managedGL, egomModel, camera, resources, config, graphics, strings, classes, environments, missions, equipment, spacecraft, ai, battle, common) {
+], function (
+        utils,
+        managedGL, egomModel, camera, resources,
+        config, graphics, strings,
+        classes, environments, missions, conditions, missionActions, missionEvents, equipment, spacecraft, ai,
+        battle,
+        common) {
     "use strict";
     var
+            // ------------------------------------------------------------------------------
+            // Imports
+            ConditionType = conditions.ConditionType,
+            ActionType = missionActions.ActionType,
+            TriggerWhen = missionEvents.TriggerWhen,
+            TriggerWhich = missionEvents.TriggerWhich,
             // ------------------------------------------------------------------------------
             // Enums
             BaseType = {
@@ -2991,7 +3009,7 @@ define([
              */
             CONDITION_TYPE = {
                 baseType: BaseType.ENUM,
-                values: missions.ConditionType
+                values: ConditionType
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3118,21 +3136,21 @@ define([
              */
             DESTROYED_CONDITION_WHICH = {
                 baseType: BaseType.ENUM,
-                values: missions.DestroyedConditionWhich
+                values: conditions.DestroyedConditionWhich
             },
             /**
              * @type Editor~TypeDescriptor
              */
             COUNT_CONDITION_RELATION = {
                 baseType: BaseType.ENUM,
-                values: missions.CountConditionRelation
+                values: conditions.CountConditionRelation
             },
             /**
              * @type Editor~TypeDescriptor
              */
             TIME_CONDITION_WHEN = {
                 baseType: BaseType.ENUM,
-                values: missions.TimeConditionWhen
+                values: conditions.TimeConditionWhen
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3151,16 +3169,16 @@ define([
                 }
             },
             _parentIsDestroyedCondition = function (data, parent) {
-                return !!parent && (parent.type === missions.ConditionType.DESTROYED);
+                return !!parent && (parent.type === ConditionType.DESTROYED);
             },
             _parentIsCountCondition = function (data, parent) {
-                return !!parent && (parent.type === missions.ConditionType.COUNT);
+                return !!parent && (parent.type === ConditionType.COUNT);
             },
             _parentIsTimeCondition = function (data, parent) {
-                return !!parent && (parent.type === missions.ConditionType.TIME);
+                return !!parent && (parent.type === ConditionType.TIME);
             },
             _isRepeatTime = function (data, parent) {
-                return _parentIsTimeCondition(data, parent) && (data.when === missions.TimeConditionWhen.REPEAT);
+                return _parentIsTimeCondition(data, parent) && (data.when === conditions.TimeConditionWhen.REPEAT);
             },
             /**
              * A merge of all the different possible condition parameters
@@ -3242,17 +3260,17 @@ define([
                 }
             },
             _conditionCanHaveSubjects = function (data) {
-                return (data.type === missions.ConditionType.DESTROYED) || (data.type === missions.ConditionType.COUNT);
+                return (data.type === ConditionType.DESTROYED) || (data.type === ConditionType.COUNT);
             },
             _conditionCanHaveParams = function (data) {
-                return ((data.type === missions.ConditionType.DESTROYED) && data.subjects && new missions.SubjectGroup(data.subjects).isMulti()) || 
-                        (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME);
+                return ((data.type === ConditionType.DESTROYED) && data.subjects && new conditions.SubjectGroup(data.subjects).isMulti()) ||
+                        (data.type === ConditionType.COUNT) || (data.type === ConditionType.TIME);
             },
             _conditionMustHaveParams = function (data) {
-                return (data.type === missions.ConditionType.COUNT) || (data.type === missions.ConditionType.TIME);
+                return (data.type === ConditionType.COUNT) || (data.type === ConditionType.TIME);
             },
             _getConditionParamDefault = function (data) {
-                return (data.type === missions.ConditionType.DESTROYED) ? "all" : "none";
+                return (data.type === ConditionType.DESTROYED) ? "all" : "none";
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3269,11 +3287,11 @@ define([
                 getPreviewText: function (instance) {
                     if (instance.type) {
                         switch (instance.type) {
-                            case missions.ConditionType.COUNT:
+                            case ConditionType.COUNT:
                                 return "count of " + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " " + CONDITION_PARAMS.getPreviewText(instance.params || utils.EMPTY_OBJECT);
-                            case missions.ConditionType.DESTROYED:
-                                return ((instance.params && instance.params.which === missions.DestroyedConditionWhich.ANY) ? "any of " : "") + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " destroyed";
-                            case missions.ConditionType.TIME:
+                            case ConditionType.DESTROYED:
+                                return ((instance.params && instance.params.which === conditions.DestroyedConditionWhich.ANY) ? "any of " : "") + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " destroyed";
+                            case ConditionType.TIME:
                                 return instance.params ? CONDITION_PARAMS.getPreviewText(instance.params) : "time";
                         }
                         return instance.type;
@@ -3306,14 +3324,14 @@ define([
              */
             TRIGGER_WHICH = {
                 baseType: BaseType.ENUM,
-                values: missions.TriggerWhich
+                values: TriggerWhich
             },
             /**
              * @type Editor~TypeDescriptor
              */
             TRIGGER_WHEN = {
                 baseType: BaseType.ENUM,
-                values: missions.TriggerWhen
+                values: TriggerWhen
             },
             _triggerHasConditions = function (data) {
                 return data.conditions && (data.conditions.length > 0);
@@ -3323,9 +3341,9 @@ define([
             },
             _getTriggerWhenString = function (when, plural) {
                 switch (when) {
-                    case missions.TriggerWhen.BECOMES_TRUE:
+                    case TriggerWhen.BECOMES_TRUE:
                         return "";
-                    case missions.TriggerWhen.BECOMES_FALSE:
+                    case TriggerWhen.BECOMES_FALSE:
                         return (plural ? "become" : "becomes") + " false";
                 }
             },
@@ -3333,7 +3351,7 @@ define([
                 var i;
                 if (data.conditions) {
                     for (i = 0; i < data.conditions.length; i++) {
-                        if (missions.createCondition(data.conditions[i]).canChangeMultipleTimes()) {
+                        if (conditions.createCondition(data.conditions[i]).canChangeMultipleTimes()) {
                             return false;
                         }
                     }
@@ -3357,7 +3375,7 @@ define([
                     var result = (instance.delay ? utils.getTimeString(instance.delay) + " after " : "");
                     if (instance.conditions && (instance.conditions.length > 0)) {
                         if (instance.conditions.length > 1) {
-                            result = result + ((instance.which === missions.TriggerWhich.ANY) ? "any of " : "") + instance.conditions.length + " conditions";
+                            result = result + ((instance.which === TriggerWhich.ANY) ? "any of " : "") + instance.conditions.length + " conditions";
                         } else {
                             result = result + CONDITION.getPreviewText(instance.conditions[0]);
                         }
@@ -3374,13 +3392,13 @@ define([
                     WHICH: {
                         name: "which",
                         type: TRIGGER_WHICH,
-                        defaultValue: missions.TriggerWhich.ALL,
+                        defaultValue: TriggerWhich.ALL,
                         isValid: _triggerHasMultipleConditions
                     },
                     WHEN: {
                         name: "when",
                         type: TRIGGER_WHEN,
-                        defaultValue: missions.TriggerWhen.BECOMES_TRUE,
+                        defaultValue: TriggerWhen.BECOMES_TRUE,
                         isValid: _triggerHasConditions
                     },
                     ONCE: {
@@ -3403,7 +3421,7 @@ define([
              */
             ACTION_TYPE = {
                 baseType: BaseType.ENUM,
-                values: missions.ActionType
+                values: ActionType
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3580,10 +3598,10 @@ define([
                 }
             },
             _parentIsMessageAction = function (data, parent) {
-                return !!parent && (parent.type === missions.ActionType.MESSAGE);
+                return !!parent && (parent.type === ActionType.MESSAGE);
             },
             _parentIsCommandAction = function (data, parent) {
-                return !!parent && (parent.type === missions.ActionType.COMMAND);
+                return !!parent && (parent.type === ActionType.COMMAND);
             },
             _isJumpCommandActionParams = function (data, parent) {
                 return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.JUMP);
@@ -3592,11 +3610,11 @@ define([
                 return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.TARGET);
             },
             _parentIsHUDAction = function (data, parent) {
-                return !!parent && (parent.type === missions.ActionType.HUD);
+                return !!parent && (parent.type === ActionType.HUD);
             },
             _missionHasMessages = function (data, parent, itemName) {
                 var prefix = strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(itemName) + strings.MISSION.MESSAGES_SUFFIX.name;
-                return !!parent && (parent.type === missions.ActionType.MESSAGE) && (strings.getKeys(prefix).length > 0);
+                return !!parent && (parent.type === ActionType.MESSAGE) && (strings.getKeys(prefix).length > 0);
             },
             _requiresMessage = function (data, parent, itemName) {
                 return _parentIsMessageAction(data, parent) && !_missionHasMessages(data, parent, itemName);
@@ -3712,10 +3730,10 @@ define([
                 }
             },
             _actionCanHaveSubjects = function (data) {
-                return data.type === missions.ActionType.COMMAND;
+                return data.type === ActionType.COMMAND;
             },
             _actionCanHaveParams = function (data) {
-                return [missions.ActionType.MESSAGE, missions.ActionType.COMMAND, missions.ActionType.HUD].indexOf(data.type) >= 0;
+                return [ActionType.MESSAGE, ActionType.COMMAND, ActionType.HUD].indexOf(data.type) >= 0;
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3725,7 +3743,7 @@ define([
                 name: "Action",
                 getName: function (instance) {
                     if (instance.type) {
-                        if (instance.type === missions.ActionType.COMMAND) {
+                        if (instance.type === ActionType.COMMAND) {
                             return instance.type + ((instance.params && instance.params.command) ? ": " + instance.params.command : "");
                         }
                         return instance.type;
@@ -3767,10 +3785,10 @@ define([
                     if (instance.name) {
                         return instance.name;
                     }
-                    if (instance.actions && (instance.actions.length > 0) && (instance.actions[0].type === missions.ActionType.WIN)) {
+                    if (instance.actions && (instance.actions.length > 0) && (instance.actions[0].type === ActionType.WIN)) {
                         return "win";
                     }
-                    if (instance.actions && (instance.actions.length > 0) && (instance.actions[0].type === missions.ActionType.LOSE)) {
+                    if (instance.actions && (instance.actions.length > 0) && (instance.actions[0].type === ActionType.LOSE)) {
                         return "lose";
                     }
                     if (instance.trigger && (!instance.trigger.conditions || instance.trigger.conditions.length === 0)) {

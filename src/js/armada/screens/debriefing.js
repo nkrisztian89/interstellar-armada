@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2020 Krisztián Nagy
+ * Copyright 2016-2021 Krisztián Nagy
  * @file This module manages and provides the Mission debriefing screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -16,7 +16,7 @@
  * @param strings Used for translation support
  * @param audio Used for setting music theme
  * @param armadaScreens Used for navigation
- * @param missions Used to access MissionState enum
+ * @param missionEvents Used to access MissionState enum
  */
 define([
     "utils/utils",
@@ -26,8 +26,8 @@ define([
     "armada/strings",
     "armada/audio",
     "armada/screens/shared",
-    "armada/logic/missions"
-], function (utils, game, screens, config, strings, audio, armadaScreens, missions) {
+    "armada/logic/missions/events"
+], function (utils, game, screens, config, strings, audio, armadaScreens, missionEvents) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -176,8 +176,8 @@ define([
         screens.HTMLScreen.prototype._updateComponents.call(this);
     };
     /**
-     * @typedef {Object} DebreifingScreen~Data
-     * @property {Number} missionState (enum missions.MissionState)
+     * @typedef {Object} DebriefingScreen~Data
+     * @property {Number} missionState (enum missionEvents.MissionState)
      * @property {String[]} objectives
      * @property {Boolean[]} objectivesCompleted
      * @property {String} performance
@@ -201,21 +201,21 @@ define([
      */
     /**
      * Sets the contents of the screen's HTML element to show the passed data (score, statistics...) of the mission
-     * @param {DebreifingScreen~Data} data
+     * @param {DebriefingScreen~Data} data
      */
     DebriefingScreen.prototype.setData = function (data) {
         var medalText, hasScore, description, i, completed;
-        hasScore = (data.missionState === missions.MissionState.COMPLETED);
-        _shouldPlayVictoryMusic = (data.missionState === missions.MissionState.COMPLETED) ||
-                (data.missionState === missions.MissionState.NONE);
+        hasScore = (data.missionState === missionEvents.MissionState.COMPLETED);
+        _shouldPlayVictoryMusic = (data.missionState === missionEvents.MissionState.COMPLETED) ||
+                (data.missionState === missionEvents.MissionState.NONE);
         medalText = hasScore ? strings.get(strings.PERFORMANCE_LEVEL.PREFIX, data.performance) : "";
-        this._title.setContent((data.missionState === missions.MissionState.COMPLETED) ?
+        this._title.setContent((data.missionState === missionEvents.MissionState.COMPLETED) ?
                 strings.get(strings.DEBRIEFING.VICTORY_TITLE) :
-                ((data.missionState === missions.MissionState.NONE) ?
+                ((data.missionState === missionEvents.MissionState.NONE) ?
                         strings.get(strings.DEBRIEFING.GENERIC_TITLE) :
                         strings.get(strings.DEBRIEFING.DEFEAT_TITLE)));
         this._medal.getElement().src = utils.formatString(MEDAL_IMAGE_SOURCE, {
-            performance: (data.missionState !== missions.MissionState.NONE) ? data.performance : MEDAL_IMAGE_NO_SCORE
+            performance: (data.missionState !== missionEvents.MissionState.NONE) ? data.performance : MEDAL_IMAGE_NO_SCORE
         });
         this._scoreContainer.setVisible(hasScore);
         this._scoreSpan.setVisible(hasScore);
@@ -226,7 +226,7 @@ define([
         }
         this._newRecord.setVisible(hasScore && data.isRecord);
         switch (data.missionState) {
-            case missions.MissionState.COMPLETED:
+            case missionEvents.MissionState.COMPLETED:
                 description =
                         utils.formatString(strings.get(strings.DEBRIEFING.DESCRIPTION_VICTORY), {
                             performance: strings.getDefiniteArticleForWord(medalText) + " <strong>" + medalText + "</strong>"
@@ -235,13 +235,13 @@ define([
                             score: data.nextPerformanceScore
                         }) : "");
                 break;
-            case missions.MissionState.NONE:
+            case missionEvents.MissionState.NONE:
                 description = strings.get(strings.DEBRIEFING.DESCRIPTION_GENERIC);
                 break;
-            case missions.MissionState.FAILED:
+            case missionEvents.MissionState.FAILED:
                 description = strings.get(strings.DEBRIEFING.DESCRIPTION_FAIL);
                 break;
-            case missions.MissionState.DEFEAT:
+            case missionEvents.MissionState.DEFEAT:
                 description = strings.get(strings.DEBRIEFING.DESCRIPTION_DEFEAT);
                 break;
             default:
@@ -250,7 +250,7 @@ define([
         this._descriptionParagraph.setContent(description);
         description = "";
         for (i = 0; i < data.objectives.length; i++) {
-            completed = (data.missionState === missions.MissionState.COMPLETED) || data.objectivesCompleted[i];
+            completed = (data.missionState === missionEvents.MissionState.COMPLETED) || data.objectivesCompleted[i];
             description += '<tr><td class="' + (completed ? COMPLETED_OBJECTIVE_CLASS_NAME : FAILED_OBJECTIVE_CLASS_NAME) + '">' +
                     (completed ? strings.get(strings.DEBRIEFING.COMPLETED) : strings.get(strings.DEBRIEFING.FAILED)) +
                     ':</td><td class="' + OBJECTIVE_TEXT_CELL_CLASS_NAME + '">' + data.objectives[i] + "</td></tr>";
