@@ -40,6 +40,8 @@ define([
                 CLEAR_MESSAGES: "clearMessages",
                 /** Executing this action sends a command to the subject spacecrafts (to be processed by their AIs) */
                 COMMAND: "command",
+                /** Executing this action sets properties (such as hull integrity) of the subject spacecrafts to the given values */
+                SET_PROPERTIES: "setProperties",
                 /** Executing this action changes the state of the HUD on the piloted spacecraft (e.g. hide / show / highlight an element) */
                 HUD: "hud",
                 /** Executing this action marks the mission as complete */
@@ -379,6 +381,58 @@ define([
      * @param {Object} dataJSON
      * @param {Trigger} trigger
      */
+    function SetPropertiesAction(dataJSON, trigger) {
+        Action.call(this, dataJSON, trigger);
+    }
+    SetPropertiesAction.prototype = new Action();
+    SetPropertiesAction.prototype.constructor = SetPropertiesAction;
+    /**
+     * @typedef SetPropertiesAction~Params
+     * @property {Number} [hull] The percentage to set the subjects' hull integrity to
+     * @property {Number} [shield] The percentage to set the subjects' shield integrity to
+     */
+    /**
+     * @override
+     * @param {SetPropertiesAction~Params} params 
+     * @returns {Boolean}
+     */
+    SetPropertiesAction.prototype._checkParams = function (params) {
+        /**
+         * @type SetPropertiesAction~Params
+         */
+        this._params = params;
+        if (!this._params ||
+                ((this._params.hull !== undefined) && ((typeof this._params.hull !== "number") || (this._params.hull < 0) || (this._params.hull > 100))) ||
+                ((this._params.shield !== undefined) && ((typeof this._params.shield !== "number") || (this._params.shield < 0) || (this._params.shield > 100)))) {
+            this._handleWrongParams();
+            return false;
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission 
+     */
+    SetPropertiesAction.prototype.execute = function (mission) {
+        var i, spacecrafts = this._subjects.getSpacecrafts(mission, true);
+        if (spacecrafts.length > 0) {
+            for (i = 0; i < spacecrafts.length; i++) {
+                if (this._params.hull !== undefined) {
+                    spacecrafts[i].setHullIntegrity(this._params.hull * 0.01);
+                }
+                if (this._params.shield !== undefined) {
+                    spacecrafts[i].setShieldIntegrity(this._params.shield * 0.01);
+                }
+            }
+        }
+    };
+    // #########################################################################
+    /**
+     * @class 
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Trigger} trigger
+     */
     function HUDAction(dataJSON, trigger) {
         Action.call(this, dataJSON, trigger);
     }
@@ -427,6 +481,7 @@ define([
     _actionConstructors[ActionType.MESSAGE] = MessageAction;
     _actionConstructors[ActionType.CLEAR_MESSAGES] = ClearMessagesAction;
     _actionConstructors[ActionType.COMMAND] = CommandAction;
+    _actionConstructors[ActionType.SET_PROPERTIES] = SetPropertiesAction;
     _actionConstructors[ActionType.HUD] = HUDAction;
     // -------------------------------------------------------------------------
     // The public interface of the module

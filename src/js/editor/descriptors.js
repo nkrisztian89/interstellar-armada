@@ -344,6 +344,13 @@ define([
                 min: 1,
                 max: 100
             },
+            NON_NEGATIVE_INT_PERCENT = {
+                baseType: BaseType.NUMBER,
+                unit: Unit.PERCENT,
+                integer: true,
+                min: 0,
+                max: 100
+            },
             NON_NEGATIVE_INTEGER = {
                 baseType: BaseType.NUMBER,
                 integer: true,
@@ -3603,6 +3610,9 @@ define([
             _parentIsCommandAction = function (data, parent) {
                 return !!parent && (parent.type === ActionType.COMMAND);
             },
+            _parentIsSetPropertiesAction = function (data, parent) {
+                return !!parent && (parent.type === ActionType.SET_PROPERTIES);
+            },
             _isJumpCommandActionParams = function (data, parent) {
                 return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.JUMP);
             },
@@ -3643,6 +3653,12 @@ define([
                             return instance.command + " " + TARGET_COMMAND_PARAMS.getPreviewText(instance.target);
                         }
                         return instance.command;
+                    }
+                    // SetPropertiesAction params:
+                    if (instance.hull !== undefined || instance.shield !== undefined) {
+                        return ((instance.hull !== undefined) ? "hull=" + instance.hull + "%" : "") +
+                                (((instance.hull !== undefined) && (instance.shield !== undefined)) ? ", " : "") +
+                                ((instance.shield !== undefined) ? "shield=" + instance.shield + "%" : "");
                     }
                     // HUDAction params:
                     if (instance.state !== undefined) {
@@ -3714,6 +3730,19 @@ define([
                         optional: true,
                         isValid: _isTargetCommandActionParams
                     },
+                    // SetPropertiesAction params:
+                    HULL: {
+                        name: "hull",
+                        type: NON_NEGATIVE_INT_PERCENT,
+                        optional: true,
+                        isValid: _parentIsSetPropertiesAction
+                    },
+                    SHIELD: {
+                        name: "shield",
+                        type: NON_NEGATIVE_INT_PERCENT,
+                        optional: true,
+                        isValid: _parentIsSetPropertiesAction
+                    },
                     // HUDAction params:
                     SECTION: {
                         name: "section",
@@ -3730,10 +3759,10 @@ define([
                 }
             },
             _actionCanHaveSubjects = function (data) {
-                return data.type === ActionType.COMMAND;
+                return (data.type === ActionType.COMMAND) || (data.type === ActionType.SET_PROPERTIES);
             },
             _actionCanHaveParams = function (data) {
-                return [ActionType.MESSAGE, ActionType.COMMAND, ActionType.HUD].indexOf(data.type) >= 0;
+                return [ActionType.MESSAGE, ActionType.COMMAND, ActionType.SET_PROPERTIES, ActionType.HUD].indexOf(data.type) >= 0;
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3745,6 +3774,14 @@ define([
                     if (instance.type) {
                         if (instance.type === ActionType.COMMAND) {
                             return instance.type + ((instance.params && instance.params.command) ? ": " + instance.params.command : "");
+                        }
+                        if (instance.type === ActionType.SET_PROPERTIES) {
+                            if (!instance.params) {
+                                return "set properties";
+                            }
+                            return (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "set") + ":" +
+                                    ((instance.params.hull !== undefined) ? " hull=" + instance.params.hull + "%" : "") +
+                                    ((instance.params.shield !== undefined) ? " shield=" + instance.params.shield + "%" : "");
                         }
                         return instance.type;
                     }

@@ -930,7 +930,11 @@ define([
      * and 1.0 (indicating full hull integrity)
      */
     Spacecraft.prototype.setHullIntegrity = function (ratio) {
-        this._hitpoints = ratio * this._maxHitpoints;
+        var newHitpoints = ratio * this._maxHitpoints, repair = newHitpoints > this._hitpoints;
+        this._hitpoints = newHitpoints;
+        if (repair) {
+            this._updateDamageIndicators();
+        }
     };
     /**
      * Returns whether the spacecraft has a shield equipped.
@@ -2857,6 +2861,23 @@ define([
         this._hitpoints = 0;
     };
     /**
+     * Removes damage indicators that are no longer needed in case the spacecraft has regained hitpoints
+     */
+    Spacecraft.prototype._updateDamageIndicators = function () {
+        var i, classIndicators, count;
+        i = this._activeDamageIndicators.length - 1;
+        classIndicators = this._class.getDamageIndicators();
+        while ((i >= 0) && (this._hitpoints > classIndicators[i].hullIntegrity / 100 * this._maxHitpoints)) {
+            i--;
+        }
+        count = i + 1;
+        while (i < this._activeDamageIndicators.length - 1) {
+            i++;
+            this._activeDamageIndicators[i].finish();
+        }
+        this._activeDamageIndicators.length = count;
+    };
+    /**
      * @typedef {Object} Spacecraft~SimulateParams
      * The named parameters that can be submitted to the simulate() method of spacecrafts
      * @property {Boolean} controlThrusters If false, the maneuvering computer will not control the thrusters in this simulation step
@@ -2913,9 +2934,10 @@ define([
                         true,
                         this._physicalModel.getVelocityMatrix());
                 this._explosion.addToScene(this._visualModel.getNode().getScene().getRootNode(), this.getSoundSource());
-                for (i = 0; i < this._activeDamageIndicators; i++) {
+                for (i = 0; i < this._activeDamageIndicators.length; i++) {
                     this._activeDamageIndicators[i].finish();
                 }
+                this._activeDamageIndicators.length = 0;
             } else {
                 this._timeElapsedSinceDestruction += dt;
                 if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getTotalDuration() * this._class.getShowTimeRatioDuringExplosion())) {
