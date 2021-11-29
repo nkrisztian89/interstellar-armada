@@ -581,6 +581,7 @@ define([
         };
         updateButtonText = function () {
             button.textContent = isArray ?
+                    arrayType && arrayType.getDescriptor().getPreviewText && arrayType.getDescriptor().getPreviewText(data) ||
                     (((data.length === 1) && typeDescriptor.getName) ? "[" + typeDescriptor.getName(data[0]) + "]" : typeDescriptor.name + " [" + data.length + "]") :
                     (typeDescriptor.getPreviewText ? typeDescriptor.getPreviewText(data) : typeDescriptor.name);
             if (parentPopup) {
@@ -1444,7 +1445,7 @@ define([
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
             valid = !propertyDescriptor.isValid || propertyDescriptor.isValid(data, parent, _item.name);
-            required = !propertyDescriptor.optional && !propertyDescriptor.globalDefault && !propertyDescriptor.getDerivedDefault && (propertyDescriptor.defaultValue === undefined) && (!propertyDescriptor.isRequired || propertyDescriptor.isRequired(data, parent, _item.name));
+            required = !propertyDescriptor.optional && !propertyDescriptor.globalDefault && (propertyDescriptor.defaultValue === undefined) && (!propertyDescriptor.isRequired || propertyDescriptor.isRequired(data, parent, _item.name));
             if (!valid || (row.required && !required)) {
                 delete data[propertyDescriptor.name];
             } else if (required && (data[propertyDescriptor.name] === undefined) && (!_basedOn || (data !== _item.data))) {

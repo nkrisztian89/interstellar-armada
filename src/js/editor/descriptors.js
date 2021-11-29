@@ -150,15 +150,17 @@ define([
              * Returns a type descriptor describing an array type that has elements of the passed type
              * @param {Editor~TypeDescriptor} elementType
              * @param {Object} [length]
+             * @param {Function} [getPreviewText]
              * @returns {Editor~TypeDescriptor}
              */
-            _createTypedArrayType = function (elementType, length) {
+            _createTypedArrayType = function (elementType, length, getPreviewText) {
                 return {
                     baseType: BaseType.ARRAY,
                     elementType: elementType,
                     fixedLength: length && length.fixed,
                     minLength: length && length.min,
-                    maxLength: length && length.max
+                    maxLength: length && length.max,
+                    getPreviewText: getPreviewText
                 };
             },
             /**
@@ -3118,7 +3120,10 @@ define([
                     if (subjects.length === 2) {
                         return subjects[0] + ", " + subjects[1];
                     }
-                    return subjects[0] + ", " + subjects[1] + "...";
+                    if ((subjects.length === 3) && (subjects[2].length < 9)) {
+                        return subjects.join(", ");
+                    }
+                    return subjects[0] + ", " + subjects[1] + "... (" + (subjects.length - 2) + " more)";
                 },
                 properties: {
                     SPACECRAFTS: {
@@ -3346,14 +3351,6 @@ define([
             _triggerHasMultipleConditions = function (data) {
                 return data.conditions && (data.conditions.length > 1);
             },
-            _getTriggerWhenString = function (when, plural) {
-                switch (when) {
-                    case TriggerWhen.BECOMES_TRUE:
-                        return "";
-                    case TriggerWhen.BECOMES_FALSE:
-                        return (plural ? "become" : "becomes") + " false";
-                }
-            },
             _getTriggerDefaultOnce = function (data) {
                 var i;
                 if (data.conditions) {
@@ -3379,21 +3376,30 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "Trigger",
                 getPreviewText: function (instance) {
-                    var result = (instance.delay ? utils.getTimeString(instance.delay) + " after " : "");
+                    var whichAny = instance.which === TriggerWhich.ANY,
+                            whenFalse = instance.when === TriggerWhen.BECOMES_FALSE,
+                            result = (instance.delay ? utils.getTimeString(instance.delay) + " after " : "");
                     if (instance.conditions && (instance.conditions.length > 0)) {
-                        if (instance.conditions.length > 1) {
-                            result = result + ((instance.which === TriggerWhich.ANY) ? "any of " : "") + instance.conditions.length + " conditions";
+                        if (instance.conditions.length > 2) {
+                            result = result + (whichAny ? "any of " : "") + instance.conditions.length + " conditions" + (whenFalse ? " become false" : "");
+                        } else if (instance.conditions.length > 1) {
+                            result = result + (whenFalse ? (whichAny ? "not " : "neither ") : "") +
+                                    instance.conditions.map(CONDITION.getPreviewText).join(whenFalse ? (whichAny ? " and " : " nor ") : (whichAny ? " or " : " and "));
                         } else {
-                            result = result + CONDITION.getPreviewText(instance.conditions[0]);
+                            result = result + (whenFalse ? "not " : "") + CONDITION.getPreviewText(instance.conditions[0]);
                         }
-                        return result + (instance.when ? " " + _getTriggerWhenString(instance.when, instance.conditions.length > 1) : "");
+                        return result;
                     }
                     return result + "mission start";
                 },
                 properties: {
                     CONDITIONS: {
                         name: "conditions",
-                        type: _createTypedArrayType(CONDITION, {min: 1}),
+                        type: _createTypedArrayType(CONDITION, {min: 1}, function (instance) {
+                            if (instance.length <= 2) {
+                                return "[" + instance.map(CONDITION.getPreviewText).join(", ") + "]";
+                            }
+                        }),
                         optional: true
                     },
                     WHICH: {
@@ -3771,21 +3777,39 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "Action",
                 getName: function (instance) {
+                    var result = "";
+                    if (instance.delay) {
+                        result = utils.getTimeString(instance.delay) + " | ";
+                    }
                     if (instance.type) {
-                        if (instance.type === ActionType.COMMAND) {
-                            return instance.type + ((instance.params && instance.params.command) ? ": " + instance.params.command : "");
-                        }
-                        if (instance.type === ActionType.SET_PROPERTIES) {
-                            if (!instance.params) {
-                                return "set properties";
+                        if (instance.type === ActionType.MESSAGE) {
+                            if (instance.params) {
+                                result = result + ACTION_PARAMS.getPreviewText(instance.params);
                             }
-                            return (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "set") + ":" +
+                        } else if (instance.type === ActionType.COMMAND) {
+                            if (instance.subjects && instance.params) {
+                                result = result + SUBJECT_GROUP.getPreviewText(instance.subjects) + ": " + ACTION_PARAMS.getPreviewText(instance.params);
+                            } else {
+                                result = result + instance.type;
+                            }
+                        } else if (instance.type === ActionType.HUD) {
+                            if (instance.params) {
+                                result = result + ACTION_PARAMS.getPreviewText(instance.params);
+                            }
+                        } else if (instance.type === ActionType.SET_PROPERTIES) {
+                            if (!instance.params) {
+                                result = result + "set properties";
+                            }
+                            result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "set") + ":" +
                                     ((instance.params.hull !== undefined) ? " hull=" + instance.params.hull + "%" : "") +
                                     ((instance.params.shield !== undefined) ? " shield=" + instance.params.shield + "%" : "");
+                        } else {
+                            result = result + instance.type;
                         }
-                        return instance.type;
+                    } else {
+                        result = result + "action";
                     }
-                    return "action";
+                    return result;
                 },
                 properties: {
                     TYPE: {
@@ -3831,8 +3855,12 @@ define([
                     if (instance.trigger && (!instance.trigger.conditions || instance.trigger.conditions.length === 0)) {
                         return "start";
                     }
-                    if (instance.actions && (instance.actions.length === 1)) {
-                        return ACTION.getName(instance.actions[0]);
+                    if (instance.actions) {
+                        if (instance.actions.length > 1) {
+                            return instance.actions.length + " actions";
+                        } else if (instance.actions.length === 1) {
+                            return ACTION.getName(instance.actions[0]);
+                        }
                     }
                     return "event";
                 },
@@ -4222,7 +4250,11 @@ define([
                 },
                 TEAMS: {
                     name: "teams",
-                    type: _createTypedArrayType(TEAM),
+                    type: _createTypedArrayType(TEAM, undefined, function (instance) {
+                        if (instance.length <= 2) {
+                            return "[" + instance.map(TEAM.getName).join(", ") + "]";
+                        }
+                    }),
                     optional: true
                 },
                 EVENTS: {
