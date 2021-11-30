@@ -1,13 +1,10 @@
 /**
- * Copyright 2018-2020 Krisztián Nagy
+ * Copyright 2018-2021 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
  * catch and process input from a touchscreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, localStorage, window, navigator */
 
 /**
  * @param utils Used for formatting control strings and handling enums

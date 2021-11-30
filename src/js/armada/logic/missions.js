@@ -5,8 +5,6 @@
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  */
 
-/*global define, localStorage */
-
 /**
  * @param utils Used for format strings and useful constants
  * @param types Used for type checking when loading from local storage

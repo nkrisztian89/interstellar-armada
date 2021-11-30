@@ -4,10 +4,7 @@
  * catch and process input from the keyboard.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, localStorage, document */
 
 /**
  * @param utils Used for the keycode utility function

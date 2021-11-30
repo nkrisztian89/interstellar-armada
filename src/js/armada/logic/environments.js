@@ -1,12 +1,9 @@
 /**
- * Copyright 2014-2018, 2020 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2021 Krisztián Nagy
  * @file Implementation of loading and managing environments
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, Element, Float32Array, performance, localStorage */
 
 /**
  * @param utils Used for format strings and useful constants

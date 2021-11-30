@@ -4,10 +4,7 @@
  * Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, location, document, JSON, localStorage */
 
 /**
  * @param game This module uses the template provided by the game module and customizes it for Interstellar Armada

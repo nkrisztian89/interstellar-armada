@@ -1,12 +1,9 @@
 /**
- * Copyright 2014-2016, 2020 Krisztián Nagy
+ * Copyright 2014-2016, 2020-2021 Krisztián Nagy
  * @file This module manages and provides the general settings screen of the application (where e.g. the language of the game can be changed)
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, document, localStorage */
 
 /**
  * @param components Used for the components (i.e. Selectors) of the screen.

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020 Krisztián Nagy
+ * Copyright 2014-2017, 2020-2021 Krisztián Nagy
  * @file This module builds on Application to provide a template for creating games.
  * To use, just augment this module, calling
  * - setGameName()
@@ -14,10 +14,9 @@
  * The, call initialize() to run the game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
 
-/*global define, requirejs, location, document, JSON */
+/*global requirejs */
 
 /**
  * @param application This module augments the generic application module

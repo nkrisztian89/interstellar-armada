@@ -32,10 +32,7 @@
  * during the game as a Float32Array
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define */
 
 /**
  * @typedef {Object} PlayerSettings
@@ -553,9 +550,10 @@ define([
             }
         };
         channel.onmessage = function (event) {
+            var data;
             application.log_DEBUG("RTC message received:", 3);
             application.log_DEBUG(event, 3);
-            const data = JSON.parse(event.data);
+            data = JSON.parse(event.data);
             switch (data.type) {
                 case MSG_TYPE_PING:
                     channel.send(JSON.stringify({

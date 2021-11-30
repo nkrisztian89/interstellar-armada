@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Provides an interface to interact with WebGL in a managed way. Offers
  * rather low level functionality, but using it is still much more transparent 
  * than accessing WebGL directly.
@@ -13,10 +13,7 @@
  * - use the render function of the model to render it to the context
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, Image, Float32Array, parseInt, document */
 
 /**
  * @param utils Used for enum functionality

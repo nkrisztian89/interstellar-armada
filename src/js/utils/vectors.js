@@ -1,12 +1,9 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, Float32Array */
 
 define(function () {
     "use strict";

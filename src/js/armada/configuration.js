@@ -3,10 +3,7 @@
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define */
 
 /**
  * @param utils Used for accessing the ScaleMode enum

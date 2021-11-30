@@ -1,12 +1,9 @@
 /**
- * Copyright 2017-2020 Krisztián Nagy
+ * Copyright 2017-2021 Krisztián Nagy
  * @file This module manages and provides the gameplay settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define */
 
 /**
  * @param application Used for showing error messages

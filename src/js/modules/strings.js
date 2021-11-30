@@ -1,13 +1,10 @@
 /**
- * Copyright 2016, 2020 Krisztián Nagy
+ * Copyright 2016, 2020-2021 Krisztián Nagy
  * @file A stateful module that stores translation strings for different languages for the application and provides functions to load these
  * strings from an object 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 0.1
  */
-
-/*global define */
 
 /**
  * @param types Used for parsing the string definition JSON with property and type verification

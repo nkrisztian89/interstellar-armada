@@ -3,10 +3,7 @@
  * @file Implementations of the various classes that represent all the different types of equipment to be added to spacecrafts
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, Element, Float32Array, performance */
 
 /**
  * @param utils Used for solving quadratic equations

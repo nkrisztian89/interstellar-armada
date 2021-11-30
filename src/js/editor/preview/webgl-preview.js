@@ -1,12 +1,9 @@
 /**
- * Copyright 2016-2020 Krisztián Nagy
+ * Copyright 2016-2021 Krisztián Nagy
  * @file Provides the general structure to preview windows of the Interstellar Armada editor that use a WebGL scene 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, document, window */
 
 /**
  * @param utils Used for enum value listing, async execution.

@@ -1,12 +1,9 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file This module manages and provides the in-game database screen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, setInterval, clearInterval, document, performance */
 
 /**
  * @param utils Used for string formatting and async calls.

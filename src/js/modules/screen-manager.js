@@ -3,10 +3,7 @@
  * @file Provides functions to add and access HTML screens of the application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define */
 
 /**
  * @param asyncResource ScreenManager is an AsyncResource as it tracks the loading state of the screens it manages

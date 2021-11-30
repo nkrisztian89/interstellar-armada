@@ -1,12 +1,9 @@
 /**
- * Copyright 2014-2018, 2020 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2021 Krisztián Nagy
  * @file Provides a capable camera class to use with scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, Float32Array, Int32Array */
 
 /**
  * @param utils Used for array equality check.

@@ -3,10 +3,7 @@
  * @file This module manages and provides the Multiplayer Games screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, document, setInterval, clearInterval */
 
 /**
  * @param utils Used for string formatting
@@ -485,7 +482,7 @@ define([
                 tr.appendChild(td);
                 td = document.createElement("td");
                 td.className = PLAYERS_COLUMN_CLASS;
-                td.textContent = `${game.playerCount}/${game.maxPlayers}`;
+                td.textContent = game.playerCount + "/" + game.maxPlayers;
                 tr.appendChild(td);
                 td = document.createElement("td");
                 td.className = STARTED_COLUMN_CLASS;

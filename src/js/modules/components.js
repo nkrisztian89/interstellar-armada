@@ -4,10 +4,7 @@
  * for storing the downloaded source (HTML and CSS) files of the created components.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, document */
 
 /**
  * @param utils Used for formatted strings when setting component content

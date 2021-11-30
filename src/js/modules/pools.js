@@ -1,13 +1,10 @@
 /**
- * Copyright 2014-2017, 2020 Krisztián Nagy
+ * Copyright 2014-2017, 2020-2021 Krisztián Nagy
  * @file Provides a pool class that can be used to minimize the creation of object from which many are created and destroyed.
  * Also provides a way to create and access common pools for different types of objects.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, Element, Float32Array, performance */
 
 define(function () {
     "use strict";

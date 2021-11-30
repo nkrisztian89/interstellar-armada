@@ -3,10 +3,7 @@
  * @file Provides the content and event handlers for the Properties window of the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, document, window */
 
 /**
  * @param utils Used for enum handling
@@ -287,7 +284,7 @@ define([
      */
     function _createNumberControl(topName, data, integer, changeHandler, parent, name, unit, min, max) {
         var result = document.createElement("div"),
-                input = common.createNumericInput(data, {integer, min, max}, function (value) {
+                input = common.createNumericInput(data, {integer: integer, min: min, max: max}, function (value) {
                     _changeData(topName, value, parent, name, changeHandler);
                 });
         result.appendChild(input);
@@ -1238,7 +1235,7 @@ define([
                                 limit = true;
                             }
                         } else if (typeof defaultValue[0] === "boolean") {
-                            labelText = defaultValue.map((boolean) => (boolean ? "yes" : "no")).join(", ");
+                            labelText = defaultValue.map(function (boolean) { return boolean ? "yes" : "no"; }).join(", ");
                             limit = true;
                         }
                     }

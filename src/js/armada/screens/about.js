@@ -1,12 +1,9 @@
 /**
- * Copyright 2014-2018, 2020 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2021 Krisztián Nagy
  * @file This module manages and provides the About screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, window, document, setInterval, clearInterval */
 
 /**
  * @param game Used for navigation and displaying the game version

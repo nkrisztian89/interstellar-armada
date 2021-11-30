@@ -3,10 +3,7 @@
  * @file Provides a basic physics engine with Newtonian mechanics
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define */
 
 /**
  * @param utils Used for point in rectangle checks

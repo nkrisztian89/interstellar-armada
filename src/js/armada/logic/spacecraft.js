@@ -3,10 +3,7 @@
  * @file Implementation of the Spacecraft game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, Element, Float32Array, performance */
 
 /**
  * @param utils Used for Pi related constants

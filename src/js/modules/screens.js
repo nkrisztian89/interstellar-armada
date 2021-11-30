@@ -4,10 +4,7 @@
  * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, document, alert, window, setInterval, clearInterval, performance, parseFloat */
 
 /**
  * @param utils Used for converting RGBA color to CSS color strings and for format strings

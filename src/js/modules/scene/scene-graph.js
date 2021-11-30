@@ -1,14 +1,11 @@
 /**
- * Copyright 2014-2018, 2020 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2021 Krisztián Nagy
  * @file A general purpose WebGL scene engine building on the functionality of ManagedGL.
  * Create a Scene, add background and main scene objects and light sources, then add it to a ManagedGLContext (or several ones), and it can
  * be rendered on them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, Float32Array, Int32Array */
 
 /**
  * @param utils Used for shallow copying

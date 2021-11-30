@@ -1,13 +1,10 @@
 /**
- * Copyright 2016-2018, 2020 Krisztián Nagy
+ * Copyright 2016-2018, 2020-2021 Krisztián Nagy
  * @file Provides functionality to parse and load the audio settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, parseFloat, window, localStorage, screen */
 
 /**
  * @param types Used for type checking JSON settings and set values

@@ -1,13 +1,10 @@
 /**
- * Copyright 2014-2020 Krisztián Nagy
+ * Copyright 2014-2021 Krisztián Nagy
  * @file Provides a basic class to use as a mixin or base class for 3 dimensional objects.
  * be rendered on them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, Float32Array, Int32Array */
 
 /**
  * @param vec Used for 3D (and 4D) vector operations.

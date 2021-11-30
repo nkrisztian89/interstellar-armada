@@ -4,10 +4,7 @@
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 0.1
  */
-
-/*global define */
 
 /**
  * @param strings This module augments the general strings module.

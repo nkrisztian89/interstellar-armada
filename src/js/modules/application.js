@@ -12,10 +12,9 @@
  * - use showError() to display verbose error messages
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
 
-/*global define, requirejs, alert, console, XMLHttpRequest, DOMParser, document, performance */
+/*global requirejs */
 
 /**
  * @module modules/application

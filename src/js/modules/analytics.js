@@ -3,10 +3,7 @@
  * @file This is a simple analytics module that sends requests to an analytics backend
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, location, document, JSON */
 
 /**
  * @param application Used for logging
@@ -85,7 +82,7 @@ define([
                 if (_queue.length === 0) {
                     callback();
                 } else {
-                    _queue.push({callback});
+                    _queue.push({callback: callback});
                 }
             },
             /**
@@ -144,7 +141,7 @@ define([
                 if (independent) {
                     request.send(null);
                 } else {
-                    _queue.push({request});
+                    _queue.push({request: request});
                     if (_queue.length === 1) {
                         request.send(null);
                     }

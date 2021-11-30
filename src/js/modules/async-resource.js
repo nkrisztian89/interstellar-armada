@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2015, 2020 Krisztián Nagy
+ * Copyright 2014-2015, 2020-2021 Krisztián Nagy
  * @file A low level module with no dependencies.
  * Provides a class that represents asynchronously loaded resources to 
  * help transparently manage them. Provides an execution queue for the resource,
@@ -11,10 +11,7 @@
  * - use executeWhenReady() to call functions that can be only executed when the resource is loaded
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, setTimeout */
 
 define(function () {
     "use strict";

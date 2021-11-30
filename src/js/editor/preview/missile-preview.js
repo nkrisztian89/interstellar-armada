@@ -1,12 +1,9 @@
 /**
- * Copyright 2019-2020 Krisztián Nagy
+ * Copyright 2019-2021 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for missile classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, document, window */
 
 /**
  * @param vec Used for vector operations

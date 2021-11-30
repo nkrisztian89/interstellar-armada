@@ -3,10 +3,7 @@
  * @file This module manages and provides the multiplayer scoreboard screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, window, document, setInterval, clearInterval */
 
 /**
  * @param utils Used for formatting time
@@ -121,7 +118,7 @@ define([
             lastScore = score;
             tr = document.createElement("tr");
             tr.className = (player.me ? "me" : (player.left ? "left" : ""));
-            tr.innerHTML = `<td class="${RANK_CELL_CLASS}">${rank}</td>`;
+            tr.innerHTML = '<td class="' + RANK_CELL_CLASS + '">' + rank + '</td>';
             td = document.createElement("td");
             td.textContent = player.name;
             tr.appendChild(td);

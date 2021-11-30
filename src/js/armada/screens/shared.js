@@ -3,10 +3,7 @@
  * @file Contains the common constants and functions accessible to all screens of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define */
 
 /**
  * @param game Used to change the screen in public functions

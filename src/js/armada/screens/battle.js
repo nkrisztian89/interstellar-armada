@@ -3,10 +3,7 @@
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, document, setInterval, clearInterval, window, performance */
 
 /**
  * @param utils Used for string formatting, async calls.

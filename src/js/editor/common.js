@@ -1,13 +1,10 @@
 /**
- * Copyright 2016-2017, 2020 Krisztián Nagy
+ * Copyright 2016-2017, 2020-2021 Krisztián Nagy
  * @file Provides some common functions to be used for the Interstellar Armada editor.
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, document, window */
 
 /**
  * @param utils Used for converting between float / hex colors

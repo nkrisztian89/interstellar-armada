@@ -3,10 +3,7 @@
  * @file This module manages and provides the Multiplayer Lobby screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, document, setInterval, clearInterval */
 
 /**
  * @param utils Used for string formatting
@@ -250,7 +247,7 @@ define([
      */
     MultiLobbyScreen.prototype._logMessage = function (message, sender) {
         var element = document.createElement("p"), date = new Date(), span;
-        element.innerHTML = `<span class="${MESSAGE_TIME_CLASS}">[${utils.getPaddedStringForNumber(date.getHours(), 2)}:${utils.getPaddedStringForNumber(date.getMinutes(), 2)}] </span>`;
+        element.innerHTML = '<span class="' + MESSAGE_TIME_CLASS + '">[' + utils.getPaddedStringForNumber(date.getHours(), 2) + ':' + utils.getPaddedStringForNumber(date.getMinutes(), 2) + '] </span>';
         if (sender) {
             span = document.createElement("span");
             span.textContent = sender + ": ";
@@ -480,13 +477,13 @@ define([
             td = document.createElement("td");
             td.textContent = player.name;
             tr.appendChild(td);
-            tr.innerHTML += `<td><div ${player.me ? 'id="' + colorSelectorId + '"' : ''} class="colorIndicator${(player.me && !player.ready) ? ' colorSelector' : ''}" style="background-color: ${_getCSSColor(player.settings.color)}"></div></td>` +
-                    `<td>${(player.me && !player.ready) ? '<button id="' + spacecraftSelectorId + '" class="' + SPACECRAFT_SELECTOR_BUTTON_CLASS + '">' : ''}${classes.getSpacecraftClass(player.settings.spacecraft).getDisplayName()}${(player.me && !player.ready) ? '</button>' : ''}</td>` +
-                    `<td>${player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)}</td>` +
-                    `<td>${player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")}</td>` +
-                    `<td>${strings.get(((index === 0) || player.ready) ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)}</td>` +
-                    (networking.isHost() ? `<td>${!player.me ? '<button id="' + getKickButtonId(index) + '" class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : ""}</td>` : "") +
-                    `</tr>`;
+            tr.innerHTML += '<td><div ' + (player.me ? 'id="' + colorSelectorId + '"' : '') + ' class="colorIndicator' + ((player.me && !player.ready) ? ' colorSelector' : '') + '" style="background-color: ' + _getCSSColor(player.settings.color) + '"></div></td>' +
+                    '<td>' + ((player.me && !player.ready) ? '<button id="' + spacecraftSelectorId + '" class="' + SPACECRAFT_SELECTOR_BUTTON_CLASS + '">' : '') + classes.getSpacecraftClass(player.settings.spacecraft).getDisplayName() + ((player.me && !player.ready) ? '</button>' : '') + '</td>' +
+                    '<td>' + (player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)) + '</td>' +
+                    '<td>' + (player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")) + '</td>' +
+                    '<td>' + (strings.get(((index === 0) || player.ready) ? strings.MULTI_LOBBY.READY_YES : strings.MULTI_LOBBY.READY_NO)) + '</td>' +
+                    (networking.isHost() ? '<td>' + (!player.me ? '<button id="' + getKickButtonId(index) + '" class="' + KICK_BUTTON_CLASS + '">' + strings.get(strings.MULTI_LOBBY.KICK_BUTTON) + '</button>' : "") + '</td>' : "") +
+                    '</tr>';
             this._playersList.getElement().appendChild(tr);
         }.bind(this));
         document.getElementById(colorSelectorId).onclick = colorSelectorAction.bind(this);

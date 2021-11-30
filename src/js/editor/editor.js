@@ -3,10 +3,9 @@
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
 
-/*global define, document, localStorage, requirejs, Blob, window */
+/*global requirejs */
 
 /**
  * @param utils Used for deep copying 
@@ -470,7 +469,7 @@ define([
         var reference;
         _newItemDialog.hidden = true;
         _exportDialog.hidden = true;
-        reference = common.getItemReference({type, name, category}, true);
+        reference = common.getItemReference({type: type, name: name, category: category}, true);
         if (reference) {
             if (_selectedItemElement) {
                 _selectedItemElement.classList.remove(SELECTED_CLASS);

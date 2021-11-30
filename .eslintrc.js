@@ -1,12 +1,14 @@
 module.exports = {
     "env": {
         "browser": true,
-        "es6": true,
-	"amd": true
+        "es6": false,
+        "amd": true
     },
     "globals": {
-        "global": true,
-        "module": true
+        "module": true,
+        "Float32Array": true,
+        "Int32Array": true,
+        "Set": true
     },
     "extends": "eslint:recommended",
     "rules": {
@@ -110,7 +112,7 @@ module.exports = {
         "no-caller": "error",
         "no-catch-shadow": "error",
         "no-confusing-arrow": ["error", {"allowParens": true}],
-	"no-console": "error",
+        "no-console": "error",
         "no-continue": "off",
         "no-div-regex": "error",
         "no-duplicate-imports": "error",

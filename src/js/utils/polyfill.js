@@ -1,11 +1,10 @@
 /**
  * @fileOverview Polyfill functions for better cross-browser compatibility.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
- * @version 1.0
  */
 
 /**********************************************************************
- Copyright 2014-2016, 2020 Krisztián Nagy
+ Copyright 2014-2016, 2020-2021 Krisztián Nagy
  
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

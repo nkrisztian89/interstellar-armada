@@ -3,10 +3,7 @@
  * @file This module manages and provides the Mission debriefing screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, window, document, setInterval, clearInterval */
 
 /**
  * @param utils Used for formatting time

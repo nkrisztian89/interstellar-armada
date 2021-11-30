@@ -5,8 +5,6 @@
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  */
 
-/*global define */
-
 /**
  * @param utils Used for format strings and useful constants
  * @param application Used for file loading and logging functionality

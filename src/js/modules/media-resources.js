@@ -1,15 +1,12 @@
 /**
- * Copyright 2014-2017, 2020 Krisztián Nagy
+ * Copyright 2014-2017, 2020-2021 Krisztián Nagy
  * @file Augments the functionality of ResourceManager to provide a customized resource manager class storing various media resources,
  * for which the respective classes are also provided. These classes are based on the classes of ManagedGL and EgomModel.
  * The provided resource manager is ready to use, can load media resource descriptions from a specified JSON file, then mark the 
  * specific resources for loading (e.g. getTexture(params)) and load them when requested.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, Image, window */
 
 /**
  * @param utils Used for comparing objects for equality

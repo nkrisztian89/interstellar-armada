@@ -3,10 +3,7 @@
  * @file Provides the menu screens of the Interstellar Armada game which are simply instances of MenuScreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 0.1
  */
-
-/*global define, window */
 
 /**
  * @param utils Used for format strings

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2021 Krisztián Nagy
  * @file 
  * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
  * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
@@ -7,10 +7,7 @@
  * are also included.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, Float32Array, parseFloat, Document */
 
 /**
  * @param vec Used for vector operations to create / manipulate normal vectors.

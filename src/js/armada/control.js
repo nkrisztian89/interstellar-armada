@@ -3,10 +3,7 @@
  * @file Provides functionality to load and access control configuration and settings for Interstellar Armada.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 2.0
  */
-
-/*global define, Element, localStorage, document, window, navigator */
 
 /**
  * @param utils Used to check for touch event support

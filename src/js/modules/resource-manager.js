@@ -13,10 +13,7 @@
  * - use requestResourceLoad() to initiate the loading of resources from files
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
- * @version 1.0
  */
-
-/*global define, Image */
 
 /**
  * @param utils Used for comparing objects
