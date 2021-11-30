@@ -1,4 +1,4 @@
-![Logo](http://nkrisztian89.github.io/interstellar-armada/assets/images/splash/1.png)
+![Logo](./assets/images/splash/1.png)
 
 Interstellar Armada: Galactic Ace is a free, Open Source browser-based 3D space 
 combat simulator developed in JavaScript-WebGL by Krisztián Nagy (<nkrisztian89@gmail.com>).
@@ -22,10 +22,8 @@ With game related questions, suggestions and feedback please contact me at
 For developers
 ==============
 
-I use [NetBeans](https://netbeans.org/) (8.2) with its web development (+
-[ESLint](http://plugins.netbeans.org/plugin/63486/eslint),
-[GLSL](http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter) and 
-[Markdown](http://plugins.netbeans.org/plugin/50964/markdown-support)) plugins 
+I use [NetBeans](https://netbeans.org/) with its web development (+
+[ESLint](https://github.com/joakim-eriksson/nb-eslint) and GLSL) plugins 
 to develop this game. To build the game, you will need
 [npm](https://www.npmjs.com/), [Grunt](https://gruntjs.com/) and 
 [Sass](http://sass-lang.com/).
@@ -45,6 +43,8 @@ Run `grunt clean` to remove the build files.
 Run `grunt dev-build` to create a build for development / testing.
 
 Run `grunt watch` while developing to automatically update dev-build files as you modify the sources.
+
+Run `grunt build-with-editor` to create a production build that includes the game editor.
 
 Editor
 ------
@@ -94,4 +94,4 @@ details and attributions please do check LICENSE.txt.
 
 Krisztián Nagy
 
-09.04.2020.
+30.11.2021.

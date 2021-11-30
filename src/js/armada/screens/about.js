@@ -108,9 +108,7 @@ define([
             chrome: _link("https://www.google.com/chrome", "Google Chrome"),
             firefox: _link("https://www.mozilla.org/firefox", "Firefox"),
             ubuntu: _link("http://www.ubuntu.com/desktop", "Ubuntu"),
-            eslint: _link("http://plugins.netbeans.org/plugin/63486/eslint", "ESLint"),
-            glsl: _link("http://plugins.netbeans.org/plugin/46515/glsl-syntax-highlighter", "GLSL Syntax Highlighter"),
-            markdown: _link("http://plugins.netbeans.org/plugin/50964/markdown-support", "Markdown Support")
+            eslint: _link("https://github.com/joakim-eriksson/nb-eslint", "ESLint")
         });
         this._aboutLicenseParagraph.customizeContent({
             license: _link("http://www.gnu.org/licenses/gpl-3.0-standalone.html", "GNU GPLv3"),

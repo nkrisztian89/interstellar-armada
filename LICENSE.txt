@@ -1,5 +1,5 @@
 Interstellar Armada: Galactic Ace license information
-Copyright (C) 2014-2020 Krisztián Nagy
+Copyright (C) 2014-2021 Krisztián Nagy
 
 All files paths given here are relative to the root folder of the game.
 
@@ -18,7 +18,7 @@ The logo of the game features the Audiowide font, the information about which ca
 The text of the Open Font License (the license of the above two fonts) is included at license/OFL.txt for convenience.
 Some minor modifications to the Aldrich font were made by Krisztián Nagy, detailed in fonts/FONTLOG.txt file.
 
-The images, 3D models, textures and music files were all created by Krisztián Nagy (Copyright (C) 2014-2020) and are released under the 
+The images, 3D models, textures and music files were all created by Krisztián Nagy (Copyright (C) 2014-2021) and are released under the 
 CC BY 4.0 license found at license/CC-BY-4.0.txt or at https://creativecommons.org/licenses/by/4.0. 
 
 The sound effects were also created by Krisztián Nagy (Copyright (C) 2016-2017) and are relased under the CC BY 4.0 license, but sound 

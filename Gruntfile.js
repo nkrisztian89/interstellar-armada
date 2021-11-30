@@ -4,8 +4,6 @@
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  */
-/*jslint white: true*/
-/*global module*/
 /**
  * @param grunt
  */
