@@ -852,6 +852,13 @@ define([
         return this._squad;
     };
     /**
+     * Returns the index of this spacecraft that specifies its place within its squad.
+     * @returns {Number}
+     */
+    Spacecraft.prototype.getIndexInSquad = function () {
+        return this._indexInSquad;
+    };
+    /**
      * Returns whether the passed spacecraft is friendly to this one.
      * @param {Spacecraft} spacecraft
      * @returns {Boolean}

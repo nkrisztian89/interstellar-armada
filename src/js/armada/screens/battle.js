@@ -1199,6 +1199,14 @@ define([
     // ------------------------------------------------------------------------------
     // private functions
     /**
+     * When the followed spacecraft changes or spacecrafts switch teams, we need to re-generate
+     * the wingman status indicators
+     */
+    function _refreshWingmanStatusPanel() {
+        _squads = _spacecraft.getTeam() ? _spacecraft.getTeam().getSquads() : [];
+        _wingmenStatusCraftLayouts = []; // drop the previous array so new layouts are generated for potentially new squads
+    }
+    /**
      * Executes one simulation (and control) step for the battle.
      */
     function _simulationLoopFunction() {
@@ -3282,8 +3290,7 @@ define([
             // color change animation when the integrity decreases
             if (craft !== _spacecraft) {
                 _spacecraft = craft;
-                _squads = craft.getTeam() ? craft.getTeam().getSquads() : [];
-                _wingmenStatusCraftLayouts = []; // drop the previous array so new layouts are generated for potentially new squads
+                _refreshWingmanStatusPanel();
                 _missileClasses = craft.getMissileClasses();
                 _spacecraftHullIntegrity = hullIntegrity;
                 _spacecraftShieldIntegrity = shieldIntegrity;
@@ -4616,6 +4623,7 @@ define([
         this._addUITexts();
         _messageQueues = _messageQueues || {};
         this.clearHUDMessageQueues();
+        _mission.onTeamsChanged(_refreshWingmanStatusPanel);
         // initializing music
         audio.initMusic(config.getSetting(config.BATTLE_SETTINGS.AMBIENT_MUSIC), AMBIENT_THEME, true);
         // choose the anticipation music track

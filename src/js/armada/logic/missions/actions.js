@@ -388,6 +388,7 @@ define([
      * @typedef SetPropertiesAction~Params
      * @property {Number} [hull] The percentage to set the subjects' hull integrity to
      * @property {Number} [shield] The percentage to set the subjects' shield integrity to
+     * @property {String} [team] The name of the team to assign the subjects to
      */
     /**
      * @override
@@ -401,7 +402,8 @@ define([
         this._params = params;
         if (!this._params ||
                 ((this._params.hull !== undefined) && ((typeof this._params.hull !== "number") || (this._params.hull < 0) || (this._params.hull > 100))) ||
-                ((this._params.shield !== undefined) && ((typeof this._params.shield !== "number") || (this._params.shield < 0) || (this._params.shield > 100)))) {
+                ((this._params.shield !== undefined) && ((typeof this._params.shield !== "number") || (this._params.shield < 0) || (this._params.shield > 100))) ||
+                ((this._params.team !== undefined) && (typeof this._params.team !== "string"))) {
             this._handleWrongParams();
             return false;
         }
@@ -412,7 +414,10 @@ define([
      * @param {Mission} mission 
      */
     SetPropertiesAction.prototype.execute = function (mission) {
-        var i, spacecrafts = this._subjects.getSpacecrafts(mission, true);
+        var i, team, teamsChanged = false, spacecrafts = this._subjects.getSpacecrafts(mission, true);
+        if (this._params.team !== undefined) {
+            team = mission.getTeam(this._params.team);
+        }
         if (spacecrafts.length > 0) {
             for (i = 0; i < spacecrafts.length; i++) {
                 if (this._params.hull !== undefined) {
@@ -421,7 +426,14 @@ define([
                 if (this._params.shield !== undefined) {
                     spacecrafts[i].setShieldIntegrity(this._params.shield * 0.01);
                 }
+                if (team) {
+                    team.addSpacecraft(spacecrafts[i]);
+                    teamsChanged = true;
+                }
             }
+        }
+        if (teamsChanged) {
+            mission.handleTeamsChanged();
         }
     };
     // #########################################################################

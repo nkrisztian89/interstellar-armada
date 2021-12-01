@@ -155,6 +155,17 @@ define([
              */
             _debugInfo = "";
     // -------------------------------------------------------------------------
+    // Private functions
+    /**
+     * Helper function to sort spacecrafts within a squad according to their index in the squad
+     * @param {Spacecraft} a
+     * @param {Spacecraft} b
+     * @returns {Number}
+     */
+    function _compareSpacecrafts(a, b) {
+        return a.getIndexInSquad() - b.getIndexInSquad();
+    }
+    // -------------------------------------------------------------------------
     // Public functions
     /**
      * Queries a module-level string for debug purposes.
@@ -249,7 +260,10 @@ define([
      * @param {Spacecraft} craft 
      */
     Team.prototype.addSpacecraft = function (craft) {
-        var i, maxMembers, squad = craft.getSquad();
+        var i, maxMembers, team = craft.getTeam(), squad = craft.getSquad();
+        if (team) {
+            team._removeSpacecraft(craft);
+        }
         craft.setTeam(this);
         // setting squad info so that it can be queried later (for example to show wingmen status for this team)
         if (squad) {
@@ -257,6 +271,7 @@ define([
             for (i = 0; i < this._squads.length; i++) {
                 if (squad === this._squads[i].name) {
                     this._squads[i].crafts.push(craft);
+                    this._squads[i].crafts.sort(_compareSpacecrafts);
                     break;
                 }
             }
@@ -275,6 +290,28 @@ define([
         // using this counter the survival rate can be calculated at the end of the mission (and in case of the player's team, whether it
         // is/was a team mission)
         this._initialCount++;
+    };
+    /**
+     * Removes the passed spacecraft from this team (called by addSpacecraft() to remove the
+     * craft from its previous team, do not call it separately)
+     * @param {Spacecraft} craft
+     */
+    Team.prototype._removeSpacecraft = function (craft) {
+        var i, index, squad = craft.getSquad();
+        if (squad) {
+            // find the squad the craft is part of, and remove it from there
+            for (i = 0; i < this._squads.length; i++) {
+                if (squad === this._squads[i].name) {
+                    index = this._squads[i].crafts.indexOf(craft);
+                    this._squads[i].crafts.splice(index, 1);
+                    if (this._squads[i].crafts.length === 0) {
+                        this._squads.splice(i, 1);
+                    }
+                    break;
+                }
+            }
+        }
+        this._initialCount--;
     };
     /**
      * Returns the names and craft references for all squads that are part of this team (i.e. for the wingmen status indicator)
@@ -634,6 +671,11 @@ define([
          * @type DifficultyLevel
          */
         this._difficultyLevel = null;
+        /**
+         * A callback function to execute when the team assignments within the mission change (i.e. some spacecraft changes its team)
+         * @type Function
+         */
+        this._onTeamsChanged = null;
     }
     /**
      * Return the name identifying this mission (typically same as the filename e.g. someMission.json)
@@ -1666,6 +1708,21 @@ define([
      */
     Mission._filterActionEntry = function (actionEntry) {
         return actionEntry.delay > 0;
+    };
+    /**
+     * Sets the passed callback to be executed whenever the team assignments within the mission change
+     * @param {Function} callback
+     */
+    Mission.prototype.onTeamsChanged = function (callback) {
+        this._onTeamsChanged = callback;
+    };
+    /**
+     * Called when a spacecraft in this mission changes its team
+     */
+    Mission.prototype.handleTeamsChanged = function () {
+        if (this._onTeamsChanged) {
+            this._onTeamsChanged();
+        }
     };
     /**
      * Call after resources have been loaded and the mission is ready to be started to finish off preparations.

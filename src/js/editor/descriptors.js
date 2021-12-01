@@ -3393,7 +3393,7 @@ define([
                     CONDITIONS: {
                         name: "conditions",
                         type: _createTypedArrayType(CONDITION, {min: 1}, function (instance) {
-                            if (instance.length <= 2) {
+                            if (instance.length > 0 && instance.length <= 2) {
                                 return "[" + instance.map(CONDITION.getPreviewText).join(", ") + "]";
                             }
                         }),
@@ -3635,6 +3635,19 @@ define([
             _getStringPreview = function (string) {
                 return (string.length > 0) ? (string.substr(0, LONG_TEXT_PREVIEW_LENGTH) + ((string.length > LONG_TEXT_PREVIEW_LENGTH) ? "..." : "")) : "...";
             },
+            _getSetPropertiesText = function (params) {
+                var parts = [];
+                if (params.hull !== undefined) {
+                    parts.push("hull=" + params.hull + "%");
+                }
+                if (params.shield !== undefined) {
+                    parts.push("shield=" + params.shield + "%");
+                }
+                if (params.team !== undefined) {
+                    parts.push("team=" + params.team);
+                }
+                return parts.join(", ");
+            },
             /**
              * A merge of all the different possible action parameters
              * @type Editor~TypeDescriptor
@@ -3658,10 +3671,8 @@ define([
                         return instance.command;
                     }
                     // SetPropertiesAction params:
-                    if (instance.hull !== undefined || instance.shield !== undefined) {
-                        return ((instance.hull !== undefined) ? "hull=" + instance.hull + "%" : "") +
-                                (((instance.hull !== undefined) && (instance.shield !== undefined)) ? ", " : "") +
-                                ((instance.shield !== undefined) ? "shield=" + instance.shield + "%" : "");
+                    if (instance.hull !== undefined || instance.shield !== undefined || instance.team !== undefined) {
+                        return _getSetPropertiesText(instance);
                     }
                     // HUDAction params:
                     if (instance.state !== undefined) {
@@ -3746,6 +3757,12 @@ define([
                         optional: true,
                         isValid: _parentIsSetPropertiesAction
                     },
+                    TEAM: {
+                        name: "team",
+                        type: TEAM_REFERENCE,
+                        optional: true,
+                        isValid: _parentIsSetPropertiesAction
+                    },
                     // HUDAction params:
                     SECTION: {
                         name: "section",
@@ -3798,8 +3815,7 @@ define([
                                 result = result + "set properties";
                             }
                             result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "set") + ":" +
-                                    ((instance.params.hull !== undefined) ? " hull=" + instance.params.hull + "%" : "") +
-                                    ((instance.params.shield !== undefined) ? " shield=" + instance.params.shield + "%" : "");
+                                    _getSetPropertiesText(instance.params);
                         } else {
                             result = result + instance.type;
                         }
@@ -4248,7 +4264,7 @@ define([
                 TEAMS: {
                     name: "teams",
                     type: _createTypedArrayType(TEAM, undefined, function (instance) {
-                        if (instance.length <= 2) {
+                        if (instance.length > 0 && instance.length <= 2) {
                             return "[" + instance.map(TEAM.getName).join(", ") + "]";
                         }
                     }),
@@ -4356,6 +4372,36 @@ define([
             return this._descriptor.missionReference;
         }
         return this._descriptor.baseType;
+    };
+    /**
+     * Returns a displayable preview text for data of this type
+     * @param {Object} data
+     * @returns {String}
+     */
+    Type.prototype.getPreviewText = function (data) {
+        var result;
+        if (this._descriptor.baseType === BaseType.ARRAY) {
+            if (this._descriptor.getPreviewText) {
+                result = this._descriptor.getPreviewText(data);
+            }
+            if (!result) {
+                if (data.length === 0) {
+                    result = "empty list";
+                } else if ((data.length === 1) && this._descriptor.elementType.getName) {
+                    result = "[" + this._descriptor.elementType.getName(data[0]) + "]";
+                } else if ((data.length === 1) && (typeof data[0] === "string")) {
+                    result = "[" + data[0] + "]";
+                } else if ((data.length <= 3) && (typeof data[0] === "number")) {
+                    result = "[" + data.join(", ") + "]";
+                } else {
+                    result = this.getElementType().getDisplayName() + " [" + data.length + "]";
+                }
+            }
+            return result;
+        }
+        return this._descriptor.getPreviewText ?
+                this._descriptor.getPreviewText(data) :
+                this._descriptor.name;
     };
     /**
      * Returns the base type of this type

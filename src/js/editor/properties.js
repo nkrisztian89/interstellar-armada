@@ -577,10 +577,7 @@ define([
             popup.alignPosition();
         };
         updateButtonText = function () {
-            button.textContent = isArray ?
-                    arrayType && arrayType.getDescriptor().getPreviewText && arrayType.getDescriptor().getPreviewText(data) ||
-                    (((data.length === 1) && typeDescriptor.getName) ? "[" + typeDescriptor.getName(data[0]) + "]" : typeDescriptor.name + " [" + data.length + "]") :
-                    (typeDescriptor.getPreviewText ? typeDescriptor.getPreviewText(data) : typeDescriptor.name);
+            button.textContent = arrayType ? arrayType.getPreviewText(data) : type.getPreviewText(data);
             if (parentPopup) {
                 parentPopup.alignPosition();
             }
@@ -750,7 +747,7 @@ define([
                     label.textContent = (array.length > 0) ? type.getDisplayName() + " list" : EMPTY_LIST_TEXT;
                 },
                 updateButtonText = function () {
-                    button.innerHTML = ((array.length === 1) && (typeof array[0] === "string")) ? "[" + array[0] + "]" : new descriptors.Type(elementTypeDescriptor).getDisplayName() + " [" + array.length + "]";
+                    button.innerHTML = arrayType.getPreviewText(array);
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }
@@ -1235,7 +1232,9 @@ define([
                                 limit = true;
                             }
                         } else if (typeof defaultValue[0] === "boolean") {
-                            labelText = defaultValue.map(function (boolean) { return boolean ? "yes" : "no"; }).join(", ");
+                            labelText = defaultValue.map(function (boolean) {
+                                return boolean ? "yes" : "no";
+                            }).join(", ");
                             limit = true;
                         }
                     }

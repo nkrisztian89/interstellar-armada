@@ -138,6 +138,7 @@ module.exports = function (grunt) {
                 ["trigger"],
                 ["pilotedSpacecraft", "get", "pilotedCraft"],
                 ["squad"],
+                ["indexInSquad"],
                 ["weapons"],
                 ["physicalPositionMatrix", "get", "physicalModel._positionMatrix"],
                 ["physicalOrientationMatrix", "get", "physicalModel._orientationMatrix"],
