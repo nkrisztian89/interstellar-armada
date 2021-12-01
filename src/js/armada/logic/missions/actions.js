@@ -40,6 +40,10 @@ define([
                 COMMAND: "command",
                 /** Executing this action sets properties (such as hull integrity) of the subject spacecrafts to the given values */
                 SET_PROPERTIES: "setProperties",
+                /** Executing this action increases the hull/shield integrity of the subject spacecrafts */
+                REPAIR: "repair",
+                /** Executing this action decreases the hull/shield integrity of the subject spacecrafts */
+                DAMAGE: "damage",
                 /** Executing this action changes the state of the HUD on the piloted spacecraft (e.g. hide / show / highlight an element) */
                 HUD: "hud",
                 /** Executing this action marks the mission as complete */
@@ -443,6 +447,110 @@ define([
      * @param {Object} dataJSON
      * @param {Trigger} trigger
      */
+    function RepairAction(dataJSON, trigger) {
+        Action.call(this, dataJSON, trigger);
+    }
+    RepairAction.prototype = new Action();
+    RepairAction.prototype.constructor = RepairAction;
+    /**
+     * @typedef RepairAction~Params
+     * @property {Number} [hull] The percentage to increase the subjects' hull integrity by
+     * @property {Number} [shield] The percentage to increase the subjects' shield integrity by
+     */
+    /**
+     * @override
+     * @param {RepairAction~Params} params 
+     * @returns {Boolean}
+     */
+    RepairAction.prototype._checkParams = function (params) {
+        /**
+         * @type SetPropertiesAction~Params
+         */
+        this._params = params;
+        if (!this._params ||
+                ((this._params.hull !== undefined) && ((typeof this._params.hull !== "number") || (this._params.hull < 0) || (this._params.hull > 100))) ||
+                ((this._params.shield !== undefined) && ((typeof this._params.shield !== "number") || (this._params.shield < 0) || (this._params.shield > 100)))) {
+            this._handleWrongParams();
+            return false;
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission 
+     */
+    RepairAction.prototype.execute = function (mission) {
+        var i, spacecrafts = this._subjects.getSpacecrafts(mission, true);
+        if (spacecrafts.length > 0) {
+            for (i = 0; i < spacecrafts.length; i++) {
+                if (this._params.hull !== undefined) {
+                    spacecrafts[i].setHullIntegrity(spacecrafts[i].getHullIntegrity() + this._params.hull * 0.01);
+                }
+                if (this._params.shield !== undefined) {
+                    spacecrafts[i].setShieldIntegrity(spacecrafts[i].getShieldIntegrity() + this._params.shield * 0.01);
+                }
+            }
+        }
+    };
+    // #########################################################################
+    /**
+     * @class 
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Trigger} trigger
+     */
+    function DamageAction(dataJSON, trigger) {
+        Action.call(this, dataJSON, trigger);
+    }
+    DamageAction.prototype = new Action();
+    DamageAction.prototype.constructor = DamageAction;
+    /**
+     * @typedef DamageAction~Params
+     * @property {Number} [hull] The percentage to decrease the subjects' hull integrity by
+     * @property {Number} [shield] The percentage to decrease the subjects' shield integrity by
+     */
+    /**
+     * @override
+     * @param {DamageAction~Params} params 
+     * @returns {Boolean}
+     */
+    DamageAction.prototype._checkParams = function (params) {
+        /**
+         * @type SetPropertiesAction~Params
+         */
+        this._params = params;
+        if (!this._params ||
+                ((this._params.hull !== undefined) && ((typeof this._params.hull !== "number") || (this._params.hull < 0) || (this._params.hull > 100))) ||
+                ((this._params.shield !== undefined) && ((typeof this._params.shield !== "number") || (this._params.shield < 0) || (this._params.shield > 100)))) {
+            this._handleWrongParams();
+            return false;
+        }
+        return true;
+    };
+    /**
+     * @override
+     * @param {Mission} mission 
+     */
+    DamageAction.prototype.execute = function (mission) {
+        var i, spacecrafts = this._subjects.getSpacecrafts(mission, true);
+        if (spacecrafts.length > 0) {
+            for (i = 0; i < spacecrafts.length; i++) {
+                if (this._params.hull !== undefined) {
+                    spacecrafts[i].setHullIntegrity(spacecrafts[i].getHullIntegrity() - this._params.hull * 0.01);
+                }
+                if (this._params.shield !== undefined) {
+                    spacecrafts[i].setShieldIntegrity(spacecrafts[i].getShieldIntegrity() - this._params.shield * 0.01);
+                }
+            }
+        }
+    };
+    // #########################################################################
+    /**
+     * @class 
+     * @extends Action
+     * @param {Object} dataJSON
+     * @param {Trigger} trigger
+     */
     function HUDAction(dataJSON, trigger) {
         Action.call(this, dataJSON, trigger);
     }
@@ -492,6 +600,8 @@ define([
     _actionConstructors[ActionType.CLEAR_MESSAGES] = ClearMessagesAction;
     _actionConstructors[ActionType.COMMAND] = CommandAction;
     _actionConstructors[ActionType.SET_PROPERTIES] = SetPropertiesAction;
+    _actionConstructors[ActionType.REPAIR] = RepairAction;
+    _actionConstructors[ActionType.DAMAGE] = DamageAction;
     _actionConstructors[ActionType.HUD] = HUDAction;
     // -------------------------------------------------------------------------
     // The public interface of the module

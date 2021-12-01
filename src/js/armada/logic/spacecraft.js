@@ -934,7 +934,7 @@ define([
      * and 1.0 (indicating full hull integrity)
      */
     Spacecraft.prototype.setHullIntegrity = function (ratio) {
-        var newHitpoints = ratio * this._maxHitpoints, repair = newHitpoints > this._hitpoints;
+        var newHitpoints = Math.min(Math.max(0, ratio), 1) * this._maxHitpoints, repair = newHitpoints > this._hitpoints;
         this._hitpoints = newHitpoints;
         if (repair) {
             this._updateDamageIndicators();
@@ -968,7 +968,7 @@ define([
      */
     Spacecraft.prototype.setShieldIntegrity = function (ratio) {
         if (this._shield) {
-            this._shield.setIntegrity(ratio);
+            this._shield.setIntegrity(Math.min(Math.max(0, ratio), 1));
         }
     };
     /**

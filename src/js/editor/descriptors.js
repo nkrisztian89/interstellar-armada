@@ -3616,6 +3616,9 @@ define([
             _parentIsSetPropertiesAction = function (data, parent) {
                 return !!parent && (parent.type === ActionType.SET_PROPERTIES);
             },
+            _parentCanHaveHullShieldParams = function (data, parent) {
+                return !!parent && (parent.type === ActionType.SET_PROPERTIES) || (parent.type === ActionType.REPAIR) || (parent.type === ActionType.DAMAGE);
+            },
             _isJumpCommandActionParams = function (data, parent) {
                 return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.JUMP);
             },
@@ -3635,16 +3638,17 @@ define([
             _getStringPreview = function (string) {
                 return (string.length > 0) ? (string.substr(0, LONG_TEXT_PREVIEW_LENGTH) + ((string.length > LONG_TEXT_PREVIEW_LENGTH) ? "..." : "")) : "...";
             },
-            _getSetPropertiesText = function (params) {
+            _getPropertiesText = function (params, operator) {
                 var parts = [];
+                operator = operator || "=";
                 if (params.hull !== undefined) {
-                    parts.push("hull=" + params.hull + "%");
+                    parts.push("hull" + operator + params.hull + "%");
                 }
                 if (params.shield !== undefined) {
-                    parts.push("shield=" + params.shield + "%");
+                    parts.push("shield" + operator + params.shield + "%");
                 }
                 if (params.team !== undefined) {
-                    parts.push("team=" + params.team);
+                    parts.push("team" + operator + params.team);
                 }
                 return parts.join(", ");
             },
@@ -3672,7 +3676,7 @@ define([
                     }
                     // SetPropertiesAction params:
                     if (instance.hull !== undefined || instance.shield !== undefined || instance.team !== undefined) {
-                        return _getSetPropertiesText(instance);
+                        return _getPropertiesText(instance, ": ");
                     }
                     // HUDAction params:
                     if (instance.state !== undefined) {
@@ -3749,13 +3753,13 @@ define([
                         name: "hull",
                         type: NON_NEGATIVE_INT_PERCENT,
                         optional: true,
-                        isValid: _parentIsSetPropertiesAction
+                        isValid: _parentCanHaveHullShieldParams
                     },
                     SHIELD: {
                         name: "shield",
                         type: NON_NEGATIVE_INT_PERCENT,
                         optional: true,
-                        isValid: _parentIsSetPropertiesAction
+                        isValid: _parentCanHaveHullShieldParams
                     },
                     TEAM: {
                         name: "team",
@@ -3779,10 +3783,17 @@ define([
                 }
             },
             _actionCanHaveSubjects = function (data) {
-                return (data.type === ActionType.COMMAND) || (data.type === ActionType.SET_PROPERTIES);
+                return (data.type === ActionType.COMMAND) || (data.type === ActionType.SET_PROPERTIES) || (data.type === ActionType.REPAIR) || (data.type === ActionType.DAMAGE);
             },
             _actionCanHaveParams = function (data) {
-                return [ActionType.MESSAGE, ActionType.COMMAND, ActionType.SET_PROPERTIES, ActionType.HUD].indexOf(data.type) >= 0;
+                return [
+                    ActionType.MESSAGE,
+                    ActionType.COMMAND,
+                    ActionType.SET_PROPERTIES,
+                    ActionType.REPAIR,
+                    ActionType.DAMAGE,
+                    ActionType.HUD
+                ].indexOf(data.type) >= 0;
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3796,28 +3807,47 @@ define([
                         result = utils.getTimeString(instance.delay) + " | ";
                     }
                     if (instance.type) {
-                        if (instance.type === ActionType.MESSAGE) {
-                            if (instance.params) {
-                                result = result + ACTION_PARAMS.getPreviewText(instance.params);
-                            }
-                        } else if (instance.type === ActionType.COMMAND) {
-                            if (instance.subjects && instance.params) {
-                                result = result + SUBJECT_GROUP.getPreviewText(instance.subjects) + ": " + ACTION_PARAMS.getPreviewText(instance.params);
-                            } else {
+                        switch (instance.type) {
+                            case ActionType.MESSAGE:
+                                if (instance.params) {
+                                    result = result + ACTION_PARAMS.getPreviewText(instance.params);
+                                }
+                                break;
+                            case ActionType.COMMAND:
+                                if (instance.subjects && instance.params) {
+                                    result = result + SUBJECT_GROUP.getPreviewText(instance.subjects) + ": " + ACTION_PARAMS.getPreviewText(instance.params);
+                                } else {
+                                    result = result + instance.type;
+                                }
+                                break;
+                            case ActionType.HUD:
+                                if (instance.params) {
+                                    result = result + ACTION_PARAMS.getPreviewText(instance.params);
+                                }
+                                break;
+                            case ActionType.SET_PROPERTIES:
+                                if (!instance.params) {
+                                    result = result + "set properties";
+                                }
+                                result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "set") + ":" +
+                                        _getPropertiesText(instance.params);
+                                break;
+                            case ActionType.REPAIR:
+                                if (!instance.params) {
+                                    result = result + "repair";
+                                }
+                                result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "repair") + ":" +
+                                        _getPropertiesText(instance.params, "+");
+                                break;
+                            case ActionType.DAMAGE:
+                                if (!instance.params) {
+                                    result = result + "damage";
+                                }
+                                result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "damage") + ":" +
+                                        _getPropertiesText(instance.params, "-");
+                                break;
+                            default:
                                 result = result + instance.type;
-                            }
-                        } else if (instance.type === ActionType.HUD) {
-                            if (instance.params) {
-                                result = result + ACTION_PARAMS.getPreviewText(instance.params);
-                            }
-                        } else if (instance.type === ActionType.SET_PROPERTIES) {
-                            if (!instance.params) {
-                                result = result + "set properties";
-                            }
-                            result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "set") + ":" +
-                                    _getSetPropertiesText(instance.params);
-                        } else {
-                            result = result + instance.type;
                         }
                     } else {
                         result = result + "action";
