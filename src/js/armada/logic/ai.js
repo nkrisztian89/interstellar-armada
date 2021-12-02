@@ -44,8 +44,13 @@ define([
                 JUMP: "jump",
                 /** A command to set a list of target spacecrafts */
                 TARGET: "target",
-                /** A command to stand down and do nothing */
-                STAND_DOWN: "standDown"
+                /** A command to stand down and not attack new targets until a new target command is issued.
+                 * Also cancels currently executed move commands. */
+                STAND_DOWN: "standDown",
+                /** A move command to approach or distance the spacecraft from another spacecraft */
+                REACH_DISTANCE: "reachDistance",
+                /** A command to cancel the currently executed move command (and get back to engaging enemies) */
+                CANCEL_MOVE: "cancelMove"
             },
             /**
              * Specifies the direction of jump commands
@@ -72,6 +77,14 @@ define([
                  * The phase when the fighter is evading its target to avoid collision and heads towards a destination beyond it.
                  */
                 EVADE: 1
+            },
+            /**
+             * @enum {Number}
+             * The possible move command states the AI can be in (the move command it is currently executing)
+             */
+            MoveCommand = {
+                NONE: -1,
+                REACH_DISTANCE: 0
             },
             // ------------------------------------------------------------------------------
             // constants
@@ -136,11 +149,23 @@ define([
              */
             MIN_EVADE_DISTANCE_FACTOR = 0.5,
             /**
-             * During normal (not charge) attacks, fighters will approach / back off with a maximum speed equal to their acceleration
-             * multiplied by this factor.
+             * During normal (not charge) attacks or when executing move commands, fighters will approach / back off with a
+             * maximum speed equal to their acceleration multiplied by this factor.
              * @type Number
              */
             APPROACH_SPEED_FACTOR = 2,
+            /**
+             * When executing move commands, spacecrafts will move with this speed (in cruise mode) if they are farther than
+             * FAR_APPROACH_THRESHOLD distance away from their target position
+             * @type Number
+             */
+            FAR_APPROACH_SPEED_FACTOR = 4,
+            /**
+             * When executing move commands, a spacecraft is considered to be "far" from its target location if it is farther
+             * then this distance (in meters), and as a result it will set a higher speed (see FAR_APPROACH_SPEED_FACTOR)
+             * @type Number
+             */
+            FAR_APPROACH_THRESHOLD = 1000,
             /**
              * During charge attacks, fighters will approach with a maximum speed equal to their acceleration multiplied by this 
              * factor.
@@ -336,6 +361,27 @@ define([
          * @type Boolean
          */
         this._attackingTarget = false;
+        /**
+         * The currently executed move command
+         * @type Number
+         */
+        this._moveCommand = MoveCommand.NONE;
+        /**
+         * The target spacecraft of the currently executed move command (position/distance
+         * specified in the command will be relative to this spacecraft)
+         * @type Spacecraft
+         */
+        this._moveCommandTarget = null;
+        /**
+         * The minimum distance to be reached to satisfy the current move command
+         * @type Number
+         */
+        this._moveCommandMinDistance = 0;
+        /**
+         * The maximum distance to be reached to satisfy the current move command
+         * @type Number
+         */
+        this._moveCommandMaxDistance = 0;
         // attaching handlers to the spacecraft events
         if (this._spacecraft) {
             this._spacecraft.setSpeedHolding(true);
@@ -709,9 +755,94 @@ define([
             case SpacecraftCommand.STAND_DOWN:
                 // handling stand down command
                 this._standingDown = true;
+                this._cancelMoveCommand();
+                break;
+            case SpacecraftCommand.REACH_DISTANCE:
+                // handling reach distance command
+                if (data.reachDistance) {
+                    target = this._mission.getSpacecraft(data.reachDistance.target);
+                    if (target && target.isAlive() && !target.isAway()) {
+                        this._moveCommand = MoveCommand.REACH_DISTANCE;
+                        this._moveCommandTarget = target;
+                        this._moveCommandMinDistance = data.reachDistance.minDistance || 0;
+                        this._moveCommandMaxDistance = data.reachDistance.maxDistance || 0;
+                    }
+                }
+                break;
+            case SpacecraftCommand.CANCEL_MOVE:
+                // handling cancel move command
+                this._cancelMoveCommand();
                 break;
             default:
                 application.showError("Unknown spacecraft command: '" + data.command + "'!");
+        }
+    };
+    /**
+     * Cancels the currently executed move command, so the spacecraft AI will get back to the
+     * default behavior (engaging hostile targets)
+     */
+    SpacecraftAI.prototype._cancelMoveCommand = function () {
+        this._moveCommand = MoveCommand.NONE;
+        this._moveCommandTarget = null;
+    };
+    /**
+     * Executes the current move command (if any) by turning/setting speed and cancels it if it has been conpleted
+     * or no longer valid (e.g. the move command target has been destroyed or left)
+     * @param {Number[3]} positionVector The position vector of the controlled spacecraft
+     * @param {Float32Array} inverseOrientationMatrix The inverse orientation matrix of the controlled spacecraft
+     * @param {Number} acceleration The acceleration of the controlled spacecraft (m/s^2)
+     * @param {Number} dt Time elapsed since last simulation step (milliseconds)
+     */
+    SpacecraftAI.prototype._executeMoveCommand = function (positionVector, inverseOrientationMatrix, acceleration, dt) {
+        var vectorToTarget, relativeTargetDirection, targetDistance, targetYawAndPitch, facingTarget, isFar, moveCommandCompleted;
+        switch (this._moveCommand) {
+            case MoveCommand.REACH_DISTANCE:
+                if (!this._moveCommandTarget || !this._moveCommandTarget.isAlive() || this._moveCommandTarget.isAway()) {
+                    this._cancelMoveCommand();
+                }
+                vectorToTarget = vec.diff3(this._moveCommandTarget.getPhysicalPositionVector(), positionVector);
+                relativeTargetDirection = vec.prodVec3Mat4Aux(
+                        vectorToTarget,
+                        inverseOrientationMatrix);
+                targetDistance = vec.extractLength3(relativeTargetDirection);
+                moveCommandCompleted = true;
+                if (this._moveCommandMaxDistance !== 0) {
+                    // approach target, because we are too far
+                    if (targetDistance > this._moveCommandMaxDistance) {
+                        targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
+                        facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                        this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                        isFar = targetDistance > this._moveCommandMaxDistance + FAR_APPROACH_THRESHOLD;
+                        this._spacecraft.changeFlightMode(isFar ? equipment.FlightMode.CRUISE : equipment.FlightMode.COMBAT);
+                        if (facingTarget) {
+                            this.approach(targetDistance, this._moveCommandMaxDistance, 0, acceleration * (isFar ? FAR_APPROACH_SPEED_FACTOR : APPROACH_SPEED_FACTOR));
+                        } else {
+                            this._spacecraft.resetSpeed();
+                        }
+                        moveCommandCompleted = false;
+                    }
+                }
+                if (this._moveCommandMinDistance !== 0) {
+                    // get away from target, because we are too close
+                    if (targetDistance < this._moveCommandMinDistance) {
+                        vec.scale3(relativeTargetDirection, -1);
+                        targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
+                        facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                        this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                        isFar = targetDistance < this._moveCommandMinDistance - FAR_APPROACH_THRESHOLD;
+                        this._spacecraft.changeFlightMode(isFar ? equipment.FlightMode.CRUISE : equipment.FlightMode.COMBAT);
+                        if (facingTarget) {
+                            this.approach(this._moveCommandMinDistance - targetDistance, 0, 0, acceleration * (isFar ? FAR_APPROACH_SPEED_FACTOR : APPROACH_SPEED_FACTOR));
+                        } else {
+                            this._spacecraft.resetSpeed();
+                        }
+                        moveCommandCompleted = false;
+                    }
+                }
+                if (moveCommandCompleted) {
+                    this._cancelMoveCommand();
+                }
+                break;
         }
     };
     // ##############################################################################
@@ -801,7 +932,7 @@ define([
          */
         this._facingTarget = false;
         /**
-         * Cached value of the distance to the current target of the controled spacecraft.
+         * Cached value of the distance to the current target of the controlled spacecraft.
          * @type Boolean
          */
         this._targetDistance = 0;
@@ -1030,240 +1161,243 @@ define([
                     i--;
                 }
             }
-            // .................................................................................................
-            // evade phase of charge maneuver
-            if (this._chargePhase === ChargePhase.EVADE) {
-                this._attackingTarget = !!target;
-                vectorToTarget = vec.diff3(this._chargeDestination, positionVector);
-                relativeTargetDirection = vec.prodVec3Mat4Aux(
-                        vectorToTarget,
-                        inverseOrientationMatrix);
-                this._targetDistance = vec.extractLength3(relativeTargetDirection);
-                targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
-                this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
-                this._spacecraft.setSpeedTarget(acceleration * CHARGE_EVADE_SPEED_FACTOR);
-                if ((this._targetDistance <= EXACT_PLACE_RANGE) || (relativeTargetDirection[1] < 0) || (speed < 0)) {
-                    this._startNewAttackRun();
-                }
+            this._executeMoveCommand(positionVector, inverseOrientationMatrix, acceleration, dt);
+            if (this._moveCommand === MoveCommand.NONE) {
                 // .................................................................................................
-                // attacking current target
-            } else if (target) {
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                // setting up variables
-                targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
-                // updating target offset and aim error, if it is time
-                if (this._targetOffsetUpdateTimeLeft <= 0) {
-                    this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
-                    newOffset = vec.diff3(this._spacecraft.getTargetHitPosition(), targetPositionVector);
-                    if (vec.length3Squared(vec.diff3(this._targetOffset, newOffset)) < AIM_ERROR_REDUCTION_THRESHOLD) {
-                        this._maxAimError *= AIM_ERROR_REDUCTION_FACTOR;
-                    } else {
-                        this._maxAimError = MAX_AIM_ERROR;
+                // evade phase of charge maneuver
+                if (this._chargePhase === ChargePhase.EVADE) {
+                    this._attackingTarget = !!target;
+                    vectorToTarget = vec.diff3(this._chargeDestination, positionVector);
+                    relativeTargetDirection = vec.prodVec3Mat4Aux(
+                            vectorToTarget,
+                            inverseOrientationMatrix);
+                    this._targetDistance = vec.extractLength3(relativeTargetDirection);
+                    targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
+                    this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                    this._spacecraft.setSpeedTarget(acceleration * CHARGE_EVADE_SPEED_FACTOR);
+                    if ((this._targetDistance <= EXACT_PLACE_RANGE) || (relativeTargetDirection[1] < 0) || (speed < 0)) {
+                        this._startNewAttackRun();
                     }
-                    this._targetOffset = newOffset;
-                    this._updateAimError();
-                } else {
-                    this._targetOffsetUpdateTimeLeft -= dt;
-                }
-                vec.add3(targetPositionVector, this._targetOffset);
-                vectorToTarget = vec.diff3(targetPositionVector, positionVector);
-                relativeTargetDirection = vec.prodVec3Mat4Aux(
-                        vectorToTarget,
-                        inverseOrientationMatrix);
-                this._targetDistance = vec.extractLength3(relativeTargetDirection);
-                targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
-                targetYawAndPitch.yaw += this._aimError[0];
-                targetYawAndPitch.pitch += this._aimError[1];
-                this._facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                // turning towards target
-                this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                // handling if another spacecraft blocks the attack path
-                if (this._isBlockedBy) {
-                    stillBlocked = false;
-                    if (!this._isBlockedBy.canBeReused() && this._facingTarget) {
-                        // checking if the blocking spacecraft is still in the way
-                        if (this._isBlockedBy.getPhysicalModel().checkHit(targetPositionVector, vectorToTarget, 1000, ownSize / 2)) {
-                            relativeBlockerPosition = vec.prodVec3Mat4Aux(
-                                    vec.diff3Aux(
-                                            mat.translationVector3(this._isBlockedBy.getPhysicalPositionMatrix()),
-                                            positionVector),
-                                    inverseOrientationMatrix);
-                            blockAvoidanceSpeed = acceleration * BLOCK_AVOIDANCE_SPEED_FACTOR;
-                            if (relativeBlockerPosition[0] < 0) {
-                                this._spacecraft.strafeRight(blockAvoidanceSpeed);
-                                stillBlocked = true;
-                            } else {
-                                this._spacecraft.strafeLeft(blockAvoidanceSpeed);
-                                stillBlocked = true;
-                            }
-                            if (relativeBlockerPosition[2] > 0) {
-                                this._spacecraft.lower(blockAvoidanceSpeed);
-                                stillBlocked = true;
-                            } else {
-                                this._spacecraft.raise(blockAvoidanceSpeed);
-                                stillBlocked = true;
+                    // .................................................................................................
+                    // attacking current target
+                } else if (target) {
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // setting up variables
+                    targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
+                    // updating target offset and aim error, if it is time
+                    if (this._targetOffsetUpdateTimeLeft <= 0) {
+                        this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
+                        newOffset = vec.diff3(this._spacecraft.getTargetHitPosition(), targetPositionVector);
+                        if (vec.length3Squared(vec.diff3(this._targetOffset, newOffset)) < AIM_ERROR_REDUCTION_THRESHOLD) {
+                            this._maxAimError *= AIM_ERROR_REDUCTION_FACTOR;
+                        } else {
+                            this._maxAimError = MAX_AIM_ERROR;
+                        }
+                        this._targetOffset = newOffset;
+                        this._updateAimError();
+                    } else {
+                        this._targetOffsetUpdateTimeLeft -= dt;
+                    }
+                    vec.add3(targetPositionVector, this._targetOffset);
+                    vectorToTarget = vec.diff3(targetPositionVector, positionVector);
+                    relativeTargetDirection = vec.prodVec3Mat4Aux(
+                            vectorToTarget,
+                            inverseOrientationMatrix);
+                    this._targetDistance = vec.extractLength3(relativeTargetDirection);
+                    targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
+                    targetYawAndPitch.yaw += this._aimError[0];
+                    targetYawAndPitch.pitch += this._aimError[1];
+                    this._facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // turning towards target
+                    this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // handling if another spacecraft blocks the attack path
+                    if (this._isBlockedBy) {
+                        stillBlocked = false;
+                        if (!this._isBlockedBy.canBeReused() && this._facingTarget) {
+                            // checking if the blocking spacecraft is still in the way
+                            if (this._isBlockedBy.getPhysicalModel().checkHit(targetPositionVector, vectorToTarget, 1000, ownSize / 2)) {
+                                relativeBlockerPosition = vec.prodVec3Mat4Aux(
+                                        vec.diff3Aux(
+                                                mat.translationVector3(this._isBlockedBy.getPhysicalPositionMatrix()),
+                                                positionVector),
+                                        inverseOrientationMatrix);
+                                blockAvoidanceSpeed = acceleration * BLOCK_AVOIDANCE_SPEED_FACTOR;
+                                if (relativeBlockerPosition[0] < 0) {
+                                    this._spacecraft.strafeRight(blockAvoidanceSpeed);
+                                    stillBlocked = true;
+                                } else {
+                                    this._spacecraft.strafeLeft(blockAvoidanceSpeed);
+                                    stillBlocked = true;
+                                }
+                                if (relativeBlockerPosition[2] > 0) {
+                                    this._spacecraft.lower(blockAvoidanceSpeed);
+                                    stillBlocked = true;
+                                } else {
+                                    this._spacecraft.raise(blockAvoidanceSpeed);
+                                    stillBlocked = true;
+                                }
                             }
                         }
+                        if (!stillBlocked) {
+                            this._isBlockedBy = null;
+                            this._spacecraft.stopLeftStrafe();
+                            this._spacecraft.stopRightStrafe();
+                            this._spacecraft.stopLower();
+                            this._spacecraft.stopRaise();
+                        }
+                        strafingHandled = true;
                     }
-                    if (!stillBlocked) {
-                        this._isBlockedBy = null;
-                        this._spacecraft.stopLeftStrafe();
-                        this._spacecraft.stopRightStrafe();
-                        this._spacecraft.stopLower();
-                        this._spacecraft.stopRaise();
-                    }
-                    strafingHandled = true;
-                }
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                // actions based on weapons
-                weapons = this._spacecraft.getWeapons();
-                if (weapons && weapons.length > 0) {
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    // firing
-                    targetSize = target.getVisualModel().getScaledSize();
-                    fireThresholdAngle = Math.atan(FIRE_THRESHOLD_ANGLE_FACTOR * targetSize / this._targetDistance);
-                    worldProjectileVelocity = weapons[0].getProjectileVelocity() + speed;
-                    targetHitTime = this._targetDistance / worldProjectileVelocity * 1000;
-                    weaponCooldown = weapons[0].getCooldown();
-                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    // aiming turnable weapons towards target
-                    this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, fireThresholdAngle, dt);
-                    if (!this._facingTarget) {
-                        this._timeSinceLastClosingIn = 0;
-                        this._timeSinceLastTargetHit = 0;
-                        this._hitCountByNonTarget = 0;
-                    }
-                    if (vec.length3(vec.diff3Aux(this._spacecraft.getTargetHitPosition(), positionVector)) <= weapons[0].getRange(speed)) {
-                        // within range...
-                        this._attackingTarget = true;
-                        if ((Math.abs(targetYawAndPitch.yaw) < fireThresholdAngle) &&
-                                (Math.abs(targetYawAndPitch.pitch) < fireThresholdAngle) &&
-                                (!this._isBlockedBy || this._isBlockedBy.isHostile(this._spacecraft))) {
-                            // finished aiming...
-                            if (this._fireDelayLeft > 0) {
-                                this._fireDelayLeft -= dt;
-                            } else {
-                                this._spacecraft.fire();
-                                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                                // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
-                                if (!this._isBlockedBy) {
-                                    this._timeSinceLastRoll += dt;
-                                    this._timeSinceLastTargetHit += dt;
-                                    this._timeSinceLastClosingIn += dt;
-                                    // starting roll if needed
-                                    rollWaitTime = targetHitTime + ROLL_CORRECTION_TRIGGERING_MISS_COUNT * weaponCooldown;
-                                    if ((this._timeSinceLastRoll > rollWaitTime) && (this._timeSinceLastTargetHit > rollWaitTime)) {
-                                        this._rollTime = 0;
-                                    }
-                                    // performing coll
-                                    if (this._rollTime >= 0) {
-                                        this._spacecraft.rollLeft();
-                                        this._timeSinceLastRoll = 0;
-                                        this._rollTime += dt;
-                                        // calculating the duration of rolling based on the angle we would like to roll (in seconds)
-                                        angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
-                                        maxAngularVelocity = angularAcceleration * _turnAccelerationDuration;
-                                        rollDuration = (ROLL_CORRECTION_ANGLE > maxAngularVelocity * _turnAccelerationDuration) ?
-                                                _turnAccelerationDuration + (ROLL_CORRECTION_ANGLE - (maxAngularVelocity * _turnAccelerationDuration)) / maxAngularVelocity :
-                                                Math.sqrt(4 * ROLL_CORRECTION_ANGLE / angularAcceleration) / 2;
-                                        // stopping roll (converting to milliseconds)
-                                        if (this._rollTime > rollDuration * 1000) {
-                                            this._rollTime = -1;
+                    // actions based on weapons
+                    weapons = this._spacecraft.getWeapons();
+                    if (weapons && weapons.length > 0) {
+                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        // firing
+                        targetSize = target.getVisualModel().getScaledSize();
+                        fireThresholdAngle = Math.atan(FIRE_THRESHOLD_ANGLE_FACTOR * targetSize / this._targetDistance);
+                        worldProjectileVelocity = weapons[0].getProjectileVelocity() + speed;
+                        targetHitTime = this._targetDistance / worldProjectileVelocity * 1000;
+                        weaponCooldown = weapons[0].getCooldown();
+                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        // aiming turnable weapons towards target
+                        this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, fireThresholdAngle, dt);
+                        if (!this._facingTarget) {
+                            this._timeSinceLastClosingIn = 0;
+                            this._timeSinceLastTargetHit = 0;
+                            this._hitCountByNonTarget = 0;
+                        }
+                        if (vec.length3(vec.diff3Aux(this._spacecraft.getTargetHitPosition(), positionVector)) <= weapons[0].getRange(speed)) {
+                            // within range...
+                            this._attackingTarget = true;
+                            if ((Math.abs(targetYawAndPitch.yaw) < fireThresholdAngle) &&
+                                    (Math.abs(targetYawAndPitch.pitch) < fireThresholdAngle) &&
+                                    (!this._isBlockedBy || this._isBlockedBy.isHostile(this._spacecraft))) {
+                                // finished aiming...
+                                if (this._fireDelayLeft > 0) {
+                                    this._fireDelayLeft -= dt;
+                                } else {
+                                    this._spacecraft.fire();
+                                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                    // if we are not hitting the target despite not being blocked and firing in the right direction, roll the spacecraft
+                                    if (!this._isBlockedBy) {
+                                        this._timeSinceLastRoll += dt;
+                                        this._timeSinceLastTargetHit += dt;
+                                        this._timeSinceLastClosingIn += dt;
+                                        // starting roll if needed
+                                        rollWaitTime = targetHitTime + ROLL_CORRECTION_TRIGGERING_MISS_COUNT * weaponCooldown;
+                                        if ((this._timeSinceLastRoll > rollWaitTime) && (this._timeSinceLastTargetHit > rollWaitTime)) {
+                                            this._rollTime = 0;
+                                        }
+                                        // performing coll
+                                        if (this._rollTime >= 0) {
+                                            this._spacecraft.rollLeft();
+                                            this._timeSinceLastRoll = 0;
+                                            this._rollTime += dt;
+                                            // calculating the duration of rolling based on the angle we would like to roll (in seconds)
+                                            angularAcceleration = this._spacecraft.getMaxAngularAcceleration();
+                                            maxAngularVelocity = angularAcceleration * _turnAccelerationDuration;
+                                            rollDuration = (ROLL_CORRECTION_ANGLE > maxAngularVelocity * _turnAccelerationDuration) ?
+                                                    _turnAccelerationDuration + (ROLL_CORRECTION_ANGLE - (maxAngularVelocity * _turnAccelerationDuration)) / maxAngularVelocity :
+                                                    Math.sqrt(4 * ROLL_CORRECTION_ANGLE / angularAcceleration) / 2;
+                                            // stopping roll (converting to milliseconds)
+                                            if (this._rollTime > rollDuration * 1000) {
+                                                this._rollTime = -1;
+                                            }
                                         }
                                     }
                                 }
+                            } else {
+                                this._timeSinceLastRoll = 0;
+                                this._fireDelayLeft = this._fireDelay;
                             }
                         } else {
                             this._timeSinceLastRoll = 0;
                             this._fireDelayLeft = this._fireDelay;
                         }
-                    } else {
-                        this._timeSinceLastRoll = 0;
-                        this._fireDelayLeft = this._fireDelay;
-                    }
-                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    // launching missiles
-                    if (this._spacecraft.getActiveMissileLauncher()) {
-                        // do not launch anti-ship missiles against fighters or vice versa
-                        if (this._spacecraft.getActiveMissileLauncher().getMissileClass().isAntiShip() === target.isFighter()) {
-                            this._spacecraft.changeMissile();
-                        } else {
-                            // do not launch additional missiles if there are already enough of them on their way to destroy the target (launched by us)
-                            hitpoints = target.getHitpoints() + target.getShieldCapacity();
-                            for (i = 0; i < this._missilesOnTarget.length; i++) {
-                                hitpoints -= this._missilesOnTarget[i].getClass().getDamage(0);
-                            }
-                            if (hitpoints > 0) {
-                                missile = this._spacecraft.launchMissile();
-                                if (missile) {
-                                    this._missilesOnTarget.push(missile);
+                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        // launching missiles
+                        if (this._spacecraft.getActiveMissileLauncher()) {
+                            // do not launch anti-ship missiles against fighters or vice versa
+                            if (this._spacecraft.getActiveMissileLauncher().getMissileClass().isAntiShip() === target.isFighter()) {
+                                this._spacecraft.changeMissile();
+                            } else {
+                                // do not launch additional missiles if there are already enough of them on their way to destroy the target (launched by us)
+                                hitpoints = target.getHitpoints() + target.getShieldCapacity();
+                                for (i = 0; i < this._missilesOnTarget.length; i++) {
+                                    hitpoints -= this._missilesOnTarget[i].getClass().getDamage(0);
+                                }
+                                if (hitpoints > 0) {
+                                    missile = this._spacecraft.launchMissile();
+                                    if (missile) {
+                                        this._missilesOnTarget.push(missile);
+                                    }
                                 }
                             }
                         }
-                    }
-                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    // initiating charge
-                    if ((this._chargePhase === ChargePhase.NONE) && ((this._hitCountByNonTarget >= CHARGE_TRIGGER_HIT_COUNT) || ((this._timeSinceLastTargetHit > targetHitTime + CHARGE_TRIGGER_MISS_COUNT * weaponCooldown)))) {
-                        this._chargePhase = ChargePhase.APPROACH_ATTACK;
-                        this._spacecraft.changeFlightMode(equipment.FlightMode.CRUISE);
-                    }
-                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    // managing distance from target based on weapons range
-                    // normal (non-charging behaviour)
-                    if (this._chargePhase === ChargePhase.NONE) {
-                        // closing in the distance if we are unable to hit the target at the current range
-                        closeInTriggerTime = targetHitTime + CLOSE_IN_TRIGGER_MISS_COUNT * weaponCooldown;
-                        if ((this._timeSinceLastClosingIn > closeInTriggerTime) && (this._timeSinceLastTargetHit > closeInTriggerTime) && (this._maxDistanceFactor > CLOSE_MAX_DISTANCE_FACTOR)) {
-                            this._maxDistanceFactor = Math.max(this._maxDistanceFactor - MAX_DISTANCE_FACTOR_DECREMENT, CLOSE_MAX_DISTANCE_FACTOR);
-                            this._timeSinceLastClosingIn = 0;
+                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        // initiating charge
+                        if ((this._chargePhase === ChargePhase.NONE) && ((this._hitCountByNonTarget >= CHARGE_TRIGGER_HIT_COUNT) || ((this._timeSinceLastTargetHit > targetHitTime + CHARGE_TRIGGER_MISS_COUNT * weaponCooldown)))) {
+                            this._chargePhase = ChargePhase.APPROACH_ATTACK;
+                            this._spacecraft.changeFlightMode(equipment.FlightMode.CRUISE);
                         }
-                        baseDistance = 0.5 * (ownSize + targetSize);
-                        maxDistance = baseDistance + this._maxDistanceFactor * this._weaponRange;
-                        minDistance = baseDistance + MIN_DISTANCE_FACTOR * this._weaponRange;
-                        if (!this._facingTarget) {
-                            this._spacecraft.resetSpeed();
-                        } else {
-                            this.approach(this._targetDistance, maxDistance, minDistance, acceleration * APPROACH_SPEED_FACTOR);
-                        }
-                        // charge attack behaviour (closing in at higher speed, without slowing)
-                    } else if (this._chargePhase === ChargePhase.APPROACH_ATTACK) {
-                        // calculating the distance at which the spacecraft will be able to avoid collision at charge speed
-                        maxDistance = Math.sqrt((targetSize + ownSize * 0.5) * 2 / acceleration) * acceleration * CHARGE_SPEED_FACTOR;
-                        if (!this._facingTarget) {
-                            this._chargePhase = ChargePhase.NONE;
-                            this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
-                            this._spacecraft.resetSpeed();
-                        } else {
-                            this._spacecraft.setSpeedTarget(acceleration * CHARGE_SPEED_FACTOR);
-                            // when the critical distance is reached, mark a destination beyond the target to head towards it
-                            if (this._targetDistance <= maxDistance) {
-                                this._chargePhase = ChargePhase.EVADE;
+                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        // managing distance from target based on weapons range
+                        // normal (non-charging behaviour)
+                        if (this._chargePhase === ChargePhase.NONE) {
+                            // closing in the distance if we are unable to hit the target at the current range
+                            closeInTriggerTime = targetHitTime + CLOSE_IN_TRIGGER_MISS_COUNT * weaponCooldown;
+                            if ((this._timeSinceLastClosingIn > closeInTriggerTime) && (this._timeSinceLastTargetHit > closeInTriggerTime) && (this._maxDistanceFactor > CLOSE_MAX_DISTANCE_FACTOR)) {
+                                this._maxDistanceFactor = Math.max(this._maxDistanceFactor - MAX_DISTANCE_FACTOR_DECREMENT, CLOSE_MAX_DISTANCE_FACTOR);
+                                this._timeSinceLastClosingIn = 0;
+                            }
+                            baseDistance = 0.5 * (ownSize + targetSize);
+                            maxDistance = baseDistance + this._maxDistanceFactor * this._weaponRange;
+                            minDistance = baseDistance + MIN_DISTANCE_FACTOR * this._weaponRange;
+                            if (!this._facingTarget) {
+                                this._spacecraft.resetSpeed();
+                            } else {
+                                this.approach(this._targetDistance, maxDistance, minDistance, acceleration * APPROACH_SPEED_FACTOR);
+                            }
+                            // charge attack behaviour (closing in at higher speed, without slowing)
+                        } else if (this._chargePhase === ChargePhase.APPROACH_ATTACK) {
+                            // calculating the distance at which the spacecraft will be able to avoid collision at charge speed
+                            maxDistance = Math.sqrt((targetSize + ownSize * 0.5) * 2 / acceleration) * acceleration * CHARGE_SPEED_FACTOR;
+                            if (!this._facingTarget) {
+                                this._chargePhase = ChargePhase.NONE;
                                 this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
-                                directionToTarget = vec.normal3(vectorToTarget);
-                                this._chargeDestination = vec.sum3(
-                                        positionVector,
-                                        vec.scaled3(
-                                                vec.diff3(
-                                                        vec.sum3(
-                                                                targetPositionVector,
-                                                                vec.scaled3(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(directionToTarget), mat.rotation3Aux(directionToTarget, Math.random() * utils.DOUBLE_PI))), maxDistance)),
-                                                        positionVector),
-                                                CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
+                                this._spacecraft.resetSpeed();
+                            } else {
+                                this._spacecraft.setSpeedTarget(acceleration * CHARGE_SPEED_FACTOR);
+                                // when the critical distance is reached, mark a destination beyond the target to head towards it
+                                if (this._targetDistance <= maxDistance) {
+                                    this._chargePhase = ChargePhase.EVADE;
+                                    this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
+                                    directionToTarget = vec.normal3(vectorToTarget);
+                                    this._chargeDestination = vec.sum3(
+                                            positionVector,
+                                            vec.scaled3(
+                                                    vec.diff3(
+                                                            vec.sum3(
+                                                                    targetPositionVector,
+                                                                    vec.scaled3(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(directionToTarget), mat.rotation3Aux(directionToTarget, Math.random() * utils.DOUBLE_PI))), maxDistance)),
+                                                            positionVector),
+                                                    CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
+                                }
                             }
                         }
+                    } else {
+                        this._spacecraft.resetSpeed();
                     }
                 } else {
+                    this._facingTarget = false;
+                    this._targetDistance = 0;
                     this._spacecraft.resetSpeed();
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // aiming turnable weapons towards default position
+                    this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, 0, dt);
                 }
-            } else {
-                this._facingTarget = false;
-                this._targetDistance = 0;
-                this._spacecraft.resetSpeed();
-                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                // aiming turnable weapons towards default position
-                this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, 0, dt);
             }
             if (!strafingHandled) {
                 // .................................................................................................
@@ -1382,6 +1516,7 @@ define([
             inverseOrientationMatrix = mat.inverseOfRotation4Aux(this._spacecraft.getPhysicalOrientationMatrix());
             target = this._spacecraft.getTarget();
             this._attackingTarget = false;
+            this._executeMoveCommand(positionVector, inverseOrientationMatrix, acceleration, dt);
             if (target) {
                 hostileTarget = target.isHostile(this._spacecraft);
                 targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
@@ -1408,51 +1543,53 @@ define([
                     // aiming turnable weapons towards target
                     this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, fireThresholdAngle, dt);
                     if (hostileTarget) {
-                        if (!facingTarget) {
-                            this._spacecraft.resetSpeed();
-                        } else {
-                            this.approach(targetDistance, maxDistance, 0, acceleration * APPROACH_SPEED_FACTOR);
-                        }
-                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        // turning towards target
-                        if (targetDistance > maxDistance) {
-                            this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
-                        } else {
+                        if (this._moveCommand === MoveCommand.NONE) {
+                            if (!facingTarget) {
+                                this._spacecraft.resetSpeed();
+                            } else {
+                                this.approach(targetDistance, maxDistance, 0, acceleration * APPROACH_SPEED_FACTOR);
+                            }
                             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                            // orienting into attack position
-                            angles = this._spacecraft.getClass().getAttackVectorAngles();
-                            thresholdAngle = this._spacecraft.getClass().getAttackThresholdAngle();
-                            switch (this._spacecraft.getClass().getTurnStyle()) {
-                                case classes.SpacecraftTurnStyle.YAW_PITCH:
-                                    if ((Math.abs(targetYawAndPitch.yaw - angles[0]) > thresholdAngle) || (Math.abs(targetYawAndPitch.pitch - angles[1]) > thresholdAngle)) {
-                                        this.turn(targetYawAndPitch.yaw - angles[0], targetYawAndPitch.pitch - angles[1], dt);
-                                    }
-                                    break;
-                                case classes.SpacecraftTurnStyle.ROLL_YAW:
-                                    targetAngles = vec.getRollAndYaw(relativeTargetDirection, true);
-                                    angleDifference = [targetAngles.roll - angles[0], targetAngles.yaw - angles[1]];
-                                    if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
-                                        if (Math.abs(angleDifference[1]) > utils.HALF_PI) {
-                                            angleDifference[0] = 0;
-                                        } else if (Math.abs(angleDifference[0]) > utils.HALF_PI) {
-                                            angleDifference[1] = 0;
+                            // turning towards target
+                            if (targetDistance > maxDistance) {
+                                this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                            } else {
+                                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                                // orienting into attack position
+                                angles = this._spacecraft.getClass().getAttackVectorAngles();
+                                thresholdAngle = this._spacecraft.getClass().getAttackThresholdAngle();
+                                switch (this._spacecraft.getClass().getTurnStyle()) {
+                                    case classes.SpacecraftTurnStyle.YAW_PITCH:
+                                        if ((Math.abs(targetYawAndPitch.yaw - angles[0]) > thresholdAngle) || (Math.abs(targetYawAndPitch.pitch - angles[1]) > thresholdAngle)) {
+                                            this.turn(targetYawAndPitch.yaw - angles[0], targetYawAndPitch.pitch - angles[1], dt);
                                         }
-                                        this.rollAndYaw(angleDifference[0], angleDifference[1], dt);
-                                    }
-                                    break;
-                                case classes.SpacecraftTurnStyle.ROLL_PITCH:
-                                    targetAngles = vec.getRollAndPitch(relativeTargetDirection, true);
-                                    angleDifference = [targetAngles.roll - angles[0], targetAngles.pitch - angles[1]];
-                                    if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
-                                        if (Math.abs(angleDifference[1]) > utils.HALF_PI) {
-                                            angleDifference[0] = 0;
-                                        } else if (Math.abs(angleDifference[0] - Math.sign(angleDifference[0]) * Math.PI) < Math.abs(angleDifference[0])) {
-                                            angleDifference[0] -= Math.sign(angleDifference[0]) * Math.PI;
-                                            targetAngles.pitch = -targetAngles.pitch;
+                                        break;
+                                    case classes.SpacecraftTurnStyle.ROLL_YAW:
+                                        targetAngles = vec.getRollAndYaw(relativeTargetDirection, true);
+                                        angleDifference = [targetAngles.roll - angles[0], targetAngles.yaw - angles[1]];
+                                        if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
+                                            if (Math.abs(angleDifference[1]) > utils.HALF_PI) {
+                                                angleDifference[0] = 0;
+                                            } else if (Math.abs(angleDifference[0]) > utils.HALF_PI) {
+                                                angleDifference[1] = 0;
+                                            }
+                                            this.rollAndYaw(angleDifference[0], angleDifference[1], dt);
                                         }
-                                        this.rollAndPitch(angleDifference[0], targetAngles.pitch - angles[1], dt);
-                                    }
-                                    break;
+                                        break;
+                                    case classes.SpacecraftTurnStyle.ROLL_PITCH:
+                                        targetAngles = vec.getRollAndPitch(relativeTargetDirection, true);
+                                        angleDifference = [targetAngles.roll - angles[0], targetAngles.pitch - angles[1]];
+                                        if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
+                                            if (Math.abs(angleDifference[1]) > utils.HALF_PI) {
+                                                angleDifference[0] = 0;
+                                            } else if (Math.abs(angleDifference[0] - Math.sign(angleDifference[0]) * Math.PI) < Math.abs(angleDifference[0])) {
+                                                angleDifference[0] -= Math.sign(angleDifference[0]) * Math.PI;
+                                                targetAngles.pitch = -targetAngles.pitch;
+                                            }
+                                            this.rollAndPitch(angleDifference[0], targetAngles.pitch - angles[1], dt);
+                                        }
+                                        break;
+                                }
                             }
                         }
                         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1469,7 +1606,9 @@ define([
                 }
             } else {
                 // if there is no target...
-                this._spacecraft.resetSpeed();
+                if (this._moveCommand === MoveCommand.NONE) {
+                    this._spacecraft.resetSpeed();
+                }
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // aiming turnable weapons towards default position
                 this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, 0, dt);

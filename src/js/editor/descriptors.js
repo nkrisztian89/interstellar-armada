@@ -3584,6 +3584,43 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            REACH_DISTANCE_COMMAND_PARAMS = {
+                baseType: BaseType.OBJECT,
+                name: "ReachDistanceCommandParams",
+                getPreviewText: function (instance) {
+                    var result = "";
+                    if (instance.minDistance) {
+                        result += instance.minDistance + " m < ";
+                    }
+                    result += "distance";
+                    if (instance.target) {
+                        result += " to " + instance.target;
+                    }
+                    if (instance.maxDistance) {
+                        result += " < " + instance.maxDistance + " m";
+                    }
+                    return result;
+                },
+                properties: {
+                    TARGET: {
+                        name: "target",
+                        type: SPACECRAFT_REFERENCE
+                    },
+                    MIN_DISTANCE: {
+                        name: "minDistance",
+                        type: POSITIVE_DISTANCE,
+                        optional: true
+                    },
+                    MAX_DISTANCE: {
+                        name: "maxDistance",
+                        type: POSITIVE_DISTANCE,
+                        optional: true
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             HUD_SECTION = {
                 baseType: BaseType.ENUM,
                 values: battle.HUDSection
@@ -3624,6 +3661,9 @@ define([
             },
             _isTargetCommandActionParams = function (data, parent) {
                 return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.TARGET);
+            },
+            _isReachDistanceCommandActionParams = function (data, parent) {
+                return _parentIsCommandAction(data, parent) && (data.command === ai.SpacecraftCommand.REACH_DISTANCE);
             },
             _parentIsHUDAction = function (data, parent) {
                 return !!parent && (parent.type === ActionType.HUD);
@@ -3671,6 +3711,17 @@ define([
                         }
                         if (instance.target) {
                             return instance.command + " " + TARGET_COMMAND_PARAMS.getPreviewText(instance.target);
+                        }
+                        if (instance.reachDistance) {
+                            if (instance.reachDistance.minDistance) {
+                                if (instance.reachDistance.maxDistance) {
+                                    return "get to " + instance.reachDistance.minDistance + "-" + instance.reachDistance.maxDistance + " m from " + instance.reachDistance.target;
+                                } else {
+                                    return "get away to " + instance.reachDistance.minDistance + " m from " + instance.reachDistance.target;
+                                }
+                            } else if (instance.reachDistance.maxDistance) {
+                                return "approach " + instance.reachDistance.target + " to " + instance.reachDistance.maxDistance + " m";
+                            }
                         }
                         return instance.command;
                     }
@@ -3747,6 +3798,12 @@ define([
                         type: TARGET_COMMAND_PARAMS,
                         optional: true,
                         isValid: _isTargetCommandActionParams
+                    },
+                    REACH_DISTANCE: {
+                        name: "reachDistance",
+                        type: REACH_DISTANCE_COMMAND_PARAMS,
+                        optional: true,
+                        isValid: _isReachDistanceCommandActionParams
                     },
                     // SetPropertiesAction params:
                     HULL: {

@@ -59,6 +59,12 @@ define(function () {
      * will not have to query the target spacecrafts
      */
     /**
+     * @typedef {Object} SpacecraftEvents~ReachDistanceCommandData
+     * @property {String} [target] The spacecraft from wich to calculate the distance
+     * @property {Number} [minDistance] We need to get at least this far from the target
+     * @property {Number} [maxDistance] We need to get at least this close to the target
+     */
+    /**
      * @typedef {Object} SpacecraftEvents~CommandData
      * @property {String} command The type of command to execute
      * @property {Spacecraft} [lead] The leading (first) spacecraft that received the same command (for example to apply a formation
@@ -68,6 +74,7 @@ define(function () {
      * @property {Boolean} [clearCache] When true, the cached properties in the command data should be cleared when executing the command
      * @property {SpacecraftEvents~JumpCommandData} [jump] Details of the command if it is a jump command
      * @property {SpacecraftEvents~TargetCommandData} [target] Details of the command if it is a target command
+     * @property {SpacecraftEvents~ReachDistanceCommandData} [reachDistance] Details of the command if it is a reach distance command
      */
     /**
      * @typedef {Object} SpacecraftEvents~HUDData
