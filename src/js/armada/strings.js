@@ -131,7 +131,10 @@ define([
         DESTROY_ANY_SUFFIX: {name: "destroyAny", optional: true},
         COUNT_BELOW_SUFFIX: {name: "countBelow", optional: true},
         TIME_SUFFIX: {name: "time", optional: true},
-        TIME_MULTI_SUFFIX: {name: "timeMulti", optional: true}
+        TIME_MULTI_SUFFIX: {name: "timeMulti", optional: true},
+        MAX_HULL_INTEGRITY_SUFFIX: {name: "maxHullIntegrity", optional: true},
+        MAX_HULL_INTEGRITY_ANY_SUFFIX: {name: "maxHullIntegrityAny", optional: true},
+        MAX_HULL_INTEGRITY_ONE_SUFFIX: {name: "maxHullIntegrityOne", optional: true}
     };
     strings.LOCATION = {
         UNKNOWN: {name: "location.unknown"},

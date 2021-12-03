@@ -21,14 +21,16 @@ define([
             // ------------------------------------------------------------------------------
             // enums
             ConditionType = {
-                /** The condition is evaluated true when all of its subjects are destroyed */
+                /** The condition is evaluated true when any/all of its subjects are destroyed */
                 DESTROYED: "destroyed",
                 /** The condition is evaluated true based on the count of still alive spacecrafts from its subjects */
                 COUNT: "count",
                 /** The condition is evaluated true based on the time elapsed since the start of the mission or the firing of a trigger */
-                TIME: "time"
+                TIME: "time",
+                /** The condition is evaluated true when any/all of its subjects' hull integrity falls into a specified range */
+                HULL_INTEGRITY: "hullIntegrity"
             },
-            DestroyedConditionWhich = {
+            ConditionSubjectsWhich = {
                 /** All the subjects need to be destroyed for the condition to be fulfilled */
                 ALL: "all",
                 /** Any of the subjects can be destroyed for the condition to be fulfilled */
@@ -64,7 +66,7 @@ define([
     // -------------------------------------------------------------------------
     // Freezing enums
     Object.freeze(ConditionType);
-    Object.freeze(DestroyedConditionWhich);
+    Object.freeze(ConditionSubjectsWhich);
     Object.freeze(CountConditionRelation);
     Object.freeze(TimeConditionWhen);
     // #########################################################################
@@ -238,6 +240,34 @@ define([
         return result;
     };
     /**
+     * Returns the minimum hull integrity value from among the subject spacecrafts
+     * @param {Boolean} [presentOnly=false] If true, only the spacecrafts that are present (not away) are considered 
+     * @returns {Number}
+     */
+    SubjectGroup.prototype.getMinHullIntegrity = function (presentOnly) {
+        var result = 100, i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i].isAlive() && (!presentOnly || !this._spacecrafts[i].isAway())) {
+                result = Math.min(result, this._spacecrafts[i].getHullIntegrity());
+            }
+        }
+        return result;
+    };
+    /**
+     * Returns the maximum hull integrity value from among the subject spacecrafts
+     * @param {Boolean} [presentOnly=false] If true, only the spacecrafts that are present (not away) are considered 
+     * @returns {Number}
+     */
+    SubjectGroup.prototype.getMaxHullIntegrity = function (presentOnly) {
+        var result = 0, i;
+        for (i = 0; i < this._spacecrafts.length; i++) {
+            if (this._spacecrafts[i].isAlive() && (!presentOnly || !this._spacecrafts[i].isAway())) {
+                result = Math.max(result, this._spacecrafts[i].getHullIntegrity());
+            }
+        }
+        return result;
+    };
+    /**
      * Returns a short translated string that can be used to display the subjects to the player (used on the HUD in battle)
      * @returns {String}
      */
@@ -341,7 +371,7 @@ define([
     DestroyedCondition.prototype.constructor = DestroyedCondition;
     /**
      * @typedef DestroyedCondition~Params
-     * @property {String} [which] (enum DestroyedConditionWhich)
+     * @property {String} [which] (enum ConditionSubjectsWhich)
      */
     /**
      * @param {DestroyedCondition~Params} params
@@ -353,14 +383,14 @@ define([
          */
         this._params = params;
         if (this._params && this._params.which &&
-                !utils.getSafeEnumValue(DestroyedConditionWhich, this._params.which)) {
+                !utils.getSafeEnumValue(ConditionSubjectsWhich, this._params.which)) {
             this._handleWrongParams();
             return false;
         }
         /**
          * @type Boolean
          */
-        this._all = !this._params || !this._params.which || (this._params.which === DestroyedConditionWhich.ALL);
+        this._all = !this._params || !this._params.which || (this._params.which === ConditionSubjectsWhich.ALL);
         return true;
     };
     /**
@@ -745,6 +775,125 @@ define([
     TimeCondition.prototype.canChangeMultipleTimes = function () {
         return this._params.when === TimeConditionWhen.REPEAT;
     };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied based on the hull integrity of the
+     * subjects
+     * @extends Condition
+     * @param {Object} dataJSON
+     */
+    function HullIntegrityCondition(dataJSON) {
+        Condition.call(this, dataJSON);
+
+    }
+    HullIntegrityCondition.prototype = new Condition();
+    HullIntegrityCondition.prototype.constructor = HullIntegrityCondition;
+    /**
+     * @typedef HullIntegrityCondition~Params
+     * @property {String} [which] (enum ConditionSubjectsWhich)
+     * @property {Number} [minIntegrity] The condition is satisfied if the hull integrity of the subjects is not below this value (in %)
+     * @property {Number} [maxIntegrity] The condition is satisfied if the hull integrity of the subjects is not above this value (in %)
+     */
+    /**
+     * @param {HullIntegrityCondition~Params} params 
+     * @returns {Boolean}
+     */
+    HullIntegrityCondition.prototype._checkParams = function (params) {
+        /**
+         * @type DestroyedCondition~Params
+         */
+        this._params = params;
+        if (this._params &&
+                ((this._params.which && !utils.getSafeEnumValue(ConditionSubjectsWhich, this._params.which)) ||
+                        (this._params.minIntegrity !== undefined && (this._params.minIntegrity < 0 || this._params.minIntegrity > 100)) ||
+                        (this._params.maxIntegrity !== undefined && (this._params.maxIntegrity < 0 || this._params.maxIntegrity > 100)))) {
+            this._handleWrongParams();
+            return false;
+        }
+        /**
+         * @type Boolean
+         */
+        this._all = !this._params || !this._params.which || (this._params.which === ConditionSubjectsWhich.ALL);
+        return true;
+    };
+    /**
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    HullIntegrityCondition.prototype.isSatisfied = function (mission) {
+        var i, integrity, spacecrafts = this._subjects.getSpacecrafts(mission);
+        for (i = 0; i < spacecrafts.length; i++) {
+            integrity = spacecrafts[i].getHullIntegrity() * 100;
+            if ((((this._params.minIntegrity !== undefined) && (integrity < this._params.minIntegrity)) ||
+                    ((this._params.maxIntegrity !== undefined) && (integrity > this._params.maxIntegrity))) === this._all) {
+                return !this._all;
+            }
+        }
+        return this._all;
+    };
+    /**
+     * @param {Object} stringPrefix
+     * @returns {String}
+     */
+    HullIntegrityCondition.prototype.getObjectiveString = function (stringPrefix) {
+        var result;
+        if (!this._params || (this._params.maxIntegrity === undefined) || (this._params.minIntegrity !== undefined)) {
+            application.showError("Hull integrity conditions for mission objectives must specify a maximum and no minimum integrity!");
+            return null;
+        }
+        result = utils.formatString(strings.get(stringPrefix,
+                this._subjects.isMulti() ?
+                (this._all ? strings.OBJECTIVE.MAX_HULL_INTEGRITY_SUFFIX.name : strings.OBJECTIVE.MAX_HULL_INTEGRITY_ANY_SUFFIX.name) :
+                strings.OBJECTIVE.MAX_HULL_INTEGRITY_ONE_SUFFIX.name), {
+            subjects: this._subjects.toString(),
+            maxIntegrity: this._params.maxIntegrity
+        });
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
+    };
+    /**
+     * @param {Object} stringPrefix 
+     * @returns {String}
+     */
+    HullIntegrityCondition.prototype.getObjectiveStateString = function (stringPrefix) {
+        var result, suffix;
+        if (!this._subjects.getSpacecrafts()) {
+            return "";
+        }
+        if (this._subjects.getLiveSubjectCount(true) > 0) {
+            suffix = " (" + Math.round((this._all ? this._subjects.getMaxHullIntegrity(true) : this._subjects.getMinHullIntegrity(true)) * 100) + "/" + this._params.maxIntegrity + "%)";
+        } else {
+            suffix = "";
+        }
+        result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.MAX_HULL_INTEGRITY_SUFFIX.name), {
+            subjects: this._subjects.getShortString()
+        }) + suffix;
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
+    };
+    /**
+     * Note: this is only correct if this condition belongs to the trigger of a WIN event
+     * @param {Mission} mission 
+     * @returns {Spacecraft[]}
+     */
+    HullIntegrityCondition.prototype.getTargetSpacecrafts = function (mission) {
+        return this._subjects.getSpacecrafts(mission);
+    };
+    /**
+     * Note: this is only correct if this condition belongs to the trigger of a LOSE event
+     * @param {Mission} mission 
+     * @returns {Spacecraft[]}
+     */
+    HullIntegrityCondition.prototype.getEscortedSpacecrafts = function (mission) {
+        return this._subjects.getSpacecrafts(mission);
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    HullIntegrityCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
     /**
      * @param {Object} dataJSON
      * @returns {DestroyedCondition|CountCondition|TimeCondition|Condition}
@@ -758,11 +907,12 @@ define([
     _conditionConstructors[ConditionType.DESTROYED] = DestroyedCondition;
     _conditionConstructors[ConditionType.COUNT] = CountCondition;
     _conditionConstructors[ConditionType.TIME] = TimeCondition;
+    _conditionConstructors[ConditionType.HULL_INTEGRITY] = HullIntegrityCondition;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         ConditionType: ConditionType,
-        DestroyedConditionWhich: DestroyedConditionWhich,
+        ConditionSubjectsWhich: ConditionSubjectsWhich,
         CountConditionRelation: CountConditionRelation,
         TimeConditionWhen: TimeConditionWhen,
         SubjectGroup: SubjectGroup,

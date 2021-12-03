@@ -98,7 +98,10 @@
             "destroyAny": "Destroy any of {subjects}",
             "countBelow": "Less than {count} out of {subjects} must remain",
             "time": "Survive for {time}",
-            "timeMulti": "Complete all objectives within {time}"
+            "timeMulti": "Complete all objectives within {time}",
+            "maxHullIntegrity": "Damage {subjects} to {maxIntegrity}% integrity",
+            "maxHullIntegrityAny": "Damage any of {subjects} to {maxIntegrity}% integrity",
+            "maxHullIntegrityOne": "Damage {subjects} to {maxIntegrity}% integrity"
         },
         "loseObjective": {
             "destroy": "At least one ship of {subjects} must survive",
@@ -106,7 +109,10 @@
             "destroyAny": "{subjects} must survive",
             "countBelow": "At least {count} out of {subjects} must survive",
             "time": "Jump out within {time}",
-            "timeMulti": "for {time}"
+            "timeMulti": "for {time}",
+            "maxHullIntegrity": "At least one ship of {subjects} must survive with more than {maxIntegrity}% integrity",
+            "maxHullIntegrityAny": "{subjects} must survive with more than {maxIntegrity}% integrity",
+            "maxHullIntegrityOne": "{subjects} must survive with more than {maxIntegrity}% integrity"
         }
     },
     "location": {
@@ -435,13 +441,15 @@
             "destroy": "Destroy: {subjects}",
             "countBelow": "Destroy {count} of {subjects} ({remaining})",
             "time": "Survive for {time}",
-            "timeMulti": "Time left: {time}"
+            "timeMulti": "Time left: {time}",
+            "maxHullIntegrity": "Damage {subjects}"
         },
         "loseObjective": {
             "destroy": "Protect: {subjects}",
             "countBelow": "Protect {count}/{live} of {subjects}",
             "time": "Jump out within {time}",
-            "timeMulti": "({time})"
+            "timeMulti": "({time})",
+            "maxHullIntegrity": "Protect: {subjects}"
         },
         "loadingBox": {
             "loadingMission": "loading mission information...",

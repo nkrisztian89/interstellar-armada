@@ -3143,9 +3143,9 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            DESTROYED_CONDITION_WHICH = {
+            CONDITION_SUBJECTS_WHICH = {
                 baseType: BaseType.ENUM,
-                values: conditions.DestroyedConditionWhich
+                values: conditions.ConditionSubjectsWhich
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3177,14 +3177,17 @@ define([
                     return [];
                 }
             },
-            _parentIsDestroyedCondition = function (data, parent) {
-                return !!parent && (parent.type === ConditionType.DESTROYED);
+            _hasWhichParam = function (data, parent) {
+                return !!parent && (parent.type === ConditionType.DESTROYED) || (parent.type === ConditionType.HULL_INTEGRITY);
             },
             _parentIsCountCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.COUNT);
             },
             _parentIsTimeCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.TIME);
+            },
+            _parentIsHullIntegrityCondition = function (data, parent) {
+                return !!parent && (parent.type === ConditionType.HULL_INTEGRITY);
             },
             _isRepeatTime = function (data, parent) {
                 return _parentIsTimeCondition(data, parent) && (data.when === conditions.TimeConditionWhen.REPEAT);
@@ -3197,6 +3200,23 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "ConditionParams",
                 getPreviewText: function (instance) {
+                    var result = "";
+                    // HullIntegrityCondition params:
+                    if (instance.minIntegrity !== undefined || instance.maxIntegrity !== undefined) {
+                        if (instance.minIntegrity !== undefined) {
+                            result += instance.minIntegrity + "% < ";
+                        }
+                        result += "hull of ";
+                        if (instance.which === conditions.ConditionSubjectsWhich.ANY) {
+                            result += "any subjects";
+                        } else {
+                            result += "all subjects";
+                        }
+                        if (instance.maxIntegrity !== undefined) {
+                            result += " < " + instance.maxIntegrity + "%";
+                        }
+                        return result;
+                    }
                     // DestroyedCondition params:
                     if (instance.which) {
                         return instance.which;
@@ -3215,9 +3235,9 @@ define([
                     // DestroyedCondition params:
                     WHICH: {
                         name: "which",
-                        type: DESTROYED_CONDITION_WHICH,
-                        isRequired: _parentIsDestroyedCondition,
-                        isValid: _parentIsDestroyedCondition
+                        type: CONDITION_SUBJECTS_WHICH,
+                        isRequired: _hasWhichParam,
+                        isValid: _hasWhichParam
                     },
                     // CountCondition params:
                     COUNT: {
@@ -3265,18 +3285,33 @@ define([
                         optional: true,
                         isValid: _isRepeatTime,
                         defaultValue: 0
+                    },
+                    // HullIntegrityCondition params:
+                    MIN_INTEGRITY: {
+                        name: "minIntegrity",
+                        type: NON_NEGATIVE_INT_PERCENT,
+                        optional: true,
+                        isValid: _parentIsHullIntegrityCondition,
+                        defaultText: "0%"
+                    },
+                    MAX_INTEGRITY: {
+                        name: "maxIntegrity",
+                        type: NON_NEGATIVE_INT_PERCENT,
+                        optional: true,
+                        isValid: _parentIsHullIntegrityCondition,
+                        defaultText: "100%"
                     }
                 }
             },
             _conditionCanHaveSubjects = function (data) {
-                return (data.type === ConditionType.DESTROYED) || (data.type === ConditionType.COUNT);
+                return (data.type === ConditionType.DESTROYED) || (data.type === ConditionType.COUNT) || (data.type === ConditionType.HULL_INTEGRITY);
             },
             _conditionCanHaveParams = function (data) {
                 return ((data.type === ConditionType.DESTROYED) && data.subjects && new conditions.SubjectGroup(data.subjects).isMulti()) ||
-                        (data.type === ConditionType.COUNT) || (data.type === ConditionType.TIME);
+                        (data.type === ConditionType.COUNT) || (data.type === ConditionType.TIME) || (data.type === ConditionType.HULL_INTEGRITY);
             },
             _conditionMustHaveParams = function (data) {
-                return (data.type === ConditionType.COUNT) || (data.type === ConditionType.TIME);
+                return (data.type === ConditionType.COUNT) || (data.type === ConditionType.TIME) || (data.type === ConditionType.HULL_INTEGRITY);
             },
             _getConditionParamDefault = function (data) {
                 return (data.type === ConditionType.DESTROYED) ? "all" : "none";
@@ -3299,9 +3334,12 @@ define([
                             case ConditionType.COUNT:
                                 return "count of " + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " " + CONDITION_PARAMS.getPreviewText(instance.params || utils.EMPTY_OBJECT);
                             case ConditionType.DESTROYED:
-                                return ((instance.params && instance.params.which === conditions.DestroyedConditionWhich.ANY) ? "any of " : "") + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " destroyed";
+                                return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " destroyed";
                             case ConditionType.TIME:
                                 return instance.params ? CONDITION_PARAMS.getPreviewText(instance.params) : "time";
+                            case ConditionType.HULL_INTEGRITY:
+                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) +
+                                        (instance.params ? ": " + CONDITION_PARAMS.getPreviewText(instance.params) : " has ?% hull integrity");
                         }
                         return instance.type;
                     }

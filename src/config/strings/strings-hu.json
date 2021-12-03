@@ -110,9 +110,12 @@
             "destroy": "Megsemmisítendő: {subjects}",
             "destroyOne": "Megsemmisítendő: {subjects}",
             "destroyAny": "Megsemmisítendő bármelyik a következőkből: {subjects}",
-            "countBelow": "Kevesebb, mint {count} maradhat meg a kövezkezőkből: {subjects}",
+            "countBelow": "Kevesebb, mint {count} maradhat meg a következőkből: {subjects}",
             "time": "Maradj életben {time}-ig",
-            "timeMulti": "Teljesítsd a feladatokat {time}-n belül"
+            "timeMulti": "Teljesítsd a feladatokat {time}-n belül",
+            "maxHullIntegrity": "Okozz sérülést {maxIntegrity}%-ig a következőknek: {subjects}",
+            "maxHullIntegrityAny": "Okozz sérülést {maxIntegrity}%-ig bármelyiknek: {subjects} közül",
+            "maxHullIntegrityOne": "Okozz sérülést {maxIntegrity}%-ig a következőnek: {subjects}"
         },
         "loseObjective": {
             "destroy": "Megvédendő legalább egy a következőkből: {subjects}",
@@ -120,12 +123,15 @@
             "destroyAny": "Megvédendő: {subjects}",
             "countBelow": "Legalább {count} maradjon meg a következőkből: {subjects}",
             "time": "Hagyd el a csatateret {time}-n belül",
-            "timeMulti": "{time}-ig"
+            "timeMulti": "{time}-ig",
+            "maxHullIntegrity": "Több, mint {maxIntegrity}% épnek kell maradnia bármelyiknek: {subjects} közül",
+            "maxHullIntegrityAny": "Több, mint {maxIntegrity}% épnek kell maradnia a következőknek: {subjects}",
+            "maxHullIntegrityOne": "Több, mint {maxIntegrity}% épnek kell maradnia a következőnek: {subjects}"
         }
     },
     "location": {
         "unknown": "Ismeretlen",
-        "system": "{systemName} rendszer"  
+        "system": "{systemName} rendszer"
     },
     "serverRegion": {
         "unknown": "ismeretlen",
@@ -466,13 +472,15 @@
             "destroy": "Célpont: {subjects}",
             "countBelow": "Célpont ({count}): {subjects} ({remaining})",
             "time": "Élj túl: {time}",
-            "timeMulti": "Hátralévő idő: {time}"
+            "timeMulti": "Hátralévő idő: {time}",
+            "maxHullIntegrity": "Célpont: {subjects}"
         },
         "loseObjective": {
             "destroy": "Megvédendő: {subjects}",
             "countBelow": "Megvédendő: {count}/{live} {subjects}",
             "time": "Ugorj ki: {time}",
-            "timeMulti": "({time})"
+            "timeMulti": "({time})",
+            "maxHullIntegrity": "Megvédendő: {subjects}"
         },
         "loadingBox": {
             "loadingMission": "küldetésleíró fájl betöltése...",
