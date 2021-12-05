@@ -577,7 +577,7 @@ define([
             popup.alignPosition();
         };
         updateButtonText = function () {
-            button.textContent = arrayType ? arrayType.getPreviewText(data) : type.getPreviewText(data);
+            button.textContent = arrayType ? arrayType.getPreviewText(data, parent) : type.getPreviewText(data, parent);
             if (parentPopup) {
                 parentPopup.alignPosition();
             }
@@ -747,7 +747,7 @@ define([
                     label.textContent = (array.length > 0) ? type.getDisplayName() + " list" : EMPTY_LIST_TEXT;
                 },
                 updateButtonText = function () {
-                    button.innerHTML = arrayType.getPreviewText(array);
+                    button.innerHTML = arrayType.getPreviewText(array, parent);
                     if (parentPopup) {
                         parentPopup.alignPosition();
                     }

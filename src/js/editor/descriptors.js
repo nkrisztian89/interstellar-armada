@@ -3178,7 +3178,10 @@ define([
                 }
             },
             _hasWhichParam = function (data, parent) {
-                return !!parent && (parent.type === ConditionType.DESTROYED) || (parent.type === ConditionType.HULL_INTEGRITY);
+                return !!parent && (
+                        (parent.type === ConditionType.DESTROYED) ||
+                        (parent.type === ConditionType.HULL_INTEGRITY) ||
+                        (parent.type === ConditionType.SHIELD_INTEGRITY));
             },
             _parentIsCountCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.COUNT);
@@ -3186,8 +3189,8 @@ define([
             _parentIsTimeCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.TIME);
             },
-            _parentIsHullIntegrityCondition = function (data, parent) {
-                return !!parent && (parent.type === ConditionType.HULL_INTEGRITY);
+            _parentIsIntegrityCondition = function (data, parent) {
+                return !!parent && ((parent.type === ConditionType.HULL_INTEGRITY) || (parent.type === ConditionType.SHIELD_INTEGRITY));
             },
             _isRepeatTime = function (data, parent) {
                 return _parentIsTimeCondition(data, parent) && (data.when === conditions.TimeConditionWhen.REPEAT);
@@ -3199,18 +3202,26 @@ define([
             CONDITION_PARAMS = {
                 baseType: BaseType.OBJECT,
                 name: "ConditionParams",
-                getPreviewText: function (instance) {
-                    var result = "";
-                    // HullIntegrityCondition params:
+                getPreviewText: function (instance, parent) {
+                    var result = "", subjects;
+                    // HullIntegrityCondition and ShieldIntegrityCondition params:
                     if (instance.minIntegrity !== undefined || instance.maxIntegrity !== undefined) {
                         if (instance.minIntegrity !== undefined) {
                             result += instance.minIntegrity + "% < ";
                         }
-                        result += "hull of ";
-                        if (instance.which === conditions.ConditionSubjectsWhich.ANY) {
-                            result += "any subjects";
+                        result += (parent && (parent.type === ConditionType.SHIELD_INTEGRITY)) ? "shield of " : "hull of ";
+                        if (parent && parent.subjects) {
+                            subjects = new conditions.SubjectGroup(parent.subjects);
+                            if (subjects.isMulti() && (instance.which === conditions.ConditionSubjectsWhich.ANY)) {
+                                result += "any of ";
+                            }
+                            result += SUBJECT_GROUP.getPreviewText(parent.subjects, parent);
                         } else {
-                            result += "all subjects";
+                            if (instance.which === conditions.ConditionSubjectsWhich.ANY) {
+                                result += "any subjects";
+                            } else {
+                                result += "all subjects";
+                            }
                         }
                         if (instance.maxIntegrity !== undefined) {
                             result += " < " + instance.maxIntegrity + "%";
@@ -3286,32 +3297,41 @@ define([
                         isValid: _isRepeatTime,
                         defaultValue: 0
                     },
-                    // HullIntegrityCondition params:
+                    // HullIntegrityCondition and ShieldIntegrityCondition params:
                     MIN_INTEGRITY: {
                         name: "minIntegrity",
                         type: NON_NEGATIVE_INT_PERCENT,
                         optional: true,
-                        isValid: _parentIsHullIntegrityCondition,
+                        isValid: _parentIsIntegrityCondition,
                         defaultText: "0%"
                     },
                     MAX_INTEGRITY: {
                         name: "maxIntegrity",
                         type: NON_NEGATIVE_INT_PERCENT,
                         optional: true,
-                        isValid: _parentIsHullIntegrityCondition,
+                        isValid: _parentIsIntegrityCondition,
                         defaultText: "100%"
                     }
                 }
             },
             _conditionCanHaveSubjects = function (data) {
-                return (data.type === ConditionType.DESTROYED) || (data.type === ConditionType.COUNT) || (data.type === ConditionType.HULL_INTEGRITY);
+                return (data.type === ConditionType.DESTROYED) ||
+                        (data.type === ConditionType.COUNT) ||
+                        (data.type === ConditionType.HULL_INTEGRITY) ||
+                        (data.type === ConditionType.SHIELD_INTEGRITY);
             },
             _conditionCanHaveParams = function (data) {
                 return ((data.type === ConditionType.DESTROYED) && data.subjects && new conditions.SubjectGroup(data.subjects).isMulti()) ||
-                        (data.type === ConditionType.COUNT) || (data.type === ConditionType.TIME) || (data.type === ConditionType.HULL_INTEGRITY);
+                        (data.type === ConditionType.COUNT) ||
+                        (data.type === ConditionType.TIME) ||
+                        (data.type === ConditionType.HULL_INTEGRITY) ||
+                        (data.type === ConditionType.SHIELD_INTEGRITY);
             },
             _conditionMustHaveParams = function (data) {
-                return (data.type === ConditionType.COUNT) || (data.type === ConditionType.TIME) || (data.type === ConditionType.HULL_INTEGRITY);
+                return (data.type === ConditionType.COUNT) ||
+                        (data.type === ConditionType.TIME) ||
+                        (data.type === ConditionType.HULL_INTEGRITY) ||
+                        (data.type === ConditionType.SHIELD_INTEGRITY);
             },
             _getConditionParamDefault = function (data) {
                 return (data.type === ConditionType.DESTROYED) ? "all" : "none";
@@ -3332,14 +3352,17 @@ define([
                     if (instance.type) {
                         switch (instance.type) {
                             case ConditionType.COUNT:
-                                return "count of " + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " " + CONDITION_PARAMS.getPreviewText(instance.params || utils.EMPTY_OBJECT);
+                                return "count of " + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " " + CONDITION_PARAMS.getPreviewText(instance.params || utils.EMPTY_OBJECT, instance);
                             case ConditionType.DESTROYED:
-                                return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) + " destroyed";
+                                return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " destroyed";
                             case ConditionType.TIME:
-                                return instance.params ? CONDITION_PARAMS.getPreviewText(instance.params) : "time";
+                                return instance.params ? CONDITION_PARAMS.getPreviewText(instance.params, instance) : "time";
                             case ConditionType.HULL_INTEGRITY:
-                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT) +
-                                        (instance.params ? ": " + CONDITION_PARAMS.getPreviewText(instance.params) : " has ?% hull integrity");
+                                return (instance.params && ((instance.params.minIntegrity !== undefined) || (instance.params.maxIntegrity !== undefined))) ?
+                                        CONDITION_PARAMS.getPreviewText(instance.params, instance) : "incomplete hull condition";
+                            case ConditionType.SHIELD_INTEGRITY:
+                                return (instance.params && ((instance.params.minIntegrity !== undefined) || (instance.params.maxIntegrity !== undefined))) ?
+                                        CONDITION_PARAMS.getPreviewText(instance.params, instance) : "incomplete shield condition";
                         }
                         return instance.type;
                     }
@@ -3421,7 +3444,7 @@ define([
                             result = result + (whenFalse ? (whichAny ? "not " : "neither ") : "") +
                                     instance.conditions.map(CONDITION.getPreviewText).join(whenFalse ? (whichAny ? " and " : " nor ") : (whichAny ? " or " : " and "));
                         } else {
-                            result = result + (whenFalse ? "not " : "") + CONDITION.getPreviewText(instance.conditions[0]);
+                            result = result + (whenFalse ? "not " : "") + CONDITION.getPreviewText(instance.conditions[0], instance);
                         }
                         return result;
                     }
@@ -3748,7 +3771,7 @@ define([
                             return instance.command + " " + instance.jump.way;
                         }
                         if (instance.target) {
-                            return instance.command + " " + TARGET_COMMAND_PARAMS.getPreviewText(instance.target);
+                            return instance.command + " " + TARGET_COMMAND_PARAMS.getPreviewText(instance.target, instance);
                         }
                         if (instance.reachDistance) {
                             if (instance.reachDistance.minDistance) {
@@ -3905,40 +3928,40 @@ define([
                         switch (instance.type) {
                             case ActionType.MESSAGE:
                                 if (instance.params) {
-                                    result = result + ACTION_PARAMS.getPreviewText(instance.params);
+                                    result = result + ACTION_PARAMS.getPreviewText(instance.params, instance);
                                 }
                                 break;
                             case ActionType.COMMAND:
                                 if (instance.subjects && instance.params) {
-                                    result = result + SUBJECT_GROUP.getPreviewText(instance.subjects) + ": " + ACTION_PARAMS.getPreviewText(instance.params);
+                                    result = result + SUBJECT_GROUP.getPreviewText(instance.subjects, instance) + ": " + ACTION_PARAMS.getPreviewText(instance.params, instance);
                                 } else {
                                     result = result + instance.type;
                                 }
                                 break;
                             case ActionType.HUD:
                                 if (instance.params) {
-                                    result = result + ACTION_PARAMS.getPreviewText(instance.params);
+                                    result = result + ACTION_PARAMS.getPreviewText(instance.params, instance);
                                 }
                                 break;
                             case ActionType.SET_PROPERTIES:
                                 if (!instance.params) {
                                     result = result + "set properties";
                                 }
-                                result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "set") + ":" +
+                                result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects, instance) : "set") + ":" +
                                         _getPropertiesText(instance.params);
                                 break;
                             case ActionType.REPAIR:
                                 if (!instance.params) {
                                     result = result + "repair";
                                 }
-                                result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "repair") + ":" +
+                                result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects, instance) : "repair") + ":" +
                                         _getPropertiesText(instance.params, "+");
                                 break;
                             case ActionType.DAMAGE:
                                 if (!instance.params) {
                                     result = result + "damage";
                                 }
-                                result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects) : "damage") + ":" +
+                                result = result + (instance.subjects ? SUBJECT_GROUP.getPreviewText(instance.subjects, instance) : "damage") + ":" +
                                         _getPropertiesText(instance.params, "-");
                                 break;
                             default:
@@ -4501,13 +4524,14 @@ define([
     /**
      * Returns a displayable preview text for data of this type
      * @param {Object} data
+     * @param {Object} parent The parent of data
      * @returns {String}
      */
-    Type.prototype.getPreviewText = function (data) {
+    Type.prototype.getPreviewText = function (data, parent) {
         var result;
         if (this._descriptor.baseType === BaseType.ARRAY) {
             if (this._descriptor.getPreviewText) {
-                result = this._descriptor.getPreviewText(data);
+                result = this._descriptor.getPreviewText(data, parent);
             }
             if (!result) {
                 if (data.length === 0) {
@@ -4525,7 +4549,7 @@ define([
             return result;
         }
         return this._descriptor.getPreviewText ?
-                this._descriptor.getPreviewText(data) :
+                this._descriptor.getPreviewText(data, parent) :
                 this._descriptor.name;
     };
     /**

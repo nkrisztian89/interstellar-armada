@@ -28,7 +28,9 @@ define([
                 /** The condition is evaluated true based on the time elapsed since the start of the mission or the firing of a trigger */
                 TIME: "time",
                 /** The condition is evaluated true when any/all of its subjects' hull integrity falls into a specified range */
-                HULL_INTEGRITY: "hullIntegrity"
+                HULL_INTEGRITY: "hullIntegrity",
+                /** The condition is evaluated true when any/all of its subjects' shield integrity falls into a specified range */
+                SHIELD_INTEGRITY: "shieldIntegrity"
             },
             ConditionSubjectsWhich = {
                 /** All the subjects need to be destroyed for the condition to be fulfilled */
@@ -800,7 +802,7 @@ define([
      */
     HullIntegrityCondition.prototype._checkParams = function (params) {
         /**
-         * @type DestroyedCondition~Params
+         * @type HullIntegrityCondition~Params
          */
         this._params = params;
         if (this._params &&
@@ -894,6 +896,84 @@ define([
     HullIntegrityCondition.prototype.canChangeMultipleTimes = function () {
         return true;
     };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied based on the shield integrity of the
+     * subjects
+     * @extends Condition
+     * @param {Object} dataJSON
+     */
+    function ShieldIntegrityCondition(dataJSON) {
+        Condition.call(this, dataJSON);
+
+    }
+    ShieldIntegrityCondition.prototype = new Condition();
+    ShieldIntegrityCondition.prototype.constructor = ShieldIntegrityCondition;
+    /**
+     * @typedef ShieldIntegrityCondition~Params
+     * @property {String} [which] (enum ConditionSubjectsWhich)
+     * @property {Number} [minIntegrity] The condition is satisfied if the shield integrity of the subjects is not below this value (in %)
+     * @property {Number} [maxIntegrity] The condition is satisfied if the shield integrity of the subjects is not above this value (in %)
+     */
+    /**
+     * @param {ShieldIntegrityCondition~Params} params 
+     * @returns {Boolean}
+     */
+    ShieldIntegrityCondition.prototype._checkParams = function (params) {
+        /**
+         * @type ShieldIntegrityCondition~Params
+         */
+        this._params = params;
+        if (this._params &&
+                ((this._params.which && !utils.getSafeEnumValue(ConditionSubjectsWhich, this._params.which)) ||
+                        (this._params.minIntegrity !== undefined && (this._params.minIntegrity < 0 || this._params.minIntegrity > 100)) ||
+                        (this._params.maxIntegrity !== undefined && (this._params.maxIntegrity < 0 || this._params.maxIntegrity > 100)))) {
+            this._handleWrongParams();
+            return false;
+        }
+        /**
+         * @type Boolean
+         */
+        this._all = !this._params || !this._params.which || (this._params.which === ConditionSubjectsWhich.ALL);
+        return true;
+    };
+    /**
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    ShieldIntegrityCondition.prototype.isSatisfied = function (mission) {
+        var i, integrity, spacecrafts = this._subjects.getSpacecrafts(mission);
+        for (i = 0; i < spacecrafts.length; i++) {
+            integrity = spacecrafts[i].getShieldIntegrity() * 100;
+            if ((((this._params.minIntegrity !== undefined) && (integrity < this._params.minIntegrity)) ||
+                    ((this._params.maxIntegrity !== undefined) && (integrity > this._params.maxIntegrity))) === this._all) {
+                return !this._all;
+            }
+        }
+        return this._all;
+    };
+    /**
+     * @returns {String}
+     */
+    ShieldIntegrityCondition.prototype.getObjectiveString = function () {
+        application.showError("Shield integrity conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {String}
+     */
+    ShieldIntegrityCondition.prototype.getObjectiveStateString = function () {
+        application.showError("Shield integrity conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    ShieldIntegrityCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
+    // -------------------------------------------------------------------------
     /**
      * @param {Object} dataJSON
      * @returns {DestroyedCondition|CountCondition|TimeCondition|Condition}
@@ -908,6 +988,7 @@ define([
     _conditionConstructors[ConditionType.COUNT] = CountCondition;
     _conditionConstructors[ConditionType.TIME] = TimeCondition;
     _conditionConstructors[ConditionType.HULL_INTEGRITY] = HullIntegrityCondition;
+    _conditionConstructors[ConditionType.SHIELD_INTEGRITY] = ShieldIntegrityCondition;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
