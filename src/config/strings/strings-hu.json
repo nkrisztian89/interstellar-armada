@@ -115,7 +115,9 @@
             "timeMulti": "Teljesítsd a feladatokat {time}-n belül",
             "maxHullIntegrity": "Okozz sérülést {maxIntegrity}%-ig a következőknek: {subjects}",
             "maxHullIntegrityAny": "Okozz sérülést {maxIntegrity}%-ig bármelyiknek: {subjects} közül",
-            "maxHullIntegrityOne": "Okozz sérülést {maxIntegrity}%-ig a következőnek: {subjects}"
+            "maxHullIntegrityOne": "Okozz sérülést {maxIntegrity}%-ig a következőnek: {subjects}",
+            "distanceMin": "Távolodj {minDistance}-re ettől: {target}",
+            "distanceMax": "Közelítsd meg {maxDistance}-re {target}-t"
         },
         "loseObjective": {
             "destroy": "Megvédendő legalább egy a következőkből: {subjects}",
@@ -126,7 +128,9 @@
             "timeMulti": "{time}-ig",
             "maxHullIntegrity": "Több, mint {maxIntegrity}% épnek kell maradnia bármelyiknek: {subjects} közül",
             "maxHullIntegrityAny": "Több, mint {maxIntegrity}% épnek kell maradnia a következőknek: {subjects}",
-            "maxHullIntegrityOne": "Több, mint {maxIntegrity}% épnek kell maradnia a következőnek: {subjects}"
+            "maxHullIntegrityOne": "Több, mint {maxIntegrity}% épnek kell maradnia a következőnek: {subjects}",
+            "distanceMin": "Maradj {minDistance}-en belül tőle: {target}",
+            "distanceMax": "Maradj {maxDistance} távol tőle: {target}"
         }
     },
     "location": {
@@ -473,14 +477,18 @@
             "countBelow": "Célpont ({count}): {subjects} ({remaining})",
             "time": "Élj túl: {time}",
             "timeMulti": "Hátralévő idő: {time}",
-            "maxHullIntegrity": "Célpont: {subjects}"
+            "maxHullIntegrity": "Célpont: {subjects}",
+            "distanceMin": "Távolodj: {target}",
+            "distanceMax": "Közelíts: {target}"
         },
         "loseObjective": {
             "destroy": "Megvédendő: {subjects}",
             "countBelow": "Megvédendő: {count}/{live} {subjects}",
             "time": "Ugorj ki: {time}",
             "timeMulti": "({time})",
-            "maxHullIntegrity": "Megvédendő: {subjects}"
+            "maxHullIntegrity": "Megvédendő: {subjects}",
+            "distanceMin": "Maradj közel: {target}",
+            "distanceMax": "Maradj távol: {target}"
         },
         "loadingBox": {
             "loadingMission": "küldetésleíró fájl betöltése...",

@@ -3192,6 +3192,9 @@ define([
             _parentIsIntegrityCondition = function (data, parent) {
                 return !!parent && ((parent.type === ConditionType.HULL_INTEGRITY) || (parent.type === ConditionType.SHIELD_INTEGRITY));
             },
+            _parentIsDistanceCondition = function (data, parent) {
+                return !!parent && (parent.type === ConditionType.DISTANCE);
+            },
             _isRepeatTime = function (data, parent) {
                 return _parentIsTimeCondition(data, parent) && (data.when === conditions.TimeConditionWhen.REPEAT);
             },
@@ -3225,6 +3228,17 @@ define([
                         }
                         if (instance.maxIntegrity !== undefined) {
                             result += " < " + instance.maxIntegrity + "%";
+                        }
+                        return result;
+                    }
+                    // DistanceCondition params:
+                    if (instance.minDistance !== undefined || instance.maxDistance !== undefined) {
+                        if (instance.minDistance !== undefined) {
+                            result += utils.getLengthString(instance.minDistance) + " < ";
+                        }
+                        result += "distance to " + instance.target;
+                        if (instance.maxDistance !== undefined) {
+                            result += " < " + utils.getLengthString(instance.maxDistance);
                         }
                         return result;
                     }
@@ -3311,6 +3325,27 @@ define([
                         optional: true,
                         isValid: _parentIsIntegrityCondition,
                         defaultText: "100%"
+                    },
+                    // DistanceCondition params:
+                    TARGET: {
+                        name: "target",
+                        type: SPACECRAFT_REFERENCE,
+                        isValid: _parentIsDistanceCondition,
+                        isRequired: _parentIsDistanceCondition
+                    },
+                    MIN_DISTANCE: {
+                        name: "minDistance",
+                        type: POSITIVE_DISTANCE,
+                        optional: true,
+                        isValid: _parentIsDistanceCondition,
+                        defaultText: "0"
+                    },
+                    MAX_DISTANCE: {
+                        name: "maxDistance",
+                        type: POSITIVE_DISTANCE,
+                        optional: true,
+                        isValid: _parentIsDistanceCondition,
+                        defaultText: "infinity"
                     }
                 }
             },
@@ -3318,20 +3353,23 @@ define([
                 return (data.type === ConditionType.DESTROYED) ||
                         (data.type === ConditionType.COUNT) ||
                         (data.type === ConditionType.HULL_INTEGRITY) ||
-                        (data.type === ConditionType.SHIELD_INTEGRITY);
+                        (data.type === ConditionType.SHIELD_INTEGRITY) ||
+                        (data.type === ConditionType.DISTANCE);
             },
             _conditionCanHaveParams = function (data) {
                 return ((data.type === ConditionType.DESTROYED) && data.subjects && new conditions.SubjectGroup(data.subjects).isMulti()) ||
                         (data.type === ConditionType.COUNT) ||
                         (data.type === ConditionType.TIME) ||
                         (data.type === ConditionType.HULL_INTEGRITY) ||
-                        (data.type === ConditionType.SHIELD_INTEGRITY);
+                        (data.type === ConditionType.SHIELD_INTEGRITY) ||
+                        (data.type === ConditionType.DISTANCE);
             },
             _conditionMustHaveParams = function (data) {
                 return (data.type === ConditionType.COUNT) ||
                         (data.type === ConditionType.TIME) ||
                         (data.type === ConditionType.HULL_INTEGRITY) ||
-                        (data.type === ConditionType.SHIELD_INTEGRITY);
+                        (data.type === ConditionType.SHIELD_INTEGRITY) ||
+                        (data.type === ConditionType.DISTANCE);
             },
             _getConditionParamDefault = function (data) {
                 return (data.type === ConditionType.DESTROYED) ? "all" : "none";
@@ -3363,6 +3401,10 @@ define([
                             case ConditionType.SHIELD_INTEGRITY:
                                 return (instance.params && ((instance.params.minIntegrity !== undefined) || (instance.params.maxIntegrity !== undefined))) ?
                                         CONDITION_PARAMS.getPreviewText(instance.params, instance) : "incomplete shield condition";
+                            case ConditionType.DISTANCE:
+                                return (instance.params && ((instance.params.minDistance !== undefined) || (instance.params.maxDistance !== undefined))) ?
+                                        SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + ": " + CONDITION_PARAMS.getPreviewText(instance.params, instance) :
+                                        "incomplete distance condition";
                         }
                         return instance.type;
                     }

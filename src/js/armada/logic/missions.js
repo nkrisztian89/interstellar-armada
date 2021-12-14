@@ -165,6 +165,67 @@ define([
     function _compareSpacecrafts(a, b) {
         return a.getIndexInSquad() - b.getIndexInSquad();
     }
+    /**
+     * Takes in a list of spacecraft descriptors as defined in a mission descriptor JSON file, and
+     * extracts the ones that define multiple spacecrafts (through the count property) into individual
+     * spacecraft descriptors in the output array (the others remain unchanged)
+     * @param {Array} spacecrafts
+     * @returns {Array}
+     */
+    function _getIndividualSpacecraftDescriptors(spacecrafts) {
+        var i, j, squad, names, loadouts, pilotedIndex, positions, formation, orientation,
+                spacecraftDataTemplate, spacecraftData,
+                result = [];
+        for (i = 0; i < spacecrafts.length; i++) {
+            if (spacecrafts[i].count) {
+                // extracting data used for generating differing spacecraft data properties
+                squad = spacecrafts[i].squad;
+                names = spacecrafts[i].names;
+                loadouts = spacecrafts[i].loadouts;
+                pilotedIndex = spacecrafts[i].pilotedIndex;
+                positions = spacecrafts[i].positions;
+                formation = spacecrafts[i].formation;
+                orientation = mat.rotation4FromJSON(spacecrafts[i].rotations);
+                // creating a template to be copied for individual spacecraft data objects, without the proprties that don't refer to individual spacecrafts
+                spacecraftDataTemplate = utils.deepCopy(spacecrafts[i]);
+                delete spacecraftDataTemplate.count;
+                delete spacecraftDataTemplate.names;
+                delete spacecraftDataTemplate.loadouts;
+                delete spacecraftDataTemplate.pilotedIndex;
+                delete spacecraftDataTemplate.positions;
+                delete spacecraftDataTemplate.formation;
+                for (j = 0; j < spacecrafts[i].count; j++) {
+                    spacecraftData = utils.deepCopy(spacecraftDataTemplate);
+                    if (squad) {
+                        spacecraftData.squad = squad + " " + (j + 1).toString();
+                    }
+                    if (names) {
+                        spacecraftData.name = names[j];
+                    }
+                    if (loadouts) {
+                        spacecraftData.loadout = loadouts[j % loadouts.length];
+                    }
+                    if (pilotedIndex === (j + 1)) {
+                        spacecraftData.piloted = true;
+                        delete spacecraftData.ai;
+                    }
+                    if (positions) {
+                        spacecraftData.position = positions[j];
+                    }
+                    if (formation) {
+                        if (positions) {
+                            application.showError("Both positions and formation have been defined for spacecraft group - formation will be used!", application.ErrorSeverity.MINOR);
+                        }
+                        spacecraftData.position = spacecraft.Spacecraft.getPositionInFormation(formation, j, spacecraftData.position, orientation);
+                    }
+                    result.push(spacecraftData);
+                }
+            } else {
+                result.push(spacecrafts[i]);
+            }
+        }
+        return result;
+    }
     // -------------------------------------------------------------------------
     // Public functions
     /**
@@ -984,10 +1045,10 @@ define([
             result.push(strings.get(strings.MISSIONS.OBJECTIVE_WIN_PREFIX, strings.OBJECTIVE.DESTROY_ALL_SUFFIX.name));
         }
         for (i = 0; i < this._winActions.length; i++) {
-            result = result.concat(this._winActions[i].getObjectiveStrings());
+            result = result.concat(this._winActions[i].getObjectiveStrings(this));
         }
         for (i = 0; i < this._loseActions.length; i++) {
-            result = result.concat(this._loseActions[i].getObjectiveStrings());
+            result = result.concat(this._loseActions[i].getObjectiveStrings(this));
         }
         return result;
     };
@@ -1062,7 +1123,22 @@ define([
      * @param {Object} dataJSON The object storing the mission data
      */
     Mission.prototype.loadObjectives = function (dataJSON) {
-        var i, j, actions, actionType, count;
+        var i, j, actions, actionType, count, spacecrafts;
+        // in case this method is called separately (not inside loadFromJSON()), we initialize
+        // the piloted spacecraft as e.g. distance conditions can only be win/lose conditions
+        // if the subject is the piloted craft, so we need to be able to check for that
+        if (!this._spacecrafts) {
+            this._spacecrafts = [];
+            spacecrafts = _getIndividualSpacecraftDescriptors(dataJSON.spacecrafts);
+            for (i = 0; i < spacecrafts.length; i++) {
+                if (spacecrafts[i].piloted) {
+                    this._pilotedCraft = new spacecraft.Spacecraft();
+                    this._pilotedCraft.loadFromJSON(spacecrafts[i]);
+                    this._spacecrafts.push(this._pilotedCraft);
+                    break;
+                }
+            }
+        }
         this._events = [];
         if (dataJSON.events) {
             for (i = 0; i < dataJSON.events.length; i++) {
@@ -1140,7 +1216,7 @@ define([
      * and a suitable AI is added to all spacecrafts if possible.
      */
     Mission.prototype.loadFromJSON = function (dataJSON, difficulty, demoMode) {
-        var i, j, shadows, craft, teamID, team, aiType, actions, count, factor, squad, names, loadouts, pilotedIndex, positions, formation, orientation, spacecrafts, spacecraftDataTemplate, spacecraftData;
+        var i, j, shadows, craft, teamID, team, aiType, actions, count, factor, spacecrafts;
         application.log_DEBUG("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
@@ -1176,56 +1252,7 @@ define([
         this._hitObjects = [];
         ai.clearAIs();
         // expand squad entries in the spacecrafts array
-        spacecrafts = [];
-        for (i = 0; i < dataJSON.spacecrafts.length; i++) {
-            if (dataJSON.spacecrafts[i].count) {
-                // extracting data used for generating differing spacecraft data properties
-                // NOTE: MissionDescriptor.getPilotedSpacecraftDescriptor() also does this extraction!
-                squad = dataJSON.spacecrafts[i].squad;
-                names = dataJSON.spacecrafts[i].names;
-                loadouts = dataJSON.spacecrafts[i].loadouts;
-                pilotedIndex = dataJSON.spacecrafts[i].pilotedIndex;
-                positions = dataJSON.spacecrafts[i].positions;
-                formation = dataJSON.spacecrafts[i].formation;
-                orientation = mat.rotation4FromJSON(dataJSON.spacecrafts[i].rotations);
-                // creating a template to be copied for individual spacecraft data objects, without the proprties that don't refer to individual spacecrafts
-                spacecraftDataTemplate = utils.deepCopy(dataJSON.spacecrafts[i]);
-                delete spacecraftDataTemplate.count;
-                delete spacecraftDataTemplate.names;
-                delete spacecraftDataTemplate.loadouts;
-                delete spacecraftDataTemplate.pilotedIndex;
-                delete spacecraftDataTemplate.positions;
-                delete spacecraftDataTemplate.formation;
-                for (j = 0; j < dataJSON.spacecrafts[i].count; j++) {
-                    spacecraftData = utils.deepCopy(spacecraftDataTemplate);
-                    if (squad) {
-                        spacecraftData.squad = squad + " " + (j + 1).toString();
-                    }
-                    if (names) {
-                        spacecraftData.name = names[j];
-                    }
-                    if (loadouts) {
-                        spacecraftData.loadout = loadouts[j % loadouts.length];
-                    }
-                    if (pilotedIndex === (j + 1)) {
-                        spacecraftData.piloted = true;
-                        delete spacecraftData.ai;
-                    }
-                    if (positions) {
-                        spacecraftData.position = positions[j];
-                    }
-                    if (formation) {
-                        if (positions) {
-                            application.showError("Both positions and formation have been defined for spacecraft group - formation will be used!", application.ErrorSeverity.MINOR);
-                        }
-                        spacecraftData.position = spacecraft.Spacecraft.getPositionInFormation(formation, j, spacecraftData.position, orientation);
-                    }
-                    spacecrafts.push(spacecraftData);
-                }
-            } else {
-                spacecrafts.push(dataJSON.spacecrafts[i]);
-            }
-        }
+        spacecrafts = _getIndividualSpacecraftDescriptors(dataJSON.spacecrafts);
         // loading spacecrafts from expanded array
         for (i = 0; i < spacecrafts.length; i++) {
             craft = new spacecraft.Spacecraft();
@@ -1972,28 +1999,12 @@ define([
      * @returns {Object}
      */
     MissionDescriptor.prototype.getPilotedSpacecraftDescriptor = function () {
-        var i, result;
+        var i, spacecrafts;
         if (!this._pilotedSpacecraftDescriptor) {
-            for (i = 0; i < this._dataJSON.spacecrafts.length; i++) {
-                if (this._dataJSON.spacecrafts[i].piloted) {
-                    this._pilotedSpacecraftDescriptor = this._dataJSON.spacecrafts[i];
-                    break;
-                }
-                if (this._dataJSON.spacecrafts[i].pilotedIndex) {
-                    result = utils.deepCopy(this._dataJSON.spacecrafts[i]);
-                    if (result.names) {
-                        result.name = result.names[result.pilotedIndex - 1];
-                        delete result.names;
-                    }
-                    if (result.loadouts) {
-                        result.loadout = result.loadouts[result.pilotedIndex - 1];
-                        delete result.loadouts;
-                    }
-                    delete result.count;
-                    delete result.pilotedIndex;
-                    delete result.positions;
-                    delete result.formation;
-                    this._pilotedSpacecraftDescriptor = result;
+            spacecrafts = _getIndividualSpacecraftDescriptors(this._dataJSON.spacecrafts);
+            for (i = 0; i < spacecrafts.length; i++) {
+                if (spacecrafts[i].piloted) {
+                    this._pilotedSpacecraftDescriptor = spacecrafts[i];
                     break;
                 }
             }

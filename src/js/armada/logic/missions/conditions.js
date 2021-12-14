@@ -7,15 +7,17 @@
 
 /**
  * @param utils Used for format strings and useful constants
+ * @param mat Used to calculate distances (squared) between spacecraft
  * @param application Used for file loading and logging functionality
  * @param strings Used for translation support
  */
 define([
     "utils/utils",
+    "utils/matrices",
     "modules/application",
     "armada/strings",
     "utils/polyfill"
-], function (utils, application, strings) {
+], function (utils, mat, application, strings) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -30,7 +32,9 @@ define([
                 /** The condition is evaluated true when any/all of its subjects' hull integrity falls into a specified range */
                 HULL_INTEGRITY: "hullIntegrity",
                 /** The condition is evaluated true when any/all of its subjects' shield integrity falls into a specified range */
-                SHIELD_INTEGRITY: "shieldIntegrity"
+                SHIELD_INTEGRITY: "shieldIntegrity",
+                /** The condition is evaluated true when any/all of its subjects' distance from a speficied spacecraft falls into a specified range */
+                DISTANCE: "distance"
             },
             ConditionSubjectsWhich = {
                 /** All the subjects need to be destroyed for the condition to be fulfilled */
@@ -145,6 +149,29 @@ define([
         return (this._descriptor.spacecrafts && (this._descriptor.spacecrafts.length > 1)) ||
                 (this._descriptor.squads && (this._descriptor.squads.length > 0)) ||
                 (this._descriptor.teams && (this._descriptor.teams.length > 0));
+    };
+    /**
+     * Whether the subject group refers to a single spacecraft (referring to a squad or team
+     * with potentially only a single member does not count)
+     * @returns {Boolean}
+     */
+    SubjectGroup.prototype.isSingleSpacecraft = function () {
+        return this._descriptor.spacecrafts && (this._descriptor.spacecrafts.length === 1) &&
+                (!this._descriptor.squads || (this._descriptor.squads.length === 0)) &&
+                (!this._descriptor.teams || (this._descriptor.teams.length === 0));
+    };
+    /**
+     * Whether the subject group refers to (only) the piloted spacecraft of the passed mission
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    SubjectGroup.prototype.isPilotedSpacecraft = function (mission) {
+        var spacecrafts;
+        if (this.isSingleSpacecraft()) {
+            spacecrafts = this.getSpacecrafts(mission);
+            return (spacecrafts.length === 1) && (spacecrafts[0] === mission.getPilotedSpacecraft());
+        }
+        return false;
     };
     /**
      * 
@@ -711,8 +738,8 @@ define([
             application.showError("Single time conditions for mission objectives must have 'when' = '" + TimeConditionWhen.AFTER + "'!");
             return null;
         }
-        if (multipleConditions && (!this._params || (this._params.when !== TimeConditionWhen.BEFORE))) {
-            application.showError("Time conditions used in combination with other conditions for mission objectives must have 'when' = '" + TimeConditionWhen.BEFORE + "'!");
+        if (multipleConditions && (!this._params || ((this._params.when !== TimeConditionWhen.BEFORE) && (this._params.when !== TimeConditionWhen.WITHIN)))) {
+            application.showError("Time conditions used in combination with other conditions for mission objectives must have 'when' = '" + TimeConditionWhen.BEFORE + +" or " + TimeConditionWhen.WITHIN + "'!");
             return null;
         }
         result = utils.formatString(strings.get(stringPrefix, multipleConditions ? strings.OBJECTIVE.TIME_MULTI_SUFFIX.name : strings.OBJECTIVE.TIME_SUFFIX.name), {
@@ -973,6 +1000,192 @@ define([
     ShieldIntegrityCondition.prototype.canChangeMultipleTimes = function () {
         return true;
     };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied based on the distance of the subjects
+     * from a specified spacecraft
+     * @extends Condition
+     * @param {Object} dataJSON
+     */
+    function DistanceCondition(dataJSON) {
+        Condition.call(this, dataJSON);
+
+    }
+    DistanceCondition.prototype = new Condition();
+    DistanceCondition.prototype.constructor = DistanceCondition;
+    /**
+     * @typedef DistanceCondition~Params
+     * @property {String} [which] (enum ConditionSubjectsWhich)
+     * @property {Number} [minDistance] The condition is satisfied if the distance of the subjects from the target is not below this value (in m)
+     * @property {Number} [maxDistance] The condition is satisfied if the distance of the subjects from the target is not above this value (in m)
+     * @property {String} target The ID of the target spacecraft to calculate the distance to
+     */
+    /**
+     * @param {DistanceCondition~Params} params 
+     * @returns {Boolean}
+     */
+    DistanceCondition.prototype._checkParams = function (params) {
+        /**
+         * @type DistanceCondition~Params
+         */
+        this._params = params;
+        if (this._params &&
+                ((this._params.which && !utils.getSafeEnumValue(ConditionSubjectsWhich, this._params.which)) ||
+                        (this._params.minDistance !== undefined && (this._params.minDistance <= 0)) ||
+                        (this._params.maxDistance !== undefined && (this._params.maxDistance <= 0)) ||
+                        !this._params.target)) {
+            this._handleWrongParams();
+            return false;
+        }
+        /**
+         * @type Boolean
+         */
+        this._all = !this._params || !this._params.which || (this._params.which === ConditionSubjectsWhich.ALL);
+        /**
+         * @type Number
+         */
+        this._minDistanceSquared = (this._params.minDistance !== undefined) ? this._params.minDistance * this._params.minDistance : 0;
+        /**
+         * @type Number
+         */
+        this._maxDistanceSquared = (this._params.maxDistance !== undefined) ? this._params.maxDistance * this._params.maxDistance : 0;
+        /**
+         * @type SubjectGroup
+         */
+        this._target = new SubjectGroup({spacecrafts: [this._params.target]});
+        /**
+         * @type Number
+         */
+        this._distanceSquared = 0;
+        /**
+         * @type Boolean
+         */
+        this._lastSatisfied = false;
+        /**
+         * @type Boolean
+         */
+        this._impossible = false;
+        /**
+         * @type Boolean
+         */
+        this._active = true;
+        return true;
+    };
+    /**
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    DistanceCondition.prototype.isSatisfied = function (mission) {
+        var i, spacecrafts = this._subjects.getSpacecrafts(mission),
+                target = mission.getSpacecraft(this._params.target), targetMatrix;
+        this._distanceSquared = 0;
+        this._active = true;
+        if (!target || !target.isAlive() || target.isAway()) {
+            this._active = false;
+            this._impossible = !target || !target.isAlive();
+            return this._lastSatisfied = false;
+        }
+        targetMatrix = target.getPhysicalPositionMatrix();
+        for (i = 0; i < spacecrafts.length; i++) {
+            this._distanceSquared = mat.distanceSquared(spacecrafts[i].getPhysicalPositionMatrix(), targetMatrix);
+            if ((((this._minDistanceSquared > 0) && (this._distanceSquared < this._minDistanceSquared)) ||
+                    ((this._maxDistanceSquared > 0) && (this._distanceSquared > this._maxDistanceSquared))) === this._all) {
+                return this._lastSatisfied = !this._all;
+            }
+        }
+        return this._lastSatisfied = this._all;
+    };
+    /**
+     * @param {Object} stringPrefix
+     * @param {Boolean} [multi] 
+     * @param {Mission} mission 
+     * @returns {String}
+     */
+    DistanceCondition.prototype.getObjectiveString = function (stringPrefix, multi, mission) {
+        var result;
+        if (!this._params || ((this._params.minDistance === undefined) && (this._params.maxDistance === undefined)) ||
+                ((this._params.minDistance !== undefined) && (this._params.maxDistance !== undefined))) {
+            application.showError("Distance conditions for mission objectives must specify either a minimum or a maximum distance!");
+            return null;
+        }
+        if (!this._subjects.isPilotedSpacecraft(mission)) {
+            application.showError("Distance conditions for mission objectives must specify the piloted spacecraft as the only subject!");
+            return null;
+        }
+        result = utils.formatString(strings.get(stringPrefix,
+                (this._params.minDistance !== undefined) ? strings.OBJECTIVE.DISTANCE_MIN_SUFFIX.name : strings.OBJECTIVE.DISTANCE_MAX_SUFFIX.name), {
+            minDistance: utils.getLengthString(this._params.minDistance),
+            maxDistance: utils.getLengthString(this._params.maxDistance),
+            target: this._target.toString()
+        });
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
+    };
+    /**
+     * @param {Object} stringPrefix 
+     * @param {Boolean} [multi] 
+     * @param {Mission} mission 
+     * @param {Boolean} inProgress
+     * @returns {String}
+     */
+    DistanceCondition.prototype.getObjectiveStateString = function (stringPrefix, multi, mission, inProgress) {
+        var result, suffix, distance;
+        if (!this._subjects.getSpacecrafts() || !this._target.getSpacecrafts(mission)) {
+            return "";
+        }
+        if (inProgress && (!this._lastSatisfied && (this._distanceSquared > 0))) {
+            distance = Math.sqrt(this._distanceSquared);
+            suffix = " (" + utils.getLengthString(this._params.minDistance ? this._params.minDistance - distance : distance - this._params.maxDistance) + ")";
+        } else {
+            suffix = "";
+        }
+        result = utils.formatString(strings.get(stringPrefix,
+                (this._params.minDistance !== undefined) ? strings.OBJECTIVE.DISTANCE_MIN_SUFFIX.name : strings.OBJECTIVE.DISTANCE_MAX_SUFFIX.name), {
+            target: this._target.getShortString()
+        }) + suffix;
+        result = result.charAt(0).toUpperCase() + result.slice(1);
+        return result;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    DistanceCondition.prototype.getTargetSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    DistanceCondition.prototype.getEscortedSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    DistanceCondition.prototype.canBeImpossible = function () {
+        return true;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    DistanceCondition.prototype.isImpossible = function () {
+        return this._impossible;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    DistanceCondition.prototype.isActive = function () {
+        return this._active;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    DistanceCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
     // -------------------------------------------------------------------------
     /**
      * @param {Object} dataJSON
@@ -989,6 +1202,7 @@ define([
     _conditionConstructors[ConditionType.TIME] = TimeCondition;
     _conditionConstructors[ConditionType.HULL_INTEGRITY] = HullIntegrityCondition;
     _conditionConstructors[ConditionType.SHIELD_INTEGRITY] = ShieldIntegrityCondition;
+    _conditionConstructors[ConditionType.DISTANCE] = DistanceCondition;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

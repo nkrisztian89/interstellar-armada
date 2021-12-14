@@ -164,10 +164,11 @@ define([
         return this._trigger.getObjectiveCount(true);
     };
     /**
+     * @param {Mission} mission
      * @returns {String[]}
      */
-    WinAction.prototype.getObjectiveStrings = function () {
-        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_WIN_PREFIX, true);
+    WinAction.prototype.getObjectiveStrings = function (mission) {
+        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_WIN_PREFIX, true, mission);
     };
     /**
      * @param {Mission} mission
@@ -213,10 +214,11 @@ define([
         return this._trigger.getObjectiveCount(false);
     };
     /**
+     * @param {Mission} mission
      * @returns {String[]}
      */
-    LoseAction.prototype.getObjectiveStrings = function () {
-        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_LOSE_PREFIX, false);
+    LoseAction.prototype.getObjectiveStrings = function (mission) {
+        return this._trigger.getObjectiveStrings(strings.MISSIONS.OBJECTIVE_LOSE_PREFIX, false, mission);
     };
     /**
      * @param {Mission} mission

@@ -283,7 +283,7 @@ define([
     /**
      * @class Represents a specific spacecraft (fighter, warship, freighter, space
      * station etc.) in the game.
-     * @param {SpacecraftClass} spacecraftClass The class of the spacecraft that
+     * @param {SpacecraftClass} [spacecraftClass] The class of the spacecraft that
      * describes its general properties.
      * @param {String} [name] An optional name to identify this spacecraft by.
      * @param {Float32Array} [positionMatrix] The translation matrix describing

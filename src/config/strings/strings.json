@@ -101,7 +101,9 @@
             "timeMulti": "Complete all objectives within {time}",
             "maxHullIntegrity": "Damage {subjects} to {maxIntegrity}% integrity",
             "maxHullIntegrityAny": "Damage any of {subjects} to {maxIntegrity}% integrity",
-            "maxHullIntegrityOne": "Damage {subjects} to {maxIntegrity}% integrity"
+            "maxHullIntegrityOne": "Damage {subjects} to {maxIntegrity}% integrity",
+            "distanceMin": "Get {minDistance} away from {target}",
+            "distanceMax": "Approach {target} to {maxDistance}"
         },
         "loseObjective": {
             "destroy": "At least one ship of {subjects} must survive",
@@ -112,7 +114,9 @@
             "timeMulti": "for {time}",
             "maxHullIntegrity": "At least one ship of {subjects} must survive with more than {maxIntegrity}% integrity",
             "maxHullIntegrityAny": "{subjects} must survive with more than {maxIntegrity}% integrity",
-            "maxHullIntegrityOne": "{subjects} must survive with more than {maxIntegrity}% integrity"
+            "maxHullIntegrityOne": "{subjects} must survive with more than {maxIntegrity}% integrity",
+            "distanceMin": "Stay within {minDistance} of {target}",
+            "distanceMax": "Stay {maxDistance} away from {target}"
         }
     },
     "location": {
@@ -442,14 +446,18 @@
             "countBelow": "Destroy {count} of {subjects} ({remaining})",
             "time": "Survive for {time}",
             "timeMulti": "Time left: {time}",
-            "maxHullIntegrity": "Damage {subjects}"
+            "maxHullIntegrity": "Damage {subjects}",
+            "distanceMin": "Get away: {target}",
+            "distanceMax": "Approach {target}"
         },
         "loseObjective": {
             "destroy": "Protect: {subjects}",
             "countBelow": "Protect {count}/{live} of {subjects}",
             "time": "Jump out within {time}",
             "timeMulti": "({time})",
-            "maxHullIntegrity": "Protect: {subjects}"
+            "maxHullIntegrity": "Protect: {subjects}",
+            "distanceMin": "Stay close: {target}",
+            "distanceMax": "Stay away: {target}"
         },
         "loadingBox": {
             "loadingMission": "loading mission information...",

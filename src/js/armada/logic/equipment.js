@@ -2849,7 +2849,7 @@ define([
      * @class The targeting computer keeps track of all targeting related data and performs targeting related tasks for the spacecraft it
      * is equipped on.
      * @param {Spacecraft} spacecraft The spacecraft this computer is equipped on
-     * @param {Spacecraft[]} spacecraftArray The list of spacecrafts from which this computer can choose its target
+     * @param {Spacecraft[]} [spacecraftArray] The list of spacecrafts from which this computer can choose its target
      * @param {Environment} [environment] The environment the host spacecraft is situated in
      */
     function TargetingComputer(spacecraft, spacecraftArray, environment) {
