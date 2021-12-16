@@ -3195,6 +3195,9 @@ define([
             _parentIsDistanceCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.DISTANCE);
             },
+            _parentIsHitCondition = function (data, parent) {
+                return !!parent && (parent.type === ConditionType.HIT);
+            },
             _isRepeatTime = function (data, parent) {
                 return _parentIsTimeCondition(data, parent) && (data.when === conditions.TimeConditionWhen.REPEAT);
             },
@@ -3253,6 +3256,10 @@ define([
                     // TimeCondition params:
                     if (instance.when !== undefined) {
                         return instance.when + (instance.maxCount ? " (" + instance.maxCount + "x)" : "") + ": " + utils.getTimeString(instance.time) + (instance.start ? " after " + instance.start : "");
+                    }
+                    // HitCondition params:
+                    if (instance.by !== undefined) {
+                        return "by " + SUBJECT_GROUP.getPreviewText(instance.by, instance);
                     }
                     return "none";
                 },
@@ -3346,6 +3353,14 @@ define([
                         optional: true,
                         isValid: _parentIsDistanceCondition,
                         defaultText: "infinity"
+                    },
+                    // HitCondition params:
+                    BY: {
+                        name: "by",
+                        type: SUBJECT_GROUP,
+                        optional: true,
+                        isValid: _parentIsHitCondition,
+                        defaultText: "any"
                     }
                 }
             },
@@ -3354,7 +3369,8 @@ define([
                         (data.type === ConditionType.COUNT) ||
                         (data.type === ConditionType.HULL_INTEGRITY) ||
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
-                        (data.type === ConditionType.DISTANCE);
+                        (data.type === ConditionType.DISTANCE) ||
+                        (data.type === ConditionType.HIT);
             },
             _conditionCanHaveParams = function (data) {
                 return ((data.type === ConditionType.DESTROYED) && data.subjects && new conditions.SubjectGroup(data.subjects).isMulti()) ||
@@ -3362,7 +3378,8 @@ define([
                         (data.type === ConditionType.TIME) ||
                         (data.type === ConditionType.HULL_INTEGRITY) ||
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
-                        (data.type === ConditionType.DISTANCE);
+                        (data.type === ConditionType.DISTANCE) ||
+                        (data.type === ConditionType.HIT);
             },
             _conditionMustHaveParams = function (data) {
                 return (data.type === ConditionType.COUNT) ||
@@ -3405,6 +3422,8 @@ define([
                                 return (instance.params && ((instance.params.minDistance !== undefined) || (instance.params.maxDistance !== undefined))) ?
                                         SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + ": " + CONDITION_PARAMS.getPreviewText(instance.params, instance) :
                                         "incomplete distance condition";
+                            case ConditionType.HIT:
+                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " hit" + ((instance.params && instance.params.by) ? " " + CONDITION_PARAMS.getPreviewText(instance.params, instance) : "");
                         }
                         return instance.type;
                     }

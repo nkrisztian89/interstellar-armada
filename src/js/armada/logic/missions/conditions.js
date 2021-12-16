@@ -10,14 +10,16 @@
  * @param mat Used to calculate distances (squared) between spacecraft
  * @param application Used for file loading and logging functionality
  * @param strings Used for translation support
+ * @param SpacecraftEvents Used for handling hit events
  */
 define([
     "utils/utils",
     "utils/matrices",
     "modules/application",
     "armada/strings",
+    "armada/logic/SpacecraftEvents",
     "utils/polyfill"
-], function (utils, mat, application, strings) {
+], function (utils, mat, application, strings, SpacecraftEvents) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -34,7 +36,9 @@ define([
                 /** The condition is evaluated true when any/all of its subjects' shield integrity falls into a specified range */
                 SHIELD_INTEGRITY: "shieldIntegrity",
                 /** The condition is evaluated true when any/all of its subjects' distance from a speficied spacecraft falls into a specified range */
-                DISTANCE: "distance"
+                DISTANCE: "distance",
+                /** This condition is evaluated true whenever its subjects are getting hit */
+                HIT: "hit"
             },
             ConditionSubjectsWhich = {
                 /** All the subjects need to be destroyed for the condition to be fulfilled */
@@ -958,7 +962,6 @@ define([
      */
     function ShieldIntegrityCondition(dataJSON) {
         Condition.call(this, dataJSON);
-
     }
     ShieldIntegrityCondition.prototype = new Condition();
     ShieldIntegrityCondition.prototype.constructor = ShieldIntegrityCondition;
@@ -1035,7 +1038,22 @@ define([
      */
     function DistanceCondition(dataJSON) {
         Condition.call(this, dataJSON);
-
+        /**
+         * @type Number
+         */
+        this._distanceSquared = 0;
+        /**
+         * @type Boolean
+         */
+        this._lastSatisfied = false;
+        /**
+         * @type Boolean
+         */
+        this._impossible = false;
+        /**
+         * @type Boolean
+         */
+        this._active = true;
     }
     DistanceCondition.prototype = new Condition();
     DistanceCondition.prototype.constructor = DistanceCondition;
@@ -1079,22 +1097,6 @@ define([
          * @type SubjectGroup
          */
         this._target = new SubjectGroup({spacecrafts: [this._params.target]});
-        /**
-         * @type Number
-         */
-        this._distanceSquared = 0;
-        /**
-         * @type Boolean
-         */
-        this._lastSatisfied = false;
-        /**
-         * @type Boolean
-         */
-        this._impossible = false;
-        /**
-         * @type Boolean
-         */
-        this._active = true;
         return true;
     };
     /**
@@ -1215,6 +1217,104 @@ define([
     DistanceCondition.prototype.canChangeMultipleTimes = function () {
         return true;
     };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied when the subjects are hit (for the simulation
+     * step when they are hit)
+     * @extends Condition
+     * @param {Object} dataJSON
+     * @param {Mission} [mission]
+     */
+    function HitCondition(dataJSON, mission) {
+        var i, spacecrafts, callback;
+        Condition.call(this, dataJSON);
+        /**
+         * @type Boolean
+         */
+        this._satisfied = false;
+        if (mission && this._subjects) {
+            spacecrafts = this._subjects.getSpacecrafts(mission);
+            if (spacecrafts && (spacecrafts.length > 0)) {
+                callback = this._handleHit.bind(this, (this._params && this._params.by) ? new SubjectGroup(this._params.by).getSpacecrafts(mission) : null);
+                for (i = 0; i < spacecrafts.length; i++) {
+                    spacecrafts[i].addEventHandler(SpacecraftEvents.BEING_HIT, callback);
+                }
+            }
+        }
+    }
+    HitCondition.prototype = new Condition();
+    HitCondition.prototype.constructor = HitCondition;
+    /**
+     * @typedef HitCondition~Params
+     * @property {Object} [by] The condition is satisfied if the subjects are hit by spacecrafts
+     * from the SubjectGroup defined by this parameter
+     */
+    /**
+     * @param {HitCondition~Params} params 
+     * @returns {Boolean}
+     */
+    HitCondition.prototype._checkParams = function (params) {
+        /**
+         * @type HitCondition~Params
+         */
+        this._params = params;
+        return true;
+    };
+    /**
+     * @param {Spacecraft[]} spacecrafts The list of spacecrafts which should satisfy the condition
+     * if the hit is by them
+     * @param {SpacecraftEvents~BeingHitData} data The hit event data
+     */
+    HitCondition.prototype._handleHit = function (spacecrafts, data) {
+        if (!spacecrafts || spacecrafts.indexOf(data.spacecraft) >= 0) {
+            this._satisfied = true;
+        }
+    };
+    /**
+     * @param {Mission} mission
+     * @param {Number} dt
+     * @returns {Boolean}
+     */
+    HitCondition.prototype.isSatisfied = function (mission, dt) {
+        var satisfied = this._satisfied;
+        if (dt > 0) {
+            this._satisfied = false;
+        }
+        return satisfied;
+    };
+    /**
+     * @returns {String}
+     */
+    HitCondition.prototype.getObjectiveString = function () {
+        application.showError("Hit conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {String}
+     */
+    HitCondition.prototype.getObjectiveStateString = function () {
+        application.showError("Hit conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    HitCondition.prototype.getTargetSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    HitCondition.prototype.getEscortedSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    HitCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
     // -------------------------------------------------------------------------
     /**
      * @param {Object} dataJSON
@@ -1233,6 +1333,7 @@ define([
     _conditionConstructors[ConditionType.HULL_INTEGRITY] = HullIntegrityCondition;
     _conditionConstructors[ConditionType.SHIELD_INTEGRITY] = ShieldIntegrityCondition;
     _conditionConstructors[ConditionType.DISTANCE] = DistanceCondition;
+    _conditionConstructors[ConditionType.HIT] = HitCondition;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
