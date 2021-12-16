@@ -102,6 +102,7 @@
             "maxHullIntegrity": "Damage {subjects} to {maxIntegrity}% integrity",
             "maxHullIntegrityAny": "Damage any of {subjects} to {maxIntegrity}% integrity",
             "maxHullIntegrityOne": "Damage {subjects} to {maxIntegrity}% integrity",
+            "maxHullIntegritySelf": "Get damaged to {maxIntegrity}% hull integrity",
             "distanceMin": "Get {minDistance} away from {target}",
             "distanceMax": "Approach {target} to {maxDistance}"
         },
@@ -115,6 +116,7 @@
             "maxHullIntegrity": "At least one ship of {subjects} must survive with more than {maxIntegrity}% integrity",
             "maxHullIntegrityAny": "{subjects} must survive with more than {maxIntegrity}% integrity",
             "maxHullIntegrityOne": "{subjects} must survive with more than {maxIntegrity}% integrity",
+            "maxHullIntegritySelf": "Stay above {maxIntegrity}% hull integrity",
             "distanceMin": "Stay within {minDistance} of {target}",
             "distanceMax": "Stay {maxDistance} away from {target}"
         }
@@ -447,6 +449,7 @@
             "time": "Survive for {time}",
             "timeMulti": "Time left: {time}",
             "maxHullIntegrity": "Damage {subjects}",
+            "maxHullIntegritySelf": "Get damaged",
             "distanceMin": "Get away: {target}",
             "distanceMax": "Approach {target}"
         },
@@ -456,6 +459,7 @@
             "time": "Jump out within {time}",
             "timeMulti": "({time})",
             "maxHullIntegrity": "Protect: {subjects}",
+            "maxHullIntegritySelf": "Stay above",
             "distanceMin": "Stay close: {target}",
             "distanceMax": "Stay away: {target}"
         },

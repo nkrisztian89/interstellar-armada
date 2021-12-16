@@ -88,8 +88,9 @@ define([
      * callbacks added to them which are invoked upon firing
      * that can be 
      * @param {Object} dataJSON
+     * @param {Mission} mission
      */
-    function Trigger(dataJSON) {
+    function Trigger(dataJSON, mission) {
         var i, when, which;
         /**
          * The list of conditions to evaluate when deciding whether to fire
@@ -99,7 +100,7 @@ define([
         if (dataJSON.conditions && (dataJSON.conditions.length > 0)) {
             this._conditions = [];
             for (i = 0; i < dataJSON.conditions.length; i++) {
-                this._conditions.push(conditions.createCondition(dataJSON.conditions[i]));
+                this._conditions.push(conditions.createCondition(dataJSON.conditions[i], mission));
             }
         }
         /**
@@ -409,8 +410,9 @@ define([
      * @class A game event is a set of actions that are executed whenever an associated trigger (a set of conditions and parameters) fires 
      * during the mission.
      * @param {Object} dataJSON
+     * @param {Mission} mission
      */
-    function MissionEvent(dataJSON) {
+    function MissionEvent(dataJSON, mission) {
         var i;
         /**
          * A string to identify this event Might be needed to refer to it for example, as a timed trigger might start its countdown after 
@@ -422,7 +424,7 @@ define([
          * The trigger that is checked every simulation step whether to fire and invoke the associated actions or not
          * @type Trigger[]
          */
-        this._trigger = new Trigger(dataJSON.trigger);
+        this._trigger = new Trigger(dataJSON.trigger, mission);
         /**
          * Actions that are executed in every simulation step when their associated triggers fire
          * @type Action[]

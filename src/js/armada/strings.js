@@ -135,6 +135,7 @@ define([
         MAX_HULL_INTEGRITY_SUFFIX: {name: "maxHullIntegrity", optional: true},
         MAX_HULL_INTEGRITY_ANY_SUFFIX: {name: "maxHullIntegrityAny", optional: true},
         MAX_HULL_INTEGRITY_ONE_SUFFIX: {name: "maxHullIntegrityOne", optional: true},
+        MAX_HULL_INTEGRITY_SELF_SUFFIX: {name: "maxHullIntegritySelf", optional: true},
         DISTANCE_MIN_SUFFIX: {name: "distanceMin", optional: true},
         DISTANCE_MAX_SUFFIX: {name: "distanceMax", optional: true}
     };

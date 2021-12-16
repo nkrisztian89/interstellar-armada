@@ -112,7 +112,7 @@ define([
     SubjectGroup.prototype.has = function (spacecraft) {
         return (this._descriptor.spacecrafts && (this._descriptor.spacecrafts.indexOf(spacecraft.getID()) >= 0)) ||
                 (this._descriptor.squads && (this._descriptor.squads.indexOf(spacecraft.getSquad()) >= 0)) ||
-                (this._descriptor.teams && (this._descriptor.teams.indexOf(spacecraft.getTeam().getName()) >= 0));
+                (this._descriptor.teams && spacecraft.getTeam() && (this._descriptor.teams.indexOf(spacecraft.getTeam().getName()) >= 0));
     };
     /**
      * Gathers and caches references to the spacecrafts in the passed mission that are in this subject group, for faster future use
@@ -302,26 +302,30 @@ define([
      */
     SubjectGroup.prototype.getShortString = function () {
         if (!this._shortString) {
-            if (this._descriptor.spacecrafts && !this._descriptor.squads && !this._descriptor.teams) {
-                if (this._spacecrafts.length > 1) {
-                    this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
-                } else {
-                    this._shortString = this._spacecrafts[0].getDisplayName();
-                }
-            } else if (!this._descriptor.spacecrafts && this._descriptor.squads && !this._descriptor.teams) {
-                if (this._descriptor.squads.length > 1) {
-                    this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SQUADS), {count: this._descriptor.squads.length});
-                } else {
-                    this._shortString = strings.get(strings.SQUAD.PREFIX, this._descriptor.squads[0], this._descriptor.squads[0]);
-                }
-            } else if (!this._descriptor.spacecrafts && !this._descriptor.squads && this._descriptor.teams) {
-                if (this._descriptor.teams.length > 1) {
-                    this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_TEAMS), {count: this._descriptor.teams.length});
-                } else {
-                    this._shortString = strings.get(strings.FACTION.PREFIX, this._descriptor.teams[0], this._descriptor.teams[0]);
-                }
+            if (this._spacecrafts.length === 0) {
+                this._shortString = "-";
             } else {
-                this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
+                if (this._descriptor.spacecrafts && !this._descriptor.squads && !this._descriptor.teams) {
+                    if (this._spacecrafts.length > 1) {
+                        this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
+                    } else {
+                        this._shortString = this._spacecrafts[0].getDisplayName();
+                    }
+                } else if (!this._descriptor.spacecrafts && this._descriptor.squads && !this._descriptor.teams) {
+                    if (this._descriptor.squads.length > 1) {
+                        this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SQUADS), {count: this._descriptor.squads.length});
+                    } else {
+                        this._shortString = strings.get(strings.SQUAD.PREFIX, this._descriptor.squads[0], this._descriptor.squads[0]);
+                    }
+                } else if (!this._descriptor.spacecrafts && !this._descriptor.squads && this._descriptor.teams) {
+                    if (this._descriptor.teams.length > 1) {
+                        this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_TEAMS), {count: this._descriptor.teams.length});
+                    } else {
+                        this._shortString = strings.get(strings.FACTION.PREFIX, this._descriptor.teams[0], this._descriptor.teams[0]);
+                    }
+                } else {
+                    this._shortString = utils.formatString(strings.get(strings.BATTLE.OBJECTIVE_SUBJECTS_SPACECRAFTS), {count: this._spacecrafts.length});
+                }
             }
         }
         return this._shortString;
@@ -729,7 +733,8 @@ define([
     };
     /**
      * @param {Object} stringPrefix
-     * @param {Boolean} multipleConditions
+     * @param {Boolean} multipleConditions Whether this condition is one in a list
+     * of multiple conditions specified for the same trigger
      * @returns {String}
      */
     TimeCondition.prototype.getObjectiveString = function (stringPrefix, multipleConditions) {
@@ -752,7 +757,8 @@ define([
     };
     /**
      * @param {Object} stringPrefix 
-     * @param {Boolean} multipleConditions
+     * @param {Boolean} multipleConditions Whether this condition is one in a list
+     * of multiple conditions specified for the same trigger
      * @returns {String}
      */
     TimeCondition.prototype.getObjectiveStateString = function (stringPrefix, multipleConditions) {
@@ -810,10 +816,30 @@ define([
      * subjects
      * @extends Condition
      * @param {Object} dataJSON
+     * @param {Mission} [mission]
      */
-    function HullIntegrityCondition(dataJSON) {
+    function HullIntegrityCondition(dataJSON, mission) {
+        var index;
         Condition.call(this, dataJSON);
-
+        /**
+         * Whether this condition refers to the piloted spacecraft of the mission
+         * @type Boolean
+         */
+        this._subjectIsSelf = !!mission && this._subjects.isPilotedSpacecraft(mission);
+        /**
+         * Cached list of target spacecrafts
+         * @type Spacecraft[]
+         */
+        this._targets = this._subjects.getSpacecrafts(mission);
+        if (this._targets) {
+            this._targets = this._targets.slice();
+            index = this._targets.indexOf(mission.getPilotedSpacecraft());
+            if (index >= 0) {
+                this._targets.splice(index, 1);
+            }
+        } else {
+            this._targets = utils.EMPTY_ARRAY;
+        }
     }
     HullIntegrityCondition.prototype = new Condition();
     HullIntegrityCondition.prototype.constructor = HullIntegrityCondition;
@@ -871,6 +897,8 @@ define([
             return null;
         }
         result = utils.formatString(strings.get(stringPrefix,
+                this._subjectIsSelf ?
+                strings.OBJECTIVE.MAX_HULL_INTEGRITY_SELF_SUFFIX.name :
                 this._subjects.isMulti() ?
                 (this._all ? strings.OBJECTIVE.MAX_HULL_INTEGRITY_SUFFIX.name : strings.OBJECTIVE.MAX_HULL_INTEGRITY_ANY_SUFFIX.name) :
                 strings.OBJECTIVE.MAX_HULL_INTEGRITY_ONE_SUFFIX.name), {
@@ -881,7 +909,7 @@ define([
         return result;
     };
     /**
-     * @param {Object} stringPrefix 
+     * @param {Object} stringPrefix
      * @returns {String}
      */
     HullIntegrityCondition.prototype.getObjectiveStateString = function (stringPrefix) {
@@ -894,7 +922,7 @@ define([
         } else {
             suffix = "";
         }
-        result = utils.formatString(strings.get(stringPrefix, strings.OBJECTIVE.MAX_HULL_INTEGRITY_SUFFIX.name), {
+        result = utils.formatString(strings.get(stringPrefix, this._subjectIsSelf ? strings.OBJECTIVE.MAX_HULL_INTEGRITY_SELF_SUFFIX.name : strings.OBJECTIVE.MAX_HULL_INTEGRITY_SUFFIX.name), {
             subjects: this._subjects.getShortString()
         }) + suffix;
         result = result.charAt(0).toUpperCase() + result.slice(1);
@@ -902,19 +930,17 @@ define([
     };
     /**
      * Note: this is only correct if this condition belongs to the trigger of a WIN event
-     * @param {Mission} mission 
      * @returns {Spacecraft[]}
      */
-    HullIntegrityCondition.prototype.getTargetSpacecrafts = function (mission) {
-        return this._subjects.getSpacecrafts(mission);
+    HullIntegrityCondition.prototype.getTargetSpacecrafts = function () {
+        return this._targets;
     };
     /**
      * Note: this is only correct if this condition belongs to the trigger of a LOSE event
-     * @param {Mission} mission 
      * @returns {Spacecraft[]}
      */
-    HullIntegrityCondition.prototype.getEscortedSpacecrafts = function (mission) {
-        return this._subjects.getSpacecrafts(mission);
+    HullIntegrityCondition.prototype.getEscortedSpacecrafts = function () {
+        return this._targets;
     };
     /**
      * @override
@@ -1097,11 +1123,12 @@ define([
     };
     /**
      * @param {Object} stringPrefix
-     * @param {Boolean} [multi] 
+     * @param {Boolean} [multipleConditions] Whether this condition is one in a list
+     * of multiple conditions specified for the same trigger
      * @param {Mission} mission 
      * @returns {String}
      */
-    DistanceCondition.prototype.getObjectiveString = function (stringPrefix, multi, mission) {
+    DistanceCondition.prototype.getObjectiveString = function (stringPrefix, multipleConditions, mission) {
         var result;
         if (!this._params || ((this._params.minDistance === undefined) && (this._params.maxDistance === undefined)) ||
                 ((this._params.minDistance !== undefined) && (this._params.maxDistance !== undefined))) {
@@ -1123,12 +1150,14 @@ define([
     };
     /**
      * @param {Object} stringPrefix 
-     * @param {Boolean} [multi] 
+     * @param {Boolean} [multipleConditions] Whether this condition is one in a list
+     * of multiple conditions specified for the same trigger
      * @param {Mission} mission 
-     * @param {Boolean} inProgress
+     * @param {Boolean} inProgress Whether the mission objective corresponding to this
+     * condition is in progress (not yet completed / failed)
      * @returns {String}
      */
-    DistanceCondition.prototype.getObjectiveStateString = function (stringPrefix, multi, mission, inProgress) {
+    DistanceCondition.prototype.getObjectiveStateString = function (stringPrefix, multipleConditions, mission, inProgress) {
         var result, suffix, distance;
         if (!this._subjects.getSpacecrafts() || !this._target.getSpacecrafts(mission)) {
             return "";
@@ -1189,10 +1218,11 @@ define([
     // -------------------------------------------------------------------------
     /**
      * @param {Object} dataJSON
-     * @returns {DestroyedCondition|CountCondition|TimeCondition|Condition}
+     * @param {Mission} mission 
+     * @returns {Condition}
      */
-    function createCondition(dataJSON) {
-        return new (_conditionConstructors[dataJSON.type] || Condition)(dataJSON);
+    function createCondition(dataJSON, mission) {
+        return new (_conditionConstructors[dataJSON.type] || Condition)(dataJSON, mission);
     }
     // initialization
     // associating condition constructors

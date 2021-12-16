@@ -116,6 +116,7 @@
             "maxHullIntegrity": "Okozz sérülést {maxIntegrity}%-ig a következőknek: {subjects}",
             "maxHullIntegrityAny": "Okozz sérülést {maxIntegrity}%-ig bármelyiknek: {subjects} közül",
             "maxHullIntegrityOne": "Okozz sérülést {maxIntegrity}%-ig a következőnek: {subjects}",
+            "maxHullIntegritySelf": "Szenvedj el sérülést {maxIntegrity}% integritásig",
             "distanceMin": "Távolodj {minDistance}-re ettől: {target}",
             "distanceMax": "Közelítsd meg {maxDistance}-re {target}-t"
         },
@@ -129,6 +130,7 @@
             "maxHullIntegrity": "Több, mint {maxIntegrity}% épnek kell maradnia bármelyiknek: {subjects} közül",
             "maxHullIntegrityAny": "Több, mint {maxIntegrity}% épnek kell maradnia a következőknek: {subjects}",
             "maxHullIntegrityOne": "Több, mint {maxIntegrity}% épnek kell maradnia a következőnek: {subjects}",
+            "maxHullIntegritySelf": "Maradj {maxIntegrity}% integritás felett",
             "distanceMin": "Maradj {minDistance}-en belül tőle: {target}",
             "distanceMax": "Maradj {maxDistance} távol tőle: {target}"
         }
@@ -478,6 +480,7 @@
             "time": "Élj túl: {time}",
             "timeMulti": "Hátralévő idő: {time}",
             "maxHullIntegrity": "Célpont: {subjects}",
+            "maxHullIntegritySelf": "Sérülj",
             "distanceMin": "Távolodj: {target}",
             "distanceMax": "Közelíts: {target}"
         },
@@ -487,6 +490,7 @@
             "time": "Ugorj ki: {time}",
             "timeMulti": "({time})",
             "maxHullIntegrity": "Megvédendő: {subjects}",
+            "maxHullIntegritySelf": "Maradj ép",
             "distanceMin": "Maradj közel: {target}",
             "distanceMax": "Maradj távol: {target}"
         },
