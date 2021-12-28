@@ -148,16 +148,22 @@ define([
              * @param {Editor~TypeDescriptor} elementType
              * @param {Object} [length]
              * @param {Function} [getPreviewText]
+             * @param {Number} [showCount] If getPreviewText is not given, generates one that shows the
+             * elements of the array separated by commas if there are this many or fewer elements
              * @returns {Editor~TypeDescriptor}
              */
-            _createTypedArrayType = function (elementType, length, getPreviewText) {
+            _createTypedArrayType = function (elementType, length, getPreviewText, showCount) {
                 return {
                     baseType: BaseType.ARRAY,
                     elementType: elementType,
                     fixedLength: length && length.fixed,
                     minLength: length && length.min,
                     maxLength: length && length.max,
-                    getPreviewText: getPreviewText
+                    getPreviewText: getPreviewText || (showCount ? function (array) {
+                        if (array.length > 0 && array.length <= showCount) {
+                            return "[" + array.join(", ") + "]";
+                        }
+                    } : undefined)
                 };
             },
             /**
@@ -3117,7 +3123,7 @@ define([
                     if (subjects.length === 2) {
                         return subjects[0] + ", " + subjects[1];
                     }
-                    if ((subjects.length === 3) && (subjects[2].length < 9)) {
+                    if ((subjects.length === 3) && subjects[2] && (subjects[2].length < 9)) {
                         return subjects.join(", ");
                     }
                     return subjects[0] + ", " + subjects[1] + "... (" + (subjects.length - 2) + " more)";
@@ -3125,17 +3131,17 @@ define([
                 properties: {
                     SPACECRAFTS: {
                         name: "spacecrafts",
-                        type: _createTypedArrayType(SPACECRAFT_REFERENCE),
+                        type: _createTypedArrayType(SPACECRAFT_REFERENCE, undefined, undefined, 2),
                         optional: true
                     },
                     SQUADS: {
                         name: "squads",
-                        type: _createTypedArrayType(SQUAD_REFERENCE),
+                        type: _createTypedArrayType(SQUAD_REFERENCE, undefined, undefined, 3),
                         optional: true
                     },
                     TEAMS: {
                         name: "teams",
-                        type: _createTypedArrayType(TEAM_REFERENCE),
+                        type: _createTypedArrayType(TEAM_REFERENCE, undefined, undefined, 3),
                         optional: true
                     }
                 }
@@ -3181,7 +3187,8 @@ define([
                 return !!parent && (
                         (parent.type === ConditionType.DESTROYED) ||
                         (parent.type === ConditionType.HULL_INTEGRITY) ||
-                        (parent.type === ConditionType.SHIELD_INTEGRITY));
+                        (parent.type === ConditionType.SHIELD_INTEGRITY) ||
+                        (parent.type === ConditionType.AWAY));
             },
             _parentIsCountCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.COUNT);
@@ -3197,6 +3204,9 @@ define([
             },
             _parentIsHitCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.HIT);
+            },
+            _parentIsAwayCondition = function (data, parent) {
+                return !!parent && (parent.type === ConditionType.AWAY);
             },
             _isRepeatTime = function (data, parent) {
                 return _parentIsTimeCondition(data, parent) && (data.when === conditions.TimeConditionWhen.REPEAT);
@@ -3245,9 +3255,15 @@ define([
                         }
                         return result;
                     }
-                    // DestroyedCondition params:
+                    // DestroyedCondition/AwayCondition params:
                     if (instance.which) {
+                        if (instance.away !== undefined) {
+                            return instance.which + " " + (instance.away ? "away" : "present");
+                        }
                         return instance.which;
+                    }
+                    if (instance.away !== undefined) {
+                        return (instance.away ? "away" : "present");
                     }
                     // CountCondition params:
                     if (instance.relation !== undefined) {
@@ -3361,6 +3377,14 @@ define([
                         optional: true,
                         isValid: _parentIsHitCondition,
                         defaultText: "any"
+                    },
+                    // AwayCondition params:
+                    AWAY: {
+                        name: "away",
+                        type: BaseType.BOOLEAN,
+                        optional: true,
+                        isValid: _parentIsAwayCondition,
+                        defaultValue: true
                     }
                 }
             },
@@ -3370,7 +3394,8 @@ define([
                         (data.type === ConditionType.HULL_INTEGRITY) ||
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
                         (data.type === ConditionType.DISTANCE) ||
-                        (data.type === ConditionType.HIT);
+                        (data.type === ConditionType.HIT) ||
+                        (data.type === ConditionType.AWAY);
             },
             _conditionCanHaveParams = function (data) {
                 return ((data.type === ConditionType.DESTROYED) && data.subjects && new conditions.SubjectGroup(data.subjects).isMulti()) ||
@@ -3379,7 +3404,8 @@ define([
                         (data.type === ConditionType.HULL_INTEGRITY) ||
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
                         (data.type === ConditionType.DISTANCE) ||
-                        (data.type === ConditionType.HIT);
+                        (data.type === ConditionType.HIT) ||
+                        (data.type === ConditionType.AWAY);
             },
             _conditionMustHaveParams = function (data) {
                 return (data.type === ConditionType.COUNT) ||
@@ -3389,7 +3415,14 @@ define([
                         (data.type === ConditionType.DISTANCE);
             },
             _getConditionParamDefault = function (data) {
-                return (data.type === ConditionType.DESTROYED) ? "all" : "none";
+                switch (data.type) {
+                    case ConditionType.DESTROYED:
+                        return "all";
+                    case ConditionType.AWAY:
+                        return "all away";
+                    default:
+                        return "none";
+                }
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3424,6 +3457,10 @@ define([
                                         "incomplete distance condition";
                             case ConditionType.HIT:
                                 return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " hit" + ((instance.params && instance.params.by) ? " " + CONDITION_PARAMS.getPreviewText(instance.params, instance) : "");
+                            case ConditionType.AWAY:
+                                return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") +
+                                        SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " " +
+                                        ((!instance.params || (instance.params.away !== false)) ? "away" : "present");
                         }
                         return instance.type;
                     }

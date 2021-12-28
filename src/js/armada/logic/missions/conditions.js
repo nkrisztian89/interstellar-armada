@@ -38,7 +38,9 @@ define([
                 /** The condition is evaluated true when any/all of its subjects' distance from a speficied spacecraft falls into a specified range */
                 DISTANCE: "distance",
                 /** This condition is evaluated true whenever its subjects are getting hit */
-                HIT: "hit"
+                HIT: "hit",
+                /** This condition is evaluated true based on whether any/all of its subjects are away */
+                AWAY: "away"
             },
             ConditionSubjectsWhich = {
                 /** All the subjects need to be destroyed for the condition to be fulfilled */
@@ -397,7 +399,7 @@ define([
     };
     // ##############################################################################
     /**
-     * @class A condition that is satisfied when all of its subjects have been destroyed
+     * @class A condition that is satisfied when any/all of its subjects have been destroyed
      * @extends Condition
      * @param {Object} dataJSON
      */
@@ -1315,6 +1317,93 @@ define([
     HitCondition.prototype.canChangeMultipleTimes = function () {
         return true;
     };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied based on whether any/all of its subjects
+     * are away
+     * @extends Condition
+     * @param {Object} dataJSON
+     */
+    function AwayCondition(dataJSON) {
+        Condition.call(this, dataJSON);
+    }
+    AwayCondition.prototype = new Condition();
+    AwayCondition.prototype.constructor = AwayCondition;
+    /**
+     * @typedef AwayCondition~Params
+     * @property {String} [which] (enum ConditionSubjectsWhich)
+     * @property {Boolean} away
+     */
+    /**
+     * @param {AwayCondition~Params} params
+     * @returns {Boolean}
+     */
+    AwayCondition.prototype._checkParams = function (params) {
+        /**
+         * @type AwayCondition~Params
+         */
+        this._params = params;
+        if (this._params && this._params.which &&
+                !utils.getSafeEnumValue(ConditionSubjectsWhich, this._params.which)) {
+            this._handleWrongParams();
+            return false;
+        }
+        /**
+         * @type Boolean
+         */
+        this._all = !this._params || !this._params.which || (this._params.which === ConditionSubjectsWhich.ALL);
+        /**
+         * @type Boolean
+         */
+        this._away = !this._params || (this._params.away !== false);
+        return true;
+    };
+    /**
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    AwayCondition.prototype.isSatisfied = function (mission) {
+        var i, spacecrafts = this._subjects.getSpacecrafts(mission);
+        for (i = 0; i < spacecrafts.length; i++) {
+            if ((spacecrafts[i].isAway() === this._away) !== this._all) {
+                return !this._all;
+            }
+        }
+        return this._all;
+    };
+    /**
+     * @returns {String}
+     */
+    AwayCondition.prototype.getObjectiveString = function () {
+        application.showError("Away conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {String}
+     */
+    AwayCondition.prototype.getObjectiveStateString = function () {
+        application.showError("Away conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    AwayCondition.prototype.getTargetSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    AwayCondition.prototype.getEscortedSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    AwayCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
     // -------------------------------------------------------------------------
     /**
      * @param {Object} dataJSON
@@ -1334,6 +1423,7 @@ define([
     _conditionConstructors[ConditionType.SHIELD_INTEGRITY] = ShieldIntegrityCondition;
     _conditionConstructors[ConditionType.DISTANCE] = DistanceCondition;
     _conditionConstructors[ConditionType.HIT] = HitCondition;
+    _conditionConstructors[ConditionType.AWAY] = AwayCondition;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
