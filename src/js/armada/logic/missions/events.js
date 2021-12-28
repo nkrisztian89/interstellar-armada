@@ -26,6 +26,7 @@ define([
         conditions, eventActions) {
     "use strict";
     var
+            MissionState = conditions.MissionState,
             // ------------------------------------------------------------------------------
             // enums
             TriggerWhich = {
@@ -40,24 +41,6 @@ define([
                 /** The trigger fires when all / any (see TriggerWhich) of its conditions become false */
                 BECOMES_FALSE: "becomesFalse"
             },
-            MissionState = {
-                // in progress states
-                /** There is no player or no objectives for the player, and no ships hostile to each other (peaceful sandbox) */
-                NONE: 0,
-                /** There is no player or no objectives for the player, but there are hostiles battling each other (demo, battle sandbox) */
-                BATTLE: 1,
-                /** There are objectives left to complete (regular mission) */
-                IN_PROGRESS: 2,
-                // finished states
-                /** All the objectives have been completed, the mission is a success */
-                COMPLETED: 3,
-                /** The player failed at least one objective, the mission is a failure */
-                FAILED: 4,
-                /** The player's spacecraft has been destroyed */
-                DEFEAT: 5,
-                /** A battle without a piloted spacecraft (player) has ended */
-                ENDED: 6
-            },
             /**
              * Objectives displayed on the HUD are colored based on this
              */
@@ -70,7 +53,6 @@ define([
     // Freezing enums
     Object.freeze(TriggerWhich);
     Object.freeze(TriggerWhen);
-    Object.freeze(MissionState);
     Object.freeze(ObjectiveState);
     // #########################################################################
     /**

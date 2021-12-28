@@ -42,7 +42,9 @@ define([
                 /** This condition is evaluated true based on whether any/all of its subjects are away */
                 AWAY: "away",
                 /** This condition is evaluated true when any/all of its subjects are on a the specified team */
-                ON_TEAM: "onTeam"
+                ON_TEAM: "onTeam",
+                /** This condition is evaluated true when the mission state has one of the specified values */
+                MISSION_STATE: "missionState"
             },
             ConditionSubjectsWhich = {
                 /** All the subjects need to be destroyed for the condition to be fulfilled */
@@ -70,6 +72,24 @@ define([
                 /** The condition is satisfied every time the specified time has been elapsed (after start), in a looping fashion */
                 REPEAT: "repeat"
             },
+            MissionState = {
+                // in progress states
+                /** There is no player or no objectives for the player, and no ships hostile to each other (peaceful sandbox) */
+                NONE: 0,
+                /** There is no player or no objectives for the player, but there are hostiles battling each other (demo, battle sandbox) */
+                BATTLE: 1,
+                /** There are objectives left to complete (regular mission) */
+                IN_PROGRESS: 2,
+                // finished states
+                /** All the objectives have been completed, the mission is a success */
+                COMPLETED: 3,
+                /** The player failed at least one objective, the mission is a failure */
+                FAILED: 4,
+                /** The player's spacecraft has been destroyed */
+                DEFEAT: 5,
+                /** A battle without a piloted spacecraft (player) has ended */
+                ENDED: 6
+            },
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -83,6 +103,7 @@ define([
     Object.freeze(ConditionSubjectsWhich);
     Object.freeze(CountConditionRelation);
     Object.freeze(TimeConditionWhen);
+    Object.freeze(MissionState);
     // #########################################################################
     /**
      * @typedef {Object} Missions~SubjectsDescriptor
@@ -1434,7 +1455,7 @@ define([
         this._params = params;
         if (this._params &&
                 ((this._params.which && !utils.getSafeEnumValue(ConditionSubjectsWhich, this._params.which)) ||
-                !this._params.team)) {
+                        !this._params.team)) {
             this._handleWrongParams();
             return false;
         }
@@ -1491,6 +1512,88 @@ define([
     OnTeamCondition.prototype.canChangeMultipleTimes = function () {
         return true;
     };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied when the mission state is as specified
+     * @extends Condition
+     * @param {Object} dataJSON
+     */
+    function MissionStateCondition(dataJSON) {
+        Condition.call(this, dataJSON);
+    }
+    MissionStateCondition.prototype = new Condition();
+    MissionStateCondition.prototype.constructor = MissionStateCondition;
+    /**
+     * @typedef MissionStateCondition~Params
+     * @property {String[]} missionStates (enum MissionState)[] The mission state values
+     * that satisfy this condition
+     */
+    /**
+     * @param {MissionStateCondition~Params} params
+     * @returns {Boolean}
+     */
+    MissionStateCondition.prototype._checkParams = function (params) {
+        /**
+         * @type MissionStateCondition~Params
+         */
+        this._params = params;
+        if (!this._params || !this._params.missionStates || !this._params.missionStates.every(function (state) {
+            return MissionState[utils.constantName(state)] !== undefined;
+        })) {
+            this._handleWrongParams();
+            return false;
+        }
+        this._states = this._params.missionStates.map(function (state) {
+            return MissionState[utils.constantName(state)];
+        });
+        return true;
+    };
+    /**
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    MissionStateCondition.prototype.isSatisfied = function (mission) {
+        var i, missionState = mission.getState();
+        for (i = 0; i < this._states.length; i++) {
+            if (missionState === this._states[i]) {
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+     * @returns {String}
+     */
+    MissionStateCondition.prototype.getObjectiveString = function () {
+        application.showError("Mission state conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {String}
+     */
+    MissionStateCondition.prototype.getObjectiveStateString = function () {
+        application.showError("Mission state conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    MissionStateCondition.prototype.getTargetSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    MissionStateCondition.prototype.getEscortedSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    MissionStateCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
     // -------------------------------------------------------------------------
     /**
      * @param {Object} dataJSON
@@ -1512,6 +1615,7 @@ define([
     _conditionConstructors[ConditionType.HIT] = HitCondition;
     _conditionConstructors[ConditionType.AWAY] = AwayCondition;
     _conditionConstructors[ConditionType.ON_TEAM] = OnTeamCondition;
+    _conditionConstructors[ConditionType.MISSION_STATE] = MissionStateCondition;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -1519,6 +1623,7 @@ define([
         ConditionSubjectsWhich: ConditionSubjectsWhich,
         CountConditionRelation: CountConditionRelation,
         TimeConditionWhen: TimeConditionWhen,
+        MissionState: MissionState,
         SubjectGroup: SubjectGroup,
         createCondition: createCondition
     };

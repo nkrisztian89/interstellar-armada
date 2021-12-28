@@ -810,9 +810,10 @@ define([
      * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object describing the set type
      * @param {Array} data The set itself that the control should edit
      * @param {type} [parentPopup] If this array property editor is displayed within a popup, give a reference to that popup here
+     * @param {Function} [changeHandler]
      * @returns {Element}
      */
-    function _createSetControl(topName, typeDescriptor, data, parentPopup) {
+    function _createSetControl(topName, typeDescriptor, data, parentPopup, changeHandler) {
         var
                 button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
@@ -838,6 +839,9 @@ define([
                     }
                     _updateData(topName);
                     updateButtonText();
+                    if (changeHandler) {
+                        changeHandler();
+                    }
                 };
         table = document.createElement("table");
         for (i = 0; i < values.length; i++) {
@@ -1361,7 +1365,7 @@ define([
                     result = _createRotationsControl(topName, data, parentPopup);
                     break;
                 case descriptors.BaseType.SET:
-                    result = _createSetControl(topName, propertyDescriptor.type, data, parentPopup);
+                    result = _createSetControl(topName, propertyDescriptor.type, data, parentPopup, changeHandler);
                     break;
                 case descriptors.BaseType.CONFINES:
                     result = _createConfinesControl(topName, data, parentPopup);

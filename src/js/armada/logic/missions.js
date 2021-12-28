@@ -1343,7 +1343,7 @@ define([
                 }
             }
         }
-        // it doesn't matter if we have objectives when there in no player craft
+        // it doesn't matter if we have objectives when there is no player craft
         if (!this._pilotedCraft) {
             this._state = MissionState.NONE;
         }

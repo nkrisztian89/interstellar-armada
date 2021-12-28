@@ -3212,8 +3212,19 @@ define([
             _parentIsOnTeamCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.ON_TEAM);
             },
+            _parentIsMissionStateCondition = function (data, parent) {
+                return !!parent && (parent.type === ConditionType.MISSION_STATE);
+            },
             _isRepeatTime = function (data, parent) {
                 return _parentIsTimeCondition(data, parent) && (data.when === conditions.TimeConditionWhen.REPEAT);
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
+            MISSION_STATE_SET = {
+                baseType: BaseType.SET,
+                name: "MissionStates",
+                values: missionEvents.MissionState
             },
             /**
              * A merge of all the different possible condition parameters
@@ -3287,6 +3298,9 @@ define([
                     // HitCondition params:
                     if (instance.by !== undefined) {
                         return "by " + SUBJECT_GROUP.getPreviewText(instance.by, instance);
+                    }
+                    if (instance.missionStates !== undefined) {
+                        return "state is " + (instance.missionStates.join(" or ") || "unknown");
                     }
                     return "none";
                 },
@@ -3403,6 +3417,13 @@ define([
                         type: TEAM_REFERENCE,
                         isValid: _parentIsOnTeamCondition,
                         isRequired: _parentIsOnTeamCondition
+                    },
+                    // MissionStateCondition params:
+                    MISSION_STATES: {
+                        name: "missionStates",
+                        type: MISSION_STATE_SET,
+                        isValid: _parentIsMissionStateCondition,
+                        isRequired: _parentIsMissionStateCondition
                     }
                 }
             },
@@ -3425,7 +3446,8 @@ define([
                         (data.type === ConditionType.DISTANCE) ||
                         (data.type === ConditionType.HIT) ||
                         (data.type === ConditionType.AWAY) ||
-                        (data.type === ConditionType.ON_TEAM);
+                        (data.type === ConditionType.ON_TEAM) ||
+                        (data.type === ConditionType.MISSION_STATE);
             },
             _conditionMustHaveParams = function (data) {
                 return (data.type === ConditionType.COUNT) ||
@@ -3433,7 +3455,8 @@ define([
                         (data.type === ConditionType.HULL_INTEGRITY) ||
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
                         (data.type === ConditionType.DISTANCE) ||
-                        (data.type === ConditionType.ON_TEAM);
+                        (data.type === ConditionType.ON_TEAM) ||
+                        (data.type === ConditionType.MISSION_STATE);
             },
             _getConditionParamDefault = function (data) {
                 switch (data.type) {
@@ -3486,6 +3509,8 @@ define([
                                 return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") +
                                         SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " on " +
                                         ((instance.params && instance.params.team) || "unknown");
+                            case ConditionType.MISSION_STATE:
+                                return "mission state is " + ((instance.params && instance.params.missionStates && instance.params.missionStates.join(" or ")) || " unknown");
                         }
                         return instance.type;
                     }
