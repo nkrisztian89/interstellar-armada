@@ -1,5 +1,5 @@
 {
-    "version": "0.4.7-dev:970 (2021.12.28.)",
+    "version": "0.4.7-dev:971 (2021.12.28.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "releases": ["0.4.3", "0.4.4", "0.4.5", "0.4.6"],

@@ -896,9 +896,20 @@ define([
      * @param {Float32Array} value A 4x4 translation matrix.
      */
     PhysicalObject.prototype.setPositionMatrix = function (value) {
-        if (value) {
-            this._positionMatrix = value;
-        }
+        this._positionMatrix = value;
+        this._modelMatrixInverseValid = false;
+    };
+    /**
+     * Sets a new position by updating the position matrix with the passed
+     * coordinates
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} z
+     */
+    PhysicalObject.prototype.setPosition = function (x, y, z) {
+        this._positionMatrix[12] = x;
+        this._positionMatrix[13] = y;
+        this._positionMatrix[14] = z;
         this._modelMatrixInverseValid = false;
     };
     /**
@@ -1178,10 +1189,10 @@ define([
             // the velocity matrix is in m/s
             mat.translateByMatrixMul(this._positionMatrix, this._velocityMatrix, dt * 0.001);
             if (this._fixedVelocity) {
-                this.setPositionMatrix();
+                this._modelMatrixInverseValid = false;
             } else {
                 mat.translateByVector(this._positionMatrix, this._offset);
-                this.setPositionMatrix();
+                this._modelMatrixInverseValid = false;
                 // calculate the movement that happened as a result of the acceleration
                 // the affecting forces caused since the previous step
                 // (s=1/2*a*t^2)
