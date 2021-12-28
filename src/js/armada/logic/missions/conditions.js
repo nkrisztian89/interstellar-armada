@@ -40,7 +40,9 @@ define([
                 /** This condition is evaluated true whenever its subjects are getting hit */
                 HIT: "hit",
                 /** This condition is evaluated true based on whether any/all of its subjects are away */
-                AWAY: "away"
+                AWAY: "away",
+                /** This condition is evaluated true when any/all of its subjects are on a the specified team */
+                ON_TEAM: "onTeam"
             },
             ConditionSubjectsWhich = {
                 /** All the subjects need to be destroyed for the condition to be fulfilled */
@@ -1404,6 +1406,91 @@ define([
     AwayCondition.prototype.canChangeMultipleTimes = function () {
         return true;
     };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied when any/all of its subjects are on a the
+     * specified team
+     * @extends Condition
+     * @param {Object} dataJSON
+     */
+    function OnTeamCondition(dataJSON) {
+        Condition.call(this, dataJSON);
+    }
+    OnTeamCondition.prototype = new Condition();
+    OnTeamCondition.prototype.constructor = OnTeamCondition;
+    /**
+     * @typedef OnTeamCondition~Params
+     * @property {String} [which] (enum ConditionSubjectsWhich)
+     * @property {String} team
+     */
+    /**
+     * @param {OnTeamCondition~Params} params
+     * @returns {Boolean}
+     */
+    OnTeamCondition.prototype._checkParams = function (params) {
+        /**
+         * @type OnTeamCondition~Params
+         */
+        this._params = params;
+        if (this._params &&
+                ((this._params.which && !utils.getSafeEnumValue(ConditionSubjectsWhich, this._params.which)) ||
+                !this._params.team)) {
+            this._handleWrongParams();
+            return false;
+        }
+        /**
+         * @type Boolean
+         */
+        this._all = !this._params || !this._params.which || (this._params.which === ConditionSubjectsWhich.ALL);
+        return true;
+    };
+    /**
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    OnTeamCondition.prototype.isSatisfied = function (mission) {
+        var i, spacecrafts = this._subjects.getSpacecrafts(mission),
+                team = mission.getTeam(this._params.team);
+        for (i = 0; i < spacecrafts.length; i++) {
+            if ((spacecrafts[i].getTeam() === team) !== this._all) {
+                return !this._all;
+            }
+        }
+        return this._all;
+    };
+    /**
+     * @returns {String}
+     */
+    OnTeamCondition.prototype.getObjectiveString = function () {
+        application.showError("OnTeam conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {String}
+     */
+    OnTeamCondition.prototype.getObjectiveStateString = function () {
+        application.showError("OnTeam conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    OnTeamCondition.prototype.getTargetSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    OnTeamCondition.prototype.getEscortedSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    OnTeamCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
     // -------------------------------------------------------------------------
     /**
      * @param {Object} dataJSON
@@ -1424,6 +1511,7 @@ define([
     _conditionConstructors[ConditionType.DISTANCE] = DistanceCondition;
     _conditionConstructors[ConditionType.HIT] = HitCondition;
     _conditionConstructors[ConditionType.AWAY] = AwayCondition;
+    _conditionConstructors[ConditionType.ON_TEAM] = OnTeamCondition;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

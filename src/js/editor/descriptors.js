@@ -3188,7 +3188,8 @@ define([
                         (parent.type === ConditionType.DESTROYED) ||
                         (parent.type === ConditionType.HULL_INTEGRITY) ||
                         (parent.type === ConditionType.SHIELD_INTEGRITY) ||
-                        (parent.type === ConditionType.AWAY));
+                        (parent.type === ConditionType.AWAY) ||
+                        (parent.type === ConditionType.ON_TEAM));
             },
             _parentIsCountCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.COUNT);
@@ -3207,6 +3208,9 @@ define([
             },
             _parentIsAwayCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.AWAY);
+            },
+            _parentIsOnTeamCondition = function (data, parent) {
+                return !!parent && (parent.type === ConditionType.ON_TEAM);
             },
             _isRepeatTime = function (data, parent) {
                 return _parentIsTimeCondition(data, parent) && (data.when === conditions.TimeConditionWhen.REPEAT);
@@ -3254,6 +3258,13 @@ define([
                             result += " < " + utils.getLengthString(instance.maxDistance);
                         }
                         return result;
+                    }
+                    // OnTeamCondition params:
+                    if (instance.team) {
+                        if (instance.which) {
+                            return instance.which + " on " + instance.team;
+                        }
+                        return "on " + instance.team;
                     }
                     // DestroyedCondition/AwayCondition params:
                     if (instance.which) {
@@ -3385,6 +3396,13 @@ define([
                         optional: true,
                         isValid: _parentIsAwayCondition,
                         defaultValue: true
+                    },
+                    // OnTeamCondition params:
+                    TEAM: {
+                        name: "team",
+                        type: TEAM_REFERENCE,
+                        isValid: _parentIsOnTeamCondition,
+                        isRequired: _parentIsOnTeamCondition
                     }
                 }
             },
@@ -3395,7 +3413,8 @@ define([
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
                         (data.type === ConditionType.DISTANCE) ||
                         (data.type === ConditionType.HIT) ||
-                        (data.type === ConditionType.AWAY);
+                        (data.type === ConditionType.AWAY) ||
+                        (data.type === ConditionType.ON_TEAM);
             },
             _conditionCanHaveParams = function (data) {
                 return ((data.type === ConditionType.DESTROYED) && data.subjects && new conditions.SubjectGroup(data.subjects).isMulti()) ||
@@ -3405,14 +3424,16 @@ define([
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
                         (data.type === ConditionType.DISTANCE) ||
                         (data.type === ConditionType.HIT) ||
-                        (data.type === ConditionType.AWAY);
+                        (data.type === ConditionType.AWAY) ||
+                        (data.type === ConditionType.ON_TEAM);
             },
             _conditionMustHaveParams = function (data) {
                 return (data.type === ConditionType.COUNT) ||
                         (data.type === ConditionType.TIME) ||
                         (data.type === ConditionType.HULL_INTEGRITY) ||
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
-                        (data.type === ConditionType.DISTANCE);
+                        (data.type === ConditionType.DISTANCE) ||
+                        (data.type === ConditionType.ON_TEAM);
             },
             _getConditionParamDefault = function (data) {
                 switch (data.type) {
@@ -3461,6 +3482,10 @@ define([
                                 return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") +
                                         SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " " +
                                         ((!instance.params || (instance.params.away !== false)) ? "away" : "present");
+                            case ConditionType.ON_TEAM:
+                                return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") +
+                                        SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " on " +
+                                        ((instance.params && instance.params.team) || "unknown");
                         }
                         return instance.type;
                     }
