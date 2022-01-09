@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2021 Krisztián Nagy
+ * Copyright 2016-2022 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -42,6 +42,11 @@ define([
         ABOUT: {name: "mainMenu.about"},
         QUIT: {name: "mainMenu.quit"}
     };
+    strings.SINGLE_PLAYER_MENU = {
+        CAMPAIGN: {name: "singlePlayer.campaign"},
+        MY_MISSIONS: {name: "singlePlayer.myMissions"},
+        COMMUNITY_MISSIONS: {name: "singlePlayer.communityMissions"}
+    };
     strings.MISSIONS = {
         BACK: {name: "missions.backButton"},
         TITLE: {name: "missions.title"},
@@ -51,12 +56,15 @@ define([
         FILE_BUTTON: {name: "missions.fileButton"},
         CUSTOM_MISSION_CAPTION: {name: "missions.customMissionCaption"},
         CUSTOM_MISSION_SUBCAPTION: {name: "missions.customMissionSubcaption"},
+        COMMUNITY_MISSION_SUBCAPTION: {name: "missions.communityMissionSubcaption"},
         NOT_COMPLETED: {name: "missions.notCompleted"},
         BEST_SCORE: {name: "missions.bestScore"},
         SANDBOX_COMPLETED: {name: "missions.sandboxCompleted"},
         NO_SELECTED_NAME: {name: "missions.noSelectedName"},
         NO_SELECTED_DESCRIPTION: {name: "missions.noSelectedDescription"},
         CUSTOM_DESCRIPTION: {name: "missions.customDescription"},
+        MISSION_HUB_CONNECTING_DESCRIPTION: {name: "missions.missionHubConnectingDescription"},
+        MISSION_HUB_DESCRIPTION: {name: "missions.missionHubDescription"},
         LOCATION: {name: "missions.location"},
         CREATED_BY: {name: "missions.createdBy"},
         LOADING_DESCRIPTION: {name: "missions.loadingDescription"},
@@ -74,7 +82,10 @@ define([
         OBJECTIVE_SUBJECTS_TEAM: {name: "missions.objectiveSubjects.team"},
         OBJECTIVE_SUBJECTS_TEAMS: {name: "missions.objectiveSubjects.teams"},
         OBJECTIVE_WIN_PREFIX: {name: "missions.winObjective.", optional: true},
-        OBJECTIVE_LOSE_PREFIX: {name: "missions.loseObjective.", optional: true}
+        OBJECTIVE_LOSE_PREFIX: {name: "missions.loseObjective.", optional: true},
+        SUBMIT_MISSION_ACCEPT_TERMS: {name: "missions.submitMissionAcceptTerms"},
+        SUBMIT_MISSION_SUCCESS: {name: "missions.submitMissionSuccess"},
+        SUBMIT_MISSION_HELP: {name: "missions.submitMissionHelp"}
     };
     strings.SERVER_REGION = {
         PREFIX: {name: "serverRegion.", optional: true},
@@ -138,6 +149,11 @@ define([
         MAX_HULL_INTEGRITY_SELF_SUFFIX: {name: "maxHullIntegritySelf", optional: true},
         DISTANCE_MIN_SUFFIX: {name: "distanceMin", optional: true},
         DISTANCE_MAX_SUFFIX: {name: "distanceMax", optional: true}
+    };
+    strings.MISSION_HUB_ERROR = {
+        PREFIX: {name: "missionHubError.", optional: true},
+        DEFAULT_SUFFIX: {name: "default", optional: true},
+        GENERAL: {name: "missionHubError.general"}
     };
     strings.LOCATION = {
         UNKNOWN: {name: "location.unknown"},

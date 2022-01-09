@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Provides various simple, general usage utility methods.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -95,7 +95,7 @@ define(function () {
                 "F1": 112, "F2": 113, "F3": 114, "F4": 115, "F5": 116, "F6": 117, "F7": 118, "F8": 119, "F9": 120,
                 "F10": 121, "F11": 122, "F12": 123,
                 ";": 186, "=": 187, ",": 188, "-": 189, ".": 190, "/": 191, "`": 192, "[": 219, "\\": 220, "]": 221, "'": 222
-                // Firefox: "-": 173, "=": 61, ";": 59
+                        // Firefox: "-": 173, "=": 61, ";": 59
             },
             // ------------------------------------------------------------------------------
             // interface
@@ -497,6 +497,19 @@ define(function () {
                         exports.formatTimeToMinutes(timeInMs));
     };
     /**
+     * Returns a string describing a file size in human-readable form based on its value in bytes.
+     * @param {Number} sizeInBytes
+     * @returns {String}
+     */
+    exports.getFileSizeString = function (sizeInBytes) {
+        return (sizeInBytes < 2048) ?
+                sizeInBytes + " B" :
+                (sizeInBytes < 2048 * 1024) ?
+                (sizeInBytes / 1024).toFixed(1) + " KiB" :
+                (sizeInBytes / 1024 * 1024).toFixed(1) + " MiB";
+
+    };
+    /**
      * Converts the string to all uppercase and replaces spaces and dashes with underscores as well as inserts underscores before uppercase letters
      * @param {String} string
      * @returns {String}
@@ -718,14 +731,14 @@ define(function () {
      * @returns {Number}
      */
     exports.getSmallestPositiveSolutionOf4thDegreeEquationWithoutDegree3 = function (a, c, d, e) {
-        var 
-            A = c / a,
-            B = d / a,
-            C = e / a,
-            P = -(A * A / 48) - (C / 4),
-            Q = -(A * A * A / 864) - (B * B / 64) + (A * C / 24),
-            delta = (Q * Q / 4) + (P * P * P / 27),
-            sqrtDelta, u, v, w, aux, x1, x2, Y1, Y2, Y3, x3, x4;
+        var
+                A = c / a,
+                B = d / a,
+                C = e / a,
+                P = -(A * A / 48) - (C / 4),
+                Q = -(A * A * A / 864) - (B * B / 64) + (A * C / 24),
+                delta = (Q * Q / 4) + (P * P * P / 27),
+                sqrtDelta, u, v, w, aux, x1, x2, Y1, Y2, Y3, x3, x4;
         if (delta >= 0) {
             if ((B === 0) && (A > 0) && (C === (A * A / 4))) {
                 return NaN;

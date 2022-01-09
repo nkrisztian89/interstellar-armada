@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Augments the template provided by the game module to define the basic structure and initialization process of the Interstellar
  * Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -17,6 +17,7 @@
  * @param config Used to load general game configuration and settings
  * @param environments Used to load the environments
  * @param missions Used to load the missions
+ * @param missionHub Used to initialize mission hub backend config
  * @param control Used to load the control configuration and setings of the game and access main functionality
  * @param strings Used to load the game translation strings
  * @param networking Used to initialize multiplayer backend config
@@ -48,6 +49,7 @@ define([
     "armada/configuration",
     "armada/logic/environments",
     "armada/logic/missions",
+    "armada/logic/mission-hub",
     "armada/control",
     "armada/strings",
     "armada/networking",
@@ -69,7 +71,7 @@ define([
     "armada/screens/dialog"
 ], function (
         game, components, analytics, lights,
-        constants, graphics, audio, config, environments, missions, control, strings, networking,
+        constants, graphics, audio, config, environments, missions, missionHub, control, strings, networking,
         armadaScreens, menus, missionsScreen, multiGames, multiLobby, battle, debriefing, multiScore, database, generalSettings, graphicsScreen, audioScreen, gameplaySettingsScreen, controlsScreen, aboutScreen, dialogScreen) {
     "use strict";
     // -------------------------------------------------------------------------
@@ -123,6 +125,7 @@ define([
             analytics.init(configJSON.analyticsUrl);
         }
         networking.init(configJSON.multiUrl);
+        missionHub.init(configJSON.missionHubUrl);
         game.showError = function (message, severity, details) {
             analytics.sendEvent("error", undefined, {message: (message.length > 120) ? message.substr(0, 120) + "..." : message});
             showError(message, severity, details);
@@ -131,6 +134,7 @@ define([
     };
     game._buildScreensAndExecuteCallback = function (callback) {
         game.addScreen(menus.getMainMenuScreen());
+        game.addScreen(menus.getSinglePlayerMenuScreen());
         game.addScreen(missionsScreen.getMissionsScreen());
         game.addScreen(multiGames.getMultiGamesScreen());
         game.addScreen(multiLobby.getMultiLobbyScreen());

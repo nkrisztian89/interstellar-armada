@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2021 Krisztián Nagy
+ * Copyright 2016-2022 Krisztián Nagy
  * @file Provides the menu screens of the Interstellar Armada game which are simply instances of MenuScreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -44,7 +44,7 @@ define([
                     action: function () {
                         analytics.sendEvent("newgame");
                         audio.resume();
-                        game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
+                        game.setScreen(armadaScreens.SINGLE_PLAYER_SCREEN_NAME);
                     }
                 }, {
                     id: strings.MAIN_MENU.MULTIPLAYER.name,
@@ -160,6 +160,60 @@ define([
                         },
                         optionselect: armadaScreens.playButtonSelectSound,
                         optionclick: armadaScreens.playButtonClickSound
+                    });
+        },
+        getSinglePlayerMenuScreen: function () {
+            return new screens.MenuScreen(
+                    armadaScreens.SINGLE_PLAYER_SCREEN_NAME,
+                    armadaScreens.SINGLE_PLAYER_SCREEN_SOURCE,
+                    {
+                        backgroundClassName: armadaScreens.SCREEN_BACKGROUND_CLASS_NAME,
+                        containerClassName: armadaScreens.SCREEN_CONTAINER_CLASS_NAME
+                    },
+                    armadaScreens.MENU_COMPONENT_SOURCE,
+                    armadaScreens.MENU_STYLE,
+                    [{
+                            id: strings.SINGLE_PLAYER_MENU.CAMPAIGN.name,
+                            action: function () {
+                                game.getScreen(armadaScreens.MISSIONS_SCREEN_NAME).setup({
+                                    custom: false,
+                                    loadCustom: false,
+                                    community: false
+                                });
+                                game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
+                            }
+                        }, {
+                            id: strings.SINGLE_PLAYER_MENU.MY_MISSIONS.name,
+                            action: function () {
+                                game.getScreen(armadaScreens.MISSIONS_SCREEN_NAME).setup({
+                                    custom: true,
+                                    loadCustom: true,
+                                    community: false
+                                });
+                                game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
+                            }
+                        }, {
+                            id: strings.SINGLE_PLAYER_MENU.COMMUNITY_MISSIONS.name,
+                            action: function () {
+                                game.getScreen(armadaScreens.MISSIONS_SCREEN_NAME).setup({
+                                    custom: true,
+                                    loadCustom: false,
+                                    community: true
+                                });
+                                game.setScreen(armadaScreens.MISSIONS_SCREEN_NAME);
+                            }
+                        }, {
+                            id: strings.SCREEN.BACK.name,
+                            action: function () {
+                                game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                            }
+                        }],
+                    armadaScreens.SINGLE_PLAYER_MENU_CONTAINER_ID,
+                    armadaScreens.MENU_EVENT_HANDLERS,
+                    {
+                        "escape": function () {
+                            game.setScreen(armadaScreens.MAIN_MENU_SCREEN_NAME);
+                        }
                     });
         },
         getSettingsMenuScreen: function () {

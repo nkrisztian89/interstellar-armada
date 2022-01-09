@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Implementation of loading and managing missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2472,12 +2472,14 @@ define([
     };
     /**
      * Returns the (file)names of the mission( descriptor)s stored in the mission manager
+     * @param {Boolean} [custom]
      * @returns {String[]}
      */
-    MissionContext.prototype.getMissionNames = function () {
+    MissionContext.prototype.getMissionNames = function (custom) {
         var result = [];
         this._missionManager.executeForAllResourcesOfType(MISSION_ARRAY_NAME, function (missionDescriptor) {
-            if (application.isDebugVersion() || !missionDescriptor.isTest()) {
+            if ((application.isDebugVersion() || !missionDescriptor.isTest()) &&
+                    ((custom === undefined) || (missionDescriptor.isCustom() === custom))) {
                 result.push(missionDescriptor.getName());
             }
         }, false, true);
@@ -2485,12 +2487,14 @@ define([
     };
     /**
      * Returns a (new) array containing all of the mission descriptors (both loaded and not yet loaded ones)
+     * @param {Boolean} [custom]
      * @returns {MissionDescriptor[]}
      */
-    MissionContext.prototype.getMissionDescriptors = function () {
+    MissionContext.prototype.getMissionDescriptors = function (custom) {
         var result = [];
         this._missionManager.executeForAllResourcesOfType(MISSION_ARRAY_NAME, function (missionDescriptor) {
-            if (application.isDebugVersion() || !missionDescriptor.isTest()) {
+            if ((application.isDebugVersion() || !missionDescriptor.isTest()) &&
+                    ((custom === undefined) || (missionDescriptor.isCustom() === custom))) {
                 result.push(missionDescriptor);
             }
         }, false, true);
@@ -2575,6 +2579,7 @@ define([
     // The public interface of the module
     return {
         FAILED_MISSION_PERFORMACE: FAILED_MISSION_PERFORMACE,
+        MissionDescriptor: MissionDescriptor,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromLocalStorage: _context.loadSettingsFromLocalStorage.bind(_context),
         requestLoad: _context.requestLoad.bind(_context),

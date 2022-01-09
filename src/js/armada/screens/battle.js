@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -258,6 +258,11 @@ define([
              * @type String
              */
             _missionSourceFilename,
+            /**
+             * 
+             * @type Object
+             */
+            _missionData,
             /**
              * The timestamp taken when loading of the mission starts
              * @type DOMHighResTimeStamp;
@@ -4691,7 +4696,7 @@ define([
                 document.body.classList.remove("wait");
                 control.switchToSpectatorMode(false, true);
                 this.setHeaderContent(custom ?
-                        _mission.getTitle() || utils.getFilenameWithoutExtension(_missionSourceFilename) :
+                        _mission.getTitle() || (_missionSourceFilename && utils.getFilenameWithoutExtension(_missionSourceFilename)) || _mission.getName() :
                         strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(_missionSourceFilename) + strings.MISSION.NAME_SUFFIX.name));
                 _battleCursor = document.body.style.cursor;
                 if (!_multi) {
@@ -4868,6 +4873,7 @@ define([
         }
         if (params.missionData !== undefined) {
             _missionSourceFilename = null;
+            _missionData = params.missionData;
         } else if (params.missionSourceFilename !== undefined) {
             _missionSourceFilename = params.missionSourceFilename;
         }
@@ -4891,7 +4897,7 @@ define([
         if (_missionSourceFilename) {
             missions.requestMission(_missionSourceFilename, _difficulty, _demoMode, this._startBattle.bind(this));
         } else {
-            this._startBattle(missions.createMission(params.missionData, _difficulty, _demoMode));
+            this._startBattle(missions.createMission(_missionData, _difficulty, _demoMode));
         }
     };
     // -------------------------------------------------------------------------

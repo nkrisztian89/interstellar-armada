@@ -1,0 +1,16 @@
+Mission Hub submission terms
+9 January, 2022
+
+For the Interstellar Armada: Galactic Ace open source game (available at https://nkrisztian89.github.io/interstellar-armada), referred to as "the game"
+Particularly its mission sharing feature available within the game, referred to as "Mission Hub"
+By the developer of the game: Krisztián Nagy, available at armada.galactic.ace@gmail.com, referred to as "the developer"
+
+By pressing Submit, I acknowledge that my username, comment and the selected mission file will be shared with the developer for the purpose of reviewing (downloading and testing), and possibly publishing it (under the supplied username) within the game for other players to play.
+
+I agree not to include any personal information (information that can be used to directly or indirectly identify individuals or to contact them physically or online) in the username, comment or the mission file. I attest that the mission file I selected was created by me and is a valid mission file for this game. I agree not to include any harmful code or any information I am legally not allowed to share or any intellectual property I do not own the copyright of in the mission file, comment or username.
+
+I hereby grant permission to the developer and the players of the game to download, erase, make copies of, play, redistribute or create derivative works off of my mission, and publish those under their own name. The missions I have uploaded might be removed from the Mission Hub at my request, but this does not influence any copies or derivative works the developer or players have made based on my mission.
+
+I acknowledge the developer is not responsible for any damages or harm caused in relation to publishing (him and other players downloading, playing or otherwise interacting with) my mission file. Also, see the license of the game for more information regarding warranty and liability (particularly sections 15 and 16). I acknowledge that the Mission Hub might become unavailable, be discontinued, or my missions erased without notice at any point, and this does not make the developer liable to me for damages.
+
+I attest I am legally allowed to interact with the game in the way the above points describe and that I have fully read and understood these terms.

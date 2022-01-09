@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides various classes that can be used integrated with the Screen module as components on screens. Also manages a shader cache
  * for storing the downloaded source (HTML and CSS) files of the created components.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -35,6 +35,9 @@ define([
      * text on the label for auto-translation.
      * @property {Function} [getCaption] Alternatively to static captions, this
      * function can be used to determine captions on each component update
+     * @property {Object} [replacements] If given, the caption based on the above
+     * properties will be taken as a format string, and its {} references will be
+     * replaced by the respective properties of this object
      */
     var
             // ------------------------------------------------------------------------------
@@ -55,6 +58,7 @@ define([
             LOADING_BOX_PROGRESS_ID = "progress",
             LOADING_BOX_STATUS_DIV_ID = "status",
             LOADING_BOX_HEADER_ID = "header",
+            LOADING_BOX_IMAGE_ID = "image",
             INFO_BOX_MESSAGE_PARAGRAPH_ID = "message",
             INFO_BOX_OK_BUTTON_ID = "okButton",
             INFO_BOX_HEADER_ID = "header",
@@ -71,6 +75,8 @@ define([
             DISABLED_CLASS_NAME = "disabled",
             SELECTED_CLASS_NAME = "selected",
             HIGHLIGHTED_CLASS_NAME = "highlighted",
+            EYE_CROSSED_CLASS_NAME = "crossed",
+            FOCUSING_CLASS_NAME = "focusing",
             // event names for passing event handlers when components are crated
             SHOW_EVENT_NAME = "show",
             HIDE_EVENT_NAME = "hide",
@@ -82,6 +88,7 @@ define([
             BUTTON_CLICK_EVENT_NAME = "buttonclick",
             OPTION_SELECT_EVENT_NAME = "optionselect",
             OPTION_CLICK_EVENT_NAME = "optionclick",
+            CLICK_EVENT_NAME = "click",
             CHANGE_EVENT_NAME = "change",
             ELEMENT_HIGHLIGHT_EVENT_NAME = "elementhighlight",
             ELEMENT_SELECT_EVENT_NAME = "elementselect",
@@ -172,9 +179,10 @@ define([
      * @returns {String}
      */
     function _getLabelText(labelDescriptor) {
-        return labelDescriptor.getCaption ?
+        var caption = labelDescriptor.getCaption ?
                 labelDescriptor.getCaption() :
                 labelDescriptor.caption || strings.get({name: labelDescriptor.id});
+        return labelDescriptor.replacements ? utils.formatString(caption, labelDescriptor.replacements) : caption;
     }
     // ------------------------------------------------------------------------------
     // public functions
@@ -703,6 +711,10 @@ define([
          */
         this._header = this.registerSimpleComponent(LOADING_BOX_HEADER_ID);
         /**
+         * @type SimpleComponent
+         */
+        this._image = this.registerSimpleComponent(LOADING_BOX_IMAGE_ID);
+        /**
          * If set, the header element gets this ID (prefixed with the component 
          * name), making it possible to auto-translate it using the same string key as this ID
          * @type String
@@ -761,6 +773,17 @@ define([
             }
         } else {
             application.log_DEBUG("WARNING! Attempting to update the status message of loading box" + this._name + " before appending it to the page!");
+        }
+    };
+    /**
+     * Updates the loading box to show a (CSS-animated) image instead of the default progress bar.
+     */
+    LoadingBox.prototype.makeIndeterminate = function () {
+        if (this._rootElement) {
+            this._progress.hide();
+            this._image.show();
+        } else {
+            application.log_DEBUG("WARNING! Attempting to make loading box" + this._name + " indeterminate before appending it to the page!");
         }
     };
     // #########################################################################
@@ -1206,6 +1229,12 @@ define([
          * @type Function
          */
         this._onChange = eventHandlers ? eventHandlers[CHANGE_EVENT_NAME] : null;
+        /**
+         * A function that runs whenever an option is clicked. If it returns false,
+         * the corresponding checkbox will not be changed (checked/unchecked)
+         * @type Function
+         */
+        this._onClick = eventHandlers ? eventHandlers[CLICK_EVENT_NAME] : null;
     }
     CheckGroup.prototype = new ExternalComponent();
     CheckGroup.prototype.constructor = CheckGroup;
@@ -1225,9 +1254,14 @@ define([
      */
     CheckGroup.prototype._getItemClickHandler = function (index) {
         return function (event) {
-            this._options[index].element.click();
-            event.stopPropagation();
-            return false;
+            var change = true;
+            if (this._onClick) {
+                change = this._onClick(event);
+            }
+            if (change) {
+                this._options[index].element.click();
+                event.stopPropagation();
+            }
         }.bind(this);
     };
     /**
@@ -1546,6 +1580,22 @@ define([
         }
         this._listElements.push(listElement);
         this._addListElement(listElement, this._listElements.length - 1);
+    };
+    /**
+     * Replace the current list elements with new ones
+     * @param {ListComponent~ListElement[]} listElements An array of the available list elements
+     */
+    ListComponent.prototype.setListElements = function (listElements) {
+        var i;
+        this.reset();
+        this._ulElement.innerHTML = "";
+        this._listElements = listElements;
+        for (i = 0; i < this._listElements.length; i++) {
+            if (this._listElements[i].enabled === undefined) {
+                this._listElements[i].enabled = true;
+            }
+            this._addListElement(this._listElements[i], i);
+        }
     };
     /**
      * @override
@@ -2051,6 +2101,8 @@ define([
         DISABLED_CLASS_NAME: DISABLED_CLASS_NAME,
         SELECTED_CLASS_NAME: SELECTED_CLASS_NAME,
         HIGHLIGHTED_CLASS_NAME: HIGHLIGHTED_CLASS_NAME,
+        EYE_CROSSED_CLASS_NAME: EYE_CROSSED_CLASS_NAME,
+        FOCUSING_CLASS_NAME: FOCUSING_CLASS_NAME,
         // event names
         SHOW_EVENT_NAME: SHOW_EVENT_NAME,
         HIDE_EVENT_NAME: HIDE_EVENT_NAME,

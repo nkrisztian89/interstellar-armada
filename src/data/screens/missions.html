@@ -13,6 +13,7 @@
             <div class="missionInfoBody">
                 <p id="missionDescription" class="missionDescription"></p>
                 <button id="fileButton" class="fileButton translatable"></button>
+                <button id="submitButton" class="fileButton translatable"></button>
                 <h3 id="missionObjectivesTitle" class="translatable missionObjectivesTitle"></h3>
                 <ul id="missionObjectives" class="missionObjectives"></ul>
                 <h3 id="playerSpacecraftTitle" class="translatable playerSpacecraftTitle"></h3>
@@ -31,6 +32,24 @@
             <button id="backButton" class="translatable"></button>
             <button id="demoButton" class="translatable"></button>
             <button id="launchButton" class="translatable"></button>
+        </div>
+    </div>
+    <div id="submitMissionPopupBackground" class="fullScreenFix submitMissionPopupBackground pageGhost">
+        <div class="anyHeightCentered outerContainer submitMissionPopup">
+            <div id="helpButton" class="topRight helpButton"></div>
+            <h3 id="submitMissionHeader" class="submitMissionPopupContent submitMissionPopupHeader translatable"></h3>
+            <div id="submitMissionPopupContent" class="submitMissionPopupContent">
+                <label id="submitMissionSenderNameLabel" for="submitMissionSenderName" class="submitMissionInputLabel translatable"></label><input id="submitMissionSenderName" class="submitMissionInput" type="text"><br>
+                <label id="submitMissionSenderSecretLabel" for="submitMissionPassword" class="submitMissionInputLabel translatable"></label><div class="wrapper"><input id="submitMissionPassword" class="submitMissionInput password" type="password" spellcheck="false"><span id="submitMissionPasswordEye" class="passwordEye"></span></div><br>
+                <label id="submitMissionCommentLabel" for="submitMissionComment" class="submitMissionCommentLabel translatable"></label><br><textarea id="submitMissionComment" class="submitMissionComment"></textarea><br>
+                <span id="submitMissionFileLabel" class="submitMissionInputLabel translatable"></span>
+                <button id="submitFileButton" class="submitFileButton translatable"></button>
+                <div id="submitMissionTermsContainer" class="submitMissionTermsContainer"></div>
+            </div>
+            <div class="horizontallyCentered horizontalMenu" >
+                <button id="submitMissionCancelButton" class="translatable"></button>
+                <button id="submitMissionSubmitButton" class="translatable"></button>
+            </div>
         </div>
     </div>
     <input type="file" id="fileInput" accept="application/json">

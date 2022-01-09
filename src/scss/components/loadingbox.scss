@@ -22,6 +22,9 @@
 
 .loadingBoxProgress {
     display: block;
+    &[hidden] {
+        display: none;
+    }
 }
 
 .loadingBoxHeader,.loadingBoxStatus {
@@ -30,4 +33,18 @@
 
 .loadingBoxStatus {
     font-size: 90%;
+}
+
+@keyframes glow-white {
+    0% {filter: drop-shadow(0 0 0.05em white); transform: rotateY(0deg);}
+    50% {filter: drop-shadow(0 0 0.5em white); transform: rotateY(180deg);}
+    100% {filter: drop-shadow(0 0 0.05em white); transform: rotateY(360deg);}
+}
+
+.loadingBoxImage {
+    display: block;
+    &[hidden] {
+        display: none;
+    }
+    animation: glow-white 3s infinite;
 }

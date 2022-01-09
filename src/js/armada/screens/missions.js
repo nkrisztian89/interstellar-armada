@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2021 Krisztián Nagy
+ * Copyright 2016-2022 Krisztián Nagy
  * @file This module manages and provides the Missions screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -16,6 +16,7 @@
  * @param armadaScreens Used for navigation
  * @param spacecraft Used for creating the spacecraft representing the player craft in missions for previewing its data
  * @param missions Used for accessing information about missions
+ * @param missionHub Used for accessing information about community missions from the Mission Hub
  */
 define([
     "utils/utils",
@@ -27,8 +28,9 @@ define([
     "armada/audio",
     "armada/screens/shared",
     "armada/logic/spacecraft",
-    "armada/logic/missions"
-], function (utils, game, screens, components, analytics, strings, audio, armadaScreens, spacecraft, missions) {
+    "armada/logic/missions",
+    "armada/logic/mission-hub"
+], function (utils, game, screens, components, analytics, strings, audio, armadaScreens, spacecraft, missions, missionHub) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -44,7 +46,41 @@ define([
             DIFFICULTY_SELECTOR_ID = "difficultySelector",
             MISSION_DESCRIPTION_ID = "missionDescription",
             FILE_BUTTON_ID = "fileButton",
+            SUBMIT_BUTTON_ID = "submitButton",
+            SUBMIT_FILE_BUTTON_ID = "submitFileButton",
             FILE_INPUT_ID = "fileInput",
+            SUBMIT_MISSION_HELP_BUTTON_ID = "helpButton",
+            SUBMIT_MISSION_POPUP_BACKGROUND_ID = "submitMissionPopupBackground",
+            SUBMIT_MISSION_SENDER_NAME_INPUT_ID = "submitMissionSenderName",
+            SUBMIT_MISSION_PASSWORD_INPUT_ID = "submitMissionPassword",
+            SUBMIT_MISSION_PASSWORD_EYE_ID = "submitMissionPasswordEye",
+            SUBMIT_MISSION_COMMENT_INPUT_ID = "submitMissionComment",
+            SUBMIT_MISSION_TERMS_CHECKGROUP_ID = "submitMissionTermsCheckGroup",
+            SUBMIT_MISSION_TERMS_CONTAINER_ID = "submitMissionTermsContainer",
+            SUBMIT_MISSION_SUBMIT_BUTTON_ID = "submitMissionSubmitButton",
+            SUBMIT_MISSION_CANCEL_BUTTON_ID = "submitMissionCancelButton",
+            INFO_BOX_ID = "infoBox",
+            LOADING_BOX_ID = "loadingBox",
+            MIN_SENDER_NAME_LENGTH = 3,
+            MAX_SENDER_NAME_LENGTH = 20,
+            MIN_PASSWORD_LENGTH = 8,
+            MAX_PASSWORD_LENGTH = 512,
+            MAX_COMMENT_LENGTH = 200,
+            MAX_MISSION_SIZE = 512 * 1024,
+            MIN_TITLE_LENGTH = 3,
+            MAX_TITLE_LENGTH = 30,
+            MIN_DESCRIPTION_LENGTH = 10,
+            SUBMIT_MISSION_TEXT_PARAMS = {
+                minNameLength: MIN_SENDER_NAME_LENGTH,
+                maxNameLength: MAX_SENDER_NAME_LENGTH,
+                minPasswordLength: MIN_PASSWORD_LENGTH,
+                maxPasswordLength: MAX_PASSWORD_LENGTH,
+                maxCommentLength: MAX_COMMENT_LENGTH,
+                maxFileSize: utils.getFileSizeString(MAX_MISSION_SIZE),
+                minTitleLength: MIN_TITLE_LENGTH,
+                maxTitleLength: MAX_TITLE_LENGTH,
+                minDescriptionLength: MIN_DESCRIPTION_LENGTH
+            },
             LIST_COMPONENT_NAME = "list",
             MEDAL_IMAGE_HTML = "<img class='missionMedal' src='assets/images/empire_{performance}_20.png' alt='{performance}'>",
             // ------------------------------------------------------------------------------
@@ -84,6 +120,37 @@ define([
                 this._getKeyCommands(),
                 armadaScreens.BUTTON_EVENT_HANDLERS);
         /**
+         * Whether to show custom missions or non-custom (official) ones
+         * @type Boolean
+         */
+        this._custom = false;
+        /**
+         * Whether to show an extra entry after the missions to allow loading of custom missions
+         * @type Boolean
+         */
+        this._loadCustom = false;
+        /**
+         * Whether we are showing community missions (from the Mission Hub instead of the player's
+         * computer)
+         * @type Boolean
+         */
+        this._community = false;
+        /**
+         * The text content of the mission file selected by the player to be submitted to the Mission Hub
+         * @type String
+         */
+        this._missionToSubmit = null;
+        /**
+         * Either the missions module for local missions or the missionHub module for community missions
+         * @type Object
+         */
+        this._missionProvider = missions;
+        /**
+         * Whether the help dialog for mission submission has already been displayed at least once
+         * @type Boolean
+         */
+        this._submitHelpShown = false;
+        /**
          * The ID of the HTML element inside of which the mission list component will be added
          * @type String
          */
@@ -94,7 +161,7 @@ define([
         this._missionTitle = this.registerSimpleComponent(MISSION_TITLE_ID);
         /** @type SimpleComponent */
         this._missionLocation = this.registerSimpleComponent(MISSION_LOCATION_ID);
-        /** @type SimpleComponent */
+        /** @type Selector */
         this._difficultySelector = null;
         /** @type SimpleComponent */
         this._missionDescription = this.registerSimpleComponent(MISSION_DESCRIPTION_ID);
@@ -119,9 +186,29 @@ define([
         /** @type SimpleComponent */
         this._fileButton = this.registerSimpleComponent(FILE_BUTTON_ID);
         /** @type SimpleComponent */
+        this._submitButton = this.registerSimpleComponent(SUBMIT_BUTTON_ID);
+        /** @type SimpleComponent */
         this._demoButton = this.registerSimpleComponent(DEMO_BUTTON_ID);
         /** @type SimpleComponent */
         this._launchButton = this.registerSimpleComponent(LAUNCH_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._submitMissionHelpButton = this.registerSimpleComponent(SUBMIT_MISSION_HELP_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._submitMissionPopupBackground = this.registerSimpleComponent(SUBMIT_MISSION_POPUP_BACKGROUND_ID);
+        /** @type SimpleComponent */
+        this._submitMissionSenderNameInput = this.registerSimpleComponent(SUBMIT_MISSION_SENDER_NAME_INPUT_ID);
+        /** @type SimpleComponent */
+        this._submitMissionPasswordInput = this.registerSimpleComponent(SUBMIT_MISSION_PASSWORD_INPUT_ID);
+        /** @type SimpleComponent */
+        this._submitMissionPasswordEye = this.registerSimpleComponent(SUBMIT_MISSION_PASSWORD_EYE_ID);
+        /** @type SimpleComponent */
+        this._submitMissionCommentInput = this.registerSimpleComponent(SUBMIT_MISSION_COMMENT_INPUT_ID);
+        /** @type SimpleComponent */
+        this._submitFileButton = this.registerSimpleComponent(SUBMIT_FILE_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._submitMissionCancelButton = this.registerSimpleComponent(SUBMIT_MISSION_CANCEL_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._submitMissionSubmitButton = this.registerSimpleComponent(SUBMIT_MISSION_SUBMIT_BUTTON_ID);
         /**
          * The component housing the mission list
          * @type MenuComponent
@@ -154,6 +241,51 @@ define([
                             }.bind(this)
                         }),
                 this._listContainerID);
+        /**
+         * @type InfoBox
+         */
+        this._infoBox = this.registerExternalComponent(new components.InfoBox(
+                INFO_BOX_ID,
+                armadaScreens.INFO_BOX_SOURCE,
+                {cssFilename: armadaScreens.INFO_BOX_CSS},
+                strings.INFO_BOX.HEADER.name,
+                strings.INFO_BOX.OK_BUTTON.name,
+                {
+                    buttonselect: armadaScreens.playButtonSelectSound,
+                    buttonclick: armadaScreens.playButtonClickSound
+                }));
+        /**
+         * @type LoadingBox
+         */
+        this._loadingBox = this.registerExternalComponent(new components.LoadingBox(
+                LOADING_BOX_ID,
+                armadaScreens.LOADING_BOX_SOURCE,
+                {cssFilename: armadaScreens.LOADING_BOX_CSS},
+                strings.LOADING.HEADER.name));
+        /**
+         * @type CheckGroup
+         */
+        this._submitMissionTermsCheckbox = this.registerExternalComponent(new components.CheckGroup(
+                SUBMIT_MISSION_TERMS_CHECKGROUP_ID,
+                armadaScreens.CHECK_GROUP_SOURCE,
+                {
+                    cssFilename: armadaScreens.CHECK_GROUP_CSS
+                },
+                [{
+                        id: strings.MISSIONS.SUBMIT_MISSION_ACCEPT_TERMS.name,
+                        replacements: {
+                            linkBegin: '<a href="license/mission-hub.txt" target="_blank" rel="noreferrer">',
+                            linkEnd: '</a>'
+                        },
+                        value: "accept"
+                    }],
+                {
+                    change: this._updateSubmitMissionButton.bind(this),
+                    click: function (event) {
+                        return event.target.tagName.toLowerCase() !== 'a';
+                    }
+                }
+        ), SUBMIT_MISSION_TERMS_CONTAINER_ID);
         missions.executeWhenReady(function () {
             this._difficultySelector = this.registerExternalComponent(
                     new components.Selector(
@@ -168,25 +300,46 @@ define([
                             _getDifficultyValues()),
                     DIFFICULTY_CONTAINER_ID);
         }.bind(this));
+        this._updateSubmitMissionButton = this._updateSubmitMissionButton.bind(this);
     }
     MissionsScreen.prototype = new screens.HTMLScreen();
     MissionsScreen.prototype.constructor = MissionsScreen;
+    /**
+     * @typedef {Object} MissionScreenConfig
+     * @property {Boolean} custom
+     * @property {Boolean} loadCustom
+     * @property {Boolean} community 
+     */
+    /**
+     * Call before displaying the page to set up what missions to show
+     * @param {MissionScreenConfig} config
+     */
+    MissionsScreen.prototype.setup = function (config) {
+        this._custom = config.custom;
+        this._loadCustom = config.loadCustom;
+        this._community = config.community;
+        this._missionProvider = config.community ? missionHub : missions;
+        this._listComponent.setListElements(this._getListElements());
+    };
     /**
      * Creates and returns the objects that can be passed for the constructor to create the list elements based on mission data
      * @returns {ListComponent~ListElement[]} 
      */
     MissionsScreen.prototype._getListElements = function () {
-        var result = [], missionNames = missions.getMissionNames(), i;
+        var result = [], missionNames = this._missionProvider.getMissionNames(this._custom), i;
         for (i = 0; i < missionNames.length; i++) {
             result.push({
-                captionID: strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(missionNames[i]) + strings.MISSION.NAME_SUFFIX.name,
+                captionID: this._community ? undefined : strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(missionNames[i]) + strings.MISSION.NAME_SUFFIX.name,
+                caption: this._community ? missionNames[i] : undefined,
                 subcaptionID: strings.MISSIONS.NOT_COMPLETED.name
             });
         }
-        result.push({
-            captionID: strings.MISSIONS.CUSTOM_MISSION_CAPTION.name,
-            subcaptionID: strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION.name
-        });
+        if (this._loadCustom) {
+            result.push({
+                captionID: strings.MISSIONS.CUSTOM_MISSION_CAPTION.name,
+                subcaptionID: strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION.name
+            });
+        }
         return result;
     };
     /**
@@ -195,8 +348,8 @@ define([
      */
     MissionsScreen.prototype._selectMission = function (index) {
         var missionFilename, missionName, pilotedCraftDescriptor, custom;
-        if ((index >= 0) && (index < missions.getMissionNames().length)) {
-            missionFilename = missions.getMissionNames()[index];
+        if ((index >= 0) && (index < this._missionProvider.getMissionNames(this._custom).length)) {
+            missionFilename = this._missionProvider.getMissionNames(this._custom)[index];
             missionName = utils.getFilenameWithoutExtension(missionFilename);
             this._missionTitle.setContent(strings.get({name: strings.MISSION.PREFIX.name + missionName + strings.MISSION.NAME_SUFFIX.name}, undefined, missionName));
             this._missionDescription.setContent(strings.get(strings.MISSIONS.LOADING_DESCRIPTION));
@@ -209,7 +362,8 @@ define([
             this._playerSpacecraftShield.hide();
             this._playerSpacecraftPropulsion.hide();
             this._fileButton.hide();
-            missions.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
+            this._submitButton.hide();
+            this._missionProvider.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
                 var
                         /** @type String[] */
                         objectives;
@@ -299,7 +453,11 @@ define([
             custom = (index >= 0);
             this._missionTitle.setContent(strings.get(strings.MISSIONS.NO_SELECTED_NAME));
             this._missionLocation.setContent("");
-            this._missionDescription.setContent(strings.get(custom ? strings.MISSIONS.CUSTOM_DESCRIPTION : strings.MISSIONS.NO_SELECTED_DESCRIPTION), {
+            this._missionDescription.setContent(strings.get(custom ?
+                    strings.MISSIONS.CUSTOM_DESCRIPTION :
+                    this._community ?
+                    (missionHub.isReady() ? strings.MISSIONS.MISSION_HUB_DESCRIPTION : strings.MISSIONS.MISSION_HUB_CONNECTING_DESCRIPTION) :
+                    strings.MISSIONS.NO_SELECTED_DESCRIPTION), {
                 editor: '<a target="_blank" rel="noopener" href="editor.html">Interstellar Armada editor</a>'
             });
             this._missionObjectivesTitle.hide();
@@ -313,6 +471,29 @@ define([
             this._launchButton.disable();
             this._demoButton.disable();
             this._fileButton.setVisible(custom);
+            this._submitButton.setVisible(this._community && missionHub.isReady());
+            if (this._community && !missionHub.isReady()) {
+                missionHub.retrieveMissions(function () {
+                    if ((game.getScreen() !== this) || !this._community) {
+                        return;
+                    }
+                    this._listComponent.setListElements(this._getListElements());
+                    this._updateScores();
+                    this._selectMission(-1);
+                }.bind(this), function (data) {
+                    if ((game.getScreen() !== this) || !this._community) {
+                        return;
+                    }
+                    this._showMessage(
+                            strings.get(
+                                    strings.MISSION_HUB_ERROR.PREFIX,
+                                    (data && data.error) || strings.MISSION_HUB_ERROR.DEFAULT_SUFFIX.name,
+                                    utils.formatString(strings.get(strings.MISSION_HUB_ERROR.GENERAL), {code: data ? data.error : 0})),
+                            function () {
+                                game.closeOrNavigateTo(armadaScreens.SINGLE_PLAYER_SCREEN_NAME);
+                            });
+                }.bind(this));
+            }
         }
     };
     /**
@@ -324,42 +505,71 @@ define([
     MissionsScreen.prototype._getKeyCommands = function (keyCommands) {
         keyCommands = keyCommands || {};
         keyCommands.up = keyCommands.up || function (event) {
-            this._listComponent.highlightPrevious();
-            event.preventDefault();
+            if (!this._submitMissionPopupBackground.isVisible()) {
+                this._listComponent.highlightPrevious();
+                event.preventDefault();
+            }
         }.bind(this);
         keyCommands.down = keyCommands.down || function (event) {
-            this._listComponent.highlightNext();
-            event.preventDefault();
+            if (!this._submitMissionPopupBackground.isVisible()) {
+                this._listComponent.highlightNext();
+                event.preventDefault();
+            }
         }.bind(this);
         keyCommands.enter = keyCommands.enter || function () {
-            if ((this._listComponent.getSelectedIndex() >= 0) && (this._listComponent.getHighlightedIndex() === this._listComponent.getSelectedIndex())) {
-                this._launchMission(false);
-            } else {
-                this._listComponent.selectHighlighted();
+            if (!this._submitMissionPopupBackground.isVisible()) {
+                if ((this._listComponent.getSelectedIndex() >= 0) && (this._listComponent.getHighlightedIndex() === this._listComponent.getSelectedIndex())) {
+                    this._launchMission(false);
+                } else {
+                    this._listComponent.selectHighlighted();
+                }
             }
         }.bind(this);
         keyCommands.space = keyCommands.space || function (event) {
-            this._listComponent.selectHighlighted();
-            event.preventDefault();
+            if (!this._submitMissionPopupBackground.isVisible()) {
+                this._listComponent.selectHighlighted();
+                event.preventDefault();
+            }
         }.bind(this);
         keyCommands.escape = function () {
-            game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
-        };
+            if (this._submitMissionPopupBackground.isVisible()) {
+                this._submitMissionPopupBackground.hide();
+            } else {
+                game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+            }
+        }.bind(this);
         return keyCommands;
+    };
+    /**
+     * Shows the given message to the user in an information box.
+     * @param {String} message
+     * @param {Function} [onButtonClick]
+     */
+    MissionsScreen.prototype._showMessage = function (message, onButtonClick) {
+        this._infoBox.updateMessage(message);
+        this._infoBox.onButtonClick(function () {
+            armadaScreens.playButtonClickSound();
+            if (onButtonClick) {
+                onButtonClick();
+            }
+        });
+        this._infoBox.show();
     };
     /**
      * Updates the subcaption for all missions in the displayed list with the current best score for the mission
      */
     MissionsScreen.prototype._updateScores = function () {
         var missionDescriptors, i;
-        missionDescriptors = missions.getMissionDescriptors();
+        missionDescriptors = this._missionProvider.getMissionDescriptors(this._custom);
         i = 0;
         this._listComponent.executeForListElements(function (listElement) {
             var score, performance, winCount, subcaption;
             if (i < missionDescriptors.length) {
                 subcaption = listElement.querySelector("." + armadaScreens.SUBCAPTION_CLASS_NAME);
                 if (missionDescriptors[i].isCustom()) {
-                    subcaption.innerHTML = strings.get(strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION);
+                    subcaption.innerHTML = utils.formatString(strings.get(this._community ? strings.MISSIONS.COMMUNITY_MISSION_SUBCAPTION : strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION), {
+                        author: missionDescriptors[i].getAuthor()
+                    });
                     winCount = 0;
                 } else {
                     score = missionDescriptors[i].getBestScore();
@@ -384,7 +594,7 @@ define([
                 }
             }
             i++;
-        });
+        }.bind(this));
     };
     /**
      * @override
@@ -403,12 +613,14 @@ define([
      * @param {Boolean} demoMode whether to load the mission in demo mode
      */
     MissionsScreen.prototype._launchMission = function (demoMode) {
-        var missionIndex = this._listComponent.getSelectedIndex();
+        var missionIndex = this._listComponent.getSelectedIndex(),
+                missionName = this._missionProvider.getMissionNames(this._custom)[missionIndex];
         if (missionIndex >= 0) {
             audio.playMusic(null);
             game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
             game.getScreen().startNewBattle({
-                missionSourceFilename: missions.getMissionNames()[missionIndex],
+                missionSourceFilename: this._community ? undefined : missionName,
+                missionData: this._community ? missionHub.getMissionDescriptor(missionName).getData() : undefined,
                 difficulty: missions.getDifficultyNames()[this._difficultySelector.getSelectedIndex()],
                 demoMode: demoMode});
         }
@@ -422,12 +634,25 @@ define([
         }.bind(this));
     };
     /**
+     * Enable/disable the submit mission data based on the current input values
+     */
+    MissionsScreen.prototype._updateSubmitMissionButton = function () {
+        if ((this._submitMissionSenderNameInput.getElement().value.length >= MIN_SENDER_NAME_LENGTH) &&
+                (this._submitMissionPasswordInput.getElement().value.length >= MIN_PASSWORD_LENGTH) &&
+                (this._submitMissionTermsCheckbox.getValue().length > 0) &&
+                !!this._missionToSubmit) {
+            this._submitMissionSubmitButton.enable();
+        } else {
+            this._submitMissionSubmitButton.disable();
+        }
+    };
+    /**
      * @override
      */
     MissionsScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
         this._backButton.getElement().onclick = function () {
-            game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
+            game.closeOrNavigateTo(armadaScreens.SINGLE_PLAYER_SCREEN_NAME);
             return false;
         }.bind(this);
         this._difficultySelector.onChange = function () {
@@ -447,20 +672,27 @@ define([
             if (file) {
                 file.text().then(function (text) {
                     var data = JSON.parse(text);
+                    this._missionToSubmit = null;
                     if (data) {
-                        data.name = file.name;
-                        data.custom = true;
-                        if (missions.getMissionNames().indexOf(data.name) >= 0) {
-                            game.showError("A mission with this filename already exists!", game.ErrorSeverity.MINOR);
-                        } else {
-                            missions.createMissionDescriptor(data);
-                            this._listComponent.setCaption(missions.getMissionNames().length - 1, data.title || utils.getFilenameWithoutExtension(data.name));
-                            this.selectMission(data.name);
-                            this._listComponent.addListElement({
-                                captionID: strings.MISSIONS.CUSTOM_MISSION_CAPTION.name,
-                                subcaptionID: strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION.name
-                            });
-                            analytics.sendEvent("customload");
+                        if (this._loadCustom) {
+                            data.name = file.name;
+                            data.custom = true;
+                            if (missions.getMissionNames().indexOf(data.name) >= 0) {
+                                game.showError("A mission with this filename already exists!", game.ErrorSeverity.MINOR);
+                            } else {
+                                missions.createMissionDescriptor(data);
+                                this._listComponent.setCaption(missions.getMissionNames(this._custom).length - 1, data.title || utils.getFilenameWithoutExtension(data.name));
+                                this.selectMission(data.name);
+                                this._listComponent.addListElement({
+                                    captionID: strings.MISSIONS.CUSTOM_MISSION_CAPTION.name,
+                                    subcaptionID: strings.MISSIONS.CUSTOM_MISSION_SUBCAPTION.name
+                                });
+                                analytics.sendEvent("customload");
+                            }
+                        } else if (this._community) {
+                            this._missionToSubmit = text;
+                            this._submitFileButton.setTextContent(file.name);
+                            this._updateSubmitMissionButton();
                         }
                     }
                 }.bind(this)).catch(function () {
@@ -472,7 +704,75 @@ define([
             this._fileInput.getElement().click();
             return false;
         }.bind(this);
+        this._submitButton.getElement().onclick = function () {
+            this._updateSubmitMissionButton();
+            this._submitMissionPopupBackground.show();
+            if (!this._submitHelpShown) {
+                this._submitMissionHelpButton.getElement().click();
+                this._submitHelpShown = true;
+            }
+        }.bind(this);
+        this._submitMissionHelpButton.getElement().onclick = function () {
+            armadaScreens.openDialog({
+                header: strings.get(strings.INFO_BOX.HEADER),
+                message: utils.formatString(strings.get(strings.MISSIONS.SUBMIT_MISSION_HELP), SUBMIT_MISSION_TEXT_PARAMS),
+                messageClass: armadaScreens.RELEASE_NOTES_CLASS_NAME,
+                buttons: [{
+                        caption: strings.get(strings.INFO_BOX.OK_BUTTON),
+                        action: function () {
+                            game.closeSuperimposedScreen();
+                        }
+                    }]
+            });
+        }.bind(this);
+        this._submitMissionSenderNameInput.getElement().maxLength = MAX_SENDER_NAME_LENGTH;
+        this._submitMissionSenderNameInput.getElement().onkeyup = this._updateSubmitMissionButton;
+        this._submitMissionPasswordInput.getElement().maxLength = MAX_PASSWORD_LENGTH;
+        this._submitMissionPasswordInput.getElement().onkeyup = this._updateSubmitMissionButton;
+        this._submitMissionPasswordEye.getElement().onmousedown = function () {
+            this._submitMissionPasswordInput.getElement().classList.add(components.FOCUSING_CLASS_NAME);
+        }.bind(this);
+        this._submitMissionPasswordEye.getElement().onmouseup = function () {
+            this._submitMissionPasswordInput.getElement().classList.remove(components.FOCUSING_CLASS_NAME);
+        }.bind(this);
+        this._submitMissionPasswordEye.getElement().onclick = function (event) {
+            var classList = this._submitMissionPasswordEye.getElement().classList;
+            classList.toggle(components.EYE_CROSSED_CLASS_NAME);
+            this._submitMissionPasswordInput.setAttribute("type", classList.contains(components.EYE_CROSSED_CLASS_NAME) ? "text" : "password");
+            this._submitMissionPasswordInput.getElement().focus();
+            event.preventDefault();
+        }.bind(this);
+        this._submitMissionCommentInput.getElement().maxLength = MAX_COMMENT_LENGTH;
+        this._submitFileButton.getElement().onclick = function () {
+            this._fileInput.getElement().click();
+            return false;
+        }.bind(this);
+        this._submitMissionCancelButton.getElement().onclick = function () {
+            this._submitMissionPopupBackground.hide();
+        }.bind(this);
+        this._submitMissionSubmitButton.getElement().onclick = function () {
+            this._loadingBox.makeIndeterminate();
+            this._loadingBox.show();
+            missionHub.submitMission({
+                sender: this._submitMissionSenderNameInput.getElement().value,
+                password: this._submitMissionPasswordInput.getElement().value,
+                comment: this._submitMissionCommentInput.getElement().value,
+                mission: this._missionToSubmit
+            }, function () {
+                this._loadingBox.hide();
+                this._submitMissionPopupBackground.hide();
+                this._showMessage(strings.get(strings.MISSIONS.SUBMIT_MISSION_SUCCESS));
+            }.bind(this), function (data) {
+                this._loadingBox.hide();
+                this._showMessage(
+                        utils.formatString(strings.get(
+                                strings.MISSION_HUB_ERROR.PREFIX,
+                                (data && data.error) || strings.MISSION_HUB_ERROR.DEFAULT_SUFFIX.name,
+                                utils.formatString(strings.get(strings.MISSION_HUB_ERROR.GENERAL), {code: data ? data.error : 0})), SUBMIT_MISSION_TEXT_PARAMS));
+            }.bind(this));
+        }.bind(this);
         this._fileInput.hide();
+        this._submitMissionPopupBackground.hide();
     };
     /**
      * @override
@@ -489,6 +789,7 @@ define([
      */
     MissionsScreen.prototype.show = function () {
         if (screens.HTMLScreen.prototype.show.call(this)) {
+            this._missionToSubmit = null;
             this._updateValues();
             return true;
         }
@@ -499,7 +800,7 @@ define([
      * @param {String} missionName Same as the mission file name
      */
     MissionsScreen.prototype.selectMission = function (missionName) {
-        var index = missions.getMissionNames().indexOf(missionName);
+        var index = this._missionProvider.getMissionNames(this._custom).indexOf(missionName);
         this._listComponent.selectIndex(index, true);
         this._selectMission(index);
     };

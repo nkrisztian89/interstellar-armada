@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2017-2018, 2020-2021 Krisztián Nagy
+Copyright (C) 2017-2018, 2020-2022 Krisztián Nagy
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -532,7 +532,7 @@ progress[value] {
 /******************************************************************************************/
 /* Styling of text inputs */
 
-input[type=text] {
+input[type=text], input[type=email], input[type=password], textarea {
     color: $text-color;
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     font-size: 2.2vmin;
@@ -540,13 +540,22 @@ input[type=text] {
     margin: 0 0.5em;
     @include bordered;
     outline: none;
-    &:active,&:focus {
+    &:active,&:focus,&.focusing {
         @include glowing;
         outline: none;
     }
     @media screen and (min-aspect-ratio: 2/1) {
         font-size: 2.5vmin;
     }
+}
+
+input[type=password], input.password {
+    padding-right: 1.4em;
+}
+
+textarea {
+    resize: none;
+    @include styled-scrollbar;
 }
 
 /******************************************************************************************/
@@ -713,4 +722,55 @@ input[type=checkbox] {
 
 label {
     cursor: $cursor, default;
+}
+
+div.wrapper {
+    display: inline-block;
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+span.passwordEye {
+    display: block;
+    position: absolute;
+    right: 0.3em;
+    top: 0.75em;
+    width: 1em;
+    height: 1em;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: url(../assets/images/eye.png);
+    background-size: cover;
+    
+    &.crossed {
+        background-position-y: 100%;
+    }
+}
+
+.topRight {
+    position: absolute;
+    top: $page-padding;
+    right: $page-padding;
+}
+
+div.helpButton {
+    width: 1.2em;
+    height: 1.2em;
+    box-sizing: border-box;
+    padding: 0.1em;
+    border-radius: 0.6em;
+    background-color: $text-color;
+    color: $body-color;
+    font-weight: bold;
+    z-index: 1000;
+
+    &::after {
+        content: '?';
+    }
+
+    &:hover {
+        background-color: $light-text-color;
+    }
 }

@@ -7,7 +7,7 @@ Play now!
 =========
 
 Though the game is far from being ready, it is possible to try out what has already
-been completed from it. **Just head to [this page](http://nkrisztian89.github.io/interstellar-armada/) 
+been completed from it. **Just head to [this page](https://nkrisztian89.github.io/interstellar-armada/) 
 to launch the latest alpha release right in your browser.**
 
 If you experience performance issues, adjust the level of graphics detail from the menu.
@@ -26,7 +26,7 @@ I use [NetBeans](https://netbeans.org/) with its web development (+
 [ESLint](https://github.com/joakim-eriksson/nb-eslint) and GLSL) plugins 
 to develop this game. To build the game, you will need
 [npm](https://www.npmjs.com/), [Grunt](https://gruntjs.com/) and 
-[Sass](http://sass-lang.com/).
+[Sass](https://sass-lang.com/).
 
 After cloning the repository, in its main folder run
 ```
