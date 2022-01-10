@@ -166,6 +166,16 @@
         "1003": "Connection to the Mission Hub timed out!",
         "1004": "The Mission Hub did not confirm the submission!"
     },
+    "missionHubClientError": {
+        "general": "Mission Hub error! Code: {code}",
+        "305": "The selected file does not appear to be a valid mission file!",
+        "306": "The selected file is too large! Maximum allowed size: {maxFileSize}",
+        "307": "The username does not match the author of the selected file. Please upload missions that were created by you!",
+        "308": "Invalid mission title: The mission title must be between {minTitleLength} and {maxTitleLength} characters long!",
+        "309": "Invalid mission description: The mission description must be at least {minDescriptionLength} characters long!",
+        "310": "The selected mission does not appear to have any spacecrafts in it!",
+        "311": "The selected mission does not appear to have a piloted spacecraft set!"
+    },
     "location": {
         "unknown": "Unknown",
         "system": "{systemName} system"

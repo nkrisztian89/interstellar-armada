@@ -180,6 +180,16 @@
         "1003": "Időtúllépés miatt nem sikerült csatlakozni a Küldetés Központhoz!",
         "1004": "A Küldetés Központ nem erősítette meg a beküldést!"
     },
+    "missionHubClientError": {
+        "general": "Küldetés Központ hiba! Hibakód: {code}",
+        "305": "A kiválasztott fájl nem tűnik érvényes küldetésfájlnak!",
+        "306": "A kiválasztott fájl túl nagy! Maximum megengedett méret: {maxFileSize}",
+        "307": "A felhasználónév nem egyezik a küldetés szerzőjeként megadott névvel. Kérlek, csak saját magad által készített küldetéseket tölts fel!",
+        "308": "Érvénytelen küldetéscím: A küldetés címének (title) {minTitleLength} és {maxTitleLength} karakter közötti hosszúságúnak kell lennie!",
+        "309": "Érvénytelen leírás: A küldetés leírásának (description) legalább {minDescriptionLength} karakter hosszúságúnak kell lennie!",
+        "310": "Úgy tűnik, a kiválasztott küldetésben nincsenek megadva űrhajók!",
+        "311": "Úgy tűnik, a kiválasztott küldetésben nincs megadva a játékos űrhajója!"
+    },
     "location": {
         "unknown": "Ismeretlen",
         "system": "{systemName} rendszer"

@@ -83,6 +83,7 @@ define([
         OBJECTIVE_SUBJECTS_TEAMS: {name: "missions.objectiveSubjects.teams"},
         OBJECTIVE_WIN_PREFIX: {name: "missions.winObjective.", optional: true},
         OBJECTIVE_LOSE_PREFIX: {name: "missions.loseObjective.", optional: true},
+        SUBMIT_FILE_BUTTON: {name: "missions.submitFileButton"},
         SUBMIT_MISSION_ACCEPT_TERMS: {name: "missions.submitMissionAcceptTerms"},
         SUBMIT_MISSION_SUCCESS: {name: "missions.submitMissionSuccess"},
         SUBMIT_MISSION_HELP: {name: "missions.submitMissionHelp"}
@@ -154,6 +155,10 @@ define([
         PREFIX: {name: "missionHubError.", optional: true},
         DEFAULT_SUFFIX: {name: "default", optional: true},
         GENERAL: {name: "missionHubError.general"}
+    };
+    strings.MISSION_HUB_CLIENT_ERROR = {
+        PREFIX: {name: "missionHubClientError.", optional: true},
+        GENERAL: {name: "missionHubClientError.general"}
     };
     strings.LOCATION = {
         UNKNOWN: {name: "location.unknown"},

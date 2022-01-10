@@ -64,12 +64,40 @@ define([
             MIN_SENDER_NAME_LENGTH = 3,
             MAX_SENDER_NAME_LENGTH = 20,
             MIN_PASSWORD_LENGTH = 8,
-            MAX_PASSWORD_LENGTH = 512,
+            MAX_PASSWORD_LENGTH = 32,
             MAX_COMMENT_LENGTH = 200,
-            MAX_MISSION_SIZE = 512 * 1024,
+            MAX_MISSION_SIZE = 100 * 1024,
             MIN_TITLE_LENGTH = 3,
             MAX_TITLE_LENGTH = 30,
             MIN_DESCRIPTION_LENGTH = 10,
+            // backend error codes - need to be kept sync with the backend version
+            ErrorCategory = {
+                AUTHORIZATION: 100,
+                INVALID_GENERAL_PARAMS: 200,
+                INVALID_SUBMIT_PARAMS: 300,
+                DATABASE_OPERATION: 400,
+                AUTHENTICATION: 500,
+                RATE_LIMIT: 600,
+                OTHER: 700
+            },
+            InvalidSubmitParamError = {
+                MISSING_BODY: 1,
+                INVALID_NAME: 2,
+                INVALID_PASSWORD: 3,
+                INVALID_COMMENT: 4,
+                WRONG_MISSION_FILE_FORMAT: 5,
+                MISSION_FILE_TOO_LARGE: 6,
+                SENDER_CREATOR_MISMATCH: 7,
+                INVALID_MISSION_TITLE: 8,
+                INVALID_MISSION_DESCRIPTON: 9,
+                NO_SPACECRAFTS: 10,
+                NO_PILOTED_CRAFT: 11
+            },
+            OtherError = {
+                TITLE_ALREADY_EXISTS: 1
+            },
+            // end of backend error codes
+            VALID = 0,
             SUBMIT_MISSION_TEXT_PARAMS = {
                 minNameLength: MIN_SENDER_NAME_LENGTH,
                 maxNameLength: MAX_SENDER_NAME_LENGTH,
@@ -95,6 +123,9 @@ define([
     }
     function _getDifficultyValues() {
         return missions.getDifficultyNames().map(_mapDifficultyName);
+    }
+    function _validateString(value, min, max) {
+        return (typeof value === "string") && ((min === undefined) || (value.length >= min)) && ((max === undefined) || (value.length <= max));
     }
     // #########################################################################
     /**
@@ -647,6 +678,74 @@ define([
         }
     };
     /**
+     * Shows a popup with the translated text corresponding to the passed Mission Hub error code, suitable for
+     * when the error happened during validation on the client side
+     * @param {Number} errorCode
+     */
+    MissionsScreen.prototype._showMissionHubClientError = function (errorCode) {
+        this._showMessage(
+                utils.formatString(strings.get(
+                        strings.MISSION_HUB_CLIENT_ERROR.PREFIX,
+                        errorCode,
+                        utils.formatString(strings.get(strings.MISSION_HUB_CLIENT_ERROR.GENERAL), {code: errorCode})), SUBMIT_MISSION_TEXT_PARAMS));
+    };
+    /**
+     * Cancels the mission file selected to be uploaded, also updating the corresponding button text
+     */
+    MissionsScreen.prototype._resetSubmitFile = function () {
+        this._fileInput.getElement().value = null;
+        this._missionToSubmit = null;
+        this._submitFileButton.setTextContent(strings.get(strings.MISSIONS.SUBMIT_FILE_BUTTON));
+        this._updateSubmitMissionButton();
+    };
+    /**
+     * Does client side validation of mission data (done when selecting a mission file to submit
+     * to the Mission Hub)
+     * @param {Object} data The parsed mission JSON file
+     * @returns {Number} 0 if the validation is successful, the error code otherwise
+     */
+    MissionsScreen.prototype._validateMissionData = function (data) {
+        var piloted, spacecraft, i;
+        if (!data || (typeof data !== "object") || !data.info || (typeof data.info !== "object") || !_validateString(data.info.author)) {
+            return InvalidSubmitParamError.WRONG_MISSION_FILE_FORMAT;
+        }
+        if (data.info.author !== this._submitMissionSenderNameInput.getElement().value) {
+            return InvalidSubmitParamError.SENDER_CREATOR_MISMATCH;
+        }
+        if (!_validateString(data.title, MIN_TITLE_LENGTH, MAX_TITLE_LENGTH)) {
+            return InvalidSubmitParamError.INVALID_MISSION_TITLE;
+        }
+        if (!_validateString(data.description, MIN_DESCRIPTION_LENGTH)) {
+            return InvalidSubmitParamError.INVALID_MISSION_DESCRIPTON;
+        }
+        if (!Array.isArray(data.spacecrafts)) {
+            return InvalidSubmitParamError.WRONG_MISSION_FILE_FORMAT;
+        }
+        if (data.spacecrafts.length === 0) {
+            return InvalidSubmitParamError.NO_SPACECRAFTS;
+        }
+        piloted = false;
+        for (i = 0; i < data.spacecrafts.length; i++) {
+            spacecraft = data.spacecrafts[i];
+            if (!spacecraft || (typeof spacecraft !== "object")) {
+                return InvalidSubmitParamError.WRONG_MISSION_FILE_FORMAT;
+            }
+            if (spacecraft.piloted === true) {
+                piloted = true;
+            } else {
+                if ((typeof spacecraft.pilotedIndex === "number") && !isNaN(spacecraft.pilotedIndex)) {
+                    if ((typeof spacecraft.count === "number") && !isNaN(spacecraft.count) && (spacecraft.pilotedIndex < spacecraft.count)) {
+                        piloted = true;
+                    }
+                }
+            }
+        }
+        if (!piloted) {
+            return InvalidSubmitParamError.NO_PILOTED_CRAFT;
+        }
+        return VALID;
+    };
+    /**
      * @override
      */
     MissionsScreen.prototype._initializeComponents = function () {
@@ -670,9 +769,26 @@ define([
         this._fileInput.getElement().onchange = function () {
             var file = this._fileInput.getElement().files[0];
             if (file) {
+                if (this._community) {
+                    if (file.size > MAX_MISSION_SIZE) {
+                        this._showMissionHubClientError(ErrorCategory.INVALID_SUBMIT_PARAMS + InvalidSubmitParamError.MISSION_FILE_TOO_LARGE);
+                        this._resetSubmitFile();
+                        return;
+                    }
+                }
                 file.text().then(function (text) {
-                    var data = JSON.parse(text);
-                    this._missionToSubmit = null;
+                    var data, validationResult;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (error) {
+                        if (this._community) {
+                            this._showMissionHubClientError(ErrorCategory.INVALID_SUBMIT_PARAMS + InvalidSubmitParamError.WRONG_MISSION_FILE_FORMAT);
+                            this._resetSubmitFile();
+                        } else {
+                            game.showError("The selected file is not a valid mission file!", game.ErrorSeverity.MINOR);
+                        }
+                        return;
+                    }
                     if (data) {
                         if (this._loadCustom) {
                             data.name = file.name;
@@ -690,9 +806,15 @@ define([
                                 analytics.sendEvent("customload");
                             }
                         } else if (this._community) {
-                            this._missionToSubmit = text;
-                            this._submitFileButton.setTextContent(file.name);
-                            this._updateSubmitMissionButton();
+                            validationResult = this._validateMissionData(data);
+                            if (validationResult === VALID) {
+                                this._missionToSubmit = text;
+                                this._submitFileButton.setTextContent(file.name);
+                                this._updateSubmitMissionButton();
+                            } else {
+                                this._showMissionHubClientError(ErrorCategory.INVALID_SUBMIT_PARAMS + validationResult);
+                                this._resetSubmitFile();
+                            }
                         }
                     }
                 }.bind(this)).catch(function () {
@@ -769,6 +891,11 @@ define([
                                 strings.MISSION_HUB_ERROR.PREFIX,
                                 (data && data.error) || strings.MISSION_HUB_ERROR.DEFAULT_SUFFIX.name,
                                 utils.formatString(strings.get(strings.MISSION_HUB_ERROR.GENERAL), {code: data ? data.error : 0})), SUBMIT_MISSION_TEXT_PARAMS));
+                if (data &&
+                        (((data.error >= ErrorCategory.INVALID_SUBMIT_PARAMS + InvalidSubmitParamError.WRONG_MISSION_FILE_FORMAT) && (data.error < ErrorCategory.INVALID_SUBMIT_PARAMS + 100)) ||
+                                (data.error === ErrorCategory.OTHER + OtherError.TITLE_ALREADY_EXISTS))) {
+                    this._resetSubmitFile();
+                }
             }.bind(this));
         }.bind(this);
         this._fileInput.hide();
@@ -789,7 +916,9 @@ define([
      */
     MissionsScreen.prototype.show = function () {
         if (screens.HTMLScreen.prototype.show.call(this)) {
-            this._missionToSubmit = null;
+            if (this._community) {
+                this._resetSubmitFile();
+            }
             this._updateValues();
             return true;
         }
