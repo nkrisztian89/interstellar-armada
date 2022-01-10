@@ -1,0 +1,16 @@
+Küldetés Központ (Mission Hub) felhasználási feltételek
+2022. Január 10.
+
+Készült az Interstellar Armada: Galactic Ace nyílt forráskodú játék (elérhető: https://nkrisztian89.github.io/interstellar-armada), továbbiakban "a játék",
+azon belül különösen a küldetésmegosztó funkció, továbbiakban "Küldetés Központ" vonatkozásában
+a játék fejlesztője: Nagy Krisztián (elérhetőség: armada.galactic.ace@gmail.com), továbbiakban "a fejlesztő" által
+
+A Beküldés gombra kattintással tudomásul veszem, hogy a megadott felhasználónevem, a megjegyzés és a kiválasztott küldetés fájl megosztásra kerül a fejlesztővel kiértékelés (letöltés és tesztelés), továbbá esetlegesen a többi játékos részére (a megadott felhasználónevem alatti) nyilvánosságra hozatal céljából.
+
+Beleegyezek, hogy nem osztok meg személyes adatot (olyan információt, amelynek segítségével közvetlenül vagy közvetetten személyek személyazonossága állapítható meg, vagy fizikai vagy online kapcsolatfelvétel válik lehetségessé velük, ide értve például (de nem kizárólagosan) a teljes neveket, címeket, telefonszámokat vagy email címeket) a felhasználónévben, a megjegyzésben vagy a beküldött küldetésfájlban. Tanúsítom, hogy a beküldendő küldetésfájlt én magam készítettem, és a játéknak megfelelő formátumú, érvényes küldetésfájl. Vállalom, hogy sem a megadott felhasználónév, sem a megjegyzés, sem a küldetésfájl nem tartalmaz kártékony kódot, olyan információt, melyet nem áll jogomban megosztani, vagy olyan szellemi tulajdont, amelynek nem én vagyok a tulajdonosa.
+
+Ezúton engedélyt adok a fejlesztőnek és a játék többi játékosának, hogy a küldetésemet letöltse, másolatokat készítsen róla, játsszon vele, továbbadja, vagy saját alkotásai alapjaként felhasználja, és azokat a saját neve alatt megjelentesse. A feltöltött küldetésem eltávolítását jogomban áll kérni, ám ez nem fog kihatni a róla készült esetleges másolatokra vagy rajta alapuló alkotásokra, melyeket a fejlesztő vagy a játékosok készítettek.
+
+Tudomásul veszem, hogy a fejlesztő nem vállal felelősséget semmilyen kárért vagy veszteségért, ami a küldetésem nyilvánosságra hozatalával (a fejlesztő vagy játékosok általi letöltésével, játékával vagy a küldetésemmel történő bármilyen más interakcióval) hozható kapcsolatba. A garanciával és felelősségvállalással kapcsolatos további részletekért lásd a játék licenszfeltételeit (különösképpen a 15. és 16. pontot). Tudomásul veszem, hogy a Küldetés Központ bármikor előzetes értesítés nélkül elérhetetlenné válhat, a fejlesztése abbamaradhat, vagy a feltöltött küldetéseim törlésre kerülhetnek, és ez engem a fejlesztővel szemben semmilyen kártérítési igényre nem jogosít.
+
+Tanúsítom, hogy jogosult vagyok a játékkal a fent leírtak szerint interakcióba lépni, és ezeket a feltételeket végigolvastam és teljesen megértettem.

@@ -61,6 +61,7 @@ define([
             SUBMIT_MISSION_CANCEL_BUTTON_ID = "submitMissionCancelButton",
             INFO_BOX_ID = "infoBox",
             LOADING_BOX_ID = "loadingBox",
+            MISSION_HUB_TERMS_LINK_ID = "missionHubTermsLink",
             MIN_SENDER_NAME_LENGTH = 3,
             MAX_SENDER_NAME_LENGTH = 20,
             MIN_PASSWORD_LENGTH = 8,
@@ -305,7 +306,7 @@ define([
                 [{
                         id: strings.MISSIONS.SUBMIT_MISSION_ACCEPT_TERMS.name,
                         replacements: {
-                            linkBegin: '<a href="license/mission-hub.txt" target="_blank" rel="noreferrer">',
+                            linkBegin: '<a id="' + MISSION_HUB_TERMS_LINK_ID + '" target="_blank" rel="noreferrer">',
                             linkEnd: '</a>'
                         },
                         value: "accept"
@@ -905,10 +906,15 @@ define([
      * @override
      */
     MissionsScreen.prototype._updateComponents = function () {
+        var missionHubTermsLink;
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._difficultySelector.setValueList(_getDifficultyValues());
         this._updateValues();
         this._updateScores();
+        missionHubTermsLink = document.getElementById(MISSION_HUB_TERMS_LINK_ID);
+        if (missionHubTermsLink) {
+            missionHubTermsLink.href = "license/mission-hub-" + strings.getLanguage() + ".txt";
+        }
     };
     /**
      * @override
