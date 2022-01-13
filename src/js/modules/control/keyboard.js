@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
  * catch and process input from the keyboard.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -53,47 +53,41 @@ define([
     /**
      * @class Represents a key (combination) - action association.
      * @extends ControlBinding
-     * @param {Object|String} [dataJSONOrActionName] If a string is given, it will
+     * @param {Object} [dataJSON] If a string is given, it will
      * be taken as the name of the action to be assigned. Otherwise it is taken as
      * a JSON object storing all the properties.
-     * @param {String} [key] The string representation of the key associated in this
-     * binding.
-     * @param {Boolean} [shiftState] Whether shift should be pressed in this key 
-     * combination (next to the primary key being pressed).
-     * @param {Boolean} [ctrlState] Whether ctrl should be pressed in this key 
-     * combination (next to the primary key being pressed).
-     * @param {Boolean} [altState] Whether alt should be pressed in this key 
-     * combination (next to the primary key being pressed).
+     * @param {String} [profileName] The name of the input profile this binding
+     * belongs to
      */
-    function KeyBinding(dataJSONOrActionName, key, shiftState, ctrlState, altState) {
+    function KeyBinding(dataJSON, profileName) {
         /**
          * The string representation of the key. 
          * @see KeyboardInputInterpreter#getKeyCodeTable
          * @type String
          */
-        this._key = key || null;
+        this._key = null;
         /**
          * The key code of the key, same as passed in the keyCode property of the event
          * argument of key event handlers.
          * @type Number
          */
-        this._keyCode = utils.getKeyCodeOf(key);
+        this._keyCode = 0;
         /**
          * Whether shift should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._shiftState = (shiftState === undefined) ? false : (shiftState || (this._keyCode === SHIFT_CODE));
+        this._shiftState = false;
         /**
          * Whether ctrl should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._ctrlState = (ctrlState === undefined) ? false : (ctrlState || (this._keyCode === CTRL_CODE));
+        this._ctrlState = false;
         /**
          * Whether alt should be pressed in this key combination (next to _key being pressed).
          * @type Boolean
          */
-        this._altState = (altState === undefined) ? false : (altState || (this._keyCode === ALT_CODE));
-        control.ControlBinding.call(this, dataJSONOrActionName);
+        this._altState = false;
+        control.ControlBinding.call(this, dataJSON, profileName);
         application.log_DEBUG("Created key binding: " + this._actionName + " - " + this.getControlString(), 3);
     }
     KeyBinding.prototype = new control.ControlBinding();
@@ -345,7 +339,7 @@ define([
      * @returns {(ActionTrigger|null)} Null, if the action is not triggered
      */
     KeyboardInputInterpreter.prototype.checkAction = function (actionName) {
-        return (this._bindings[actionName].isTriggered(this._currentlyPressedKeys)) ?
+        return (this._currentProfile[actionName].isTriggered(this._currentlyPressedKeys)) ?
                 {name: actionName, source: this} :
                 null;
     };
@@ -353,7 +347,6 @@ define([
     // The public interface of the module
     return {
         setModulePrefix: setModulePrefix,
-        KeyBinding: KeyBinding,
         KeyboardInputInterpreter: KeyboardInputInterpreter
     };
 });

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides general functionality to handle various types of user input.
  * Provides a base input interpreter class which can be subclassed for each needed input device to catch and process its inputs, 
  * translating it to actions using a list of bindings added to the interpreter.
@@ -26,26 +26,33 @@ define([
     "modules/strings"
 ], function (utils, application, asyncResource) {
     "use strict";
+    var
+            // ----------------------------------------------------------------------
+            // constants
+            DEFAULT_PROFILE_NAME = "default";
     // #########################################################################
     /**
      * @class A generic superclass for classes that represent the bindig of certain controls to an action.
      * A subclass should be created for each specific input device that implements setting, loading, saving,
      * comparing control settings for the binding and checking the action trigger state.
-     * @param {(Object|String)} dataJSONOrActionName
+     * @param {Object} dataJSON
+     * @param {String} [profileName] The name of the input profile this binding
+     * belongs to
      */
-    function ControlBinding(dataJSONOrActionName) {
+    function ControlBinding(dataJSON, profileName) {
         /**
          * Name of the action the stored control is assigned to. {@link Controller}s
          * will process this name and execute the appropriate action.
          * @type String
          */
-        this._actionName = ((typeof dataJSONOrActionName) === "string" ?
-                dataJSONOrActionName :
-                null);
+        this._actionName = null;
+        /**
+         * The name of the input profile this binding belongs to
+         * @type String
+         */
+        this._profileName = profileName;
         // if a JSON object was specified, initialize the properties from there
-        if ((typeof dataJSONOrActionName) === "object") {
-            this.loadFromJSON(dataJSONOrActionName);
-        }
+        this.loadFromJSON(dataJSON);
     }
     /**
      * Returns the name of the action assigned in this binding. Has to be a name
@@ -61,9 +68,12 @@ define([
      * @param {Object} dataJSON
      */
     ControlBinding.prototype.loadFromJSON = function (dataJSON) {
-        this._actionName = dataJSON.action;
+        this._actionName = dataJSON ? dataJSON.action : null;
     };
     // #########################################################################
+    /**
+     * @typedef {Object.<String, ControlBinding>} InputProfile
+     */
     /**
      * @class A generic common superclass for input interpreters which needs to be subclassed for each different input device.
      * This class provides the common general functionality. The subclasses need to add their model of the input device's state,
@@ -93,10 +103,20 @@ define([
          */
         this._bindingClass = bindingClass;
         /**
-         * An associative array storing the active bindings by the names of the actions that they are associated to.
-         * @type Object.<String, ControlBinding>
+         * Each profile contains control bindings, one profile can be set as the current one to use
+         * @type Object.<String, InputProfile>
          */
-        this._bindings = {};
+        this._profiles = {};
+        /**
+         * The currently selected profile containing the active control bindings
+         * @type InputProfile
+         */
+        this._currentProfile = null;
+        /**
+         * The string ID (key within the _profiles object) of the currently selected profile
+         * @type String
+         */
+        this._currentProfileName = null;
         /**
          * Associative array of the names of disabled actions. The action names are
          * the keys, and if the corresponding action is disabled, the value is true.
@@ -194,6 +214,16 @@ define([
         }
     };
     /**
+     * Set the profile by its string ID (key). The profile determines the active control bindings
+     * @param {String} name
+     */
+    InputInterpreter.prototype.setProfile = function (name) {
+        if (this._profiles.hasOwnProperty(name)) {
+            this._currentProfile = this._profiles[name];
+            this._currentProfileName = name;
+        }
+    };
+    /**
      * If there is no control bound yet to the action associated with the passed 
      * binding, adds the binding. If there already is a binding, overwrites it with
      * the passed binding, as there can be no two different controls bound to the
@@ -201,15 +231,16 @@ define([
      * @param {ControlBinding} binding
      */
     InputInterpreter.prototype.setBinding = function (binding) {
-        this._bindings[binding.getActionName()] = binding;
+        this._currentProfile[binding.getActionName()] = binding;
     };
     /**
      * Sets (adds or overwrites) the binding associated with the action of the 
      * passed binding, and also stores the binding in HTML5 local storage. This 
      * method is for setting custom local bindings.
-     * @param {ControlBinding} binding
+     * @param {Object} dataJSON
      */
-    InputInterpreter.prototype.setAndStoreBinding = function (binding) {
+    InputInterpreter.prototype.setAndStoreBinding = function (dataJSON) {
+        var binding = new this._bindingClass(dataJSON, this._currentProfileName);
         this.setBinding(binding);
         binding.saveToLocalStorage();
     };
@@ -219,9 +250,35 @@ define([
      * @param {Object} dataJSON
      */
     InputInterpreter.prototype.loadFromJSON = function (dataJSON) {
-        var i;
-        for (i = 0; i < dataJSON.bindings.length; i++) {
-            this.setBinding(new this._bindingClass(dataJSON.bindings[i]));
+        var i, j, profileName, profile, chain;
+        if (dataJSON.profiles) {
+            for (profileName in dataJSON.profiles) {
+                if (dataJSON.profiles.hasOwnProperty(profileName)) {
+                    profile = dataJSON.profiles[profileName];
+                    chain = [dataJSON.profiles[profileName].bindings];
+                    while (profile.basedOn && dataJSON.profiles.hasOwnProperty(profile.basedOn)) {
+                        chain.unshift(dataJSON.profiles[profile.basedOn].bindings);
+                        profile = dataJSON.profiles[profile.basedOn];
+                    }
+                    this._profiles[profileName] = {};
+                    this._currentProfile = this._profiles[profileName];
+                    for (i = 0; i < chain.length; i++) {
+                        for (j = 0; j < chain[i].length; j++) {
+                            this.setBinding(new this._bindingClass(chain[i][j], profileName));
+                        }
+
+                    }
+                }
+            }
+            this._currentProfile = this._profiles[dataJSON.defaultProfile];
+            this._currentProfileName = dataJSON.defaultProfile;
+        } else {
+            this._profiles[DEFAULT_PROFILE_NAME] = {};
+            this._currentProfile = this._profiles[DEFAULT_PROFILE_NAME];
+            this._currentProfileName = DEFAULT_PROFILE_NAME;
+            for (i = 0; i < dataJSON.bindings.length; i++) {
+                this.setBinding(new this._bindingClass(dataJSON.bindings[i], DEFAULT_PROFILE_NAME));
+            }
         }
     };
     /**
@@ -230,9 +287,9 @@ define([
      */
     InputInterpreter.prototype.loadFromLocalStorage = function () {
         var actionName;
-        for (actionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(actionName)) {
-                this._bindings[actionName].loadFromLocalStorage();
+        for (actionName in this._currentProfile) {
+            if (this._currentProfile.hasOwnProperty(actionName)) {
+                this._currentProfile[actionName].loadFromLocalStorage();
             }
         }
     };
@@ -241,9 +298,9 @@ define([
      */
     InputInterpreter.prototype.removeFromLocalStorage = function () {
         var actionName;
-        for (actionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(actionName)) {
-                this._bindings[actionName].removeFromLocalStorage();
+        for (actionName in this._currentProfile) {
+            if (this._currentProfile.hasOwnProperty(actionName)) {
+                this._currentProfile[actionName].removeFromLocalStorage();
             }
         }
     };
@@ -253,8 +310,8 @@ define([
      * @returns {String}
      */
     InputInterpreter.prototype.getControlStringForAction = function (actionName) {
-        if (this._bindings[actionName] !== undefined) {
-            return this._bindings[actionName].getControlString();
+        if (this._currentProfile[actionName] !== undefined) {
+            return this._currentProfile[actionName].getControlString();
         }
         return "";
     };
@@ -314,10 +371,10 @@ define([
         if (!this.isListening() || !this.isEnabled()) {
             return result;
         }
-        for (actionName in this._bindings) {
-            if (this._bindings.hasOwnProperty(actionName)) {
+        for (actionName in this._currentProfile) {
+            if (this._currentProfile.hasOwnProperty(actionName)) {
                 if (!this._disabledActions[actionName] && (!actionFilterFunction || actionFilterFunction(actionName))) {
-                    this._addActionByBinding(actionsByBindings, this.checkAction(actionName), this._bindings[actionName]);
+                    this._addActionByBinding(actionsByBindings, this.checkAction(actionName), this._currentProfile[actionName]);
                 }
             }
         }

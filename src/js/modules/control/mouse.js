@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
  * catch and process input from the mouse.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -117,8 +117,10 @@ define([
      * @extends ControlBinding
      * @param {Object} [dataJSON] If given, the properties will be initialized from
      * the data stored in this JSON object.
+     * @param {String} [profileName] The name of the input profile this binding
+     * belongs to
      */
-    function MouseBinding(dataJSON) {
+    function MouseBinding(dataJSON, profileName) {
         /**
          * Which mouse button should be pressed to trigger this binding.
          * Possible values:
@@ -179,7 +181,7 @@ define([
          * @default 0
          */
         this._scrollY = 0;
-        control.ControlBinding.call(this, dataJSON);
+        control.ControlBinding.call(this, dataJSON, profileName);
     }
     MouseBinding.prototype = new control.ControlBinding();
     MouseBinding.prototype.constructor = MouseBinding;
@@ -678,7 +680,7 @@ define([
      */
     MouseInputInterpreter.prototype.checkAction = function (actionName) {
         var actionIntensity =
-                this._bindings[actionName].getTriggeredIntensity(
+                this._currentProfile[actionName].getTriggeredIntensity(
                 this._currentlyPressedButtons,
                 this._mousePosition,
                 this._mousePositionChange,
@@ -687,7 +689,7 @@ define([
         return (actionIntensity >= 0) ?
                 {
                     name: actionName,
-                    intensity: (this._bindings[actionName].isMeasuredFromCenter() === true) ?
+                    intensity: (this._currentProfile[actionName].isMeasuredFromCenter() === true) ?
                             Math.min(1, Math.max(0, actionIntensity - this._displacementDeadzone) * this._displacementFactor) :
                             (actionIntensity * this._moveSensitivity),
                     source: this
@@ -729,7 +731,6 @@ define([
     // The public interface of the module
     return {
         setModulePrefix: setModulePrefix,
-        MouseBinding: MouseBinding,
         MouseInputInterpreter: MouseInputInterpreter
     };
 });

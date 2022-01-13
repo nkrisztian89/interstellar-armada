@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021, Krisztián Nagy
+ * Copyright 2014-2022, Krisztián Nagy
  * @file This module manages and provides the Control settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -123,12 +123,13 @@ define([
         }
         // respect the shift, ctrl, alt states and set the new key for the action
         var interpreter = control.getInputInterpreter(control.KEYBOARD_NAME);
-        interpreter.setAndStoreBinding(new control.KeyBinding(
-                _actionUnderSetting,
-                utils.getKeyOfCode(event.keyCode),
-                _settingShiftState,
-                _settingCtrlState,
-                _settingAltState));
+        interpreter.setAndStoreBinding({
+            action: _actionUnderSetting,
+            key: utils.getKeyOfCode(event.keyCode),
+            shift: _settingShiftState,
+            ctrl: _settingCtrlState,
+            alt: _settingAltState
+        });
         _stopKeySetting();
     }
     /**

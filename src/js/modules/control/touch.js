@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2021 Krisztián Nagy
+ * Copyright 2018-2022 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
  * catch and process input from a touchscreen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -161,8 +161,10 @@ define([
      * @extends ControlBinding
      * @param {Object} [dataJSON] If given, the properties will be initialized from
      * the data stored in this JSON object.
+     * @param {String} [profileName] The name of the input profile this binding
+     * belongs to
      */
-    function TouchBinding(dataJSON) {
+    function TouchBinding(dataJSON, profileName) {
         /**
          * The area on the screen where to touch for this gesture (like texture coordinates: [0,0] top left to [1,1] bottom right)
          * x (Number[2]): X range, y( Number[2]): Y range
@@ -230,7 +232,7 @@ define([
          * @type Number
          */
         this._rangeFactor = 0;
-        control.ControlBinding.call(this, dataJSON);
+        control.ControlBinding.call(this, dataJSON, profileName);
     }
     TouchBinding.prototype = new control.ControlBinding();
     TouchBinding.prototype.constructor = TouchBinding;
@@ -242,7 +244,7 @@ define([
     TouchBinding.prototype._initDerivedProperties = function () {
         this._areaPx = utils.deepCopy(this._area);
         switch (this._type) {
-            case GestureType.TWO_POINT_TAP: 
+            case GestureType.TWO_POINT_TAP:
                 this._count = 2;
                 break;
             case GestureType.THREE_POINT_TAP:
@@ -272,7 +274,7 @@ define([
         if ((typeof dataJSON.type) === "string") {
             this._type = utils.getSafeEnumValueForKey(GestureType, dataJSON.type);
         }
-        this._range  = dataJSON.range || DEFAULT_MOVE_RANGE;
+        this._range = dataJSON.range || DEFAULT_MOVE_RANGE;
         this._moveX = 0;
         this._moveY = 0;
         if ((typeof dataJSON.direction) === "string") {
@@ -377,7 +379,7 @@ define([
                     if (touch.age > this._timeout) {
                         return 0;
                     }
-                    if ((touch.capturedBy === null) && (this._touchStartedInArea(touch)) && 
+                    if ((touch.capturedBy === null) && (this._touchStartedInArea(touch)) &&
                             (Math.abs(touch.currentX - touch.startX) <= TAP_DEADZONE) &&
                             (Math.abs(touch.currentY - touch.startY) <= TAP_DEADZONE) && (touch.finished === true)) {
                         touch.capturedBy = this;
@@ -433,7 +435,7 @@ define([
                             break;
                         }
                         // check if this touch is applicable - in the right area, now a swipe, not captured
-                        if ((touch.capturedBy === null) && (this._touchStartedInArea(touch)) && 
+                        if ((touch.capturedBy === null) && (this._touchStartedInArea(touch)) &&
                                 (Math.abs(touch.currentX - touch.startX) <= TAP_DEADZONE) &&
                                 (Math.abs(touch.currentY - touch.startY) <= TAP_DEADZONE)) {
                             // if we haven't yet found enough touches, we add this one, but if there are more than what we need, cancel
@@ -464,13 +466,13 @@ define([
                     touch = touches[i];
                     if (touch.finished === true) {
                         long = touch.age >= SWIPE_TIMEOUT;
-                        if (!long && this._touchStartedInArea(touch) && 
+                        if (!long && this._touchStartedInArea(touch) &&
                                 ((((touch.currentX - touch.startX) > TAP_DEADZONE) && (this._moveX > 0)) ||
-                                (((touch.currentX - touch.startX) < -TAP_DEADZONE) && (this._moveX < 0)) ||
-                                (((touch.currentY - touch.startY) > TAP_DEADZONE) && (this._moveY > 0)) ||
-                                (((touch.currentY - touch.startY) < -TAP_DEADZONE) && (this._moveY < 0)))) {
+                                        (((touch.currentX - touch.startX) < -TAP_DEADZONE) && (this._moveX < 0)) ||
+                                        (((touch.currentY - touch.startY) > TAP_DEADZONE) && (this._moveY > 0)) ||
+                                        (((touch.currentY - touch.startY) < -TAP_DEADZONE) && (this._moveY < 0)))) {
                             return 1;
-                        } 
+                        }
                     }
                 }
                 return 0;
@@ -500,13 +502,13 @@ define([
                     touch = touches[i];
                     if (touch.finished === true) {
                         long = touch.age >= SHORT_TAP_TIMEOUT;
-                        if (!long && this._touchStartedInArea(touch) && 
+                        if (!long && this._touchStartedInArea(touch) &&
                                 (Math.abs(touch.currentX - touch.startX) <= MOVE_DEADZONE) &&
                                 (Math.abs(touch.currentY - touch.startY) <= MOVE_DEADZONE)) {
                             this._currentX = 0;
                             this._currentY = 0;
                             return 0;
-                        } 
+                        }
                     }
                 }
                 // change offset (currentX, currentY) based on ongoing touch:
@@ -640,9 +642,9 @@ define([
      */
     TouchInputInterpreter.prototype.setScreenCenter = function (x, y) {
         var i, keys;
-        keys = Object.keys(this._bindings);
+        keys = Object.keys(this._currentProfile);
         for (i = 0; i < keys.length; i++) {
-            this._bindings[keys[i]].setScreenSize(x * 2, y * 2);
+            this._currentProfile[keys[i]].setScreenSize(x * 2, y * 2);
         }
     };
     /**
@@ -773,7 +775,7 @@ define([
      * @returns {(ActionTrigger|null)} Null, if the action is not triggered
      */
     TouchInputInterpreter.prototype.checkAction = function (actionName) {
-        var intensity = this._bindings[actionName].getTriggeredIntensity(this._touches);
+        var intensity = this._currentProfile[actionName].getTriggeredIntensity(this._touches);
         if (intensity > 0) {
             return {
                 name: actionName,
@@ -811,7 +813,6 @@ define([
     // The public interface of the module
     return {
         setModulePrefix: setModulePrefix,
-        TouchBinding: TouchBinding,
         TouchInputInterpreter: TouchInputInterpreter
     };
 });

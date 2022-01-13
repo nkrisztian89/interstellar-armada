@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
  * catch and process input from a joystick or gamepad.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -17,11 +17,12 @@ define([
     "modules/application",
     "modules/strings",
     "modules/control/control"
-], function (utils, application,  strings, control) {
+], function (utils, application, strings, control) {
     "use strict";
     var
             // ----------------------------------------------------------------------
             // constants
+            DELIMITER = "_",
             GAMEPAD_BUTTON_INDEX_SUFFIX = "_gamepad_button",
             GAMEPAD_AXIS_INDEX_SUFFIX = "_gamepad_axisIndex",
             GAMEPAD_AXIS_POSITIVE_SUFFIX = "_gamepad_axisPositive",
@@ -66,8 +67,10 @@ define([
      * @extends ControlBinding
      * @param {Object} [dataJSON] If given, the properties will be initialized from
      * the data stored in this JSON object.
+     * @param {String} [profileName] The name of the input profile this binding
+     * belongs to
      */
-    function GamepadBinding(dataJSON) {
+    function GamepadBinding(dataJSON, profileName) {
         /**
          * Which mouse button should be pressed to trigger this binding.
          * @type Number
@@ -83,7 +86,7 @@ define([
          * @type Boolean
          */
         this._axisPositive = false;
-        control.ControlBinding.call(this, dataJSON);
+        control.ControlBinding.call(this, dataJSON, profileName);
     }
     GamepadBinding.prototype = new control.ControlBinding();
     GamepadBinding.prototype.constructor = GamepadBinding;
@@ -115,13 +118,21 @@ define([
         }
     };
     /**
+     * Get the prefix to be used when storing the data of this binding in local storage
+     * @returns {String}
+     */
+    GamepadBinding.prototype._getLocalStoragePrefix = function () {
+        return _modulePrefix + this._profileName + DELIMITER + this._actionName;
+    };
+    /**
      * @override
      * Saves the properties of this binding to HTML5 local storage.
      */
     GamepadBinding.prototype.saveToLocalStorage = function () {
-        localStorage[_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX] = this._button;
-        localStorage[_modulePrefix + this._actionName + GAMEPAD_AXIS_INDEX_SUFFIX] = this._axisIndex;
-        localStorage[_modulePrefix + this._actionName + GAMEPAD_AXIS_POSITIVE_SUFFIX] = this._axisPositive;
+        var prefix = this._getLocalStoragePrefix();
+        localStorage[prefix + GAMEPAD_BUTTON_INDEX_SUFFIX] = this._button;
+        localStorage[prefix + GAMEPAD_AXIS_INDEX_SUFFIX] = this._axisIndex;
+        localStorage[prefix + GAMEPAD_AXIS_POSITIVE_SUFFIX] = this._axisPositive;
     };
     /**
      * @override
@@ -129,10 +140,11 @@ define([
      * storage object.
      */
     GamepadBinding.prototype.loadFromLocalStorage = function () {
-        if (localStorage[_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX] !== undefined) {
-            this._button = parseInt(localStorage[_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX], 10);
-            this._axisIndex = parseInt(localStorage[_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX], 10);
-            this._axisPositive = (localStorage[_modulePrefix + this._actionName + GAMEPAD_AXIS_POSITIVE_SUFFIX] === "true");
+        var prefix = this._getLocalStoragePrefix();
+        if (localStorage[prefix + GAMEPAD_BUTTON_INDEX_SUFFIX] !== undefined) {
+            this._button = parseInt(localStorage[prefix + GAMEPAD_BUTTON_INDEX_SUFFIX], 10);
+            this._axisIndex = parseInt(localStorage[prefix + GAMEPAD_BUTTON_INDEX_SUFFIX], 10);
+            this._axisPositive = (localStorage[prefix + GAMEPAD_AXIS_POSITIVE_SUFFIX] === "true");
         }
     };
     /**
@@ -140,9 +152,10 @@ define([
      * Removes the properties of this binding from the HTML5 local storage.
      */
     GamepadBinding.prototype.removeFromLocalStorage = function () {
-        localStorage.removeItem(_modulePrefix + this._actionName + GAMEPAD_BUTTON_INDEX_SUFFIX);
-        localStorage.removeItem(_modulePrefix + this._actionName + GAMEPAD_AXIS_INDEX_SUFFIX);
-        localStorage.removeItem(_modulePrefix + this._actionName + GAMEPAD_AXIS_POSITIVE_SUFFIX);
+        var prefix = this._getLocalStoragePrefix();
+        localStorage.removeItem(prefix + GAMEPAD_BUTTON_INDEX_SUFFIX);
+        localStorage.removeItem(prefix + GAMEPAD_AXIS_INDEX_SUFFIX);
+        localStorage.removeItem(prefix + GAMEPAD_AXIS_POSITIVE_SUFFIX);
     };
     /**
      * Returns how much is the gamepad action  triggered according to the current gamepad 
@@ -162,8 +175,16 @@ define([
         // first if this is a button assignment, check the state of the appropriate
         // gamepad button
         if (this._button !== this.BUTTON_NONE) {
-            return (gamepad.buttons[this._button] === 1.0 ||
-                    ((typeof (gamepad.buttons[this._button]) === "object") && gamepad.buttons[this._button].pressed)) ? 1 : 0;
+            if (typeof gamepad.buttons[this._button] === "number") {
+                return gamepad.buttons[this._button];
+            }
+            if (typeof gamepad.buttons[this._button] === "object") {
+                if (typeof gamepad.buttons[this._button].value === "number") {
+                    return gamepad.buttons[this._button].value;
+                }
+                return gamepad.buttons[this._button].pressed ? 1 : 0;
+            }
+            return 0;
         }
         if (this._axisIndex !== this.AXIS_NONE) {
             return Math.max((gamepad.axes[this._axisIndex] * (this._axisPositive ? 1 : -1)), 0);
@@ -340,7 +361,7 @@ define([
      */
     GamepadInputInterpreter.prototype.checkAction = function (actionName) {
         var baseIntensity, i, finalIntensity;
-        baseIntensity = this._bindings[actionName].getTriggeredIntensity(this._gamepad);
+        baseIntensity = this._currentProfile[actionName].getTriggeredIntensity(this._gamepad);
         if (baseIntensity > 0) {
             for (i = 0; i < this._sensitivityActionGroups.length; i++) {
                 finalIntensity = this._sensitivityActionGroups[i].getIntensityForAction(baseIntensity, actionName);
@@ -392,7 +413,6 @@ define([
     // The public interface of the module
     return {
         setModulePrefix: setModulePrefix,
-        GamepadBinding: GamepadBinding,
         GamepadInputInterpreter: GamepadInputInterpreter
     };
 });

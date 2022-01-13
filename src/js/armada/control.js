@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Provides functionality to load and access control configuration and settings for Interstellar Armada.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -49,6 +49,7 @@ define([
             GENERAL_CONTROLLER_NAME = "general",
             FIGHTER_CONTROLLER_NAME = "fighter",
             CAMERA_CONTROLLER_NAME = "camera",
+            MODULE_PREFIX = "interstellarArmada_control_",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -103,10 +104,10 @@ define([
                     _missileChangeSound.play();
                 }
             };
-    keyboard.setModulePrefix("interstellarArmada_control_");
-    mouse.setModulePrefix("interstellarArmada_control_");
-    gamepad.setModulePrefix("interstellarArmada_control_");
-    touch.setModulePrefix("interstellarArmada_control_");
+    keyboard.setModulePrefix(MODULE_PREFIX);
+    mouse.setModulePrefix(MODULE_PREFIX);
+    gamepad.setModulePrefix(MODULE_PREFIX);
+    touch.setModulePrefix(MODULE_PREFIX);
     // #########################################################################
     /**
      * Creates a general controller object.
@@ -651,7 +652,6 @@ define([
         GENERAL_CONTROLLER_NAME: GENERAL_CONTROLLER_NAME,
         FIGHTER_CONTROLLER_NAME: FIGHTER_CONTROLLER_NAME,
         CAMERA_CONTROLLER_NAME: CAMERA_CONTROLLER_NAME,
-        KeyBinding: keyboard.KeyBinding,
         loadConfigurationFromJSON: _context.loadConfigurationFromJSON.bind(_context),
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
         loadSettingsFromLocalStorage: _context.loadSettingsFromLocalStorage.bind(_context),
