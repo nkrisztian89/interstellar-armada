@@ -710,6 +710,20 @@ define(function () {
         return result;
     };
     /**
+     * Whether the passed string represents a valid hexadecimal number
+     * @param {String} value
+     * @returns {Boolean}
+     */
+    exports.isHexString = function (value) {
+        var i;
+        for (i = 0; i < value.length; i++) {
+            if (isNaN(parseInt(value[i], 16))) {
+                return false;
+            }
+        }
+        return true;
+    };
+    /**
      * Solves the quadratic equation a * x^2 + b * x + c = 0 for x, and returns the greater of the two solutions. Returns NaN if there is
      * no solution.
      * @param {Number} a

@@ -1,7 +1,7 @@
 /**
  * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides an input interpreter subclass (based on the base class provided by the generic control module) to
- * catch and process input from a joystick or gamepad.
+ * catch and process input from a joystick or gamepad using the Gamepad API.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  */
@@ -26,6 +26,11 @@ define([
             GAMEPAD_BUTTON_INDEX_SUFFIX = "_gamepad_button",
             GAMEPAD_AXIS_INDEX_SUFFIX = "_gamepad_axisIndex",
             GAMEPAD_AXIS_POSITIVE_SUFFIX = "_gamepad_axisPositive",
+            PREFERRED_GAMEPAD_SUFFIX = "preferredGamepad",
+            PREFERRED_GAMEPAD_NULL_VALUE = "null",
+            EMPTY_LIST = [],
+            GAMEPAD_UNSET = -2,
+            GAMEPAD_DISABLED = -1,
             // ----------------------------------------------------------------------
             // string definitions for translation of control strings
             JOYSTICK_BUTTON = {
@@ -50,7 +55,29 @@ define([
              * When saving to or loading from local storage, the names of any settings of this module will be prefixed by this string.
              * @type String
              */
-            _modulePrefix = "";
+            _modulePrefix = "",
+            /**
+             * Whether the Gamepad API is supported by the browser
+             * @type Boolean
+             */
+            _gamepadsSupported = !!navigator.getGamepads,
+            // -------------------------------------------------------------------------
+            /**
+             * Public function to query the list of Gamepad objects detected by the browser.
+             * Chrome (97) returns the nonstandard GamepadList object, while Firefox (96)
+             * returns an array of Gamepad objects. GamepadList has a [] operator and length
+             * property similar to arrays, but other array functions (indexOf, map etc) don't
+             * work with it. It is planned to be switched to an array in later versions.
+             * @type Function
+             * @returns {Gamepad[]|GamepadList}
+             */
+            getDevices = _gamepadsSupported ?
+            function () {
+                return navigator.getGamepads();
+            } :
+            function () {
+                return EMPTY_LIST;
+            };
     // -------------------------------------------------------------------------
     // functions
     /**
@@ -282,6 +309,17 @@ define([
          */
         this._gamepad = null;
         /**
+         * The index of the gamepad that was specifically selected by the user to be used
+         * @type Number
+         */
+        this._gamepadSetIndex = localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX] === PREFERRED_GAMEPAD_NULL_VALUE ? GAMEPAD_DISABLED : GAMEPAD_UNSET;
+        /**
+         * Whether the next time we are querying the list of connected gamepads, we should
+         * try to find and select the one the user chose last time
+         * @type Boolean
+         */
+        this._detectingPreference = !!localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX];
+        /**
          * 
          * @type GamepadSensitivityActionGroup[]
          */
@@ -326,7 +364,7 @@ define([
      * @param {GamepadEvent} event
      */
     GamepadInputInterpreter.prototype.handleGamepadConnected = function (event) {
-        if (!this._gamepad) {
+        if (!this._gamepad && (this._gamepadSetIndex === GAMEPAD_UNSET)) {
             this._gamepad = event.gamepad;
         }
     };
@@ -382,6 +420,52 @@ define([
         return null;
     };
     /**
+     * Query the list of gamepads returned by the Gamepad API and select the one to be used 
+     * @returns {Gamepad} The chosen Gamepad object is also returned
+     */
+    GamepadInputInterpreter.prototype.updateGamepad = function () {
+        var gamepads, i, preferredGamepadId;
+        gamepads = getDevices();
+        // if the player selected a specific controller to use, we choose it unless it is disconnected
+        if (this._gamepadSetIndex !== GAMEPAD_UNSET) {
+            if (gamepads[this._gamepadSetIndex] !== null) {
+                this._gamepad = gamepads[this._gamepadSetIndex];
+            } else {
+                this._gamepadSetIndex = GAMEPAD_UNSET;
+            }
+        }
+        // if the player hasn't selected a specific controller (or it was disconnected), we choose one automatically
+        if (this._gamepadSetIndex === GAMEPAD_UNSET) {
+            this._gamepad = null;
+            // if we haven't detected any controllers so far, try to choose one based on the previous user preference
+            if (this._detectingPreference) {
+                preferredGamepadId = localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX];
+                for (i = 0; i < gamepads.length; i++) {
+                    if (gamepads[i] !== null) {
+                        this._detectingPreference = false;
+                        if (gamepads[i].id === preferredGamepadId) {
+                            this._gamepadSetIndex = gamepads[i].index;
+                            this._gamepad = gamepads[i];
+                            break;
+                        } else if (this._gamepad === null) {
+                            this._gamepad = gamepads[i];
+                        }
+                    }
+                }
+            } else {
+                // if we don't have a specific controller selected and have already detected controllers in the past,
+                // go with the first connected one
+                for (i = 0; i < gamepads.length; i++) {
+                    if (gamepads[i] !== null) {
+                        this._gamepad = gamepads[i];
+                        break;
+                    }
+                }
+            }
+        }
+        return this._gamepad;
+    };
+    /**
      * @override
      * Returns the list of currently triggered actions and their intensity based on 
      * the internally stored gamepad state and gamepad bindings.
@@ -392,27 +476,53 @@ define([
      * stores the action's name and the intensity (Number) property the intensity.
      */
     GamepadInputInterpreter.prototype.getTriggeredActions = function (actionFilterFunction) {
-        var gamepads;
-        if (!this.isListening()) {
-            return [];
+        if (!this.isListening() || (this._gamepadSetIndex === GAMEPAD_DISABLED)) {
+            return EMPTY_LIST;
         }
         // Firefox continuously updates the Gamepad object obtained from the gamepadconnected event, but it has to be manually
         // refreshed for Chrome to get an up-to-date state, so we do it right before the query
-        gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);
-        if (gamepads && (gamepads.length > 0)) {
-            this._gamepad = gamepads[0];
-        } else {
-            this._gamepad = null;
-        }
-        if (this._gamepad) {
+        this.updateGamepad();
+        if (this._gamepad !== null) {
             return control.InputInterpreter.prototype.getTriggeredActions.call(this, actionFilterFunction);
         }
-        return [];
+        return EMPTY_LIST;
+    };
+    /**
+     * Sets a specific Gamepad to be used and also saves this preference into local storage so that next time the same
+     * controller can be automatically selected from the list of controllers even if it is not the first one
+     * @param {Gamepad|null} gamepad If null, the preference is set to disable all gamepads
+     * @returns {Boolean} Whether the passed gamepad has been successfully selected
+     */
+    GamepadInputInterpreter.prototype.setGamepad = function (gamepad) {
+        var i, gamepads = getDevices();
+        if (!gamepad) {
+            this._gamepadSetIndex = GAMEPAD_DISABLED;
+            localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX] = PREFERRED_GAMEPAD_NULL_VALUE;
+            return true;
+        }
+        for (i = 0; i < gamepads.length; i++) {
+            if (gamepads[i] === gamepad) {
+                this._gamepad = gamepad;
+                this._gamepadSetIndex = gamepad.index;
+                localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX] = gamepad.id;
+                return true;
+            }
+        }
+        return false;
+    };
+    /**
+     * @override
+     */
+    GamepadInputInterpreter.prototype.removeFromLocalStorage = function () {
+        control.InputInterpreter.prototype.removeFromLocalStorage.call(this);
+        localStorage.removeItem(_modulePrefix + PREFERRED_GAMEPAD_SUFFIX);
+        this._gamepadSetIndex = GAMEPAD_UNSET;
     };
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         setModulePrefix: setModulePrefix,
+        getDevices: getDevices,
         GamepadInputInterpreter: GamepadInputInterpreter
     };
 });

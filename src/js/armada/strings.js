@@ -427,6 +427,8 @@ define([
         SETTINGS_TITLE: {name: "controls.settingsTitle"},
         TITLE: {name: "controls.title"},
         MOUSE_TURN_SENSITIVITY: {name: "controls.mouseTurnSensitivity"},
+        CONTROLLER: {name: "controls.controller"},
+        CONTROLLER_DISABLED: {name: "controls.controllerDisabled"},
         CONTROLLER_TYPE_HEADING: {name: "controls.controllerHeading"},
         ACTION: {name: "controls.action"}
     };

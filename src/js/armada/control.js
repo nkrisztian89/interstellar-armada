@@ -49,7 +49,7 @@ define([
             GENERAL_CONTROLLER_NAME = "general",
             FIGHTER_CONTROLLER_NAME = "fighter",
             CAMERA_CONTROLLER_NAME = "camera",
-            MODULE_PREFIX = "interstellarArmada_control_",
+            MODULE_PREFIX = "armada_control_",
             // ------------------------------------------------------------------------------
             // private variables
             /**

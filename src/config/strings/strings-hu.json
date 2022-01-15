@@ -750,7 +750,7 @@
     "inputDevice": {
         "keyboard": "Billentyűzet",
         "mouse": "Egér",
-        "joystick": "Joystick",
+        "joystick": "Kontroller",
         "touch": "Érintőképernyő"
     },
     "touchArea": {
@@ -767,7 +767,12 @@
         "backButton": "Vissza a menübe",
         "title": "Irányítás",
         "settingsTitle": "Beállítások",
+        "mouseTitle": "Egér",
         "mouseTurnSensitivity": "Egérrel fordulás érzékenysége:",
+        "controllerTitle": "Kontroller",
+        "controller": "Kontroller:",
+        "noController": "Nem érzékelhető kontroller. Ha van csatlakoztatott kontroller, nyomd le a gombjait, és várj egy keveset, hogy a játék érzékelhesse.",
+        "controllerDisabled": "letiltva",
         "controllerHeading": "{controllerType} irányítás",
         "action": "Művelet"
     },

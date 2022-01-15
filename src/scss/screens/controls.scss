@@ -2,6 +2,19 @@
 
 .controls.pageContent {
     height: calc(100% - #{2*$separator-height+$page-padding});
+
+    & .selector {
+        margin: 0.25em auto;
+
+        & button {
+        }
+    }
+
+    & div.noController {
+        max-width: 50vw;
+        text-align: center;
+        margin: 0.5em auto;
+    }
 }
 
 .controlsTable {

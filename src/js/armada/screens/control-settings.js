@@ -10,6 +10,7 @@
  * @param screens The controls screen is cubclassed from HTMLScreen
  * @param components Used for creating sliders
  * @param game Used for navigation
+ * @param gamepad Used for querying connected controller devices
  * @param strings Used for translation support
  * @param armadaScreens Used for common screen constants
  * @param control Used to access and modify control settings of the game
@@ -19,10 +20,11 @@ define([
     "modules/screens",
     "modules/components",
     "modules/game",
+    "modules/control/gamepad",
     "armada/strings",
     "armada/screens/shared",
     "armada/control"
-], function (utils, screens, components, game, strings, armadaScreens, control) {
+], function (utils, screens, components, game, gamepad, strings, armadaScreens, control) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -30,9 +32,14 @@ define([
             BACK_BUTTON_ID = "backButton",
             TITLE_HEADING_ID = "title",
             DEFAULTS_BUTTON_ID = "defaultsButton",
+            SETTINGS_TITLE_ID = "settingsTitle",
             SETTINGS_CONTAINER_ID = "settingsContainer",
+            MOUSE_SETTINGS_CONTAINER_ID = "mouseSettingsContainer",
+            NO_CONTROLLER_ID = "noController",
+            CONTROLLER_SETTINGS_CONTAINER_ID = "controllerSettingsContainer",
             TABLES_CONTAINER_ID = "tablesContainer",
             MOUSE_TURN_SENSITIVITY_SLIDER_ID = "mouseTurnSensitivitySlider",
+            CONTROLLER_SELECTOR_ID = "controllerSelector",
             CLICKABLE_CLASS_NAME = "clickable",
             HIGHLIGHTED_CLASS_NAME = "highlightedItem",
             TABLE_TITLE_CLASS_NAME = "controls tableTitle",
@@ -42,6 +49,7 @@ define([
             SHIFT_CODE = 16,
             CTRL_CODE = 17,
             ALT_CODE = 18,
+            DETECT_CONTROLLERS_INTERVAL = 1000,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -66,7 +74,34 @@ define([
              */
             _settingAltState = false;
     // ------------------------------------------------------------------------------
-    // private functions    
+    // private functions
+    /**
+     * Take a gamepad string id (Gamepad.id) as returned by the Gamepad API and
+     * transform it to something more user presentable
+     * @param {String} id
+     * @returns {String}
+     */
+    function _getControllerDisplayName(id) {
+        var index;
+        // Chrome (97) adds the vendor and product codes at the end of gamepad ids
+        index = id.indexOf(' (Vendor:');
+        if (index < 0) {
+            // if the gamepad is mapped to a standard mapping, Chrome (97) adds
+            // STANDARD GAMEPAD before the vendor and product codes
+            index = id.indexOf(' (STANDARD GAMEPAD');
+        }
+        if (index >= 0) {
+            return id.substring(0, index);
+        }
+        // Firefox (96) adds the vendor and product codes before the rest of the id
+        // delimited with dashes
+        if ((id.length > 10) &&
+                utils.isHexString(id.substring(0, 4)) && (id[4] === "-") &&
+                utils.isHexString(id.substring(5, 9)) && (id[9] === "-")) {
+            return id.substring(10);
+        }
+        return id;
+    }
     /**
      * Updates the cell content showing the currently set control for the given action 
      * @param {String} inputDevice
@@ -190,6 +225,18 @@ define([
                 },
                 armadaScreens.BUTTON_EVENT_HANDLERS);
         /**
+         * The id for the gamepad detection interval
+         * @type Number
+         */
+        this._detectGamepadsInterval = -1;
+        /**
+         * The list of connected gamepads returned by the Gamepad API in the same
+         * order as their options are presented in the controller selector
+         * (contains no null values)
+         * @type Gamepad[]
+         */
+        this._gamepadOptions = null;
+        /**
          * @type SimpleComponent
          */
         this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
@@ -197,6 +244,22 @@ define([
          * @type SimpleComponent
          */
         this._titleHeading = this.registerSimpleComponent(TITLE_HEADING_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._settingsTitle = this.registerSimpleComponent(SETTINGS_TITLE_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._settingsContainer = this.registerSimpleComponent(SETTINGS_CONTAINER_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._controllerSettingsContainer = this.registerSimpleComponent(CONTROLLER_SETTINGS_CONTAINER_ID);
+        /**
+         * @type SimpleComponent
+         */
+        this._noController = this.registerSimpleComponent(NO_CONTROLLER_ID);
         /**
          * @type Slider
          */
@@ -215,7 +278,18 @@ define([
                         function (value) {
                             control.getInputInterpreter(control.MOUSE_NAME).setAndStoreDisplacementAreaRelativeSize(1 - value);
                         }),
-                SETTINGS_CONTAINER_ID);
+                MOUSE_SETTINGS_CONTAINER_ID);
+        /**
+         * @type Selector
+         */
+        this._controllerSelector = this.registerExternalComponent(
+                new components.Selector(
+                        CONTROLLER_SELECTOR_ID,
+                        armadaScreens.SELECTOR_SOURCE,
+                        {cssFilename: armadaScreens.SELECTOR_CSS},
+                        {id: strings.CONTROLS.CONTROLLER.name},
+                        []),
+                CONTROLLER_SETTINGS_CONTAINER_ID);
         /**
          * @type SimpleComponent
          */
@@ -239,6 +313,22 @@ define([
             this._generateTables();
             return false;
         }.bind(this);
+        this._settingsTitle.getElement().onclick = function () {
+            this._settingsContainer.setVisible(!this._settingsContainer.isVisible());
+            armadaScreens.playButtonClickSound(true);
+        }.bind(this);
+        this._settingsTitle.getElement().onmouseenter = function () {
+            armadaScreens.playButtonSelectSound(true);
+        }.bind(this);
+        this._controllerSelector.onChange = function (stepping) {
+            var index = this._controllerSelector.getSelectedIndex();
+            if ((stepping === 0) ||
+                    !control.getInputInterpreter(control.JOYSTICK_NAME)
+                    .setGamepad((index < this._gamepadOptions.length) ? this._gamepadOptions[index] : null)) {
+                this._updateControllers();
+            }
+        }.bind(this);
+        this._settingsContainer.hide();
     };
     /**
      * @override
@@ -324,10 +414,39 @@ define([
         }.bind(this));
     };
     /**
+     * Updates the option list and the current value of the controller selector based on the detected gamepads
+     * and the currently set one
+     */
+    ControlsScreen.prototype._updateControllers = function () {
+        var gamepads, gamepadIds, i, index, currentGamepad;
+        gamepads = gamepad.getDevices();
+        gamepadIds = [];
+        this._gamepadOptions = [];
+        for (i = 0; i < gamepads.length; i++) {
+            if (gamepads[i]) {
+                gamepadIds.push(_getControllerDisplayName(gamepads[i].id));
+                this._gamepadOptions.push(gamepads[i]);
+            }
+        }
+        if (gamepadIds.length > 0) {
+            gamepadIds.push(strings.get(strings.CONTROLS.CONTROLLER_DISABLED));
+            this._controllerSelector.setValueList(gamepadIds);
+            currentGamepad = control.getInputInterpreter(control.JOYSTICK_NAME).updateGamepad();
+            index = this._gamepadOptions.indexOf(currentGamepad);
+            this._controllerSelector.selectValueWithIndex(currentGamepad ? ((index >= 0) ? index : 0) : this._gamepadOptions.length);
+            this._noController.hide();
+            this._controllerSettingsContainer.show();
+        } else {
+            this._noController.show();
+            this._controllerSettingsContainer.hide();
+        }
+    };
+    /**
      * Updates the component states based on the current controls settings
      */
     ControlsScreen.prototype._updateValues = function () {
         this._mouseTurnSensitivitySlider.setNumericValue(1 - control.getInputInterpreter(control.MOUSE_NAME).getDisplacementAreaRelativeSize());
+        this._updateControllers();
     };
     /**
      * @override
@@ -339,6 +458,21 @@ define([
             return true;
         }
         return false;
+    };
+    /**
+     * @override
+     * @param {Boolean} active
+     */
+    ControlsScreen.prototype.setActive = function (active) {
+        screens.HTMLScreen.prototype.setActive.call(this, active);
+        if (active) {
+            this._detectGamepadsInterval = setInterval(this._updateControllers.bind(this), DETECT_CONTROLLERS_INTERVAL);
+        } else {
+            if (this._detectGamepadsInterval >= 0) {
+                clearInterval(this._detectGamepadsInterval);
+                this._detectGamepadsInterval = -1;
+            }
+        }
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

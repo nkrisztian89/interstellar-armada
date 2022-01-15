@@ -719,7 +719,7 @@
     "inputDevice": {
         "keyboard": "Keyboard",
         "mouse": "Mouse",
-        "joystick": "Joystick",
+        "joystick": "Controller",
         "touch": "Touchscreen"
     },
     "touchArea": {
@@ -736,7 +736,12 @@
         "backButton": "Back to menu",
         "title": "Controls",
         "settingsTitle": "Settings",
+        "mouseTitle": "Mouse",
         "mouseTurnSensitivity": "Mouse turn sensitivity:",
+        "controllerTitle": "Controller",
+        "controller": "Controller:",
+        "noController": "No controllers detected. If you have controllers plugged in, try pressing the buttons on them and wait a few seconds for them to be detected.",
+        "controllerDisabled": "disabled",
         "controllerHeading": "{controllerType} controls",
         "action": "Action"
     },
