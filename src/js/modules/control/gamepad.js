@@ -202,14 +202,8 @@ define([
         // first if this is a button assignment, check the state of the appropriate
         // gamepad button
         if (this._button !== this.BUTTON_NONE) {
-            if (typeof gamepad.buttons[this._button] === "number") {
-                return gamepad.buttons[this._button];
-            }
-            if (typeof gamepad.buttons[this._button] === "object") {
-                if (typeof gamepad.buttons[this._button].value === "number") {
-                    return gamepad.buttons[this._button].value;
-                }
-                return gamepad.buttons[this._button].pressed ? 1 : 0;
+            if (gamepad.buttons[this._button]) {
+                return gamepad.buttons[this._button].value;
             }
             return 0;
         }
