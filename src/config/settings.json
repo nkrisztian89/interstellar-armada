@@ -1293,6 +1293,7 @@
                 "defaultProfile": "joystickRoll",
                 "profiles": {
                     "joystickRoll": {
+                        "keywords": ["joystick", "flight stick", "hotas", "t.16000m", "logitech extreme 3d"],
                         "bindings": [
                             {
                                 "action": "fire",
@@ -1391,6 +1392,7 @@
                         ]
                     },
                     "gamepad": {
+                        "keywords": ["gamepad", "controller", "xbox", "playstation", "wup-028", "dualshock"],
                         "bindings": [
                             {
                                 "action": "fire",
@@ -1473,6 +1475,36 @@
                             }, {
                                 "action": "toggleCruise",
                                 "button": 8
+                            }
+                        ]
+                    },
+                    "gamepadMirroredSticks": {
+                        "basedOn": "gamepad",
+                        "bindings": [
+                            {
+                                "action": "yawLeft",
+                                "axis": "-2"
+                            }, {
+                                "action": "yawRight",
+                                "axis": "+2"
+                            }, {
+                                "action": "pitchDown",
+                                "axis": "+3"
+                            }, {
+                                "action": "pitchUp",
+                                "axis": "-3"
+                            }, {
+                                "action": "strafeLeft",
+                                "axis": "-0"
+                            }, {
+                                "action": "strafeRight",
+                                "axis": "+0"
+                            }, {
+                                "action": "raise",
+                                "axis": "-1"
+                            }, {
+                                "action": "lower",
+                                "axis": "+1"
                             }
                         ]
                     }

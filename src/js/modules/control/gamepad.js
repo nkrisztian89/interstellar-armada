@@ -27,6 +27,7 @@ define([
             GAMEPAD_AXIS_INDEX_SUFFIX = "_gamepad_axisIndex",
             GAMEPAD_AXIS_POSITIVE_SUFFIX = "_gamepad_axisPositive",
             PREFERRED_GAMEPAD_SUFFIX = "preferredGamepad",
+            PREFERRED_PROFILES_SUFFIX = "preferredProfiles",
             PREFERRED_GAMEPAD_NULL_VALUE = "null",
             EMPTY_LIST = [],
             GAMEPAD_UNSET = -2,
@@ -208,7 +209,10 @@ define([
             return 0;
         }
         if (this._axisIndex !== this.AXIS_NONE) {
-            return Math.max((gamepad.axes[this._axisIndex] * (this._axisPositive ? 1 : -1)), 0);
+            if (gamepad.axes.length > this._axisIndex) {
+                return Math.max((gamepad.axes[this._axisIndex] * (this._axisPositive ? 1 : -1)), 0);
+            }
+            return 0;
         }
         return 0;
     };
@@ -314,6 +318,11 @@ define([
          */
         this._detectingPreference = !!localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX];
         /**
+         * The id of the gamepad the user selected to use, loaded from local storage
+         * @type String
+         */
+        this._preferredGamepadId = localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX];
+        /**
          * 
          * @type GamepadSensitivityActionGroup[]
          */
@@ -418,7 +427,7 @@ define([
      * @returns {Gamepad} The chosen Gamepad object is also returned
      */
     GamepadInputInterpreter.prototype.updateGamepad = function () {
-        var gamepads, i, preferredGamepadId;
+        var gamepads, i, index;
         gamepads = getDevices();
         // if the player selected a specific controller to use, we choose it unless it is disconnected
         if (this._gamepadSetIndex !== GAMEPAD_UNSET) {
@@ -430,19 +439,19 @@ define([
         }
         // if the player hasn't selected a specific controller (or it was disconnected), we choose one automatically
         if (this._gamepadSetIndex === GAMEPAD_UNSET) {
+            index = (this._gamepad !== null) ? this._gamepad.index : -1;
             this._gamepad = null;
             // if we haven't detected any controllers so far, try to choose one based on the previous user preference
             if (this._detectingPreference) {
-                preferredGamepadId = localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX];
                 for (i = 0; i < gamepads.length; i++) {
                     if (gamepads[i] !== null) {
                         this._detectingPreference = false;
-                        if (gamepads[i].id === preferredGamepadId) {
-                            this._gamepadSetIndex = gamepads[i].index;
-                            this._gamepad = gamepads[i];
+                        if (gamepads[i].id === this._preferredGamepadId) {
+                            this._setGamepad(gamepads[i]);
                             break;
                         } else if (this._gamepad === null) {
                             this._gamepad = gamepads[i];
+                            this.setProfile(this._getProfile(gamepads[i]), false);
                         }
                     }
                 }
@@ -452,6 +461,9 @@ define([
                 for (i = 0; i < gamepads.length; i++) {
                     if (gamepads[i] !== null) {
                         this._gamepad = gamepads[i];
+                        if (gamepads[i].index !== index) {
+                            this.setProfile(this._getProfile(gamepads[i]), false);
+                        }
                         break;
                     }
                 }
@@ -482,6 +494,46 @@ define([
         return EMPTY_LIST;
     };
     /**
+     * Returns the id of the profile that should be used with the passed Gamepad, based on
+     * user preference and profile keyword lists
+     * @param {Gamepad} gamepad
+     * @returns {String}
+     */
+    GamepadInputInterpreter.prototype._getProfile = function (gamepad) {
+        var preferences, i, j, keywords, profileNames, id;
+        preferences = this._getProfilePreferences();
+        if (preferences[gamepad.id]) {
+            return preferences[gamepad.id];
+        }
+        profileNames = Object.keys(this._profileKeywords);
+        id = gamepad.id.toLowerCase();
+        for (i = 0; i < profileNames.length; i++) {
+            keywords = this._profileKeywords[profileNames[i]];
+            if (keywords) {
+                for (j = 0; j < keywords.length; j++) {
+                    if (id.indexOf(keywords[j]) >= 0) {
+                        return profileNames[i];
+                    }
+                }
+            }
+        }
+        return this._defaultProfileName;
+    };
+    /**
+     * @private
+     * This is an internal method to execute the things needed to be done when a specific gamepad is selected by
+     * the user or loaded from preference. From outside the class, setGamepad() is available which also handles
+     * the case when no gamepad (null) is to be selected and checks if the pased gamepad is valid and connected
+     * @param {Gamepad} gamepad
+     */
+    GamepadInputInterpreter.prototype._setGamepad = function (gamepad) {
+        this._gamepad = gamepad;
+        this._gamepadSetIndex = gamepad.index;
+        this._preferredGamepadId = gamepad.id;
+        localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX] = gamepad.id;
+        this.setProfile(this._getProfile(gamepad), false);
+    };
+    /**
      * Sets a specific Gamepad to be used and also saves this preference into local storage so that next time the same
      * controller can be automatically selected from the list of controllers even if it is not the first one
      * @param {Gamepad|null} gamepad If null, the preference is set to disable all gamepads
@@ -491,14 +543,13 @@ define([
         var i, gamepads = getDevices();
         if (!gamepad) {
             this._gamepadSetIndex = GAMEPAD_DISABLED;
+            this._preferredGamepadId = PREFERRED_GAMEPAD_NULL_VALUE;
             localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX] = PREFERRED_GAMEPAD_NULL_VALUE;
             return true;
         }
         for (i = 0; i < gamepads.length; i++) {
             if (gamepads[i] === gamepad) {
-                this._gamepad = gamepad;
-                this._gamepadSetIndex = gamepad.index;
-                localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX] = gamepad.id;
+                this._setGamepad(gamepad);
                 return true;
             }
         }
@@ -510,7 +561,43 @@ define([
     GamepadInputInterpreter.prototype.removeFromLocalStorage = function () {
         control.InputInterpreter.prototype.removeFromLocalStorage.call(this);
         localStorage.removeItem(_modulePrefix + PREFERRED_GAMEPAD_SUFFIX);
+        localStorage.removeItem(_modulePrefix + PREFERRED_PROFILES_SUFFIX);
         this._gamepadSetIndex = GAMEPAD_UNSET;
+        this._preferredGamepadId = "";
+    };
+    /**
+     * Returns an object containing the profiles selected by the user for all the
+     * gamepads, with the gamepad ids as the keys and the profile names as values
+     * @returns {Object}
+     */
+    GamepadInputInterpreter.prototype._getProfilePreferences = function () {
+        var data, string = localStorage[_modulePrefix + PREFERRED_PROFILES_SUFFIX];
+        if (!string) {
+            return {};
+        }
+        try {
+            data = JSON.parse(string);
+        } catch (e) {
+            return {};
+        }
+        if (data && (typeof data === "object")) {
+            return data;
+        }
+        return {};
+    };
+    /**
+     * @override
+     * @param {String} name
+     * @param {Boolean} [saveToLocalStorage=true]
+     */
+    GamepadInputInterpreter.prototype.setProfile = function (name, saveToLocalStorage) {
+        var preferences;
+        control.InputInterpreter.prototype.setProfile.call(this, name);
+        if ((this._gamepad !== null) && (saveToLocalStorage !== false)) {
+            preferences = this._getProfilePreferences();
+            preferences[this._gamepad.id] = this._currentProfileName;
+            localStorage[_modulePrefix + PREFERRED_PROFILES_SUFFIX] = JSON.stringify(preferences);
+        }
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

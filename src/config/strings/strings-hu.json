@@ -763,6 +763,13 @@
         "left": "bal felén",
         "right": "jobb felén"
     },
+    "controllerProfile": {
+        "none": "nincs",
+        "joystickRoll": "joystick - orsózás",
+        "joystickYaw": "joystick - fordulás",
+        "gamepad": "gamepad",
+        "gamepadMirroredSticks": "gamepad - felcserélt"
+    },
     "controls": {
         "backButton": "Vissza a menübe",
         "title": "Irányítás",
@@ -773,6 +780,7 @@
         "controller": "Kontroller:",
         "noController": "Nem érzékelhető kontroller. Ha van csatlakoztatott kontroller, nyomd le a gombjait, és várj egy keveset, hogy a játék érzékelhesse.",
         "controllerDisabled": "letiltva",
+        "controllerProfile": "Profil:",
         "controllerHeading": "{controllerType} irányítás",
         "action": "Művelet"
     },

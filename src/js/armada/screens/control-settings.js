@@ -40,6 +40,7 @@ define([
             TABLES_CONTAINER_ID = "tablesContainer",
             MOUSE_TURN_SENSITIVITY_SLIDER_ID = "mouseTurnSensitivitySlider",
             CONTROLLER_SELECTOR_ID = "controllerSelector",
+            CONTROLLER_PROFILE_SELECTOR_ID = "controllerProfileSelector",
             CLICKABLE_CLASS_NAME = "clickable",
             HIGHLIGHTED_CLASS_NAME = "highlightedItem",
             TABLE_TITLE_CLASS_NAME = "controls tableTitle",
@@ -101,6 +102,23 @@ define([
             return id.substring(10);
         }
         return id;
+    }
+    /**
+     * Returns the list of human readable strings for all the selectable controller profiles
+     * @returns {String[]}
+     */
+    function _getControllerProfiles() {
+        return control.getInputInterpreter(control.GAMEPAD_NAME).getProfiles().map(function (name) {
+            return strings.get(strings.CONTROLLER_PROFILE.PREFIX, name, name);
+        });
+    }
+    /**
+     * Returns a list with a single string that refers to the profile that should show up in
+     * the profile selector when no controller is selected
+     * @returns {String[]}
+     */
+    function _getNoControllerProfiles() {
+        return [strings.get(strings.CONTROLLER_PROFILE.NONE)];
     }
     /**
      * Updates the cell content showing the currently set control for the given action 
@@ -291,6 +309,17 @@ define([
                         []),
                 CONTROLLER_SETTINGS_CONTAINER_ID);
         /**
+         * @type Selector
+         */
+        this._controllerProfileSelector = this.registerExternalComponent(
+                new components.Selector(
+                        CONTROLLER_PROFILE_SELECTOR_ID,
+                        armadaScreens.SELECTOR_SOURCE,
+                        {cssFilename: armadaScreens.SELECTOR_CSS},
+                        {id: strings.CONTROLS.CONTROLLER_PROFILE.name},
+                        _getControllerProfiles()),
+                CONTROLLER_SETTINGS_CONTAINER_ID);
+        /**
          * @type SimpleComponent
          */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
@@ -321,12 +350,22 @@ define([
             armadaScreens.playButtonSelectSound(true);
         }.bind(this);
         this._controllerSelector.onChange = function (stepping) {
-            var index = this._controllerSelector.getSelectedIndex();
-            if ((stepping === 0) ||
-                    !control.getInputInterpreter(control.JOYSTICK_NAME)
-                    .setGamepad((index < this._gamepadOptions.length) ? this._gamepadOptions[index] : null)) {
-                this._updateControllers();
+            var index;
+            if (stepping !== 0) {
+                index = this._controllerSelector.getSelectedIndex();
+                control.getInputInterpreter(control.GAMEPAD_NAME)
+                        .setGamepad((index < this._gamepadOptions.length) ? this._gamepadOptions[index] : null);
             }
+            this._updateValues();
+        }.bind(this);
+        this._controllerProfileSelector.onChange = function (stepping) {
+            var index, gamepadInterpreter;
+            if (stepping !== 0) {
+                index = this._controllerProfileSelector.getSelectedIndex();
+                gamepadInterpreter = control.getInputInterpreter(control.GAMEPAD_NAME);
+                gamepadInterpreter.setProfile(gamepadInterpreter.getProfiles()[index], true);
+            }
+            this._generateTables();
         }.bind(this);
         this._settingsContainer.hide();
     };
@@ -418,7 +457,8 @@ define([
      * and the currently set one
      */
     ControlsScreen.prototype._updateControllers = function () {
-        var gamepads, gamepadIds, i, index, currentGamepad;
+        var gamepads, gamepadIds, i, index, currentGamepad, gamepadInterpreter;
+        gamepadInterpreter = control.getInputInterpreter(control.GAMEPAD_NAME);
         gamepads = gamepad.getDevices();
         gamepadIds = [];
         this._gamepadOptions = [];
@@ -431,7 +471,7 @@ define([
         if (gamepadIds.length > 0) {
             gamepadIds.push(strings.get(strings.CONTROLS.CONTROLLER_DISABLED));
             this._controllerSelector.setValueList(gamepadIds);
-            currentGamepad = control.getInputInterpreter(control.JOYSTICK_NAME).updateGamepad();
+            currentGamepad = gamepadInterpreter.updateGamepad();
             index = this._gamepadOptions.indexOf(currentGamepad);
             this._controllerSelector.selectValueWithIndex(currentGamepad ? ((index >= 0) ? index : 0) : this._gamepadOptions.length);
             this._noController.hide();
@@ -439,6 +479,13 @@ define([
         } else {
             this._noController.show();
             this._controllerSettingsContainer.hide();
+        }
+        if (this._controllerSelector.getSelectedIndex() < this._gamepadOptions.length) {
+            this._controllerProfileSelector.setValueList(_getControllerProfiles());
+            this._controllerProfileSelector.selectValueWithIndex(gamepadInterpreter.getProfiles().indexOf(gamepadInterpreter.getProfile()));
+        } else {
+            this._controllerProfileSelector.setValueList(_getNoControllerProfiles());
+            this._controllerProfileSelector.selectValueWithIndex(0);
         }
     };
     /**

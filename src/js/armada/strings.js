@@ -422,6 +422,10 @@ define([
         PREFIX: {name: "touchArea.", optional: true},
         DEFAULT: {name: "touchArea.default"}
     };
+    strings.CONTROLLER_PROFILE = {
+        PREFIX: {name: "controllerProfile.", optional: true},
+        NONE: {name: "controllerProfile.none"}
+    };
     strings.CONTROLS = {
         BACK: {name: "controls.backButton"},
         SETTINGS_TITLE: {name: "controls.settingsTitle"},
@@ -429,6 +433,7 @@ define([
         MOUSE_TURN_SENSITIVITY: {name: "controls.mouseTurnSensitivity"},
         CONTROLLER: {name: "controls.controller"},
         CONTROLLER_DISABLED: {name: "controls.controllerDisabled"},
+        CONTROLLER_PROFILE: {name: "controls.controllerProfile"},
         CONTROLLER_TYPE_HEADING: {name: "controls.controllerHeading"},
         ACTION: {name: "controls.action"}
     };

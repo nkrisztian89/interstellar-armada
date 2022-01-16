@@ -108,6 +108,13 @@ define([
          */
         this._profiles = {};
         /**
+         * The list of keywords for each profile which determine for which controllers should the profile be
+         * used by default. The profile is chosen for a controller if the id of the controller contains any
+         * of its keywords (keywords should be in lowercase, id is transformed to lowercase when checking)
+         * @type Object.<String, String[]>
+         */
+        this._profileKeywords = {};
+        /**
          * The currently selected profile containing the active control bindings
          * @type InputProfile
          */
@@ -117,6 +124,12 @@ define([
          * @type String
          */
         this._currentProfileName = null;
+        /**
+         * The string ID (key within the _profiles object) of the profile that is to be chosen for a
+         * controller if its id doesn't contain any of the keywords of any profiles.
+         * @type String
+         */
+        this._defaultProfileName = null;
         /**
          * Associative array of the names of disabled actions. The action names are
          * the keys, and if the corresponding action is disabled, the value is true.
@@ -224,6 +237,20 @@ define([
         }
     };
     /**
+     * Returns the name of the currently active profile.
+     * @returns {String}
+     */
+    InputInterpreter.prototype.getProfile = function () {
+        return this._currentProfileName;
+    };
+    /**
+     * Returns the list of names of all the available profiles.
+     * @returns {String[]}
+     */
+    InputInterpreter.prototype.getProfiles = function () {
+        return Object.keys(this._profiles);
+    };
+    /**
      * If there is no control bound yet to the action associated with the passed 
      * binding, adds the binding. If there already is a binding, overwrites it with
      * the passed binding, as there can be no two different controls bound to the
@@ -266,10 +293,11 @@ define([
                         for (j = 0; j < chain[i].length; j++) {
                             this.setBinding(new this._bindingClass(chain[i][j], profileName));
                         }
-
                     }
+                    this._profileKeywords[profileName] = profile.keywords;
                 }
             }
+            this._defaultProfileName = dataJSON.defaultProfile;
             this._currentProfile = this._profiles[dataJSON.defaultProfile];
             this._currentProfileName = dataJSON.defaultProfile;
         } else {
