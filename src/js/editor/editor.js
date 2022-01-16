@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2021 Krisztián Nagy
+ * Copyright 2016-2022 Krisztián Nagy
  * @file The main module for the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -408,7 +408,6 @@ define([
     function _handleNameChange() {
         var newName = _selectedItem.data.name, oldName = _selectedItemElement.innerHTML, nameChangeHandler;
         if (newName && (newName !== oldName)) {
-            _selectedItemElement.innerHTML = newName;
             switch (_selectedItem.type) {
                 case common.ItemType.RESOURCE:
                     resources.renameResource(_selectedItem.category, oldName, newName);
@@ -422,10 +421,17 @@ define([
                         return type.getClassReference();
                     });
                     break;
+                case common.ItemType.MISSION:
+                    newName = utils.getFilenameWithoutExtension(_selectedItem.data.name);
+                    if (newName !== oldName) {
+                        application.showError("Name change not supported for this type of item!");
+                    }
+                    return;
                 default:
                     application.showError("Name change not supported for this type of item!");
                     return;
             }
+            _selectedItemElement.innerHTML = newName;
             _selectedItem.name = newName;
             _itemElements[_selectedItem.type][_selectedItem.category][newName] = _itemElements[_selectedItem.type][_selectedItem.category][oldName];
             delete _itemElements[_selectedItem.type][_selectedItem.category][oldName];
@@ -845,7 +851,7 @@ define([
                 break;
             case common.ItemType.MISSION:
                 categories = [MISSIONS_CATEGORY];
-                getItems = missions.getMissionNames;
+                getItems = missions.getMissionNames.bind(this, undefined);
                 break;
             default:
                 application.crash();
@@ -946,7 +952,13 @@ define([
                     var file = importFile.files[0];
                     if (file) {
                         file.text().then(function (text) {
-                            var data = JSON.parse(text);
+                            var data;
+                            try {
+                                data = JSON.parse(text);
+                            } catch (e) {
+                                application.showError("The selected file doesn't seem to be a valid mission file!", application.ErrorSeverity.MINOR);
+                                return;
+                            }
                             if (data) {
                                 data.name = file.name;
                                 if (missions.getMissionNames().indexOf(data.name) >= 0) {
@@ -958,7 +970,7 @@ define([
                                 }
                             }
                         }.bind(this)).catch(function () {
-                            application.showError("The selected file doesn't seem to be a valid mission file!", application.ErrorSeverity.MINOR);
+                            application.showError("Error while loading the mission file!", application.ErrorSeverity.MINOR);
                         });
                     }
                     break;
