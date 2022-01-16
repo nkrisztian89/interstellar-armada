@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2021 Krisztián Nagy
+ * Copyright 2016-2022 Krisztián Nagy
  * @file A stateful module providing a collection to which AIs of different types (at the moment only one type, an AI for fighters) can be
  * added which control their respective spacecraft when the control function of the module is called.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -799,6 +799,7 @@ define([
             case MoveCommand.REACH_DISTANCE:
                 if (!this._moveCommandTarget || !this._moveCommandTarget.isAlive() || this._moveCommandTarget.isAway()) {
                     this._cancelMoveCommand();
+                    return;
                 }
                 vectorToTarget = vec.diff3(this._moveCommandTarget.getPhysicalPositionVector(), positionVector);
                 relativeTargetDirection = vec.prodVec3Mat4Aux(
