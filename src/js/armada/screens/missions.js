@@ -59,6 +59,14 @@ define([
             SUBMIT_MISSION_TERMS_CONTAINER_ID = "submitMissionTermsContainer",
             SUBMIT_MISSION_SUBMIT_BUTTON_ID = "submitMissionSubmitButton",
             SUBMIT_MISSION_CANCEL_BUTTON_ID = "submitMissionCancelButton",
+            MANAGE_SUBMISSIONS_BUTTON_ID = "manageSubmissionsButton",
+            MANAGE_SUBMISSIONS_POPUP_BACKGROUND_ID = "manageSubmissionsPopupBackground",
+            SUBMISSION_TITLE_COLUMN_CLASS = "submissionTitleColumn",
+            SUBMISSION_DATE_COLUMN_CLASS = "submissionDateColumn",
+            SUBMISSION_STATUS_COLUMN_CLASS = "submissionStatusColumn",
+            SUBMISSION_ACTIONS_COLUMN_CLASS = "submissionActionsColumn",
+            MANAGE_SUBMISSIONS_CLOSE_BUTTON_ID = "manageSubmissionsCloseButton",
+            SUBMISSIONS_LIST_ID = "submissionsList",
             INFO_BOX_ID = "infoBox",
             LOADING_BOX_ID = "loadingBox",
             MISSION_HUB_TERMS_LINK_ID = "missionHubTermsLink",
@@ -71,6 +79,11 @@ define([
             MIN_TITLE_LENGTH = 3,
             MAX_TITLE_LENGTH = 30,
             MIN_DESCRIPTION_LENGTH = 10,
+            SUBMISSION_DATE_FORMAT_OPTIONS = {
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            },
             // backend error codes - need to be kept sync with the backend version
             ErrorCategory = {
                 AUTHORIZATION: 100,
@@ -241,6 +254,14 @@ define([
         this._submitMissionCancelButton = this.registerSimpleComponent(SUBMIT_MISSION_CANCEL_BUTTON_ID);
         /** @type SimpleComponent */
         this._submitMissionSubmitButton = this.registerSimpleComponent(SUBMIT_MISSION_SUBMIT_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._manageSubmissionsButton = this.registerSimpleComponent(MANAGE_SUBMISSIONS_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._manageSubmissionsPopupBackground = this.registerSimpleComponent(MANAGE_SUBMISSIONS_POPUP_BACKGROUND_ID);
+        /** @type SimpleComponent */
+        this._manageSubmissionsCloseButton = this.registerSimpleComponent(MANAGE_SUBMISSIONS_CLOSE_BUTTON_ID);
+        /** @type SimpleComponent */
+        this._submissionsList = this.registerSimpleComponent(SUBMISSIONS_LIST_ID);
         /**
          * The component housing the mission list
          * @type MenuComponent
@@ -375,6 +396,28 @@ define([
         return result;
     };
     /**
+     * Private helper function to display the proper error message in case a request
+     * to the Mission Hub fails
+     * @param {Boolean} quitScreen 
+     * @param {Object} data
+     */
+    MissionsScreen.prototype._handleMissionHubError = function (quitScreen, data) {
+        if ((game.getScreen() !== this) || !this._community) {
+            return;
+        }
+        this._loadingBox.hide();
+        this._showMessage(
+                strings.get(
+                        strings.MISSION_HUB_ERROR.PREFIX,
+                        (data && data.error) || strings.MISSION_HUB_ERROR.DEFAULT_SUFFIX.name,
+                        utils.formatString(strings.get(strings.MISSION_HUB_ERROR.GENERAL), {code: data ? data.error : 0})),
+                function () {
+                    if (quitScreen) {
+                        game.closeOrNavigateTo(armadaScreens.SINGLE_PLAYER_SCREEN_NAME);
+                    }
+                }.bind(this));
+    };
+    /**
      * Requests the data of the selected mission and displays its information once it has been loaded
      * @param {Number} index
      */
@@ -395,6 +438,7 @@ define([
             this._playerSpacecraftPropulsion.hide();
             this._fileButton.hide();
             this._submitButton.hide();
+            this._manageSubmissionsButton.hide();
             this._missionProvider.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
                 var
                         /** @type String[] */
@@ -504,6 +548,7 @@ define([
             this._demoButton.disable();
             this._fileButton.setVisible(custom);
             this._submitButton.setVisible(this._community && missionHub.isReady());
+            this._manageSubmissionsButton.setVisible(this._community && missionHub.isReady() && missionHub.isSubmitter());
             if (this._community && !missionHub.isReady()) {
                 missionHub.retrieveMissions(function () {
                     if ((game.getScreen() !== this) || !this._community) {
@@ -512,19 +557,7 @@ define([
                     this._listComponent.setListElements(this._getListElements());
                     this._updateScores();
                     this._selectMission(-1);
-                }.bind(this), function (data) {
-                    if ((game.getScreen() !== this) || !this._community) {
-                        return;
-                    }
-                    this._showMessage(
-                            strings.get(
-                                    strings.MISSION_HUB_ERROR.PREFIX,
-                                    (data && data.error) || strings.MISSION_HUB_ERROR.DEFAULT_SUFFIX.name,
-                                    utils.formatString(strings.get(strings.MISSION_HUB_ERROR.GENERAL), {code: data ? data.error : 0})),
-                            function () {
-                                game.closeOrNavigateTo(armadaScreens.SINGLE_PLAYER_SCREEN_NAME);
-                            });
-                }.bind(this));
+                }.bind(this), this._handleMissionHubError.bind(this, true));
             }
         }
     };
@@ -537,19 +570,19 @@ define([
     MissionsScreen.prototype._getKeyCommands = function (keyCommands) {
         keyCommands = keyCommands || {};
         keyCommands.up = keyCommands.up || function (event) {
-            if (!this._submitMissionPopupBackground.isVisible()) {
+            if (!this._submitMissionPopupBackground.isVisible() && !this._manageSubmissionsPopupBackground.isVisible()) {
                 this._listComponent.highlightPrevious();
                 event.preventDefault();
             }
         }.bind(this);
         keyCommands.down = keyCommands.down || function (event) {
-            if (!this._submitMissionPopupBackground.isVisible()) {
+            if (!this._submitMissionPopupBackground.isVisible() && !this._manageSubmissionsPopupBackground.isVisible()) {
                 this._listComponent.highlightNext();
                 event.preventDefault();
             }
         }.bind(this);
         keyCommands.enter = keyCommands.enter || function () {
-            if (!this._submitMissionPopupBackground.isVisible()) {
+            if (!this._submitMissionPopupBackground.isVisible() && !this._manageSubmissionsPopupBackground.isVisible()) {
                 if ((this._listComponent.getSelectedIndex() >= 0) && (this._listComponent.getHighlightedIndex() === this._listComponent.getSelectedIndex())) {
                     this._launchMission(false);
                 } else {
@@ -558,13 +591,13 @@ define([
             }
         }.bind(this);
         keyCommands.space = keyCommands.space || function (event) {
-            if (!this._submitMissionPopupBackground.isVisible()) {
+            if (!this._submitMissionPopupBackground.isVisible() && !this._manageSubmissionsPopupBackground.isVisible()) {
                 this._listComponent.selectHighlighted();
                 event.preventDefault();
             }
         }.bind(this);
         keyCommands.escape = function () {
-            if (this._submitMissionPopupBackground.isVisible()) {
+            if (this._submitMissionPopupBackground.isVisible() && !this._manageSubmissionsPopupBackground.isVisible()) {
                 this._submitMissionPopupBackground.hide();
             } else {
                 game.closeOrNavigateTo(armadaScreens.MAIN_MENU_SCREEN_NAME);
@@ -747,6 +780,64 @@ define([
         return VALID;
     };
     /**
+     * Retrieve and display the list of missions submitted by the current player
+     */
+    MissionsScreen.prototype._showSubmissions = function () {
+        this._loadingBox.show();
+        missionHub.getSubmissions(function (missions) {
+            var i, row, cell, button, date, status,
+                    list = this._submissionsList.getElement(),
+                    onMouseEnter = function () {
+                        armadaScreens.playButtonSelectSound(true);
+                    },
+                    deleteButtonAction = function (index) {
+                        armadaScreens.playButtonClickSound(true);
+                        this._loadingBox.show();
+                        missionHub.deleteSubmission(missions[index].id, function () {
+                            this._loadingBox.hide();
+                            this._showMessage(strings.get(strings.MISSIONS.DELETE_SUBMISSION_SUCCESS), this._showSubmissions.bind(this));
+                        }.bind(this), this._handleMissionHubError.bind(this, false));
+                    };
+            list.innerHTML = "";
+            for (i = 0; i < missions.length; i++) {
+                row = document.createElement("tr");
+                cell = document.createElement("td");
+                cell.className = SUBMISSION_TITLE_COLUMN_CLASS;
+                cell.textContent = missions[i].title;
+                row.appendChild(cell);
+                cell = document.createElement("td");
+                cell.className = SUBMISSION_DATE_COLUMN_CLASS;
+                date = new Date(missions[i].time);
+                cell.textContent = date.toLocaleDateString(strings.getLocale(), SUBMISSION_DATE_FORMAT_OPTIONS);
+                row.appendChild(cell);
+                cell = document.createElement("td");
+                cell.className = SUBMISSION_STATUS_COLUMN_CLASS;
+                status = document.createElement("strong");
+                status.textContent = missions[i].reviewed ?
+                        strings.get(missions[i].approved ? strings.MISSIONS.SUBMISSION_STATUS_APPROVED : strings.MISSIONS.SUBMISSION_STATUS_REJECTED) :
+                        strings.get(strings.MISSIONS.SUBMISSION_STATUS_PENDING);
+                cell.appendChild(status);
+                if (missions[i].reviewed && missions[i].review) {
+                    status = document.createElement("span");
+                    status.textContent = " " + missions[i].review;
+                    cell.appendChild(status);
+                }
+                row.appendChild(cell);
+                cell = document.createElement("td");
+                cell.className = SUBMISSION_ACTIONS_COLUMN_CLASS;
+                button = document.createElement("button");
+                button.textContent = strings.get(missions[i].approved ? strings.MISSIONS.DELETE_SUBMISSION_BUTTON : strings.MISSIONS.REVOKE_SUBMISSION_BUTTON);
+                button.onmouseenter = onMouseEnter;
+                button.onclick = deleteButtonAction.bind(this, i);
+                cell.appendChild(button);
+                row.appendChild(cell);
+                list.appendChild(row);
+            }
+            this._loadingBox.hide();
+            this._manageSubmissionsPopupBackground.show();
+        }.bind(this), this._handleMissionHubError.bind(this, false));
+    };
+    /**
      * @override
      */
     MissionsScreen.prototype._initializeComponents = function () {
@@ -874,7 +965,6 @@ define([
             this._submitMissionPopupBackground.hide();
         }.bind(this);
         this._submitMissionSubmitButton.getElement().onclick = function () {
-            this._loadingBox.makeIndeterminate();
             this._loadingBox.show();
             missionHub.submitMission({
                 sender: this._submitMissionSenderNameInput.getElement().value,
@@ -885,6 +975,7 @@ define([
                 this._loadingBox.hide();
                 this._submitMissionPopupBackground.hide();
                 this._showMessage(strings.get(strings.MISSIONS.SUBMIT_MISSION_SUCCESS));
+                this._manageSubmissionsButton.show();
             }.bind(this), function (data) {
                 this._loadingBox.hide();
                 this._showMessage(
@@ -899,8 +990,14 @@ define([
                 }
             }.bind(this));
         }.bind(this);
+        this._manageSubmissionsButton.getElement().onclick = this._showSubmissions.bind(this);
+        this._manageSubmissionsCloseButton.getElement().onclick = function () {
+            this._manageSubmissionsPopupBackground.hide();
+        }.bind(this);
         this._fileInput.hide();
         this._submitMissionPopupBackground.hide();
+        this._manageSubmissionsPopupBackground.hide();
+        this._loadingBox.makeIndeterminate();
     };
     /**
      * @override

@@ -1,4 +1,5 @@
 {
+    "locale": "hu-HU",
     "grammar": {
         "definiteArticle": {
             "beforeVowel": "az",
@@ -85,6 +86,7 @@
         "demoButton": "Demo",
         "fileButton": "Fájl kiválasztása",
         "submitButton": "Küldetés beküldése",
+        "manageSubmissionsButton": "Beküldések kezelése",
         "customMissionCaption": "Küldetés betöltése...",
         "customMissionSubcaption": "Egyéni küldetés",
         "communityMissionSubcaption": "{author}",
@@ -153,7 +155,21 @@
         "submitMissionCancelButton": "Mégse",
         "submitMissionSubmitButton": "Beküldés",
         "submitMissionSuccess": "Küldetés sikeresen beküldve!",
-        "submitMissionHelp": "<p>Itt van lehetőséged a saját magad alkotta küldetések beküldésére a Küldetés Központba (Mission Hub), hogy azokat a játék fejlesztője (Nagy Krisztián) átnézze, és jóváhagyás esetén nyilvánossá tegye. A <em>Saját küldetések</em> menüpont alatt hozhatsz létre és tesztelhetsz küldetéseket.</p><p><strong>Felhasználónév:</strong> Add meg a becenevet, ami alatt nyilvánosságra szeretnéd hozni a küldetésedet. Ezt minden játékos látni fogja. Ne személyes adatot használj névnek! Ugyanazt a nevet kell megadnod, amit a küldetés létrehozásakor megadtál szerzőként. {minNameLength} és {maxNameLength} karakter közötti hosszúságúnak kell lennie.</p><p><strong>Jelszó:</strong> Hogy ellenőrizhető legyen, hogy több beküldés ugyanattól az embertől érkezik, ugyanazt a jelszót kell használnod, ha többször használod ugyanazt a nevet. A biztonságod érdekében ne használj olyan jelszót, amit fontos online szolgáltatásokhoz is használsz (pl. email, internetbank). Nem gyűjtök email címeket, emiatt a jelszó nem visszaállítható, ha egyszer elfelejted! {minPasswordLength} és {maxPasswordLength} karakter közötti hosszúságúnak kell lennie.</p><p><strong>Megjegyzés:</strong> Írj ide bármiféle megjegyzést, amit tudtomra akarsz adni a küldetéssel kapcsolatban. Ne ossz meg személyes adatot! Ezt a mezőt csak én, a fejlesztő fogom látni, más játékosok nem. A többi játékosnak szóló információkat a küldetés leírás (description) mezőjébe írd a szerkesztőben!</p><p><strong>Küldetésfájl:</strong> Válassz ki egy .json formátumú fájlt, amit a játék szerkesztőjével készítettél, és megfelel a <em>Közösségi küldetések</em> oldalon leírt követelményeknek. A fájl nem lehet nagyobb, mint {maxFileSize}.</p>"
+        "submitMissionHelp": "<p>Itt van lehetőséged a saját magad alkotta küldetések beküldésére a Küldetés Központba (Mission Hub), hogy azokat a játék fejlesztője (Nagy Krisztián) átnézze, és jóváhagyás esetén nyilvánossá tegye. A <em>Saját küldetések</em> menüpont alatt hozhatsz létre és tesztelhetsz küldetéseket.</p><p><strong>Felhasználónév:</strong> Add meg a becenevet, ami alatt nyilvánosságra szeretnéd hozni a küldetésedet. Ezt minden játékos látni fogja. Ne személyes adatot használj névnek! Ugyanazt a nevet kell megadnod, amit a küldetés létrehozásakor megadtál szerzőként. {minNameLength} és {maxNameLength} karakter közötti hosszúságúnak kell lennie.</p><p><strong>Jelszó:</strong> Hogy ellenőrizhető legyen, hogy több beküldés ugyanattól az embertől érkezik, ugyanazt a jelszót kell használnod, ha többször használod ugyanazt a nevet. A biztonságod érdekében ne használj olyan jelszót, amit fontos online szolgáltatásokhoz is használsz (pl. email, internetbank). Nem gyűjtök email címeket, emiatt a jelszó nem visszaállítható, ha egyszer elfelejted! {minPasswordLength} és {maxPasswordLength} karakter közötti hosszúságúnak kell lennie.</p><p><strong>Megjegyzés:</strong> Írj ide bármiféle megjegyzést, amit tudtomra akarsz adni a küldetéssel kapcsolatban. Ne ossz meg személyes adatot! Ezt a mezőt csak én, a fejlesztő fogom látni, más játékosok nem. A többi játékosnak szóló információkat a küldetés leírás (description) mezőjébe írd a szerkesztőben!</p><p><strong>Küldetésfájl:</strong> Válassz ki egy .json formátumú fájlt, amit a játék szerkesztőjével készítettél, és megfelel a <em>Közösségi küldetések</em> oldalon leírt követelményeknek. A fájl nem lehet nagyobb, mint {maxFileSize}.</p>",
+        "submissionsHeader": "Beküldött küldetések",
+        "submissionTitleColumn": "Cím",
+        "submissionDateColumn": "Beküldve",
+        "submissionStatusColumn": "Állapot",
+        "submissionActionsColumn": "Lehetőségek",
+        "deleteSubmissionButton": "Törlés",
+        "revokeSubmissionButton": "Visszavonás",
+        "deleteSubmissionSuccess": "Beküldött küldetés sikeresen törölve!",
+        "manageSubmissionsCloseButton": "Bezárás",
+        "submissionStatus": {
+            "pending": "Függőben...",
+            "approved": "Elfogadva!",
+            "rejected": "Visszautasítva:"
+        }
     },
     "missionHubError": {
         "default": "Ismeretlen Küldetés Központ hiba!",
@@ -171,14 +187,17 @@
         "311": "Úgy tűnik, a beküldött küldetésben nincs megadva a játékos űrhajója!",
         "401": "Nem sikerült új felhasználót létrehozni!",
         "402": "Beküldési művelet sikertelen!",
+        "403": "Nem sikerült törölni a küldetést!",
+        "404": "Több küldetés is törölve lett!",
         "501": "A felhasználó nem létezik!",
         "502": "A megadott felhasználónévhez más jelszó tartozik!",
         "601": "Túl sok beküldés! Kérlek próbálkozz újra egy óra múlva!",
         "701": "Ilyen című küldetés már szerepel a Küldetés Központban.",
-        "1001": "Nem sikerült lekérdezni a küldetéseket a Küldetés Központtól!",
-        "1002": "Nem sikerült csatlakozni a Küldetés Központhoz!",
-        "1003": "Időtúllépés miatt nem sikerült csatlakozni a Küldetés Központhoz!",
-        "1004": "A Küldetés Központ nem erősítette meg a beküldést!"
+        "1001": "Nem sikerült csatlakozni a Küldetés Központhoz!",
+        "1002": "Időtúllépés miatt nem sikerült csatlakozni a Küldetés Központhoz!",
+        "1003": "A Küldetés Központ nem erősítette meg a beküldést!",
+        "1004": "Nem sikerült lekérdezni a küldetéseket a Küldetés Központtól!",
+        "1005": "Nem sikerült törölni a küldetést a Küldetés Központról!"
     },
     "missionHubClientError": {
         "general": "Küldetés Központ hiba! Hibakód: {code}",

@@ -1,4 +1,5 @@
 {
+    "locale": "en-US",
     "grammar": {
         "definiteArticle": {
             "beforeVowel": "the",
@@ -71,6 +72,7 @@
         "demoButton": "Launch demo",
         "fileButton": "Choose file",
         "submitButton": "Submit mission",
+        "manageSubmissionsButton": "Manage submissions",
         "customMissionCaption": "Load mission...",
         "customMissionSubcaption": "Custom mission",
         "communityMissionSubcaption": "By {author}",
@@ -139,7 +141,21 @@
         "submitMissionCancelButton": "Cancel",
         "submitMissionSubmitButton": "Submit",
         "submitMissionSuccess": "Mission has been successfully submitted!",
-        "submitMissionHelp": "<p>Here you can submit missions created by yourself to the Mission Hub to be reviewed by the game developer (me, Krisztián Nagy). See the <em>My missions</em> screen to create and test your own missions!</p><p><strong>Username:</strong> Enter the nickname under which you want to publish your missions. This will be visible for all players. Do not use personal information! Use the same name that you set in the editor as the author of the mission. The username must be between {minNameLength} and {maxNameLength} characters long.</p><p><strong>Password:</strong> To verify that two missions came from the same user, you must enter the same password to submit multiple missions under the same name. For security, do not use the same password that you use for important online services (email, banking etc). I do not collect email addresses, so this password can not be recovered if lost! The password must be between {minPasswordLength} and {maxPasswordLength} characters long.</p><p><strong>Comment:</strong> Add any notes here that you would like me to know about the mission. Do not include personal information! This will be only visible to me, not to other players. The information you want to share with players about the mission should go in the description field of the mission.</p><p><strong>Mission file:</strong> Select a .json file that you have created with the game editor and that meets the criteria listed on the main <em>Community missions</em> screen. The file must not be larger than {maxFileSize}.</p>"
+        "submitMissionHelp": "<p>Here you can submit missions created by yourself to the Mission Hub to be reviewed by the game developer (me, Krisztián Nagy). See the <em>My missions</em> screen to create and test your own missions!</p><p><strong>Username:</strong> Enter the nickname under which you want to publish your missions. This will be visible for all players. Do not use personal information! Use the same name that you set in the editor as the author of the mission. The username must be between {minNameLength} and {maxNameLength} characters long.</p><p><strong>Password:</strong> To verify that two missions came from the same user, you must enter the same password to submit multiple missions under the same name. For security, do not use the same password that you use for important online services (email, banking etc). I do not collect email addresses, so this password can not be recovered if lost! The password must be between {minPasswordLength} and {maxPasswordLength} characters long.</p><p><strong>Comment:</strong> Add any notes here that you would like me to know about the mission. Do not include personal information! This will be only visible to me, not to other players. The information you want to share with players about the mission should go in the description field of the mission.</p><p><strong>Mission file:</strong> Select a .json file that you have created with the game editor and that meets the criteria listed on the main <em>Community missions</em> screen. The file must not be larger than {maxFileSize}.</p>",
+        "submissionsHeader": "My mission submissions",
+        "submissionTitleColumn": "Title",
+        "submissionDateColumn": "Sent",
+        "submissionStatusColumn": "Status",
+        "submissionActionsColumn": "Actions",
+        "deleteSubmissionButton": "Delete",
+        "revokeSubmissionButton": "Revoke",
+        "deleteSubmissionSuccess": "Submission has been successfully deleted!",
+        "manageSubmissionsCloseButton": "Close",
+        "submissionStatus": {
+            "pending": "Pending...",
+            "approved": "Approved!",
+            "rejected": "Rejected:"
+        }
     },
     "missionHubError": {
         "default": "Unknown Mission Hub error!",
@@ -157,14 +173,17 @@
         "311": "The submitted mission does not appear to have a piloted spacecraft set!",
         "401": "Failed to create new user!",
         "402": "Submit operation failed!",
+        "403": "Failed to delete mission!",
+        "404": "Multiple missions have been deleted!",
         "501": "User not found!",
         "502": "Wrong password entered for user!",
         "601": "Too many submissions! Please try again after an hour!",
         "701": "A mission with the same title has already been submitted.",
-        "1001": "Failed to retrieve missions from the Mission Hub!",
-        "1002": "Failed to connect to the Mission Hub!",
-        "1003": "Connection to the Mission Hub timed out!",
-        "1004": "The Mission Hub did not confirm the submission!"
+        "1001": "Failed to connect to the Mission Hub!",
+        "1002": "Connection to the Mission Hub timed out!",
+        "1003": "The Mission Hub did not confirm the submission!",
+        "1004": "Failed to retrieve missions from the Mission Hub!",
+        "1005": "Failed to delete mission from the Mission Hub!"
     },
     "missionHubClientError": {
         "general": "Mission Hub error! Code: {code}",

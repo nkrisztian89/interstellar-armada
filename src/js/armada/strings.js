@@ -86,7 +86,13 @@ define([
         SUBMIT_FILE_BUTTON: {name: "missions.submitFileButton"},
         SUBMIT_MISSION_ACCEPT_TERMS: {name: "missions.submitMissionAcceptTerms"},
         SUBMIT_MISSION_SUCCESS: {name: "missions.submitMissionSuccess"},
-        SUBMIT_MISSION_HELP: {name: "missions.submitMissionHelp"}
+        SUBMIT_MISSION_HELP: {name: "missions.submitMissionHelp"},
+        DELETE_SUBMISSION_BUTTON: {name: "missions.deleteSubmissionButton"},
+        REVOKE_SUBMISSION_BUTTON: {name: "missions.revokeSubmissionButton"},
+        DELETE_SUBMISSION_SUCCESS: {name: "missions.deleteSubmissionSuccess"},
+        SUBMISSION_STATUS_PENDING: {name: "missions.submissionStatus.pending"},
+        SUBMISSION_STATUS_APPROVED: {name: "missions.submissionStatus.approved"},
+        SUBMISSION_STATUS_REJECTED: {name: "missions.submissionStatus.rejected"}
     };
     strings.SERVER_REGION = {
         PREFIX: {name: "serverRegion.", optional: true},

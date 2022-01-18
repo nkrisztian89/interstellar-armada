@@ -28,10 +28,11 @@ define([
             LOCAL_STORAGE_PREFIX = constants.LOCAL_STORAGE_PREFIX + "missionHub_",
             NAME_LOCAL_STORAGE_ID = LOCAL_STORAGE_PREFIX + "username",
             TOKEN_LOCAL_STORAGE_ID = LOCAL_STORAGE_PREFIX + "token",
-            ERROR_WRONG_RESPONSE_FORMAT = 1001,
-            ERROR_REQUEST_FAILED = 1002,
-            ERROR_REQUEST_TIMEOUT = 1003,
-            ERROR_SUBMIT_FAILED = 1004,
+            ERROR_REQUEST_FAILED = 1001,
+            ERROR_REQUEST_TIMEOUT = 1002,
+            ERROR_SUBMIT_FAILED = 1003,
+            ERROR_GETMISSIONS_WRONG_RESPONSE_FORMAT = 1004,
+            ERROR_DELETE_WRONG_RESPONSE_FORMAT = 1005,
             // -------------------------------------------------------------------------
             // private variables
             _url,
@@ -45,6 +46,13 @@ define([
      */
     function isReady() {
         return !!_missionDescriptors;
+    }
+    /**
+     * Whether the current player has already submitted missions
+     * @returns {Boolean}
+     */
+    function isSubmitter() {
+        return !!localStorage[NAME_LOCAL_STORAGE_ID] && !!localStorage[TOKEN_LOCAL_STORAGE_ID];
     }
     /**
      * Initiates a request to query the list of all approved community missions from
@@ -68,7 +76,7 @@ define([
             _connecting = false;
             if (request.responseText[0] !== "{") {
                 onError({
-                    error: ERROR_WRONG_RESPONSE_FORMAT
+                    error: ERROR_GETMISSIONS_WRONG_RESPONSE_FORMAT
                 });
                 return;
             }
@@ -79,7 +87,7 @@ define([
             }
             if (!data.missions || !Array.isArray(data.missions)) {
                 onError({
-                    error: ERROR_WRONG_RESPONSE_FORMAT
+                    error: ERROR_GETMISSIONS_WRONG_RESPONSE_FORMAT
                 });
                 return;
             }
@@ -176,6 +184,113 @@ define([
         request.send(JSON.stringify(data));
     }
     /**
+     * Retrieve the list of missions the current player has submitted
+     * @param {Function} onSuccess If the request is successful, this is called
+     * with the array of missions passed to it as an argument
+     * @param {Function} onError
+     */
+    function getSubmissions(onSuccess, onError) {
+        var request,
+                name = localStorage[NAME_LOCAL_STORAGE_ID],
+                token = localStorage[TOKEN_LOCAL_STORAGE_ID];
+        if (name && token) {
+            if (_connecting) {
+                return;
+            }
+            _connecting = true;
+            request = new XMLHttpRequest();
+            request.onload = function () {
+                var data;
+                _connecting = false;
+                if (request.responseText[0] !== "{") {
+                    onError({
+                        error: ERROR_GETMISSIONS_WRONG_RESPONSE_FORMAT
+                    });
+                    return;
+                }
+                data = JSON.parse(request.responseText);
+                if (data.error) {
+                    onError(data);
+                    return;
+                }
+                if (!data.missions || !Array.isArray(data.missions)) {
+                    onError({
+                        error: ERROR_GETMISSIONS_WRONG_RESPONSE_FORMAT
+                    });
+                    return;
+                }
+                onSuccess(data.missions);
+            }.bind(this);
+            request.onerror = function () {
+                _connecting = false;
+                onError({
+                    error: ERROR_REQUEST_FAILED
+                });
+            }.bind(this);
+            request.ontimeout = function () {
+                _connecting = false;
+                onError({
+                    error: ERROR_REQUEST_TIMEOUT
+                });
+            }.bind(this);
+            request.overrideMimeType("text/plain; charset=utf-8");
+            request.open("GET", _url + "missions/" + name + "?" + _versionParam + "&token=" + token, true);
+            request.send(null);
+        }
+    }
+    /**
+     * Send a request to the Mission Hub to delete the mission with the passed id, if it was
+     * submitted by the current player
+     * @param {Number} id The mission id
+     * @param {Function} onSuccess Called if the mission has been successfully deleted
+     * @param {Function} onError
+     */
+    function deleteSubmission(id, onSuccess, onError) {
+        var request,
+                name = localStorage[NAME_LOCAL_STORAGE_ID],
+                token = localStorage[TOKEN_LOCAL_STORAGE_ID];
+        if (name && token) {
+            request = new XMLHttpRequest();
+            request.onload = function () {
+                var data;
+                if (request.responseText[0] !== "{") {
+                    onError({
+                        error: ERROR_DELETE_WRONG_RESPONSE_FORMAT
+                    });
+                    return;
+                }
+                data = JSON.parse(request.responseText);
+                if (data.error) {
+                    onError(data);
+                    return;
+                }
+                if (data.success !== true) {
+                    onError({
+                        error: ERROR_DELETE_WRONG_RESPONSE_FORMAT
+                    });
+                    return;
+                }
+                onSuccess();
+            }.bind(this);
+            request.onerror = function () {
+                onError({
+                    error: ERROR_REQUEST_FAILED
+                });
+            }.bind(this);
+            request.ontimeout = function () {
+                onError({
+                    error: ERROR_REQUEST_TIMEOUT
+                });
+            }.bind(this);
+            request.overrideMimeType("text/plain; charset=utf-8");
+            request.open("POST", _url + "delete/" + id + "?" + _versionParam + "&token=" + token, true);
+            request.setRequestHeader("Content-Type", "application/json");
+            request.send(JSON.stringify({
+                username: name
+            }));
+        }
+    }
+    /**
      * Returns the list of names (unique titles) of all the loaded missions
      * @returns {String[]}
      */
@@ -217,8 +332,11 @@ define([
     return {
         init: init,
         isReady: isReady,
+        isSubmitter: isSubmitter,
         retrieveMissions: retrieveMissions,
         submitMission: submitMission,
+        getSubmissions: getSubmissions,
+        deleteSubmission: deleteSubmission,
         getMissionNames: getMissionNames,
         getMissionDescriptor: getMissionDescriptor,
         getMissionDescriptors: getMissionDescriptors,

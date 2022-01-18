@@ -1,5 +1,5 @@
 /**
- * Copyright 2016, 2020-2021 Krisztián Nagy
+ * Copyright 2016, 2020-2022 Krisztián Nagy
  * @file A stateful module that stores translation strings for different languages for the application and provides functions to load these
  * strings from an object 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -174,6 +174,13 @@ define([
         return Object.keys(_allStrings[_currentLanguage]).filter(function (key) {
             return key.indexOf(prefix) === 0;
         });
+    };
+    /**
+     * Returns the locale string code that is defined in the strings data JSON for the current language (e.g. "en-US"))
+     * @returns {String}
+     */
+    exports.getLocale = function () {
+        return _allStrings[_currentLanguage].locale;
     };
     exports.CATEGORY_SEPARATOR = CATEGORY_SEPARATOR;
     return exports;

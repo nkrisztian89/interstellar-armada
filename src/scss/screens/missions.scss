@@ -24,7 +24,7 @@ $header-height: 3em;
     right: 0;
     width: calc(100% - #{$list-width + $horizontal-margin});
     height: 100%;
-    
+
     text-align: left;
 }
 
@@ -59,7 +59,7 @@ $info-top-margin: 0.5em;
     padding-top: 0.5em;
     padding-right: 0.5em;
     height: calc(100% - #{$header-height + $info-top-margin});
-    
+
     @include top-bordered;
     @include styled-scrollbar;
 }
@@ -86,17 +86,17 @@ $info-top-margin: 0.5em;
     margin-bottom: 0.5em;
     width: 25em;
     background-image:
-            -webkit-linear-gradient(
-            left, 
-            $panel-back-color,
-            rgba($panel-back-color,0)
-            );
+        -webkit-linear-gradient(
+        left,
+        $panel-back-color,
+        rgba($panel-back-color,0)
+        );
     background-image:
-            -moz-linear-gradient(
-            left, 
-            $panel-back-color,
-            rgba($panel-back-color,0)
-            );
+        -moz-linear-gradient(
+        left,
+        $panel-back-color,
+        rgba($panel-back-color,0)
+        );
 }
 
 .subcaption.completed {
@@ -137,12 +137,8 @@ img.missionMedal {
     @include bottom-bordered;
 }
 
-.fileButton {
+button.fileButton {
     margin: 0.5em;
-}
-
-.submitMissionPopupBackground {
-    background-color: $overlay-background-color;
 }
 
 .submitMissionPopup {
@@ -199,4 +195,55 @@ button.submitFileButton {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+table.submissions {
+    max-width: 90%;
+    text-align: left;
+    margin-left: auto;
+    margin-right: auto;
+    & tbody {
+        max-height: 28em;
+        display: block;
+        @include styled-scrollbar;
+        @media screen and (min-aspect-ratio: 2/1) {
+            max-height: 22em;
+        }
+    }
+    & thead, & tbody tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+    & tbody tr:hover>td {
+        color: $light-text-color;
+        background-color: $panel-front-color;
+    }
+    & td {
+        vertical-align: top;
+    }
+    & th.submissionTitleColumn {
+        width: 14.4em;
+    }
+    & td.submissionTitleColumn {
+        white-space: normal;
+        width: 16em;
+    }
+    & th.submissionDateColumn {
+        width: 9em;
+    }
+    & td.submissionDateColumn {
+        width: 10em;
+    }
+    & th.submissionStatusColumn {
+        width: auto;
+    }
+    & td.submissionStatusColumn {
+        white-space: normal;
+        width: auto;
+    }
+    & .submissionActionsColumn {
+        width: 10.5em;
+        font-size: 100%;
+    }
 }
