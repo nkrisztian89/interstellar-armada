@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2021 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2022 Krisztián Nagy
  * @file Provides the descriptor objects that outline the structure of properties for the various resource / class categories of 
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -3899,6 +3899,9 @@ define([
                 if (params.team !== undefined) {
                     parts.push("team" + operator + params.team);
                 }
+                if (params.disableFiring !== undefined) {
+                    parts.push((params.disableFiring ? "disable" : "enable") + " firing");
+                }
                 return parts.join(", ");
             },
             /**
@@ -3935,7 +3938,7 @@ define([
                         return instance.command;
                     }
                     // SetPropertiesAction params:
-                    if (instance.hull !== undefined || instance.shield !== undefined || instance.team !== undefined) {
+                    if (instance.hull !== undefined || instance.shield !== undefined || instance.team !== undefined || instance.disableFiring !== undefined) {
                         return _getPropertiesText(instance, ": ");
                     }
                     // HUDAction params:
@@ -4019,18 +4022,28 @@ define([
                         name: "hull",
                         type: NON_NEGATIVE_INT_PERCENT,
                         optional: true,
+                        defaultText: "unchanged",
                         isValid: _parentCanHaveHullShieldParams
                     },
                     SHIELD: {
                         name: "shield",
                         type: NON_NEGATIVE_INT_PERCENT,
                         optional: true,
+                        defaultText: "unchanged",
                         isValid: _parentCanHaveHullShieldParams
                     },
                     TEAM: {
                         name: "team",
                         type: TEAM_REFERENCE,
                         optional: true,
+                        defaultText: "unchanged",
+                        isValid: _parentIsSetPropertiesAction
+                    },
+                    DISABLE_FIRING: {
+                        name: "disableFiring",
+                        type: BaseType.BOOLEAN,
+                        optional: true,
+                        defaultText: "unchanged",
                         isValid: _parentIsSetPropertiesAction
                     },
                     // HUDAction params:

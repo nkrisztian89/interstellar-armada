@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file The classes defining actions which can be executed during mission events
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -395,6 +395,7 @@ define([
      * @property {Number} [hull] The percentage to set the subjects' hull integrity to
      * @property {Number} [shield] The percentage to set the subjects' shield integrity to
      * @property {String} [team] The name of the team to assign the subjects to
+     * @property {Boolean} [disableFiring] Whether to disable firing weapons (including launching missiles)
      */
     /**
      * @override
@@ -409,7 +410,8 @@ define([
         if (!this._params ||
                 ((this._params.hull !== undefined) && ((typeof this._params.hull !== "number") || (this._params.hull < 0) || (this._params.hull > 100))) ||
                 ((this._params.shield !== undefined) && ((typeof this._params.shield !== "number") || (this._params.shield < 0) || (this._params.shield > 100))) ||
-                ((this._params.team !== undefined) && (typeof this._params.team !== "string"))) {
+                ((this._params.team !== undefined) && (typeof this._params.team !== "string")) ||
+                ((this._params.disableFiring !== undefined) && (typeof this._params.disableFiring !== "boolean"))) {
             this._handleWrongParams();
             return false;
         }
@@ -435,6 +437,11 @@ define([
                 if (team) {
                     team.addSpacecraft(spacecrafts[i]);
                     teamsChanged = true;
+                }
+                if (this._params.disableFiring === true) {
+                    spacecrafts[i].disableFiring();
+                } else if (this._params.disableFiring === false) {
+                    spacecrafts[i].enableFiring();
                 }
             }
         }
