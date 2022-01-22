@@ -534,7 +534,7 @@ define([
                     this._community ?
                     (missionHub.isReady() ? strings.MISSIONS.MISSION_HUB_DESCRIPTION : strings.MISSIONS.MISSION_HUB_CONNECTING_DESCRIPTION) :
                     strings.MISSIONS.NO_SELECTED_DESCRIPTION), {
-                editor: '<a target="_blank" rel="noopener" href="editor.html">Interstellar Armada editor</a>'
+                editor: '<a target="_blank" rel="noopener" href="editor.html#missions">Interstellar Armada editor</a>'
             });
             this._missionObjectivesTitle.hide();
             this._missionObjectives.hide();

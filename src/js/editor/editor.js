@@ -83,9 +83,11 @@ define([
             NEW_ITEM_BUTTON_ID = "newItemButton",
             NEW_ITEM_DIALOG_ID = "newItemDialog",
             NEW_ITEM_TYPE_ID = "newItemType",
+            NEW_ITEM_CATEGORY_CONTAINER_ID = "newItemCategoryContainer",
             NEW_ITEM_CATEGORY_ID = "newItemCategory",
             NEW_ITEM_BASE_ID = "newItemBase",
             NEW_ITEM_NAME_ID = "newItemName",
+            NEW_ITEM_DIALOG_FILLER_ID = "newItemDialogFiller",
             NEW_ITEM_CREATE_BUTTON_ID = "newItemCreate",
             NEW_ITEM_CANCEL_BUTTON_ID = "newItemCancel",
             // export items
@@ -124,7 +126,7 @@ define([
             PREVIEW_DIV_ID = "previewDiv",
             PREVIEW_CANVAS_ID = "previewCanvas",
             PREVIEW_INFO_ID = "previewInfo",
-            NO_ITEM_SELECTED_TEXT = "select an item from the left",
+            NO_ITEM_SELECTED_TEXT = "select an item from the left or click New or Import in the top left menu",
             NO_PREVIEW_TEXT = "preview not available for this type of item",
             NO_PROPERTIES_TEXT = "properties not available for this type of item",
             // ------------------------------------------------------------------------------
@@ -1046,7 +1048,7 @@ define([
                     break;
                 case common.ItemType.MISSION:
                     common.setSelectorOptions(newItemCategory, [MISSIONS_CATEGORY]);
-                    getItems = missions.getMissionNames;
+                    getItems = missions.getMissionNames.bind(this, undefined);
                     create = null;
                     createAsync = function (callback) {
                         var newItemData;
@@ -1075,6 +1077,8 @@ define([
                     createAsync = null;
                     application.showError("Creating " + newItemType.value + " is not yet implemented!");
             }
+            document.getElementById(NEW_ITEM_CATEGORY_CONTAINER_ID).hidden = newItemCategory.options.length < 2;
+            document.getElementById(NEW_ITEM_DIALOG_FILLER_ID).hidden = newItemCategory.options.length >= 2;
             newItemCategory.onchange();
         };
         newItemCategory.onchange = function () {
@@ -1224,6 +1228,19 @@ define([
                                 _selectItem(hash[0], location.hash.substring(3 + hash[0].length + hash[1].length), hash[1]);
                             } else if (hash.length === 3) {
                                 _selectItem(hash[0], hash[2], hash[1]);
+                            } else if (hash.length > 0) {
+                                if (hash[0] === common.ItemType.MISSION) {
+                                    _selectedItem.type = common.ItemType.MISSION;
+                                    _selectedItem.category = MISSIONS_CATEGORY;
+                                    _expandList(_itemElements[_selectedItem.type][_selectedItem.category]._list);
+                                    if (hash.length === 2) {
+                                        if (hash[1] === "create") {
+                                            document.getElementById(NEW_ITEM_BUTTON_ID).click();
+                                        } else if (hash[1] === "import") {
+                                            document.getElementById(IMPORT_BUTTON_ID).click();
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
