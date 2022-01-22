@@ -24,6 +24,7 @@ define([
             exports = {
                 // ------------------------------------------------------------------------------
                 // Constants
+                GAME_VERSION_LABEL_ID: "gameVersion",
                 // music
                 MENU_THEME: "menu",
                 DEBRIEFING_VICTORY_THEME: "debriefing_victory",

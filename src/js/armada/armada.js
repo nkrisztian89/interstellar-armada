@@ -130,6 +130,7 @@ define([
             analytics.sendEvent("error", undefined, {message: (message.length > 120) ? message.substr(0, 120) + "..." : message});
             showError(message, severity, details);
         };
+        document.getElementById(armadaScreens.GAME_VERSION_LABEL_ID).textContent = game.getVersion();
         callback();
     };
     game._buildScreensAndExecuteCallback = function (callback) {

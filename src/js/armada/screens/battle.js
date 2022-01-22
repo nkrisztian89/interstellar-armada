@@ -2521,6 +2521,17 @@ define([
      * @override
      * @returns {Boolean}
      */
+    BattleScreen.prototype.show = function () {
+        if (screens.HTMLScreenWithCanvases.prototype.show.call(this)) {
+            document.getElementById(armadaScreens.GAME_VERSION_LABEL_ID).hidden = true;
+            return true;
+        }
+        return false;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
     BattleScreen.prototype.hide = function () {
         if (screens.HTMLScreenWithCanvases.prototype.hide.call(this)) {
             if (_multi) {
@@ -2528,6 +2539,7 @@ define([
             }
             this.pauseBattle(true);
             _clearData();
+            document.getElementById(armadaScreens.GAME_VERSION_LABEL_ID).hidden = false;
             return true;
         }
         return false;
