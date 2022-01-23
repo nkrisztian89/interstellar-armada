@@ -333,7 +333,11 @@ define([
                         value: "accept"
                     }],
                 {
-                    change: this._updateSubmitMissionButton.bind(this),
+                    select: armadaScreens.playButtonSelectSound,
+                    change: function () {
+                        armadaScreens.playButtonClickSound(true);
+                        this._updateSubmitMissionButton();
+                    }.bind(this),
                     click: function (event) {
                         return event.target.tagName.toLowerCase() !== 'a';
                     }

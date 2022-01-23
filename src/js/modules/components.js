@@ -1235,6 +1235,10 @@ define([
          * @type Function
          */
         this._onClick = eventHandlers ? eventHandlers[CLICK_EVENT_NAME] : null;
+        /**
+         * A function that runs whenever an option is selected
+         */
+        this._onSelect = eventHandlers ? eventHandlers[SELECT_EVENT_NAME] : null;
     }
     CheckGroup.prototype = new ExternalComponent();
     CheckGroup.prototype.constructor = CheckGroup;
@@ -1245,6 +1249,16 @@ define([
         return function () {
             if (this._onChange) {
                 this._onChange();
+            }
+        }.bind(this);
+    };
+    /**
+     * @returns {Function}
+     */
+    CheckGroup.prototype._getItemSelectHandler = function () {
+        return function () {
+            if (this._onSelect) {
+                this._onSelect(true);
             }
         }.bind(this);
     };
@@ -1274,7 +1288,8 @@ define([
                     event.stopPropagation();
                     return true;
                 },
-                changeHandler = this._getItemChangeHandler();
+                changeHandler = this._getItemChangeHandler(),
+                selectHandler = this._getItemSelectHandler();
         ExternalComponent.prototype._initializeComponents.call(this);
         if (this._rootElement) {
             for (i = 0; i < this._options.length; i++) {
@@ -1285,6 +1300,7 @@ define([
                 }
                 inputElement.onchange = changeHandler;
                 inputElement.onclick = clickHandler;
+                inputElement.onfocus = selectHandler;
                 this._options[i].element = inputElement;
                 labelElement = document.createElement("label");
                 labelElement.innerHTML = _getLabelText(this._options[i]);
@@ -1296,6 +1312,7 @@ define([
                 divElement.appendChild(inputElement);
                 divElement.appendChild(labelElement);
                 divElement.onclick = this._getItemClickHandler(i);
+                divElement.onmouseenter = selectHandler;
                 this._rootElement.appendChild(divElement);
             }
         }

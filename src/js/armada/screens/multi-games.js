@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Krisztián Nagy
+ * Copyright 2021-2022 Krisztián Nagy
  * @file This module manages and provides the Multiplayer Games screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -195,7 +195,11 @@ define([
                             },
                             _getSpacecraftOptions(),
                             {
-                                change: this._updateCreateGameCreateButton.bind(this)
+                                select: armadaScreens.playButtonSelectSound,
+                                change: function () {
+                                    armadaScreens.playButtonClickSound(true);
+                                    this._updateCreateGameCreateButton();
+                                }.bind(this)
                             }),
                     CREATE_GAME_SPACECRAFTS_CONTAINER_ID);
         }.bind(this));
