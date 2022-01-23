@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file The classes defining conditions which can trigger events during missions
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -44,7 +44,11 @@ define([
                 /** This condition is evaluated true when any/all of its subjects are on a the specified team */
                 ON_TEAM: "onTeam",
                 /** This condition is evaluated true when the mission state has one of the specified values */
-                MISSION_STATE: "missionState"
+                MISSION_STATE: "missionState",
+                /** This condition is evaluated true whenever the subjects get targeted */
+                GETS_TARGETED: "getsTargeted",
+                /** This condition is evaluated true while any/all of its subjects are being targeted */
+                IS_TARGETED: "isTargeted"
             },
             ConditionSubjectsWhich = {
                 /** All the subjects need to be destroyed for the condition to be fulfilled */
@@ -1594,6 +1598,201 @@ define([
     MissionStateCondition.prototype.canChangeMultipleTimes = function () {
         return true;
     };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied (for a single simulation step) whenever
+     * any of the subjects get targeted
+     * @extends Condition
+     * @param {Object} dataJSON
+     * @param {Mission} [mission]
+     */
+    function GetsTargetedCondition(dataJSON, mission) {
+        var i, spacecrafts, callback;
+        Condition.call(this, dataJSON);
+        /**
+         * @type Boolean
+         */
+        this._satisfied = false;
+        if (mission && this._subjects) {
+            spacecrafts = this._subjects.getSpacecrafts(mission);
+            if (spacecrafts && (spacecrafts.length > 0)) {
+                callback = this._handleTargeted.bind(this, (this._params && this._params.by) ? new SubjectGroup(this._params.by).getSpacecrafts(mission) : null);
+                for (i = 0; i < spacecrafts.length; i++) {
+                    spacecrafts[i].addEventHandler(SpacecraftEvents.BEING_TARGETED, callback);
+                }
+            }
+        }
+    }
+    GetsTargetedCondition.prototype = new Condition();
+    GetsTargetedCondition.prototype.constructor = GetsTargetedCondition;
+    /**
+     * @typedef GetsTargetedCondition~Params
+     * @property {Object} [by] The condition is satisfied if the subjects are targeted by spacecrafts
+     * from the SubjectGroup defined by this parameter
+     */
+    /**
+     * @param {GetsTargetedCondition~Params} params 
+     * @returns {Boolean}
+     */
+    GetsTargetedCondition.prototype._checkParams = function (params) {
+        /**
+         * @type GetsTargetedCondition~Params
+         */
+        this._params = params;
+        return true;
+    };
+    /**
+     * @param {Spacecraft[]} spacecrafts The list of spacecrafts which should satisfy the condition
+     * if the subjects are targeted by them
+     * @param {SpacecraftEvents~BeingTargetedData} data The event data
+     */
+    GetsTargetedCondition.prototype._handleTargeted = function (spacecrafts, data) {
+        if (!spacecrafts || spacecrafts.indexOf(data.spacecraft) >= 0) {
+            this._satisfied = true;
+        }
+    };
+    /**
+     * @param {Mission} mission
+     * @param {Number} dt
+     * @returns {Boolean}
+     */
+    GetsTargetedCondition.prototype.isSatisfied = function (mission, dt) {
+        var satisfied = this._satisfied;
+        if (dt > 0) {
+            this._satisfied = false;
+        }
+        return satisfied;
+    };
+    /**
+     * @returns {String}
+     */
+    GetsTargetedCondition.prototype.getObjectiveString = function () {
+        application.showError("GetsTargeted conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {String}
+     */
+    GetsTargetedCondition.prototype.getObjectiveStateString = function () {
+        application.showError("GetsTargeted conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    GetsTargetedCondition.prototype.getTargetSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    GetsTargetedCondition.prototype.getEscortedSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    GetsTargetedCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
+    // ##############################################################################
+    /**
+     * @class A condition that is satisfied while any/all of its subjects are being targeted 
+     * @extends Condition
+     * @param {Object} dataJSON
+     * @param {Mission} [mission]
+     */
+    function IsTargetedCondition(dataJSON, mission) {
+        Condition.call(this, dataJSON);
+        /**
+         * @type Spacecraft[]
+         */
+        this._by = null;
+        if (mission && this._params && this._params.by) {
+            this._by = new SubjectGroup(this._params.by).getSpacecrafts(mission);
+        }
+    }
+    IsTargetedCondition.prototype = new Condition();
+    IsTargetedCondition.prototype.constructor = IsTargetedCondition;
+    /**
+     * @typedef IsTargetedCondition~Params
+     * @property {String} [which] (enum ConditionSubjectsWhich)
+     * @property {Object} [by] The condition is satisfied if the subjects are targeted by spacecrafts
+     * from the SubjectGroup defined by this parameter
+     */
+    /**
+     * @param {IsTargetedCondition~Params} params 
+     * @returns {Boolean}
+     */
+    IsTargetedCondition.prototype._checkParams = function (params) {
+        /**
+         * @type IsTargetedCondition~Params
+         */
+        this._params = params;
+        /**
+         * @type Boolean
+         */
+        this._all = !this._params || !this._params.which || (this._params.which === ConditionSubjectsWhich.ALL);
+        return true;
+    };
+    /**
+     * @param {Mission} mission
+     * @returns {Boolean}
+     */
+    IsTargetedCondition.prototype.isSatisfied = function (mission) {
+        var i, j, spacecrafts = this._subjects.getSpacecrafts(mission), targetingSpacecrafts;
+        if (this._by === null) {
+            for (i = 0; i < spacecrafts.length; i++) {
+                if ((spacecrafts[i].getTargetingSpacecrafts().length > 0) !== this._all) {
+                    return !this._all;
+                }
+            }
+        } else {
+            for (i = 0; i < spacecrafts.length; i++) {
+                targetingSpacecrafts = spacecrafts[i].getTargetingSpacecrafts();
+                for (j = 0; j < this._by.length; j++) {
+                    if ((targetingSpacecrafts.indexOf(this._by[j]) >= 0) !== this._all) {
+                        return !this._all;
+                    }
+                }
+            }
+        }
+        return this._all;
+    };
+    /**
+     * @returns {String}
+     */
+    IsTargetedCondition.prototype.getObjectiveString = function () {
+        application.showError("IsTargeted conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {String}
+     */
+    IsTargetedCondition.prototype.getObjectiveStateString = function () {
+        application.showError("IsTargeted conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    IsTargetedCondition.prototype.getTargetSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    IsTargetedCondition.prototype.getEscortedSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    IsTargetedCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
     // -------------------------------------------------------------------------
     /**
      * @param {Object} dataJSON
@@ -1616,6 +1815,8 @@ define([
     _conditionConstructors[ConditionType.AWAY] = AwayCondition;
     _conditionConstructors[ConditionType.ON_TEAM] = OnTeamCondition;
     _conditionConstructors[ConditionType.MISSION_STATE] = MissionStateCondition;
+    _conditionConstructors[ConditionType.GETS_TARGETED] = GetsTargetedCondition;
+    _conditionConstructors[ConditionType.IS_TARGETED] = IsTargetedCondition;
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {

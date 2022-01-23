@@ -3103,8 +3103,11 @@ define([
             SUBJECT_GROUP = {
                 baseType: BaseType.OBJECT,
                 name: "SubjectGroup",
-                getPreviewText: function (instance) {
-                    var subjects = [];
+                getPreviewText: function (instance, parent) {
+                    var prefix = "", subjects = [];
+                    if (parent && parent.params && parent.params.which === conditions.ConditionSubjectsWhich.ANY) {
+                        prefix = "any of ";
+                    }
                     if (instance.spacecrafts) {
                         subjects = subjects.concat(instance.spacecrafts);
                     }
@@ -3121,12 +3124,12 @@ define([
                         return subjects[0];
                     }
                     if (subjects.length === 2) {
-                        return subjects[0] + ", " + subjects[1];
+                        return prefix + subjects[0] + ", " + subjects[1];
                     }
                     if ((subjects.length === 3) && subjects[2] && (subjects[2].length < 9)) {
-                        return subjects.join(", ");
+                        return prefix + subjects.join(", ");
                     }
-                    return subjects[0] + ", " + subjects[1] + "... (" + (subjects.length - 2) + " more)";
+                    return prefix + subjects[0] + ", " + subjects[1] + "... (" + (subjects.length - 2) + " more)";
                 },
                 properties: {
                     SPACECRAFTS: {
@@ -3189,7 +3192,8 @@ define([
                         (parent.type === ConditionType.HULL_INTEGRITY) ||
                         (parent.type === ConditionType.SHIELD_INTEGRITY) ||
                         (parent.type === ConditionType.AWAY) ||
-                        (parent.type === ConditionType.ON_TEAM));
+                        (parent.type === ConditionType.ON_TEAM) ||
+                        (parent.type === ConditionType.IS_TARGETED));
             },
             _parentIsCountCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.COUNT);
@@ -3203,8 +3207,11 @@ define([
             _parentIsDistanceCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.DISTANCE);
             },
-            _parentIsHitCondition = function (data, parent) {
-                return !!parent && (parent.type === ConditionType.HIT);
+            _hasByParam = function (data, parent) {
+                return !!parent && (
+                        (parent.type === ConditionType.HIT) ||
+                        (parent.type === ConditionType.GETS_TARGETED) ||
+                        (parent.type === ConditionType.IS_TARGETED));
             },
             _parentIsAwayCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.AWAY);
@@ -3234,7 +3241,7 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "ConditionParams",
                 getPreviewText: function (instance, parent) {
-                    var result = "", subjects;
+                    var result = "";
                     // HullIntegrityCondition and ShieldIntegrityCondition params:
                     if (instance.minIntegrity !== undefined || instance.maxIntegrity !== undefined) {
                         if (instance.minIntegrity !== undefined) {
@@ -3242,10 +3249,6 @@ define([
                         }
                         result += (parent && (parent.type === ConditionType.SHIELD_INTEGRITY)) ? "shield of " : "hull of ";
                         if (parent && parent.subjects) {
-                            subjects = new conditions.SubjectGroup(parent.subjects);
-                            if (subjects.isMulti() && (instance.which === conditions.ConditionSubjectsWhich.ANY)) {
-                                result += "any of ";
-                            }
                             result += SUBJECT_GROUP.getPreviewText(parent.subjects, parent);
                         } else {
                             if (instance.which === conditions.ConditionSubjectsWhich.ANY) {
@@ -3277,6 +3280,13 @@ define([
                         }
                         return "on " + instance.team;
                     }
+                    // HitCondition/GetsTargetedCondition/IsTargetedCondition params:
+                    if (instance.by !== undefined) {
+                        if (instance.which) {
+                            result = instance.which + ", ";
+                        }
+                        return result + "by " + SUBJECT_GROUP.getPreviewText(instance.by);
+                    }
                     // DestroyedCondition/AwayCondition params:
                     if (instance.which) {
                         if (instance.away !== undefined) {
@@ -3294,10 +3304,6 @@ define([
                     // TimeCondition params:
                     if (instance.when !== undefined) {
                         return instance.when + (instance.maxCount ? " (" + instance.maxCount + "x)" : "") + ": " + utils.getTimeString(instance.time) + (instance.start ? " after " + instance.start : "");
-                    }
-                    // HitCondition params:
-                    if (instance.by !== undefined) {
-                        return "by " + SUBJECT_GROUP.getPreviewText(instance.by, instance);
                     }
                     if (instance.missionStates !== undefined) {
                         return "state is " + (instance.missionStates.join(" or ") || "unknown");
@@ -3400,7 +3406,7 @@ define([
                         name: "by",
                         type: SUBJECT_GROUP,
                         optional: true,
-                        isValid: _parentIsHitCondition,
+                        isValid: _hasByParam,
                         defaultText: "any"
                     },
                     // AwayCondition params:
@@ -3435,7 +3441,9 @@ define([
                         (data.type === ConditionType.DISTANCE) ||
                         (data.type === ConditionType.HIT) ||
                         (data.type === ConditionType.AWAY) ||
-                        (data.type === ConditionType.ON_TEAM);
+                        (data.type === ConditionType.ON_TEAM) ||
+                        (data.type === ConditionType.GETS_TARGETED) ||
+                        (data.type === ConditionType.IS_TARGETED);
             },
             _conditionCanHaveParams = function (data) {
                 return ((data.type === ConditionType.DESTROYED) && data.subjects && new conditions.SubjectGroup(data.subjects).isMulti()) ||
@@ -3447,7 +3455,9 @@ define([
                         (data.type === ConditionType.HIT) ||
                         (data.type === ConditionType.AWAY) ||
                         (data.type === ConditionType.ON_TEAM) ||
-                        (data.type === ConditionType.MISSION_STATE);
+                        (data.type === ConditionType.MISSION_STATE) ||
+                        (data.type === ConditionType.GETS_TARGETED) ||
+                        (data.type === ConditionType.IS_TARGETED);
             },
             _conditionMustHaveParams = function (data) {
                 return (data.type === ConditionType.COUNT) ||
@@ -3486,7 +3496,7 @@ define([
                             case ConditionType.COUNT:
                                 return "count of " + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " " + CONDITION_PARAMS.getPreviewText(instance.params || utils.EMPTY_OBJECT, instance);
                             case ConditionType.DESTROYED:
-                                return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") + SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " destroyed";
+                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " destroyed";
                             case ConditionType.TIME:
                                 return instance.params ? CONDITION_PARAMS.getPreviewText(instance.params, instance) : "time";
                             case ConditionType.HULL_INTEGRITY:
@@ -3502,15 +3512,17 @@ define([
                             case ConditionType.HIT:
                                 return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " hit" + ((instance.params && instance.params.by) ? " " + CONDITION_PARAMS.getPreviewText(instance.params, instance) : "");
                             case ConditionType.AWAY:
-                                return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") +
-                                        SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " " +
+                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " " +
                                         ((!instance.params || (instance.params.away !== false)) ? "away" : "present");
                             case ConditionType.ON_TEAM:
-                                return ((instance.params && instance.params.which === conditions.ConditionSubjectsWhich.ANY) ? "any of " : "") +
-                                        SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " on " +
+                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " on " +
                                         ((instance.params && instance.params.team) || "unknown");
                             case ConditionType.MISSION_STATE:
-                                return "mission state is " + ((instance.params && instance.params.missionStates && instance.params.missionStates.join(" or ")) || " unknown");
+                                return "mission state is " + ((instance.params && instance.params.missionStates && instance.params.missionStates.join(" or ")) || "unknown");
+                            case ConditionType.GETS_TARGETED:
+                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " gets targeted" + ((instance.params && instance.params.by) ? " " + CONDITION_PARAMS.getPreviewText(instance.params, instance) : "");
+                            case ConditionType.IS_TARGETED:
+                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " is targeted" + ((instance.params && instance.params.by) ? " by " + SUBJECT_GROUP.getPreviewText(instance.params.by) : "");
                         }
                         return instance.type;
                     }
