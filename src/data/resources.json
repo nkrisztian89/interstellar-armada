@@ -1305,6 +1305,26 @@
                     "maxLOD": 4
                 }]
         }, {
+            "name": "tank",
+            "basepath": "tank",
+            "format": "egm",
+            "files": [{
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }]
+        }, {
             "name": "drone",
             "basepath": "drone",
             "format": "egm",

@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.7:935-dev (2021.08.29.)",
-        "creationTime": "Sun Aug 29 2021 14:50:51 GMT+0200 (közép-európai nyári idő)"
+        "version": "0.4.7-dev:986 (2022.01.23.)",
+        "creationTime": "Mon Jan 24 2022 00:05:29 GMT+0100 (közép-európai téli idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -3436,6 +3436,34 @@
                 }],
             "explosion": "containerExplosion",
             "showTimeRatioDuringExplosion": 0.25,
+            "scoreValue": 5
+        }, {
+            "name": "containerTank",
+            "type": "container",
+            "fullName": "SMCU-31 Container",
+            "showInDatabase": false,
+            "hitpoints": 5,
+            "model": "tank",
+            "shader": "ship",
+            "texture": "libra",
+            "mass": 500,
+            "dragFactor": 4,
+            "bodies": [{
+                    "position": [0, 0, 0],
+                    "size": [4, 4, 7]
+                }],
+            "views": [{
+                    "name": "free",
+                    "fov": 45,
+                    "fovRange": [30, 60],
+                    "movable": true,
+                    "turnable": true,
+                    "rotationCenterIsObject": true,
+                    "distanceRange": [6, 25],
+                    "position": [0, -10, 0]
+                }],
+            "explosion": "containerExplosion",
+            "showTimeRatioDuringExplosion": 0.1,
             "scoreValue": 5
         }, {
             "name": "falcon",

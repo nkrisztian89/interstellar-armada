@@ -899,6 +899,9 @@
         "container": {
             "name": "SMCU-11 Konténer"
         },
+        "containerTank": {
+            "name": "SMCU-31 Konténer"
+        },
         "drone": {
             "name": "Kiképző drón",
             "description": "Ezeket a drónokat a birodalmi vadászpilóták kiképzése során használják lőgyakorlatokhoz. Olcsóak és könnyen előállíthatóak, a konstrukciójuk pedig biztosítja, hogy az alacsony energiájú gyakorló fegyverek találataitól hamar darabokra hulljanak. Ezeket a darabokat aztán begyűjtik, hogy új drónok építéséhez használják fel őket, ezáltal egy egyszerre gazdaságos és a szimulátornál életszerűbb gyakorlási lehetőséget biztosítva a pilótáknak."
@@ -927,6 +930,9 @@
         "wolf": {
             "name": "Farkas",
             "description": "Módosított változata az eredeti Főnix osztályú vadászgépeknek, melyek a Birodalom kezdeti időszakától egészen a közelmúltig a legelterjedtebb harci gépek közé tartoztak. A Főnixek légkörben és mélyűrben is használható, sokoldalú vadászok voltak. A méretükhöz képest nagy raktérnek és térugró kapacitásnak köszönhetően hosszabb időtartamú küldetésekre is bevethetőek. Ahogy a Birodalom egyre több külső és belső fenyegetéssel kezdett szembenézni, a Főnix többfeladatú vadászokat leváltották az egy-egy szerepkörre specializálódott Szitakötő, Sólyom, Rinocérosz és Vipera osztályok, melyek a saját feladatukat hatékonyabban tudják ellátni. A legtöbb Főnixet átalakították polgári használatra, ám egyre több jelentés érkezik kalózokról, akik a vadász módosított változatát használják rajtaütéseik során. Ez a változat a Farkas megjelölést kapta."
+        },
+        "commRelay": {
+            "name": "Átjátszóállomás"
         }
     },
     "weaponClass": {
