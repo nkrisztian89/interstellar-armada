@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.4.7-dev:986 (2022.01.23.)",
-        "creationTime": "Mon Jan 24 2022 00:05:29 GMT+0100 (közép-európai téli idő)"
+        "version": "0.4.7-dev:988 (2022.01.25.)",
+        "creationTime": "Tue Jan 25 2022 01:03:35 GMT+0100 (közép-európai téli idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -7266,6 +7266,107 @@
             "texture": "ruby_blade",
             "scoreValue": 100,
             "defaultLuminosityFactors": [[0, 1], [18, 1]]
+        }, {
+            "name": "buoy",
+            "type": "station",
+            "fullName": "Navigation Buoy",
+            "showInDatabase": false,
+            "hitpoints": 5,
+            "model": "buoy",
+            "shader": "ship",
+            "texture": "libra",
+            "mass": 3000,
+            "dragFactor": 5,
+            "bodies": [{
+                    "position": [0, 0, 0],
+                    "size": [3, 3, 18]
+                }, {
+                    "position": [0, 0, 0],
+                    "size": [18, 3, 3]
+                }, {
+                    "position": [0, 0, 0],
+                    "size": [3, 18, 3]
+                }],
+            "views": [{
+                    "name": "free",
+                    "fov": 45,
+                    "fovRange": [30, 60],
+                    "movable": true,
+                    "turnable": true,
+                    "rotationCenterIsObject": true,
+                    "distanceRange": [30, 70],
+                    "position": [0, -50, 0]
+                }],
+            "explosion": "fighterExplosion",
+            "showTimeRatioDuringExplosion": 0.32,
+            "scoreValue": 5,
+            "blinkers": [{
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 1, 1],
+                        "duration": 200
+                    },
+                    "position": [0, 12.5, 0],
+                    "period": 2000,
+                    "blinks": [0],
+                    "intensity": 100
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 1, 1],
+                        "duration": 200
+                    },
+                    "position": [0, -12.5, 0],
+                    "period": 2000,
+                    "blinks": [0],
+                    "intensity": 100
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 0, 1],
+                        "duration": 200
+                    },
+                    "position": [12.5, 0, 0],
+                    "period": 2000,
+                    "blinks": [500],
+                    "intensity": 100
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 1, 0, 1],
+                        "duration": 200
+                    },
+                    "position": [-12.5, 0, 0],
+                    "period": 2000,
+                    "blinks": [500],
+                    "intensity": 100
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 0, 0, 1],
+                        "duration": 200
+                    },
+                    "position": [0, 0, 12.5],
+                    "period": 2000,
+                    "blinks": [1000],
+                    "intensity": 100
+                }, {
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 0, 0, 1],
+                        "duration": 200
+                    },
+                    "position": [0, 0, -12.5],
+                    "period": 2000,
+                    "blinks": [1000],
+                    "intensity": 100
+                }]
         }, {
             "name": "commRelay",
             "type": "station",
