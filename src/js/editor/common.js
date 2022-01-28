@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2020-2021 Krisztián Nagy
+ * Copyright 2016-2017, 2020-2022 Krisztián Nagy
  * @file Provides some common functions to be used for the Interstellar Armada editor.
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -490,11 +490,11 @@ define([
      * @param {Boolean} [recursive=false] If true, all children of the popup are aligned recursively
      */
     Popup.prototype.alignPosition = function (recursive) {
-        var rect, left, i;
+        var invokerRect, rect, left, i;
         if (this.isVisible()) {
-            rect = this._invoker.getBoundingClientRect();
-            this._element.style.left = rect.left + "px";
-            this._element.style.top = rect.bottom + "px";
+            invokerRect = this._invoker.getBoundingClientRect();
+            this._element.style.left = invokerRect.left + "px";
+            this._element.style.top = invokerRect.bottom + "px";
             this._element.style.width = "";
             this._element.style.height = "";
             // first horizontal alignment, as it can change the height by canceling out text wrapping
@@ -510,10 +510,14 @@ define([
                 }
             }
             if (rect.bottom > window.innerHeight - POPUP_BOTTOM_MARGIN) {
-                this._element.style.height = (window.innerHeight - rect.top - 10 - POPUP_BOTTOM_MARGIN) + "px";
-                rect = this._element.getBoundingClientRect();
-                this._element.style.left = (rect.left - 21) + "px";
-                this._element.style.width = ((rect.right - rect.left) + 16) + "px";
+                if (invokerRect.top - rect.height > POPUP_BOTTOM_MARGIN) {
+                    this._element.style.top = (invokerRect.top - rect.height) + "px";
+                } else {
+                    this._element.style.height = (window.innerHeight - rect.top - 10 - POPUP_BOTTOM_MARGIN) + "px";
+                    rect = this._element.getBoundingClientRect();
+                    this._element.style.left = (rect.left - 21) + "px";
+                    this._element.style.width = ((rect.right - rect.left) + 16) + "px";
+                }
             }
             rect = this._element.getBoundingClientRect();
             if (recursive) {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Implementation of the Spacecraft game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -70,6 +70,10 @@ define([
             SpacecraftFormation = {
                 /** X offset is alternating (+/-), all offset factors increase for every second ship */
                 WEDGE: "wedge",
+                /** Each ship is offset by the given spacing from the previous one */
+                LINE: "line",
+                /** The offsets for the 3 ships after the lead: +X+Y+Z, -X+Y+Z, +2Y+2Z, then continues relative to the 4th */
+                DIAMOND: "diamond",
                 /** The position is randomly generated within the +/- X/2,Y/2,Z/2 around the lead position */
                 RANDOM: "random"
             },
@@ -370,6 +374,13 @@ define([
          * @type PointLightSource[]
          */
         this._lights = null;
+        /**
+         * The time value to be set for the blinkers when the spacecraft is added to the
+         * scene. -1 means there is no specified time (left at 0 or randomly chosen based
+         * on the parameters passed when adding to the scene)
+         * @type Number
+         */
+        this._initialBlinkTime = -1;
         // ---------------------------------------
         // physics
         /**
@@ -652,11 +663,26 @@ define([
      * @returns {Number[3]}
      */
     Spacecraft.getPositionInFormation = function (formation, index, leadPosition, orientation) {
-        var result, factor = Math.ceil(index / 2);
+        var result, factor, modulus;
         switch (formation.type) {
             case SpacecraftFormation.WEDGE:
+                factor = Math.ceil(index / 2);
                 result = [
                     (((index % 2) === 1) ? 1 : -1) * factor * formation.spacing[0],
+                    factor * formation.spacing[1],
+                    factor * formation.spacing[2]];
+                break;
+            case SpacecraftFormation.LINE:
+                result = [
+                    index * formation.spacing[0],
+                    index * formation.spacing[1],
+                    index * formation.spacing[2]];
+                break;
+            case SpacecraftFormation.DIAMOND:
+                modulus = (index % 3);
+                factor = Math.floor(index / 3) * 2 + ((modulus > 0) ? 1 : 0);
+                result = [
+                    ((modulus === 0) ? 0 : (modulus === 1) ? 1 : -1) * formation.spacing[0],
                     factor * formation.spacing[1],
                     factor * formation.spacing[2]];
                 break;
@@ -1556,6 +1582,7 @@ define([
         if (dataJSON.away) {
             this.setAway(true);
         }
+        this._initialBlinkTime = (dataJSON.initialBlinkTime !== undefined) ? dataJSON.initialBlinkTime : -1;
     };
     /**
      * Function to reset state before starting to execute the control actions triggered in the current simulation step.
@@ -2028,11 +2055,15 @@ define([
         if (addSupplements.blinkers === true) {
             for (i = 0; i < this._blinkers.length; i++) {
                 this._blinkers[i].addToScene(node, addSupplements.lightSources);
-                if (params.randomAnimationTime) {
-                    if (i === 0) {
-                        animationTime = this._blinkers[i].setRandomTime();
-                    } else {
-                        this._blinkers[i].setTime(animationTime);
+                if (this._initialBlinkTime >= 0) {
+                    this._blinkers[i].setTime(this._initialBlinkTime);
+                } else {
+                    if (params.randomAnimationTime) {
+                        if (i === 0) {
+                            animationTime = this._blinkers[i].setRandomTime();
+                        } else {
+                            this._blinkers[i].setTime(animationTime);
+                        }
                     }
                 }
             }

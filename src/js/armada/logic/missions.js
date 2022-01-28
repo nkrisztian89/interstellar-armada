@@ -173,7 +173,7 @@ define([
      * @returns {Array}
      */
     function _getIndividualSpacecraftDescriptors(spacecrafts) {
-        var i, j, squad, names, loadouts, pilotedIndex, positions, formation, orientation,
+        var i, j, squad, names, loadouts, pilotedIndex, positions, formation, orientation, initialBlinkTime, initialBlinkTimeDelta,
                 spacecraftDataTemplate, spacecraftData,
                 result = [];
         for (i = 0; i < spacecrafts.length; i++) {
@@ -186,6 +186,8 @@ define([
                 positions = spacecrafts[i].positions;
                 formation = spacecrafts[i].formation;
                 orientation = mat.rotation4FromJSON(spacecrafts[i].rotations);
+                initialBlinkTime = spacecrafts[i].initialBlinkTime;
+                initialBlinkTimeDelta = spacecrafts[i].initialBlinkTimeDelta;
                 // creating a template to be copied for individual spacecraft data objects, without the proprties that don't refer to individual spacecrafts
                 spacecraftDataTemplate = utils.deepCopy(spacecrafts[i]);
                 delete spacecraftDataTemplate.count;
@@ -217,6 +219,9 @@ define([
                             application.showError("Both positions and formation have been defined for spacecraft group - formation will be used!", application.ErrorSeverity.MINOR);
                         }
                         spacecraftData.position = spacecraft.Spacecraft.getPositionInFormation(formation, j, spacecraftData.position, orientation);
+                    }
+                    if (initialBlinkTime !== undefined) {
+                        spacecraftData.initialBlinkTime = initialBlinkTime + (j * (initialBlinkTimeDelta || 0));
                     }
                     result.push(spacecraftData);
                 }

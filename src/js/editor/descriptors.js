@@ -4410,6 +4410,9 @@ define([
             _craftCanHaveFormation = function (data) {
                 return _craftIsMulti(data) && _craftHasNoPositions(data);
             },
+            _craftCanHaveInitialBlinkTimeDelta = function (data) {
+                return _craftIsMulti(data) && (data.initialBlinkTime !== undefined);
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -4499,6 +4502,12 @@ define([
                         defaultValue: false,
                         isValid: _craftIsNotPiloted
                     },
+                    INITIAL_BLINK_TIME: {
+                        name: "initialBlinkTime",
+                        type: NON_NEGATIVE_MILLISECONDS,
+                        optional: true,
+                        defaultText: "random"
+                    },
                     COUNT: {
                         name: "count",
                         type: SPACECRAFT_COUNT,
@@ -4535,6 +4544,13 @@ define([
                         type: FORMATION,
                         optional: true,
                         isValid: _craftCanHaveFormation
+                    },
+                    INITIAL_BLINK_TIME_DELTA: {
+                        name: "initialBlinkTimeDelta",
+                        type: MILLISECONDS,
+                        optional: true,
+                        defaultText: "0",
+                        isValid: _craftCanHaveInitialBlinkTimeDelta
                     }
                 }
             },
