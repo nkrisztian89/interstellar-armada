@@ -29,7 +29,57 @@ define([
     var
             // ----------------------------------------------------------------------
             // constants
-            DEFAULT_PROFILE_NAME = "default";
+            DEFAULT_PROFILE_NAME = "default",
+            // ----------------------------------------------------------------------
+            // private variables
+            /** @type ControlContext */
+            _context,
+            /** @type Boolean */
+            _pointerLock = false,
+            /** @type Boolean */
+            _manualPointerLockExit = false,
+            /** @type Function */
+            _onPointerLockExit;
+    /**
+     * @private
+     * @param {ControlContext} context
+     */
+    function _setContext(context) {
+        _context = context;
+    }
+    /**
+     * Get the active control context
+     * @returns {ControlContext}
+     */
+    function getContext() {
+        return _context;
+    }
+    /**
+     * Use this together with onPointerLockExit() to be able to distinguish
+     * between exiting pointer lock by this call and by the default user action
+     * (pressing escape)
+     */
+    function exitPointerLock() {
+        _manualPointerLockExit = true;
+        document.exitPointerLock();
+    }
+    /**
+     * If exiting the pointer lock was triggered by exitPointerLock(), the
+     * passed callback will be called with a true argument, otherwise (e.g.
+     * if triggered by the default user action, pressing escape) it will be
+     * called with a false argument
+     * @param {Function} callback
+     */
+    function onPointerLockExit(callback) {
+        _onPointerLockExit = callback;
+    }
+    /**
+     * Returns whether the pointer is currently locked by some element
+     * @returns {Boolean}
+     */
+    function isPointerLocked() {
+        return _pointerLock;
+    }
     // #########################################################################
     /**
      * @class A generic superclass for classes that represent the bindig of certain controls to an action.
@@ -752,6 +802,19 @@ define([
             }
         }
     };
+    /**
+     * Manually trigger the execution of a specific action, if it is handled by this
+     * controller
+     * @param {String} actionName
+     * @param {Number} [intensity]
+     * @param {InputInterpreter} [source]
+     */
+    Controller.prototype.executeAction = function (actionName, intensity, source) {
+        if (this._actions.hasOwnProperty(actionName)) {
+            this._actions[actionName].setTriggered(true, intensity, source);
+            this._actions[actionName].execute();
+        }
+    };
     // #########################################################################
     /**
      * @class A control context holds interpreter objects that translate the user 
@@ -825,6 +888,7 @@ define([
          * @type Object
          */
         this._disabledActions = {};
+        _setContext(this);
     }
     ControlContext.prototype = new asyncResource.AsyncResource();
     ControlContext.prototype.constructor = ControlContext;
@@ -1125,12 +1189,40 @@ define([
             }
         });
     };
+    /**
+     * Manually trigger the execution of a specific action
+     * @param {String} actionName
+     * @param {Number} [intensity]
+     * @param {InputInterpreter} [source]
+     */
+    ControlContext.prototype.executeAction = function (actionName, intensity, source) {
+        var i;
+        for (i = 0; i < this._controllersPriorityQueue.length; i++) {
+            this._controllersPriorityQueue[i].executeAction(actionName, intensity, source);
+        }
+    };
+    // -------------------------------------------------------------------------
+    // Initialization
+    document.addEventListener("pointerlockchange", function () {
+        _pointerLock = !!document.pointerLockElement;
+        if (!_pointerLock) {
+            if (_onPointerLockExit) {
+                _onPointerLockExit(_manualPointerLockExit);
+            }
+        } else {
+            _manualPointerLockExit = false;
+        }
+    });
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
         ControlBinding: ControlBinding,
         InputInterpreter: InputInterpreter,
         Controller: Controller,
-        ControlContext: ControlContext
+        ControlContext: ControlContext,
+        getContext: getContext,
+        exitPointerLock: exitPointerLock,
+        onPointerLockExit: onPointerLockExit,
+        isPointerLocked: isPointerLocked
     };
 });

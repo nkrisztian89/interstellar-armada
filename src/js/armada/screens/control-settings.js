@@ -288,7 +288,7 @@ define([
                         {cssFilename: armadaScreens.SLIDER_CSS},
                         {id: strings.CONTROLS.MOUSE_TURN_SENSITIVITY.name},
                         {
-                            min: 0,
+                            min: 0.1,
                             max: 0.5,
                             step: 0.01,
                             "default": 0.25

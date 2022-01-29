@@ -452,6 +452,12 @@ define([
          */
         this._displacementAreaRelativeSize = 0;
         /**
+         * The distance from the center of the screen (along X and Y) at (and above) which the intensity of
+         * actions that depend on displacement is at maximum, in pixels.
+         * @type Number
+         */
+        this._maxDisplacement = 0;
+        /**
          * The factor mouse displacement will be multiplied by to get the action intensity (maximum 1.0)
          * based on the displacement area relative size and the screen size (cached value).
          * @type Number
@@ -464,6 +470,12 @@ define([
          * @type Number
          */
         this._displacementDeadzone = 0;
+        /**
+         * Whether the pointer is currently locked by some element
+         * @type Boolean
+         */
+        this._pointerLock = false;
+        this.handlePointerLockChange = this.handlePointerLockChange.bind(this);
         control.InputInterpreter.call(this, MouseBinding, dataJSON);
     }
     MouseInputInterpreter.prototype = new control.InputInterpreter();
@@ -473,7 +485,9 @@ define([
      * based on the displacement area relative size and the screen size.
      */
     MouseInputInterpreter.prototype._updateDisplacementFactor = function () {
-        this._displacementFactor = 1 / ((this._screenSize || 1) * this._displacementAreaRelativeSize);
+        this._maxDisplacement = (this._screenSize || 1) * this._displacementAreaRelativeSize;
+        this._displacementFactor = 1 / this._maxDisplacement;
+        this._maxDisplacement += this._displacementDeadzone;
     };
     /**
      * Updates the screen center relative to which the mouse position is sent to the
@@ -614,19 +628,43 @@ define([
         // queries are considered
         // only add the movement if we have a valid mouse position
         if (this._mousePosition[0] >= 0) {
-            this._mousePositionChange[0] += (event.clientX - this._mousePosition[0]);
-            this._mousePositionChange[1] += (event.clientY - this._mousePosition[1]);
+            if (this._pointerLock) {
+                this._mousePositionChange[0] += event.movementX;
+                this._mousePositionChange[1] += event.movementY;
+            } else {
+                this._mousePositionChange[0] += (event.clientX - this._mousePosition[0]);
+                this._mousePositionChange[1] += (event.clientY - this._mousePosition[1]);
+            }
         }
-        this._mousePosition = [event.clientX, event.clientY];
+        if (this._pointerLock) {
+            this._mousePosition[0] = Math.min(Math.max(
+                    this._screenCenter[0] - this._maxDisplacement,
+                    this._mousePosition[0] + event.movementX),
+                    this._screenCenter[0] + this._maxDisplacement);
+            this._mousePosition[1] = Math.min(Math.max(
+                    this._screenCenter[1] - this._maxDisplacement,
+                    this._mousePosition[1] + event.movementY),
+                    this._screenCenter[1] + this._maxDisplacement);
+        } else {
+            this._mousePosition = [event.clientX, event.clientY];
+        }
     };
     /**
-     * An event handler for the wheel event , updating the stored scrolling state
+     * An event handler for the wheel event, updating the stored scrolling state
      * @param {WheelEvent} event
      */
     MouseInputInterpreter.prototype.handleWheel = function (event) {
         // changes are accumulated and reset to zero when processed
         this._scrollChange[0] += event.deltaX;
         this._scrollChange[1] += event.deltaY;
+    };
+    /**
+     * An event handler for the pointer lock change event (update internal
+     * state so that the other event handlers work properly both when the
+     * pointer is locked and when not)
+     */
+    MouseInputInterpreter.prototype.handlePointerLockChange = function () {
+        this._pointerLock = !!document.pointerLockElement;
     };
     /**
      * @override
@@ -656,6 +694,8 @@ define([
             event.preventDefault();
             return false;
         };
+        this.handlePointerLockChange();
+        document.addEventListener("pointerlockchange", this.handlePointerLockChange);
     };
     /**
      * @override
@@ -671,6 +711,7 @@ define([
         document.onwheel = null;
         document.onclick = null;
         document.oncontextmenu = null;
+        document.removeEventListener("pointerlockchange", this.handlePointerLockChange);
     };
     /**
      * @override

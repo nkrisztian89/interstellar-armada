@@ -319,6 +319,19 @@ define([
                 event.stopPropagation();
             }
         }.bind(this);
+        control.onPointerLockExit(function (manual) {
+            var actions, i;
+            if (!manual) {
+                // the user exited pointer lock by the default action (pressing escape)
+                // so trigger the actions that are triggered by pressing escape (keycode 27)
+                this._currentlyPressedKeys[27] = true;
+                actions = this.getTriggeredActions();
+                for (i = 0; i < actions.length; i++) {
+                    control.getContext().executeAction(actions[i][0].name, undefined, this);
+                }
+                this._currentlyPressedKeys[27] = false;
+            }
+        }.bind(this));
     };
     /**
      * @override
@@ -331,6 +344,7 @@ define([
         document.onkeydown = null;
         document.onkeyup = null;
         document.onkeypress = null;
+        control.onPointerLockExit(null);
     };
     /**
      * @override

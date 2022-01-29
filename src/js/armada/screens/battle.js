@@ -181,6 +181,7 @@ define([
             TARGET_INFO_SECTIONS = [TARGET_INFO_NAME, TARGET_INFO_CLASS, TARGET_INFO_TEAM, TARGET_INFO_FIREPOWER, TARGET_INFO_DISTANCE, TARGET_INFO_VELOCITY],
             /** This governs what suppements are target view items added with @type Object */
             TARGET_VIEW_SUPPLEMENTS = {weapons: true},
+            POINTER_LOCK_DELAY = 1000,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -2635,6 +2636,17 @@ define([
         }
         audio.resetMusicVolume();
         audio.resetSFXVolume();
+        if (control.getInputInterpreter(control.MOUSE_NAME).isEnabled()) {
+            // we need to use timeout to make sure the gesture that initiated
+            // this function (e.g. clicking the "Resume" button) completes
+            // before the pointer lock is requested, otherwise it can be denied
+            // if the user quit from it before
+            setTimeout(function () {
+                if (game.getScreen() === this) {
+                    this.requestPointerLock();
+                }
+            }.bind(this), POINTER_LOCK_DELAY);
+        }
     };
     /**
      * Uses the loading box to show the status to the user.
@@ -4911,6 +4923,12 @@ define([
         } else {
             this._startBattle(missions.createMission(_missionData, _difficulty, _demoMode));
         }
+    };
+    /**
+     * Requests the pointer to be locked by the canvas element on this screen
+     */
+    BattleScreen.prototype.requestPointerLock = function () {
+        this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement().requestPointerLock();
     };
     // -------------------------------------------------------------------------
     // Caching frequently needed setting values

@@ -135,6 +135,7 @@ define([
         this.setActionFunction("quit", true, function () {
             this._battle.pauseBattle();
             game.setScreen(armadaScreens.INGAME_MENU_SCREEN_NAME, true, armadaScreens.SUPERIMPOSE_BACKGROUND_COLOR);
+            control.exitPointerLock();
         }.bind(this));
         // pausing the game
         this.setActionFunction("pause", true, function () {
@@ -176,6 +177,7 @@ define([
                     _context.enableMouseTurning();
                 } else {
                     document.body.style.cursor = game.getDefaultCursor();
+                    control.exitPointerLock();
                 }
             }
         });
@@ -620,6 +622,9 @@ define([
             _mouseInputInterpreter.enableAction("rollLeft");
             _mouseInputInterpreter.enableAction("rollRight");
             this._mouseTurningDisabled = false;
+        }
+        if (!control.isPointerLocked()) {
+            game.getScreen().requestPointerLock();
         }
     };
     /**
