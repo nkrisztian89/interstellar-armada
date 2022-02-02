@@ -387,9 +387,11 @@ define([
                     armadaScreens.INGAME_MENU_CONTAINER_ID,
                     armadaScreens.MENU_EVENT_HANDLERS,
                     {
-                        "escape": function () {
-                            game.closeSuperimposedScreen();
-                            battle.resumeBattle();
+                        "escape": function (event) {
+                            if (!event.repeat) {
+                                game.closeSuperimposedScreen();
+                                battle.resumeBattle(false, true);
+                            }
                         }
                     });
         }

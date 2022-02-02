@@ -239,7 +239,13 @@ define([
                 },
                 undefined,
                 {
-                    "escape": _closeScreen
+                    "escape": function () {
+                        if (!_actionUnderSetting) {
+                            _closeScreen();
+                        } else if (_actionUnderSetting !== "quit") {
+                            _stopKeySetting();
+                        }
+                    }
                 },
                 armadaScreens.BUTTON_EVENT_HANDLERS);
         /**

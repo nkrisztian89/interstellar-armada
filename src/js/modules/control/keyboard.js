@@ -25,6 +25,7 @@ define([
             SHIFT_CODE = 16,
             CTRL_CODE = 17,
             ALT_CODE = 18,
+            ESCAPE_CODE = 27,
             CONTROL_STRING_COMBINE = " + ",
             KEY_SUFFIX = "_key",
             SHIFT_STATE_SUFFIX = "_shift",
@@ -267,6 +268,12 @@ define([
         }
     };
     /**
+     * Sets the escape key as being pressed in the stored state of the keyboard
+     */
+    KeyboardInputInterpreter.prototype.setEscapeToPressed = function () {
+        this._currentlyPressedKeys[ESCAPE_CODE] = true;
+    };
+    /**
      * Returns whether the default browser actions for the key of the passed code
      * should be enabled while this interpreter is active.
      * @param {Number} keyCode
@@ -323,13 +330,13 @@ define([
             var actions, i;
             if (!manual) {
                 // the user exited pointer lock by the default action (pressing escape)
-                // so trigger the actions that are triggered by pressing escape (keycode 27)
-                this._currentlyPressedKeys[27] = true;
+                // so trigger the actions that are triggered by pressing escape
+                this._currentlyPressedKeys[ESCAPE_CODE] = true;
                 actions = this.getTriggeredActions();
                 for (i = 0; i < actions.length; i++) {
                     control.getContext().executeAction(actions[i][0].name, undefined, this);
                 }
-                this._currentlyPressedKeys[27] = false;
+                this._currentlyPressedKeys[ESCAPE_CODE] = false;
             }
         }.bind(this));
     };

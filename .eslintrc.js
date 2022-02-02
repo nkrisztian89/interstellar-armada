@@ -8,7 +8,8 @@ module.exports = {
         "module": true,
         "Float32Array": true,
         "Int32Array": true,
-        "Set": true
+        "Set": true,
+        "Promise": true
     },
     "extends": "eslint:recommended",
     "rules": {

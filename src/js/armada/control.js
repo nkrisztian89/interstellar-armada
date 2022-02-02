@@ -623,8 +623,8 @@ define([
             _mouseInputInterpreter.enableAction("rollRight");
             this._mouseTurningDisabled = false;
         }
-        if (!control.isPointerLocked()) {
-            game.getScreen().requestPointerLock();
+        if (!control.isPointerLocked() && (game.getScreen() === game.getScreen(armadaScreens.BATTLE_SCREEN_NAME))) {
+            game.getScreen().requestPointerLock(false);
         }
     };
     /**

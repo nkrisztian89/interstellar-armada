@@ -1204,8 +1204,9 @@ define([
     // -------------------------------------------------------------------------
     // Initialization
     document.addEventListener("pointerlockchange", function () {
+        var previousPointerLock = _pointerLock;
         _pointerLock = !!document.pointerLockElement;
-        if (!_pointerLock) {
+        if (previousPointerLock && !_pointerLock) {
             if (_onPointerLockExit) {
                 _onPointerLockExit(_manualPointerLockExit);
             }

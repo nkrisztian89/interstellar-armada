@@ -665,6 +665,12 @@ define([
      */
     MouseInputInterpreter.prototype.handlePointerLockChange = function () {
         this._pointerLock = !!document.pointerLockElement;
+        if (this._pointerLock) {
+            if (this._mousePosition[0] < 0) {
+                this._mousePosition[0] = this._screenCenter[0];
+                this._mousePosition[1] = this._screenCenter[1];
+            }
+        }
     };
     /**
      * @override

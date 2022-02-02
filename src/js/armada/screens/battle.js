@@ -250,6 +250,11 @@ define([
              */
             _battleScreen,
             /**
+             * The ID of the timeout set to retry locking the pointer if it fails for the first time
+             * @type Number
+             */
+            _pointerLockTimeout = -1,
+            /**
              * The object that will be returned as this module
              * @type Battle
              */
@@ -2607,8 +2612,10 @@ define([
      * Resumes the simulation and control of the battle and the render loop
      * @param {Boolean} [start=false] Whether this is the start of the battle 
      * (as opposed to resuming after a pause)
+     * @param {Boolean} [escapePressed=false] Whether the escape key is being
+     * pressed to resume (coming from the in-game menu)
      */
-    BattleScreen.prototype.resumeBattle = function (start) {
+    BattleScreen.prototype.resumeBattle = function (start, escapePressed) {
         document.body.style.cursor = _battleCursor || game.getDefaultCursor();
         if (_multi && !start) {
             control.startListening();
@@ -2626,6 +2633,9 @@ define([
                     _simulationLoop = setInterval(_simulationLoopFunction, 1000 / (config.getSetting(config.BATTLE_SETTINGS.SIMULATION_STEPS_PER_SECOND)));
                 }
                 control.startListening();
+                if (escapePressed) {
+                    control.getInputInterpreter(control.KEYBOARD_NAME).setEscapeToPressed();
+                }
                 this.startRenderLoop(1000 / config.getSetting(config.BATTLE_SETTINGS.RENDER_FPS));
             } else {
                 application.showError(
@@ -2637,15 +2647,7 @@ define([
         audio.resetMusicVolume();
         audio.resetSFXVolume();
         if (control.getInputInterpreter(control.MOUSE_NAME).isEnabled()) {
-            // we need to use timeout to make sure the gesture that initiated
-            // this function (e.g. clicking the "Resume" button) completes
-            // before the pointer lock is requested, otherwise it can be denied
-            // if the user quit from it before
-            setTimeout(function () {
-                if (game.getScreen() === this) {
-                    this.requestPointerLock();
-                }
-            }.bind(this), POINTER_LOCK_DELAY);
+            this.requestPointerLock(true);
         }
     };
     /**
@@ -4926,10 +4928,43 @@ define([
     };
     /**
      * Requests the pointer to be locked by the canvas element on this screen
+     * @param {Boolean} [retry=false] Whether to try again after a short time if locking the pointer fails
      */
-    BattleScreen.prototype.requestPointerLock = function () {
-        this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement().requestPointerLock();
+    BattleScreen.prototype.requestPointerLock = function (retry) {
+        var promise;
+        if (document.pointerLockElement !== this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement()) {
+            if (_pointerLockTimeout !== -1) {
+                clearInterval(_pointerLockTimeout);
+                _pointerLockTimeout = -1;
+            }
+            promise = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement().requestPointerLock();
+            if (promise instanceof Promise) {
+                promise.catch(function () {
+                    if (retry) {
+                        application.log_DEBUG("Pointer lock request failed. Will retry in a short while.");
+                        // we need to use timeout to make sure the gesture that initiated
+                        // this function (e.g. clicking the "Resume" button) completes
+                        // before the pointer lock is requested, otherwise it can be denied
+                        // if the user quit from it before
+                        _pointerLockTimeout = setTimeout(function () {
+                            _pointerLockTimeout = -1;
+                            if ((game.getScreen() === this) && control.getInputInterpreter(control.MOUSE_NAME).isEnabled()) {
+                                this.requestPointerLock(false);
+                            }
+                        }.bind(this), POINTER_LOCK_DELAY);
+                    }
+                }.bind(this));
+            }
+        }
     };
+    // -------------------------------------------------------------------------
+    // Initialization
+    document.addEventListener("pointerlockchange", function () {
+        if (_pointerLockTimeout !== -1) {
+            clearInterval(_pointerLockTimeout);
+            _pointerLockTimeout = -1;
+        }
+    });
     // -------------------------------------------------------------------------
     // Caching frequently needed setting values
     config.executeWhenReady(function () {
