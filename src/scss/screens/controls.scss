@@ -27,3 +27,9 @@
 .controls.tableTitle:hover {
     @include highlight-text;
 }
+
+.pointerLock.selector>.selectorButtonContainer>button {
+    min-width: 6.95em;
+    margin-left: auto;
+    margin-right: 0.2em;
+}

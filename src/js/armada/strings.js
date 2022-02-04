@@ -437,6 +437,7 @@ define([
         SETTINGS_TITLE: {name: "controls.settingsTitle"},
         TITLE: {name: "controls.title"},
         MOUSE_TURN_SENSITIVITY: {name: "controls.mouseTurnSensitivity"},
+        POINTER_LOCK: {name: "controls.pointerLock"},
         CONTROLLER: {name: "controls.controller"},
         CONTROLLER_DISABLED: {name: "controls.controllerDisabled"},
         CONTROLLER_PROFILE: {name: "controls.controllerProfile"},
@@ -521,6 +522,22 @@ define([
             result += (" " + strings.get(strings.GRAMMAR.AND) + " " + items[items.length - 1]);
         }
         return result;
+    };
+    /**
+     * Return an array of two strings containing the translated "off" and "on" setting values
+     * for the current language
+     * @returns {String[]}
+     */
+    strings.getOnOffSettingValues = function () {
+        return [strings.get(strings.SETTING.OFF), strings.get(strings.SETTING.ON)];
+    };
+    /**
+     * Return an array with a single string containing the translated "off" setting value
+     * for the current language
+     * @returns {String[]}
+     */
+    strings.getOffSettingValue = function () {
+        return [strings.get(strings.SETTING.OFF)];
     };
     return strings;
 });

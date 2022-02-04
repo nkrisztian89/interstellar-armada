@@ -4932,7 +4932,7 @@ define([
      */
     BattleScreen.prototype.requestPointerLock = function (retry) {
         var promise;
-        if (document.pointerLockElement !== this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement()) {
+        if (control.isPointerLockEnabled() && (document.pointerLockElement !== this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement())) {
             if (_pointerLockTimeout !== -1) {
                 clearInterval(_pointerLockTimeout);
                 _pointerLockTimeout = -1;
@@ -4959,12 +4959,14 @@ define([
     };
     // -------------------------------------------------------------------------
     // Initialization
-    document.addEventListener("pointerlockchange", function () {
-        if (_pointerLockTimeout !== -1) {
-            clearInterval(_pointerLockTimeout);
-            _pointerLockTimeout = -1;
-        }
-    });
+    if (control.isPointerLockSupported()) {
+        document.addEventListener("pointerlockchange", function () {
+            if (_pointerLockTimeout !== -1) {
+                clearInterval(_pointerLockTimeout);
+                _pointerLockTimeout = -1;
+            }
+        });
+    }
     // -------------------------------------------------------------------------
     // Caching frequently needed setting values
     config.executeWhenReady(function () {

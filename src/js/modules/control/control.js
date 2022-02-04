@@ -35,6 +35,8 @@ define([
             /** @type ControlContext */
             _context,
             /** @type Boolean */
+            _pointerLockSupported = (typeof document.body.requestPointerLock === "function") && (typeof document.exitPointerLock === "function"),
+            /** @type Boolean */
             _pointerLock = false,
             /** @type Boolean */
             _manualPointerLockExit = false,
@@ -55,13 +57,22 @@ define([
         return _context;
     }
     /**
+     * Returns whether the Pointer Lock API is supported by the browser
+     * @returns {Boolean}
+     */
+    function isPointerLockSupported() {
+        return _pointerLockSupported;
+    }
+    /**
      * Use this together with onPointerLockExit() to be able to distinguish
      * between exiting pointer lock by this call and by the default user action
      * (pressing escape)
      */
     function exitPointerLock() {
-        _manualPointerLockExit = true;
-        document.exitPointerLock();
+        if (_pointerLockSupported) {
+            _manualPointerLockExit = true;
+            document.exitPointerLock();
+        }
     }
     /**
      * If exiting the pointer lock was triggered by exitPointerLock(), the
@@ -1203,17 +1214,19 @@ define([
     };
     // -------------------------------------------------------------------------
     // Initialization
-    document.addEventListener("pointerlockchange", function () {
-        var previousPointerLock = _pointerLock;
-        _pointerLock = !!document.pointerLockElement;
-        if (previousPointerLock && !_pointerLock) {
-            if (_onPointerLockExit) {
-                _onPointerLockExit(_manualPointerLockExit);
+    if (_pointerLockSupported) {
+        document.addEventListener("pointerlockchange", function () {
+            var previousPointerLock = _pointerLock;
+            _pointerLock = !!document.pointerLockElement;
+            if (previousPointerLock && !_pointerLock) {
+                if (_onPointerLockExit) {
+                    _onPointerLockExit(_manualPointerLockExit);
+                }
+            } else {
+                _manualPointerLockExit = false;
             }
-        } else {
-            _manualPointerLockExit = false;
-        }
-    });
+        });
+    }
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
@@ -1222,6 +1235,7 @@ define([
         Controller: Controller,
         ControlContext: ControlContext,
         getContext: getContext,
+        isPointerLockSupported: isPointerLockSupported,
         exitPointerLock: exitPointerLock,
         onPointerLockExit: onPointerLockExit,
         isPointerLocked: isPointerLocked

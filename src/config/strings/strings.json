@@ -764,6 +764,7 @@
         "settingsTitle": "Settings",
         "mouseTitle": "Mouse",
         "mouseTurnSensitivity": "Mouse turn sensitivity:",
+        "pointerLock": "Lock mouse cursor during flight:",
         "controllerTitle": "Controller",
         "controller": "Controller:",
         "noController": "No controllers detected. If you have controllers plugged in, try pressing the buttons on them and wait a few seconds for them to be detected.",

@@ -1036,6 +1036,7 @@
         }
     },
     "control": {
+        "pointerLockEnabled": true,
         "inputDevices": [
             {
                 "type": "keyboard",

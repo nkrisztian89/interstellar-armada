@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2021 Krisztián Nagy
+ * Copyright 2017-2022 Krisztián Nagy
  * @file This module manages and provides the gameplay settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -44,9 +44,6 @@ define([
                     return caption;
                 };
             },
-            _getOnOffSettingValues = function () {
-                return [strings.get(strings.SETTING.OFF), strings.get(strings.SETTING.ON)];
-            },
             _getFighterViewSettingValues = function () {
                 return _fighterViewOptions.map(_getMapToCaptionFunction(strings.OBJECT_VIEW));
             },
@@ -71,8 +68,8 @@ define([
             HUD_OPTION_PARENT_ID = "hudSettingsDiv",
             CAMERA_OPTION_PARENT_ID = "cameraSettingsDiv",
             CONTROLS_OPTION_PARENT_ID = "controlsSettingsDiv",
-            SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
-            SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
+            SETTING_ON_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
+            SETTING_OFF_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
     // ##############################################################################
     /**
      * @class Represents the Gameplay settings screen.
@@ -117,13 +114,13 @@ define([
         config.executeWhenReady(function () {
             this._targetHullAtCenterSelector = this._registerSelector(TARGET_HULL_AT_CENTER_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.TARGET_HEALTH_AT_CENTER.name,
-                    _getOnOffSettingValues(), HUD_OPTION_PARENT_ID);
+                    strings.getOnOffSettingValues(), HUD_OPTION_PARENT_ID);
             this._offsetImpactIndicatorsSelector = this._registerSelector(OFFSET_IMPACT_INDICATORS_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.OFFSET_IMPACT_INDICATORS.name,
-                    _getOnOffSettingValues(), HUD_OPTION_PARENT_ID);
+                    strings.getOnOffSettingValues(), HUD_OPTION_PARENT_ID);
             this._relativeTargetOrientationSelector = this._registerSelector(RELATIVE_TARGET_ORIENTATION_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.RELATIVE_TARGET_ORIENTATION.name,
-                    _getOnOffSettingValues(), HUD_OPTION_PARENT_ID);
+                    strings.getOnOffSettingValues(), HUD_OPTION_PARENT_ID);
             this._preferredFighterViewSelector = this._registerSelector(PREFERRED_FIGHTER_VIEW_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.PREFERRED_FIGHTER_VIEW.name,
                     _getFighterViewSettingValues(), CAMERA_OPTION_PARENT_ID);
@@ -132,10 +129,10 @@ define([
                     _getShipViewSettingValues(), CAMERA_OPTION_PARENT_ID);
             this._demoViewSwitchingSelector = this._registerSelector(DEMO_VIEW_SWITCHING_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEMO_VIEW_SWITCHING.name,
-                    _getOnOffSettingValues(), CAMERA_OPTION_PARENT_ID);
+                    strings.getOnOffSettingValues(), CAMERA_OPTION_PARENT_ID);
             this._defaultSalvoModeSelector = this._registerSelector(DEFAULT_SALVO_MODE_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEFAULT_SALVO_MODE.name,
-                    _getOnOffSettingValues(), CONTROLS_OPTION_PARENT_ID);
+                    strings.getOnOffSettingValues(), CONTROLS_OPTION_PARENT_ID);
         }.bind(this));
     }
     GameplaySettingsScreen.prototype = new screens.HTMLScreen();
@@ -192,13 +189,13 @@ define([
     GameplaySettingsScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
-        this._targetHullAtCenterSelector.setValueList(_getOnOffSettingValues());
-        this._offsetImpactIndicatorsSelector.setValueList(_getOnOffSettingValues());
-        this._relativeTargetOrientationSelector.setValueList(_getOnOffSettingValues());
+        this._targetHullAtCenterSelector.setValueList(strings.getOnOffSettingValues());
+        this._offsetImpactIndicatorsSelector.setValueList(strings.getOnOffSettingValues());
+        this._relativeTargetOrientationSelector.setValueList(strings.getOnOffSettingValues());
         this._preferredFighterViewSelector.setValueList(_getFighterViewSettingValues());
         this._preferredShipViewSelector.setValueList(_getShipViewSettingValues());
-        this._demoViewSwitchingSelector.setValueList(_getOnOffSettingValues());
-        this._defaultSalvoModeSelector.setValueList(_getOnOffSettingValues());
+        this._demoViewSwitchingSelector.setValueList(strings.getOnOffSettingValues());
+        this._defaultSalvoModeSelector.setValueList(strings.getOnOffSettingValues());
         this._updateValues();
     };
     /**

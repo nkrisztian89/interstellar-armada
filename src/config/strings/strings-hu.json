@@ -795,6 +795,7 @@
         "settingsTitle": "Beállítások",
         "mouseTitle": "Egér",
         "mouseTurnSensitivity": "Egérrel fordulás érzékenysége:",
+        "pointerLock": "Egérmutató rögzítése az ablakhoz:",
         "controllerTitle": "Kontroller",
         "controller": "Kontroller:",
         "noController": "Nem érzékelhető kontroller. Ha van csatlakoztatott kontroller, nyomd le a gombjait, és várj egy keveset, hogy a játék érzékelhesse.",

@@ -700,8 +700,10 @@ define([
             event.preventDefault();
             return false;
         };
-        this.handlePointerLockChange();
-        document.addEventListener("pointerlockchange", this.handlePointerLockChange);
+        if (control.isPointerLockSupported()) {
+            this.handlePointerLockChange();
+            document.addEventListener("pointerlockchange", this.handlePointerLockChange);
+        }
     };
     /**
      * @override
@@ -717,7 +719,9 @@ define([
         document.onwheel = null;
         document.onclick = null;
         document.oncontextmenu = null;
-        document.removeEventListener("pointerlockchange", this.handlePointerLockChange);
+        if (control.isPointerLockSupported()) {
+            document.removeEventListener("pointerlockchange", this.handlePointerLockChange);
+        }
     };
     /**
      * @override

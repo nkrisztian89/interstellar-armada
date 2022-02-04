@@ -7,6 +7,7 @@
 
 /**
  * @param utils Used to check for touch event support
+ * @param types Used to read boolean values from local storage
  * @param application Used to check if the application is in debug mode.
  * @param control This module builds its game-specific functionality on the general control module
  * @param keyboard Used to include keyboard input handling
@@ -23,6 +24,7 @@
  */
 define([
     "utils/utils",
+    "utils/types",
     "modules/application",
     "modules/control/control",
     "modules/control/keyboard",
@@ -36,7 +38,7 @@ define([
     "armada/strings",
     "armada/configuration",
     "armada/logic/equipment"
-], function (utils, application, control, keyboard, mouse, gamepad, touch, cameraController, game, resources, armadaScreens, strings, config, equipment) {
+], function (utils, types, application, control, keyboard, mouse, gamepad, touch, cameraController, game, resources, armadaScreens, strings, config, equipment) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -50,6 +52,7 @@ define([
             FIGHTER_CONTROLLER_NAME = "fighter",
             CAMERA_CONTROLLER_NAME = "camera",
             MODULE_PREFIX = "armada_control_",
+            POINTER_LOCK_ENABLED_LOCAL_STORAGE_ID = MODULE_PREFIX + "pointerLockEnabled",
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -524,6 +527,12 @@ define([
          * @type Boolean
          */
         this._mouseTurningDisabled = false;
+        /**
+         * Whether locking the pointer (using the Pointer Lock API) during the game (to avoid the mouse cursor leaving the window)
+         * is enabled
+         * @type Boolean
+         */
+        this._pointerLockEnabled = false;
         this.registerInputInterpreterType(KEYBOARD_NAME, keyboard.KeyboardInputInterpreter);
         this.registerInputInterpreterType(MOUSE_NAME, mouse.MouseInputInterpreter);
         this.registerInputInterpreterType(JOYSTICK_NAME, gamepad.GamepadInputInterpreter);
@@ -536,6 +545,29 @@ define([
     }
     ArmadaControlContext.prototype = new control.ControlContext();
     ArmadaControlContext.prototype.constructor = ArmadaControlContext;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     * @param {Boolean} [onlyRestoreSettings=false]
+     */
+    ArmadaControlContext.prototype.loadSettingsFromJSON = function (dataJSON, onlyRestoreSettings) {
+        control.ControlContext.prototype.loadSettingsFromJSON.call(this, dataJSON, onlyRestoreSettings);
+        if (control.isPointerLockSupported()) {
+            this._pointerLockEnabled = dataJSON.pointerLockEnabled;
+        }
+        if (onlyRestoreSettings) {
+            localStorage.removeItem(POINTER_LOCK_ENABLED_LOCAL_STORAGE_ID);
+        }
+    };
+    /**
+     * @override
+     */
+    ArmadaControlContext.prototype.loadSettingsFromLocalStorage = function () {
+        if (control.isPointerLockSupported() && localStorage[POINTER_LOCK_ENABLED_LOCAL_STORAGE_ID] !== undefined) {
+            this._pointerLockEnabled = types.getBooleanValueFromLocalStorage(POINTER_LOCK_ENABLED_LOCAL_STORAGE_ID, {defaultValue: this._pointerLockEnabled});
+        }
+        control.ControlContext.prototype.loadSettingsFromLocalStorage.call(this);
+    };
     /**
      * Returns whether the context is currently in the mode for controlling a spacecraft as a pilot (as opposed to spectator mode, 
      * controlling a free camera)
@@ -634,6 +666,30 @@ define([
     ArmadaControlContext.prototype.isMouseTurningDisabled = function () {
         return this._mouseTurningDisabled;
     };
+    /**
+     * Whether locking the pointer (using the Pointer Lock API) during the game (to avoid the mouse cursor leaving
+     * the window) is enabled
+     * @returns {Boolean}
+     */
+    ArmadaControlContext.prototype.isPointerLockEnabled = function () {
+        return this._pointerLockEnabled;
+    };
+    /**
+     * Turn on/off whether the pointer should be locked during the game (actual combat/mission)
+     * @param {Boolean} value
+     * @param {Boolean} [saveToLocalStorage=true]
+     */
+    ArmadaControlContext.prototype.setPointerLockEnabled = function (value, saveToLocalStorage) {
+        if (control.isPointerLockSupported()) {
+            if (saveToLocalStorage === undefined) {
+                saveToLocalStorage = true;
+            }
+            this._pointerLockEnabled = value;
+            if (saveToLocalStorage) {
+                localStorage[POINTER_LOCK_ENABLED_LOCAL_STORAGE_ID] = value.toString();
+            }
+        }
+    };
     // -------------------------------------------------------------------------
     // Initialization
     _context = new ArmadaControlContext();
@@ -676,6 +732,9 @@ define([
         switchToPilotMode: _context.switchToPilotMode.bind(_context),
         switchToSpectatorMode: _context.switchToSpectatorMode.bind(_context),
         isMouseTurningDisabled: _context.isMouseTurningDisabled.bind(_context),
+        isPointerLockSupported: control.isPointerLockSupported,
+        isPointerLockEnabled: _context.isPointerLockEnabled.bind(_context),
+        setPointerLockEnabled: _context.setPointerLockEnabled.bind(_context),
         playMissileChangeSound: playMissileChangeSound
     };
 });

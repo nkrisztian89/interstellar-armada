@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2016, 2020-2022 Krisztián Nagy
  * @file This module manages and provides the general settings screen of the application (where e.g. the language of the game can be changed)
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -27,11 +27,6 @@ define([
     "use strict";
     var
             // ------------------------------------------------------------------------------
-            // private functions
-            _getOnOffSettingValues = function () {
-                return [strings.get(strings.SETTING.OFF), strings.get(strings.SETTING.ON)];
-            },
-            // ------------------------------------------------------------------------------
             // constants
             BACK_BUTTON_ID = "backButton",
             DEFAULTS_BUTTON_ID = "defaultsButton",
@@ -44,8 +39,8 @@ define([
              * @type String[]
              */
             _settingLanguageValues,
-            SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
-            SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
+            SETTING_ON_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
+            SETTING_OFF_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
     // ##############################################################################
     /**
      * @class Represents the general settings screen.
@@ -84,7 +79,7 @@ define([
          */
         this._analyticsSelector = this._registerSelector(ANALYTICS_SELECTOR_ID,
                 strings.GENERAL_SETTINGS.ANALYTICS.name,
-                _getOnOffSettingValues());
+                strings.getOnOffSettingValues());
         /**
          * @type SimpleComponent
          */
@@ -146,7 +141,7 @@ define([
     GeneralSettingsScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
-        this._analyticsSelector.setValueList(_getOnOffSettingValues());
+        this._analyticsSelector.setValueList(strings.getOnOffSettingValues());
         this._updateValues();
     };
     /**

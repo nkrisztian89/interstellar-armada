@@ -39,6 +39,8 @@ define([
             CONTROLLER_SETTINGS_CONTAINER_ID = "controllerSettingsContainer",
             TABLES_CONTAINER_ID = "tablesContainer",
             MOUSE_TURN_SENSITIVITY_SLIDER_ID = "mouseTurnSensitivitySlider",
+            POINTER_LOCK_SELECTOR_ID = "pointerLockSelector",
+            POINTER_LOCK_SELECTOR_CLASS = "pointerLock selector",
             CONTROLLER_SELECTOR_ID = "controllerSelector",
             CONTROLLER_PROFILE_SELECTOR_ID = "controllerProfileSelector",
             CLICKABLE_CLASS_NAME = "clickable",
@@ -51,6 +53,8 @@ define([
             CTRL_CODE = 17,
             ALT_CODE = 18,
             DETECT_CONTROLLERS_INTERVAL = 1000,
+            SETTING_ON_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
+            SETTING_OFF_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF)),
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -215,13 +219,6 @@ define([
             };
         }
     }
-    /**
-     * Stops the setting of the current key (if any) and closes the screen.
-     */
-    function _closeScreen() {
-        _stopKeySetting();
-        game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
-    }
     // ##############################################################################
     /**
      * @class Represents the controls screen, where the user can set up the game
@@ -241,11 +238,11 @@ define([
                 {
                     "escape": function () {
                         if (!_actionUnderSetting) {
-                            _closeScreen();
+                            this._applyAndClose();
                         } else if (_actionUnderSetting !== "quit") {
                             _stopKeySetting();
                         }
-                    }
+                    }.bind(this)
                 },
                 armadaScreens.BUTTON_EVENT_HANDLERS);
         /**
@@ -306,6 +303,20 @@ define([
         /**
          * @type Selector
          */
+        this._pointerLockSelector = this.registerExternalComponent(
+                new components.Selector(
+                        POINTER_LOCK_SELECTOR_ID,
+                        armadaScreens.SELECTOR_SOURCE,
+                        {
+                            cssFilename: armadaScreens.SELECTOR_CSS,
+                            selectorClassName: POINTER_LOCK_SELECTOR_CLASS
+                        },
+                        {id: strings.CONTROLS.POINTER_LOCK.name},
+                        strings.getOnOffSettingValues()),
+                MOUSE_SETTINGS_CONTAINER_ID);
+        /**
+         * @type Selector
+         */
         this._controllerSelector = this.registerExternalComponent(
                 new components.Selector(
                         CONTROLLER_SELECTOR_ID,
@@ -338,7 +349,7 @@ define([
     ControlsScreen.prototype._initializeComponents = function () {
         screens.HTMLScreen.prototype._initializeComponents.call(this);
         this._backButton.getElement().onclick = function () {
-            _closeScreen();
+            this._applyAndClose();
             return false;
         }.bind(this);
         this._defaultsButton.getElement().onclick = function () {
@@ -380,10 +391,19 @@ define([
      */
     ControlsScreen.prototype._updateComponents = function () {
         screens.HTMLScreen.prototype._updateComponents.call(this);
+        this._pointerLockSelector.setValueList(control.isPointerLockSupported() ? strings.getOnOffSettingValues() : strings.getOffSettingValue());
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
         this._updateValues();
         this._generateTables();
     };
+    /**
+     * Stops the setting of the current key (if any), applies not immediately applied settings and closes the screen.
+     */
+    ControlsScreen.prototype._applyAndClose = function () {
+        _stopKeySetting();
+        control.setPointerLockEnabled(this._pointerLockSelector.getSelectedIndex() === SETTING_ON_INDEX);
+        game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
+    }
     /**
      * Adds the table showing available actions and their assigned keys as well as
      * sets up a click handler for the cells showing the keys to initiate a change
@@ -499,6 +519,7 @@ define([
      */
     ControlsScreen.prototype._updateValues = function () {
         this._mouseTurnSensitivitySlider.setNumericValue(1 - control.getInputInterpreter(control.MOUSE_NAME).getDisplacementAreaRelativeSize());
+        this._pointerLockSelector.selectValueWithIndex(control.isPointerLockEnabled() ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
         this._updateControllers();
     };
     /**

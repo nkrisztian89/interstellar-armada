@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file This module manages and provides the Graphics settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -60,12 +60,6 @@ define([
             },
             _mapCaption = function (element) {
                 return element[0];
-            },
-            _getOnOffSettingValues = function () {
-                return [strings.get(strings.SETTING.OFF), strings.get(strings.SETTING.ON)];
-            },
-            _getOffSettingValue = function () {
-                return [strings.get(strings.SETTING.OFF)];
             },
             /**
              * Returns an array of arrays, storing pairs of elements, the first of which is the caption
@@ -181,8 +175,8 @@ define([
             GENERAL_LEVEL_PARENT_ID = "generalLevelDiv",
             LEFT_OPTION_PARENT_ID = "settingsDivLeft",
             RIGHT_OPTION_PARENT_ID = "settingsDivRight",
-            SETTING_ON_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
-            SETTING_OFF_INDEX = _getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
+            SETTING_ON_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
+            SETTING_OFF_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
     // ##############################################################################
     /**
      * @class Represents the graphics settings screen.
@@ -277,7 +271,7 @@ define([
                     GENERAL_LEVEL_SELECTOR_CLASS_NAME, GENERAL_LEVEL_SELECTOR_PROPERTY_CLASS_NAME);
             this._antialiasingSelector = this._registerSelector(AA_SELECTOR_ID,
                     strings.GRAPHICS.ANTIALIASING.name,
-                    _getOnOffSettingValues(), LEFT_OPTION_PARENT_ID);
+                    strings.getOnOffSettingValues(), LEFT_OPTION_PARENT_ID);
             this._filteringSelector = this._registerSelector(FILTERING_SELECTOR_ID,
                     strings.GRAPHICS.FILTERING.name,
                     _getFilteringSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
@@ -292,13 +286,13 @@ define([
                     _getLODSettingValues().map(_mapCaption), LEFT_OPTION_PARENT_ID);
             this._missilesInLaunchersSelector = this._registerSelector(MISSILES_IN_LAUNCHERS_SELECTOR_ID,
                     strings.GRAPHICS.MISSILES_IN_LAUNCHERS.name,
-                    _getOnOffSettingValues(), LEFT_OPTION_PARENT_ID);
+                    strings.getOnOffSettingValues(), LEFT_OPTION_PARENT_ID);
             this._shaderComplexitySelector = this._registerSelector(SHADER_COMPLEXITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADERS.name,
                     _getShaderComplexitySettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
             this._shadowMappingSelector = this._registerSelector(SHADOW_MAPPING_SELECTOR_ID,
                     strings.GRAPHICS.SHADOWS.name,
-                    _getOnOffSettingValues(), RIGHT_OPTION_PARENT_ID);
+                    strings.getOnOffSettingValues(), RIGHT_OPTION_PARENT_ID);
             this._shadowQualitySelector = this._registerSelector(SHADOW_QUALITY_SELECTOR_ID,
                     strings.GRAPHICS.SHADOW_QUALITY.name,
                     _getShadowQualitySettingValues().map(_mapCaption), RIGHT_OPTION_PARENT_ID);
@@ -439,14 +433,14 @@ define([
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._defaultsButton.setContent(strings.get(strings.SETTINGS.DEFAULTS));
         this._generalLevelSelector.setValueList(_getGeneralLevelSettingValues().map(_mapCaption));
-        this._antialiasingSelector.setValueList(managedGL.isAntialiasingAvailable() ? _getOnOffSettingValues() : _getOffSettingValue());
+        this._antialiasingSelector.setValueList(managedGL.isAntialiasingAvailable() ? strings.getOnOffSettingValues() : strings.getOffSettingValue());
         this._filteringSelector.setValueList(_getFilteringSettingValues().map(_mapCaption));
         this._textureQualitySelector.setValueList(_getTextureQualitySettingValues().map(_mapCaption));
         this._cubemapQualitySelector.setValueList(_getCubemapQualitySettingValues().map(_mapCaption));
         this._lodSelector.setValueList(_getLODSettingValues().map(_mapCaption));
-        this._missilesInLaunchersSelector.setValueList(_getOnOffSettingValues());
+        this._missilesInLaunchersSelector.setValueList(strings.getOnOffSettingValues());
         this._shaderComplexitySelector.setValueList(_getShaderComplexitySettingValues().map(_mapCaption));
-        this._shadowMappingSelector.setValueList(_getOnOffSettingValues());
+        this._shadowMappingSelector.setValueList(strings.getOnOffSettingValues());
         this._shadowQualitySelector.setValueList(_getShadowQualitySettingValues().map(_mapCaption));
         this._shadowDistanceSelector.setValueList(_getShadowDistanceSettingValues().map(_mapCaption));
         this._maxDynamicLightsSelector.setValueList(_getMaxDynamicLightsSettingValues().map(_mapCaption));
@@ -460,10 +454,10 @@ define([
      */
     GraphicsScreen.prototype._updateShadowMappingSelector = function () {
         if (graphics.canEnableShadowMapping()) {
-            this._shadowMappingSelector.setValueList(_getOnOffSettingValues());
+            this._shadowMappingSelector.setValueList(strings.getOnOffSettingValues());
             this._shadowMappingSelector.selectValueWithIndex((graphics.isShadowMappingEnabled() === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
         } else {
-            this._shadowMappingSelector.setValueList(_getOffSettingValue());
+            this._shadowMappingSelector.setValueList(strings.getOffSettingValue());
             this._shadowMappingSelector.selectValueWithIndex(SETTING_OFF_INDEX);
         }
     };
@@ -476,7 +470,7 @@ define([
             this._shadowQualitySelector.setValueList(_getShadowQualitySettingValues().map(_mapCaption));
             this._shadowQualitySelector.selectValueWithIndex(_findIndexOf(graphics.getShadowMapQuality(), _getShadowQualitySettingValues()));
         } else {
-            this._shadowQualitySelector.setValueList(_getOffSettingValue());
+            this._shadowQualitySelector.setValueList(strings.getOffSettingValue());
             this._shadowQualitySelector.selectValueWithIndex(SETTING_OFF_INDEX);
         }
     };
@@ -490,7 +484,7 @@ define([
             this._shadowDistanceSelector.setValueList(_getShadowDistanceSettingValues().map(_mapCaption));
             this._shadowDistanceSelector.selectValueWithIndex(_findIndexOf(graphics.getShadowDistance(), _getShadowDistanceSettingValues()));
         } else {
-            this._shadowDistanceSelector.setValueList(_getOffSettingValue());
+            this._shadowDistanceSelector.setValueList(strings.getOffSettingValue());
             this._shadowDistanceSelector.selectValueWithIndex(SETTING_OFF_INDEX);
         }
     };
@@ -503,7 +497,7 @@ define([
             this._maxDynamicLightsSelector.setValueList(_getMaxDynamicLightsSettingValues().map(_mapCaption));
             this._maxDynamicLightsSelector.selectValueWithIndex(_findIndexOf(graphics.getPointLightAmount(), _getMaxDynamicLightsSettingValues()));
         } else {
-            this._maxDynamicLightsSelector.setValueList(_getOffSettingValue());
+            this._maxDynamicLightsSelector.setValueList(strings.getOffSettingValue());
             this._maxDynamicLightsSelector.selectValueWithIndex(SETTING_OFF_INDEX);
         }
     };
