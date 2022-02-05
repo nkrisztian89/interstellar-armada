@@ -1475,16 +1475,16 @@
                                 "button": 15
                             }, {
                                 "action": "cameraMoveLeft",
-                                "axis": "-0"
+                                "axis": "-2"
                             }, {
                                 "action": "cameraMoveRight",
-                                "axis": "+0"
+                                "axis": "+2"
                             }, {
                                 "action": "cameraMoveForward",
-                                "axis": "-1"
+                                "axis": "-3"
                             }, {
                                 "action": "cameraMoveBackward",
-                                "axis": "+1"
+                                "axis": "+3"
                             }, {
                                 "action": "nextView",
                                 "button": 9
@@ -1494,6 +1494,12 @@
                             }, {
                                 "action": "toggleCruise",
                                 "button": 8
+                            }, {
+                                "action": "followNext",
+                                "button": 0
+                            }, {
+                                "action": "followPrevious",
+                                "button": 1
                             }
                         ]
                     },

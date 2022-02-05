@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2017, 2020-2022 Krisztián Nagy
  * @file This file provides a class that builds on the Control module to provide a Controller for cameras of the SceneGraph module
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -217,40 +217,32 @@ define([
             }
         }.bind(this));
         //moving the camera along the 3 axes
-        this.setActionFunctions("cameraMoveLeft", function () {
-            if (this._velocityTargetVector[0] > -this._maxSpeed) {
-                this._velocityTargetVector[0] = -this._maxSpeed;
-            }
+        this.setActionFunctions("cameraMoveLeft", function (i) {
+            this._velocityTargetVector[0] = -((i !== undefined) ? i : 1) * this._maxSpeed;
         }.bind(this), function () {
             // stopping unnecessary leftward movement
             if (this._velocityTargetVector[0] < 0) {
                 this._velocityTargetVector[0] = 0;
             }
         }.bind(this));
-        this.setActionFunctions("cameraMoveRight", function () {
-            if (this._velocityTargetVector[0] < this._maxSpeed) {
-                this._velocityTargetVector[0] = this._maxSpeed;
-            }
+        this.setActionFunctions("cameraMoveRight", function (i) {
+            this._velocityTargetVector[0] = ((i !== undefined) ? i : 1) * this._maxSpeed;
         }.bind(this), function () {
             // stopping unnecessary rightward movement
             if (this._velocityTargetVector[0] > 0) {
                 this._velocityTargetVector[0] = 0;
             }
         }.bind(this));
-        this.setActionFunctions("cameraMoveUp", function () {
-            if (this._velocityTargetVector[1] < this._maxSpeed) {
-                this._velocityTargetVector[1] = this._maxSpeed;
-            }
+        this.setActionFunctions("cameraMoveUp", function (i) {
+            this._velocityTargetVector[1] = ((i !== undefined) ? i : 1) * this._maxSpeed;
         }.bind(this), function () {
             // stopping unnecessary upward movement
             if (this._velocityTargetVector[1] > 0) {
                 this._velocityTargetVector[1] = 0;
             }
         }.bind(this));
-        this.setActionFunctions("cameraMoveDown", function () {
-            if (this._velocityTargetVector[1] > -this._maxSpeed) {
-                this._velocityTargetVector[1] = -this._maxSpeed;
-            }
+        this.setActionFunctions("cameraMoveDown", function (i) {
+            this._velocityTargetVector[1] = -((i !== undefined) ? i : 1) * this._maxSpeed;
         }.bind(this), function () {
             // stopping unnecessary downward movement
             if (this._velocityTargetVector[1] < 0) {
@@ -258,20 +250,15 @@ define([
             }
         }.bind(this));
         this.setActionFunctions("cameraMoveForward", function (i) {
-            var targetSpeed = ((i !== undefined) ? i : 1) * this._maxSpeed;
-            if ((this._velocityTargetVector[2] > -targetSpeed) || (i !== undefined)) {
-                this._velocityTargetVector[2] = -targetSpeed;
-            }
+            this._velocityTargetVector[2] = -((i !== undefined) ? i : 1) * this._maxSpeed;
         }.bind(this), function () {
             // stopping unnecessary forward movement
             if (this._velocityTargetVector[2] < 0) {
                 this._velocityTargetVector[2] = 0;
             }
         }.bind(this));
-        this.setActionFunctions("cameraMoveBackward", function () {
-            if (this._velocityTargetVector[2] < this._maxSpeed) {
-                this._velocityTargetVector[2] = this._maxSpeed;
-            }
+        this.setActionFunctions("cameraMoveBackward", function (i) {
+            this._velocityTargetVector[2] = ((i !== undefined) ? i : 1) * this._maxSpeed;
         }.bind(this), function () {
             // stopping unnecessary backward movement
             if (this._velocityTargetVector[2] > 0) {
