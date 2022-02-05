@@ -735,6 +735,7 @@ define([
         isPointerLockSupported: control.isPointerLockSupported,
         isPointerLockEnabled: _context.isPointerLockEnabled.bind(_context),
         setPointerLockEnabled: _context.setPointerLockEnabled.bind(_context),
+        exitPointerLock: control.exitPointerLock,
         playMissileChangeSound: playMissileChangeSound
     };
 });

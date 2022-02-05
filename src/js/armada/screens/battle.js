@@ -3008,6 +3008,7 @@ define([
             }
         });
         this._infoBox.show();
+        control.exitPointerLock();
     };
     /**
      * Updates the big header's content on the screen.
