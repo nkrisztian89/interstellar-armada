@@ -453,11 +453,6 @@ define([
          */
         this._targetingComputer = null;
         /**
-         * While true, the spacecraft is not allowed to fire (for example during jump sequences)
-         * @type Boolean
-         */
-        this._firingDisabled = false;
-        /**
          * The propulsion system this spacecraft is equipped with.
          * @type Propulsion
          */
@@ -478,6 +473,17 @@ define([
          * @type ManeuveringComputer
          */
         this._maneuveringComputer = null;
+        /**
+         * While true, the spacecraft is not allowed to fire
+         * @type Boolean
+         */
+        this._firingDisabled = false;
+        /**
+         * Set to true by the jump engine while the jump sequence is underway - the
+         * spacecraft is not allowed to fire during this time
+         * @type Boolean
+         */
+        this._isJumping = false;
         // ---------------------------------------
         // effects
         /**
@@ -742,6 +748,7 @@ define([
         this._activeMissileLauncherIndex = -1;
         this._targetingComputer = new equipment.TargetingComputer(this, spacecraftArray, environment);
         this._firingDisabled = false;
+        this._isJumping = false;
         this._maneuveringComputer = new equipment.ManeuveringComputer(this);
         this._blinkers = [];
         blinkerDescriptors = this._class.getBlinkerDescriptors();
@@ -2355,7 +2362,7 @@ define([
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
         var i, scaledOriMatrix, fired = false, projectileCount;
-        if (!this._firingDisabled) {
+        if (!this._firingDisabled && !this._isJumping) {
             scaledOriMatrix = this.getScaledOriMatrix();
             for (i = 0; i < this._weapons.length; i++) {
                 projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, this.getSoundSourceForFireSound());
@@ -2434,7 +2441,7 @@ define([
      */
     Spacecraft.prototype.launchMissile = function () {
         var i, scaledOriMatrix, missile;
-        if (!this._firingDisabled && (this._activeMissileLauncherIndex >= 0) && this._targetingComputer.isMissileLocked()) {
+        if (!this._firingDisabled && !this._isJumping && (this._activeMissileLauncherIndex >= 0) && this._targetingComputer.isMissileLocked()) {
             scaledOriMatrix = this.getScaledOriMatrix();
             missile = this._missileLaunchers[this._activeMissileLauncherIndex].launch(scaledOriMatrix, this.getSoundSourceForFireSound(), false);
             // executing callbacks
@@ -2810,12 +2817,19 @@ define([
             futureTargetPosition = this.getTargetHitPosition();
         }
         for (i = 0; i < this._weapons.length; i++) {
-            if (target && !this._firingDisabled) {
+            if (target && !this._firingDisabled && !this._isJumping) {
                 this._weapons[i].aimTowards(futureTargetPosition, turnThreshold, fireThreshold, this.getScaledOriMatrix(), dt);
             } else {
                 this._weapons[i].rotateToDefaultPosition(turnThreshold, dt);
             }
         }
+    };
+    /**
+     * This is to be used by the jump engine only! Signals whether the jump sequence is currently underway.
+     * @param {Boolean} value
+     */
+    Spacecraft.prototype.setJumping = function (value) {
+        this._isJumping = value;
     };
     /**
      * Engages jump engines to leave the scene of the mission

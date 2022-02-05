@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Implementations of the various classes that represent all the different types of equipment to be added to spacecrafts
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -4732,7 +4732,7 @@ define([
                 this._spacecraft.changeFlightMode(FlightMode.CRUISE);
                 this._spacecraft.setSpeedTarget(this._class.getPrepareVelocity());
                 this._spacecraft.lockManeuvering();
-                this._spacecraft.disableFiring();
+                this._spacecraft.setJumping(true);
                 // the starting sound effect (computer blips) only need to be played for the piloted spacecraft - the event handler should
                 // return true if the event handling included the HUD and other piloted spacecraft related updates
                 if (this._spacecraft.handleEvent(SpacecraftEvents.JUMP_ENGAGED)) {
@@ -4750,7 +4750,7 @@ define([
                     this._state = JumpEngine.JumpState.NONE;
                     this._spacecraft.unlockManeuvering();
                     this._spacecraft.changeFlightMode(this._originalFlightMode);
-                    this._spacecraft.enableFiring();
+                    this._spacecraft.setJumping(false);
                     if (this._soundClip) {
                         this._soundClip.stopPlaying(audio.SOUND_RAMP_DURATION);
                         this._soundClip = null;
@@ -4787,7 +4787,7 @@ define([
             this._spacecraft.unlockManeuvering();
             this._spacecraft.setSpeedTarget(0);
             this._spacecraft.lockManeuvering();
-            this._spacecraft.disableFiring();
+            this._spacecraft.setJumping(true);
             exp = explosion.getExplosion();
             exp.init(
                     this._class.getJumpInExplosionClass(),
@@ -4899,7 +4899,7 @@ define([
                 if (this._timeLeft <= 0) {
                     this._state = JumpEngine.JumpState.NONE;
                     this._spacecraft.unlockManeuvering();
-                    this._spacecraft.enableFiring();
+                    this._spacecraft.setJumping(false);
                     this._spacecraft.handleEvent(SpacecraftEvents.ARRIVED);
                     this._spacecraft.resetDrag();
                 }
