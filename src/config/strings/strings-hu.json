@@ -801,6 +801,7 @@
         "noController": "Nem érzékelhető kontroller. Ha van csatlakoztatott kontroller, nyomd le a gombjait, és várj egy keveset, hogy a játék érzékelhesse.",
         "controllerDisabled": "letiltva",
         "controllerProfile": "Profil:",
+        "vibrationEnabled": "Rezgés sérüléskor:",
         "controllerHeading": "{controllerType} irányítás",
         "action": "Művelet"
     },

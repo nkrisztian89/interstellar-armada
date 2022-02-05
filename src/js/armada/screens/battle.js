@@ -2552,6 +2552,16 @@ define([
     };
     /**
      * @override
+     * @param {Boolean} active
+     */
+    BattleScreen.prototype.setActive = function (active) {
+        screens.HTMLScreen.prototype.setActive.call(this, active);
+        if (!active) {
+            control.exitPointerLock();
+        }
+    };
+    /**
+     * @override
      */
     BattleScreen.prototype._initializeComponents = function () {
         var canvas;

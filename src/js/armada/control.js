@@ -53,6 +53,7 @@ define([
             CAMERA_CONTROLLER_NAME = "camera",
             MODULE_PREFIX = "armada_control_",
             POINTER_LOCK_ENABLED_LOCAL_STORAGE_ID = MODULE_PREFIX + "pointerLockEnabled",
+            CANCEL_CRUISE_STRAFE_INTENSITY = 0.1, // a strafing command (strafe left/right, raise/lower) of minimum this intensity will cancel cruise flight mode
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -356,10 +357,12 @@ define([
         }.bind(this));
         // strafing to left and right
         this.setActionFunctions("strafeLeft", function (i) {
-            if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
-                if (this._controlledSpacecraft.toggleCruise()) {
-                    if (_flightModeSwitchSound) {
-                        _flightModeSwitchSound.play();
+            if ((i === undefined) || (i >= CANCEL_CRUISE_STRAFE_INTENSITY)) {
+                if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
+                    if (this._controlledSpacecraft.toggleCruise()) {
+                        if (_flightModeSwitchSound) {
+                            _flightModeSwitchSound.play();
+                        }
                     }
                 }
             }
@@ -368,10 +371,12 @@ define([
             this._controlledSpacecraft.stopLeftStrafe();
         }.bind(this));
         this.setActionFunctions("strafeRight", function (i) {
-            if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
-                if (this._controlledSpacecraft.toggleCruise()) {
-                    if (_flightModeSwitchSound) {
-                        _flightModeSwitchSound.play();
+            if ((i === undefined) || (i >= CANCEL_CRUISE_STRAFE_INTENSITY)) {
+                if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
+                    if (this._controlledSpacecraft.toggleCruise()) {
+                        if (_flightModeSwitchSound) {
+                            _flightModeSwitchSound.play();
+                        }
                     }
                 }
             }
@@ -381,10 +386,12 @@ define([
         }.bind(this));
         // strafing up and down
         this.setActionFunctions("raise", function (i) {
-            if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
-                if (this._controlledSpacecraft.toggleCruise()) {
-                    if (_flightModeSwitchSound) {
-                        _flightModeSwitchSound.play();
+            if ((i === undefined) || (i >= CANCEL_CRUISE_STRAFE_INTENSITY)) {
+                if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
+                    if (this._controlledSpacecraft.toggleCruise()) {
+                        if (_flightModeSwitchSound) {
+                            _flightModeSwitchSound.play();
+                        }
                     }
                 }
             }
@@ -393,10 +400,12 @@ define([
             this._controlledSpacecraft.stopRaise();
         }.bind(this));
         this.setActionFunctions("lower", function (i) {
-            if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
-                if (this._controlledSpacecraft.toggleCruise()) {
-                    if (_flightModeSwitchSound) {
-                        _flightModeSwitchSound.play();
+            if ((i === undefined) || (i >= CANCEL_CRUISE_STRAFE_INTENSITY)) {
+                if (this._controlledSpacecraft.getFlightMode() === equipment.FlightMode.CRUISE) {
+                    if (this._controlledSpacecraft.toggleCruise()) {
+                        if (_flightModeSwitchSound) {
+                            _flightModeSwitchSound.play();
+                        }
                     }
                 }
             }

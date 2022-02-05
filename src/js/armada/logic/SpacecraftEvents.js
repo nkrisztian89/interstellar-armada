@@ -1,5 +1,5 @@
 /**
- * Copyright 2017, 2020-2021 Krisztián Nagy
+ * Copyright 2017, 2020-2022 Krisztián Nagy
  * @file Event identifiers for spacecraft related events
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -15,6 +15,8 @@ define(function () {
      * @typedef {Object} SpacecraftEvents~BeingHitData
      * @property {Spacecraft} spacecraft The spacecraft that fired the projectile.
      * @property {Number[3]} hitPosition The position where the projectile has hit the spacecraft, in model-space.
+     * @property {Number} hullDamage The amount of damage the hull suffered as a result of the hit (damage absorbed
+     * by the shield and/or armor is not included)
      */
     /**
      * @typedef {Object} SpacecraftEvents~AnySpacecraftHitData

@@ -509,6 +509,21 @@ define([
          * @type Spacecraft[]
          */
         this._targetedBy = null;
+        /**
+         * The data passed to the event handlers for the "being hit" event (to avoid creating a new object on each hit)
+         * @type SpacecraftEvents~BeingHitData
+         */
+        this._hitData = {
+            spacecraft: null,
+            hitPosition: null,
+            hullDamage: 0
+        };
+        /**
+         * @type SpacecraftEvents~AnySpacecraftHitData
+         */
+        this._anySpacecraftHitData = {
+            spacecraft: this
+        };
         // ---------------------------------------
         // affiliation
         /**
@@ -2786,14 +2801,15 @@ define([
             }
         }
         // callbacks
-        this.handleEvent(SpacecraftEvents.BEING_HIT, {spacecraft: hitBy, hitPosition: damagePosition});
+        this._hitData.spacecraft = hitBy;
+        this._hitData.hitPosition = damagePosition;
+        this._hitData.hullDamage = damage;
+        this.handleEvent(SpacecraftEvents.BEING_HIT, this._hitData);
         if (hitBy.isAlive() && !hitBy.isAway()) {
             if (hitBy.getTarget() === this) {
                 hitBy.handleEvent(SpacecraftEvents.TARGET_HIT);
             }
-            hitBy.handleEvent(SpacecraftEvents.ANY_SPACECRAFT_HIT, {
-                spacecraft: this
-            });
+            hitBy.handleEvent(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._anySpacecraftHitData);
         }
         if (!_isMultiGuest) {
             if (this.isHostile(hitBy)) {

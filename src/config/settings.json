@@ -1291,6 +1291,24 @@
                         }
                     ]
                 },
+                "vibrationEnabled": true,
+                "vibrationEffects": {
+                    "shield-hit": {
+                        "duration": 200,
+                        "strongMagnitude": 0,
+                        "weakMagnitude": 0.5
+                    },
+                    "hull-hit": {
+                        "duration": 200,
+                        "strongMagnitude": 1,
+                        "weakMagnitude": 1
+                    },
+                    "destroyed": {
+                        "duration": 1000,
+                        "strongMagnitude": 1,
+                        "weakMagnitude": 1
+                    }
+                },
                 "defaultProfile": "joystickRoll",
                 "profiles": {
                     "joystickRoll": {
@@ -1393,7 +1411,7 @@
                         ]
                     },
                     "gamepad": {
-                        "keywords": ["gamepad", "controller", "xbox", "playstation", "wup-028", "dualshock"],
+                        "keywords": ["gamepad", "controller", "xbox", "x-box", "playstation", "wup-028", "dualshock"],
                         "bindings": [
                             {
                                 "action": "fire",

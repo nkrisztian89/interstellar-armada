@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2016-2018, 2020-2022 Krisztián Nagy
  * @file Grunt configuration file for the Interstellar Armada game
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -170,7 +170,8 @@ module.exports = function (grunt) {
                 ["test", "is"],
                 ["custom", "is"],
                 ["dragFactor"],
-                ["angularDrag"]
+                ["angularDrag"],
+                ["vibrationEnabled", "is"]
             ].map(
             function (replacement) {
                 // create the replacements for each simple getter
@@ -458,8 +459,8 @@ module.exports = function (grunt) {
                         }, {
                             match: 'graphics.isShadowMapDebuggingEnabled()',
                             replacement: 'false'
-                            // -------------------------------------------------
-                            // stereoscopy
+                                    // -------------------------------------------------
+                                    // stereoscopy
                         }, {
                             match: 'graphics.isAnaglyphRenderingEnabled()',
                             replacement: 'false'

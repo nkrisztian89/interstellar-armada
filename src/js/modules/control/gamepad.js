@@ -28,6 +28,7 @@ define([
             GAMEPAD_AXIS_POSITIVE_SUFFIX = "_gamepad_axisPositive",
             PREFERRED_GAMEPAD_SUFFIX = "preferredGamepad",
             PREFERRED_PROFILES_SUFFIX = "preferredProfiles",
+            VIBRATION_ENABLED_SUFFIX = "vibrationEnabled",
             PREFERRED_GAMEPAD_NULL_VALUE = "null",
             EMPTY_LIST = [],
             GAMEPAD_UNSET = -2,
@@ -323,6 +324,23 @@ define([
          */
         this._preferredGamepadId = localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX];
         /**
+         * Whether vibration effects are enabled. If this is true and vibration support is detected,
+         * calling vibrate() will play the passed vibration effect.
+         * @type Boolean
+         */
+        this._vibrationEnabled = false;
+        /**
+         * The parameters for the available vibration effects to play. The keys are names of the
+         * vibration effects (can be passed to the vibrate() method), and the values are objects
+         * holding the parameters.
+         * Supported parameters (as of Chrome 98):
+         * - duration (number, ms)
+         * - strongMagnitude (number, 0-1)
+         * - weakMagnitude (number, 0-1)
+         * @type Object
+         */
+        this._vibrationEffects = null;
+        /**
          * 
          * @type GamepadSensitivityActionGroup[]
          */
@@ -360,6 +378,17 @@ define([
             for (i = 0; i < dataJSON.sensitivityProfile.actionGroups.length; i++) {
                 this._sensitivityActionGroups.push(new GamepadSensitivityActionGroup(dataJSON.sensitivityProfile.actionGroups[i]));
             }
+        }
+        this._vibrationEnabled = !!dataJSON.vibrationEnabled || false;
+        this._vibrationEffects = dataJSON.vibrationEffects || {};
+    };
+    /**
+     * @override
+     */
+    GamepadInputInterpreter.prototype.loadFromLocalStorage = function () {
+        control.InputInterpreter.prototype.loadFromLocalStorage.call(this);
+        if (localStorage[_modulePrefix + VIBRATION_ENABLED_SUFFIX] !== undefined) {
+            this._vibrationEnabled = localStorage[_modulePrefix + VIBRATION_ENABLED_SUFFIX] === true.toString();
         }
     };
     /**
@@ -562,6 +591,7 @@ define([
         control.InputInterpreter.prototype.removeFromLocalStorage.call(this);
         localStorage.removeItem(_modulePrefix + PREFERRED_GAMEPAD_SUFFIX);
         localStorage.removeItem(_modulePrefix + PREFERRED_PROFILES_SUFFIX);
+        localStorage.removeItem(_modulePrefix + VIBRATION_ENABLED_SUFFIX);
         this._gamepadSetIndex = GAMEPAD_UNSET;
         this._preferredGamepadId = "";
     };
@@ -597,6 +627,44 @@ define([
             preferences = this._getProfilePreferences();
             preferences[this._gamepad.id] = this._currentProfileName;
             localStorage[_modulePrefix + PREFERRED_PROFILES_SUFFIX] = JSON.stringify(preferences);
+        }
+    };
+    /**
+     * Returns whether controller vibration effects are supported for the currently set controller.
+     * @returns {Boolean}
+     */
+    GamepadInputInterpreter.prototype.isVibrationSupported = function () {
+        return (this._gamepad !== null) && this._gamepad.vibrationActuator && (this._gamepad.vibrationActuator.type === "dual-rumble") && (typeof this._gamepad.vibrationActuator.playEffect === "function");
+    };
+    /**
+     * Returns whether vibration effects are currently enabled.
+     * @returns {Boolean}
+     */
+    GamepadInputInterpreter.prototype.isVibrationEnabled = function () {
+        return this._vibrationEnabled;
+    };
+    /**
+     * Enables/disables vibration effects. If they are enabled and also supported (by the browser and the current controller), calling vibrate() will play the
+     * passed vibration effect.
+     * @param {Boolean} value
+     * @param {Boolean} [saveToLocalStorage=true]
+     */
+    GamepadInputInterpreter.prototype.setVibrationEnabled = function (value, saveToLocalStorage) {
+        if (saveToLocalStorage === undefined) {
+            saveToLocalStorage = true;
+        }
+        this._vibrationEnabled = value;
+        if (saveToLocalStorage) {
+            localStorage[_modulePrefix + VIBRATION_ENABLED_SUFFIX] = value.toString();
+        }
+    };
+    /**
+     * Plays the vibration effect with the passed name on the current controller, if it exists and vibration effects are supported and turned on.
+     * @param {String} effectName
+     */
+    GamepadInputInterpreter.prototype.vibrate = function (effectName) {
+        if (this._vibrationEnabled && this._gamepad && this._gamepad.vibrationActuator && this._vibrationEffects.hasOwnProperty(effectName)) {
+            this._gamepad.vibrationActuator.playEffect("dual-rumble", this._vibrationEffects[effectName]);
         }
     };
     // -------------------------------------------------------------------------

@@ -43,6 +43,7 @@ define([
             POINTER_LOCK_SELECTOR_CLASS = "pointerLock selector",
             CONTROLLER_SELECTOR_ID = "controllerSelector",
             CONTROLLER_PROFILE_SELECTOR_ID = "controllerProfileSelector",
+            VIBRATION_ENABLED_SELECTOR_ID = "vibrationEnabledSelector",
             CLICKABLE_CLASS_NAME = "clickable",
             HIGHLIGHTED_CLASS_NAME = "highlightedItem",
             TABLE_TITLE_CLASS_NAME = "controls tableTitle",
@@ -337,6 +338,17 @@ define([
                         _getControllerProfiles()),
                 CONTROLLER_SETTINGS_CONTAINER_ID);
         /**
+         * @type Selector
+         */
+        this._vibrationEnabledSelector = this.registerExternalComponent(
+                new components.Selector(
+                        VIBRATION_ENABLED_SELECTOR_ID,
+                        armadaScreens.SELECTOR_SOURCE,
+                        {cssFilename: armadaScreens.SELECTOR_CSS},
+                        {id: strings.CONTROLS.VIBRATION_ENABLED.name},
+                        strings.getOnOffSettingValues()),
+                CONTROLLER_SETTINGS_CONTAINER_ID);
+        /**
          * @type SimpleComponent
          */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
@@ -384,6 +396,12 @@ define([
             }
             this._generateTables();
         }.bind(this);
+        this._vibrationEnabledSelector.onChange = function (stepping) {
+            if (stepping !== 0) {
+                control.getInputInterpreter(control.GAMEPAD_NAME).setVibrationEnabled(this._vibrationEnabledSelector.getSelectedIndex() === SETTING_ON_INDEX);
+            }
+            this._generateTables();
+        }.bind(this);
         this._settingsContainer.hide();
     };
     /**
@@ -403,7 +421,7 @@ define([
         _stopKeySetting();
         control.setPointerLockEnabled(this._pointerLockSelector.getSelectedIndex() === SETTING_ON_INDEX);
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
-    }
+    };
     /**
      * Adds the table showing available actions and their assigned keys as well as
      * sets up a click handler for the cells showing the keys to initiate a change
@@ -509,9 +527,14 @@ define([
         if (this._controllerSelector.getSelectedIndex() < this._gamepadOptions.length) {
             this._controllerProfileSelector.setValueList(_getControllerProfiles());
             this._controllerProfileSelector.selectValueWithIndex(gamepadInterpreter.getProfiles().indexOf(gamepadInterpreter.getProfile()));
+            this._vibrationEnabledSelector.setValueList(gamepadInterpreter.isVibrationSupported() ? strings.getOnOffSettingValues() : strings.getOffSettingValue());
+            this._vibrationEnabledSelector.selectValueWithIndex((gamepadInterpreter.isVibrationSupported() && gamepadInterpreter.isVibrationEnabled()) ?
+                    SETTING_ON_INDEX : SETTING_OFF_INDEX);
         } else {
             this._controllerProfileSelector.setValueList(_getNoControllerProfiles());
             this._controllerProfileSelector.selectValueWithIndex(0);
+            this._vibrationEnabledSelector.setValueList(strings.getOffSettingValue());
+            this._vibrationEnabledSelector.selectValueWithIndex(0);
         }
     };
     /**

@@ -441,6 +441,7 @@ define([
         CONTROLLER: {name: "controls.controller"},
         CONTROLLER_DISABLED: {name: "controls.controllerDisabled"},
         CONTROLLER_PROFILE: {name: "controls.controllerProfile"},
+        VIBRATION_ENABLED: {name: "controls.vibrationEnabled"},
         CONTROLLER_TYPE_HEADING: {name: "controls.controllerHeading"},
         ACTION: {name: "controls.action"}
     };

@@ -770,6 +770,7 @@
         "noController": "No controllers detected. If you have controllers plugged in, try pressing the buttons on them and wait a few seconds for them to be detected.",
         "controllerDisabled": "disabled",
         "controllerProfile": "Profile:",
+        "vibrationEnabled": "Vibrate when hit:",
         "controllerHeading": "{controllerType} controls",
         "action": "Action"
     },

@@ -19,6 +19,7 @@
  * @param camera Used for creating camera configurations for views
  * @param renderableObjects Used for creating visual models for game objects
  * @param constants Used for Accessing global localStorage prefixes
+ * @param control Used to trigger gamepad vibration effects
  * @param graphics Used to access graphics settings
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param config Used to access game settings/configuration
@@ -47,6 +48,7 @@ define([
     "modules/scene/camera",
     "modules/scene/renderable-objects",
     "armada/constants",
+    "armada/control",
     "armada/graphics",
     "armada/logic/classes",
     "armada/configuration",
@@ -65,7 +67,7 @@ define([
         utils, types, mat,
         application, asyncResource, resourceManager, resources, pools, egomModel, physics,
         camera, renderableObjects,
-        constants, graphics, classes, config, strings,
+        constants, control, graphics, classes, config, strings,
         logicConstants, environments, SpacecraftEvents, spacecraft, equipment, explosion, ai,
         missionActions, missionEvents) {
     "use strict";
@@ -1265,6 +1267,9 @@ define([
             if (!demoMode && spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
                 craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
+                craft.addEventHandler(SpacecraftEvents.BEING_HIT, function (pilotedCraft, hitData) {
+                    control.getInputInterpreter(control.GAMEPAD_NAME).vibrate((pilotedCraft.getHullIntegrity() <= 0) ? "destroyed" : (hitData.hullDamage > 0) ? "hull-hit" : "shield-hit");
+                }.bind(this, craft));
             }
             if (spacecrafts[i].multi) {
                 craft.setAsMultiControlled(spacecrafts[i].piloted, i);
