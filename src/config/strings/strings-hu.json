@@ -657,6 +657,7 @@
             "initializing": "Adatbázis inicializálása..."
         },
         "length": "Hosszúság",
+        "height": "Magasság",
         "weaponSlots": "Fegyverek",
         "missileLaunchers": "Rakétavetők",
         "lockResist": "Célbefogás nehézsége",
@@ -895,6 +896,10 @@
         "cruiser": {
             "name": "cirkáló",
             "description": "A cirkálók jelenleg a legnagyobb szolgálatban lévő hadihajók, az űrhajótervezés és -építés csúcsát testesítik meg. Teljes flották zászlóshajóiként, előretolt mobil parancsnoki központként, körzetek műveleti bázisaként és bolygók ostromának, illetve védelmének vezetésére használják őket. Nagy méretüknek és fejlett fegyverzetüknek köszönhetően biztonságosan szállíthatnak nagy mennyiségű ellátmányt, számos harci és szállító gépet, földfelszíni katonai egységeket, vagy akár új helyőrségek kiépítéséhez szükséges berendezéseket és erőforrásokat. A legerősebb páncélzattal és védőpajzzsal, továbbá mind vadászgépek, mind hadihajók ellen hatásos fegyverzettel szerelhetők fel. Fontos szerepük miatt az ellenség rendszerint kiemelt célpontként kezeli őket, ezért nagyobb ütközetekben létfontosságú, hogy megfelelő védelmi támogatást kapjanak torpedókkal és hajók ellen irányuló tűzerővel szemben."
+        },
+        "station": {
+            "name": "állomás",
+            "description": "Minden olyan, műholdnál nagyobb űreszköz űrállomásnak minősül, amely elégséges üzemanyagkapacitás vagy megfelelő erejű hajtóművek hiányában képtelen saját erőből számottevő pályamódosításra. Akár alkalmas személyzet befogadására, akár nem, a kis átjátszóállomásoktól a hatalmas orbitális hajógyárakig."
         }
     },
     "spacecraftClass": {
@@ -937,7 +942,8 @@
             "name": "Navigációs bólya"
         },
         "commRelay": {
-            "name": "Átjátszóállomás"
+            "name": "Átjátszóállomás",
+            "description": "Ezek a kis méretű, személyzet nélküli állomások alkotják a megbízható, nagy hatótávolságú, fénysebességnél gyorsabb kommunikációs hálózat gerincét. Navigációs jeladóként is szolgálnak, és kisebb mennyiségű vészhelyzeti ellátmánnyal is rendelkeznek a megsérült űrhajók számára, amelyek rajtuk keresztül hívhatnak segítséget. Manőverező hajtóművekkel is fel vannak szerelve, és elég üzemanyaggal tölthetők fel, hogy két karbantartás között képesek legyenek tartani a pályájukat."
         }
     },
     "weaponClass": {

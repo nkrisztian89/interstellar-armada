@@ -626,6 +626,7 @@
             "initializing": "Initializing database..."
         },
         "length": "Length",
+        "height": "Height",
         "weaponSlots": "Weapon slots",
         "missileLaunchers": "Missile launchers",
         "lockResist": "Lock-on resistance",

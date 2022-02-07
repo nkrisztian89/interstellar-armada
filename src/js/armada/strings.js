@@ -308,6 +308,7 @@ define([
         NEXT_BUTTON: {name: "database.nextButton"},
         LOADING_BOX_INITIALIZING: {name: "database.loadingBox.initializing"},
         LENGTH: {name: "database.length"},
+        HEIGHT: {name: "database.height"},
         WEAPON_SLOTS: {name: "database.weaponSlots"},
         MISSILE_LAUNCHERS: {name: "database.missileLaunchers"},
         LOCK_RESIST: {name: "database.lockResist"},

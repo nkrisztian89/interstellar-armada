@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file This module manages and provides the in-game database screen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -133,6 +133,11 @@ define([
              * @type Number
              */
             _currentItemLengthInMeters = 0,
+            /**
+             * The size of the currently loaded models on the Z axis in meters
+             * @type Number
+             */
+            _currentItemHeightInMeters = 0,
             /**
              * Whether we are in the first load cycle (no items have been loaded yet)
              * @type Boolean
@@ -439,10 +444,14 @@ define([
     /**
      * Returns a format string that can be used for the stats paragraph and is translated to the current language, but only has the 
      * placeholders for the stat values
+     * @param {Boolean} showHeightInsteadOfLength Whether to include the passed height instead of the length in the output string
      * @returns {String}
      */
-    function getStatsFormatString() {
-        return strings.get(strings.DATABASE.LENGTH) + ": {length}<br/>" +
+    function getStatsFormatString(showHeightInsteadOfLength) {
+        return (showHeightInsteadOfLength ?
+                (strings.get(strings.DATABASE.HEIGHT) + ": {height}<br/>") :
+                (strings.get(strings.DATABASE.LENGTH) + ": {length}<br/>")
+                ) +
                 strings.get(strings.SPACECRAFT_STATS.ARMOR) + ": {armor} (" +
                 strings.get(strings.SPACECRAFT_STATS.ARMOR_RATING) + ")<br/>" +
                 strings.get(strings.DATABASE.WEAPON_SLOTS) + ": {weaponSlots}<br/>" +
@@ -542,6 +551,7 @@ define([
         var i, shipClass = classes.getSpacecraftClassesInArray(true)[_currentItemIndex],
                 missileLaunchers, missileLauncherSizes, missileLaunchersText;
         _currentItemLengthInMeters = (_currentItem && _currentItem.getVisualModel()) ? _currentItem.getVisualModel().getHeightInMeters() : 0;
+        _currentItemHeightInMeters = (_currentItem && _currentItem.getVisualModel()) ? _currentItem.getVisualModel().getDepthInMeters() : 0;
         // full names can have translations, that need to refer to the name of the spacecraft class / type, and if they exist,
         // then they are displayed, otherwise the stock value is displayed
         this._itemNameHeader.setContent(shipClass.getDisplayName());
@@ -557,8 +567,9 @@ define([
                 missileLaunchersText += missileLaunchers[missileLauncherSizes[i]].length + " " + strings.get(strings.MISSILE_SIZE.PREFIX, missileLauncherSizes[i], missileLauncherSizes[i]);
             }
         }
-        this._itemStatsParagraph.setContent(getStatsFormatString(), {
+        this._itemStatsParagraph.setContent(getStatsFormatString(!shipClass.isFighterClass() && (_currentItemHeightInMeters > _currentItemLengthInMeters)), {
             length: (_currentItemLengthInMeters && utils.getLengthString(_currentItemLengthInMeters)) || "-",
+            height: (_currentItemHeightInMeters && utils.getLengthString(_currentItemHeightInMeters)) || "-",
             armor: shipClass.getHitpoints() || "-",
             rating: shipClass.getArmor() || "0",
             weaponSlots: shipClass.getWeaponSlots().length || "-",

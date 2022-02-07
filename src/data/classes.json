@@ -3407,7 +3407,7 @@
         }, {
             "name": "station",
             "fullName": "Station",
-            "description": ""
+            "description": "Manned or unmanned, from small communications relays to large orbital shipyards, any spacecraft larger than a satellite that does not have sufficient fuel capacity or thrusters powerful enough to meaningfully alter its course or orbit under its own power is classified as a space station."
         }],
     "spacecraftClasses": [{
             "name": "container",
@@ -7377,7 +7377,8 @@
             "name": "commRelay",
             "type": "station",
             "fullName": "Communications Relay",
-            "showInDatabase": false,
+            "description": "These small unmanned stations provide the backbone of reliable long range FTL communication in civilized space. They also serve as navigation beacons, and they hold a small amount of emergency supplies for damaged vessels that may link up with them to call for help. They are outfitted with maneuvering thrusters and some fuel so they can hold their orbital positions in the interval between maintenance rounds.",
+            "showInDatabase": true,
             "hitpoints": 30,
             "model": "commrelay",
             "shader": "ship",

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Provides various basic renderable object classes that can be added to scenes inside renderable nodes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -762,7 +762,7 @@ define([
      * @param {ManagedShader} shader
      */
     function ContainerObject(shader) {
-        RenderableObject3D.call(this, shader);   
+        RenderableObject3D.call(this, shader);
     }
     ContainerObject.prototype = new RenderableObject3D();
     ContainerObject.prototype.constructor = ContainerObject;
@@ -1010,6 +1010,13 @@ define([
         return this._model.getHeightInMeters();
     };
     /**
+     * Returns the depth (size on the Z axis) of the largest mesh of the model, measured in meters.
+     * @returns {Number}
+     */
+    ShadedLODMesh.prototype.getDepthInMeters = function () {
+        return this._model.getDepthInMeters();
+    };
+    /**
      * Returns largest Y coordinate that any of the vertices of any of the meshes of this model have
      * @returns {Number}
      */
@@ -1191,7 +1198,7 @@ define([
      * managedGL), and the values should indicate the type of elements in the corresponding uniform array (using the enum 
      * managedGL.ShaderVariableType). E.g. { "myFloatArray": managedGL.ShaderVariableType.FLOAT }
      */
-    ParameterizedMesh.prototype.init = function(model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod, smallestSizeWhenDrawn, parameterArrayDeclarations) {
+    ParameterizedMesh.prototype.init = function (model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod, smallestSizeWhenDrawn, parameterArrayDeclarations) {
         var i, j, uniformArrayName, uniformArrayLength, parameterArrayNames;
         ShadedLODMesh.prototype.init.call(this, model, shader, textures, positionMatrix, orientationMatrix, scalingMatrix, wireframe, lod, smallestSizeWhenDrawn);
         /**
