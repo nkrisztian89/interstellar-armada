@@ -47,6 +47,13 @@
         "0.4.6": "<ul><li>Added missiles and a missile tutorial mission</li><li>Responsive menu layouts using the whole screen</li><li>Added experimental touchscreen controls</li><li>Custom missions can be created and loaded</li><li>Difficulty levels affect more mechanics</li><li>Added two new music tracks</li><li>Updated backgrounds</li><li>Optimized game files for smaller size and faster loading</li><li>Performance optimizations</li><li>Major improvements in the Interstellar Armada Editor</li><li>Many additional tweaks and fixes for the menus, HUD and graphics</li></ul>",
         "button": "Start"
     },
+    "firstMultiRunNote": {
+        "header": "Multiplayer notice",
+        "message": "This is a very early preview version of the multiplayer feature of the game. It has only <strong>extremely basic functionality</strong>, and if you choose to try it out, expect <strong>bugs, performance problems, lag, jittering, desynchronization, disconnects</strong> and other issues! The performance can be improved if you play on the same local network, because in this case the game host will connect to the other players directly, not through the server.<br><br>At the moment, <strong>all games are public</strong>, private games cannot be created!<br><br>The chat in the game lobby room is not moderated, please <strong>stay civil and respectful</strong> towards other players! <strong>Do not share any personal or sensitive information</strong> through your player name or in the chat! The game developer does not take responsibility for any player behaviour or messages you may encounter here. Enter at your own risk!",
+        "okButton": "Understood",
+        "doNotShowAgainButton": "Do not show again",
+        "cancelButton": "Back"
+    },
     "screen": {
         "back": "Back",
         "cancel": "Cancel"

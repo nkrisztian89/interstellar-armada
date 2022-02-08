@@ -61,6 +61,13 @@
         "0.4.6": "<ul><li>Rakétavetők és rakéta lőgyakorlat küldetés</li><li>Átdolgozott menüelrendezés, ami az egész képernyőt kihasználja</li><li>Kísérleti érintőképernyős irányítás</li><li>Egyéni küldetéseket lehet készíteni és betölteni</li><li>A nehézség változtatása több játékelemet befolyásol</li><li>Két új aláfestő zene</li><li>Frissített hátterek</li><li>A játék fájljai kisebb méretűre lettek optimalizálva</li><li>Jobb teljesítmény</li><li>A játékszerkesztő rengeteg fejlesztésen esett át</li><li>Számos további finomhangolás és hibajavítás, főként a menük, HUD és grafika terén</li></ul>",
         "button": "Indítás"
     },
+    "firstMultiRunNote": {
+        "header": "Többjátékos mód megjegyzések",
+        "message": "Ez a többjátékos mód nagyon korai előzetes verziója! Csak a <strong>legalapvetőbb funkciók</strong> egy része elérhető, és ha kipróbálod, számíts <strong>hibákra, rossz teljesítményre, akadozásra, szinkronizációs és csatlakozási problémákra</strong>! Jobb teljesítmény érhető el, ha a többi játékossal egy helyi hálózaton játszol, mert ilyenkor a házigazda közvetlenül csatlakozik a többiekhez, nem pedig a szerveren keresztül.<br><br>Jelenleg <strong>minden játék nyilvános</strong>, nincs lehetőség privát játék indítására!<br><br>A játékon belüli üzenetküldés nincs moderálva, kérlek <strong>kulturált és udvarias módon</strong> érintkezz a többi játékossal! <strong>Ne ossz meg személyes vagy érzékeny információt</strong> a játékosneveden vagy az üzeneteiden keresztül! A játék fejlesztője semmilyen felelősséget nem vállal a játékosok viselkedéséért és üzeneteiért. Belépés csak saját felelősségre!",
+        "okButton": "Értettem",
+        "doNotShowAgainButton": "Ne mutasd többször",
+        "cancelButton": "Vissza"
+    },
     "screen": {
         "back": "Vissza",
         "cancel": "Mégse"

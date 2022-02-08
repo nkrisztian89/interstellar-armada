@@ -30,6 +30,13 @@ define([
         NO_NEWS: {name: "releaseNotes.noNews"},
         BUTTON: {name: "releaseNotes.button"}
     };
+    strings.FIRST_MULTI_RUN_NOTE = {
+        HEADER: {name: "firstMultiRunNote.header"},
+        MESSAGE: {name: "firstMultiRunNote.message"},
+        OK_BUTTON: {name: "firstMultiRunNote.okButton"},
+        DO_NOT_SHOW_AGAIN_BUTTON: {name: "firstMultiRunNote.doNotShowAgainButton"},
+        CANCEL_BUTTON: {name: "firstMultiRunNote.cancelButton"}
+    };
     strings.SCREEN = {
         BACK: {name: "screen.back"},
         CANCEL: {name: "screen.cancel"}

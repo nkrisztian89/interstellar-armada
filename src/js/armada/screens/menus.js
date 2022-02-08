@@ -36,9 +36,11 @@ define([
             // --------------------------------------------------------------------------------------------
             // Constants
             FIRST_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID = constants.LOCAL_STORAGE_PREFIX + "firstRunNoteShown",
+            FIRST_MULTI_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID = constants.LOCAL_STORAGE_PREFIX + "firstMultiRunNoteShown",
             // --------------------------------------------------------------------------------------------
             // Private variables
             _releaseNotesShown = false,
+            _firstMultiRunNoteShown = false,
             _mainMenuOptions = [{
                     id: strings.MAIN_MENU.SINGLE_PLAYER.name,
                     action: function () {
@@ -49,9 +51,41 @@ define([
                 }, {
                     id: strings.MAIN_MENU.MULTIPLAYER.name,
                     action: function () {
-                        analytics.sendEvent("multi");
-                        audio.resume();
-                        game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
+                        var launchMulti = function () {
+                            analytics.sendEvent("multi");
+                            audio.resume();
+                            game.setScreen(armadaScreens.MULTI_GAMES_SCREEN_NAME);
+                        };
+                        // show first multi run message
+                        if ((localStorage[FIRST_MULTI_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID] !== "true") && !_firstMultiRunNoteShown) {
+                            armadaScreens.openDialog({
+                                header: strings.get(strings.FIRST_MULTI_RUN_NOTE.HEADER),
+                                message: strings.get(strings.FIRST_MULTI_RUN_NOTE.MESSAGE),
+                                buttons: [{
+                                        caption: strings.get(strings.FIRST_MULTI_RUN_NOTE.CANCEL_BUTTON),
+                                        action: function () {
+                                            game.closeSuperimposedScreen();
+                                        }
+                                    }, {
+                                        caption: strings.get(strings.FIRST_MULTI_RUN_NOTE.OK_BUTTON),
+                                        action: function () {
+                                            _firstMultiRunNoteShown = true;
+                                            game.closeSuperimposedScreen();
+                                            launchMulti();
+                                        }
+                                    }, {
+                                        caption: strings.get(strings.FIRST_MULTI_RUN_NOTE.DO_NOT_SHOW_AGAIN_BUTTON),
+                                        action: function () {
+                                            localStorage[FIRST_MULTI_RUN_NOTE_SHOWN_LOCAL_STORAGE_ID] = "true";
+                                            game.closeSuperimposedScreen();
+                                            launchMulti();
+                                        }
+                                    }]
+                            });
+                            // if running a new version for the first time, show release notes of version since the last played one
+                        } else {
+                            launchMulti();
+                        }
                     }
                 }, {
                     id: strings.MAIN_MENU.DATABASE.name,
