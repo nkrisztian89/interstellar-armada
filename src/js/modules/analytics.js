@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2017-2018, 2020-2022 Krisztián Nagy
  * @file This is a simple analytics module that sends requests to an analytics backend
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -206,8 +206,9 @@ define([
                     url += "/" + urlParams[i];
                 }
             }
+            url += "?version=" + application.getVersion().split(" ")[0];
             if (queryParams) {
-                url += "?";
+                url += "&";
                 p = Object.keys(queryParams);
                 for (i = 0; i < p.length; i++) {
                     url += p[i] + "=" + queryParams[p[i]] + "&";
