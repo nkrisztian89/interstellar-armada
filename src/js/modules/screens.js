@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Provides wrapper classes that can be used to manage (loading, assemblin, displaying, hiding, translating...) HTML based screens for
  * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -394,6 +394,13 @@ define([
                 this._model = null;
             }
         });
+    };
+    /**
+     * Whether the screen is visible (is could be under a superimposed screen or as the active screen on top)
+     * @returns {Boolean}
+     */
+    HTMLScreen.prototype.isVisible = function () {
+        return this._visible;
     };
     /**
      * Displays the screen (makes it visible)

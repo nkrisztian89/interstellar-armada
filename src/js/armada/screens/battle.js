@@ -2501,6 +2501,12 @@ define([
                 strings.INFO_BOX.OK_BUTTON.name,
                 {
                     show: function () {
+                        if (!_battleScreen.isVisible()) {
+                            return;
+                        }
+                        while (game.getScreen() !== _battleScreen) {
+                            game.closeSuperimposedScreen();
+                        }
                         this.pauseBattle();
                     }.bind(this),
                     hide: function () {
