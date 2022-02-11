@@ -383,11 +383,17 @@ define([
      * @returns {ListComponent~ListElement[]} 
      */
     MissionsScreen.prototype._getListElements = function () {
-        var result = [], missionNames = this._missionProvider.getMissionNames(this._custom), i;
+        var result = [], missionNames = this._missionProvider.getMissionNames(this._custom), i, missionTitles;
+        if (this._custom && !this._community) {
+            missionTitles = [];
+            for (i = 0; i < missionNames.length; i++) {
+                missionTitles.push(this._missionProvider.getMissionDescriptor(missionNames[i]).getTitle());
+            }
+        }
         for (i = 0; i < missionNames.length; i++) {
             result.push({
-                captionID: this._community ? undefined : strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(missionNames[i]) + strings.MISSION.NAME_SUFFIX.name,
-                caption: this._community ? missionNames[i] : undefined,
+                captionID: (this._community || this._custom) ? undefined : strings.MISSION.PREFIX.name + utils.getFilenameWithoutExtension(missionNames[i]) + strings.MISSION.NAME_SUFFIX.name,
+                caption: this._community ? missionNames[i] : this._custom ? missionTitles[i] || utils.getFilenameWithoutExtension(missionNames[i]) : undefined,
                 subcaptionID: strings.MISSIONS.NOT_COMPLETED.name
             });
         }
