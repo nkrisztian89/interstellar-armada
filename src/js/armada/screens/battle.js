@@ -2545,12 +2545,18 @@ define([
      * @returns {Boolean}
      */
     BattleScreen.prototype.hide = function () {
+        var shadows;
         if (screens.HTMLScreenWithCanvases.prototype.hide.call(this)) {
             if (_multi) {
                 _multi = false;
             }
             this.pauseBattle(true);
             _clearData();
+            shadows = graphics.isShadowMappingEnabled();
+            graphics.setShadowMapping();
+            if (shadows !== graphics.isShadowMappingEnabled()) {
+                graphics.handleSettingsChanged();
+            }
             document.getElementById(armadaScreens.GAME_VERSION_LABEL_ID).hidden = false;
             return true;
         }
@@ -4578,7 +4584,7 @@ define([
      * @param {Mission} mission
      */
     BattleScreen.prototype._startBattle = function (mission) {
-        var missionDescriptor, custom, anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex, i, canvas;
+        var missionDescriptor, custom, anticipationMusicNames, anticipationMusic, anticipationMusicIndex, combatMusicNames, combatMusic, combatMusicIndex, i, canvas, shadows;
         canvas = this.getScreenCanvas(BATTLE_CANVAS_ID).getCanvasElement();
         _mission = mission;
         _targets = _mission.getTargetSpacecrafts();
@@ -4607,6 +4613,15 @@ define([
         _timeSinceMultiMatchEnded = 0;
         _timeSincePlayerLeft = 0;
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
+        shadows = graphics.isShadowMappingEnabled();
+        if (_mission.hasShadows()) {
+            graphics.setShadowMapping();
+        } else {
+            graphics.setShadowMapping(false, false);
+        }
+        if (shadows !== graphics.isShadowMappingEnabled()) {
+            graphics.handleSettingsChanged();
+        }
         if (graphics.shouldUseShadowMapping()) {
             graphics.getShadowMappingShader();
         }

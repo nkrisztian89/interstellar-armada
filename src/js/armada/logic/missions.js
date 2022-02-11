@@ -1223,7 +1223,7 @@ define([
      * and a suitable AI is added to all spacecrafts if possible.
      */
     Mission.prototype.loadFromJSON = function (dataJSON, difficulty, demoMode) {
-        var i, j, shadows, craft, teamID, team, aiType, actions, count, factor, spacecrafts;
+        var i, j, craft, teamID, team, aiType, actions, count, factor, spacecrafts;
         application.log_DEBUG("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
@@ -1231,15 +1231,6 @@ define([
         this._title = dataJSON.title || "";
         this._nextMissionName = dataJSON.nextMission || null;
         this.loadEnvironment(dataJSON);
-        shadows = graphics.isShadowMappingEnabled();
-        if (this._environment.hasShadows()) {
-            graphics.setShadowMapping();
-        } else {
-            graphics.setShadowMapping(false, false);
-        }
-        if (shadows !== graphics.isShadowMappingEnabled()) {
-            graphics.handleSettingsChanged();
-        }
         physics.setDrag(this._environment.getDrag(), this._environment.getAngularDrag());
         this._anticipationTheme = dataJSON.anticipationTheme;
         this._combatTheme = dataJSON.combatTheme;
