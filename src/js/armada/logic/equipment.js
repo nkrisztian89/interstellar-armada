@@ -1283,7 +1283,7 @@ define([
             mat.setProd3x3SubOf4(this._turningMatrix,
                     mat.prod3x3SubOf4Aux(
                             this._physicalModel.getOrientationMatrix(),
-                            this._physicalModel.getAngularVelocityMatrix()),
+                            this._physicalModel.getVelocityMatrix()),
                     mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
             this._turningMatrixValid = true;
         }
@@ -4802,7 +4802,7 @@ define([
             physicalModel = this._spacecraft.getPhysicalModel();
             directionVector = mat.getRowB4(physicalModel.getOrientationMatrix());
             // calculate and set the starting velocity based on the set final velocity and total deceleration during the jump in sequence
-            physicalModel.setVelocityMatrix(mat.translation4v(vec.scaled3(directionVector, this._class.getJumpInVelocity() + this._class.getJumpInDeceleration() * this._class.getJumpInDuration() / 1000)));
+            physicalModel.setVelocityv(vec.scaled3(directionVector, this._class.getJumpInVelocity() + this._class.getJumpInDeceleration() * this._class.getJumpInDuration() / 1000));
             physicalModel.addForce(new physics.Force(physicalModel.getMass() * this._class.getJumpInDeceleration(), vec.scaled3(directionVector, -1), this._class.getJumpInDuration()));
             physicalModel.setDragFactor(0);
             this._soundClip = this._class.createJumpInSoundClip(this._spacecraft.getSoundSource());

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides a basic physics engine with Newtonian mechanics
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -573,7 +573,10 @@ define([
          */
         this._modelMatrixInverseValid = false;
         /**
-         * The 4x4 translation matrix describing the velocity of the object. (m/s)
+         * A combined 4x4 translation and rotation matrix:
+         * The translation component describes the velocity of the object. (m/s)
+         * The rotation component describes the rotation the current angular velocity of the object causes over 
+         * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds. (because rotation is performed in steps as matrix rotation cannot be interpolated)
          * @type Float32Array
          */
         this._velocityMatrix = mat.identity4();
@@ -589,12 +592,6 @@ define([
          * @type Number[3]
          */
         this._offset = [0, 0, 0];
-        /**
-         * The 4x4 rotation matrix describing the rotation the current angular velocity of the object causes over 
-         * ANGULAR_VELOCITY_MATRIX_DURATION milliseconds. (because rotation is performed in steps as matrix rotation cannot be interpolated)
-         * @type Float32Array
-         */
-        this._angularVelocityMatrix = mat.identity4();
         /**
          * The angular acceleration caused by the directly applied and the added 
          * torques is accumulated for the current simulation step in this 3x3 rotation matrix.
@@ -686,10 +683,10 @@ define([
         this._rotationMatrixInverseValid = false;
         this._scalingMatrixInverseValid = false;
         this._modelMatrixInverseValid = false;
+        mat.setIdentity4(this._velocityMatrix);
         mat.copyTranslation4(this._velocityMatrix, initialVelocityMatrix);
         vec.setNull3(this._acceleration);
         vec.setNull3(this._offset);
-        mat.setIdentity4(this._angularVelocityMatrix);
         mat.setIdentity3(this._angularAccelerationMatrix);
         mat.setIdentity3(this._orientationOffset);
         this._hasAngularAcceleration = false;
@@ -708,7 +705,6 @@ define([
      */
     PhysicalObject.prototype.reset = function () {
         mat.setIdentity4(this._velocityMatrix);
-        mat.setIdentity4(this._angularVelocityMatrix);
         this._forces.clear();
         this._torques.clear();
     };
@@ -774,20 +770,14 @@ define([
         return this._bodySize * this._scalingMatrix[0];
     };
     /**
-     * Returns the 4x4 translation matrix describing the velocity of the object.
-     * (in m/s)
+     * Returns a combined 4x4 translation and rotation matrix:
+     * The translation component describes the velocity of the object. (in m/s)
+     * The rotation component describes the rotation the current angular
+     * velocity of the object causes over ANGULAR_VELOCITY_MATRIX_DURATION milliseconds.
      * @returns {Float32Array}
      */
     PhysicalObject.prototype.getVelocityMatrix = function () {
         return this._velocityMatrix;
-    };
-    /**
-     * Directly (by reference) sets the 4x4 translation matrix describing the velocity of the object.
-     * (in m/s)
-     * @param{Float32Array} value
-     */
-    PhysicalObject.prototype.setVelocityMatrix = function (value) {
-        this._velocityMatrix = value;
     };
     /**
      * Sets a new velocity for the object (in m/s)
@@ -801,12 +791,13 @@ define([
         this._velocityMatrix[14] = z;
     };
     /**
-     * Returns the 4x4 rotation matrix describing the rotation the current angular
-     * velocity of the object causes over ANGULAR_VELOCITY_MATRIX_DURATION milliseconds.
-     * @returns {Float32Array}
+     * Sets a new velocity for the object (in m/s)
+     * @param {Number[]} v The new velocity vector to set
      */
-    PhysicalObject.prototype.getAngularVelocityMatrix = function () {
-        return this._angularVelocityMatrix;
+    PhysicalObject.prototype.setVelocityv = function (v) {
+        this._velocityMatrix[12] = v[0];
+        this._velocityMatrix[13] = v[1];
+        this._velocityMatrix[14] = v[2];
     };
     /**
      * Sets a new angular velocity for the object by modifying its angular velocity matrix.
@@ -821,15 +812,15 @@ define([
      * @param {Number} zz
      */
     PhysicalObject.prototype.setAngularVelocity = function (xx, xy, xz, yx, yy, yz, zx, zy, zz) {
-        this._angularVelocityMatrix[0] = xx;
-        this._angularVelocityMatrix[1] = xy;
-        this._angularVelocityMatrix[2] = xz;
-        this._angularVelocityMatrix[4] = yx;
-        this._angularVelocityMatrix[5] = yy;
-        this._angularVelocityMatrix[6] = yz;
-        this._angularVelocityMatrix[8] = zx;
-        this._angularVelocityMatrix[9] = zy;
-        this._angularVelocityMatrix[10] = zz;
+        this._velocityMatrix[0] = xx;
+        this._velocityMatrix[1] = xy;
+        this._velocityMatrix[2] = xz;
+        this._velocityMatrix[4] = yx;
+        this._velocityMatrix[5] = yy;
+        this._velocityMatrix[6] = yz;
+        this._velocityMatrix[8] = zx;
+        this._velocityMatrix[9] = zy;
+        this._velocityMatrix[10] = zz;
     };
     /**
      * Adds a force that will affect this object from now on.
@@ -1125,7 +1116,7 @@ define([
         // transforms the position to object-space for preliminary check
         relativePos = vec.prodVec4Mat4Aux(vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
-        relativeVelocityVector = vec.diffVec3Mat4(velocityVector, this.getVelocityMatrix());
+        relativeVelocityVector = vec.diffVec3Mat4(velocityVector, this._velocityMatrix);
         i = vec.extractLength3(relativeVelocityVector);
         range = i * dt * 0.001 * this._inverseScalingFactor;
         // first, preliminary check based on position relative to the whole object
@@ -1162,7 +1153,7 @@ define([
     PhysicalObject.prototype._correctMatrices = function () {
         mat.correctOrthogonal4(this._orientationMatrix);
         this.setOrientationMatrix();
-        mat.correctOrthogonal4(this._angularVelocityMatrix);
+        mat.correctOrthogonal4(this._velocityMatrix);
     };
     /**
      * Performs the physics calculations for the object based on the forces and 
@@ -1228,23 +1219,23 @@ define([
                 if ((_drag > 0) && (this._dragFactor > 0)) {
                     matrix = mat.identity3Aux();
                     s = _angularDrag * this._dragFactor * dt * 0.001;
-                    if (vec.angle2y(this._angularVelocityMatrix[4], this._angularVelocityMatrix[5]) > MINIMUM_DRAG_ANGLE) {
-                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Z, (this._angularVelocityMatrix[4] > 0) ? -s : s));
+                    if (vec.angle2y(this._velocityMatrix[4], this._velocityMatrix[5]) > MINIMUM_DRAG_ANGLE) {
+                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Z, (this._velocityMatrix[4] > 0) ? -s : s));
                     }
-                    if (vec.angle2x(this._angularVelocityMatrix[5], this._angularVelocityMatrix[6]) > MINIMUM_DRAG_ANGLE) {
-                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_X, (this._angularVelocityMatrix[6] > 0) ? s : -s));
+                    if (vec.angle2x(this._velocityMatrix[5], this._velocityMatrix[6]) > MINIMUM_DRAG_ANGLE) {
+                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_X, (this._velocityMatrix[6] > 0) ? s : -s));
                     }
-                    if (vec.angle2x(this._angularVelocityMatrix[0], this._angularVelocityMatrix[2]) > MINIMUM_DRAG_ANGLE) {
-                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Y, (this._angularVelocityMatrix[2] > 0) ? -s : s));
+                    if (vec.angle2x(this._velocityMatrix[0], this._velocityMatrix[2]) > MINIMUM_DRAG_ANGLE) {
+                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Y, (this._velocityMatrix[2] > 0) ? -s : s));
                     }
-                    mat.mulRotation43(this._angularVelocityMatrix, matrix);
+                    mat.mulRotation43(this._velocityMatrix, matrix);
                 }
                 // the same process with rotation and torques
                 // the angular velocity matrix represents the rotation that happens
                 // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
                 // interpolated easily, for that quaternions should be used)
                 for (i = 0; (i + ANGULAR_VELOCITY_MATRIX_DURATION * 0.5) < dt; i += ANGULAR_VELOCITY_MATRIX_DURATION) {
-                    mat.mulRotationRotation4(this._orientationMatrix, this._angularVelocityMatrix);
+                    mat.mulRotationRotation4(this._orientationMatrix, this._velocityMatrix);
                 }
                 if (this._hasAngularAcceleration) {
                     mat.mulRotation43(
@@ -1277,12 +1268,12 @@ define([
                 }
                 if (this._hasAngularAcceleration) {
                     // update angular velocity matrix
-                    mat.mulRotation43(this._angularVelocityMatrix, this._angularAccelerationMatrix);
+                    mat.mulRotation43(this._velocityMatrix, this._angularAccelerationMatrix);
                     mat.setIdentity3(this._angularAccelerationMatrix);
                     this._hasAngularAcceleration = false;
                     // correct matrix inaccuracies and close to zero values resulting from
                     // floating point operations
-                    mat.straightenRotation4(this._angularVelocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
+                    mat.straightenRotation4(this._velocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
                 }
                 this._correctMatrices();
             }

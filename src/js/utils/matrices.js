@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides a set of functions to operate on Float32Arrays as matrices
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2911,10 +2911,6 @@ define([
         m[9] = vz[1];
         m[10] = vz[2];
         m[11] = 0.0;
-        m[12] = 0.0;
-        m[13] = 0.0;
-        m[14] = 0.0;
-        m[15] = 1.0;
     };
     /**
      * Modifies the passed matrix m to a "straigthened" version, which means every value
@@ -2964,7 +2960,7 @@ define([
      */
     mat.straightenRotation4 = function (m, epsilon) {
         var i;
-        for (i = 0; i < 10; i++) {
+        for (i = 0; i < 11; i++) {
             m[i] = (Math.abs(m[i]) < epsilon) ?
                     0.0 :
                     ((Math.abs(1 - m[i]) < epsilon) ?

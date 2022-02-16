@@ -1464,7 +1464,7 @@ define([
             mat.setProd3x3SubOf4(this._turningMatrix,
                     mat.prod3x3SubOf4Aux(
                             this._physicalModel.getOrientationMatrix(),
-                            this._physicalModel.getAngularVelocityMatrix()),
+                            this._physicalModel.getVelocityMatrix()),
                     mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
             this._turningMatrixValid = true;
         }
@@ -3154,14 +3154,13 @@ define([
      * @returns {Float32Array}
      */
     Spacecraft.prototype.getMultiHostData = function () {
-        var position, orientation, velocity, angularVelocity;
+        var position, orientation, velocity;
         if (!this._alive) {
             return this._multiHostData;
         }
         position = this._physicalModel.getPositionMatrix();
         orientation = this._physicalModel.getOrientationMatrix();
         velocity = this._physicalModel.getVelocityMatrix();
-        angularVelocity = this._physicalModel.getAngularVelocityMatrix();
         this._multiHostData[0] = position[12];
         this._multiHostData[1] = position[13];
         this._multiHostData[2] = position[14];
@@ -3177,15 +3176,15 @@ define([
         this._multiHostData[12] = velocity[12];
         this._multiHostData[13] = velocity[13];
         this._multiHostData[14] = velocity[14];
-        this._multiHostData[15] = angularVelocity[0];
-        this._multiHostData[16] = angularVelocity[1];
-        this._multiHostData[17] = angularVelocity[2];
-        this._multiHostData[18] = angularVelocity[4];
-        this._multiHostData[19] = angularVelocity[5];
-        this._multiHostData[20] = angularVelocity[6];
-        this._multiHostData[21] = angularVelocity[8];
-        this._multiHostData[22] = angularVelocity[9];
-        this._multiHostData[23] = angularVelocity[10];
+        this._multiHostData[15] = velocity[0];
+        this._multiHostData[16] = velocity[1];
+        this._multiHostData[17] = velocity[2];
+        this._multiHostData[18] = velocity[4];
+        this._multiHostData[19] = velocity[5];
+        this._multiHostData[20] = velocity[6];
+        this._multiHostData[21] = velocity[8];
+        this._multiHostData[22] = velocity[9];
+        this._multiHostData[23] = velocity[10];
         this._multiHostData[24] = this._maneuveringComputer.getSpeedTarget();
         this._multiHostData[25] = this._maneuveringComputer.getLastStrafeTarget();
         this._multiHostData[26] = this._maneuveringComputer.getLastLiftTarget();
