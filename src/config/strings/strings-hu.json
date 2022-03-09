@@ -945,6 +945,10 @@
             "name": "Farkas",
             "description": "Módosított változata az eredeti Főnix osztályú vadászgépeknek, melyek a Birodalom kezdeti időszakától egészen a közelmúltig a legelterjedtebb harci gépek közé tartoztak. A Főnixek légkörben és mélyűrben is használható, sokoldalú vadászok voltak. A méretükhöz képest nagy raktérnek és térugró kapacitásnak köszönhetően hosszabb időtartamú küldetésekre is bevethetőek. Ahogy a Birodalom egyre több külső és belső fenyegetéssel kezdett szembenézni, a Főnix többfeladatú vadászokat leváltották az egy-egy szerepkörre specializálódott Szitakötő, Sólyom, Rinocérosz és Vipera osztályok, melyek a saját feladatukat hatékonyabban tudják ellátni. A legtöbb Főnixet átalakították polgári használatra, ám egyre több jelentés érkezik kalózokról, akik a vadász módosított változatát használják rajtaütéseik során. Ez a változat a Farkas megjelölést kapta."
         },
+        "piranha": {
+            "name": "Pirája",
+            "description": "Versenygép eredetének köszönhetően a Pirája mozgékonyságban verhetetlen a vadászgépek között. Illegális műhelyekben minimális páncélzattal szerelték fel, a szárnyak végén a manőverező hajtoművek mellé pedig fegyverfelfüggesztési pontokat szereltek be, így létrehozva ezt a félelmetes kalóz harci gépet, amely kitűnően alkalmas gyors rajtaütések végrehajtására. A súlytöbblet lelassítja ugyan némileg az eredeti versenyváltozathoz képest, ám még így is túlszárnyalja bármelyik birodalmi vadászt gyorsulásban és manőverezhetőségben. Kis méretéből adódóan nem rendelkezik raktérrel az elrabolt rakomány szállításához, emiatt a kalózok kénytelenek más hajókkal együtt bevetni a támadásaik során. Ha közvetlen összecsapásra kerül a sor, elhanyagolható páncélzata, fegyverzete és a rakétavetők hiánya szintén komoly hátrányt jelent, melyet csak a legtehetségesebb pilóták képességei képesek ellensúlyozni."
+        },
         "buoy": {
             "name": "Navigációs bólya"
         },

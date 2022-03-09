@@ -412,6 +412,21 @@
                 "high": "_1024"
             }
         }, {
+            "name": "piranha",
+            "basepath": "spacecraft/",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "wolf",
+                "specular": "wolf_specular",
+                "emissive": "piranha_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
             "name": "falcon48",
             "basepath": "spacecraft/falcon/falcon48",
             "format": "png",
@@ -1467,6 +1482,26 @@
         }, {
             "name": "wolf",
             "basepath": "wolf",
+            "format": "egm",
+            "files": [{
+                    "suffix": "_lod0-0",
+                    "maxLOD": 0
+                }, {
+                    "suffix": "_lod0-1",
+                    "maxLOD": 1
+                }, {
+                    "suffix": "_lod0-2",
+                    "maxLOD": 2
+                }, {
+                    "suffix": "_lod0-3",
+                    "maxLOD": 3
+                }, {
+                    "suffix": "_lod0-4",
+                    "maxLOD": 4
+                }]
+        }, {
+            "name": "piranha",
+            "basepath": "piranha",
             "format": "egm",
             "files": [{
                     "suffix": "_lod0-0",

@@ -50,6 +50,12 @@
             "class": "wolf",
             "position": [72, 200, -100],
             "rotations": ["z+180"]
+        },
+        {
+            "team": "pirates",
+            "class": "piranha",
+            "position": [92, 200, -100],
+            "rotations": ["z+180"]
         }
     ]
 }
