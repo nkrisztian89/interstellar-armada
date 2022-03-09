@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Krisztián Nagy
+ * Copyright 2020-2022 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for missions within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -145,6 +145,7 @@ define([
         if (params.clearScene || shouldReload) {
             if (shouldReload) {
                 _mission = _missionDescriptor.createMission(DIFFICULTY);
+                preview.setMission(_mission);
             }
             _mission.addToScene(preview.getScene(), null, {
                 spacecraftShaderName: SPACECRAFT_SHADER_NAME,

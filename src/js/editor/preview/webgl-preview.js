@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2021 Krisztián Nagy
+ * Copyright 2016-2022 Krisztián Nagy
  * @file Provides the general structure to preview windows of the Interstellar Armada editor that use a WebGL scene 
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -68,6 +68,7 @@ define([
             CAMERA_SCROLL_MOVE_FACTOR = 1000,
             FREE_CAMERA_INITIAL_HEIGHT = 500,
             FREE_CAMERA_VIEW_DISTANCE = 15000,
+            FREE_CAMERA_ROTATIONS = [{axis: "X", degrees: 90}],
             MODEL_ROTATE_BUTTON = utils.MouseButton.LEFT,
             CAMERA_ROTATE_BUTTON = utils.MouseButton.MIDDLE,
             ENLARGE_FACTOR = 1.05,
@@ -80,7 +81,7 @@ define([
             DEFAULT_DISTANCE_FACTOR = 1.5,
             DEFAULT_CAMERA_DIRECTION = [0, -1, 0],
             MAX_DISTANCE_FACTOR = 100,
-            OBJECT_VIEW_NAME = "standard",
+            VIEW_NAME = "standard",
             FOV = 45,
             WIREFRAME_SHADER_NAME = "oneColor",
             WIREFRAME_COLOR = [1, 1, 1, 1],
@@ -106,6 +107,10 @@ define([
              * @type RenderableObject3D
              */
             _model, _wireframeModel,
+            /**
+             * @type Mission
+             */
+            _mission,
             /**
              * @type Number[2]
              */
@@ -233,6 +238,9 @@ define([
     }
     function setModel(value) {
         _model = value;
+    }
+    function setMission(value) {
+        _mission = value;
     }
     function setupWireframeModel(model) {
         model.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
@@ -619,6 +627,7 @@ define([
             _currentContext.functions.clear();
             _model = null;
             _wireframeModel = null;
+            _mission = null;
             _particlePool.clear();
             _explosionPool.clear();
         }
@@ -678,7 +687,7 @@ define([
                             _currentContext.cameraDistance = (_currentContext.params.defaultDistanceFactor || DEFAULT_DISTANCE_FACTOR) * _model.getScaledSize();
                         }
                         view = new classes.ObjectView({
-                            name: OBJECT_VIEW_NAME,
+                            name: VIEW_NAME,
                             isAimingView: false,
                             fps: false,
                             fov: FOV,
@@ -699,7 +708,22 @@ define([
                                 config.getDefaultCameraSpan()));
                     } else {
                         if (!params.preserve) {
-                            _scene.getCamera().moveToPosition([0, 0, FREE_CAMERA_INITIAL_HEIGHT], 0);
+                            if (_mission) {
+                                view = new classes.SceneView({
+                                    name: VIEW_NAME,
+                                    fps: true,
+                                    lookAt: classes.SceneViewLookAtMode.NONE,
+                                    fov: FOV,
+                                    fovRange: [FOV, FOV],
+                                    movable: true,
+                                    turnable: true,
+                                    position: [0, 0, FREE_CAMERA_INITIAL_HEIGHT],
+                                    rotations: FREE_CAMERA_ROTATIONS
+                                });
+                                _scene.getCamera().setConfiguration(_mission.createCameraConfigurationForSceneView(view, _scene));
+                            } else {
+                                _scene.getCamera().moveToPosition([0, 0, FREE_CAMERA_INITIAL_HEIGHT], 0);
+                            }
                             _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.identity4(), true);
                         }
                         _scene.getCamera().setViewDistance(FREE_CAMERA_VIEW_DISTANCE);
@@ -841,6 +865,7 @@ define([
         getScene: getScene,
         getWireframeShaderName: getWireframeShaderName,
         setModel: setModel,
+        setMission: setMission,
         setWireframeModel: setWireframeModel,
         setupWireframeModel: setupWireframeModel,
         requestRender: requestRender,
