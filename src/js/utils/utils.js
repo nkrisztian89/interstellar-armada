@@ -459,11 +459,12 @@ define(function () {
     /**
      * Returns a string describing a length (distance) in human-readable form based on its value in meters.
      * @param {Number} lengthInMeters
+     * @param {Boolean} [round=false]
      * @returns {String}
      */
-    exports.getLengthString = function (lengthInMeters) {
+    exports.getLengthString = function (lengthInMeters, round) {
         return (lengthInMeters < 2000) ?
-                ((lengthInMeters < 100) ?
+                (((lengthInMeters < 100) && !round) ?
                         lengthInMeters.toPrecision(3) + " m" :
                         Math.round(lengthInMeters) + " m") :
                 ((lengthInMeters < 100000) ?

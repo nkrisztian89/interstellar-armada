@@ -1144,6 +1144,11 @@ define([
         }
         targetMatrix = target.getPhysicalPositionMatrix();
         for (i = 0; i < spacecrafts.length; i++) {
+            if (!spacecrafts[i].isAlive() || spacecrafts[i].isAway()) {
+                this._active = false;
+                this._impossible = !spacecrafts[i].isAlive();
+                return this._lastSatisfied = false;
+            }
             this._distanceSquared = mat.distanceSquared(spacecrafts[i].getPhysicalPositionMatrix(), targetMatrix);
             if ((((this._minDistanceSquared > 0) && (this._distanceSquared < this._minDistanceSquared)) ||
                     ((this._maxDistanceSquared > 0) && (this._distanceSquared > this._maxDistanceSquared))) === this._all) {
@@ -1172,8 +1177,8 @@ define([
         }
         result = utils.formatString(strings.get(stringPrefix,
                 (this._params.minDistance !== undefined) ? strings.OBJECTIVE.DISTANCE_MIN_SUFFIX.name : strings.OBJECTIVE.DISTANCE_MAX_SUFFIX.name), {
-            minDistance: utils.getLengthString(this._params.minDistance),
-            maxDistance: utils.getLengthString(this._params.maxDistance),
+            minDistance: utils.getLengthString(this._params.minDistance, true),
+            maxDistance: utils.getLengthString(this._params.maxDistance, true),
             target: this._target.toString()
         });
         result = result.charAt(0).toUpperCase() + result.slice(1);
@@ -1195,7 +1200,7 @@ define([
         }
         if (inProgress && (!this._lastSatisfied && (this._distanceSquared > 0))) {
             distance = Math.sqrt(this._distanceSquared);
-            suffix = " (" + utils.getLengthString(this._params.minDistance ? this._params.minDistance - distance : distance - this._params.maxDistance) + ")";
+            suffix = " (" + utils.getLengthString(this._params.minDistance ? this._params.minDistance - distance : distance - this._params.maxDistance, true) + ")";
         } else {
             suffix = "";
         }
