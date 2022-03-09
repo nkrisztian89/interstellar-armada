@@ -2626,7 +2626,7 @@ define([
         if (_messageTypeSound) {
             _messageTypeSound.stopPlaying(HUD_MESSAGE_APPEAR_SOUND_STOP_RAMP_DURATION);
         }
-        if (application.isDebugVersion()) {
+        if (application.isDebugVersion() && _battleScene) {
             _battleScene.logNodes();
         }
     };
