@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
  * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -173,6 +173,11 @@ define([
              * @type String
              */
             PROPULSION_CLASS_ARRAY_NAME = "propulsionClasses",
+            /**
+             * In the class description file, sensor array classes will be initialized from the array with this name
+             * @type String
+             */
+            SENSORS_CLASS_ARRAY_NAME = "sensorsClasses",
             /**
              * In the class description file, jump engine classes will be initialized from the array with this name
              * @type String
@@ -360,6 +365,14 @@ define([
      */
     function getPropulsionClass(name) {
         return _classManager.getResource(PROPULSION_CLASS_ARRAY_NAME, name);
+    }
+    /**
+     * Return the sensor array class with the given name if it exists, otherwise null.
+     * @param {String} name
+     * @returns {SensorsClass}
+     */
+    function getSensorsClass(name) {
+        return _classManager.getResource(SENSORS_CLASS_ARRAY_NAME, name);
     }
     /**
      * Return the jump engine class with the given name if it exists, otherwise null.
@@ -551,6 +564,21 @@ define([
                 }
             }
         }
+    }
+    /**
+     * Returns the value of a property for a loadout, considering the loadouts it is based on
+     * @param {Object} dataJSON The JSON descriptor of the loadout
+     * @param {Array} baseData The list of JSON descriptors of the loadouts the current one is
+     * based on recursively (e.g. if we have C which is based on B which is based on A, this would be [B, A]
+     * @param {String} propertyName The name of the property to query
+     * @returns {Object} The value of the property
+     */
+    function _getLoadoutProperty(dataJSON, baseData, propertyName) {
+        var i, value;
+        for (i = 0, value = dataJSON[propertyName]; value === undefined && (i < baseData.length); i++) {
+            value = baseData[i][propertyName];
+        }
+        return value || null;
     }
     // ##############################################################################
     /**
@@ -2928,6 +2956,70 @@ define([
     };
     // ##############################################################################
     /**
+     * @class Each spacecraft can be equipped with a sensor array. This class
+     * represents one of the classes to which such a sensor array can belong, describing
+     * the properties it.
+     * @augments GenericClass
+     * @param {Object} [dataJSON]
+     */
+    function SensorsClass(dataJSON) {
+        GenericClass.call(this, dataJSON);
+    }
+    SensorsClass.prototype = new GenericClass();
+    SensorsClass.prototype.constructor = SensorsClass;
+    /**
+     * @override
+     * @param {Object} dataJSON
+     * @returns {Boolean}
+     */
+    SensorsClass.prototype._loadData = function (dataJSON) {
+        GenericClass.prototype._loadData.call(this, dataJSON);
+        /**
+         * The full name of this class as displayed in the game.
+         * @type String
+         */
+        this._fullName = dataJSON ? (dataJSON.fullName || this.getName()) : null;
+        /**
+         * The maximum distance at which spacecrafts can be targeted using a sensor array of this class, in meters.
+         * @type Number
+         */
+        this._range = dataJSON ? (dataJSON.range || _missingNumber(this, "range")) : 0;
+        /**
+         * The amount of score points to be added to the total score value of spacecrafts that have a sensor array of this class equipped
+         * @type Number
+         */
+        this._scoreValue = dataJSON ? (dataJSON.scoreValue || 0) : 0;
+        return true;
+    };
+    /**
+     * @returns {Boolean}
+     */
+    SensorsClass.prototype.acquireResources = function () {
+        return true;
+    };
+    /**
+     * @returns {String}
+     */
+    SensorsClass.prototype.getDisplayName = function () {
+        return strings.get(
+                strings.SENSORS_CLASS.PREFIX, this.getName() + strings.SENSORS_CLASS.NAME_SUFFIX.name,
+                this._fullName);
+    };
+    /**
+     * @returns {Number}
+     */
+    SensorsClass.prototype.getRange = function () {
+        return this._range;
+    };
+    /**
+     * Returns the amount of score points to be added to the total score value of spacecrafts that have a sensor array of this class equipped
+     * @returns {Number}
+     */
+    SensorsClass.prototype.getScoreValue = function () {
+        return this._scoreValue;
+    };
+    // ##############################################################################
+    /**
      * @class Each spacecraft can be equipped with a jump engine. This class
      * represents one of the classes to which such an engine can belong, describing
      * the properties of such a jump engine.
@@ -3571,6 +3663,19 @@ define([
     }
     // ##############################################################################
     /**
+     * @struct A sensor array descriptor can be used to equip a sensor array on a 
+     * spacecraft, by describing the parameters of the equipment.
+     * @param {Object} [dataJSON]
+     */
+    function SensorsDescriptor(dataJSON) {
+        /**
+         * The name of the class of the sensors to be equipped.
+         * @type String
+         */
+        this.className = dataJSON ? (dataJSON.class || _missingString(this, "class")) : null;
+    }
+    // ##############################################################################
+    /**
      * @struct A jump engine descriptor can be used to equip a jump engine on a 
      * spacecraft, by describing the parameters of the equipment. 
      * @param {Object} [dataJSON]
@@ -3605,11 +3710,31 @@ define([
      * @param {Array} [loadouts] The array of loadouts of the spacecraft class
      */
     function Loadout(dataJSON, loadouts) {
-        var i, baseData, weapons, missiles;
-        if (dataJSON.basedOn && loadouts) {
-            for (i = 0; (i < loadouts.length) && !baseData; i++) {
-                if (loadouts[i].name === dataJSON.basedOn) {
-                    baseData = loadouts[i];
+        var i, baseData = [], basedOn, circular, found,
+                weapons, missiles, propulsion, sensors, jumpEngine, shield;
+        if (loadouts) {
+            circular = false;
+            basedOn = dataJSON.basedOn;
+            while (basedOn) {
+                found = false;
+                for (i = 0; i < loadouts.length; i++) {
+                    if (loadouts[i].name === basedOn) {
+                        if (baseData.indexOf(loadouts[i]) < 0) {
+                            found = true;
+                            baseData.push(loadouts[i]);
+                            basedOn = loadouts[i].basedOn;
+                        } else {
+                            circular = true;
+                            basedOn = null;
+                        }
+                        break;
+                    }
+                }
+                if (circular) {
+                    application.showError("Circular reference detected in loadout '" + dataJSON.name + "'!");
+                } else if (!found) {
+                    application.showError("Could not find referenced loadout '" + basedOn + "'!");
+                    basedOn = null;
                 }
             }
         }
@@ -3622,7 +3747,7 @@ define([
          * @type WeaponDescriptor[]
          */
         this._weaponDescriptors = [];
-        weapons = dataJSON.weapons || (baseData && baseData.weapons);
+        weapons = _getLoadoutProperty(dataJSON, baseData, "weapons");
         if (weapons) {
             for (i = 0; i < weapons.length; i++) {
                 this._weaponDescriptors.push(new WeaponDescriptor(weapons[i]));
@@ -3633,27 +3758,36 @@ define([
          * @type MissileDescriptor[]
          */
         this._missileDescriptors = [];
-        missiles = dataJSON.missiles || (baseData && baseData.missiles);
+        missiles = _getLoadoutProperty(dataJSON, baseData, "missiles");
         if (missiles) {
             for (i = 0; i < missiles.length; i++) {
                 this._missileDescriptors.push(new MissileDescriptor(missiles[i]));
             }
         }
+        propulsion = _getLoadoutProperty(dataJSON, baseData, "propulsion");
         /**
          * The descriptor of the propulsion system for this loadout to be equipped.
          * @type PropulsionDescriptor
          */
-        this._propulsionDescriptor = (dataJSON.propulsion || (baseData && baseData.propulsion)) ? new PropulsionDescriptor(dataJSON.propulsion || baseData.propulsion) : null;
+        this._propulsionDescriptor = propulsion ? new PropulsionDescriptor(propulsion) : null;
+        sensors = _getLoadoutProperty(dataJSON, baseData, "sensors");
+        /**
+         * The descriptor of the sensor array for this loadout to be equipped.
+         * @type SensorsDescriptor
+         */
+        this._sensorsDescriptor = sensors ? new SensorsDescriptor(sensors) : null;
+        jumpEngine = _getLoadoutProperty(dataJSON, baseData, "jumpEngine");
         /**
          * The descriptor of the jump engine for this loadout to be equipped.
          * @type JumpEngineDescriptor
          */
-        this._jumpEngineDescriptor = (dataJSON.jumpEngine || (baseData && baseData.jumpEngine)) ? new JumpEngineDescriptor(dataJSON.jumpEngine || baseData.jumpEngine) : null;
+        this._jumpEngineDescriptor = jumpEngine ? new JumpEngineDescriptor(jumpEngine) : null;
+        shield = _getLoadoutProperty(dataJSON, baseData, "shield");
         /**
          * The descriptor of the shield for this loadout to be equipped.
          * @type ShieldDescriptor
          */
-        this._shieldDescriptor = (dataJSON.shield || (baseData && baseData.shield)) ? new ShieldDescriptor(dataJSON.shield || baseData.shield) : null;
+        this._shieldDescriptor = shield ? new ShieldDescriptor(shield) : null;
     }
     /**
      * Returns the name of this loadout.
@@ -3684,6 +3818,13 @@ define([
      */
     Loadout.prototype.getPropulsionDescriptor = function () {
         return this._propulsionDescriptor;
+    };
+    /**
+     * Returns the sensor array descriptor of this loadout.
+     * @returns {SensorsDescriptor}
+     */
+    Loadout.prototype.getSensorsDescriptor = function () {
+        return this._sensorsDescriptor;
     };
     /**
      * Returns the jump engine descriptor of this loadout.
@@ -5045,6 +5186,7 @@ define([
         classAssignment[PROJECTILE_CLASS_ARRAY_NAME] = ProjectileClass;
         classAssignment[WEAPON_CLASS_ARRAY_NAME] = WeaponClass;
         classAssignment[PROPULSION_CLASS_ARRAY_NAME] = PropulsionClass;
+        classAssignment[SENSORS_CLASS_ARRAY_NAME] = SensorsClass;
         classAssignment[MISSILE_CLASS_ARRAY_NAME] = MissileClass;
         classAssignment[JUMP_ENGINE_CLASS_ARRAY_NAME] = JumpEngineClass;
         classAssignment[SHIELD_CLASS_ARRAY_NAME] = ShieldClass;
@@ -5089,6 +5231,7 @@ define([
         getMissileClass: getMissileClass,
         getWeaponClass: getWeaponClass,
         getPropulsionClass: getPropulsionClass,
+        getSensorsClass: getSensorsClass,
         getJumpEngineClass: getJumpEngineClass,
         getShieldClass: getShieldClass,
         getSpacecraftType: getSpacecraftType,

@@ -481,6 +481,11 @@ define([
         NAME_SUFFIX: {name: ".name", optional: true},
         DESCRIPTION_SUFFIX: {name: ".description", optional: true}
     };
+    strings.SENSORS_CLASS = {
+        PREFIX: {name: "sensorsClass.", optional: true},
+        NAME_SUFFIX: {name: ".name", optional: true},
+        DESCRIPTION_SUFFIX: {name: ".description", optional: true}
+    };
     strings.SHIELD_CLASS = {
         PREFIX: {name: "shieldClass.", optional: true},
         NAME_SUFFIX: {name: ".name", optional: true},

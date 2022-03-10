@@ -503,6 +503,13 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            SENSORS_CLASS_REFERENCE = {
+                baseType: BaseType.ENUM,
+                classReference: "sensorsClasses"
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             JUMP_ENGINE_CLASS_REFERENCE = {
                 baseType: BaseType.ENUM,
                 classReference: "jumpEngineClasses"
@@ -1758,6 +1765,29 @@ define([
                     defaultValue: 0
                 }
             },
+            SENSORS_CLASS = {
+                NAME: {
+                    name: "name",
+                    type: BaseType.STRING
+                },
+                FULL_NAME: {
+                    name: "fullName",
+                    type: BaseType.STRING,
+                    optional: true,
+                    getDerivedDefault: _getName,
+                    updateOnValidate: true
+                },
+                RANGE: {
+                    name: "range",
+                    type: POSITIVE_DISTANCE,
+                    newValue: 1
+                },
+                SCORE_VALUE: {
+                    name: "scoreValue",
+                    type: NON_NEGATIVE_INTEGER,
+                    defaultValue: 0
+                }
+            },
             _getDefaultJumpInDeceleration = function (data) {
                 return data.jumpOutAcceleration + " " + METERS_PER_SECOND_SQUARED.unit;
             },
@@ -2375,6 +2405,22 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
+            SENSORS = {
+                baseType: BaseType.OBJECT,
+                name: "Sensors",
+                getPreviewText: function (instance) {
+                    return instance.class;
+                },
+                properties: {
+                    CLASS: {
+                        name: "class",
+                        type: SENSORS_CLASS_REFERENCE
+                    }
+                }
+            },
+            /**
+             * @type Editor~TypeDescriptor
+             */
             JUMP_ENGINE = {
                 baseType: BaseType.OBJECT,
                 name: "JumpEngine",
@@ -2450,6 +2496,12 @@ define([
                     PROPULSION: {
                         name: "propulsion",
                         type: PROPULSION,
+                        optional: true,
+                        defaultText: "none"
+                    },
+                    SENSORS: {
+                        name: "sensors",
+                        type: SENSORS,
                         optional: true,
                         defaultText: "none"
                     },
@@ -2952,6 +3004,11 @@ define([
                     name: "angularDrag",
                     type: NON_NEGATIVE_NUMBER,
                     defaultValue: 0
+                },
+                SENSOR_RANGE_FACTOR: {
+                    name: "sensorRangeFactor",
+                    type: NON_NEGATIVE_SCALE,
+                    defaultValue: 1
                 },
                 LOCKING_TIME_FACTOR: {
                     name: "lockingTimeFactor",
@@ -4989,6 +5046,7 @@ define([
             "missileClasses": MISSILE_CLASS,
             "weaponClasses": WEAPON_CLASS,
             "propulsionClasses": PROPULSION_CLASS,
+            "sensorsClasses": SENSORS_CLASS,
             "jumpEngineClasses": JUMP_ENGINE_CLASS,
             "shieldClasses": SHIELD_CLASS,
             "spacecraftTypes": SPACECRAFT_TYPE,

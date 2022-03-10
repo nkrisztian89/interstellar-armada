@@ -608,6 +608,11 @@ define([
         // ---------------------------------------
         // other
         /**
+         * The score value of the currently equipped sensor array
+         * @type Number
+         */
+        this._sensorsScoreValue = 0;
+        /**
          * The calculated cached value of how many score points is destroying this spacecraft worth (based on spacecraft class and equipment
          * score values)
          * @type Number
@@ -2216,6 +2221,7 @@ define([
         if (this._propulsion) {
             this._scoreValue += this._propulsion.getScoreValue();
         }
+        this._scoreValue += this._sensorsScoreValue;
         if (this._shield) {
             this._scoreValue += this._shield.getScoreValue();
         }
@@ -2281,6 +2287,15 @@ define([
         this._updateBurnNeedFactors();
     };
     /**
+     * Equips a sensor array of the given class to the ship, replacing the previous
+     * sensors, if they were equipped
+     * @param {SensorsClass} sensorsClass
+     */
+    Spacecraft.prototype._addSensors = function (sensorsClass) {
+        this._targetingComputer.updateSensors(sensorsClass);
+        this._sensorsScoreValue = sensorsClass.getScoreValue();
+    };
+    /**
      * Equips a jump engine of the given class to the ship, replacing the
      * previous jump engine, if one was equipped.
      * @param {JumpEngineClass} jumpEngineClass
@@ -2317,6 +2332,8 @@ define([
         this._propulsion = null;
         this._maneuveringComputer.updateForNewPropulsion();
         this._maneuveringComputer.updateTurningLimit();
+        this._targetingComputer.updateSensors();
+        this._sensorsScoreValue = 0;
         this._updateScoreValue();
     };
     /**
@@ -2336,6 +2353,9 @@ define([
             }
             if (loadout.getPropulsionDescriptor() !== null) {
                 this._addPropulsion(classes.getPropulsionClass(loadout.getPropulsionDescriptor().className));
+            }
+            if (loadout.getSensorsDescriptor() !== null) {
+                this._addSensors(classes.getSensorsClass(loadout.getSensorsDescriptor().className));
             }
             if (loadout.getJumpEngineDescriptor() !== null) {
                 this._addJumpEngine(classes.getJumpEngineClass(loadout.getJumpEngineDescriptor().className));
@@ -2678,6 +2698,14 @@ define([
      */
     Spacecraft.prototype.updatePropulsionVisuals = function () {
         this._propulsion.updateVisuals();
+    };
+    /**
+     * Whether the passed spacecraft is within sensor (targeting) range
+     * @param {Spacecraft} craft
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isInSensorRange = function (craft) {
+        return this._targetingComputer.isInRange(craft);
     };
     /**
      * Show the models representing the hitboxes of this spacecraft.

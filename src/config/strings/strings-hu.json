@@ -1052,6 +1052,14 @@
             "name": "Lázadó bombázó hajtómű"
         }
     },
+    "sensorsClass": {
+        "standardSensors": {
+            "name": "Szabványos érzékelőfürt"
+        },
+        "standardShipSensors": {
+            "name": "Szabványos hajó érzékelők"
+        }
+    },
     "shieldClass": {
         "imperialFighterMk1": {
             "name": "Könnyű vadászgép pajzs"

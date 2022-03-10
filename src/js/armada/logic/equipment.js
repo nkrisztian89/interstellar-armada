@@ -2859,6 +2859,12 @@ define([
          */
         this._spacecraft = spacecraft;
         /**
+         * Cached value of the square of the range within which ships can be targeted, considering the
+         * environmental factor as well
+         * @type Number
+         */
+        this._rangeSquared = 0;
+        /**
          * The currently targeted spacecraft.
          * @type Spacecraft
          */
@@ -2909,11 +2915,32 @@ define([
          */
         this._lockTimeLeft = 1;
         /**
+         * Range is multiplied by this factor
+         * @type Number
+         */
+        this._rangeFactor = environment ? environment.getSensorRangeFactor() : 1;
+        /**
          * Missile locking time is multiplied by this factor
          * @type Number
          */
         this._lockingTimeFactor = environment ? environment.getLockingTimeFactor() : 1;
     }
+    /**
+     * Updates the targeting computer's properties with the passed sensor class being equipped on the spacecaft
+     * @param {SensorsClass} [sensorsClass]
+     */
+    TargetingComputer.prototype.updateSensors = function (sensorsClass) {
+        var range = sensorsClass ? sensorsClass.getRange() : 0;
+        this._rangeSquared = range * range * this._rangeFactor * this._rangeFactor;
+    };
+    /**
+     * Whether the passed spacecraft is in targeting range
+     * @param {Spacecraft} craft
+     * @returns {Boolean}
+     */
+    TargetingComputer.prototype.isInRange = function (craft) {
+        return mat.distanceSquared(this._spacecraft.getPhysicalPositionMatrix(), craft.getPhysicalPositionMatrix()) <= this._rangeSquared;
+    };
     /**
      * Reset locking time and time remaining according to missile launcher and target characteristics
      */
@@ -2985,7 +3012,7 @@ define([
      * @returns {unresolved}
      */
     TargetingComputer.prototype._filterHostileTarget = function (craft) {
-        return this._spacecraft.isHostile(craft);
+        return this._spacecraft.isHostile(craft) && (mat.distanceSquared(this._spacecraft.getPhysicalPositionMatrix(), craft.getPhysicalPositionMatrix()) <= this._rangeSquared);
     };
     /**
      * Used to filter the potential target list to include only non-hostiles
@@ -2993,7 +3020,7 @@ define([
      * @returns {Boolean}
      */
     TargetingComputer.prototype._filterNonHostileTarget = function (craft) {
-        return (craft !== this._spacecraft) && !this._spacecraft.isHostile(craft);
+        return (craft !== this._spacecraft) && !this._spacecraft.isHostile(craft) && (mat.distanceSquared(this._spacecraft.getPhysicalPositionMatrix(), craft.getPhysicalPositionMatrix()) <= this._rangeSquared);
     };
     /**
      * @typedef {Object} TargetingComputer~MappedTarget
@@ -3281,7 +3308,10 @@ define([
      * @param {Number} dt The time elapsed since the last simulation step, in milliseconds
      */
     TargetingComputer.prototype.simulate = function (dt) {
-        if (this._target && (this._target.canBeReused() || this._target.isAway())) {
+        if (this._rangeSquared === 0) {
+            return;
+        }
+        if (this._target && (this._target.canBeReused() || this._target.isAway() || !this.isInRange(this._target))) {
             this.setTarget(null);
         }
         this._targetHitPosition = null;

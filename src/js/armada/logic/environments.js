@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Implementation of loading and managing environments
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -506,6 +506,11 @@ define([
          */
         this._angularDrag = 0;
         /**
+         * The ranges of sensor arrays are multiplied by this factor within this environment
+         * @type Number
+         */
+        this._sensorRangeFactor = 0;
+        /**
          * Missile locking times are multiplied by this factor within this environment
          * @type Number
          */
@@ -574,6 +579,7 @@ define([
         this._ambientColor = dataJSON.ambientColor || [0, 0, 0];
         this._drag = dataJSON.drag || 0;
         this._angularDrag = dataJSON.angularDrag || 0;
+        this._sensorRangeFactor = (dataJSON.sensorRangeFactor !== undefined) ? dataJSON.sensorRangeFactor : 1;
         this._lockingTimeFactor = (dataJSON.lockingTimeFactor !== undefined) ? dataJSON.lockingTimeFactor : 1;
     };
     /**
@@ -607,6 +613,13 @@ define([
      */
     Environment.prototype.getAngularDrag = function () {
         return this._angularDrag;
+    };
+    /**
+     * Sensor ranges are multiplied by this factor within this environment
+     * @returns {Number}
+     */
+    Environment.prototype.getSensorRangeFactor = function () {
+        return this._sensorRangeFactor;
     };
     /**
      * Missile locking times are multiplied by this factor within this environment

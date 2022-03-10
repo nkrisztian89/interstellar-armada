@@ -2744,6 +2744,17 @@
             },
             "scoreValue": 5
         }],
+    "sensorsClasses": [{
+            "name": "standardSensors",
+            "fullName": "Standard sensor array",
+            "range": "10000",
+            "scoreValue": 0
+        }, {
+            "name": "standardShipSensors",
+            "fullName": "Standard ship sensors",
+            "range": "20000",
+            "scoreValue": 0
+        }],
     "missileClasses": [{
             "name": "smallMissile",
             "fullName": "SM-4 Small missile",
@@ -3765,6 +3776,9 @@
                     "propulsion": {
                         "class": "imperialFighterMk1"
                     },
+                    "sensors": {
+                        "class": "standardSensors"
+                    },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
                     },
@@ -3773,6 +3787,7 @@
                     }
                 }, {
                     "name": "player-tier2",
+                    "basedOn": "player-tier1",
                     "weapons": [{
                             "class": "plasmaGun"
                         }, {
@@ -3792,23 +3807,12 @@
                     "propulsion": {
                         "class": "imperialFighterMk2"
                     },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    },
                     "shield": {
                         "class": "imperialFighterMk2"
                     }
                 }, {
                     "name": "player-tier3",
-                    "weapons": [{
-                            "class": "plasmaGun"
-                        }, {
-                            "class": "plasmaGun"
-                        }, {
-                            "class": "plasmaGun"
-                        }, {
-                            "class": "plasmaGun"
-                        }],
+                    "basedOn": "player-tier2",
                     "missiles": [{
                             "class": "mediumMissile",
                             "amount": 5
@@ -3818,9 +3822,6 @@
                         }],
                     "propulsion": {
                         "class": "imperialFighterMk3"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
                     },
                     "shield": {
                         "class": "imperialFighterMk3"
@@ -3835,24 +3836,23 @@
                     "propulsion": {
                         "class": "imperialFighterMk1"
                     },
+                    "sensors": {
+                        "class": "standardSensors"
+                    },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "training-fixed",
+                    "basedOn": "training",
                     "weapons": [{
                             "class": "fixedTrainingGun"
                         }, {
                             "class": "fixedTrainingGun"
-                        }],
-                    "propulsion": {
-                        "class": "imperialFighterMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    }
+                        }]
                 }, {
                     "name": "training-full-fixed",
+                    "basedOn": "training",
                     "weapons": [{
                             "class": "fixedTrainingGun"
                         }, {
@@ -3861,13 +3861,7 @@
                             "class": "fixedTrainingGun"
                         }, {
                             "class": "fixedTrainingGun"
-                        }],
-                    "propulsion": {
-                        "class": "imperialFighterMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    }
+                        }]
                 }, {
                     "name": "multi-tier1",
                     "weapons": [{
@@ -3878,11 +3872,15 @@
                     "propulsion": {
                         "class": "imperialFighterMk1"
                     },
+                    "sensors": {
+                        "class": "standardSensors"
+                    },
                     "shield": {
                         "class": "imperialFighterMk1"
                     }
                 }, {
                     "name": "multi-tier2",
+                    "basedOn": "multi-tier1",
                     "weapons": [{
                             "class": "fixedPlasmaGun"
                         }, {
@@ -3900,15 +3898,7 @@
                     }
                 }, {
                     "name": "multi-tier3",
-                    "weapons": [{
-                            "class": "fixedPlasmaGun"
-                        }, {
-                            "class": "fixedPlasmaGun"
-                        }, {
-                            "class": "fixedPlasmaGun"
-                        }, {
-                            "class": "fixedPlasmaGun"
-                        }],
+                    "basedOn": "multi-tier2",
                     "propulsion": {
                         "class": "imperialFighterMk3"
                     },
@@ -3928,6 +3918,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialFighterMk3"
+                    },
+                    "sensors": {
+                        "class": "standardSensors"
                     }
                 }, {
                     "name": "rebel",
@@ -3938,6 +3931,9 @@
                         }],
                     "propulsion": {
                         "class": "rebelFighterMk1"
+                    },
+                    "sensors": {
+                        "class": "standardSensors"
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
@@ -4279,6 +4275,9 @@
                     "propulsion": {
                         "class": "imperialBomberMk1"
                     },
+                    "sensors": {
+                        "class": "standardSensors"
+                    },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
                     },
@@ -4312,20 +4311,12 @@
                         }]
                 }, {
                     "name": "player-tier1",
+                    "basedOn": "training",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
                         }, {
                             "class": "heavyPlasmaGun"
                         }],
-                    "propulsion": {
-                        "class": "imperialBomberMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    },
-                    "shield": {
-                        "class": "imperialBomberMk1"
-                    },
                     "missiles": [{
                             "class": "lightTorpedo",
                             "amount": 2
@@ -4353,16 +4344,9 @@
                         }]
                 }, {
                     "name": "player-tier2",
-                    "weapons": [{
-                            "class": "heavyPlasmaGun"
-                        }, {
-                            "class": "heavyPlasmaGun"
-                        }],
+                    "basedOn": "player-tier1",
                     "propulsion": {
                         "class": "imperialBomberMk2"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
                     },
                     "shield": {
                         "class": "imperialBomberMk2"
@@ -4402,14 +4386,15 @@
                     "propulsion": {
                         "class": "imperialBomberMk1"
                     },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
+                    "sensors": {
+                        "class": "standardSensors"
                     },
                     "shield": {
                         "class": "imperialBomberMk1"
                     }
                 }, {
                     "name": "multi-tier2",
+                    "basedOn": "multi-tier1",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
                         }, {
@@ -4417,25 +4402,15 @@
                         }],
                     "propulsion": {
                         "class": "imperialBomberMk2"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
                     },
                     "shield": {
                         "class": "imperialBomberMk2"
                     }
                 }, {
                     "name": "multi-tier3",
-                    "weapons": [{
-                            "class": "heavyPlasmaGun"
-                        }, {
-                            "class": "heavyPlasmaGun"
-                        }],
+                    "basedOn": "multi-tier2",
                     "propulsion": {
                         "class": "imperialBomberMk3"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
                     },
                     "shield": {
                         "class": "imperialBomberMk3"
@@ -4450,61 +4425,36 @@
                     "propulsion": {
                         "class": "imperialBomberMk3"
                     },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
+                    "sensors": {
+                        "class": "standardSensors"
                     }
                 }, {
                     "name": "imperial-tier1",
-                    "weapons": [{
-                            "class": "heavyPlasmaGun"
-                        }, {
-                            "class": "heavyPlasmaGun"
-                        }],
+                    "basedOn": "player-tier1",
                     "missiles": [{
                             "class": "lightTorpedo",
                             "amount": 1
                         }, {
                             "class": "lightTorpedo",
                             "amount": 1
-                        }],
-                    "propulsion": {
-                        "class": "imperialBomberMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    },
-                    "shield": {
-                        "class": "imperialBomberMk1"
-                    }
+                        }]
                 }, {
                     "name": "imperial-light",
+                    "basedOn": "player-tier1",
                     "weapons": [{
                             "class": "plasmaGun"
                         }, {
                             "class": "plasmaGun"
                         }],
-                    "propulsion": {
-                        "class": "imperialBomberMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    },
-                    "shield": {
-                        "class": "imperialBomberMk1"
-                    }
+                    "missiles": []
                 }, {
                     "name": "rebel-heavy",
+                    "basedOn": "rebel-light",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
                         }, {
                             "class": "heavyPlasmaGun"
                         }],
-                    "propulsion": {
-                        "class": "rebelBomberMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    },
                     "shield": {
                         "class": "rebelBomberMk1"
                     }
@@ -4517,6 +4467,9 @@
                         }],
                     "propulsion": {
                         "class": "rebelBomberMk1"
+                    },
+                    "sensors": {
+                        "class": "standardSensors"
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
@@ -4808,6 +4761,9 @@
                     "propulsion": {
                         "class": "imperialHeavyFighterMk1"
                     },
+                    "sensors": {
+                        "class": "standardSensors"
+                    },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
                     },
@@ -4828,14 +4784,15 @@
                     "propulsion": {
                         "class": "imperialHeavyFighterMk1"
                     },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
+                    "sensors": {
+                        "class": "standardSensors"
                     },
                     "shield": {
                         "class": "imperialHeavyFighterMk1"
                     }
                 }, {
                     "name": "multi-tier2",
+                    "basedOn": "multi-tier1",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
                         }, {
@@ -4848,14 +4805,12 @@
                     "propulsion": {
                         "class": "imperialHeavyFighterMk2"
                     },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    },
                     "shield": {
                         "class": "imperialHeavyFighterMk2"
                     }
                 }, {
                     "name": "multi-tier3",
+                    "basedOn": "multi-tier2",
                     "weapons": [{
                             "class": "heavyPlasmaGun"
                         }, {
@@ -4871,9 +4826,6 @@
                         }],
                     "propulsion": {
                         "class": "imperialHeavyFighterMk3"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
                     },
                     "shield": {
                         "class": "imperialHeavyFighterMk3"
@@ -4896,8 +4848,8 @@
                     "propulsion": {
                         "class": "imperialHeavyFighterMk3"
                     },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
+                    "sensors": {
+                        "class": "standardSensors"
                     }
                 }],
             "thrusterSlots": [{
@@ -5285,19 +5237,17 @@
                 }],
             "loadouts": [{
                     "name": "default",
+                    "basedOn": "unarmed",
                     "weapons": [{
                             "class": "fixedTrainingGun"
-                        }],
-                    "propulsion": {
-                        "class": "imperialDrone"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialFighterMk1"
-                    }
+                        }]
                 }, {
                     "name": "unarmed",
                     "propulsion": {
                         "class": "imperialDrone"
+                    },
+                    "sensors": {
+                        "class": "standardSensors"
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
@@ -5645,17 +5595,12 @@
                 }],
             "loadouts": [{
                     "name": "imperial-tier1",
+                    "basedOn": "unarmed",
                     "weapons": [{
                             "class": "smallPlasmaTurret"
                         }, {
                             "class": "smallPlasmaTurret"
                         }],
-                    "propulsion": {
-                        "class": "imperialCorvetteMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialSmallShipMk1"
-                    },
                     "shield": {
                         "class": "imperialCorvetteMk1"
                     }
@@ -5664,20 +5609,18 @@
                     "propulsion": {
                         "class": "imperialCorvetteMk1"
                     },
+                    "sensors": {
+                        "class": "standardShipSensors"
+                    },
                     "jumpEngine": {
                         "class": "imperialSmallShipMk1"
                     }
                 }, {
                     "name": "rebel",
+                    "basedOn": "unarmed",
                     "weapons": [{
                             "class": "damagedSmallPlasmaTurret"
                         }],
-                    "propulsion": {
-                        "class": "imperialCorvetteMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialSmallShipMk1"
-                    },
                     "shield": {
                         "class": "rebelCorvetteMk1"
                     }
@@ -6082,20 +6025,12 @@
                 }],
             "loadouts": [{
                     "name": "imperial-half",
+                    "basedOn": "imperial-tier1",
                     "weapons": [{
                             "class": "smallProtonCannon"
                         }, {
                             "class": "smallProtonCannon"
-                        }],
-                    "propulsion": {
-                        "class": "imperialFrigateMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialSmallShipMk1"
-                    },
-                    "shield": {
-                        "class": "imperialFrigateMk1"
-                    }
+                        }]
                 }, {
                     "name": "imperial-tier1",
                     "weapons": [{
@@ -6110,6 +6045,9 @@
                     "propulsion": {
                         "class": "imperialFrigateMk1"
                     },
+                    "sensors": {
+                        "class": "standardShipSensors"
+                    },
                     "jumpEngine": {
                         "class": "imperialSmallShipMk1"
                     },
@@ -6118,17 +6056,7 @@
                     }
                 }, {
                     "name": "rebel",
-                    "weapons": [{
-                            "class": "smallProtonCannon"
-                        }, {
-                            "class": "smallProtonCannon"
-                        }],
-                    "propulsion": {
-                        "class": "imperialFrigateMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "imperialSmallShipMk1"
-                    },
+                    "basedOn": "imperial-half",
                     "shield": {
                         "class": "rebelFrigateMk1"
                     }
@@ -6728,6 +6656,9 @@
                     "propulsion": {
                         "class": "imperialCruiserMk1"
                     },
+                    "sensors": {
+                        "class": "standardShipSensors"
+                    },
                     "jumpEngine": {
                         "class": "imperialLargeShipMk1"
                     },
@@ -7025,86 +6956,46 @@
                     "propulsion": {
                         "class": "pirateFighterMk1"
                     },
+                    "sensors": {
+                        "class": "standardSensors"
+                    },
                     "jumpEngine": {
                         "class": "pirateFighterMk1"
                     }
                 }, {
                     "name": "pirate-medium",
+                    "basedOn": "pirate-full",
                     "weapons": [{
                             "class": "pirateGun",
                             "slotIndex": 1
                         }, {
                             "class": "pirateGun",
                             "slotIndex": 2
-                        }],
-                    "propulsion": {
-                        "class": "pirateFighterMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "pirateFighterMk1"
-                    }
+                        }]
                 }, {
                     "name": "pirate-weak",
+                    "basedOn": "pirate-full",
                     "weapons": [{
                             "class": "pirateGun"
-                        }],
-                    "propulsion": {
-                        "class": "pirateFighterMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "pirateFighterMk1"
-                    }
+                        }]
                 }, {
                     "name": "pirate-shielded",
-                    "weapons": [{
-                            "class": "pirateGun"
-                        }, {
-                            "class": "pirateGun"
-                        }, {
-                            "class": "pirateGun"
-                        }],
-                    "propulsion": {
-                        "class": "pirateFighterMk1"
-                    },
-                    "jumpEngine": {
-                        "class": "pirateFighterMk1"
-                    },
+                    "basedOn": "pirate-full",
                     "shield": {
                         "class": "pirateFighterMk1"
                     }
                 }, {
                     "name": "pirate-elite",
-                    "weapons": [{
-                            "class": "pirateGun"
-                        }, {
-                            "class": "pirateGun"
-                        }, {
-                            "class": "pirateGun"
-                        }],
+                    "basedOn": "pirate-full",
                     "propulsion": {
                         "class": "pirateFighterMk2"
-                    },
-                    "jumpEngine": {
-                        "class": "pirateFighterMk1"
                     },
                     "shield": {
                         "class": "pirateFighterMk2"
                     }
                 }, {
                     "name": "pirate-ruby-blade",
-                    "weapons": [{
-                            "class": "pirateGun"
-                        }, {
-                            "class": "pirateGun"
-                        }, {
-                            "class": "pirateGun"
-                        }],
-                    "propulsion": {
-                        "class": "pirateFighterMk2"
-                    },
-                    "jumpEngine": {
-                        "class": "pirateFighterMk1"
-                    },
+                    "basedOn": "pirate-elite",
                     "shield": {
                         "class": "pirateFighterMk1"
                     }
@@ -7119,6 +7010,9 @@
                         }],
                     "propulsion": {
                         "class": "imperialFighterMk1"
+                    },
+                    "sensors": {
+                        "class": "standardSensors"
                     },
                     "jumpEngine": {
                         "class": "imperialFighterMk1"
@@ -7411,21 +7305,24 @@
                     "propulsion": {
                         "class": "pirateRacingMk1"
                     },
+                    "sensors": {
+                        "class": "standardSensors"
+                    },
                     "jumpEngine": {
                         "class": "pirateFighterMk1"
                     }
                 }, {
                     "name": "pirate-shielded",
+                    "basedOn": "pirate",
                     "shield": {
                         "class": "pirateFighterMk1"
-                    },
-                    "basedOn": "pirate"
+                    }
                 }, {
                     "name": "pirate-elite",
+                    "basedOn": "pirate",
                     "shield": {
                         "class": "pirateFighterMk2"
-                    },
-                    "basedOn": "pirate"
+                    }
                 }],
             "defaultLoadout": "pirate",
             "thrusterSlots": [{

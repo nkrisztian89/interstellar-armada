@@ -4082,8 +4082,9 @@ define([
             }
             statusCount = 0; // counter for the status indicators that we are using
             for (i = 0; i < ships.length; i++) {
-                visible1 = ((ships[i] === target) && _hudSectionIsVisible(HUDSection.TARGET_INDICATOR)) ||
-                        ((ships[i] !== target) && _hudSectionIsVisible(HUDSection.SHIP_INDICATORS));
+                visible1 = (((ships[i] === target) && _hudSectionIsVisible(HUDSection.TARGET_INDICATOR)) ||
+                        ((ships[i] !== target) && _hudSectionIsVisible(HUDSection.SHIP_INDICATORS)) &&
+                        craft.isInSensorRange(ships[i]));
                 transmissionSource = (ships[i] === _messageSource);
                 // targeting reticle at the ship position
                 if (_shipIndicators.length <= i) {
