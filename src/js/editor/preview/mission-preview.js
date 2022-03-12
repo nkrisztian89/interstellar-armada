@@ -6,11 +6,13 @@
  */
 
 /**
+ * @param renderableObjects
  * @param preview
  */
 define([
+    "modules/scene/renderable-objects",
     "editor/preview/webgl-preview"
-], function (preview) {
+], function (renderableObjects, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -102,6 +104,16 @@ define([
              */
             HOSTILE_COLOR = [1, 0, 0, 1],
             /** 
+             * Selected friendly spacecrafts are rendered with this color in the mission preview
+             * @type Number[4]
+             */
+            FRIENDLY_HIGHTLIGHTED_COLOR = [0.75, 1, 0.75, 1],
+            /** 
+             * Selected hostile spacecrafts are rendered with this color in the mission preview
+             * @type Number[4]
+             */
+            HOSTILE_HIGHTLIGHTED_COLOR = [1, 0.75, 0.75, 1],
+            /** 
              * Spacecrafts are rendered when their visible size reaches minimum this number
              * @type Number 
              */
@@ -120,7 +132,13 @@ define([
              * Stores the WebGL preview context information for mission previews
              * @type WebGLPreviewContext
              */
-            _previewContext;
+            _previewContext,
+            /**
+             * The index of the currently edited spacecraft entry from the mission
+             * descriptor JSON
+             * @type Number
+             */
+            _selectedSpacecraftIndex;
     // ----------------------------------------------------------------------
     // Private Functions
     /**
@@ -230,6 +248,43 @@ define([
         }
         return result;
     }
+    /**
+     * Returns the color the passed spacecraft should be rendered with in the preview (if not selected)
+     * @param {Spacecraft} spacecraft
+     * @returns {Number[4]}
+     */
+    function _spacecraftColorFunction(spacecraft) {
+        return (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_COLOR : FRIENDLY_COLOR;
+    }
+    /**
+     * Returns the color the passed spacecraft should be rendered with in the preview if selected
+     * @param {Spacecraft} spacecraft
+     * @returns {Number[4]}
+     */
+    function _highlightedSpacecraftColorFunction(spacecraft) {
+        return (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_HIGHTLIGHTED_COLOR : FRIENDLY_HIGHTLIGHTED_COLOR;
+    }
+    /**
+     * Update the preview for the current spacecraft selection
+     */
+    function _updateForSpacecraftSelection() {
+        var i, startIndex, endIndex, spacecraftData = _mission.getData().spacecrafts, spacecrafts = _mission.getSpacecrafts();
+        if (_selectedSpacecraftIndex >= 0) {
+            startIndex = 0;
+            for (i = 0; i < _selectedSpacecraftIndex; i++) {
+                startIndex += (spacecraftData[i].count || 1);
+            }
+            endIndex = startIndex + (spacecraftData[i].count || 1);
+        } else {
+            startIndex = -1;
+            endIndex = -1;
+        }
+        for (i = 0; i < spacecrafts.length; i++) {
+            spacecrafts[i].getVisualModel().setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, ((i >= startIndex) && (i < endIndex)) ?
+                    _highlightedSpacecraftColorFunction.bind(this, spacecrafts[i]) :
+                    _spacecraftColorFunction.bind(this, spacecrafts[i]));
+        }
+    }
     // ----------------------------------------------------------------------
     // Public Functions
     /**
@@ -259,15 +314,26 @@ define([
     }
     /**
      * Updates the preview for the case when a property of the previewed item is being edited
+     * @param {String} name The name of the property that is edited (under which the editing is happening)
+     * @param {Number} [index] If the property is an array, this is the index of the element in the array being edited
      */
-    function handleStartEdit() {
-        return true;
+    function handleStartEdit(name, index) {
+        if (name === "spacecrafts") {
+            _selectedSpacecraftIndex = index;
+            _updateForSpacecraftSelection();
+            preview.requestRender();
+        }
     }
     /**
      * Updates the preview for the case when a property of the previewed item is no longer being edited
+     * @param {String} name The name of the property that is no longer edited 
      */
-    function handleStopEdit() {
-        return true;
+    function handleStopEdit(name) {
+        if (name === "spacecrafts") {
+            _selectedSpacecraftIndex = -1;
+            _updateForSpacecraftSelection();
+            preview.requestRender();
+        }
     }
     // ----------------------------------------------------------------------
     // Initialization

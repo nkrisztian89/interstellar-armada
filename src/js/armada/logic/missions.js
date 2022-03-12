@@ -627,6 +627,11 @@ define([
          */
         this._name = name;
         /**
+         * Reference to the mission descriptor JSON object
+         * @type Object
+         */
+        this._dataJSON = null;
+        /**
          * The name of the mission that should be played after completing this one (typically same as the filename e.g. someMission.json)
          * @type String
          */
@@ -751,6 +756,13 @@ define([
      */
     Mission.prototype.getName = function () {
         return this._name;
+    };
+    /**
+     * Returns the reference to the mission descriptor JSON object
+     * @returns {Object}
+     */
+    Mission.prototype.getData = function () {
+        return this._dataJSON;
     };
     /**
      * Returns the mission title as given in the data JSON
@@ -1228,6 +1240,7 @@ define([
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
         spacecraft.resetRandomSeed();
+        this._dataJSON = dataJSON;
         this._title = dataJSON.title || "";
         this._nextMissionName = dataJSON.nextMission || null;
         this.loadEnvironment(dataJSON);
