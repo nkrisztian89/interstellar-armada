@@ -749,6 +749,11 @@ define([
          * @type Function
          */
         this._onTeamsChanged = null;
+        /**
+         * Whether there are armed spacecrafts on the player's team at the start of the mission.
+         * @type Boolean
+         */
+        this._initialTeamMission = false;
     }
     /**
      * Return the name identifying this mission (typically same as the filename e.g. someMission.json)
@@ -1301,8 +1306,9 @@ define([
         // applying difficulty hitpoint factor for friendly spacecrafts
         // adding AI
         this._referenceScore = 0;
+        this._initialTeamMission = false;
         team = this._pilotedCraft && this._pilotedCraft.getTeam();
-        count = 0;
+        count = 1;
         factor = this._difficultyLevel.getFriendlyHitpointsFactor();
         for (i = 0; i < spacecrafts.length; i++) {
             craft = this._spacecrafts[i];
@@ -1316,8 +1322,11 @@ define([
                 if (this._pilotedCraft.isFriendly(craft)) {
                     if (craft !== this._pilotedCraft) {
                         craft.multiplyMaxHitpoints(factor);
+                        if (craft.hasWeapons() || craft.hasMissiles()) {
+                            this._initialTeamMission = true;
+                            count++;
+                        }
                     }
-                    count++;
                 }
             }
             aiType = spacecrafts[i].ai;
@@ -1332,7 +1341,7 @@ define([
                 ai.addAI(aiType, craft, this);
             }
         }
-        if (count > 0) {
+        if (count > 1) {
             this._referenceScore /= count;
         }
         // load events and mission objectives
@@ -1368,11 +1377,18 @@ define([
         application.log_DEBUG("Mission successfully loaded.", 2);
     };
     /**
-     * Returns whether the mission is starting (has been started) with the player having teammates.
+     * Returns whether the mission has more than one spacecraft (alive or destroyed) on the player's team.
      * @returns {Boolean}
      */
     Mission.prototype.isTeamMission = function () {
         return this.getPilotedSpacecraft() && this.getPilotedSpacecraft().getTeam() && (this.getPilotedSpacecraft().getTeam().getInitialCount() > 1);
+    };
+    /**
+     * Returns whether there are armed spacecrafts on the player's team at the start of the mission.
+     * @returns {Boolean}
+     */
+    Mission.prototype.isInitialTeamMission = function () {
+        return this._initialTeamMission;
     };
     /**
      * Returns an object containing the final score and score breakdown granted in this mission for the performance described by the passed 
@@ -2296,7 +2312,7 @@ define([
      */
     MissionPerformanceLevel.prototype.getRequiredScore = function (mission) {
         return this._referenceBaseScoreFactor ? mission.getScoreStatistics(
-                mission.getReferenceScore() * (mission.isTeamMission() ? this._referenceBaseScoreFactor : 1),
+                mission.getReferenceScore() * (mission.isInitialTeamMission() ? this._referenceBaseScoreFactor : 1),
                 this._referenceHitRatio,
                 this._referenceHullIntegrity,
                 this._referenceTeamSurvival).score : 0;

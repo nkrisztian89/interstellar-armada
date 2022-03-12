@@ -7471,7 +7471,7 @@
                 }],
             "explosion": "fighterExplosion",
             "showTimeRatioDuringExplosion": 0.32,
-            "scoreValue": 5,
+            "scoreValue": 0,
             "blinkers": [{
                     "particle": {
                         "shader": "particle",
@@ -7582,7 +7582,7 @@
                 }],
             "explosion": "smallStationExplosion",
             "showTimeRatioDuringExplosion": 0.32,
-            "scoreValue": 10,
+            "scoreValue": 50,
             "blinkers": [{
                     "particle": {
                         "shader": "particle",
