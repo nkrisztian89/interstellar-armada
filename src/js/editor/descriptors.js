@@ -3248,6 +3248,7 @@ define([
                         (parent.type === ConditionType.DESTROYED) ||
                         (parent.type === ConditionType.HULL_INTEGRITY) ||
                         (parent.type === ConditionType.SHIELD_INTEGRITY) ||
+                        (parent.type === ConditionType.DISTANCE) ||
                         (parent.type === ConditionType.AWAY) ||
                         (parent.type === ConditionType.ON_TEAM) ||
                         (parent.type === ConditionType.IS_TARGETED));
