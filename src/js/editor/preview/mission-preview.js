@@ -152,6 +152,43 @@ define([
         }
     }
     /**
+     * Returns the color the passed spacecraft should be rendered with in the preview (if not selected)
+     * @param {Spacecraft} spacecraft
+     * @returns {Number[4]}
+     */
+    function _spacecraftColorFunction(spacecraft) {
+        return (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_COLOR : FRIENDLY_COLOR;
+    }
+    /**
+     * Returns the color the passed spacecraft should be rendered with in the preview if selected
+     * @param {Spacecraft} spacecraft
+     * @returns {Number[4]}
+     */
+    function _highlightedSpacecraftColorFunction(spacecraft) {
+        return (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_HIGHTLIGHTED_COLOR : FRIENDLY_HIGHTLIGHTED_COLOR;
+    }
+    /**
+     * Update the preview for the current spacecraft selection
+     */
+    function _updateForSpacecraftSelection() {
+        var i, startIndex, endIndex, spacecraftData = _mission.getData().spacecrafts, spacecrafts = _mission.getSpacecrafts();
+        if (_selectedSpacecraftIndex >= 0) {
+            startIndex = 0;
+            for (i = 0; i < _selectedSpacecraftIndex; i++) {
+                startIndex += (spacecraftData[i].count || 1);
+            }
+            endIndex = startIndex + (spacecraftData[i].count || 1);
+        } else {
+            startIndex = -1;
+            endIndex = -1;
+        }
+        for (i = 0; i < spacecrafts.length; i++) {
+            spacecrafts[i].getVisualModel().setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, ((i >= startIndex) && (i < endIndex)) ?
+                    _highlightedSpacecraftColorFunction.bind(this, spacecrafts[i]) :
+                    _spacecraftColorFunction.bind(this, spacecrafts[i]));
+        }
+    }
+    /**
      * For the WebGL preview context.
      * Updates the content of the preview canvas according to the current preview settings
      * @param {Editor~RefreshParams} params
@@ -178,7 +215,8 @@ define([
                 hostileColor: HOSTILE_COLOR,
                 smallestSizeWhenDrawn: SMALLEST_SIZE_WHEN_DRAWN,
                 awayColorFactor: AWAY_COLOR_FACTOR,
-                awayAlphaFactor: AWAY_ALPHA_FACTOR
+                awayAlphaFactor: AWAY_ALPHA_FACTOR,
+                callback: _updateForSpacecraftSelection
             });
         }
     }
@@ -247,43 +285,6 @@ define([
             }
         }
         return result;
-    }
-    /**
-     * Returns the color the passed spacecraft should be rendered with in the preview (if not selected)
-     * @param {Spacecraft} spacecraft
-     * @returns {Number[4]}
-     */
-    function _spacecraftColorFunction(spacecraft) {
-        return (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_COLOR : FRIENDLY_COLOR;
-    }
-    /**
-     * Returns the color the passed spacecraft should be rendered with in the preview if selected
-     * @param {Spacecraft} spacecraft
-     * @returns {Number[4]}
-     */
-    function _highlightedSpacecraftColorFunction(spacecraft) {
-        return (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_HIGHTLIGHTED_COLOR : FRIENDLY_HIGHTLIGHTED_COLOR;
-    }
-    /**
-     * Update the preview for the current spacecraft selection
-     */
-    function _updateForSpacecraftSelection() {
-        var i, startIndex, endIndex, spacecraftData = _mission.getData().spacecrafts, spacecrafts = _mission.getSpacecrafts();
-        if (_selectedSpacecraftIndex >= 0) {
-            startIndex = 0;
-            for (i = 0; i < _selectedSpacecraftIndex; i++) {
-                startIndex += (spacecraftData[i].count || 1);
-            }
-            endIndex = startIndex + (spacecraftData[i].count || 1);
-        } else {
-            startIndex = -1;
-            endIndex = -1;
-        }
-        for (i = 0; i < spacecrafts.length; i++) {
-            spacecrafts[i].getVisualModel().setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, ((i >= startIndex) && (i < endIndex)) ?
-                    _highlightedSpacecraftColorFunction.bind(this, spacecrafts[i]) :
-                    _spacecraftColorFunction.bind(this, spacecrafts[i]));
-        }
     }
     // ----------------------------------------------------------------------
     // Public Functions

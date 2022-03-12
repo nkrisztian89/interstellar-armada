@@ -1543,6 +1543,7 @@ define([
      * @property {Number} smallestSizeWhenDrawn
      * @property {Number} awayColorFactor
      * @property {Number} awayAlphaFactor
+     * @property {Function} [callback]
      */
     /**
      * Adds renderable objects representing all visual elements of the mission to
@@ -1552,7 +1553,7 @@ define([
      * @param {PreviewParams} [previewParams]
      */
     Mission.prototype.addToScene = function (battleScene, targetScene, previewParams) {
-        var i, preview = !!previewParams,
+        var i, preview = !!previewParams, spacecraftCount, addedSpacecrafts,
                 friendly, friendlyColor, hostileColor, markerColor, callback,
                 white = [1, 1, 1],
                 getSpacecraftColor;
@@ -1610,8 +1611,14 @@ define([
                     });
                     battleScene.addObject(marker, false);
                 }
+                addedSpacecrafts++;
+                if ((addedSpacecrafts === spacecraftCount) && previewParams.callback) {
+                    previewParams.callback();
+                }
             };
         }
+        spacecraftCount = this._spacecrafts.length;
+        addedSpacecrafts = 0;
         for (i = 0; i < this._spacecrafts.length; i++) {
             if (preview) {
                 friendly = !this.getPilotedSpacecraft() || !this._spacecrafts[i].isHostile(this.getPilotedSpacecraft());
