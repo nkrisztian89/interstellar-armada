@@ -37,6 +37,7 @@ define([
             // constants
             MISSION_LIST_CONTAINER_CLASS = "missionListContainer",
             COMPLETED_CLASS = "completed",
+            TITLE_ID = "title",
             BACK_BUTTON_ID = "backButton",
             DEMO_BUTTON_ID = "demoButton",
             LAUNCH_BUTTON_ID = "launchButton",
@@ -200,6 +201,8 @@ define([
          * @type String
          */
         this._listContainerID = armadaScreens.MISSIONS_LIST_CONTAINER_ID;
+        /** @type SimpleComponent */
+        this._title = this.registerSimpleComponent(TITLE_ID);
         /** @type SimpleComponent */
         this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
         /** @type SimpleComponent */
@@ -677,6 +680,9 @@ define([
     MissionsScreen.prototype.setActive = function (active) {
         screens.HTMLScreen.prototype.setActive.call(this, active);
         if (active) {
+            this._title.setContent(strings.get(this._community ?
+                    strings.MISSIONS.COMMUNITY_MISSIONS_TITLE :
+                    this._loadCustom ? strings.MISSIONS.MY_MISSIONS_TITLE : strings.MISSIONS.CAMPAIGN_TITLE));
             this._updateScores();
             this._listComponent.reset();
             this._selectMission(-1);

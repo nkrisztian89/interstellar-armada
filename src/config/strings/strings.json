@@ -73,7 +73,9 @@
     },
     "missions": {
         "backButton": "Back to menu",
-        "title": "Missions",
+        "campaignTitle": "Campaign",
+        "myMissionsTitle": "My missions",
+        "communityMissionsTitle": "Community missions",
         "difficulty": "Select difficulty:",
         "launchButton": "Launch mission",
         "demoButton": "Launch demo",

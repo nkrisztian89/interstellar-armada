@@ -56,7 +56,9 @@ define([
     };
     strings.MISSIONS = {
         BACK: {name: "missions.backButton"},
-        TITLE: {name: "missions.title"},
+        CAMPAIGN_TITLE: {name: "missions.campaignTitle"},
+        MY_MISSIONS_TITLE: {name: "missions.myMissionsTitle"},
+        COMMUNITY_MISSIONS_TITLE: {name: "missions.communityMissionsTitle"},
         DIFFICULTY: {name: "missions.difficulty"},
         LAUNCH_BUTTON: {name: "missions.launchButton"},
         DEMO_BUTTON: {name: "missions.demoButton"},

@@ -87,7 +87,9 @@
     },
     "missions": {
         "backButton": "Vissza a menübe",
-        "title": "Küldetések",
+        "campaignTitle": "Hadjárat",
+        "myMissionsTitle": "Saját küldetések",
+        "communityMissionsTitle": "Közösségi küldetések",
         "difficulty": "Választott nehézség:",
         "launchButton": "Indítás",
         "demoButton": "Demo",
