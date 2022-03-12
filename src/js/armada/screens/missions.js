@@ -432,7 +432,7 @@ define([
      * @param {Number} index
      */
     MissionsScreen.prototype._selectMission = function (index) {
-        var missionFilename, missionName, pilotedCraftDescriptor, custom;
+        var missionFilename, missionName, pilotedCraftDescriptor;
         if ((index >= 0) && (index < this._missionProvider.getMissionNames(this._custom).length)) {
             missionFilename = this._missionProvider.getMissionNames(this._custom)[index];
             missionName = utils.getFilenameWithoutExtension(missionFilename);
@@ -536,10 +536,9 @@ define([
             this._launchButton.enable();
             this._demoButton.enable();
         } else {
-            custom = (index >= 0);
             this._missionTitle.setContent(strings.get(strings.MISSIONS.NO_SELECTED_NAME));
             this._missionLocation.setContent("");
-            this._missionDescription.setContent(strings.get(custom ?
+            this._missionDescription.setContent(strings.get(this._loadCustom ?
                     strings.MISSIONS.CUSTOM_DESCRIPTION :
                     this._community ?
                     (missionHub.isReady() ? strings.MISSIONS.MISSION_HUB_DESCRIPTION : strings.MISSIONS.MISSION_HUB_CONNECTING_DESCRIPTION) :
@@ -556,7 +555,7 @@ define([
             this._playerSpacecraftPropulsion.hide();
             this._launchButton.disable();
             this._demoButton.disable();
-            this._fileButton.setVisible(custom);
+            this._fileButton.setVisible(this._loadCustom);
             this._submitButton.setVisible(this._community && missionHub.isReady());
             this._manageSubmissionsButton.setVisible(this._community && missionHub.isReady() && missionHub.isSubmitter());
             if (this._community && !missionHub.isReady()) {
