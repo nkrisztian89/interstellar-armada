@@ -439,8 +439,8 @@ define([
         if ((index >= 0) && (index < this._missionProvider.getMissionNames(this._custom).length)) {
             missionFilename = this._missionProvider.getMissionNames(this._custom)[index];
             missionName = utils.getFilenameWithoutExtension(missionFilename);
-            this._missionTitle.setContent(strings.get({name: strings.MISSION.PREFIX.name + missionName + strings.MISSION.NAME_SUFFIX.name}, undefined, missionName));
-            this._missionDescription.setContent(strings.get(strings.MISSIONS.LOADING_DESCRIPTION));
+            this._missionTitle.setTextContent(strings.get({name: strings.MISSION.PREFIX.name + missionName + strings.MISSION.NAME_SUFFIX.name}, undefined, missionName));
+            this._missionDescription.setTextContent(strings.get(strings.MISSIONS.LOADING_DESCRIPTION));
             this._missionObjectivesTitle.hide();
             this._missionObjectives.hide();
             this._playerSpacecraftTitle.hide();
@@ -454,11 +454,12 @@ define([
             this._manageSubmissionsButton.hide();
             this._missionProvider.requestMissionDescriptor(missionFilename, function (missionDescriptor) {
                 var
+                        author,
                         /** @type String[] */
                         objectives;
                 if (this._listComponent.getSelectedIndex() === index) {
                     if (missionDescriptor.getTitle()) {
-                        this._missionTitle.setContent(missionDescriptor.getTitle());
+                        this._missionTitle.setTextContent(missionDescriptor.getTitle());
                         this._listComponent.setCaption(index, missionDescriptor.getTitle());
                     }
                     if (_spacecraft) {
@@ -473,11 +474,20 @@ define([
                     objectives = missionDescriptor.getMissionObjectives().map(function (objective) {
                         return "<li>" + objective + "</li>";
                     });
-                    this._missionLocation.setContent(strings.get(strings.MISSIONS.LOCATION) + " " + missionDescriptor.getEnvironment().getDisplayName());
-                    this._missionDescription.setContent(missionDescriptor.isCustom() ?
-                            (missionDescriptor.getAuthor() ? utils.formatString(strings.get(strings.MISSIONS.CREATED_BY), {author: missionDescriptor.getAuthor()}) + "<br><br>" : "") +
-                            (missionDescriptor.getDescription() || missionDescriptor.getDisplayDescription()) :
-                            missionDescriptor.getDisplayDescription());
+                    this._missionLocation.setTextContent(strings.get(strings.MISSIONS.LOCATION) + " " + missionDescriptor.getEnvironment().getDisplayName());
+                    this._missionDescription.setContent("");
+                    if (missionDescriptor.isCustom()) {
+                        if (missionDescriptor.getAuthor()) {
+                            author = document.createElement("span");
+                            author.textContent = utils.formatString(strings.get(strings.MISSIONS.CREATED_BY), {author: missionDescriptor.getAuthor()});
+                            this._missionDescription.getElement().appendChild(author);
+                            this._missionDescription.getElement().appendChild(document.createElement("br"));
+                            this._missionDescription.getElement().appendChild(document.createElement("br"));
+                        }
+                        components.appendFormattedContent(this._missionDescription.getElement(), missionDescriptor.getDescription() || missionDescriptor.getDisplayDescription());
+                    } else {
+                        components.appendFormattedContent(this._missionDescription.getElement(), missionDescriptor.getDisplayDescription());
+                    }
                     this._missionObjectives.setContent(objectives.join(""));
                     if (_spacecraft) {
                         this._playerSpacecraftData.setContent(strings.get(strings.MISSIONS.SPACECRAFT_DATA), {

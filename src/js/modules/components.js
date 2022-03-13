@@ -77,6 +77,9 @@ define([
             HIGHLIGHTED_CLASS_NAME = "highlighted",
             EYE_CROSSED_CLASS_NAME = "crossed",
             FOCUSING_CLASS_NAME = "focusing",
+            BOLD_CLASS_NAME = "bold",
+            SHIP_CLASS_NAME = "ship",
+            HOSTILE_SHIP_CLASS_NAME = "ship-hostile",
             // event names for passing event handlers when components are crated
             SHOW_EVENT_NAME = "show",
             HIDE_EVENT_NAME = "hide",
@@ -193,6 +196,52 @@ define([
      */
     function clearStoredDOMModels() {
         _modelLoadInfo = {};
+    }
+    /**
+     * Parse the passed format string and create and append HTML elements to the passed
+     * parent element based on it.
+     * @param {Element} element The parent element to append to
+     * @param {String} text A string with limited formatting options:
+     * [p] starts a new paragraph (<p>)
+     * [b]...[] will add a <span> with bold styling
+     * [s]...[] will add a <span> with (friendly) ship reference styling
+     * [s:h]...[] will add a <span> with hostile ship reference styling
+     * Example:
+     * "[p]This is the first paragraph.[p]This is the second paragraph.[b]This text is bold.[][s]Friendly ship[], [s:h]Hostile ship[]"
+     */
+    function appendFormattedContent(element, text) {
+        var paragraphs, p, i, j, parts, span, spanType;
+        paragraphs = text.split("[p]");
+        for (i = 0; i < paragraphs.length; i++) {
+            if (paragraphs[i]) {
+                p = document.createElement("p");
+                parts = paragraphs[i].split("[");
+                for (j = 0; j < parts.length; j++) {
+                    if (parts[j]) {
+                        if (j % 2 === 0) {
+                            p.appendChild(document.createTextNode(parts[j].substring(parts[j].indexOf("]") + 1)));
+                        } else {
+                            span = document.createElement("span");
+                            spanType = parts[j].substring(0, parts[j].indexOf("]"));
+                            switch (spanType) {
+                                case "b":
+                                    span.className = BOLD_CLASS_NAME;
+                                    break;
+                                case "s":
+                                    span.className = SHIP_CLASS_NAME;
+                                    break;
+                                case "s:h":
+                                    span.className = HOSTILE_SHIP_CLASS_NAME;
+                                    break;
+                            }
+                            span.textContent = parts[j].substring(parts[j].indexOf("]") + 1);
+                            p.appendChild(span);
+                        }
+                    }
+                }
+                element.appendChild(p);
+            }
+        }
     }
     // #########################################################################
     /**
@@ -2131,6 +2180,7 @@ define([
         TRANSLATION_KEY_ATTRIBUTE: TRANSLATION_KEY_ATTRIBUTE,
         // functions
         clearStoredDOMModels: clearStoredDOMModels,
+        appendFormattedContent: appendFormattedContent,
         // classes
         SimpleComponent: SimpleComponent,
         LoadingBox: LoadingBox,

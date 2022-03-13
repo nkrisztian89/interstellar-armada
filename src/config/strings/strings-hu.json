@@ -110,7 +110,7 @@
         "location": "Helyszín: ",
         "createdBy": "Készítette: {author}",
         "loadingDescription": "Betöltés...",
-        "noTranslatedDescription": "A küldetéshez nem érhető el leírás magyar nyelven. A leírás eredeti nyelven:<br/>{originalDescription}",
+        "noTranslatedDescription": "[p]A küldetéshez nem érhető el leírás magyar nyelven. A leírás eredeti nyelven:[p]{originalDescription}",
         "noDescription": "A küldetéshez nem érhető el leírás.",
         "missionObjectivesTitle": "Feladatok:",
         "playerSpacecraftTitle": "Űrhajó:",
@@ -437,7 +437,7 @@
         },
         "headhunt": {
             "name": "Fejvadászat",
-            "description": "<p>Egy helyi kalózvezér, <strong>Hector Yccra</strong>, egyre aktívabbá vált az utóbbi időben, immár több birodalmi csillagrendszerben is problémákat okozva. Ügynökeinknek sikerült bemérniük, és csapdát állítottak neki a Blovell rendszerben. Mivel váltságdíjak jelentik az elsődleges bevételi forrását, ezért azt a hamis információt hitettük el vele, hogy a rendszeren egy fontos személyeket szállító, ám gyengén védett hajó fog áthaladni.</p><p>Egy hamis jeleket kibocsátó szonda segítségével fogjuk a konkrét helyszínre csalni. Nagyobb hadihajók vagy vadászkötelékek jelenléte idő előtt felfedné a csapdát számára, emiatt <strong>mindössze két elfogó vadásznak kell végrehajtania ezt a küldetést.</strong></p><p>Nagy hatótávolságú érzékelőink szerint már úton van a szonda felé jól felfegyverzett őrei társaságában, akik egyben a rajtaütések során fő csapásmérő erejét jelentik. Ezen kívül előreküldött egy kisebb felderítőcsapatot is. Semmisítse meg a felderítőket, és amikor megérkezik a fő csapat, mérje be Hector vadászgépét, a <strong>Ruby Blade</strong>-et. A jelentések szerint vérfoltokra emlékeztető harci festés látható a gép testén. <strong>NE próbálja meg kilőni az egész csapatot</strong>, a kalózok túlerőben lesznek. Hagyja el a helyszínt, amint a Ruby Blade megsemmisült.</p>",
+            "description": "[p]Egy helyi kalózvezér, [b]Hector Yccra[], egyre aktívabbá vált az utóbbi időben, immár több birodalmi csillagrendszerben is problémákat okozva. Ügynökeinknek sikerült bemérniük, és csapdát állítottak neki a Blovell rendszerben. Mivel váltságdíjak jelentik az elsődleges bevételi forrását, ezért azt a hamis információt hitettük el vele, hogy a rendszeren egy fontos személyeket szállító, ám gyengén védett hajó fog áthaladni.[p]Egy hamis jeleket kibocsátó szonda segítségével fogjuk a konkrét helyszínre csalni. Nagyobb hadihajók vagy vadászkötelékek jelenléte idő előtt felfedné a csapdát számára, emiatt [b]mindössze két elfogó vadásznak kell végrehajtania ezt a küldetést.[][p]Nagy hatótávolságú érzékelőink szerint már úton van a szonda felé jól felfegyverzett őrei társaságában, akik egyben a rajtaütések során fő csapásmérő erejét jelentik. Ezen kívül előreküldött egy kisebb felderítőcsapatot is. Semmisítse meg a felderítőket, és amikor megérkezik a fő csapat, mérje be Hector vadászgépét, a [s:h]Ruby Blade[]-et. A jelentések szerint vérfoltokra emlékeztető harci festés látható a gép testén. [b]NE próbálja meg kilőni az egész csapatot[], a kalózok túlerőben lesznek. Hagyja el a helyszínt, amint a Ruby Blade megsemmisült.",
             "messages": {
                 "rubyBladeArrived": "Itt van! Hagyd az őröket! Gyorsan vedd célba a Ruby Blade-et, lőjük ki, aztán pucoljunk innen!"
             }
@@ -448,7 +448,7 @@
         },
         "destroyCorvette": {
             "name": "A lázadók korvettje",
-            "description": "Érzékelőink egy sérült felszerelésű Aries korvettet észleltek két vadászkötelék társaságában. Lázadó társaik felé tartanak, ezért el kell őket fogni és megsemmisíteni, mielőtt egyesíthetnék erőiket. Az <strong>Alfa</strong> vadász csapat feladata, hogy megtisztítsa az utat a bombázóink (<strong>Delta</strong>) előtt a jelenlévő ellenséges vadászok semlegesítésével, majd védje a bombázókat, amíg azok célba veszik az ellenséges korvettet. A korvett fegyverei sérültek ugyan, de vadászgépekre még veszélyt jelentenek, ezért legyen óvatos, és maradjon folyamatosan mozgásban!",
+            "description": "Érzékelőink egy sérült felszerelésű Aries korvettet észleltek két vadászkötelék társaságában. Lázadó társaik felé tartanak, ezért el kell őket fogni és megsemmisíteni, mielőtt egyesíthetnék erőiket. Az [s]Alfa[] vadász csapat feladata, hogy megtisztítsa az utat a bombázóink ([s]Delta[]) előtt a jelenlévő ellenséges vadászok semlegesítésével, majd védje a bombázókat, amíg azok célba veszik az ellenséges korvettet. A korvett fegyverei sérültek ugyan, de vadászgépekre még veszélyt jelentenek, ezért legyen óvatos, és maradjon folyamatosan mozgásban!",
             "messages": {
                 "start": "Célba vettük az ellenséges vadászokat! Figyeljetek a korvett lövegére!",
                 "deltaArrived": "Megérkezett a lovasság! Megtámadjuk Dniepert!",
@@ -468,7 +468,7 @@
         },
         "destroyFrigate": {
             "name": "Bombázó bevetés",
-            "description": "Egy fregattkapitányunk átállt a lázadók oldalára, és most hajójával az egyik őrjáratunkat fenyegeti a Varanock rendszerben. Egy csapat Vipera bombázót (<strong>Delta</strong>) küldünk a semlegesítésére. Őn fogja vezetni a csapatot. Fogja el és semmisítse meg a hajót, mielőtt elérné az őrjáratunkat, utána pedig segítsen az esetlegesen megmaradó kisérő vadászgépek eltakarításában.",
+            "description": "Egy fregattkapitányunk átállt a lázadók oldalára, és most hajójával az egyik őrjáratunkat fenyegeti a Varanock rendszerben. Egy csapat Vipera bombázót ([s]Delta[]) küldünk a semlegesítésére. Őn fogja vezetni a csapatot. Fogja el és semmisítse meg a hajót, mielőtt elérné az őrjáratunkat, utána pedig segítsen az esetlegesen megmaradó kisérő vadászgépek eltakarításában.",
             "messages": {
                 "hostileFightersArrived": "A kísérettel elbánunk mi! Delta csapat, haladjatok tovább a Dniester felé!",
                 "dniesterGettingClose": "A Dniester egyre közelebb ér! Delta csapat, lőjétek ki gyorsan! Váltsatok cirkáló módra, hogy hamarabb elérjétek!",
@@ -503,7 +503,7 @@
         },
         "battle": {
             "name": "Csata a lázadókkal",
-            "description": "A lázadók szövetkeztek a helyi kalózokkal, és egy nagyobb flottát próbálnak összevonni a vadászaikból és kisebb hadihajóikból. Lokalizáltuk a találkozási pontjukat, és egy csapásmérő osztagot küldünk a felszámolásukra. Az <strong>Alfa</strong> csapatot fogja vezetni. Fókuszáljon az ellenséges bombázók és vadászok megsemmisítésére, hogy segítsen életben tartani a hajóinkat és a saját bombázóinkat. Figyeljen az ellenséges hajók lövegeinek tüzére!",
+            "description": "A lázadók szövetkeztek a helyi kalózokkal, és egy nagyobb flottát próbálnak összevonni a vadászaikból és kisebb hadihajóikból. Lokalizáltuk a találkozási pontjukat, és egy csapásmérő osztagot küldünk a felszámolásukra. Az [s]Alfa[] csapatot fogja vezetni. Fókuszáljon az ellenséges bombázók és vadászok megsemmisítésére, hogy segítsen életben tartani a hajóinkat és a saját bombázóinkat. Figyeljen az ellenséges hajók lövegeinek tüzére!",
             "messages": {
                 "hostileFrigatesArrived": "Nehéztüzérségük van! Küldjétek be a bombázókat!",
                 "betaArrived": "Béta csapat jelentkezik, célba vesszük a fregattokat! Fedezzetek, Alfa csapat!",
@@ -520,7 +520,7 @@
         },
         "heavy": {
             "name": "Nehézfiúk",
-            "description": "<p>Szenzoraink befogtak két sérült lázadó korvettet, amik elmenekültek a csatából. Az érzékelők szerint egy csapatnyi jól felfegyverzett kalózhoz szeretnének csatlakozni. Azonosítottuk a gyülekezőpontjukat, és vadászokat küldünk a megállításukra. Egy pár Rinocéroszt épp most készítettünk fel csatára, lent a hangárban várakoznak. Ön fogja vezetni őket <strong>Gamma 1</strong> hívójellel, és feladata az <strong>Alfa</strong> csapat támogatása lesz, akiket a kalózok ellen küldünk. Ha megtisztították a terepet a vadászoktól, beküldjük a bombázóinkat, a <strong>Béta</strong> csapatot, hogy intézzék el a korvetteket, mielőtt tovább tudnának ugrani. Őket is segíteni fogja a hadihajók megsemmisítésében. A bázisra akkor térjen vissza, ha minden kalóz és lázadó jelenlétet felszámoltak a szektorban.</p><p>A küldetéshez használt nehéz vadász jóval több lövést kibír, mint amihez hozzászokott, így tovább tarthat vele célra. De vigyázzon! Ha kereszttűzbe kerül, nehezebben tud majd csak kimenekülni belőle, és egy Rinocérosz sem megsemmisíthetetlen.</p>",
+            "description": "[p]Szenzoraink befogtak két sérült lázadó korvettet, amik elmenekültek a csatából. Az érzékelők szerint egy csapatnyi jól felfegyverzett kalózhoz szeretnének csatlakozni. Azonosítottuk a gyülekezőpontjukat, és vadászokat küldünk a megállításukra. Egy pár Rinocéroszt épp most készítettünk fel csatára, lent a hangárban várakoznak. Ön fogja vezetni őket [s]Gamma 1[] hívójellel, és feladata az [s]Alfa[] csapat támogatása lesz, akiket a kalózok ellen küldünk. Ha megtisztították a terepet a vadászoktól, beküldjük a bombázóinkat, a [s]Béta[] csapatot, hogy intézzék el a korvetteket, mielőtt tovább tudnának ugrani. Őket is segíteni fogja a hadihajók megsemmisítésében. A bázisra akkor térjen vissza, ha minden kalóz és lázadó jelenlétet felszámoltak a szektorban.[p]A küldetéshez használt nehéz vadász jóval több lövést kibír, mint amihez hozzászokott, így tovább tarthat vele célra. De vigyázzon! Ha kereszttűzbe kerül, nehezebben tud majd csak kimenekülni belőle, és egy Rinocérosz sem megsemmisíthetetlen.",
             "messages": {
                 "firstCorvetteArrived": "Itt az első korvett, figyeljetek a lövegekre!",
                 "bombersArrived": "Béta vezér jelentkezik! Megérkeztünk, megkezdjük a támadást!"

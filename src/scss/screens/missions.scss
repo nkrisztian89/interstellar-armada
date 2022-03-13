@@ -62,41 +62,53 @@ $info-top-margin: 0.5em;
 
     @include top-bordered;
     @include styled-scrollbar;
-}
-
-.missionInfoBody > p {
-    margin-top: 0;
-}
-
-.missionDescription > p {
-    margin-top: 0;
+    
+    &>p {
+        margin-top: 0;
+    }
+    
+    &>h3 {
+        padding: 0.1em 0 0.2em 0.1em;
+        margin-bottom: 0.5em;
+        width: 25em;
+        background-image:
+            -webkit-linear-gradient(
+            left,
+            $panel-back-color,
+            rgba($panel-back-color,0)
+            );
+        background-image:
+            -moz-linear-gradient(
+            left,
+            $panel-back-color,
+            rgba($panel-back-color,0)
+            );
+    }
 }
 
 .missionDescription {
+    &>p {
+        margin-top: 0;
+        &>span {
+            &.bold {
+                font-weight: bold;
+            }
+            &.ship {
+                font-weight: bold;
+                color: $friendly-color;
+            }
+            &.ship-hostile {
+                font-weight: bold;
+                color: $hostile-color;
+            }
+        }
+    }
     &>ul {
         margin: 0;
         &>li {
             list-style-type: square;
         }
     }
-}
-
-.missionInfoBody > h3 {
-    padding: 0.1em 0 0.2em 0.1em;
-    margin-bottom: 0.5em;
-    width: 25em;
-    background-image:
-        -webkit-linear-gradient(
-        left,
-        $panel-back-color,
-        rgba($panel-back-color,0)
-        );
-    background-image:
-        -moz-linear-gradient(
-        left,
-        $panel-back-color,
-        rgba($panel-back-color,0)
-        );
 }
 
 .subcaption.completed {
