@@ -35,6 +35,8 @@
         }, {
             "source": "heavy.json"
         }, {
+            "source": "hideAndSeek.json"
+        }, {
             "source": "tests/test.json"
         }, {
             "source": "tests/cruiserVsBombers.json",

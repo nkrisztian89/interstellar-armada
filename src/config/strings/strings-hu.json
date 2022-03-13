@@ -526,6 +526,23 @@
                 "bombersArrived": "Béta vezér jelentkezik! Megérkeztünk, megkezdjük a támadást!"
             }
         },
+        "hideAndSeek": {
+            "name": "Aki bújt, aki nem...",
+            "description": "[p]A kalózok rejtett bázisokat létesítettek, melyeket meg kell találnunk és fel kell számolnunk, hogy visszaállítsuk szektorunk békéjét. A bázisaikat rendszeresen áthelyezik, és mindeddig sikeresen tartották titokban a koordinátáikat. Nemrég azonban adatokat szereztünk egy támadás után sérülten sodrodó kalózhajó számítógépéről. Bár a bázis koordinátáit nem tartalmazzák, a segítségükkel tervet állítottunk össze, amivel rábukkanhatunk.[p]Az adatok alapján a kalózok egy átprogramozott kommunikációs átjátszóállomást rejtettek el az Arberon rendszer protoplanetáris korongjában, ami kulcsszerepet játszik a műveleteik megszervezésében. A birtokunkba került koordináták elvezethetnek ehhez az állomáshoz, ami a [s:h]Hermes[] kódnevet kapta.[p]Az Ön feladata, hogy [b]megtalálja az átjátszóállomást, feltörje a szoftverrendszerét, majd a segítségével megszerezze a kalózbázis koordinátáit[]. A hajóját felszereltük az ehhez szükséges elektronikai és zavaró berendezésekkel. Ha 150 méterre megközelíti az állomást, annak rendszerét rövid időn belül fel tudjuk törni, eközben azt is megakadályozva, hogy erről a kalózok vészjelzést küldhessenek. Ezután már csak arról kell gondoskodnia, hogy az állomás működőképes maradjon, amíg a segítségével meghatározzuk a titkos bázis elhelyezkedését. Amint megszereztük a szükséges információt, elhagyhatja a helyszínt.[p]Figyelem, ezt a küldetést egy sűrű csillagköd belsejében kell végrehajtani! A közegellenállás miatt [b]kisebb manőverezhetőség és sebesség[] érhető el, [b]korlátozottabb az érzékelők hatótávolsága és a látótávolság is[], valamint [b]a rakéták célbefogási ideje hosszabb[]!",
+            "messages": {
+                "start1": "Ezeket a koordinátákat nyertük ki a kalóz adatfájljából. Átjátszóállomás keresése...",
+                "start2": "Az állomásnak nincs nyoma, de az érzékelők bójákat észlelnek. Valószínűleg ezek segítségével navigálnak a kalózok. Kövesse a bójákat, talán elvezetnek az állomáshoz!",
+                "patrol": "Egy kalóz őrjáratot észleltünk! Az állomás már biztos közel van!",
+                "relayDetected": "Észleltük az átjátszóállomást! Közelítse meg a szoftvere feltöréséhez!",
+                "hackingStart": "Átjátszóállomás feltörése...",
+                "hacking25": "Feltörés: 25%...",
+                "hacking50": "Feltörés: 50%...",
+                "hacking75": "Feltörés: 75%...",
+                "hackingEnd": "Feltörés sikeres! Védje meg az állomást, amíg lokalizáljuk a kalózok bázisát!",
+                "almostWin": "A bázist majdnem bemértük, már csak 30 másodperc!",
+                "win": "Megvannak a koordináták! Szép munka!"
+            }
+        },
         "test": {
             "name": "Teszt",
             "description": "Egy homokozó jellegű tesztpálya, ami felvonultatja a játékban szereplő legtöbb hajóosztályt, részben véletlenszerűen elhelyezve. Az űrhajók mozdulatlanul állnak. Demó módban a küldetés egy mindenki mindenki ellen jellegű összecsapássá változik, melynek célja a játék fejlesztés alatti teljesítménytesztelése.",

@@ -467,6 +467,22 @@
                 "bombersArrived": "Beta leader here, we have arrived and are engaging the enemy!"
             }
         },
+        "hideAndSeek": {
+            "name": "Hide and seek",
+            "messages": {
+                "start1": "These are the coordinates we extracted from the pirate data files. Looking for the relay...",
+                "start2": "No sign of the relay, but the sensors are picking up some buoys. The pirates must be using these to navigate in the nebula. Follow the buoys to see if they lead to the relay!",
+                "patrol": "Picking up a pirate patrol coming your way! You must be getting closer to the relay!",
+                "relayDetected": "The sensors are picking up the relay! Approach it to begin the hacking process!",
+                "hackingStart": "Hacking relay...",
+                "hacking25": "Hacking: 25%...",
+                "hacking50": "Hacking: 50%...",
+                "hacking75": "Hacking: 75%...",
+                "hackingEnd": "Hacking successful! Protect the relay until we can locate the pirate base!",
+                "almostWin": "Almost located the base, just 30 more seconds!",
+                "win": "We've got the base coordinates! Well done!"
+            }
+        },
         "test": {
             "name": "Sandbox test",
             "messages": {
