@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Implementation of mission events - a list of actions that can be triggered by conditions
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -157,11 +157,17 @@ define([
          */
         this._canBeImpossible = true;
         /**
-         * (enum ObjectiveState) If this trigger belongs to a mission objective (win / lose event),
-         * we track the state of the objective in this variable
-         * @type Number
+         * (enum ObjectiveState)[] If this trigger belongs to mission objectives (win / lose event),
+         * we track the state of the objectives in this variable
+         * @type Number[]
          */
-        this._objectiveState = ObjectiveState.IN_PROGRESS;
+        this._objectiveState = null;
+        if (this._conditions) {
+            this._objectiveState = new Array(this._conditions.length);
+            for (i = 0; i < this._conditions.length; i++) {
+                this._objectiveState[i] = ObjectiveState.IN_PROGRESS;
+            }
+        }
         if (!this._falsy && this._conditions) {
             this._canBeImpossible = !this._all;
             for (i = 0; i < this._conditions.length; i++) {
@@ -306,8 +312,8 @@ define([
         var i, multi = this._conditions.length > 1, satisfied, impossible, text;
         if (triggersWinAction) {
             for (i = 0; i < this._conditions.length; i++) {
-                if (this._objectiveState === ObjectiveState.IN_PROGRESS) {
-                    this._objectiveState = this._conditions[i].isSatisfied(mission, 0) ?
+                if (this._objectiveState[i] === ObjectiveState.IN_PROGRESS) {
+                    this._objectiveState[i] = this._conditions[i].isSatisfied(mission, 0) ?
                             ((this._conditions[i].canBeImpossible() && !missionEnded) ?
                                     ((mission.getState() === MissionState.COMPLETED) ?
                                             ObjectiveState.COMPLETED :
@@ -315,14 +321,14 @@ define([
                                     ObjectiveState.COMPLETED) :
                             this._conditions[i].isImpossible() ? ObjectiveState.FAILED : ObjectiveState.IN_PROGRESS;
                 }
-                if ((this._objectiveState !== ObjectiveState.IN_PROGRESS) || this._conditions[i].isActive() || missionEnded) {
-                    objectivesState[index].text = this._conditions[i].getObjectiveStateString(strings.BATTLE.OBJECTIVE_WIN_PREFIX, multi, mission, this._objectiveState === ObjectiveState.IN_PROGRESS);
-                    objectivesState[index].state = this._objectiveState;
+                if ((this._objectiveState[i] !== ObjectiveState.IN_PROGRESS) || this._conditions[i].isActive() || missionEnded) {
+                    objectivesState[index].text = this._conditions[i].getObjectiveStateString(strings.BATTLE.OBJECTIVE_WIN_PREFIX, multi, mission, this._objectiveState[i] === ObjectiveState.IN_PROGRESS);
+                    objectivesState[index].state = this._objectiveState[i];
                     objectivesState[index].completable = true;
                     index++;
                 }
             }
-        } else {
+        } else if (this._conditions.length > 0) {
             satisfied = true;
             impossible = false;
             for (i = 0; i < this._conditions.length; i++) {
@@ -334,20 +340,20 @@ define([
                     }
                 }
             }
-            if (this._objectiveState !== ObjectiveState.FAILED) {
-                this._objectiveState = satisfied ? ObjectiveState.FAILED : (impossible || missionEnded || (mission.getState() === MissionState.COMPLETED)) ? ObjectiveState.COMPLETED : ObjectiveState.IN_PROGRESS;
+            if (this._objectiveState[0] !== ObjectiveState.FAILED) {
+                this._objectiveState[0] = satisfied ? ObjectiveState.FAILED : (impossible || missionEnded || (mission.getState() === MissionState.COMPLETED)) ? ObjectiveState.COMPLETED : ObjectiveState.IN_PROGRESS;
             }
-            text = (this._conditions.length > 0) ? this._conditions[0].getObjectiveStateString(strings.BATTLE.OBJECTIVE_LOSE_PREFIX, multi, mission, this._objectiveState === ObjectiveState.IN_PROGRESS) : "";
-            if (this._objectiveState === ObjectiveState.IN_PROGRESS) {
+            text = this._conditions[0].getObjectiveStateString(strings.BATTLE.OBJECTIVE_LOSE_PREFIX, multi, mission, this._objectiveState[0] === ObjectiveState.IN_PROGRESS);
+            if (this._objectiveState[0] === ObjectiveState.IN_PROGRESS) {
                 for (i = 1; i < this._conditions.length; i++) {
                     if (this._conditions[i].isActive()) {
-                        text += " " + this._conditions[i].getObjectiveStateString(strings.BATTLE.OBJECTIVE_LOSE_PREFIX, multi, mission, this._objectiveState === ObjectiveState.IN_PROGRESS);
+                        text += " " + this._conditions[i].getObjectiveStateString(strings.BATTLE.OBJECTIVE_LOSE_PREFIX, multi, mission, true);
                     }
                 }
             }
             if (text) {
                 objectivesState[index].text = text;
-                objectivesState[index].state = this._objectiveState;
+                objectivesState[index].state = this._objectiveState[0];
                 objectivesState[index].completable = this._canBeImpossible;
                 index++;
             }
