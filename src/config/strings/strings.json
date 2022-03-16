@@ -683,6 +683,8 @@
         "licenseHeader": "License",
         "licenseParagraph": "The source code of the game (HTML, Javascript, CSS source files, JSON files containing game configuration and accompanying text files) is created by Krisztián Nagy and released under the {license} license, except for the included {requireJS} library, about which see {requireJSLicense}.<br><br>About the license of the fonts used in game see: {sansation} (by Bernd Montag), {aldrich} and {audiowide} (from the Google Fonts library). Some modifications to Aldrich were made by Krisztián Nagy, detailed in the {fontlog} file.<br><br>The images, 3D models, textures and music files were all created by Krisztián Nagy and are released under the {assetLicense} license. Regarding the sound effects, click {soundLicense} for detailed licensing and attribution information.",
         "requireJSLicense": "the MIT license",
+        "licenseElectronParagraph": "This version of the game has been packaged with the {electron} framework, which is available under {electronLicense}.",
+        "electronLicense": "the MIT license",
         "here": "here"
     },
     "setting": {

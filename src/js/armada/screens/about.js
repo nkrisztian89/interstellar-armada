@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file This module manages and provides the About screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -25,7 +25,8 @@ define([
             VERSION_PARAGRAPH_ID = "versionParagraph",
             ABOUT_GAME_DEV_PARAGRAPH_ID = "aboutGameDevParagraph",
             USED_SOFTWARE_PARAGRAPH_ID = "usedSoftwareParagraph",
-            LICENSE_PARAGRAPH_ID = "licenseParagraph";
+            LICENSE_PARAGRAPH_ID = "licenseParagraph",
+            LICENSE_ELECTRON_PARAGRAPH_ID = "licenseElectronParagraph";
     // ------------------------------------------------------------------------------
     // private functions
     function _compareNames(a, b) {
@@ -65,6 +66,8 @@ define([
         this._aboutLicenseParagraph = this.registerSimpleComponent(LICENSE_PARAGRAPH_ID);
         /** @type SimpleComponent */
         this._aboutUsedSoftwareParagraph = this.registerSimpleComponent(USED_SOFTWARE_PARAGRAPH_ID);
+        /** @type SimpleComponent */
+        this._aboutLicenseElectronParagraph = this.registerSimpleComponent(LICENSE_ELECTRON_PARAGRAPH_ID);
 
     }
     AboutScreen.prototype = new screens.HTMLScreen();
@@ -121,6 +124,15 @@ define([
             assetLicense: _link("https://creativecommons.org/licenses/by/4.0/", "CC BY 4.0"),
             soundLicense: _link("license/sfx-license.txt", strings.get(strings.ABOUT.HERE))
         });
+        if (game.usesElectron()) {
+            this._aboutLicenseElectronParagraph.customizeContent({
+                electron: _link("https://www.electronjs.org", "Electron"),
+                electronLicense: _link("https://github.com/electron/electron/blob/main/LICENSE", strings.get(strings.ABOUT.ELECTRON_LICENSE))
+            });
+            this._aboutLicenseElectronParagraph.show();
+        } else {
+            this._aboutLicenseElectronParagraph.hide();
+        }
         // reversing the order of names if needed based on the current language
         // selecting the names that need to be reversed
         if (strings.getLanguage() === "magyar") {

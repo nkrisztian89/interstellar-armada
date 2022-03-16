@@ -715,6 +715,8 @@
         "licenseHeader": "Licensz",
         "licenseParagraph": "A játék forráskódját (ide értve a HTML, Javascript és CSS fájlokat, a játék konfigurációs beállításait tartalmazó JSON fájlokat és bármely más, ezekhez kapcsolódó szöveges fájlt) Nagy Krisztián készítette, és a {license} licensz alatt kerülnek kiadásra. Ez alól kivételt képez a {requireJS} programkönyvtár, amire az {requireJSLicense} vonatkozik.<br><br>A felhasznált betűtípusok licenszével kapcsolatos információkat itt találod: {sansation} (szerző: Bernd Montag), {aldrich} és {audiowide} (a Google Fonts gyűjteményből). Az Aldrich esetében Nagy Krisztián pár apró módosítást hajtott végre, amiről információt a {fontlog} fájlban találsz.<br><br>A képek, 3D modellek, textúrák és zenei fájlok mind Nagy Krisztián munkái és a {assetLicense} licensz alatt kerülnek kiadásra.<br>A hangeffektekkel kapcsolatos szerzői és licenszinformációkat {soundLicense} találod.",
         "requireJSLicense": "MIT licensz",
+        "licenseElectronParagraph": "A játék jelen verziója az {electron} keretrendszerbe van beágyazva, ami az {electronLicense} alatt elérhető.",
+        "electronLicense": "MIT licensz",
         "here": "itt"
     },
     "setting": {
