@@ -1,0 +1,48 @@
+<div class="innerContainer">
+    <div class="separatorBar">
+        <h1 id="title" class="translatable"></h1>
+    </div>
+    <div class="multiLobby pageContent">
+        <h2 id="gameTitle" class="gameTitle"></h2>
+        <div class="playersContainer">
+            <table class="multiPlayers outerContainer">
+                <thead>
+                    <tr>
+                        <th id="playerNameColumn" class="translatable"></th>
+                        <th>&nbsp;</th>
+                        <th id="spacecraftColumn" class="translatable"></th>
+                        <th id="connectionColumn" class="translatable"></th>
+                        <th id="pingColumn" class="translatable"></th>
+                        <th id="readyColumn" class="translatable"></th>
+                        <th id="kickColumn">&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody id="playersList">
+                </tbody>
+            </table>
+        </div>
+        <div class="settingsContainer">
+            <div id="hostSettings" class="hostSettings">
+            </div>
+            <div id="guestSettings">
+                <span id="locationLabel" class="translatable"></span>&nbsp;<span id="locationValue"></span><br>
+                <span id="loadoutLabel" class="translatable"></span>&nbsp;<span id="loadoutValue"></span>
+            </div>
+        </div>
+        <div class="chatContainer">
+            <div id="chatLog" class="chatLog"></div>
+            <div class="chatMessageContainer">
+                <input id="chatMessage" class="chatMessage" type="text">
+                <span id="remainingMessageChars" class="remainingMessageChars"></span>
+            </div>
+            <button id="chatSend" class="chatSend translatable"></button>
+        </div>
+    </div>
+    <div class="footer separatorBar">
+        <div class="horizontallyCentered horizontalMenu" >
+            <button id="leaveButton" class="translatable"></button>
+            <button id="readyButton" class="translatable"></button>
+            <button id="startButton" class="translatable"></button>
+        </div>
+    </div>
+</div>

@@ -1,8 +1,8 @@
 {
-    "version": "0.4.7-dev:1019 (2022.03.16.)",
+    "version": "0.5.0:1020 (2022.03.16.)",
     "debugVersion": false,
     "logVerbosity": 1,
-    "releases": ["0.4.3", "0.4.4", "0.4.5", "0.4.6"],
+    "releases": ["0.4.3", "0.4.4", "0.4.5", "0.4.6", "0.5.0"],
     "folders": {
         "config": "config/",
         "strings": "{{config}}/strings/",
