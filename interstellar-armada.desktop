@@ -1,9 +1,8 @@
 [Desktop Entry]
 Name=Interstellar Armada: Galactic Ace
-#Comment=Comment for My App
 GenericName=Interstellar Armada
 Exec=interstellar-armada %U
-Icon=${SNAP}/meta/gui/icon-ace.png
+Icon=${SNAP}/meta/gui/interstellar-armada.png
 Type=Application
 StartupNotify=true
 StartupWMClass=InterstellarArmada

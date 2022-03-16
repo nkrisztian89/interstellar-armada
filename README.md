@@ -74,15 +74,21 @@ The project contains the necessary files for the Electron setup, so after this i
 When run this way, the game has some small differences such as a Quit button in the menu to close the application and the
 lack of a fullscreen button (as it will run in fullscreen by default).
 
-The last release of Electron tested with the game: 8.2.0
+The last release of Electron tested with the game: 17.1.2
 
 Snap packaging
 --------------
 
-I have added added the files necessary to create a [snap package](https://snapcraft.io/) out of the game 
-in the `snap` folder. I used Electron to create a standalone version of the app and then packaged it with snapcraft.
-Everything was working in my tests except the sound. (which might be due to bad configuration or the limitations
-of snap at the time I tried)
+Run `npm run snap-build` after you have created a game build to use [electron-builder](https://www.electron.build/) to package the build
+together with Electron into a [Snap](https://snapcraft.io/). The package file and other build artifacts will be generated in the `dist` folder.
+
+To clean the folder up, run `npm run snap-clean`.
+
+Latest versions tested:
+
+Electron: 17.1.2
+
+electron-builder: 22.14.13
 
 License and copyright
 =====================
@@ -94,4 +100,4 @@ details and attributions please do check LICENSE.txt.
 
 Krisztián Nagy
 
-30.11.2021.
+16.03.2022.

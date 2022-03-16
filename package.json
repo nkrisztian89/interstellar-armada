@@ -1,35 +1,72 @@
 {
-  "name": "interstellar-armada",
-  "version": "0.4.7",
-  "description": "The Interstellar Armada WebGL space combat game.",
-  "main": "main.js",
-  "scripts": {
-    "clean": "grunt clean",
-    "lint": "grunt lint",
-    "build": "grunt build",
-    "dev-build": "grunt dev-build",
-    "start": "google-chrome --allow-file-access-from-files --user-data-dir=/tmp file://${INIT_CWD}/index.html#local"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://nkrisztian89@github.com/nkrisztian89/interstellar-armada.git"
-  },
-  "author": "Krisztián Nagy",
-  "license": "GPL-3.0",
-  "bugs": {
-    "url": "https://github.com/nkrisztian89/interstellar-armada/issues"
-  },
-  "devDependencies": {
-    "grunt": "^1.4.1",
-    "grunt-concurrent": "^3.0.0",
-    "grunt-contrib-clean": "^2.0.0",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-requirejs": "^1.0.0",
-    "grunt-contrib-sass": "^2.0.0",
-    "grunt-contrib-watch": "^1.1.0",
-    "grunt-eslint": "^24.0.0",
-    "grunt-json-minify": "^1.1.0",
-    "grunt-replace-lts": "^1.1.0",
-    "grunt-sync": "^0.8.2"
-  }
+    "name": "interstellar-armada",
+    "version": "0.4.7",
+    "description": "Interstellar Armada: Galactic Ace is a mission-based 3D space combat simulator where you take the role of a mercenary fighter pilot. Complete missions to earn fortune and fame and help the rising Empire unite humankind under its flag, or aid the shrinking number of opposing Republic worlds to stop its advance. The game uses Newtonian mechanics with an assisted, six degrees of freedom flight model and supports keyboard, mouse, joystick, gamepad and touch controls.This development version features several training and combat missions, a basic multiplayer mode and support for creating and publishing user-created custom missions. The game is built with open web technologies and is packaged as a standalone app using Electron.",
+    "main": "main.js",
+    "scripts": {
+        "clean": "grunt clean",
+        "lint": "grunt lint",
+        "build": "grunt build",
+        "build-with-editor": "grunt build-with-editor",
+        "dev-build": "grunt dev-build",
+        "start": "google-chrome --allow-file-access-from-files --user-data-dir=/tmp file://${INIT_CWD}/index.html#local",
+        "snap-build": "electron-builder --linux snap",
+        "snap-clean": "grunt clean-snap"
+    },
+    "build": {
+        "appId": "interstellar-armada",
+        "productName": "Interstellar Armada: Galactic Ace",
+        "snap": {
+            "confinement": "strict",
+            "grade": "stable",
+            "title": "Interstellar Armada: Galactic Ace",
+            "summary": "A 3D space combat action/sim game in development.",
+            "plugs": ["desktop", "desktop-legacy", "wayland", "x11", "unity7", "home", "gsettings", "browser-support", "network", "audio-playback", "opengl", "hardware-observe", "joystick"]
+        },
+        "files": [
+            "**/*",
+            "!**/node_modules",
+            "!build{,/**/*}",
+            "!dist{,/**/*}",
+            "!src{,/**/*}",
+            "!nbproject{,/**/*}",
+            "!snap{,/**/*}",
+            "!**/*.{iml,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,suo,xproj,cc,d.ts,pdb}",
+            "!**/._*",
+            "!**/electron-builder.{yaml,yml,json,json5,toml}",
+            "!**/{.git,.hg,.svn,CVS,RCS,SCCS,__pycache__,.DS_Store,thumbs.db,.gitignore,.gitkeep,.gitattributes,.npmignore,.idea,.vs,.flowconfig,.jshintrc,.eslintrc,.circleci,.yarn-integrity,.yarn-metadata.json,yarn-error.log,yarn.lock,package-lock.json,npm-debug.log,appveyor.yml,.travis.yml,circle.yml,.nyc_output,.sass-cache,Gruntfile.js,.eslintignore,.eslintrc.js}",
+            "!.yarn{,/**/*}",
+            "!.editorconfig",
+            "!.yarnrc.yml"
+        ],
+        "linux": {
+            "icon": "./interstellar-armada.png",
+            "desktop": "./interstellar-armada.desktop",
+            "category": "Game"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://nkrisztian89@github.com/nkrisztian89/interstellar-armada.git"
+    },
+    "author": "Krisztián Nagy",
+    "license": "GPL-3.0",
+    "bugs": {
+        "url": "https://github.com/nkrisztian89/interstellar-armada/issues"
+    },
+    "devDependencies": {
+        "electron": "^17.1.2",
+        "electron-builder": "^22.14.13",
+        "grunt": "^1.4.1",
+        "grunt-concurrent": "^3.0.0",
+        "grunt-contrib-clean": "^2.0.0",
+        "grunt-contrib-copy": "^1.0.0",
+        "grunt-contrib-requirejs": "^1.0.0",
+        "grunt-contrib-sass": "^2.0.0",
+        "grunt-contrib-watch": "^1.1.0",
+        "grunt-eslint": "^24.0.0",
+        "grunt-json-minify": "^1.1.0",
+        "grunt-replace-lts": "^1.1.0",
+        "grunt-sync": "^0.8.2"
+    }
 }

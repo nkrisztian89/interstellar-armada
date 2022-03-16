@@ -342,10 +342,11 @@ module.exports = function (grunt) {
             }
         },
         _clean: {
-            full: ["config/", "css/", "data/", "js/"],
+            full: ["config/", "css/", "data/", "js/", "dist/"],
             editor: ["js/editor", "js/editor*"],
             dist: ["js/*", "!js/main.js"],
-            distWithEditor: ["js/*", "!js/main.js", "!js/editor-main.js"]
+            distWithEditor: ["js/*", "!js/main.js", "!js/editor-main.js"],
+            snap: ["dist/"]
         },
         _copy: {
             devData: {
@@ -649,6 +650,7 @@ module.exports = function (grunt) {
     grunt.registerTask('build', ['_concurrent:build']);
     grunt.registerTask('build-with-editor', ['_concurrent:buildWithEditor']);
     grunt.registerTask('clean', ['_clean:full']);
+    grunt.registerTask('clean-snap', ['_clean:snap']);
     grunt.registerTask('lint', ['_eslint']);
     grunt.registerTask('dev-build', ['_concurrent:dev']);
     grunt.registerTask('watch', ['_concurrent:watch']);
