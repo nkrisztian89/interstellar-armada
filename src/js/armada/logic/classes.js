@@ -4821,6 +4821,13 @@ define([
                 types.getVerifiedObject("spacecraftClasses['" + this._name + "'].humSound", dataJSON.humSound, SOUND_EFFECT_3D) :
                 (otherSpacecraftClass ? otherSpacecraftClass._humSound : null);
         /**
+         * The descriptor of the sound effect to be played when this spacecraft collides with a heavier object.
+         * @type Object
+         */
+        this._collisionSound = dataJSON.collisionSound ?
+                types.getVerifiedObject("spacecraftClasses['" + this._name + "'].collisionSound", dataJSON.collisionSound, SOUND_EFFECT_3D) :
+                (otherSpacecraftClass ? otherSpacecraftClass._collisionSound : null);
+        /**
          * The class of the explosion this spacecraft creates when it is destroyed and explodes.
          * @type ExplosionClass
          */
@@ -5129,6 +5136,9 @@ define([
             if (this._humSound) {
                 _loadSoundEffect(this._humSound);
             }
+            if (this._collisionSound) {
+                _loadSoundEffect(this._collisionSound);
+            }
         }
     };
     /**
@@ -5160,6 +5170,16 @@ define([
     SpacecraftClass.prototype.createHumSoundClip = function (soundSource) {
         if (this._humSound) {
             return _createSoundClip(this._humSound, true, soundSource);
+        }
+        return null;
+    };
+    /**
+     * Plays the collision sound effect associated with this class at the passed 3D location
+     * @param {Number[3]} position 3D coordinates for spatial sound (in camera-space)
+     */
+    SpacecraftClass.prototype.playCollisionSound = function (position) {
+        if (this._collisionSound) {
+            _playSoundEffect(this._collisionSound, position);
         }
         return null;
     };

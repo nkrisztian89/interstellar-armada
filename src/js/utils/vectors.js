@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Provides functions that work on arrays of numbers as mathematical vectors.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -916,6 +916,19 @@ define(function () {
         v1[2] += v2[2];
     };
     /**
+     * Adds the translation component of the passed 4x4 matrix m to the passed vector v,
+     * modifying it in-place
+     * @param {Number[3]} v A 3D vector
+     * @param {Float32Array} m A 4x4 matrix
+     * @returns {Number[3]} The modified vector v
+     */
+    vec.addVec3Mat4 = function (v, m) {
+        v[0] += m[12];
+        v[1] += m[13];
+        v[2] += m[14];
+        return v;
+    };
+    /**
      * Modifies the pased 3D vector, setting it to be the difference of the other two passed vectors
      * @param {Number[3]} v The 3D vector to modify
      * @param {Number[3]} v1
@@ -1022,12 +1035,25 @@ define(function () {
      * Multiplies the given 3D row vector by the top left 3x3 submatrix of the given 4x4 matrix from the right, modifying it in-place.
      * @param {Number[3]} v The vector to modify
      * @param {Float32Array} m A 4x4 matrix.
+     * @returns {Number[3]} The modified vector v
      */
     vec.mulVec3Mat4 = function (v, m) {
         var vox = v[0], voy = v[1], voz = v[2];
         v[0] = m[0] * vox + m[4] * voy + m[8] * voz;
         v[1] = m[1] * vox + m[5] * voy + m[9] * voz;
         v[2] = m[2] * vox + m[6] * voy + m[10] * voz;
+        return v;
+    };
+    /**
+     * Multiplies the passed vector with the passed 4x4 model matrix as if it had a w component of value 1
+     * @param {Number[3]} v A 3D vector.
+     * @param {Float32Array} mm A 4x4 model matrix (no projection component)
+     */
+    vec.mulVec3ModelMat4 = function (v, mm) {
+        var vox = v[0], voy = v[1], voz = v[2];
+        v[0] = mm[0] * vox + mm[4] * voy + mm[8] * voz + mm[12];
+        v[1] = mm[1] * vox + mm[5] * voy + mm[9] * voz + mm[13];
+        v[2] = mm[2] * vox + mm[6] * voy + mm[10] * voz + mm[14];
     };
     /**
      * Sets the given vector to be equal to the product of the given 3D row vector and the top left 3x3 submatrix of the the given 4x4 matrix.

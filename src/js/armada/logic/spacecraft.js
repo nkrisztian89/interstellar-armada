@@ -141,6 +141,12 @@ define([
              * @type Number
              */
             MULTI_GUEST_DATA_LENGTH = constants.MULTI_GUEST_DATA_LENGTH,
+            /**
+             * The minimum amount of time that needs to pass between two playbacks of the collision sound effect for the same spacecraft,
+             * in milliseconds
+             * @type Number
+             */
+            MINIMUM_COLLISION_SOUND_INTERVAL = 250,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -553,6 +559,16 @@ define([
          * @type Number
          */
         this._humSoundVolume = 0;
+        /**
+         * Sound clip used for playing the collision sound effect when this spacecraft collides with a heavier one.
+         * @type SoundClip
+         */
+        this._collisionSoundClip = null;
+        /**
+         * The time elapsed since we last started playing the collision sound for this spacecraft, in milliseconds
+         * @type Number 
+         */
+        this._timeSinceCollisionSoundPlayed = 0;
         /**
          * The sound source used to position the sound effects beloning to this spacecraft in 3D sound (=camera) space
          * @type SoundSource
@@ -2745,8 +2761,9 @@ define([
      * @param {Boolean} byMissile Whether the damage was caused by missile hit
      * @param {Number} offset The offset value that was used during the hitcheck (the distance by which
      * the hitbox sides have been extended outward)
+     * @param {Boolean} collision Whether the damage was caused by colliding with something
      */
-    Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy, byMissile, offset) {
+    Spacecraft.prototype.damage = function (damage, damagePosition, damageDir, hitBy, byMissile, offset, collision) {
         var originalHitpoints, i, damageIndicator, hitpointThreshold, exp, liveHit, scoreValue, damageIndicatorPosition, dirToCenter, distToCenter;
         originalHitpoints = this._hitpoints;
         // shield absorbs damage
@@ -2840,7 +2857,7 @@ define([
             hitBy.handleEvent(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._anySpacecraftHitData);
         }
         if (!_isMultiGuest) {
-            if (this.isHostile(hitBy)) {
+            if (!collision && this.isHostile(hitBy)) {
                 hitBy.increaseHitsOnEnemies(byMissile);
             }
         } else {
@@ -2926,6 +2943,16 @@ define([
         this._humSoundClip.rampVolume(this._humSoundVolume, HUM_SOUND_VOLUME_RAMP_DURATION, true, true);
     };
     /**
+     * Plays the collision sound effect corresponding to this spacecraft
+     * @param {Number[3]} position The camera-space coordinates of where the collision happened
+     */
+    Spacecraft.prototype.playCollisionSound = function (position) {
+        if (this._timeSinceCollisionSoundPlayed >= MINIMUM_COLLISION_SOUND_INTERVAL) {
+            this._class.playCollisionSound(position);
+            this._timeSinceCollisionSoundPlayed = 0;
+        }
+    };
+    /**
      * If the spacecraft object was not destroyed upon its destruction (by setting an onDestructed handler returning false), it retains its
      * data and can be respawned (returned to full hitpoints) using this method
      * @param {Boolean} [randomAnimationTime=false] If true, the blinking lights on the spacecraft will be set to a random blinking 
@@ -2994,7 +3021,7 @@ define([
      * of the method
      */
     Spacecraft.prototype.simulate = function (dt, params) {
-        var i, p;
+        var i, p, v;
         if (!this._alive) {
             return;
         }
@@ -3031,6 +3058,9 @@ define([
                     this._activeDamageIndicators[i].finish();
                 }
                 this._activeDamageIndicators.length = 0;
+                v = mat.matrix4Aux(this._physicalModel.getVelocityMatrix());
+                this._physicalModel.reset();
+                this._physicalModel.setVelocity(v[12], v[13], v[14]);
             } else {
                 this._timeElapsedSinceDestruction += dt;
                 if (this._timeElapsedSinceDestruction > (this._class.getExplosionClass().getTotalDuration() * this._class.getShowTimeRatioDuringExplosion())) {
@@ -3072,6 +3102,9 @@ define([
                         this._startHumSound();
                     }
                 }
+            }
+            if (this._timeSinceCollisionSoundPlayed < MINIMUM_COLLISION_SOUND_INTERVAL) {
+                this._timeSinceCollisionSoundPlayed += dt;
             }
         }
         this._physicalModel.simulate(dt);

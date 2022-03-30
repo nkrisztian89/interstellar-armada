@@ -2446,7 +2446,7 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "referenceMass": 2000,
+            "referenceMass": 5000,
             "thrust": 30,
             "angularThrust": 150,
             "maxMoveBurnLevel": 0.5,
@@ -2638,9 +2638,9 @@
             "shader": "particle",
             "texture": "flare",
             "color": [0, 0.8, 1, 1],
-            "referenceMass": 250000000,
+            "referenceMass": 400000000,
             "thrust": 12,
-            "angularThrust": 24,
+            "angularThrust": 12,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
@@ -3445,7 +3445,7 @@
             "model": "box",
             "shader": "ship",
             "texture": "libra",
-            "mass": 500,
+            "mass": 8000,
             "dragFactor": 5,
             "bodies": [{
                     "position": [0, 0, 0],
@@ -3461,6 +3461,10 @@
                     "distanceRange": [6, 25],
                     "position": [0, -10, 0]
                 }],
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.0
+            },
             "explosion": "containerExplosion",
             "showTimeRatioDuringExplosion": 0.25,
             "scoreValue": 5
@@ -3473,7 +3477,7 @@
             "model": "tank",
             "shader": "ship",
             "texture": "libra",
-            "mass": 500,
+            "mass": 8000,
             "dragFactor": 4,
             "bodies": [{
                     "position": [0, 0, 0],
@@ -3489,6 +3493,10 @@
                     "distanceRange": [6, 25],
                     "position": [0, -10, 0]
                 }],
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.0
+            },
             "explosion": "containerExplosion",
             "showTimeRatioDuringExplosion": 0.1,
             "scoreValue": 5
@@ -3961,6 +3969,10 @@
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
+            },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.5
             },
             "explosion": "fighterExplosion",
             "showTimeRatioDuringExplosion": 0.25,
@@ -4480,6 +4492,10 @@
                 "name": "spacecraftHum",
                 "volume": 0.5
             },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.5
+            },
             "explosion": "bomberExplosion",
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
@@ -4669,6 +4685,10 @@
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
+            },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.5
             },
             "explosion": "largeFighterExplosion",
             "showTimeRatioDuringExplosion": 0.3,
@@ -5056,7 +5076,7 @@
             "model": "drone",
             "shader": "ship",
             "texture": "libra",
-            "mass": 2000,
+            "mass": 5000,
             "dragFactor": 0.75,
             "bodies": [{
                     "position": [0, 2, 0.3],
@@ -5257,6 +5277,10 @@
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
+            },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.5
             },
             "explosion": "fighterExplosion",
             "showTimeRatioDuringExplosion": 0.25,
@@ -5629,6 +5653,10 @@
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.75
+            },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 2.5
             },
             "explosion": "smallShipExplosion",
             "showTimeRatioDuringExplosion": 0.25,
@@ -6066,6 +6094,10 @@
                 "name": "spacecraftHum",
                 "volume": 0.75
             },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 2.5
+            },
             "explosion": "smallShipExplosion",
             "showTimeRatioDuringExplosion": 0.48,
             "damageIndicators": [{
@@ -6191,7 +6223,7 @@
             "texture": "libra",
             "factionColor": [0.8, 0.2, 0.2, 1],
             "defaultLuminosityFactors": [[0, 0], [15, 0.5], [16, 1]],
-            "mass": 250000000,
+            "mass": 400000000,
             "lockingTimeFactor": 0.5,
             "bodies": [{
                     "position": [0, 250, 0],
@@ -6671,6 +6703,10 @@
                 "name": "spacecraftHum",
                 "volume": 1.5
             },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 4.0
+            },
             "explosion": "largeShipExplosion",
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
@@ -6895,6 +6931,10 @@
             "humSound": {
                 "name": "spacecraftHum",
                 "volume": 0.5
+            },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.5
             },
             "explosion": "largeFighterExplosion",
             "showTimeRatioDuringExplosion": 0.25,
@@ -7264,6 +7304,10 @@
                 "name": "spacecraftHum",
                 "volume": 0.5
             },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.5
+            },
             "explosion": "fighterExplosion",
             "showTimeRatioDuringExplosion": 0.25,
             "damageIndicators": [{
@@ -7469,6 +7513,10 @@
                     "distanceRange": [30, 70],
                     "position": [0, -50, 0]
                 }],
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.0
+            },
             "explosion": "fighterExplosion",
             "showTimeRatioDuringExplosion": 0.32,
             "scoreValue": 0,
@@ -7580,6 +7628,10 @@
                     "distanceRange": [30, 70],
                     "position": [0, -50, 0]
                 }],
+            "collisionSound": {
+                "name": "collision",
+                "volume": 2.0
+            },
             "explosion": "smallStationExplosion",
             "showTimeRatioDuringExplosion": 0.32,
             "scoreValue": 50,

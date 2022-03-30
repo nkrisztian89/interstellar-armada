@@ -630,7 +630,7 @@ define([
     Projectile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
         var exp, power;
         power = Math.min(this._timeLeft / this._class.getDissipationDuration(), 1);
-        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
+        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, 1, _momentDuration);
         exp = explosion.getExplosion();
         exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, true, physicalHitObject.getVelocityMatrix());
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObject.getSoundSource(), true);
@@ -1537,7 +1537,7 @@ define([
      * @param {Number} offset
      */
     Missile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
-        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000 / _momentDuration, _momentDuration);
+        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000 / _momentDuration, 1, _momentDuration);
         this._destruct(
                 ((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()),
                 mat.translation4vAux(hitPositionVectorInWorldSpace),
@@ -2147,6 +2147,7 @@ define([
                                 this._spacecraft.getPhysicalPositionMatrix()),
                         mat.getRowB43Neg(projectileOriMatrix),
                         barrels[i].getForceForDuration(_momentDuration),
+                        1,
                         _momentDuration
                         );
                 result++;
@@ -2717,6 +2718,7 @@ define([
                     tubePosVector,
                     mat.getRowB43Neg(missileOriMatrix),
                     this._class.getForceForDuration(_momentDuration),
+                    1,
                     _momentDuration
                     );
             if (!shipSoundSource) {

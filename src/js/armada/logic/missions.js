@@ -8,6 +8,7 @@
 /**
  * @param utils Used for format strings and useful constants
  * @param types Used for type checking when loading from local storage
+ * @param vec Vectors are used for collision calculations
  * @param mat Matrices are widely used for 3D simulation
  * @param application Used for file loading and logging functionality
  * @param asyncResource LogicContext is a subclass of AsyncResource
@@ -37,6 +38,7 @@
 define([
     "utils/utils",
     "utils/types",
+    "utils/vectors",
     "utils/matrices",
     "modules/application",
     "modules/async-resource",
@@ -64,7 +66,7 @@ define([
     "armada/logic/missions/events",
     "utils/polyfill"
 ], function (
-        utils, types, mat,
+        utils, types, vec, mat,
         application, asyncResource, resourceManager, resources, pools, egomModel, physics,
         camera, renderableObjects,
         constants, control, graphics, classes, config, strings,
@@ -107,6 +109,12 @@ define([
             NUMBERED_FACTION_NAME = "numbered",
             GRID_MODEL_NAME = "grid",
             MARKER_MODEL_NAME = "marker",
+            /**
+             * The damage spacecrafts suffer from collisions is calculated as the square of the relative velocity (in m/s) multiplied
+             * by this factor (and it cannot exceed the maximum hitpoints of either of the ships)
+             * @type Number
+             */
+            COLLISION_DAMAGE_FACTOR = 0.00025,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -1808,7 +1816,7 @@ define([
      * @param {Boolean} [multi=false] Whether the game is multiplayer
      */
     Mission.prototype.tick = function (dt, mainScene, multi) {
-        var i, v, octree, index;
+        var i, j, v, octree, index, collision, collA, collB, collisionDamage, collisionPosition;
         if (this._environment) {
             this._environment.simulate();
         }
@@ -1840,6 +1848,26 @@ define([
                 }
             } else if (_showHitboxesForHitchecks) {
                 this._spacecrafts[i].hideHitbox();
+            }
+        }
+        // collision detection between spacecrafts
+        for (i = 0; i < this._spacecrafts.length - 1; i++) {
+            if ((this._spacecrafts[i].getHitpoints() > 0) && !this._spacecrafts[i].isAway()) {
+                for (j = i + 1; j < this._spacecrafts.length; j++) {
+                    if ((this._spacecrafts[j].getHitpoints() > 0) && !this._spacecrafts[j].isAway()) {
+                        collision = this._spacecrafts[i].getPhysicalModel().checkCollision(this._spacecrafts[j].getPhysicalModel(), dt);
+                        if (collision) {
+                            collA = this._spacecrafts[collision.reverse ? j : i];
+                            collB = this._spacecrafts[collision.reverse ? i : j];
+                            collisionDamage = Math.min(Math.min(collision.magnitude * collision.magnitude * COLLISION_DAMAGE_FACTOR, this._spacecrafts[i].getClass().getHitpoints()), this._spacecrafts[j].getClass().getHitpoints());
+                            collisionPosition = vec.prodVec4Mat4Aux(collision.position, collA.getPhysicalModel().getModelMatrix());
+                            collA.damage(collisionDamage, collision.position, vec.scaled3(collision.direction, -1), collB, false, 0, true);
+                            collB.damage(collisionDamage, vec.prodVec4Mat4Aux(collisionPosition, collB.getPhysicalModel().getModelMatrixInverse()), vec.normal3(vec.prodVec3Mat4Aux(vec.prodVec3Mat4Aux(collision.direction, collA.getPhysicalOrientationMatrix()), collB.getPhysicalModel().getRotationMatrixInverse())), collA, false, 0, true);
+                            vec.mulVec3ModelMat4(collisionPosition, mainScene.getCamera().getViewMatrix());
+                            ((collA.getClass().getMass() <= collB.getClass().getMass()) ? collA : collB).playCollisionSound(collisionPosition);
+                        }
+                    }
+                }
             }
         }
         if (_projectilePool.hasLockedObjects()) {

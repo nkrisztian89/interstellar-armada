@@ -252,6 +252,27 @@ define([
         ]);
     };
     /**
+     * Return a 3x3 matrix comprised of the first 9 elements of the passed array.
+     * Uses one of the auxiliary matrices instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array|Number[9]} m
+     * @returns {Float32Array}
+     */
+    mat.matrix3Aux = function (m) {
+        var aux = _auxMatrices3[_auxMatrix3Index];
+        aux[0] = m[0];
+        aux[1] = m[1];
+        aux[2] = m[2];
+        aux[3] = m[3];
+        aux[4] = m[4];
+        aux[5] = m[5];
+        aux[6] = m[6];
+        aux[7] = m[7];
+        aux[8] = m[8];
+        aux[9] = m[9];
+        _auxMatrix3Index = (_auxMatrix3Index + 1) % AUX_MATRIX_COUNT;
+        return aux;
+    };
+    /**
      * Return a 4x4 matrix comprised of the first 16 elements of the passed array.
      * @param {Float32Array|Number[16]} m
      * @returns {Float32Array}
@@ -1408,6 +1429,19 @@ define([
         return aux;
     };
     /**
+     * Transposes the passed 3x3 matrix, modifying it in-place.
+     * @param {Float32Array} m
+     */
+    mat.transpose3 = function (m) {
+        var m1 = m[1], m2 = m[2], m5 = m[5];
+        m[1] = m[3];
+        m[3] = m1;
+        m[2] = m[6];
+        m[6] = m2;
+        m[5] = m[7];
+        m[7] = m5;
+    };
+    /**
      * Returns the inverse of the passed 3x3 matrix m.
      * @param {Float32Array} m A 3x3 matrix.
      * @returns {Float32Array} The inverse of m.
@@ -2537,6 +2571,32 @@ define([
         _releaseTempMatrix(index);
     };
     /**
+     * Multiples the given 3x3 matrix m1 in-place by the 3x3 matrix m2 from the right
+     * multiple times.
+     * @param {Float32Array} m1
+     * @param {Float32Array} m2
+     * @param {Number} count The number of times to repeat the multiplication
+     */
+    mat.mul3multi = function (m1, m2, count) {
+        var
+                i,
+                index = _getFreeTempMatrixIndex(),
+                mt = _getTempMatrix(index);
+        for (i = 0; i < count; i++) {
+            mat.setMatrix3(mt, m1);
+            m1[0] = mt[0] * m2[0] + mt[1] * m2[3] + mt[2] * m2[6];
+            m1[1] = mt[0] * m2[1] + mt[1] * m2[4] + mt[2] * m2[7];
+            m1[2] = mt[0] * m2[2] + mt[1] * m2[5] + mt[2] * m2[8];
+            m1[3] = mt[3] * m2[0] + mt[4] * m2[3] + mt[5] * m2[6];
+            m1[4] = mt[3] * m2[1] + mt[4] * m2[4] + mt[5] * m2[7];
+            m1[5] = mt[3] * m2[2] + mt[4] * m2[5] + mt[5] * m2[8];
+            m1[6] = mt[6] * m2[0] + mt[7] * m2[3] + mt[8] * m2[6];
+            m1[7] = mt[6] * m2[1] + mt[7] * m2[4] + mt[8] * m2[7];
+            m1[8] = mt[6] * m2[2] + mt[7] * m2[5] + mt[8] * m2[8];
+        }
+        _releaseTempMatrix(index);
+    };
+    /**
      * Multiples the given 4x4 matrix m1 in place by the 4x4 matrix m2 from the right.
      * @param {Float32Array} m1
      * @param {Float32Array} m2
@@ -2641,6 +2701,33 @@ define([
         _releaseTempMatrix(index);
     };
     /**
+     * Modifies the passed 4x4 rotation matrix is place, multiplying it with the passed 3x3 matrix
+     * padded to a 4x4 matrix (complemented as an identity matrix, with a 0,0,0,1 last row/column)
+     * multiple times.
+     * @param {Float32Array} m4 A 4x4 rotation matrix
+     * @param {Float32Array} m3 A 3x3 matrix
+     * @param {Number} count The number of times to repeat the multiplication
+     */
+    mat.mulRotation43Multi = function (m4, m3, count) {
+        var
+                i,
+                index = _getFreeTempMatrixIndex(),
+                mt = _getTempMatrix(index);
+        for (i = 0; i < count; i++) {
+            mat.setMatrix4(mt, m4);
+            m4[0] = mt[0] * m3[0] + mt[1] * m3[3] + mt[2] * m3[6];
+            m4[1] = mt[0] * m3[1] + mt[1] * m3[4] + mt[2] * m3[7];
+            m4[2] = mt[0] * m3[2] + mt[1] * m3[5] + mt[2] * m3[8];
+            m4[4] = mt[4] * m3[0] + mt[5] * m3[3] + mt[6] * m3[6];
+            m4[5] = mt[4] * m3[1] + mt[5] * m3[4] + mt[6] * m3[7];
+            m4[6] = mt[4] * m3[2] + mt[5] * m3[5] + mt[6] * m3[8];
+            m4[8] = mt[8] * m3[0] + mt[9] * m3[3] + mt[10] * m3[6];
+            m4[9] = mt[8] * m3[1] + mt[9] * m3[4] + mt[10] * m3[7];
+            m4[10] = mt[8] * m3[2] + mt[9] * m3[5] + mt[10] * m3[8];
+        }
+        _releaseTempMatrix(index);
+    };
+    /**
      * Multiples the given 4x4 rotation matrix m1 in place by the 4x4 rotation matrix m2 from the right.
      * @param {Float32Array} m1
      * @param {Float32Array} m2
@@ -2731,6 +2818,23 @@ define([
         m[15] = 1;
     };
     /**
+     * Modifies a 3x3 matrix in-place to be equal to the product of the upper left 3x3 submatrices of two 4x4 matrices.
+     * @param {Float32Array} m The 3x3 matrix to modify
+     * @param {Float32Array} m1 The 4x4 matrix on the left of the multiplicaton.
+     * @param {Float32Array} m2 The 4x4 matrix on the right of the multiplicaton.
+     */
+    mat.setProd3x3SubOf43 = function (m, m1, m2) {
+        m[0] = m1[0] * m2[0] + m1[1] * m2[4] + m1[2] * m2[8];
+        m[1] = m1[0] * m2[1] + m1[1] * m2[5] + m1[2] * m2[9];
+        m[2] = m1[0] * m2[2] + m1[1] * m2[6] + m1[2] * m2[10];
+        m[3] = m1[4] * m2[0] + m1[5] * m2[4] + m1[6] * m2[8];
+        m[4] = m1[4] * m2[1] + m1[5] * m2[5] + m1[6] * m2[9];
+        m[5] = m1[4] * m2[2] + m1[5] * m2[6] + m1[6] * m2[10];
+        m[6] = m1[8] * m2[0] + m1[9] * m2[4] + m1[10] * m2[8];
+        m[7] = m1[8] * m2[1] + m1[9] * m2[5] + m1[10] * m2[9];
+        m[8] = m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10];
+    };
+    /**
      * Modifies a 4x4 scaling matrix in-place to be equal to the product of two 4x4 sacling matrices.
      * @param {Float32Array} m The 4x4 scaling matrix to modify
      * @param {Float32Array} m1 The 4x4 scaling matrix on the left of the multiplicaton.
@@ -2765,6 +2869,30 @@ define([
         m[12] = r[0] * t[12] + r[4] * t[13] + r[8] * t[14];
         m[13] = r[1] * t[12] + r[5] * t[13] + r[9] * t[14];
         m[14] = r[2] * t[12] + r[6] * t[13] + r[10] * t[14];
+        m[15] = 1;
+    };
+    /**
+     * Multiplies a 4x4 scaling matrix with a 4x4 rotation matrix.
+     * @param {Float32Array} m A 4x4 matrix to save the result of the multiplication to.
+     * @param {Float32Array} sm The 4x4 scaling matrix on the left of the multiplicaton.
+     * @param {Float32Array} rm The 4x4 rotation matrix on the right of the multiplicaton.
+     */
+    mat.setProdScalingRotation = function (m, sm, rm) {
+        m[0] = sm[0] * rm[0];
+        m[1] = sm[0] * rm[1];
+        m[2] = sm[0] * rm[2];
+        m[3] = 0;
+        m[4] = sm[5] * rm[4];
+        m[5] = sm[5] * rm[5];
+        m[6] = sm[5] * rm[6];
+        m[7] = 0;
+        m[8] = sm[10] * rm[8];
+        m[9] = sm[10] * rm[9];
+        m[10] = sm[10] * rm[10];
+        m[11] = 0;
+        m[12] = 0;
+        m[13] = 0;
+        m[14] = 0;
         m[15] = 1;
     };
     /**

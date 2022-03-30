@@ -1627,6 +1627,9 @@
             "name": "shieldHit",
             "samples": ["explosion/shield-hit.ogg"]
         }, {
+            "name": "collision",
+            "samples": ["spacecraft/collision.ogg"]
+        }, {
             "name": "containerExplosion",
             "samples": ["explosion/container-explosion.ogg"]
         }, {

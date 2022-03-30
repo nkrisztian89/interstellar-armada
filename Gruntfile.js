@@ -171,7 +171,9 @@ module.exports = function (grunt) {
                 ["custom", "is"],
                 ["dragFactor"],
                 ["angularDrag"],
-                ["vibrationEnabled", "is"]
+                ["vibrationEnabled", "is"],
+                ["hitDistance"],
+                ["points"]
             ].map(
             function (replacement) {
                 // create the replacements for each simple getter

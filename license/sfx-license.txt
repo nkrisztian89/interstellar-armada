@@ -3,7 +3,9 @@ the sound effects used in the Interstellar Armada: Galactic Ace game.
 
 More information about the licenses referred here:
 CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+CC BY-NC 4.0: https://creativecommons.org/licenses/by-nc/4.0/
 CC BY 3.0: https://creativecommons.org/licenses/by/3.0/
+CC BY-NC 3.0: https://creativecommons.org/licenses/by-nc/3.0/
 CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
 
 More information about the tools mentioned:
@@ -149,6 +151,20 @@ Copyright: freesound user Electroviolence, license: CC0 1.0
 
 http://freesound.org/people/qubodup/sounds/146770/
 Copyright: freesound user qubodup, license: CC0 1.0
+
+---
+
+spacecraft/collision.ogg
+
+Edited by Krisztián Nagy with Audacity
+License: CC BY-NC 4.0
+Created (edited and mixed) from the following sound effects:
+
+https://freesound.org/people/bareform/sounds/218721
+Copyright: freesound user bareform, license: CC BY-NC 3.0
+
+https://freesound.org/people/CGEffex/sounds/93835
+Copyright: freesound user CGEffex, license: CC BY-NC 3.0
 
 ---
 

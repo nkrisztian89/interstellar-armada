@@ -2788,6 +2788,12 @@ define([
                     optional: true,
                     defaultText: "none"
                 },
+                COLLISION_SOUND: {
+                    name: "collisionSound",
+                    type: SOUND_DESCRIPTOR,
+                    optional: true,
+                    defaultText: "none"
+                },
                 EXPLOSION: {
                     name: "explosion",
                     type: EXPLOSION_CLASS_REFERENCE
