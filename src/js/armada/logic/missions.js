@@ -1581,9 +1581,7 @@ define([
                 friendly, friendlyColor, hostileColor, markerColor, callback,
                 white = [1, 1, 1],
                 getSpacecraftColor;
-        if (this._environment) {
-            this._environment.addToScene(battleScene);
-        }
+        this._environment.addToScene(battleScene);
         if (preview) {
             // add grids
             graphics.getShader(previewParams.gridShaderName);
@@ -1817,9 +1815,7 @@ define([
      */
     Mission.prototype.tick = function (dt, mainScene, multi) {
         var i, j, v, octree, index, collision, collA, collB, collisionDamage, collisionPosition;
-        if (this._environment) {
-            this._environment.simulate();
-        }
+        this._environment.simulate();
         for (i = 0; i < this._actionQueue.length; i++) {
             this._actionQueue[i].delay -= dt;
             if (this._actionQueue[i].delay <= 0) {

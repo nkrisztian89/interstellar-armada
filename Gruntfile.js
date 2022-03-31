@@ -173,7 +173,13 @@ module.exports = function (grunt) {
                 ["angularDrag"],
                 ["vibrationEnabled", "is"],
                 ["hitDistance"],
-                ["points"]
+                ["points"],
+                ["playerHitpointsFactor"],
+                ["friendlyHitpointsFactor"],
+                ["enemyReactionTimeFactor"],
+                ["playerSelfDamage"],
+                ["playerFriendlyFireDamage"],
+                ["hitboxOffset"]
             ].map(
             function (replacement) {
                 // create the replacements for each simple getter
@@ -503,6 +509,9 @@ module.exports = function (grunt) {
                             replacement: '//'
                         }, {
                             match: 'if (this._hitbox) {',
+                            replacement: 'if (false) {'
+                        }, {
+                            match: 'if (_showHitboxesForHitchecks) {',
                             replacement: 'if (false) {'
                         }
                     ]))))),

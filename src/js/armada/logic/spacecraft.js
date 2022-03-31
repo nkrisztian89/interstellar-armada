@@ -1471,7 +1471,7 @@ define([
         if (!this._relativeVelocityMatrixValid) {
             mat.setProdTranslationRotation4(this._relativeVelocityMatrix,
                     this._physicalModel.getVelocityMatrix(),
-                    mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
+                    this._physicalModel.getRotationMatrixInverse());
             this._relativeVelocityMatrixValid = true;
         }
         return this._relativeVelocityMatrix;
@@ -1486,7 +1486,7 @@ define([
                     mat.prod3x3SubOf4Aux(
                             this._physicalModel.getOrientationMatrix(),
                             this._physicalModel.getVelocityMatrix()),
-                    mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
+                    this._physicalModel.getRotationMatrixInverse());
             this._turningMatrixValid = true;
         }
         return this._turningMatrix;

@@ -487,7 +487,7 @@ define([
         if (this._rotated) {
             // we should not modify relativePositionVector, so creating a new one instead of multiplying in-place
             relativePositionVector = vec.prodVec4Mat4Aux(relativePositionVector, this.getModelMatrixInverse());
-            relativeDirectionVector = vec.prodVec3Mat3Aux(relativeDirectionVector, mat.matrix3from4Aux(mat.inverseOfRotation4Aux(this._orientationMatrix)));
+            relativeDirectionVector = vec.prodVec3Mat4Aux(relativeDirectionVector, mat.inverseOfRotation4Aux(this._orientationMatrix));
         } else {
             // we should not modify relativePositionVector, so creating a new one instead of subtracting in-place
             relativePositionVector = vec.diff3Aux(relativePositionVector, this._positionVector);
@@ -1260,26 +1260,27 @@ define([
      * @param {Number[3]} positionVector A 3D vector describing the position of the point in world space. (in meters)
      * @param {Number[3]} velocityVector The vector in world space that describes the velocity of the travelling object in m/s.
      * @param {Number} dt The time interval in milliseconds within which to check for the hit.
-     * @param {Number} [offset=0] If given, the bounderies of (all the bodies of) the object are offset (the size increased) by this amount
+     * @param {Number} offset The bounderies of (all the bodies of) the object are offset (the size increased) by this amount
      * (meters in world space)
      * @returns {Number[4]|null} If the object has hit, the intersection point where the hit happened in object space, otherwise null.
      */
     PhysicalObject.prototype.checkHit = function (positionVector, velocityVector, dt, offset) {
-        var relativePos, relativeVelocityVector, i, range, result = null;
-        offset = offset || 0;
+        var i, range, result = null;
         offset *= this._inverseScalingFactor;
         // transforms the position to object-space for preliminary check
-        relativePos = vec.prodVec4Mat4Aux(vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
+        vec.setProdVec4Mat4(_auxVector, vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
-        relativeVelocityVector = vec.diffVec3Mat4(velocityVector, this._velocityMatrix);
-        i = vec.extractLength3(relativeVelocityVector);
+        _auxVector2[0] = velocityVector[0] - this._velocityMatrix[12];
+        _auxVector2[1] = velocityVector[1] - this._velocityMatrix[13];
+        _auxVector2[2] = velocityVector[2] - this._velocityMatrix[14];
+        i = vec.extractLength3(_auxVector2);
         range = i * dt * 0.001 * this._inverseScalingFactor;
         // first, preliminary check based on position relative to the whole object
-        if ((Math.abs(relativePos[0]) - range < this._bodySize + offset) && (Math.abs(relativePos[1]) - range < this._bodySize + offset) && (Math.abs(relativePos[2]) - range < this._bodySize + offset)) {
+        if ((Math.abs(_auxVector[0]) - range < this._bodySize + offset) && (Math.abs(_auxVector[1]) - range < this._bodySize + offset) && (Math.abs(_auxVector[2]) - range < this._bodySize + offset)) {
             // if it is close enough to be hitting one of the bodies, check them
-            vec.mulVec3Mat3(relativeVelocityVector, mat.matrix3from4Aux(this.getRotationMatrixInverse()));
+            vec.mulVec3Mat4(_auxVector2, this.getRotationMatrixInverse());
             for (i = 0; (result === null) && (i < this._bodies.length); i++) {
-                result = this._bodies[i].checkHit(relativePos, relativeVelocityVector, range, offset);
+                result = this._bodies[i].checkHit(_auxVector, _auxVector2, range, offset);
             }
         }
         return result;
