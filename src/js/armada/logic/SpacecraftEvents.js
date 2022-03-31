@@ -96,6 +96,8 @@ define(function () {
         TARGET_FIRED: "targetFired",
         /** The spacecraft fires. */
         FIRED: "fired",
+        /** The spacecraft collides with another */
+        COLLIDED: "collided",
         /** The spacecraft is destructed (gets to the point in its explosion where the spacecraft should no longer be visible) */
         /** The handler of this event should return a boolean, determining whether the spacecraft object should be destroyed (true) or kept 
          * (false, in which case it can be respawned later - e.g. for the spacecraft preview in the editor)*/

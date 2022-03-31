@@ -3277,6 +3277,9 @@ define([
                         (parent.type === ConditionType.GETS_TARGETED) ||
                         (parent.type === ConditionType.IS_TARGETED));
             },
+            _hasWithParam = function (data, parent) {
+                return !!parent && (parent.type === ConditionType.COLLISION);
+            },
             _parentIsAwayCondition = function (data, parent) {
                 return !!parent && (parent.type === ConditionType.AWAY);
             },
@@ -3350,6 +3353,10 @@ define([
                             result = instance.which + ", ";
                         }
                         return result + "by " + SUBJECT_GROUP.getPreviewText(instance.by);
+                    }
+                    // CollisionCondition params:
+                    if (instance.with !== undefined) {
+                        return result + "with " + SUBJECT_GROUP.getPreviewText(instance.with);
                     }
                     // DestroyedCondition/AwayCondition params:
                     if (instance.which) {
@@ -3473,6 +3480,14 @@ define([
                         isValid: _hasByParam,
                         defaultText: "any"
                     },
+                    // CollisionCondition params:
+                    WITH: {
+                        name: "with",
+                        type: SUBJECT_GROUP,
+                        optional: true,
+                        isValid: _hasWithParam,
+                        defaultText: "any"
+                    },
                     // AwayCondition params:
                     AWAY: {
                         name: "away",
@@ -3504,6 +3519,7 @@ define([
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
                         (data.type === ConditionType.DISTANCE) ||
                         (data.type === ConditionType.HIT) ||
+                        (data.type === ConditionType.COLLISION) ||
                         (data.type === ConditionType.AWAY) ||
                         (data.type === ConditionType.ON_TEAM) ||
                         (data.type === ConditionType.GETS_TARGETED) ||
@@ -3517,6 +3533,7 @@ define([
                         (data.type === ConditionType.SHIELD_INTEGRITY) ||
                         (data.type === ConditionType.DISTANCE) ||
                         (data.type === ConditionType.HIT) ||
+                        (data.type === ConditionType.COLLISION) ||
                         (data.type === ConditionType.AWAY) ||
                         (data.type === ConditionType.ON_TEAM) ||
                         (data.type === ConditionType.MISSION_STATE) ||
@@ -3575,6 +3592,8 @@ define([
                                         "incomplete distance condition";
                             case ConditionType.HIT:
                                 return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " hit" + ((instance.params && instance.params.by) ? " " + CONDITION_PARAMS.getPreviewText(instance.params, instance) : "");
+                            case ConditionType.COLLISION:
+                                return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " collides" + ((instance.params && instance.params.with) ? " " + CONDITION_PARAMS.getPreviewText(instance.params, instance) : "");
                             case ConditionType.AWAY:
                                 return SUBJECT_GROUP.getPreviewText(instance.subjects || utils.EMPTY_OBJECT, instance) + " " +
                                         ((!instance.params || (instance.params.away !== false)) ? "away" : "present");

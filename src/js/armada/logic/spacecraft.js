@@ -2849,12 +2849,16 @@ define([
         this._hitData.spacecraft = hitBy;
         this._hitData.hitPosition = damagePosition;
         this._hitData.hullDamage = damage;
-        this.handleEvent(SpacecraftEvents.BEING_HIT, this._hitData);
-        if (hitBy.isAlive() && !hitBy.isAway()) {
-            if (hitBy.getTarget() === this) {
-                hitBy.handleEvent(SpacecraftEvents.TARGET_HIT);
+        if (collision) {
+            this.handleEvent(SpacecraftEvents.COLLIDED, this._hitData);
+        } else {
+            this.handleEvent(SpacecraftEvents.BEING_HIT, this._hitData);
+            if (hitBy.isAlive() && !hitBy.isAway()) {
+                if (hitBy.getTarget() === this) {
+                    hitBy.handleEvent(SpacecraftEvents.TARGET_HIT);
+                }
+                hitBy.handleEvent(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._anySpacecraftHitData);
             }
-            hitBy.handleEvent(SpacecraftEvents.ANY_SPACECRAFT_HIT, this._anySpacecraftHitData);
         }
         if (!_isMultiGuest) {
             if (!collision && this.isHostile(hitBy)) {

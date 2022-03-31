@@ -39,6 +39,8 @@ define([
                 DISTANCE: "distance",
                 /** This condition is evaluated true whenever its subjects are getting hit */
                 HIT: "hit",
+                /** This condition is evaluated true whenever its subjects collide */
+                COLLISION: "collision",
                 /** This condition is evaluated true based on whether any/all of its subjects are away */
                 AWAY: "away",
                 /** This condition is evaluated true when any/all of its subjects are on a the specified team */
@@ -1351,6 +1353,104 @@ define([
     };
     // ##############################################################################
     /**
+     * @class A condition that is satisfied when the subjects collide (for the simulation
+     * steps when a collision is detected)
+     * @extends Condition
+     * @param {Object} dataJSON
+     * @param {Mission} [mission]
+     */
+    function CollisionCondition(dataJSON, mission) {
+        var i, spacecrafts, callback;
+        Condition.call(this, dataJSON);
+        /**
+         * @type Boolean
+         */
+        this._satisfied = false;
+        if (mission && this._subjects) {
+            spacecrafts = this._subjects.getSpacecrafts(mission);
+            if (spacecrafts && (spacecrafts.length > 0)) {
+                callback = this._handleCollision.bind(this, (this._params && this._params.with) ? new SubjectGroup(this._params.with).getSpacecrafts(mission) : null);
+                for (i = 0; i < spacecrafts.length; i++) {
+                    spacecrafts[i].addEventHandler(SpacecraftEvents.COLLIDED, callback);
+                }
+            }
+        }
+    }
+    CollisionCondition.prototype = new Condition();
+    CollisionCondition.prototype.constructor = CollisionCondition;
+    /**
+     * @typedef CollisionCondition~Params
+     * @property {Object} [with] The condition is satisfied if the subjects collide with spacecrafts
+     * from the SubjectGroup defined by this parameter
+     */
+    /**
+     * @param {CollisionCondition~Params} params 
+     * @returns {Boolean}
+     */
+    CollisionCondition.prototype._checkParams = function (params) {
+        /**
+         * @type CollisionCondition~Params
+         */
+        this._params = params;
+        return true;
+    };
+    /**
+     * @param {Spacecraft[]} spacecrafts The list of spacecrafts which should satisfy the condition
+     * if the collision is with them
+     * @param {SpacecraftEvents~BeingHitData} data The collision event data
+     */
+    CollisionCondition.prototype._handleCollision = function (spacecrafts, data) {
+        if (!spacecrafts || spacecrafts.indexOf(data.spacecraft) >= 0) {
+            this._satisfied = true;
+        }
+    };
+    /**
+     * @param {Mission} mission
+     * @param {Number} dt
+     * @returns {Boolean}
+     */
+    CollisionCondition.prototype.isSatisfied = function (mission, dt) {
+        var satisfied = this._satisfied;
+        if (dt > 0) {
+            this._satisfied = false;
+        }
+        return satisfied;
+    };
+    /**
+     * @returns {String}
+     */
+    CollisionCondition.prototype.getObjectiveString = function () {
+        application.showError("Collision conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {String}
+     */
+    CollisionCondition.prototype.getObjectiveStateString = function () {
+        application.showError("Collision conditions cannot be used as win/lose conditions!");
+        return null;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    CollisionCondition.prototype.getTargetSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @returns {Spacecraft[]}
+     */
+    CollisionCondition.prototype.getEscortedSpacecrafts = function () {
+        return utils.EMPTY_ARRAY;
+    };
+    /**
+     * @override
+     * @returns {Boolean}
+     */
+    CollisionCondition.prototype.canChangeMultipleTimes = function () {
+        return true;
+    };
+    // ##############################################################################
+    /**
      * @class A condition that is satisfied based on whether any/all of its subjects
      * are away
      * @extends Condition
@@ -1817,6 +1917,7 @@ define([
     _conditionConstructors[ConditionType.SHIELD_INTEGRITY] = ShieldIntegrityCondition;
     _conditionConstructors[ConditionType.DISTANCE] = DistanceCondition;
     _conditionConstructors[ConditionType.HIT] = HitCondition;
+    _conditionConstructors[ConditionType.COLLISION] = CollisionCondition;
     _conditionConstructors[ConditionType.AWAY] = AwayCondition;
     _conditionConstructors[ConditionType.ON_TEAM] = OnTeamCondition;
     _conditionConstructors[ConditionType.MISSION_STATE] = MissionStateCondition;
