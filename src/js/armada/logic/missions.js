@@ -1248,7 +1248,7 @@ define([
      * and a suitable AI is added to all spacecrafts if possible.
      */
     Mission.prototype.loadFromJSON = function (dataJSON, difficulty, demoMode) {
-        var i, j, craft, teamID, team, aiType, actions, count, factor, spacecrafts;
+        var i, j, craft, teamID, team, aiType, actions, count, factor, spacecrafts, vibrateCallback;
         application.log_DEBUG("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
@@ -1284,9 +1284,11 @@ define([
             if (!demoMode && spacecrafts[i].piloted) {
                 this._pilotedCraft = craft;
                 craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
-                craft.addEventHandler(SpacecraftEvents.BEING_HIT, function (pilotedCraft, hitData) {
+                vibrateCallback = function (pilotedCraft, hitData) {
                     control.getInputInterpreter(control.GAMEPAD_NAME).vibrate((pilotedCraft.getHullIntegrity() <= 0) ? "destroyed" : (hitData.hullDamage > 0) ? "hull-hit" : "shield-hit");
-                }.bind(this, craft));
+                }.bind(this, craft);
+                craft.addEventHandler(SpacecraftEvents.BEING_HIT, vibrateCallback);
+                craft.addEventHandler(SpacecraftEvents.COLLIDED, vibrateCallback);
             }
             if (spacecrafts[i].multi) {
                 craft.setAsMultiControlled(spacecrafts[i].piloted, i);
