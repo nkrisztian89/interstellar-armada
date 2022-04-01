@@ -2478,7 +2478,7 @@ define([
             if (this._missileLaunchers[this._activeMissileLauncherIndex].getMissileClass() === missileClass) {
                 this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(salvo);
             } else {
-                this._missileLaunchers[this._activeMissileLauncherIndex].setMinimumCooldown(config.getBattleSetting(config.BATTLE_SETTINGS.MISSILE_AUTO_CHANGE_COOLDOWN));
+                this._missileLaunchers[this._activeMissileLauncherIndex].setMinimumCooldown(config.getSetting(config.BATTLE_SETTINGS.MISSILE_AUTO_CHANGE_COOLDOWN));
                 if (config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE)) {
                     this._missileLaunchers[this._activeMissileLauncherIndex].setSalvoMode(true);
                 }

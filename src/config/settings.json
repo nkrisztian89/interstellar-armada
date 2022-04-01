@@ -198,7 +198,7 @@
             "defaultShipViewName": "near",
             "defaultShipViewNameOptions": ["near", "far", "target"],
             "targetViewName": "target",
-            "targetChangeTransitonDuration": 300,
+            "targetChangeTransitionDuration": 300,
             "targetChangeTransitionStyle": "smooth",
             "targetOrderDuration": 750,
             "jumpPrepareViewName": "jump",

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1009,7 +1009,7 @@ define([
          * The duration of camera transitions of target views when the target is changed, in milliseconds
          */
         TARGET_CHANGE_TRANSITION_DURATION: {
-            name: "targetChangeTransitonDuration",
+            name: "targetChangeTransitionDuration",
             type: types.DURATION,
             defaultValue: 300
         },
@@ -1936,8 +1936,8 @@ define([
      */
     ConfigurationContext.prototype.getDefaultCamerConfigurationName = function (spacecraft) {
         return spacecraft.isFighter() ?
-                        this.getBattleSetting(BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME) :
-                        this.getBattleSetting(BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME);
+                this.getBattleSetting(BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME) :
+                this.getBattleSetting(BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME);
     };
     // methods
     /**

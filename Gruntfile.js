@@ -10,6 +10,17 @@
 module.exports = function (grunt) {
     "use strict";
     var
+            settings = grunt.file.readJSON("src/config/settings.json"),
+            getConstName = function (string) {
+                var result = "", i;
+                for (i = 0; i < string.length; i++) {
+                    if (string[i].match(/[A-Z]/)) {
+                        result += "_";
+                    }
+                    result += ((string[i] === " ") || (string[i] === "-")) ? "_" : string[i].toUpperCase();
+                }
+                return result;
+            },
             scssMappings = {
                 "css/general.css": 'src/scss/general.scss',
                 "css/about.css": 'src/scss/screens/about.scss',
@@ -360,6 +371,81 @@ module.exports = function (grunt) {
                     match: new RegExp("this\\." + fieldName + " = [\\w\\.]+;", "g"),
                     replacement: ""
                 };
+            }),
+            settingReplacements = [
+                ["missileAutoChangeCooldown", "battle"],
+                ["cameraPilotingSwitchTransitionDuration", "battle"],
+                ["cameraPilotingSwitchTransitionStyle", "battle"],
+                ["strafeSpeedFactor", "battle"],
+                ["turnAccelerationDurationInSeconds", "battle", "TURN_ACCELERATION_DURATION_S"],
+                ["backgroundObjectDistance", "battle"],
+                ["defaultMuzzleFlashDuration", "battle"],
+                ["targetViewName", "battle"],
+                ["targetChangeTransitionDuration", "battle"],
+                ["targetChangeTransitionStyle", "battle"],
+                ["targetOrderDuration", "battle"],
+                ["selfFire", "battle"],
+                ["maxCombatForwardSpeedFactor", "battle"],
+                ["maxCombatReverseSpeedFactor", "battle"],
+                ["maxCruiseForwardSpeedFactor", "battle"],
+                ["maxCruiseReverseSpeedFactor", "battle"],
+                ["showHitboxesForHitchecks", "battle"],
+                ["fireSoundStackingTimeThreshold", "battle"],
+                ["fireSoundStackingVolumeFactor", "battle"],
+                ["hitSoundStackingTimeThreshold", "battle"],
+                ["hitSoundStackingVolumeFactor", "battle"],
+                ["weaponFireSoundStackMinimumDistance", "battle"],
+                ["demoFighterAI", "battle", "DEMO_FIGHTER_AI_TYPE"],
+                ["demoShipAI", "battle", "DEMO_SHIP_AI_TYPE"],
+                ["scoreFractionForKill", "battle"],
+                ["scoreBonusForHullIntegrity", "battle"],
+                ["scoreBonusForHullIntegrityTeam", "battle"],
+                ["missileHitRatioFactor", "battle"],
+                ["scoreBonusForTeamSurvival", "battle"],
+                ["particlePoolPrefillFactor", "battle"],
+                ["projectilePoolPrefillFactor", "battle"],
+                ["missilePoolPrefillFactor", "battle"],
+                ["trailSegmentPoolPrefillFactor", "battle"],
+                ["explosionPoolPrefillFactor", "battle"],
+                ["viewDistance", "battle"],
+                ["moveToOrigoDistance", "battle"],
+                ["demoViewSwitchInterval", "battle"],
+                ["demoDoubleViewSwitchChance", "battle"],
+                ["jumpPrepareViewName", "battle"],
+                ["jumpOutViewName", "battle"],
+                ["musicVolumeInMenus", "battle"],
+                ["sfxVolumeInMenus", "battle"],
+                ["simulationStepsPerSecond", "battle"],
+                ["battleRenderFPS", "battle", "RENDER_FPS"],
+                ["quitDelayAfterJumpOut", "battle"],
+                ["gameStateDisplayDelay", "battle"],
+                ["multiMatchQuitDelay", "battle"],
+                ["endThemeCrossfadeDuration", "battle"],
+                ["cameraDefaultTransitionDuration", "battle"],
+                ["cameraDefaultTransitionStyle", "battle"],
+                ["ambientMusic", "battle"],
+                ["victoryMusic", "battle"],
+                ["defeatMusic", "battle"],
+                ["debriefingVictoryMusic", "battle"],
+                ["debriefingDefeatMusic", "battle"],
+                ["combatThemeDurationAfterFire", "battle"],
+                ["debriefingThemeFadeInDuration", "battle"],
+                ["useRequestAnimFrame", "general"],
+                ["defaultRandomSeed", "general"],
+                ["luminosityFactorsArrayName", "general", "UNIFORM_LUMINOSITY_FACTORS_ARRAY_NAME"],
+                ["useVerticalCameraValues", "general"],
+                ["menuMusic", "general"],
+                ["musicFadeInDuration", "general"],
+                ["themeCrossfadeDuration", "general"],
+                ["musicFadeOutDuration", "general"]
+            ].map(
+            function (replacement) {
+                var constName = (replacement.length < 3) ? getConstName(replacement[0]) : replacement[2],
+                        value = settings.logic[replacement[1]][replacement[0]];
+                return {
+                    match: "config.getSetting(config." + replacement[1].toUpperCase() + "_SETTINGS." + constName + ")",
+                    replacement: (typeof value === "string") ? '"' + value + '"' : value
+                };
             });
     // flatten the replacements arrays
     getterReplacements.reduce(function (acc, val) {
@@ -521,6 +607,12 @@ module.exports = function (grunt) {
                         }, {
                             match: 'graphics.isShadowMapDebuggingEnabled()',
                             replacement: 'false'
+                        }, {
+                            match: '_hitZoneColor =',
+                            replacement: '//'
+                        }, {
+                            match: '_hitZoneColor,',
+                            replacement: '//'
                                     // -------------------------------------------------
                                     // stereoscopy
                         }, {
@@ -544,7 +636,7 @@ module.exports = function (grunt) {
             // avoid the overhead of calling the getter functions
             optimize: {
                 options: {
-                    patterns: getterReplacements.concat(setterReplacements.concat(methodRemovals.concat(exportedFunctionRemovals.concat(objectRemovals.concat(fieldRemovals.concat([
+                    patterns: getterReplacements.concat(setterReplacements.concat(methodRemovals.concat(exportedFunctionRemovals.concat(objectRemovals.concat(fieldRemovals.concat(settingReplacements.concat([
                         {
                             match: '_scene.getLODContext()',
                             replacement: '_scene._lodContext'
@@ -564,10 +656,13 @@ module.exports = function (grunt) {
                             match: 'if (this._hitbox) {',
                             replacement: 'if (false) {'
                         }, {
+                            match: 'if (hitbox) {',
+                            replacement: 'if (false) {'
+                        }, {
                             match: 'if (_showHitboxesForHitchecks) {',
                             replacement: 'if (false) {'
                         }
-                    ])))))),
+                    ]))))))),
                     usePrefix: false
                 },
                 files: [
