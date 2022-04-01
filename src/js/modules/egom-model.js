@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file 
  * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
  * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
@@ -134,27 +134,6 @@ define([
      */
     Vertex.prototype.getTexCoords = function () {
         return [this.u, this.v];
-    };
-    /**
-     * Sets the X coordinate of the vertex.
-     * @param {Number} x
-     */
-    Vertex.prototype.setX = function (x) {
-        this.x = x;
-    };
-    /**
-     * Sets the Y coordinate of the vertex.
-     * @param {Number} y
-     */
-    Vertex.prototype.setY = function (y) {
-        this.y = y;
-    };
-    /**
-     * Sets the Z coordinate of the vertex.
-     * @param {Number} z
-     */
-    Vertex.prototype.setZ = function (z) {
-        this.z = z;
     };
     // ############################################################################################
     /**

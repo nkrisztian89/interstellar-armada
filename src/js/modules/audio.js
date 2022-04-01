@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2016-2018, 2020-2022 Krisztián Nagy
  * @file This module provides some wrappers for Web Audio API functions for easier use.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -271,7 +271,7 @@ define([
      * by this sound source.
      * @returns {PannerNode}
      */
-    SoundSource.prototype.getNode = function () {
+    SoundSource.prototype.getPannerNode = function () {
         if (!this._pannerNode) {
             this._pannerNode = _context.createPanner();
             this._pannerNode.panningModel = this._panningModel;
@@ -558,7 +558,7 @@ define([
             this._sourceNode.loop = true;
         }
         if (this._soundSource) {
-            currentNode.connect(this._soundSource.getNode());
+            currentNode.connect(this._soundSource.getPannerNode());
         } else {
             switch (this._soundCategory) {
                 case SoundCategory.SOUND_EFFECT:

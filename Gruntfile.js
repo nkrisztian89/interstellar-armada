@@ -179,7 +179,20 @@ module.exports = function (grunt) {
                 ["enemyReactionTimeFactor"],
                 ["playerSelfDamage"],
                 ["playerFriendlyFireDamage"],
-                ["hitboxOffset"]
+                ["hitboxOffset"],
+                ["lastStrafeTarget"],
+                ["lastLiftTarget"],
+                ["lastYawTarget"],
+                ["lastPitchTarget"],
+                ["lastRollTarget"],
+                ["initialCount"],
+                ["team"],
+                ["key"],
+                ["minLOD"],
+                ["aspect"],
+                ["minFOV"],
+                ["maxFOV"],
+                ["node"]
             ].map(
             function (replacement) {
                 // create the replacements for each simple getter
@@ -196,6 +209,43 @@ module.exports = function (grunt) {
                         replacement: ""
                     }, {
                         // remove the getter definition from the prototype if it was added by reference
+                        match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = \\w+;", "g"),
+                        replacement: ""
+                    }];
+            }),
+            setterReplacements = [
+                ["lightSource"],
+                ["strafeTarget"],
+                ["liftTarget"],
+                ["yawTarget"],
+                ["pitchTarget"],
+                ["rollTarget"],
+                ["team"],
+                ["controlledCamera"],
+                ["name"],
+                ["dragFactor"],
+                ["node"],
+                ["instancedShader"],
+                ["smallestSizeWhenDrawn"],
+                ["clearColor"],
+                ["ambientColor"],
+                ["revealState"]
+            ].map(
+            function (replacement) {
+// create the replacements for each simple setter
+                var
+                        functionName = ((replacement.length > 1) ? replacement[1] : "set") + ((replacement[1] === "") ? replacement[0] : replacement[0][0].toUpperCase() + replacement[0].substring(1)),
+                        fieldName = "_" + ((replacement.length > 2) ? replacement[2] : replacement[0]);
+                return [{
+                        // replace calls to this setter with a simple assignment of the property
+                        match: new RegExp("\\." + functionName + "\\(((?:[^()]+|\\((?:[^()]+|\\([^()]*\\))*\\))*)\\)", "g"),
+                        replacement: "." + fieldName + "=" + "$1"
+                    }, {
+                        // remove the setter definition from the prototype
+                        match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = function \\(\\w+\\) {\\s+this." + fieldName + " = \\w+;\\s+};", "g"),
+                        replacement: ""
+                    }, {
+                        // remove the setter definition from the prototype if it was added by reference
                         match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = \\w+;", "g"),
                         replacement: ""
                     }];
@@ -313,6 +363,9 @@ module.exports = function (grunt) {
             });
     // flatten the replacements arrays
     getterReplacements.reduce(function (acc, val) {
+        return acc.concat(val);
+    }, []);
+    setterReplacements.reduce(function (acc, val) {
         return acc.concat(val);
     }, []);
     methodRemovals.reduce(function (acc, val) {
@@ -491,7 +544,7 @@ module.exports = function (grunt) {
             // avoid the overhead of calling the getter functions
             optimize: {
                 options: {
-                    patterns: getterReplacements.concat(methodRemovals.concat(exportedFunctionRemovals.concat(objectRemovals.concat(fieldRemovals.concat([
+                    patterns: getterReplacements.concat(setterReplacements.concat(methodRemovals.concat(exportedFunctionRemovals.concat(objectRemovals.concat(fieldRemovals.concat([
                         {
                             match: '_scene.getLODContext()',
                             replacement: '_scene._lodContext'
@@ -514,7 +567,7 @@ module.exports = function (grunt) {
                             match: 'if (_showHitboxesForHitchecks) {',
                             replacement: 'if (false) {'
                         }
-                    ]))))),
+                    ])))))),
                     usePrefix: false
                 },
                 files: [
