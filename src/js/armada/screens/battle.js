@@ -3860,7 +3860,7 @@ define([
                     _targetInfoTexts[TARGET_INFO_DISTANCE].setColor(targetInfoTextColor);
                     _targetInfoTexts[TARGET_INFO_DISTANCE].setText(strings.get(strings.BATTLE.HUD_DISTANCE) + ": " + utils.getLengthString(distance));
                     _targetInfoTexts[TARGET_INFO_VELOCITY].setColor(targetInfoTextColor);
-                    _targetInfoTexts[TARGET_INFO_VELOCITY].setText(strings.get(strings.BATTLE.HUD_VELOCITY) + ": " + vec.length3(mat.translationVector3(target.getVelocityMatrix())).toFixed() + " m/s");
+                    _targetInfoTexts[TARGET_INFO_VELOCITY].setText(strings.get(strings.BATTLE.HUD_VELOCITY) + ": " + mat.translationLength(target.getPhysicalVelocityMatrix()).toFixed() + " m/s");
                     _targetInfoTextLayer.show();
                     visible3 = true;
                 }

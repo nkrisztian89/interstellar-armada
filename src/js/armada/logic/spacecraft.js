@@ -1460,7 +1460,7 @@ define([
      * Returns the 4x4 translation matrix describing the current velocity of this spacecraft in world space.
      * @returns {Float32Array}
      */
-    Spacecraft.prototype.getVelocityMatrix = function () {
+    Spacecraft.prototype.getPhysicalVelocityMatrix = function () {
         return this._physicalModel.getVelocityMatrix();
     };
     /**

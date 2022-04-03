@@ -504,7 +504,7 @@ define([
             _scene.getCamera().setControlledVelocityVector([0, 0, (_model ? originalDistance : CAMERA_SCROLL_MOVE_FACTOR) * (scaleFactor - 1)]);
             _scene.getCamera().update(1000);
             _scene.getCamera().setControlledVelocityVector([0, 0, 0]);
-            _currentContext.cameraDistance = vec.length3(mat.translationVector3(_scene.getCamera().getCameraPositionMatrix()));
+            _currentContext.cameraDistance = mat.translationLength(_scene.getCamera().getCameraPositionMatrix());
             requestRender();
         }
         return false;

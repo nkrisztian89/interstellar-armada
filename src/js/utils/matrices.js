@@ -1178,7 +1178,7 @@ define([
      * @returns {Number}
      */
     mat.translationLength = function (m) {
-        return vec.length3([m[12], m[13], m[14]]);
+        return Math.sqrt(m[12] * m[12] + m[13] * m[13] + m[14] * m[14]);
     };
     /**
      * Returns two angles, rotating by which would bring the axis Y unit vector in line with the passed unit vector.

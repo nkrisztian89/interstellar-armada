@@ -502,7 +502,7 @@ define([
     Projectile.prototype.init = function (projectileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity) {
         var velocityMatrix = mat.identity4Aux();
         if (spacecraft) {
-            mat.copyTranslation4(velocityMatrix, spacecraft.getVelocityMatrix());
+            mat.copyTranslation4(velocityMatrix, spacecraft.getPhysicalVelocityMatrix());
         }
         if (muzzleVelocity) {
             velocityMatrix[12] += orientationMatrix[4] * muzzleVelocity;
@@ -1043,7 +1043,7 @@ define([
     Missile.prototype.init = function (missileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity, target) {
         var i, velocityMatrix = mat.identity4Aux();
         if (spacecraft) {
-            mat.copyTranslation4(velocityMatrix, spacecraft.getVelocityMatrix());
+            mat.copyTranslation4(velocityMatrix, spacecraft.getPhysicalVelocityMatrix());
         }
         if (muzzleVelocity) {
             velocityMatrix[12] += orientationMatrix[4] * muzzleVelocity;
@@ -1426,7 +1426,7 @@ define([
         if (!this._targetHitPositionValid) {
             targetPosition = this._target.getPhysicalPositionVector();
             position = mat.translationVector3(this._physicalModel.getPositionMatrix());
-            relativeTargetVelocity = vec.diffTranslation3(this._target.getVelocityMatrix(), this._physicalModel.getVelocityMatrix());
+            relativeTargetVelocity = vec.diffTranslation3(this._target.getPhysicalVelocityMatrix(), this._physicalModel.getVelocityMatrix());
             hitTime = this._class.getTargetHitTime(position, targetPosition, relativeTargetVelocity);
             this._targetHitPosition[0] = targetPosition[0] + hitTime * relativeTargetVelocity[0];
             this._targetHitPosition[1] = targetPosition[1] + hitTime * relativeTargetVelocity[1];
@@ -2753,8 +2753,8 @@ define([
         var driftTime, burnTime, position, targetPosition, orientationMatrix, turnAngles, maxTurnAngle, turnTime, velocityVector, relativeTargetVelocity, angularAcceleration;
         orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
         // velocity vector for the original drifting of the missile after it is launched, before igniting main engine
-        velocityVector = vec.sum3(mat.translationVector3(this._spacecraft.getVelocityMatrix()), vec.scaled3Aux(mat.getRowB43(orientationMatrix), this._class.getLaunchVelocity()));
-        relativeTargetVelocity = vec.diff3(mat.translationVector3(target.getVelocityMatrix()), velocityVector);
+        velocityVector = vec.sum3(mat.translationVector3(this._spacecraft.getPhysicalVelocityMatrix()), vec.scaled3Aux(mat.getRowB43(orientationMatrix), this._class.getLaunchVelocity()));
+        relativeTargetVelocity = vec.diff3(mat.translationVector3(target.getPhysicalVelocityMatrix()), velocityVector);
         driftTime = 0.001 * this._class.getIgnitionTime();
         // first, consider drifting after launch
         position = this._spacecraft.getPhysicalPositionVector();
@@ -3285,7 +3285,7 @@ define([
                 return targetPosition;
             }
             position = this._spacecraft.getPhysicalPositionVector();
-            relativeTargetVelocity = vec.diffTranslation3(this._target.getVelocityMatrix(), this._spacecraft.getVelocityMatrix());
+            relativeTargetVelocity = vec.diffTranslation3(this._target.getPhysicalVelocityMatrix(), this._spacecraft.getPhysicalVelocityMatrix());
             projectileSpeed = weapons[0].getProjectileVelocity();
             a = projectileSpeed * projectileSpeed - (relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
             b = 0;
