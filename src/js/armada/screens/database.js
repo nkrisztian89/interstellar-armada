@@ -483,7 +483,7 @@ define([
                 graphics.getAntialiasing(),
                 true,
                 graphics.getFiltering(),
-                _getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME),
+                config.getSetting(config.GENERAL_SETTINGS.USE_REQUEST_ANIM_FRAME),
                 undefined,
                 {
                     "escape": _closeScreen,
@@ -646,7 +646,7 @@ define([
                 graphics.getMaxPointLights(),
                 graphics.getMaxSpotLights(),
                 {
-                    useVerticalValues: _getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
+                    useVerticalValues: config.getSetting(config.GENERAL_SETTINGS.USE_VERTICAL_CAMERA_VALUES),
                     viewDistance: _getSetting(SETTINGS.ITEM_VIEW_DISTANCE),
                     fov: _getSetting(SETTINGS.ITEM_VIEW_FOV),
                     span: _getSetting(SETTINGS.ITEM_VIEW_SPAN)

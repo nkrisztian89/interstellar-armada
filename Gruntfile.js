@@ -51,11 +51,11 @@ module.exports = function (grunt) {
             // optimization purposes, it is better to refer to the property directly in the release builds, so
             // here we build an array of replacements which replace the getters with direct property access and
             // remove their definitions from the code
-            getterReplacements = [
+            // these getters are to be replaced both in the game and the editor sources
+            gettersToReplaceCommon = [
                 ["positionMatrix"],
                 ["orientationMatrix"],
                 ["scalingMatrix"],
-                ["scene"],
                 ["renderableObject"],
                 ["subnodes"],
                 ["minimumCountForInstancing"],
@@ -204,8 +204,12 @@ module.exports = function (grunt) {
                 ["minFOV"],
                 ["maxFOV"],
                 ["node"]
-            ].map(
-            function (replacement) {
+            ],
+            // these getters are to be replaced only in the game (and not the editor) sources
+            gettersToReplaceGame = [
+                ["scene"]
+            ],
+            getGetterReplacement = function (replacement) {
                 // create the replacements for each simple getter
                 var
                         functionName = ((replacement.length > 1) ? replacement[1] : "get") + ((replacement[1] === "") ? replacement[0] : replacement[0][0].toUpperCase() + replacement[0].substring(1)),
@@ -223,7 +227,9 @@ module.exports = function (grunt) {
                         match: new RegExp("\\s\\w+\\.prototype\\." + functionName + " = \\w+;", "g"),
                         replacement: ""
                     }];
-            }),
+            },
+            getterReplacementsCommon = gettersToReplaceCommon.map(getGetterReplacement),
+            getterReplacementsGame = gettersToReplaceGame.map(getGetterReplacement),
             setterReplacements = [
                 ["lightSource"],
                 ["strafeTarget"],
@@ -372,7 +378,7 @@ module.exports = function (grunt) {
                     replacement: ""
                 };
             }),
-            settingReplacements = [
+            settingsToReplace = [
                 ["missileAutoChangeCooldown", "battle"],
                 ["cameraPilotingSwitchTransitionDuration", "battle"],
                 ["cameraPilotingSwitchTransitionStyle", "battle"],
@@ -437,18 +443,40 @@ module.exports = function (grunt) {
                 ["menuMusic", "general"],
                 ["musicFadeInDuration", "general"],
                 ["themeCrossfadeDuration", "general"],
-                ["musicFadeOutDuration", "general"]
-            ].map(
-            function (replacement) {
-                var constName = (replacement.length < 3) ? getConstName(replacement[0]) : replacement[2],
-                        value = settings.logic[replacement[1]][replacement[0]];
-                return {
-                    match: "config.getSetting(config." + replacement[1].toUpperCase() + "_SETTINGS." + constName + ")",
-                    replacement: (typeof value === "string") ? '"' + value + '"' : value
-                };
-            });
+                ["musicFadeOutDuration", "general"],
+                ["slowConnectionThreshold", "multi"],
+                ["connectionLostThreshold", "multi"],
+                ["disconnectThreshold", "multi"]
+            ],
+            settingConfigReplacements = settingsToReplace.map(
+                    function (replacement) {
+                        var value = settings.logic[replacement[1]][replacement[0]],
+                                setting = '"' + replacement[0] + '": ' + ((typeof value === "string") ? '"' + value + '"' : value);
+                        return {
+                            // either remove a comma from before or after the setting (if there is any)
+                            match: new RegExp(",\\s*" + setting + "|" + setting + ",*", "g"),
+                            replacement: ""
+                        };
+                    }),
+            settingReplacements = settingsToReplace.map(
+                    function (replacement) {
+                        var constName = (replacement.length < 3) ? getConstName(replacement[0]) : replacement[2],
+                                value = settings.logic[replacement[1]][replacement[0]];
+                        return [{
+                                // replacing usages of this setting
+                                match: "config.getSetting(config." + replacement[1].toUpperCase() + "_SETTINGS." + constName + ")",
+                                replacement: (typeof value === "string") ? '"' + value + '"' : value
+                            }, {
+                                // removing the definition of this setting from configuration.js
+                                match: new RegExp("\\s" + constName + ": {\\s*name: \"" + replacement[0] + "\"(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*}[,\\s]", "g"),
+                                replacement: ""
+                            }];
+                    });
     // flatten the replacements arrays
-    getterReplacements.reduce(function (acc, val) {
+    getterReplacementsCommon.reduce(function (acc, val) {
+        return acc.concat(val);
+    }, []);
+    getterReplacementsGame.reduce(function (acc, val) {
         return acc.concat(val);
     }, []);
     setterReplacements.reduce(function (acc, val) {
@@ -458,6 +486,9 @@ module.exports = function (grunt) {
         return acc.concat(val);
     }, []);
     exportedFunctionRemovals.reduce(function (acc, val) {
+        return acc.concat(val);
+    }, []);
+    settingReplacements.reduce(function (acc, val) {
         return acc.concat(val);
     }, []);
     // Project configuration.
@@ -553,6 +584,16 @@ module.exports = function (grunt) {
             }
         },
         _replace: {
+            distConfig: {
+                // removes setting values that have been baked into the game source
+                options: {
+                    patterns: settingConfigReplacements,
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, cwd: 'config/', src: ['settings.json'], dest: 'config/'}
+                ]
+            },
             distData: {
                 // removes test mission entries from missions.json
                 options: {
@@ -568,7 +609,8 @@ module.exports = function (grunt) {
                     {expand: true, cwd: 'data/', src: ['missions.json'], dest: 'data/'}
                 ]
             },
-            preOptimize: {
+            // these replacements should be applied to both the game and the editor
+            preOptimizeCommon: {
                 options: {
                     patterns: [
                         {
@@ -590,15 +632,6 @@ module.exports = function (grunt) {
                             match: 'application.isDebugVersion()',
                             replacement: 'false'
                         }, {
-                            match: 'if (preview) {',
-                            replacement: 'if (false) {'
-                        }, {
-                            match: 'if (!preview) {',
-                            replacement: 'if (true) {'
-                        }, {
-                            match: 'preview ? ',
-                            replacement: 'false ? '
-                        }, {
                             match: 'missionDescriptor.isTest()',
                             replacement: 'false'
                         }, {
@@ -607,12 +640,6 @@ module.exports = function (grunt) {
                         }, {
                             match: 'graphics.isShadowMapDebuggingEnabled()',
                             replacement: 'false'
-                        }, {
-                            match: '_hitZoneColor =',
-                            replacement: '//'
-                        }, {
-                            match: '_hitZoneColor,',
-                            replacement: '//'
                                     // -------------------------------------------------
                                     // stereoscopy
                         }, {
@@ -629,14 +656,42 @@ module.exports = function (grunt) {
                     usePrefix: false
                 },
                 files: [
+                    {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
+                ]
+            },
+            // these replacements should only be applied to the game, and not the editor (removes hitbox visuals for example)
+            preOptimizeGame: {
+                options: {
+                    patterns: [
+                        {
+                            match: 'if (preview) {',
+                            replacement: 'if (false) {'
+                        }, {
+                            match: 'if (!preview) {',
+                            replacement: 'if (true) {'
+                        }, {
+                            match: 'preview ? ',
+                            replacement: 'false ? '
+                        }, {
+                            match: '_hitZoneColor =',
+                            replacement: '//'
+                        }, {
+                            match: '_hitZoneColor,',
+                            replacement: '//'
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
                     {expand: true, cwd: 'js/', src: ['**', '!editor', '!editor*'], dest: 'js/'}
                 ]
             },
             // replacing some widely and frequently used one-line getter calls with the direct access of their respective properties to
             // avoid the overhead of calling the getter functions
-            optimize: {
+            // these replacements should be applied to both the game and the editor
+            optimizeCommon: {
                 options: {
-                    patterns: getterReplacements.concat(setterReplacements.concat(methodRemovals.concat(exportedFunctionRemovals.concat(objectRemovals.concat(fieldRemovals.concat(settingReplacements.concat([
+                    patterns: getterReplacementsCommon.concat(setterReplacements.concat(settingReplacements.concat([
                         {
                             match: '_scene.getLODContext()',
                             replacement: '_scene._lodContext'
@@ -647,6 +702,24 @@ module.exports = function (grunt) {
                             match: 'setFileCacheBypassEnabled(true)',
                             replacement: 'setFileCacheBypassEnabled(false)'
                         }, {
+                            match: 'if (_showHitboxesForHitchecks) {',
+                            replacement: 'if (false) {'
+                        }, {
+                            match: '!silentDiscard',
+                            replacement: 'false'
+                        }
+                    ]))),
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
+                ]
+            },
+            // these replacements should only be applied to the game, and not the editor (removes hitbox visuals for example)
+            optimizeGame: {
+                options: {
+                    patterns: getterReplacementsGame.concat(methodRemovals.concat(exportedFunctionRemovals.concat(objectRemovals.concat(fieldRemovals.concat([
+                        {
                             match: 'addSupplements.hitboxes',
                             replacement: 'false'
                         }, {
@@ -658,17 +731,15 @@ module.exports = function (grunt) {
                         }, {
                             match: 'if (hitbox) {',
                             replacement: 'if (false) {'
-                        }, {
-                            match: 'if (_showHitboxesForHitchecks) {',
-                            replacement: 'if (false) {'
                         }
-                    ]))))))),
+                    ]))))),
                     usePrefix: false
                 },
                 files: [
                     {expand: true, cwd: 'js/', src: ['**', '!editor', '!editor*'], dest: 'js/'}
                 ]
             },
+            // these replacements should be applied to both the game and the editor
             postOptimize: {
                 options: {
                     // shorten some commonly used long property/method names to make the build file smaller
@@ -741,7 +812,7 @@ module.exports = function (grunt) {
                     usePrefix: false
                 },
                 files: [
-                    {expand: true, cwd: 'js/', src: ['**', '!editor', '!editor*'], dest: 'js/'}
+                    {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
                 ]
             },
             sass: {
@@ -778,8 +849,8 @@ module.exports = function (grunt) {
         _concurrent: {
             watch: ['_watch:dev', '_watch:sass'],
             dev: [['_sass:dev', '_replace:sass'], '_copy:devData', '_copy:js'],
-            build: ['_sass:dist', ['_copy:distData', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimize', '_replace:optimize', '_requirejs:game', '_clean:dist', '_replace:postOptimize']],
-            buildWithEditor: ['_sass:dist', ['_copy:distData', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_requirejs:editor', '_replace:preOptimize', '_replace:optimize', '_requirejs:game', '_clean:distWithEditor', '_replace:postOptimize']]
+            build: ['_sass:dist', ['_copy:distData', '_replace:distConfig', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimizeCommon', '_replace:preOptimizeGame', '_replace:optimizeCommon', '_replace:optimizeGame', '_requirejs:game', '_clean:dist', '_replace:postOptimize']],
+            buildWithEditor: ['_sass:dist', ['_copy:distData', '_replace:distConfig', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_replace:preOptimizeCommon', '_replace:optimizeCommon', '_requirejs:editor', '_replace:preOptimizeGame', '_replace:optimizeGame', '_requirejs:game', '_clean:distWithEditor', '_replace:postOptimize']]
         }
     });
     // Plugins
