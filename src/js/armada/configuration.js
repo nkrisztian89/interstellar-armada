@@ -777,36 +777,6 @@ define([
             name: "explosionPoolPrefillFactor",
             type: "number"
         },
-        MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumDustParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_PROJECTILE_COUNT_FOR_INSTANCING: {
-            name: "minimumProjectileCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_TRAIL_SEGMENT_COUNT_FOR_INSTANCING: {
-            name: "minimumTrailSegmentCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumThrusterParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
-        MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING: {
-            name: "minimumBlinkerParticleCountForInstancing",
-            type: "number",
-            defaultValue: 1
-        },
         /**
          * The view distance in the battle scene
          */

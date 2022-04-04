@@ -59,7 +59,7 @@ module.exports = function (grunt) {
                 ["velocityMatrix"],
                 ["renderableObject"],
                 ["subnodes"],
-                ["minimumCountForInstancing"],
+                ["instancing"],
                 ["rootNode"],
                 ["camera"],
                 ["duration"],

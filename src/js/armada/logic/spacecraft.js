@@ -257,7 +257,7 @@ define([
                 true,
                 this._descriptor.getParticle().getInstancedShader(),
                 0);
-        parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_BLINKER_PARTICLE_COUNT_FOR_INSTANCING)));
+        parentNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, false, true));
         if (_dynamicLights && (addLightSource === true) && (this._descriptor.getIntensity() > 0)) {
             this._lightSource = new lights.PointLightSource(
                     this._descriptor.getLightColor(),

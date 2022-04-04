@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file A general purpose WebGL scene engine building on the functionality of ManagedGL.
  * Create a Scene, add background and main scene objects and light sources, then add it to a ManagedGLContext (or several ones), and it can
  * be rendered on them.
@@ -295,10 +295,9 @@ define([
      * instanced rendering, only its first subnode will be checked about which queues it should be added to, and all the subnodes will be 
      * added to the same queues together, without checking them for further subnodes. Use this on container nodes storing large amounts
      * of (leaf) subnodes that are suitable for instancing to improve performance.
-     * @param {Number} [minimumCountForInstancing=0] If greater than zero, then when at least this amount of nodes of the same type are
-     * added to the same render queue and instancing is available, they will be rendered using instancing.
+     * @param {Boolean} [instancing=false] If true and instancing is available, the node will be rendered using instancing.
      */
-    function RenderableNode(renderableObject, renderToShadowMap, instancedSubnodes, minimumCountForInstancing) {
+    function RenderableNode(renderableObject, renderToShadowMap, instancedSubnodes, instancing) {
         /**
          * The object this node holds that can be rendered.
          * @type RenderableObject
@@ -336,7 +335,7 @@ define([
          * A list of camera configurations that are associated with this node.
          * @type CameraConfiguration[]
          */
-        this._cameraConfigurations = [];
+        this._cameraConfigurations = null;
         /**
          * If false, this node and its subnodes are never rendered to shadow maps
          * @type Boolean
@@ -349,10 +348,10 @@ define([
          */
         this._hasInstancedSubnodes = instancedSubnodes;
         /**
-         * The minimum number of nodes of this same type that should be added to the same render queue to be rendered in instanced mode.
+         * Whether the node is to be rendered using instancing.
          * @type Number
          */
-        this._minimumCountForInstancing = minimumCountForInstancing || 0;
+        this._instancing = !!instancing;
         /**
          * A shortcut cache variable that is set to true once this node is set to be resuable or it is found reusable in a check, so that
          * later this can be determined in one step
@@ -414,10 +413,10 @@ define([
      */
     RenderableNode.prototype.addToRenderQueue = function (renderQueues) {
         var i;
-        if (this._minimumCountForInstancing === 0) {
+        if (!this._instancing) {
             for (i = 0; i < renderQueues.length; i++) {
                 if ((renderQueues[i].length > 0) &&
-                        (renderQueues[i][0].getMinimumCountForInstancing() === 0) &&
+                        (!renderQueues[i][0].getInstancing()) &&
                         (this._renderableObject.shouldGoInSameRenderQueue(renderQueues[i][0].getRenderableObject()))) {
                     renderQueues[i].push(this);
                     return i;
@@ -426,7 +425,7 @@ define([
         } else {
             for (i = 0; i < renderQueues.length; i++) {
                 if ((renderQueues[i].length > 0) &&
-                        (renderQueues[i][0].getMinimumCountForInstancing() > 0) &&
+                        (renderQueues[i][0].getInstancing()) &&
                         (this._renderableObject.shouldGoInSameRenderQueueInstanced(renderQueues[i][0].getRenderableObject()))) {
                     renderQueues[i].push(this);
                     return i;
@@ -501,7 +500,7 @@ define([
             if (queueBits === undefined) {
                 queueBits = distanceRendering ? this._renderableObject.getRenderQueueBits(camera, parentQueueBits) : renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT;
             }
-            if (!this._hasInstancedSubnodes || (this._subnodes.getLength() < this._subnodes.getFirst().getMinimumCountForInstancing())) {
+            if (!this._hasInstancedSubnodes || !this._subnodes.getFirst().getInstancing()) {
                 for (subnode = this._subnodes.getFirst(); subnode; subnode = next) {
                     next = subnode.next;
                     subnode.animateAndAddToRenderQueues(renderQueues, distanceRendering, camera, dt, queueBits);
@@ -658,6 +657,9 @@ define([
      * @param {CameraConfiguration} cameraConfiguration
      */
     RenderableNode.prototype.addCameraConfiguration = function (cameraConfiguration) {
+        if (!this._cameraConfigurations) {
+            this._cameraConfigurations = [];
+        }
         this._cameraConfigurations.push(cameraConfiguration);
     };
     /**
@@ -667,6 +669,9 @@ define([
      */
     RenderableNode.prototype.hasCameraConfiguration = function (cameraConfiguration) {
         var i;
+        if (!this._cameraConfigurations) {
+            return false;
+        }
         for (i = 0; i < this._cameraConfigurations.length; i++) {
             if (this._cameraConfigurations[i] === cameraConfiguration) {
                 return true;
@@ -683,7 +688,11 @@ define([
      * @returns {CameraConfiguration}
      */
     RenderableNode.prototype.getNextCameraConfiguration = function (currentCameraConfiguration) {
-        var i, currentIndex, length = this._cameraConfigurations.length;
+        var i, currentIndex, length;
+        if (!this._cameraConfigurations) {
+            return null;
+        }
+        length = this._cameraConfigurations.length;
         if (length <= 0) {
             return null;
         }
@@ -716,7 +725,11 @@ define([
      * @returns {CameraConfiguration}
      */
     RenderableNode.prototype.getPreviousCameraConfiguration = function (currentCameraConfiguration) {
-        var i, currentIndex, length = this._cameraConfigurations.length;
+        var i, currentIndex, length;
+        if (!this._cameraConfigurations) {
+            return null;
+        }
+        length = this._cameraConfigurations.length;
         if (length <= 0) {
             return null;
         }
@@ -747,9 +760,11 @@ define([
      */
     RenderableNode.prototype.getCameraConfigurationsWithName = function (name) {
         var result = [], i;
-        for (i = 0; i < this._cameraConfigurations.length; i++) {
-            if (this._cameraConfigurations[i].getName() === name) {
-                result.push(this._cameraConfigurations[i]);
+        if (this._cameraConfigurations) {
+            for (i = 0; i < this._cameraConfigurations.length; i++) {
+                if (this._cameraConfigurations[i].getName() === name) {
+                    result.push(this._cameraConfigurations[i]);
+                }
             }
         }
         return result;
@@ -759,8 +774,10 @@ define([
      */
     RenderableNode.prototype.resetCameraConfigurations = function () {
         var i;
-        for (i = 0; i < this._cameraConfigurations.length; i++) {
-            this._cameraConfigurations[i].resetToDefaults();
+        if (this._cameraConfigurations) {
+            for (i = 0; i < this._cameraConfigurations.length; i++) {
+                this._cameraConfigurations[i].resetToDefaults();
+            }
         }
     };
     /**
@@ -973,11 +990,11 @@ define([
         }
     };
     /**
-     * Returns the minimum number of nodes that should be in the same render queue to enable instanced rendering for that queue.
-     * @returns {Number}
+     * Returns wether to enable instancing for the render queues this node is put in.
+     * @returns {Boolean}
      */
-    RenderableNode.prototype.getMinimumCountForInstancing = function () {
-        return this._minimumCountForInstancing;
+    RenderableNode.prototype.getInstancing = function () {
+        return this._instancing;
     };
     /**
      * Remove the given subnode from this node.
@@ -1963,12 +1980,11 @@ define([
      * If the passed object already has an associated node, uses that one instead.
      * @param {RenderableObject} newObject The object to add.
      * @param {Boolean} [renderedToShadowMap=true] If false, the node for this object and its subnodes will never be rendered to shadow maps
-     * @param {Number} [minimumCountForInstancing=0] When given, the object will be rendered using instancing if this many or more
-     * instances of it are added to the scene.
+     * @param {Boolean} [instancing=false] When true, the object will be rendered using instancing.
      * @returns {RenderableNode} The node that was created / used to contain the passed object.
      */
-    Scene.prototype.addObject = function (newObject, renderedToShadowMap, minimumCountForInstancing) {
-        var node = newObject.getNode() || new RenderableNode(newObject, renderedToShadowMap, false, minimumCountForInstancing);
+    Scene.prototype.addObject = function (newObject, renderedToShadowMap, instancing) {
+        var node = newObject.getNode() || new RenderableNode(newObject, renderedToShadowMap, false, instancing);
         this._rootNode.addSubnode(node);
         return node;
     };
@@ -2473,10 +2489,9 @@ define([
      * @param {Boolean} depthMask
      */
     Scene.prototype._renderQueue = function (context, widthInPixels, heightInPixels, renderQueue, index, depthMask) {
-        var i, queueLength = renderQueue.length, minimumInstancingCount, count;
+        var i, queueLength = renderQueue.length, count;
         if (queueLength > 0) {
-            minimumInstancingCount = renderQueue[0].getMinimumCountForInstancing();
-            if ((minimumInstancingCount > 0) && (queueLength >= minimumInstancingCount) && (context.instancingExt)) {
+            if (renderQueue[0].getInstancing() && context.instancingExt) {
                 count = 0;
                 renderQueue[0].prepareForInstancedRender(context, index, queueLength);
                 for (i = 0; i < queueLength; i++) {

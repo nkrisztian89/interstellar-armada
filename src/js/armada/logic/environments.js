@@ -228,7 +228,7 @@ define([
                 this._positionVector,
                 addOwnProperties ? this._cloud.getClass().getColor() : null,
                 addOwnProperties ? this._range : 0);
-        cloudNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_DUST_PARTICLE_COUNT_FOR_INSTANCING)));
+        cloudNode.addSubnode(new sceneGraph.RenderableNode(this._visualModel, false, false, true));
     };
     /**
      * @returns {PointParticle}

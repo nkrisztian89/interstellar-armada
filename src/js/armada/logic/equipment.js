@@ -234,21 +234,6 @@ define([
              */
             _momentDuration = 0,
             /**
-             * Cached value of the configuration setting of minimum number of particles that should trigger their instanced rendering.
-             * @type Number
-             */
-            _minimumParticleCountForInstancing = 0,
-            /**
-             * Cached value of the configuration setting of minimum number of projectiles that should trigger their instanced rendering.
-             * @type Number
-             */
-            _minimumProjectileCountForInstancing = 0,
-            /**
-             * Cached value of the configuration setting of minimum number of trail segments that should trigger their instanced rendering.
-             * @type Number
-             */
-            _minimumTrailSegmentCountForInstancing = 0,
-            /**
              * Cached value of the configuration setting for maximum combat forward speed factor.
              * @type Number
              */
@@ -579,7 +564,7 @@ define([
      */
     Projectile.prototype.addToSceneNow = function (scene, wireframe, callback) {
         this._initVisualModel(wireframe);
-        scene.addObject(this._visualModel, false, _minimumProjectileCountForInstancing);
+        scene.addObject(this._visualModel, false, true);
         if (callback) {
             callback(this._visualModel);
         }
@@ -813,7 +798,7 @@ define([
                 prevTime,
                 Math.min(this._descriptor.getDuration(), prevTime + this._descriptor.getGrowthRate() * dt),
                 this._descriptor.getInstancedShader());
-        this._visualModel.getNode().addSubnode(segment.getNode() || new sceneGraph.RenderableNode(segment, false, false, _minimumTrailSegmentCountForInstancing));
+        this._visualModel.getNode().addSubnode(segment.getNode() || new sceneGraph.RenderableNode(segment, false, false, true));
         this._visualModel.setSize(vec.length3(vec.diff3Aux(this._firstPoint, point)));
         vec.setVector3(this._lastPoint, point);
         this._lastSegment = segment;
@@ -2119,7 +2104,7 @@ define([
                 muzzleFlash = this._getMuzzleFlashForBarrel(i, barrelPosVector);
                 barrelPosVector = vec.prodVec3Mat4(barrelPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
                 mat.setTranslatedByVector(Weapon._projectilePosMatrix, Weapon._weaponSlotPosMatrix, barrelPosVector);
-                this._visualModel.getNode().addSubnode(muzzleFlash.getNode() || new sceneGraph.RenderableNode(muzzleFlash, false, false, _minimumParticleCountForInstancing));
+                this._visualModel.getNode().addSubnode(muzzleFlash.getNode() || new sceneGraph.RenderableNode(muzzleFlash, false, false, true));
                 // add the projectile of this barrel
                 p = _projectilePool.getObject();
                 p.init(
@@ -3406,7 +3391,7 @@ define([
                     mat.translation4v(this._slot.positionVector),
                     this._propulsionClass.getThrusterBurnParticle().getInstancedShader());
             visualModel.setRelativeSize(0);
-            parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel, false, false, config.getSetting(config.BATTLE_SETTINGS.MINIMUM_THRUSTER_PARTICLE_COUNT_FOR_INSTANCING)));
+            parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel, false, false, true));
             if (!this._visualModel || replaceVisualModel) {
                 if (this._visualModel) {
                     this._visualModel.markAsReusable(true);
@@ -5134,9 +5119,6 @@ define([
     config.executeWhenReady(function () {
         _isSelfFireEnabled = config.getSetting(config.BATTLE_SETTINGS.SELF_FIRE);
         _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
-        _minimumParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_PARTICLE_COUNT_FOR_INSTANCING);
-        _minimumProjectileCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_PROJECTILE_COUNT_FOR_INSTANCING);
-        _minimumTrailSegmentCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_TRAIL_SEGMENT_COUNT_FOR_INSTANCING);
         _maxCombatForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_FORWARD_SPEED_FACTOR);
         _maxCombatReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_REVERSE_SPEED_FACTOR);
         _maxCruiseForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_CRUISE_FORWARD_SPEED_FACTOR);

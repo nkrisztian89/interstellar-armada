@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides a particle system class that can be added to scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -414,11 +414,9 @@ define([
      * add them directly to the scene root.
      * @param {Boolean} [relativeOrientation=false] When the particles are not carried, whether to rotate them according to
      * the orientation set for the system when created
-     * @param {Number} [minimumCountForInstancing=0] If greater than zero, then having at least this many particles of the types emitted
-     * by this particle system will turn on instancing for their render queue.
      * @param {Number} [particleCountFactor=1] The number of particles created by this particle system will be multiplied by this factor
      */
-    function ParticleSystem(positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, relativeOrientation, minimumCountForInstancing, particleCountFactor) {
+    function ParticleSystem(positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, relativeOrientation, particleCountFactor) {
         renderableObjects.RenderableObject3D.call(this, null, false, true, positionMatrix, orientationMatrix, scalingMatrix, undefined, 1, true);
         /**
          * The 4x4 translation matrix describing the velocity of the particle system (m/s)
@@ -459,12 +457,6 @@ define([
          */
         this._hasRelativeOrientation = (relativeOrientation === true);
         /**
-         * If greater than zero, then having at least this many particles of the types emitted by this particle system will turn on 
-         * instancing for their render queue.
-         * @type Number
-         */
-        this._minimumCountForInstancing = minimumCountForInstancing;
-        /**
          * The number of particles created by this particle system are multiplied by this factor (compared to the emitter settings)
          * @type Number
          */
@@ -487,11 +479,9 @@ define([
      * add them directly to the scene root.
      * @param {Boolean} [relativeOrientation=false] When the particles are not carried, whether to rotate them according to
      * the orientation set for the system when created
-     * @param {Number} [minimumCountForInstancing=0] If greater than zero, then having at least this many particles of the types emitted
-     * by this particle system will turn on instancing for their render queue.
      * @param {Number} [particleCountFactor=1] The number of particles created by this particle system will be multiplied by this factor
      */
-    ParticleSystem.prototype.init = function (positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, relativeOrientation, minimumCountForInstancing, particleCountFactor) {
+    ParticleSystem.prototype.init = function (positionMatrix, orientationMatrix, scalingMatrix, velocityMatrix, emitters, duration, keepAlive, carriesParticles, relativeOrientation, particleCountFactor) {
         renderableObjects.RenderableObject3D.prototype.init.call(this, null, false, true, positionMatrix, orientationMatrix, scalingMatrix, undefined, 1, true);
         this._velocityMatrix = velocityMatrix;
         this._emitters = emitters;
@@ -500,7 +490,6 @@ define([
         this._keepAlive = (keepAlive === true);
         this._carriesParticles = (carriesParticles === true);
         this._hasRelativeOrientation = (relativeOrientation === true);
-        this._minimumCountForInstancing = minimumCountForInstancing;
         this._particleCountFactor = (particleCountFactor !== undefined) ? particleCountFactor : 1;
         this._calculateSize();
     };
@@ -532,7 +521,7 @@ define([
      */
     ParticleSystem.prototype.shouldBeRendered = function (renderParameters) {
         this.updateVisibleSize(renderParameters, false); // visible size needs to be updated during shouldBeRendered()
-                                                         // so that based on it the particles can decide if they are to be rendered   
+        // so that based on it the particles can decide if they are to be rendered   
         return false;
     };
     /**
@@ -552,7 +541,7 @@ define([
                 particles = this._emitters[i].emitParticles(dt, this._particleCountFactor);
                 if (this._carriesParticles) {
                     for (j = 0; j < particles.length; j++) {
-                        this.getNode().addSubnode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, this._minimumCountForInstancing));
+                        this.getNode().addSubnode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, true));
                     }
                 } else if (this._hasRelativeOrientation) {
                     modelMatrix = this.getModelMatrix();
@@ -560,13 +549,13 @@ define([
                     for (j = 0; j < particles.length; j++) {
                         particles[j].translateByMatrix(modelMatrix);
                         particles[j].rotateByMatrix3(orientationMatrix);
-                        this.getNode().getScene().addNode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, this._minimumCountForInstancing));
+                        this.getNode().getScene().addNode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, true));
                     }
                 } else {
                     modelMatrix = this.getModelMatrix();
                     for (j = 0; j < particles.length; j++) {
                         particles[j].translateByMatrix(modelMatrix);
-                        this.getNode().getScene().addNode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, this._minimumCountForInstancing));
+                        this.getNode().getScene().addNode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, true));
                     }
                 }
             }

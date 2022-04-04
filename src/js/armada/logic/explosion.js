@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Implementation of the Explosion game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -78,12 +78,7 @@ define([
              * A pool containing explosions for reuse, so that creation of new explosion objects can be decreased for optimization.
              * @type Pool
              */
-            _explosionPool,
-            /**
-             * Cached value of the configuration setting of minimum number of particles that should trigger their instanced rendering.
-             * @type Number
-             */
-            _minimumParticleCountForInstancing = 0;
+            _explosionPool;
     // ------------------------------------------------------------------------------
     // public functions
     /**
@@ -211,7 +206,6 @@ define([
                 this._class ? this._class.isContinuous() : false,
                 this._carriesParticles,
                 this._hasRelativeOrientation,
-                _minimumParticleCountForInstancing,
                 this._ignoreParticleCountFactor ? 1 : graphics.getParticleCountFactor());
     };
     /**
@@ -330,7 +324,6 @@ define([
                     this._class.isContinuous(),
                     this._carriesParticles,
                     this._hasRelativeOrientation,
-                    _minimumParticleCountForInstancing,
                     this._ignoreParticleCountFactor ? 1 : graphics.getParticleCountFactor());
         }
     };
@@ -412,7 +405,6 @@ define([
     config.executeWhenReady(function () {
         _hitSoundStackingTimeThreshold = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_TIME_THRESHOLD);
         _hitSoundStackingVolumeFactor = config.getSetting(config.BATTLE_SETTINGS.HIT_SOUND_STACKING_VOLUME_FACTOR);
-        _minimumParticleCountForInstancing = config.getSetting(config.BATTLE_SETTINGS.MINIMUM_PARTICLE_COUNT_FOR_INSTANCING);
         graphics.executeWhenReady(handleGraphicsSettingsChanged);
         graphics.onSettingsChange(handleGraphicsSettingsChanged);
     });
