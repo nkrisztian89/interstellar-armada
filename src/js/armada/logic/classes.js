@@ -2224,11 +2224,10 @@ define([
     };
     /**
      * The force the launch of the missile exerts on the launching spacecraft
-     * @param {Number} duration In milliseconds
      * @returns {Number} In newtons (kg*m/s^2)
      */
-    MissileClass.prototype.getForceForDuration = function (duration) {
-        return this._launchVelocity * this._mass / (duration * 0.001); // ms -> s
+    MissileClass.prototype.getLaunchForce = function () {
+        return this._launchVelocity * this._mass * 1000; // ms -> s
     };
     /**
      * @returns {Number}
@@ -2434,11 +2433,11 @@ define([
         return this._projectileVelocity;
     };
     /**
-     * @param {Number} duration In milliseconds
+     * The force firing a projectile from this barrel exerts on the spacecraft
      * @returns {Number} In newtons (kg*m/s^2)
      */
-    Barrel.prototype.getForceForDuration = function (duration) {
-        return this._projectileVelocity * this._projectileClass.getMass() / (duration * 0.001); // ms -> s
+    Barrel.prototype.getFireForce = function () {
+        return this._projectileVelocity * this._projectileClass.getMass() * 1000; // ms -> s
     };
     /**
      * @returns {Number[4]}

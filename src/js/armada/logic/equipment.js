@@ -2125,7 +2125,7 @@ define([
                                 Weapon._projectilePosMatrix,
                                 this._spacecraft.getPhysicalPositionMatrix()),
                         mat.getRowB43Neg(projectileOriMatrix),
-                        barrels[i].getForceForDuration(1),
+                        barrels[i].getFireForce(),
                         1,
                         1
                         );
@@ -2696,7 +2696,7 @@ define([
             this._spacecraft.getPhysicalModel().applyForceAndTorque(
                     tubePosVector,
                     mat.getRowB43Neg(missileOriMatrix),
-                    this._class.getForceForDuration(1),
+                    this._class.getLaunchForce(),
                     1,
                     1
                     );
