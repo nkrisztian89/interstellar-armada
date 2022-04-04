@@ -173,7 +173,6 @@
             "cameraDefaultTransitionStyle": "smooth",
             "cameraPilotingSwitchTransitionDuration": 800,
             "cameraPilotingSwitchTransitionStyle": "smooth",
-            "momentDuration": 1,
             "backgroundObjectDistance": 4500,
             "turnAccelerationDurationInSeconds": 0.2,
             "maxCombatForwardSpeedFactor": 2,

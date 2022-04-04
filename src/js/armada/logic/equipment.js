@@ -228,12 +228,6 @@ define([
              */
             _hitboxOffset = 0,
             /**
-             * Cached value of the configuration setting of how long does a momentary action (e.g. firing a projectile) take in terms of 
-             * physics simulation, in milliseconds.
-             * @type Number
-             */
-            _momentDuration = 0,
-            /**
              * Cached value of the configuration setting for maximum combat forward speed factor.
              * @type Number
              */
@@ -615,7 +609,7 @@ define([
     Projectile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
         var exp, power;
         power = Math.min(this._timeLeft / this._class.getDissipationDuration(), 1);
-        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._physicalModel.getMass() * 1000 / _momentDuration, 1, _momentDuration);
+        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._physicalModel.getMass() * 1000, 1, 1);
         exp = explosion.getExplosion();
         exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, true, physicalHitObject.getVelocityMatrix());
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObject.getSoundSource(), true);
@@ -1522,7 +1516,7 @@ define([
      * @param {Number} offset
      */
     Missile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
-        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000 / _momentDuration, 1, _momentDuration);
+        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000, 1, 1);
         this._destruct(
                 ((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()),
                 mat.translation4vAux(hitPositionVectorInWorldSpace),
@@ -2131,9 +2125,9 @@ define([
                                 Weapon._projectilePosMatrix,
                                 this._spacecraft.getPhysicalPositionMatrix()),
                         mat.getRowB43Neg(projectileOriMatrix),
-                        barrels[i].getForceForDuration(_momentDuration),
+                        barrels[i].getForceForDuration(1),
                         1,
-                        _momentDuration
+                        1
                         );
                 result++;
             }
@@ -2702,9 +2696,9 @@ define([
             this._spacecraft.getPhysicalModel().applyForceAndTorque(
                     tubePosVector,
                     mat.getRowB43Neg(missileOriMatrix),
-                    this._class.getForceForDuration(_momentDuration),
+                    this._class.getForceForDuration(1),
                     1,
-                    _momentDuration
+                    1
                     );
             if (!shipSoundSource) {
                 soundPosition = mat.translationVector3(m.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera()));
@@ -5118,7 +5112,6 @@ define([
     // caching configuration settings
     config.executeWhenReady(function () {
         _isSelfFireEnabled = config.getSetting(config.BATTLE_SETTINGS.SELF_FIRE);
-        _momentDuration = config.getSetting(config.BATTLE_SETTINGS.MOMENT_DURATION);
         _maxCombatForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_FORWARD_SPEED_FACTOR);
         _maxCombatReverseSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_COMBAT_REVERSE_SPEED_FACTOR);
         _maxCruiseForwardSpeedFactor = config.getSetting(config.BATTLE_SETTINGS.MAX_CRUISE_FORWARD_SPEED_FACTOR);

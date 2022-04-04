@@ -827,14 +827,6 @@ define([
             defaultValue: camera.Camera.TransitionStyle.SMOOTH
         },
         /**
-         * The length of impulse-like events (like firing a projectile or hitting a ship) in milliseconds
-         */
-        MOMENT_DURATION: {
-            name: "momentDuration",
-            type: types.DURATION,
-            defaultValue: 1
-        },
-        /**
          * Background objects will be rendered at a point this distance from the camera-space origo, in their set direction.
          */
         BACKGROUND_OBJECT_DISTANCE: {
