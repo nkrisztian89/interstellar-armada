@@ -1255,21 +1255,22 @@ define([
      * Checks whether a point-like object travelling along a straight path with a given speed has hit this pyhical object recently and
      * if so, returns the intersection point where it did.
      * @param {Number[3]} positionVector A 3D vector describing the position of the point in world space. (in meters)
-     * @param {Number[3]} velocityVector The vector in world space that describes the velocity of the travelling object in m/s.
+     * @param {Float32Array} velocityMatrix The 4x4 matrix in world space that describes the velocity of the travelling object in m/s
+     * as the translation component.
      * @param {Number} dt The time interval in milliseconds within which to check for the hit.
      * @param {Number} offset The bounderies of (all the bodies of) the object are offset (the size increased) by this amount
      * (meters in world space)
      * @returns {Number[4]|null} If the object has hit, the intersection point where the hit happened in object space, otherwise null.
      */
-    PhysicalObject.prototype.checkHit = function (positionVector, velocityVector, dt, offset) {
+    PhysicalObject.prototype.checkHit = function (positionVector, velocityMatrix, dt, offset) {
         var i, range, result = null;
         offset *= this._inverseScalingFactor;
         // transforms the position to object-space for preliminary check
         vec.setProdVec4Mat4(_auxVector, vec.vector4From3Aux(positionVector), this.getModelMatrixInverse());
         // calculate the relative velocity of the two objects in world space
-        _auxVector2[0] = velocityVector[0] - this._velocityMatrix[12];
-        _auxVector2[1] = velocityVector[1] - this._velocityMatrix[13];
-        _auxVector2[2] = velocityVector[2] - this._velocityMatrix[14];
+        _auxVector2[0] = velocityMatrix[12] - this._velocityMatrix[12];
+        _auxVector2[1] = velocityMatrix[13] - this._velocityMatrix[13];
+        _auxVector2[2] = velocityMatrix[14] - this._velocityMatrix[14];
         i = vec.extractLength3(_auxVector2);
         range = i * dt * 0.001 * this._inverseScalingFactor;
         // first, preliminary check based on position relative to the whole object

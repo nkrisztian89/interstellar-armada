@@ -382,18 +382,17 @@ define([
      */
     function _checkHit(positionMatrix, velocityMatrix, hitObjectOctree, hitCheckDT, origin, pilotedCraft, offsetCallback, hitCallback) {
         var i, hitObjects, isHostile, isPiloted,
-                positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace,
+                positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace,
                 relativeVelocity, relativeVelocityDirectionInWorldSpace,
                 physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, offset;
         positionVectorInWorldSpace = mat.translationVector3(positionMatrix);
-        velocityVectorInWorldSpace = mat.translationVector3(velocityMatrix);
         hitObjects = hitObjectOctree.getObjects(
-                Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
-                Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
-                Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT * 0.001),
-                Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityVectorInWorldSpace[1] * hitCheckDT * 0.001),
-                Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT * 0.001),
-                Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityVectorInWorldSpace[2] * hitCheckDT * 0.001));
+                Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityMatrix[12] * hitCheckDT * 0.001),
+                Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityMatrix[12] * hitCheckDT * 0.001),
+                Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityMatrix[13] * hitCheckDT * 0.001),
+                Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityMatrix[13] * hitCheckDT * 0.001),
+                Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityMatrix[14] * hitCheckDT * 0.001),
+                Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityMatrix[14] * hitCheckDT * 0.001));
         if (_showHitboxesForHitchecks) {
             for (i = 0; i < hitObjects.length; i++) {
                 hitObjects[i].showHitbox();
@@ -407,9 +406,9 @@ define([
                     ((hitObjects[i] === origin) && _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !isPiloted)) ||
                     ((hitObjects[i] !== origin) && (_isPlayerFriendlyFireDamageEnabled || (hitObjects[i] !== pilotedCraft) || isHostile)))) {
                 offset = offsetCallback(hitObjects[i], isPiloted && pilotedCraft.isHostile(hitObjects[i]));
-                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityVectorInWorldSpace, hitCheckDT, offset);
+                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityMatrix, hitCheckDT, offset);
                 if (hitPositionVectorInObjectSpace) {
-                    relativeVelocityDirectionInWorldSpace = vec.diffVec3Mat4(velocityVectorInWorldSpace, physicalHitObject.getVelocityMatrix());
+                    relativeVelocityDirectionInWorldSpace = vec.diffTranslation3(velocityMatrix, physicalHitObject.getVelocityMatrix());
                     relativeVelocity = vec.extractLength3(relativeVelocityDirectionInWorldSpace);
                     relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4Aux(hitObjects[i].getVisualModel().getOrientationMatrix()));
                     hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());

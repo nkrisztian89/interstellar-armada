@@ -1218,21 +1218,21 @@ define([
                         stillBlocked = false;
                         if (!this._isBlockedBy.canBeReused() && this._facingTarget) {
                             // checking if the blocking spacecraft is still in the way
-                            if (this._isBlockedBy.getPhysicalModel().checkHit(targetPositionVector, vectorToTarget, 1000, ownSize / 2)) {
+                            if (this._isBlockedBy.getPhysicalModel().checkHit(targetPositionVector, mat.translation4vAux(vectorToTarget), 1000, ownSize * 0.25)) {
                                 relativeBlockerPosition = vec.prodVec3Mat4Aux(
-                                        vec.diff3Aux(
-                                                mat.translationVector3(this._isBlockedBy.getPhysicalPositionMatrix()),
-                                                positionVector),
+                                        vec.diffVec3Mat4Aux(
+                                                positionVector,
+                                                this._isBlockedBy.getPhysicalPositionMatrix()),
                                         inverseOrientationMatrix);
                                 blockAvoidanceSpeed = acceleration * BLOCK_AVOIDANCE_SPEED_FACTOR;
-                                if (relativeBlockerPosition[0] < 0) {
+                                if (relativeBlockerPosition[0] > 0) {
                                     this._spacecraft.strafeRight(blockAvoidanceSpeed);
                                     stillBlocked = true;
                                 } else {
                                     this._spacecraft.strafeLeft(blockAvoidanceSpeed);
                                     stillBlocked = true;
                                 }
-                                if (relativeBlockerPosition[2] > 0) {
+                                if (relativeBlockerPosition[2] < 0) {
                                     this._spacecraft.lower(blockAvoidanceSpeed);
                                     stillBlocked = true;
                                 } else {

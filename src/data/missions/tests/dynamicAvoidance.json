@@ -51,7 +51,7 @@
             "class": "falcon",
             "ai": "fighter",
             "position": [-100, 0, 0],
-            "loadout": "full"
+            "loadout": "imperial-tier3"
         },
         {
             "team": "empire",
