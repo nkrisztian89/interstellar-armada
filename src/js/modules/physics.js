@@ -661,11 +661,6 @@ define([
          */
         this._scalingMatrixInverse = mat.identity4();
         /**
-         * Whether the cached value of the inverse scaling matrix is currently valid
-         * @type Boolean
-         */
-        this._scalingMatrixInverseValid = false;
-        /**
          * The cached model matrix.
          * @type Float32Array
          */
@@ -787,8 +782,8 @@ define([
         mat.copyTranslation4(this._positionMatrix, positionMatrix);
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
         mat.copyScaling4(this._scalingMatrix, scalingMatrix);
+        mat.setInverseOfScaling4(this._scalingMatrixInverse, this._scalingMatrix);
         this._rotationMatrixInverseValid = false;
-        this._scalingMatrixInverseValid = false;
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
         mat.setIdentity4(this._velocityMatrix);
@@ -1076,7 +1071,7 @@ define([
      */
     PhysicalObject.prototype.setScalingMatrix = function (value) {
         this._scalingMatrix = value;
-        this._scalingMatrixInverseValid = false;
+        mat.setInverseOfScaling4(this._scalingMatrixInverse, this._scalingMatrix);
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
         this._inverseScalingFactor = 1 / this._scalingMatrix[0];
@@ -1092,18 +1087,6 @@ define([
             this._rotationMatrixInverseValid = true;
         }
         return this._rotationMatrixInverse;
-    };
-    /**
-     * Returns the inverse of the scaling matrix and stores it in a cache to
-     * make sure it is only calculated again if the scaling matrix changes.
-     * @returns {Float32Array}
-     */
-    PhysicalObject.prototype.getScalingMatrixInverse = function () {
-        if (!this._scalingMatrixInverseValid) {
-            mat.setInverseOfScaling4(this._scalingMatrixInverse, this._scalingMatrix);
-            this._scalingMatrixInverseValid = true;
-        }
-        return this._scalingMatrixInverse;
     };
     /**
      * Returns the model matrix of the object, recalculating it if necessary
@@ -1123,11 +1106,7 @@ define([
      */
     PhysicalObject.prototype.getModelMatrixInverse = function () {
         if (!this._modelMatrixInverseValid) {
-            mat.setProdTranslationRotation4(this._modelMatrixInverse,
-                    mat.inverseOfTranslation4Aux(this._positionMatrix),
-                    mat.prod3x3SubOf4Aux(
-                            this.getRotationMatrixInverse(),
-                            this.getScalingMatrixInverse()));
+            mat.setModelMatrixInverse(this._modelMatrixInverse, this._positionMatrix, this._orientationMatrix, this._scalingMatrixInverse);
             this._modelMatrixInverseValid = true;
         }
         return this._modelMatrixInverse;
