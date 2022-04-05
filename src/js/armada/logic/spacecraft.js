@@ -775,8 +775,6 @@ define([
                 mat.identity4(),
                 mat.identity4(),
                 this._class.getBodies(),
-                false,
-                false,
                 this._class.getDragFactor());
         this._weapons = [];
         this._missileLaunchers = [];

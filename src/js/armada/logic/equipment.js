@@ -1032,8 +1032,6 @@ define([
                 mat.scaling4Aux(missileClass.getModelScale()),
                 velocityMatrix,
                 utils.EMPTY_ARRAY,
-                false,
-                false,
                 missileClass.getDragFactor());
         this._timeLeft = missileClass.getDuration();
         this._timeLeftForIgnition = missileClass.getIgnitionTime();

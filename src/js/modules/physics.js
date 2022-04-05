@@ -622,13 +622,9 @@ define([
      * @param {Float32Array} scalingMatrix The 4x4 scaling matrix describing the initial scaling of the object.
      * @param {Float32Array} initialVelocityMatrix The 4x4 translation matrix  describing the initial velocity of the object. (in m/s)
      * @param {Body[]} [bodies] The array of bodies this object is comprised of.
-     * @param {Boolean} [fixedOrientation=false] When true, the orientation of the object cannot change during simulation steps as the 
-     * related calculations are not performed (for optimization)
-     * @param {Boolean} [fixedVelocity=false] When true, the velocity of the object is not changed by any added forces (can still be 
-     * changed by directly applying forces)
      * @param {Number} [dragFactor=1] If there is a global drag coefficient set, the drag experienced by this object will be multiplied by this factor
      */
-    function PhysicalObject(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation, fixedVelocity, dragFactor) {
+    function PhysicalObject(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, dragFactor) {
         /**
          * The mass in kilograms.
          * @type Number
@@ -748,18 +744,6 @@ define([
          */
         this._bodySize = -1;
         /**
-         * When true, the velocity of the object is not changed by any added forces (can still be changed by directly applying forces)
-         * Makes the simulate() call faster by omitting the related calculations
-         * @type Boolean
-         */
-        this._fixedVelocity = false;
-        /**
-         * When true, the orientation of the object cannot change during simulation steps as the related calculations are not performed 
-         * (for optimization)
-         * @type Boolean
-         */
-        this._fixedOrientation = false;
-        /**
          * If there is a global drag coefficient set, the drag experienced by this object will be multiplied by this factor
          * @type Number
          */
@@ -785,7 +769,7 @@ define([
             reverse: false
         };
         if (positionMatrix) {
-            this.init(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation, fixedVelocity, dragFactor);
+            this.init(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, dragFactor);
         }
     }
     /**
@@ -795,13 +779,9 @@ define([
      * @param {Float32Array} scalingMatrix The 4x4 scaling matrix describing the initial scaling of the object.
      * @param {Float32Array} initialVelocityMatrix The 4x4 translation matrix  describing the initial velocity of the object. (in m/s)
      * @param {Body[]} [bodies] The array of bodies this object is comprised of.
-     * @param {Boolean} [fixedOrientation=false] When true, the orientation of the object cannot change during simulation steps as the 
-     * related calculations are not performed (for optimization)
-     * @param {Boolean} [fixedVelocity=false] When true, the velocity of the object is not changed by any added forces (can still be 
-     * changed by directly applying forces)
      * @param {Number} [dragFactor=1] If there is a global drag coefficient set, the drag experienced by this object will be multiplied by this factor
      */
-    PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, fixedOrientation, fixedVelocity, dragFactor) {
+    PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, dragFactor) {
         this._mass = mass;
         this._inverseMass = 1 / mass;
         mat.copyTranslation4(this._positionMatrix, positionMatrix);
@@ -824,8 +804,6 @@ define([
         this._bodies = bodies || utils.EMPTY_ARRAY;
         this._bodySize = -1;
         this._calculateBodySize();
-        this._fixedOrientation = !!fixedOrientation;
-        this._fixedVelocity = !!fixedVelocity;
         this._dragFactor = (dragFactor !== undefined) ? dragFactor : 1;
     };
     /**
@@ -1501,104 +1479,98 @@ define([
             // milliseconds as a result of the velocity sampled in the previous step
             // the velocity matrix is in m/s
             mat.translateByMatrixMul(this._positionMatrix, this._velocityMatrix, dt * 0.001);
-            if (this._fixedVelocity) {
-                this._modelMatrixInverseValid = false;
-            } else {
-                mat.translateByVector(this._positionMatrix, this._offset);
-                this._modelMatrixInverseValid = false;
-                // calculate the movement that happened as a result of the acceleration
-                // the affecting forces caused since the previous step
-                // (s=1/2*a*t^2)
-                if (this._forces.getLength() > 0) {
-                    for (force = this._forces.getFirst(); force; force = nextForce) {
-                        nextForce = force.next;
-                        if (force.canBeReused()) {
-                            this._forces.remove(force);
-                        } else {
-                            t = force.exert(dt) * 0.001; // t is in seconds
-                            if (t > 0) {
-                                a = force.getAccelerationVector(this._inverseMass);
-                                mat.translateByVector(
-                                        this._positionMatrix,
-                                        vec.scaled3Aux(a, 0.5 * t * t));
-                                // calculate the caused acceleration to update the velocity matrix
-                                vec.add3(
-                                        this._acceleration,
-                                        vec.scaled3Aux(a, t));
-                            }
+            mat.translateByVector(this._positionMatrix, this._offset);
+            this._modelMatrixInverseValid = false;
+            // calculate the movement that happened as a result of the acceleration
+            // the affecting forces caused since the previous step
+            // (s=1/2*a*t^2)
+            if (this._forces.getLength() > 0) {
+                for (force = this._forces.getFirst(); force; force = nextForce) {
+                    nextForce = force.next;
+                    if (force.canBeReused()) {
+                        this._forces.remove(force);
+                    } else {
+                        t = force.exert(dt) * 0.001; // t is in seconds
+                        if (t > 0) {
+                            a = force.getAccelerationVector(this._inverseMass);
+                            mat.translateByVector(
+                                    this._positionMatrix,
+                                    vec.scaled3Aux(a, 0.5 * t * t));
+                            // calculate the caused acceleration to update the velocity matrix
+                            vec.add3(
+                                    this._acceleration,
+                                    vec.scaled3Aux(a, t));
                         }
                     }
                 }
-                // update velocity matrix
-                mat.translateByVector(this._velocityMatrix, this._acceleration);
-                vec.setNull3(this._acceleration);
-                vec.setNull3(this._offset);
+            }
+            // update velocity matrix
+            mat.translateByVector(this._velocityMatrix, this._acceleration);
+            vec.setNull3(this._acceleration);
+            vec.setNull3(this._offset);
+            // correct matrix inaccuracies and close to zero values resulting from
+            // floating point operations
+            mat.straightenTranslation(this._velocityMatrix, VELOCITY_MATRIX_ERROR_THRESHOLD);
+            if ((_drag > 0) && (this._dragFactor > 0)) {
+                matrix = mat.identity3Aux();
+                s = _angularDrag * this._dragFactor * dt * 0.001;
+                if (vec.angle2y(this._velocityMatrix[4], this._velocityMatrix[5]) > MINIMUM_DRAG_ANGLE) {
+                    mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Z, (this._velocityMatrix[4] > 0) ? -s : s));
+                }
+                if (vec.angle2x(this._velocityMatrix[5], this._velocityMatrix[6]) > MINIMUM_DRAG_ANGLE) {
+                    mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_X, (this._velocityMatrix[6] > 0) ? s : -s));
+                }
+                if (vec.angle2x(this._velocityMatrix[0], this._velocityMatrix[2]) > MINIMUM_DRAG_ANGLE) {
+                    mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Y, (this._velocityMatrix[2] > 0) ? -s : s));
+                }
+                mat.mulRotation43(this._velocityMatrix, matrix);
+            }
+            // the same process with rotation and torques
+            // the angular velocity matrix represents the rotation that happens
+            // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
+            // interpolated easily, for that quaternions should be used)
+            for (i = 0; (i + ANGULAR_VELOCITY_MATRIX_DURATION * 0.5) < dt; i += ANGULAR_VELOCITY_MATRIX_DURATION) {
+                mat.mulRotationRotation4(this._orientationMatrix, this._velocityMatrix);
+            }
+            if (this._hasAngularAcceleration) {
+                mat.mulRotation43(
+                        this._orientationMatrix,
+                        this._orientationOffset);
+                mat.setIdentity3(this._orientationOffset);
+            }
+            this.setOrientationMatrix();
+            // calculate the rotation that happened as a result of the angular
+            // acceleration the affecting torques caused since the previous step
+            if (this._torques.getLength() > 0) {
+                this._hasAngularAcceleration = true;
+                for (torque = this._torques.getFirst(); torque; torque = nextTorque) {
+                    nextTorque = torque.next;
+                    if (torque.canBeReused()) {
+                        this._torques.remove(torque);
+                    } else {
+                        t = torque.exert(dt) * 0.001; // t is in seconds
+                        if (t > 0) {
+                            mat.mulRotation43(
+                                    this._orientationMatrix,
+                                    torque.getAngularAccelerationMatrixOverTime(this._inverseMass, 0.5 * t * t));
+                            // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
+                            mat.mul3(
+                                    this._angularAccelerationMatrix,
+                                    torque.getAngularAccelerationMatrixOverTime(this._inverseMass, ANGULAR_VELOCITY_MATRIX_DURATION * t * 0.001));
+                        }
+                    }
+                }
+            }
+            if (this._hasAngularAcceleration) {
+                // update angular velocity matrix
+                mat.mulRotation43(this._velocityMatrix, this._angularAccelerationMatrix);
+                mat.setIdentity3(this._angularAccelerationMatrix);
+                this._hasAngularAcceleration = false;
                 // correct matrix inaccuracies and close to zero values resulting from
                 // floating point operations
-                mat.straightenTranslation(this._velocityMatrix, VELOCITY_MATRIX_ERROR_THRESHOLD);
+                mat.straightenRotation4(this._velocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
             }
-            if (!this._fixedOrientation) {
-                if ((_drag > 0) && (this._dragFactor > 0)) {
-                    matrix = mat.identity3Aux();
-                    s = _angularDrag * this._dragFactor * dt * 0.001;
-                    if (vec.angle2y(this._velocityMatrix[4], this._velocityMatrix[5]) > MINIMUM_DRAG_ANGLE) {
-                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Z, (this._velocityMatrix[4] > 0) ? -s : s));
-                    }
-                    if (vec.angle2x(this._velocityMatrix[5], this._velocityMatrix[6]) > MINIMUM_DRAG_ANGLE) {
-                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_X, (this._velocityMatrix[6] > 0) ? s : -s));
-                    }
-                    if (vec.angle2x(this._velocityMatrix[0], this._velocityMatrix[2]) > MINIMUM_DRAG_ANGLE) {
-                        mat.mul3(matrix, mat.rotation3Aux(vec.UNIT3_Y, (this._velocityMatrix[2] > 0) ? -s : s));
-                    }
-                    mat.mulRotation43(this._velocityMatrix, matrix);
-                }
-                // the same process with rotation and torques
-                // the angular velocity matrix represents the rotation that happens
-                // during the course of ANGULAR_VELOCITY_MATRIX_DURATION milliseconds (since rotation cannot be
-                // interpolated easily, for that quaternions should be used)
-                for (i = 0; (i + ANGULAR_VELOCITY_MATRIX_DURATION * 0.5) < dt; i += ANGULAR_VELOCITY_MATRIX_DURATION) {
-                    mat.mulRotationRotation4(this._orientationMatrix, this._velocityMatrix);
-                }
-                if (this._hasAngularAcceleration) {
-                    mat.mulRotation43(
-                            this._orientationMatrix,
-                            this._orientationOffset);
-                    mat.setIdentity3(this._orientationOffset);
-                }
-                this.setOrientationMatrix();
-                // calculate the rotation that happened as a result of the angular
-                // acceleration the affecting torques caused since the previous step
-                if (this._torques.getLength() > 0) {
-                    this._hasAngularAcceleration = true;
-                    for (torque = this._torques.getFirst(); torque; torque = nextTorque) {
-                        nextTorque = torque.next;
-                        if (torque.canBeReused()) {
-                            this._torques.remove(torque);
-                        } else {
-                            t = torque.exert(dt) * 0.001; // t is in seconds
-                            if (t > 0) {
-                                mat.mulRotation43(
-                                        this._orientationMatrix,
-                                        torque.getAngularAccelerationMatrixOverTime(this._inverseMass, 0.5 * t * t));
-                                // angular acceleration matrix stores angular acceleration for ANGULAR_VELOCITY_MATRIX_DURATION ms
-                                mat.mul3(
-                                        this._angularAccelerationMatrix,
-                                        torque.getAngularAccelerationMatrixOverTime(this._inverseMass, ANGULAR_VELOCITY_MATRIX_DURATION * t * 0.001));
-                            }
-                        }
-                    }
-                }
-                if (this._hasAngularAcceleration) {
-                    // update angular velocity matrix
-                    mat.mulRotation43(this._velocityMatrix, this._angularAccelerationMatrix);
-                    mat.setIdentity3(this._angularAccelerationMatrix);
-                    this._hasAngularAcceleration = false;
-                    // correct matrix inaccuracies and close to zero values resulting from
-                    // floating point operations
-                    mat.straightenRotation4(this._velocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
-                }
-                this._correctMatrices();
-            }
+            this._correctMatrices();
         }
     };
     // -------------------------------------------------------------------------
