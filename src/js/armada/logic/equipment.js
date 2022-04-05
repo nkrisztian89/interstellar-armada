@@ -382,17 +382,16 @@ define([
      */
     function _checkHit(positionMatrix, velocityMatrix, hitObjectOctree, hitCheckDT, origin, pilotedCraft, offsetCallback, hitCallback) {
         var i, hitObjects, isHostile, isPiloted,
-                positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace,
+                relativeVelocityDirectionInObjectSpace,
                 relativeVelocity, relativeVelocityDirectionInWorldSpace,
                 physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, offset;
-        positionVectorInWorldSpace = mat.translationVector3(positionMatrix);
         hitObjects = hitObjectOctree.getObjects(
-                Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityMatrix[12] * hitCheckDT * 0.001),
-                Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityMatrix[12] * hitCheckDT * 0.001),
-                Math.min(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityMatrix[13] * hitCheckDT * 0.001),
-                Math.max(positionVectorInWorldSpace[1], positionVectorInWorldSpace[1] - velocityMatrix[13] * hitCheckDT * 0.001),
-                Math.min(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityMatrix[14] * hitCheckDT * 0.001),
-                Math.max(positionVectorInWorldSpace[2], positionVectorInWorldSpace[2] - velocityMatrix[14] * hitCheckDT * 0.001));
+                Math.min(positionMatrix[12], positionMatrix[12] - velocityMatrix[12] * hitCheckDT * 0.001),
+                Math.max(positionMatrix[12], positionMatrix[12] - velocityMatrix[12] * hitCheckDT * 0.001),
+                Math.min(positionMatrix[13], positionMatrix[13] - velocityMatrix[13] * hitCheckDT * 0.001),
+                Math.max(positionMatrix[13], positionMatrix[13] - velocityMatrix[13] * hitCheckDT * 0.001),
+                Math.min(positionMatrix[14], positionMatrix[14] - velocityMatrix[14] * hitCheckDT * 0.001),
+                Math.max(positionMatrix[14], positionMatrix[14] - velocityMatrix[14] * hitCheckDT * 0.001));
         if (_showHitboxesForHitchecks) {
             for (i = 0; i < hitObjects.length; i++) {
                 hitObjects[i].showHitbox();
@@ -406,7 +405,7 @@ define([
                     ((hitObjects[i] === origin) && _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !isPiloted)) ||
                     ((hitObjects[i] !== origin) && (_isPlayerFriendlyFireDamageEnabled || (hitObjects[i] !== pilotedCraft) || isHostile)))) {
                 offset = offsetCallback(hitObjects[i], isPiloted && pilotedCraft.isHostile(hitObjects[i]));
-                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionVectorInWorldSpace, velocityMatrix, hitCheckDT, offset);
+                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionMatrix, velocityMatrix, hitCheckDT, offset);
                 if (hitPositionVectorInObjectSpace) {
                     relativeVelocityDirectionInWorldSpace = vec.diffTranslation3(velocityMatrix, physicalHitObject.getVelocityMatrix());
                     relativeVelocity = vec.extractLength3(relativeVelocityDirectionInWorldSpace);

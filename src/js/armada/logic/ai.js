@@ -1218,7 +1218,7 @@ define([
                         stillBlocked = false;
                         if (!this._isBlockedBy.canBeReused() && this._facingTarget) {
                             // checking if the blocking spacecraft is still in the way
-                            if (this._isBlockedBy.getPhysicalModel().checkHit(targetPositionVector, mat.translation4vAux(vectorToTarget), 1000, ownSize * 0.25)) {
+                            if (this._isBlockedBy.getPhysicalModel().checkHit(mat.translation4vAux(targetPositionVector), mat.translation4vAux(vectorToTarget), 1000, ownSize * 0.25)) {
                                 relativeBlockerPosition = vec.prodVec3Mat4Aux(
                                         vec.diffVec3Mat4Aux(
                                                 positionVector,
