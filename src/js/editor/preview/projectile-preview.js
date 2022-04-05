@@ -1,5 +1,5 @@
 /**
- * Copyright 2016, 2020-2021 Krisztián Nagy
+ * Copyright 2016, 2020-2022 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for projectile classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -90,10 +90,10 @@ define([
                 preview.getScene().addDirectionalLightSource(new lights.DirectionalLightSource(LIGHT_SOURCES[i].color, LIGHT_SOURCES[i].direction));
             }
             if (shouldReload) {
-                _projectile = new equipment.Projectile(_projectileClass, undefined, orientationMatrix);
+                _projectile = new equipment.Projectile(_projectileClass);
             }
             _projectile.addResourcesToScene(preview.getScene(), false);
-            _projectile.addToScene(preview.getScene(), false, function (model) {
+            _projectile.addToScene(preview.getScene(), false, undefined, orientationMatrix, 0, function (model) {
                 preview.setModel(model);
             });
         }

@@ -370,7 +370,8 @@ define([
      */
     /**
      * The common code to use for both projectile and missile hitchecks.
-     * @param {PhysicalObject} object The physical model of the object (i.e. projectile or missile) that can hit the others
+     * @param {Float32Array} positionMatrix The position matrix of the object (i.e. projectile or missile) that can hit the others
+     * @param {Float32Array} velocityMatrix The velocity matrix of the object (i.e. projectile or missile) that can hit the others
      * @param {Octree} hitObjectOctree The octree containing the objects that our projectile/missile can hit
      * @param {Number} hitCheckDT The elapsed time to consider for the hit check (since last hitcheck, in ms)
      * @param {Spacecraft} origin The spacecraft that fired our projectile / missile (for self hit checks)
@@ -379,13 +380,13 @@ define([
      * the hitbox sizes so that e.g. missiles can already hit the object from farther away)
      * @param {HitCallback} hitCallback The function to call if an object is hit, passing the parameters of the hit to it
      */
-    function _checkHit(object, hitObjectOctree, hitCheckDT, origin, pilotedCraft, offsetCallback, hitCallback) {
+    function _checkHit(positionMatrix, velocityMatrix, hitObjectOctree, hitCheckDT, origin, pilotedCraft, offsetCallback, hitCallback) {
         var i, hitObjects, isHostile, isPiloted,
                 positionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, velocityVectorInWorldSpace,
                 relativeVelocity, relativeVelocityDirectionInWorldSpace,
                 physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, offset;
-        positionVectorInWorldSpace = mat.translationVector3(object.getPositionMatrix());
-        velocityVectorInWorldSpace = mat.translationVector3(object.getVelocityMatrix());
+        positionVectorInWorldSpace = mat.translationVector3(positionMatrix);
+        velocityVectorInWorldSpace = mat.translationVector3(velocityMatrix);
         hitObjects = hitObjectOctree.getObjects(
                 Math.min(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
                 Math.max(positionVectorInWorldSpace[0], positionVectorInWorldSpace[0] - velocityVectorInWorldSpace[0] * hitCheckDT * 0.001),
@@ -423,12 +424,9 @@ define([
     /**
      * @class Represents a projectile fired from a weapon.
      * @param {ProjectileClass} projectileClass The class of the projectile defining its general properties.
-     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the projectile.
-     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the projectile.
      * @param {Spacecraft} [spacecraft] The spacecraft which fired the projectile.
-     * @param {Number} [muzzleVelocity] The starting velocity of the projectile, in its +Y direction, in m/s
      */
-    function Projectile(projectileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity) {
+    function Projectile(projectileClass, spacecraft) {
         /**
          * The class storing the general characteristics of this projectile.
          * @type ProjectileClass
@@ -440,11 +438,10 @@ define([
          */
         this._visualModel = null;
         /**
-         * The object that represents and simulates the physical behaviour of
-         * this projectile.
-         * @type PhysicalObject
+         * The translation component of this matrix holds the velocity of the projectile.
+         * @type Float32Array
          */
-        this._physicalModel = new physics.PhysicalObject();
+        this._velocityMatrix = mat.identity4();
         /**
          * The amount of time this projectile has left to "live", in milliseconds.
          * @type Number
@@ -468,37 +465,15 @@ define([
          */
         this._hitCallback = Projectile.prototype._hitCallback.bind(this);
         if (projectileClass) {
-            this.init(projectileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity);
+            this.init(projectileClass, spacecraft);
         }
     }
     /**
      * @param {ProjectileClass} projectileClass The class of the projectile defining its general properties.
-     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the projectile.
-     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the projectile.
      * @param {Spacecraft} [spacecraft] The spacecraft which fired the projectile.
-     * @param {Number} [muzzleVelocity] The starting velocity of the projectile, in its +Y direction, in m/s
      */
-    Projectile.prototype.init = function (projectileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity) {
-        var velocityMatrix = mat.identity4Aux();
-        if (spacecraft) {
-            mat.copyTranslation4(velocityMatrix, spacecraft.getPhysicalVelocityMatrix());
-        }
-        if (muzzleVelocity) {
-            velocityMatrix[12] += orientationMatrix[4] * muzzleVelocity;
-            velocityMatrix[13] += orientationMatrix[5] * muzzleVelocity;
-            velocityMatrix[14] += orientationMatrix[6] * muzzleVelocity;
-        }
+    Projectile.prototype.init = function (projectileClass, spacecraft) {
         this._class = projectileClass;
-        this._physicalModel.init(
-                projectileClass.getMass(),
-                positionMatrix || mat.IDENTITY4,
-                orientationMatrix || mat.IDENTITY4,
-                mat.scaling4Aux(projectileClass.getSize()),
-                velocityMatrix,
-                utils.EMPTY_ARRAY,
-                true,
-                true,
-                projectileClass.getDragFactor());
         this._timeLeft = projectileClass.getDuration();
         this._origin = spacecraft;
     };
@@ -520,10 +495,22 @@ define([
     /**
      * Sets up the renderable object that can be used to represent this projectile in a visual scene.
      * @param {Boolean} [wireframe=false] Whether to set up the model in wireframe mode
+     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the projectile.
+     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the projectile.
+     * @param {Number} [muzzleVelocity] The starting velocity of the projectile, in its +Y direction, in m/s
      */
-    Projectile.prototype._initVisualModel = function (wireframe) {
+    Projectile.prototype._initVisualModel = function (wireframe, positionMatrix, orientationMatrix, muzzleVelocity) {
         if (!this._visualModel) {
             this.createVisualModel();
+        }
+        mat.setIdentity4(this._velocityMatrix);
+        if (this._origin) {
+            mat.copyTranslation4(this._velocityMatrix, this._origin.getPhysicalVelocityMatrix());
+        }
+        if (muzzleVelocity) {
+            this._velocityMatrix[12] += orientationMatrix[4] * muzzleVelocity;
+            this._velocityMatrix[13] += orientationMatrix[5] * muzzleVelocity;
+            this._velocityMatrix[14] += orientationMatrix[6] * muzzleVelocity;
         }
         this._visualModel.init(
                 this._class.getModel(),
@@ -531,8 +518,8 @@ define([
                 this._class.getTexturesOfTypes(this._class.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                 this._class.getSize(),
                 wireframe,
-                this._physicalModel.getPositionMatrix(),
-                this._physicalModel.getOrientationMatrix(),
+                positionMatrix || mat.IDENTITY4,
+                orientationMatrix || mat.IDENTITY4,
                 this._class.getInstancedShader());
     };
     /**
@@ -553,11 +540,14 @@ define([
      * Adds the projectile to a scene immediately, assuming its resources have already been loaded.
      * @param {Scene} scene The scene to which to add the renderable object presenting the projectile.
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
+     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the projectile.
+     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the projectile.
+     * @param {Number} [muzzleVelocity] The starting velocity of the projectile, in its +Y direction, in m/s
      * @param {Function} [callback] If given, this function will be executed right after the projectile is addded to the scene, with the 
      * visual model of the projectile passed to it as its only argument
      */
-    Projectile.prototype.addToSceneNow = function (scene, wireframe, callback) {
-        this._initVisualModel(wireframe);
+    Projectile.prototype.addToSceneNow = function (scene, wireframe, positionMatrix, orientationMatrix, muzzleVelocity, callback) {
+        this._initVisualModel(wireframe, positionMatrix, orientationMatrix, muzzleVelocity);
         scene.addObject(this._visualModel, false, true);
         if (callback) {
             callback(this._visualModel);
@@ -567,11 +557,14 @@ define([
      * Adds a renderable node representing this projectile to the passed scene.
      * @param {Scene} scene The scene to which to add the renderable object presenting the projectile.
      * @param {Boolean} [wireframe=false] Whether to add the model for wireframe rendering
+     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the projectile.
+     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the projectile.
+     * @param {Number} [muzzleVelocity] The starting velocity of the projectile, in its +Y direction, in m/s
      * @param {Function} [callback] If given, this function will be executed right after the projectile is addded to the scene, with the 
      * visual model of the projectile passed to it as its only argument
      */
-    Projectile.prototype.addToScene = function (scene, wireframe, callback) {
-        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, wireframe, callback));
+    Projectile.prototype.addToScene = function (scene, wireframe, positionMatrix, orientationMatrix, muzzleVelocity, callback) {
+        resources.executeWhenReady(this.addToSceneNow.bind(this, scene, wireframe, positionMatrix, orientationMatrix, muzzleVelocity, callback));
     };
     /**
      * Adds the resources required to render this projectile to the passed scene,
@@ -609,7 +602,7 @@ define([
     Projectile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
         var exp, power;
         power = Math.min(this._timeLeft / this._class.getDissipationDuration(), 1);
-        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._physicalModel.getMass() * 1000, 1, 1);
+        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._class.getMass() * 1000, 1, 1);
         exp = explosion.getExplosion();
         exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, true, physicalHitObject.getVelocityMatrix());
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObject.getSoundSource(), true);
@@ -633,8 +626,10 @@ define([
         hitCheckDT = Math.min(dt, this._class.getDuration() - this._timeLeft);
         this._timeLeft -= dt;
         if (this._timeLeft > 0) {
-            this._physicalModel.simulate(dt);
-            this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
+            if ((physics.getDrag() > 0) && (this._class.getDragFactor() > 0)) {
+                physics.applyDrag(this._velocityMatrix, dt, this._class.getDragFactor());
+            }
+            this._visualModel.translateByMatrixMul(this._velocityMatrix, dt * 0.001);
             if (this._timeLeft < this._class.getDissipationDuration()) {
                 power = this._timeLeft / this._class.getDissipationDuration();
                 this._visualModel.setDirectionW(power);
@@ -642,7 +637,7 @@ define([
                     this._lightSource.setObjectIntensity(power * this._class.getLightIntensity());
                 }
             }
-            _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, _getDefaultOffset, this._hitCallback);
+            _checkHit(this._visualModel.getPositionMatrix(), this._velocityMatrix, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, _getDefaultOffset, this._hitCallback);
         } else {
             this._visualModel.markAsReusable(true);
         }
@@ -659,7 +654,7 @@ define([
             this._visualModel.getNode().markAsReusable(true);
         }
         this._visualModel = null;
-        this._physicalModel = null;
+        this._velocityMatrix = null;
     };
     // ##############################################################################
     /**
@@ -1620,7 +1615,7 @@ define([
                 }
             }
             if ((hitCheckDT > 0) && (this._timeLeftForIgnition <= 0)) {
-                _checkHit(this._physicalModel, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, this._getHitOffset, this._hitCallback);
+                _checkHit(this._physicalModel.getPositionMatrix(), this._physicalModel.getVelocityMatrix(), hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, this._getHitOffset, this._hitCallback);
             }
         } else {
             // self-destruct if the time has run out
@@ -2101,13 +2096,8 @@ define([
                 this._visualModel.getNode().addSubnode(muzzleFlash.getNode() || new sceneGraph.RenderableNode(muzzleFlash, false, false, true));
                 // add the projectile of this barrel
                 p = _projectilePool.getObject();
-                p.init(
-                        projectileClass,
-                        Weapon._projectilePosMatrix,
-                        projectileOriMatrix,
-                        this._spacecraft,
-                        barrels[i].getProjectileVelocity());
-                p.addToSceneNow(scene);
+                p.init(projectileClass, this._spacecraft);
+                p.addToSceneNow(scene, false, Weapon._projectilePosMatrix, projectileOriMatrix, barrels[i].getProjectileVelocity());
                 if (_dynamicLights && projectileClass.getLightColor()) {
                     // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
                     // been created, so that projectiles from the same weapon and of the same class only use one light source object

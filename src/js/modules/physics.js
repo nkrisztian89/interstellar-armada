@@ -122,6 +122,25 @@ define([
         _drag = drag;
         _angularDrag = angularDrag;
     }
+    /**
+     * Slows the linear velocity represented by the translation component of the passed 4x4 matrix according to the
+     * set global drag, the drag factor and the passed elapsed time.
+     * @param {Float32Array} velocityMatrix A 4x4 matrix, the translation component represents velocity in m/s
+     * @param {Number} dt The elapsed time in milliseconds
+     * @param {Number} factor A factor to multiply the strength of the force created by drag
+     */
+    function applyDrag(velocityMatrix, dt, factor) {
+        var s, a;
+        s = (velocityMatrix[12] * velocityMatrix[12] + velocityMatrix[13] * velocityMatrix[13] + velocityMatrix[14] * velocityMatrix[14]);
+        if (s > MINIMUM_DRAG_VELOCITY) {
+            a = _drag * factor * s;
+            s = 1 / Math.sqrt(s);
+            a = -s * a * dt * 0.001;
+            velocityMatrix[12] += a * velocityMatrix[12];
+            velocityMatrix[13] += a * velocityMatrix[13];
+            velocityMatrix[14] += a * velocityMatrix[14];
+        }
+    }
     // #########################################################################
     /**
      * @class Represents a force affecting a physical object, causing it to 
@@ -1476,15 +1495,7 @@ define([
         var i, a, s, t, force, nextForce, torque, nextTorque, matrix;
         if (dt > 0) {
             if ((_drag > 0) && (this._dragFactor > 0)) {
-                s = (this._velocityMatrix[12] * this._velocityMatrix[12] + this._velocityMatrix[13] * this._velocityMatrix[13] + this._velocityMatrix[14] * this._velocityMatrix[14]);
-                if (s > MINIMUM_DRAG_VELOCITY) {
-                    a = _drag * this._dragFactor * s;
-                    s = 1 / Math.sqrt(s);
-                    a = -s * a * dt * 0.001;
-                    this._velocityMatrix[12] += a * this._velocityMatrix[12];
-                    this._velocityMatrix[13] += a * this._velocityMatrix[13];
-                    this._velocityMatrix[14] += a * this._velocityMatrix[14];
-                }
+                applyDrag(this._velocityMatrix, dt, this._dragFactor);
             }
             // first calculate the movement that happened in the past dt
             // milliseconds as a result of the velocity sampled in the previous step
@@ -1595,6 +1606,7 @@ define([
     return {
         getDrag: getDrag,
         setDrag: setDrag,
+        applyDrag: applyDrag,
         Body: Body,
         Force: Force,
         Torque: Torque,

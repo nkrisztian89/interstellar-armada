@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Provides a basic class to use as a mixin or base class for 3 dimensional objects.
  * be rendered on them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -359,6 +359,25 @@ define([
             this._positionMatrixInCameraSpaceValid = false;
         }
         /**
+         * Translates the current position by mutliplying it by the translation
+         * defined by the passed matrix multiplied by the passed factor.
+         * @param {Float32Array} matrix
+         * @param {Number} factor
+         */
+        function translateByMatrixMul(matrix, factor) {
+            this._positionMatrix[12] += matrix[12] * factor;
+            this._positionMatrix[13] += matrix[13] * factor;
+            this._positionMatrix[14] += matrix[14] * factor;
+            this._modelMatrix[12] += matrix[12] * factor;
+            this._modelMatrix[13] += matrix[13] * factor;
+            this._modelMatrix[14] += matrix[14] * factor;
+            this._modelMatrixInverseValid = false;
+            if (!this._parent || !this._parent.childrenAlwaysInside()) {
+                this._insideParent = null;
+            }
+            this._positionMatrixInCameraSpaceValid = false;
+        }
+        /**
          * Translates the position to be the linear combination of the current
          * position and the one define by the passed matrix.
          * @param {Float32Array} matrix A 4x4 matrix
@@ -704,6 +723,7 @@ define([
             this.prototype.translate = translate;
             this.prototype.translatev = translatev;
             this.prototype.translateByMatrix = translateByMatrix;
+            this.prototype.translateByMatrixMul = translateByMatrixMul;
             this.prototype.translateTowardsM4 = translateTowardsM4;
             this.prototype.getXDirectionVector = getXDirectionVector;
             this.prototype.getYDirectionVector = getYDirectionVector;
