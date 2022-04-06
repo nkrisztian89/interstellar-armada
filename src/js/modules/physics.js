@@ -1025,9 +1025,7 @@ define([
      * @param {Float32Array} value A 4x4 rotation matrix.
      */
     PhysicalObject.prototype.setOrientationMatrix = function (value) {
-        if (value) {
-            this._orientationMatrix = value;
-        }
+        this._orientationMatrix = value;
         this._rotationMatrixInverseValid = false;
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
@@ -1427,15 +1425,6 @@ define([
         return result;
     };
     /**
-     * Ensures that the orientation and angular velocity matrices are orthogonal,
-     * compensating for floating point inaccuracies.
-     */
-    PhysicalObject.prototype._correctMatrices = function () {
-        mat.correctOrthogonal4(this._orientationMatrix);
-        this.setOrientationMatrix();
-        mat.correctOrthogonal4(this._velocityMatrix);
-    };
-    /**
      * Performs the physics calculations for the object based on the forces and 
      * torques that are affecting it, updating its position and orientation.
      * @param {Number} dt The elapsed time since the last simulation step, in
@@ -1510,7 +1499,6 @@ define([
                         this._orientationOffset);
                 mat.setIdentity3(this._orientationOffset);
             }
-            this.setOrientationMatrix();
             // calculate the rotation that happened as a result of the angular
             // acceleration the affecting torques caused since the previous step
             if (this._torques.getLength() > 0) {
@@ -1542,7 +1530,11 @@ define([
                 // floating point operations
                 mat.straightenRotation4(this._velocityMatrix, ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD);
             }
-            this._correctMatrices();
+            mat.correctOrthogonal4(this._orientationMatrix);
+            mat.correctOrthogonal4(this._velocityMatrix);
+            this._rotationMatrixInverseValid = false;
+            this._modelMatrixValid = false;
+            this._modelMatrixInverseValid = false;
         }
     };
     // -------------------------------------------------------------------------
