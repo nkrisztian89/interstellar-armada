@@ -91,33 +91,6 @@ define([
          */
         this._modelMatrixForFrameValid = false;
         /**
-         * Cache variable to store the calculated value of the inverse of the combined model matrix.
-         * @type Float32Array
-         */
-        this._modelMatrixInverse = mat.identity4();
-        /**
-         * Whether the cached inverse model matrix value is currently valid
-         * @type Boolean
-         */
-        this._modelMatrixInverseValid = false;
-        /**
-         * The cached calculated value of the cascaded inverse model matrix (with the transformations of the parents applied) for the 
-         * current frame.
-         * @type Float32Array
-         */
-        this._cascadedModelMatrixInverse = mat.identity4();
-        /**
-         * The matrix to be used as the inverse model matrix for the current frame (points to the calculated cascaded inverse model matrix, if there is a parent, 
-         * and to the simple local inverse model matrix if there isn't)
-         * @type Float32Array
-         */
-        this._modelMatrixInverseForFrame = this._modelMatrixInverse;
-        /**
-         * Whether the cached cascaded inverse model matrix value is currently valid
-         * @type Boolean
-         */
-        this._modelMatrixInverseForFrameValid = false;
-        /**
          * @type Number
          */
         this._size = (size !== undefined) ? size : 1;
@@ -185,12 +158,9 @@ define([
             mat.setMatrix4(this._orientationMatrix, orientationMatrix || mat.IDENTITY4);
             mat.copyScaling4(this._scalingMatrix, scalingMatrix || mat.IDENTITY4);
             this._modelMatrixForFrame = this._modelMatrix;
-            this._modelMatrixInverseForFrame = this._modelMatrixInverse;
             this._cascadeScalingMatrixValid = false;
             this._modelMatrixValid = false;
             this._modelMatrixForFrameValid = false;
-            this._modelMatrixInverseValid = false;
-            this._modelMatrixInverseForFrameValid = false;
             this._size = (size !== undefined) ? size : 1;
             this._insideParent = null;
             this._childrenAlwaysInside = childrenAlwaysInside || false;
@@ -204,7 +174,6 @@ define([
         function resetCachedValues() {
             this._positionMatrixInCameraSpaceValid = false;
             this._modelMatrixForFrameValid = false;
-            this._modelMatrixInverseForFrameValid = false;
         }
         /**
          * Sets a new parent.
@@ -213,7 +182,6 @@ define([
         function setParent(parent) {
             this._parent = parent;
             this._modelMatrixForFrame = (parent && !parent.shouldIgnoreTransform()) ? this._cascadedModelMatrix : this._modelMatrix;
-            this._modelMatrixInverseForFrame = (parent && !parent.shouldIgnoreTransform()) ? this._cascadedModelMatrixInverse : this._modelMatrixInverse;
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         /**
@@ -233,7 +201,6 @@ define([
             this._modelMatrix[12] = this._positionMatrix[12];
             this._modelMatrix[13] = this._positionMatrix[13];
             this._modelMatrix[14] = this._positionMatrix[14];
-            this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
             }
@@ -281,7 +248,6 @@ define([
             this._modelMatrix[12] = v[0];
             this._modelMatrix[13] = v[1];
             this._modelMatrix[14] = v[2];
-            this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
             }
@@ -298,7 +264,6 @@ define([
             this._modelMatrix[12] = m[12];
             this._modelMatrix[13] = m[13];
             this._modelMatrix[14] = m[14];
-            this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
             }
@@ -317,7 +282,6 @@ define([
             this._modelMatrix[12] += x;
             this._modelMatrix[13] += y;
             this._modelMatrix[14] += z;
-            this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
             }
@@ -334,7 +298,6 @@ define([
             this._modelMatrix[12] += v[0];
             this._modelMatrix[13] += v[1];
             this._modelMatrix[14] += v[2];
-            this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
             }
@@ -352,7 +315,6 @@ define([
             this._modelMatrix[12] += matrix[12];
             this._modelMatrix[13] += matrix[13];
             this._modelMatrix[14] += matrix[14];
-            this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
             }
@@ -371,7 +333,6 @@ define([
             this._modelMatrix[12] += matrix[12] * factor;
             this._modelMatrix[13] += matrix[13] * factor;
             this._modelMatrix[14] += matrix[14] * factor;
-            this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
             }
@@ -394,7 +355,6 @@ define([
             delta = (ratio * matrix[14]) + ((1 - ratio) * this._positionMatrix[14]) - this._positionMatrix[14];
             this._positionMatrix[14] += delta;
             this._modelMatrix[14] += delta;
-            this._modelMatrixInverseValid = false;
             if (!this._parent || !this._parent.childrenAlwaysInside()) {
                 this._insideParent = null;
             }
@@ -417,7 +377,6 @@ define([
                 this._orientationMatrix = value;
             }
             this._modelMatrixValid = false;
-            this._modelMatrixInverseValid = false;
             if (this._handleOrientationChanged) {
                 this._handleOrientationChanged();
             }
@@ -429,7 +388,6 @@ define([
         function setOrientationM4(m) {
             mat.setMatrix4(this._orientationMatrix, m);
             this._modelMatrixValid = false;
-            this._modelMatrixInverseValid = false;
             if (this._handleOrientationChanged) {
                 this._handleOrientationChanged();
             }
@@ -517,7 +475,6 @@ define([
                 this._scalingMatrix = value;
             }
             this._modelMatrixValid = false;
-            this._modelMatrixInverseValid = false;
             this._cascadeScalingMatrixValid = false;
         }
         /**
@@ -563,23 +520,6 @@ define([
                 this._modelMatrixForFrameValid = true;
             }
             return this._modelMatrixForFrame;
-        }
-        /**
-         * Returns the calculated inverse of the combined model matrix of this object (and its parents). Uses cache.
-         * @returns {Float32Array}
-         */
-        function getModelMatrixInverse() {
-            if (!this._modelMatrixInverseForFrameValid) {
-                if (!this._modelMatrixInverseValid) {
-                    mat.setInverse4(this._modelMatrixInverse, this.getModelMatrix());
-                    this._modelMatrixInverseValid = true;
-                }
-                if (this._parent && !this._parent.shouldIgnoreTransform()) {
-                    mat.setProd4NoProj(this._cascadedModelMatrixInverse, this._parent.getModelMatrixInverse(), this._modelMatrixInverse);
-                }
-                this._modelMatrixInverseForFrameValid = true;
-            }
-            return this._modelMatrixInverseForFrame;
         }
         /**
          * Returns the size of this object.
@@ -733,7 +673,6 @@ define([
             this.prototype.rotateByMatrix3 = rotateByMatrix3;
             this.prototype.getCascadeScalingMatrix = getCascadeScalingMatrix;
             this.prototype.getModelMatrix = getModelMatrix;
-            this.prototype.getModelMatrixInverse = getModelMatrixInverse;
             this.prototype.getSize = getSize;
             this.prototype.setSize = setSize;
             this.prototype.getScaledSize = getScaledSize;
