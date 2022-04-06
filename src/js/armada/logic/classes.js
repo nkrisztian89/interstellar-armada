@@ -2365,23 +2365,21 @@ define([
      * Returns the estimated time it would take for a missile of this class to reach
      * a target at targetPosition from position, assuming the passed initial relative 
      * velocity of the target, accelerating in a straight line towards it. In seconds.
-     * @param {Number[3]} position
+     * @param {Float32Array} positionMatrix
      * @param {Number[3]} targetPosition
      * @param {Number[3]} relativeTargetVelocity
      * @returns {Number}
      */
-    MissileClass.prototype.getTargetHitTime = function (position, targetPosition, relativeTargetVelocity) {
-        var a, c, d, e, i;
+    MissileClass.prototype.getTargetHitTime = function (positionMatrix, targetPosition, relativeTargetVelocity) {
+        var a, c, d, e;
         a = this._acceleration * this._acceleration * 0.25;
         c = -(relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
-        d = 0;
-        for (i = 0; i < 3; i++) {
-            d += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
-        }
-        e = 0;
-        for (i = 0; i < 3; i++) {
-            e += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
-        }
+        d = 2 * relativeTargetVelocity[0] * (positionMatrix[12] - targetPosition[0]) +
+                2 * relativeTargetVelocity[1] * (positionMatrix[13] - targetPosition[1]) +
+                2 * relativeTargetVelocity[2] * (positionMatrix[14] - targetPosition[2]);
+        e = -targetPosition[0] * targetPosition[0] - positionMatrix[12] * positionMatrix[12] + 2 * targetPosition[0] * positionMatrix[12] -
+                targetPosition[1] * targetPosition[1] - positionMatrix[13] * positionMatrix[13] + 2 * targetPosition[1] * positionMatrix[13] -
+                targetPosition[2] * targetPosition[2] - positionMatrix[14] * positionMatrix[14] + 2 * targetPosition[2] * positionMatrix[14];
         return utils.getSmallestPositiveSolutionOf4thDegreeEquationWithoutDegree3(a, c, d, e);
     };
     /**

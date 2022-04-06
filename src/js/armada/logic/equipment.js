@@ -1254,7 +1254,7 @@ define([
                     mat.prod3x3SubOf4Aux(
                             this._physicalModel.getOrientationMatrix(),
                             this._physicalModel.getVelocityMatrix()),
-                    mat.rotation4m4Aux(this._physicalModel.getRotationMatrixInverse()));
+                    this._physicalModel.getRotationMatrixInverse());
             this._turningMatrixValid = true;
         }
         return this._turningMatrix;
@@ -1390,14 +1390,13 @@ define([
      */
     Missile.prototype._getTargetHitPosition = function () {
         var
-                position, targetPosition,
+                targetPosition,
                 relativeTargetVelocity,
                 hitTime;
         if (!this._targetHitPositionValid) {
             targetPosition = this._target.getPhysicalPositionVector();
-            position = mat.translationVector3(this._physicalModel.getPositionMatrix());
-            relativeTargetVelocity = vec.diffTranslation3(this._target.getPhysicalVelocityMatrix(), this._physicalModel.getVelocityMatrix());
-            hitTime = this._class.getTargetHitTime(position, targetPosition, relativeTargetVelocity);
+            relativeTargetVelocity = vec.diffTranslation3Aux(this._target.getPhysicalVelocityMatrix(), this._physicalModel.getVelocityMatrix());
+            hitTime = this._class.getTargetHitTime(this._physicalModel.getPositionMatrix(), targetPosition, relativeTargetVelocity);
             this._targetHitPosition[0] = targetPosition[0] + hitTime * relativeTargetVelocity[0];
             this._targetHitPosition[1] = targetPosition[1] + hitTime * relativeTargetVelocity[1];
             this._targetHitPosition[2] = targetPosition[2] + hitTime * relativeTargetVelocity[2];
@@ -1549,9 +1548,9 @@ define([
                 this.resetThrusterBurn();
                 if (this._homing && !this._stopHoming) {
                     // for homing, calculate expected target hit position and the yaw and pitch angles towards it
-                    targetYawAndPitch = vec.getYawAndPitch(vec.normalize3(vec.prodVec3Mat4Aux(
-                            vec.diff3(this._getTargetHitPosition(), mat.translationVector3(this._physicalModel.getPositionMatrix())),
-                            mat.inverseOfRotation4Aux(oriMatrix))));
+                    targetYawAndPitch = vec.getYawAndPitch(vec.normalize3(vec.prodMat4Vec3Aux(
+                            oriMatrix,
+                            vec.diffVec3Mat4Aux(this._getTargetHitPosition(), this._physicalModel.getPositionMatrix()))));
                     threshold = this._class.getMainBurnAngleThreshold();
                 }
                 // apply main thrust if the missile is not homing or is homing and sufficiently facing the target
@@ -1856,10 +1855,11 @@ define([
     Weapon.prototype.getBasePointPosVector = function (shipScaledOriMatrix) {
         var
                 basePointPosVector,
-                weaponSlotPosVector = vec.prodVec3Mat4Aux(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
-        vec.add3(weaponSlotPosVector, this._spacecraft.getPhysicalPositionVector());
-        basePointPosVector = vec.prodVec4Mat4(this._class.getBasePoint(), this._transformMatrix);
-        vec.mulVec3Mat4(basePointPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
+                weaponSlotPosVector = vec.prodTranslationModel3Aux(this.getOrigoPositionMatrix(), shipScaledOriMatrix);
+        vec.addVec3Mat4(weaponSlotPosVector, this._spacecraft.getPhysicalPositionMatrix());
+        basePointPosVector = vec.prodVec4Mat4Aux(this._class.getBasePoint(), this._transformMatrix);
+        vec.mulVec3Mat4(basePointPosVector, this.getScaledOriMatrix());
+        vec.mulVec3Mat4(basePointPosVector, shipScaledOriMatrix);
         vec.add3(basePointPosVector, weaponSlotPosVector);
         return basePointPosVector;
     };
@@ -2244,10 +2244,10 @@ define([
             // space, transformed according to the current rotation angles of the weapon)
             basePointPosVector = this.getBasePointPosVector(shipScaledOriMatrix);
             // calculate the vector pointing towards the target in world coordinates
-            vectorToTarget = vec.diff3(targetPositionVector, basePointPosVector);
+            vectorToTarget = vec.diff3Aux(targetPositionVector, basePointPosVector);
             // transform to object space - relative to the weapon
-            vectorToTarget = vec.prodMat4Vec3(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
-            vectorToTarget = vec.prodMat4Vec3(this._slot.orientationMatrix, vectorToTarget);
+            vectorToTarget = vec.prodMat4Vec3Aux(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
+            vectorToTarget = vec.prodMat4Vec3Aux(this._slot.orientationMatrix, vectorToTarget);
             inRange = vec.extractLength3(vectorToTarget) <= this.getRange();
             switch (this._class.getRotationStyle()) {
                 case classes.WeaponRotationStyle.YAW_PITCH:
@@ -2715,22 +2715,21 @@ define([
      * @returns {Boolean}
      */
     MissileLauncher.prototype.isInLockingRange = function (target) {
-        var driftTime, burnTime, position, targetPosition, orientationMatrix, turnAngles, maxTurnAngle, turnTime, velocityVector, relativeTargetVelocity, angularAcceleration;
+        var driftTime, burnTime, targetPosition, orientationMatrix, turnAngles, maxTurnAngle, turnTime, velocityVector, relativeTargetVelocity, angularAcceleration;
         orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
         // velocity vector for the original drifting of the missile after it is launched, before igniting main engine
         velocityVector = vec.sum3(mat.translationVector3(this._spacecraft.getPhysicalVelocityMatrix()), vec.scaled3Aux(mat.getRowB43(orientationMatrix), this._class.getLaunchVelocity()));
         relativeTargetVelocity = vec.diff3(mat.translationVector3(target.getPhysicalVelocityMatrix()), velocityVector);
         driftTime = 0.001 * this._class.getIgnitionTime();
         // first, consider drifting after launch
-        position = this._spacecraft.getPhysicalPositionVector();
         targetPosition = vec.sum3(target.getPhysicalPositionVector(), vec.scaled3Aux(relativeTargetVelocity, driftTime));
         // consider turning before firing main engine
         if (this._class.getHomingMode() === classes.MissileHomingMode.NONE) {
             turnTime = 0;
         } else {
-            turnAngles = vec.getYawAndPitch(vec.normalize3(vec.prodVec3Mat4Aux(
-                    vec.diff3(targetPosition, position),
-                    mat.inverseOfRotation4Aux(orientationMatrix))));
+            turnAngles = vec.getYawAndPitch(vec.normalize3(vec.prodMat4Vec3Aux(
+                    orientationMatrix,
+                    vec.diffVec3Mat4Aux(targetPosition, this._spacecraft.getPhysicalPositionMatrix()))));
             turnAngles.yaw = Math.abs(turnAngles.yaw);
             turnAngles.pitch = Math.abs(turnAngles.pitch);
             if (this._class.getLockingAngle() > 0) {
@@ -2748,7 +2747,7 @@ define([
         }
         // consider the phase accelerating towards the target (assuming straight line for simplicity)
         burnTime = 0.001 * this._class.getDuration() - driftTime - turnTime;
-        return this._class.getTargetHitTime(position, targetPosition, relativeTargetVelocity) < burnTime;
+        return this._class.getTargetHitTime(this._spacecraft.getPhysicalPositionMatrix(), targetPosition, relativeTargetVelocity) < burnTime;
     };
     /**
      * Returns the amount of score points to be added to the total score value of spacecrafts that have this launcher

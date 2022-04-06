@@ -3760,15 +3760,15 @@ define([
                             slotPosition = weapons[i].getOrigoPositionMatrix();
                             indicatorPosition = vec.sumArray3([
                                 position,
-                                vec.scaled3(mat.getRowB43(m), futureDistance),
-                                vec.scaled3(mat.getRowA43(m), slotPosition[12] * scale),
-                                vec.scaled3(mat.getRowC43(m), slotPosition[14] * scale)]);
+                                vec.scaled3Aux(mat.getRowB43(m), futureDistance),
+                                vec.scaled3Aux(mat.getRowA43(m), slotPosition[12] * scale),
+                                vec.scaled3Aux(mat.getRowC43(m), slotPosition[14] * scale)]);
                         } else {
                             basePointPosition = weapons[i].getBasePointPosVector(scaledOriMatrix);
                             indicatorPosition = vec.sum3(
                                     basePointPosition,
-                                    vec.scaled3(mat.getRowB43(weapons[i].getProjectileOrientationMatrix()), vec.length3(
-                                            vec.diff3(futureTargetPosition, basePointPosition))));
+                                    vec.scaled3Aux(mat.getRowB43(weapons[i].getProjectileOrientationMatrix()), vec.length3(
+                                            vec.diff3Aux(futureTargetPosition, basePointPosition))));
                         }
                         if (_aimAssistCrosshairs) {
                             vec.sub3(indicatorPosition, vec.diff3Aux(futureTargetPosition, targetPosition));
