@@ -359,7 +359,7 @@ define([
          * The cached inverse of the model matrix of the body.
          * @type Float32Array
          */
-        this._modelMatrixInverse = null;
+        this._modelMatrixInverse = mat.prodTranslationRotation4(mat.inverseOfTranslation4Aux(this._positionMatrix), mat.inverseOfRotation4Aux(this._orientationMatrix));
         /**
          * Half of the size of the box this body represents along the X axis, in relative 
          * (unoriented) space.
@@ -474,15 +474,6 @@ define([
         return this._modelTransformResult;
     };
     /**
-     * Returns the inverse of the model matrix (the matrix representing both the
-     * position and orientation of the body)
-     * @returns {Float32Array} A 4x4 transformation matrix.
-     */
-    Body.prototype.getModelMatrixInverse = function () {
-        this._modelMatrixInverse = this._modelMatrixInverse || mat.prodTranslationRotation4(mat.inverseOfTranslation4Aux(this._positionMatrix), mat.inverseOfRotation4Aux(this._orientationMatrix));
-        return this._modelMatrixInverse;
-    };
-    /**
      * Returns the half of the width, height and depth of the body in an array.
      * @returns {Number[3]}
      */
@@ -505,8 +496,8 @@ define([
         // first transform the coordinates from model-space (physical object space) to body-space
         if (this._rotated) {
             // we should not modify relativePositionVector, so creating a new one instead of multiplying in-place
-            relativePositionVector = vec.prodVec4Mat4Aux(relativePositionVector, this.getModelMatrixInverse());
-            relativeDirectionVector = vec.prodVec3Mat4Aux(relativeDirectionVector, mat.inverseOfRotation4Aux(this._orientationMatrix));
+            relativePositionVector = vec.prodVec4Mat4Aux(relativePositionVector, this._modelMatrixInverse);
+            relativeDirectionVector = vec.prodMat4Vec3Aux(this._orientationMatrix, relativeDirectionVector);
         } else {
             // we should not modify relativePositionVector, so creating a new one instead of subtracting in-place
             relativePositionVector = vec.diff3Aux(relativePositionVector, this._positionVector);

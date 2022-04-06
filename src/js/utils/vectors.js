@@ -791,6 +791,18 @@ define(function () {
         ];
     };
     /**
+     * Returns the product of the top left 3x3 submatrix of the passed 4x4 matrix and the passed vector.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m The 4x4 matrix on the left of the multiplication
+     * @param {Nubmer[3]} v The 3D vector on the right of the multiplication
+     */
+    vec.prodMat4Vec3Aux = function (m, v) {
+        var aux = _auxVectors[_auxVectorIndex];
+        vec.setProdMat4Vec3(aux, m, v);
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Multiplies the given 4x4 matrix with the given 4D row vector. (from the right)
      * @param {Float32Array} m A 4x4 matrix.
      * @param {Number[4]} v A 4D vector.
@@ -1113,6 +1125,18 @@ define(function () {
         v[1] = mr[5] * y + mr[13];
         v[2] = mr[6] * y + mr[14];
         v[3] = mr[7] * y + mr[15];
+    };
+    /**
+     * Sets the given vector to be equal to the product of the top left 3x3 submatrix of the passed 4x4 matrix and
+     * the passed vector.
+     * @param {Nubmer[3]} v The vectory to modify
+     * @param {Float32Array} m The 4x4 matrix on the left of the multiplication
+     * @param {Nubmer[3]} vr The 3D vector on the right of the multiplication
+     */
+    vec.setProdMat4Vec3 = function (v, m, vr) {
+        v[0] = m[0] * vr[0] + m[1] * vr[1] + m[2] * vr[2];
+        v[1] = m[4] * vr[0] + m[5] * vr[1] + m[6] * vr[2];
+        v[2] = m[8] * vr[0] + m[9] * vr[1] + m[10] * vr[2];
     };
     /**
      * Sets the given 3D vector to be equal to the product of the translation component of a 4x4 matrix and a 4x4 model matrix (a matrix
