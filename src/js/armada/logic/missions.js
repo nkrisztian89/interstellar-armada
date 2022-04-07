@@ -1860,7 +1860,7 @@ define([
                             collisionDamage = Math.min(Math.min(collision.magnitude * collision.magnitude * COLLISION_DAMAGE_FACTOR, this._spacecrafts[i].getClass().getHitpoints()), this._spacecrafts[j].getClass().getHitpoints());
                             collisionPosition = vec.prodVec4Mat4Aux(collision.position, collA.getPhysicalModel().getModelMatrix());
                             collA.damage(collisionDamage, collision.position, vec.scaled3(collision.direction, -1), collB, false, 0, true);
-                            collB.damage(collisionDamage, vec.prodVec4Mat4Aux(collisionPosition, collB.getPhysicalModel().getModelMatrixInverse()), vec.normal3(vec.prodVec3Mat4Aux(vec.prodVec3Mat4Aux(collision.direction, collA.getPhysicalOrientationMatrix()), collB.getPhysicalModel().getRotationMatrixInverse())), collA, false, 0, true);
+                            collB.damage(collisionDamage, vec.prodVec4Mat4Aux(collisionPosition, collB.getPhysicalModel().getModelMatrixInverse()), vec.normal3(vec.prodMat4Vec3Aux(collB.getPhysicalOrientationMatrix(), vec.prodVec3Mat4Aux(collision.direction, collA.getPhysicalOrientationMatrix()))), collA, false, 0, true);
                             vec.mulVec3ModelMat4(collisionPosition, mainScene.getCamera().getViewMatrix());
                             ((collA.getClass().getMass() <= collB.getClass().getMass()) ? collA : collB).playCollisionSound(collisionPosition);
                         }

@@ -2835,6 +2835,42 @@ define([
         m[8] = m1[8] * m2[2] + m1[9] * m2[6] + m1[10] * m2[10];
     };
     /**
+     * Updates the rotation component of 4x4 matrix m to be equal to the product of
+     * 4x4 rotation matrix r1 and the inverse of 4x4 rotation matrix r2
+     * @param {Float32Array} m A 4x4 matrix
+     * @param {Float32Array} r1 A 4x4 matrix
+     * @param {Float32Array} r2 A 4x4 matrix
+     */
+    mat.updateProdRotationRotationInverse4 = function (m, r1, r2) {
+        m[0] = r1[0] * r2[0] + r1[1] * r2[1] + r1[2] * r2[2];
+        m[1] = r1[0] * r2[4] + r1[1] * r2[5] + r1[2] * r2[6];
+        m[2] = r1[0] * r2[8] + r1[1] * r2[9] + r1[2] * r2[10];
+        m[4] = r1[4] * r2[0] + r1[5] * r2[1] + r1[6] * r2[2];
+        m[5] = r1[4] * r2[4] + r1[5] * r2[5] + r1[6] * r2[6];
+        m[6] = r1[4] * r2[8] + r1[5] * r2[9] + r1[6] * r2[10];
+        m[8] = r1[8] * r2[0] + r1[9] * r2[1] + r1[10] * r2[2];
+        m[9] = r1[8] * r2[4] + r1[9] * r2[5] + r1[10] * r2[6];
+        m[10] = r1[8] * r2[8] + r1[9] * r2[9] + r1[10] * r2[10];
+    };
+    /**
+     * Modifies the 3x3 matrix m to be equal to the product of the rotation
+     * components of 4x4 rotation matrix r1 and the inverse of 4x4 rotation matrix r2
+     * @param {Float32Array} m A 3x3 matrix
+     * @param {Float32Array} r1 A 4x4 matrix
+     * @param {Float32Array} r2 A 4x4 matrix
+     */
+    mat.setProdRotationRotationInverse43 = function (m, r1, r2) {
+        m[0] = r1[0] * r2[0] + r1[1] * r2[1] + r1[2] * r2[2];
+        m[1] = r1[0] * r2[4] + r1[1] * r2[5] + r1[2] * r2[6];
+        m[2] = r1[0] * r2[8] + r1[1] * r2[9] + r1[2] * r2[10];
+        m[3] = r1[4] * r2[0] + r1[5] * r2[1] + r1[6] * r2[2];
+        m[4] = r1[4] * r2[4] + r1[5] * r2[5] + r1[6] * r2[6];
+        m[5] = r1[4] * r2[8] + r1[5] * r2[9] + r1[6] * r2[10];
+        m[6] = r1[8] * r2[0] + r1[9] * r2[1] + r1[10] * r2[2];
+        m[7] = r1[8] * r2[4] + r1[9] * r2[5] + r1[10] * r2[6];
+        m[8] = r1[8] * r2[8] + r1[9] * r2[9] + r1[10] * r2[10];
+    };
+    /**
      * Modifies a 4x4 scaling matrix in-place to be equal to the product of two 4x4 sacling matrices.
      * @param {Float32Array} m The 4x4 scaling matrix to modify
      * @param {Float32Array} m1 The 4x4 scaling matrix on the left of the multiplicaton.
@@ -2870,6 +2906,28 @@ define([
         m[13] = r[1] * t[12] + r[5] * t[13] + r[9] * t[14];
         m[14] = r[2] * t[12] + r[6] * t[13] + r[10] * t[14];
         m[15] = 1;
+    };
+    /**
+     * Performs an optimized multiplication of two matrices using the assumption that the left matrix is a translation matrix and the right
+     * matrix if a rotation (or scaled rotation, but without projection or translation) matrix and sets a passed matrix to be equal to the
+     * product of the translation matrix and the inverse of the rotation matrix. Only updates the rotation and translation components of m.
+     * @param {Float32Array} m The 4x4 matrix to set
+     * @param {Float32Array} t A 4x4 translation matrix, without rotation, scaling or projection.
+     * @param {Float32Array} r A 4x4 rotation or scaling and rotation matrix, without translation or projection.
+     */
+    mat.updateProdTranslationRotationInverse4 = function (m, t, r) {
+        m[0] = r[0];
+        m[1] = r[4];
+        m[2] = r[8];
+        m[4] = r[1];
+        m[5] = r[5];
+        m[6] = r[9];
+        m[8] = r[2];
+        m[9] = r[6];
+        m[10] = r[10];
+        m[12] = r[0] * t[12] + r[1] * t[13] + r[2] * t[14];
+        m[13] = r[4] * t[12] + r[5] * t[13] + r[6] * t[14];
+        m[14] = r[8] * t[12] + r[9] * t[13] + r[10] * t[14];
     };
     /**
      * Multiplies a 4x4 scaling matrix with a 4x4 rotation matrix.

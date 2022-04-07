@@ -637,16 +637,6 @@ define([
          */
         this._scalingMatrix = mat.identity4();
         /**
-         * The cached inverse of the orientation matrix.
-         * @type Float32Array
-         */
-        this._rotationMatrixInverse = mat.identity4();
-        /**
-         * Whether the cached value of the inverse orientation matrix is currently valid
-         * @type Boolean
-         */
-        this._rotationMatrixInverseValid = false;
-        /**
          * The cached inverse of the scaling matrix.
          * @type Float32Array
          */
@@ -774,7 +764,6 @@ define([
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
         mat.copyScaling4(this._scalingMatrix, scalingMatrix);
         mat.setInverseOfScaling4(this._scalingMatrixInverse, this._scalingMatrix);
-        this._rotationMatrixInverseValid = false;
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
         mat.setIdentity4(this._velocityMatrix);
@@ -1026,7 +1015,6 @@ define([
      */
     PhysicalObject.prototype.setOrientationMatrix = function (value) {
         this._orientationMatrix = value;
-        this._rotationMatrixInverseValid = false;
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
     };
@@ -1050,7 +1038,6 @@ define([
         this._orientationMatrix[8] = upX;
         this._orientationMatrix[9] = upY;
         this._orientationMatrix[10] = upZ;
-        this._rotationMatrixInverseValid = false;
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
     };
@@ -1064,18 +1051,6 @@ define([
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
         this._inverseScalingFactor = 1 / this._scalingMatrix[0];
-    };
-    /**
-     * Returns the inverse of the rotation matrix and stores it in a cache to
-     * make sure it is only calculated again if the rotation matrix changes.
-     * @returns {Float32Array}
-     */
-    PhysicalObject.prototype.getRotationMatrixInverse = function () {
-        if (!this._rotationMatrixInverseValid) {
-            mat.setInverseOfRotation4(this._rotationMatrixInverse, this._orientationMatrix);
-            this._rotationMatrixInverseValid = true;
-        }
-        return this._rotationMatrixInverse;
     };
     /**
      * Returns the model matrix of the object, recalculating it if necessary
@@ -1245,7 +1220,7 @@ define([
         if ((Math.abs(_auxVector[0]) - range < this._bodySize + offset) && (Math.abs(_auxVector[1]) - range < this._bodySize + offset) && (Math.abs(_auxVector[2]) - range < this._bodySize + offset)) {
             _auxVector[3] = 1;
             // if it is close enough to be hitting one of the bodies, check them
-            vec.mulVec3Mat4(_auxVector2, this.getRotationMatrixInverse());
+            vec.mulMat4Vec3(_auxVector2, this._orientationMatrix);
             for (i = 0; (result === null) && (i < this._bodies.length); i++) {
                 result = this._bodies[i].checkHit(_auxVector, _auxVector2, range, offset);
             }
@@ -1300,7 +1275,7 @@ define([
         }
         mat.translateByMatrix(_auxMatrix2, otherObject.getPositionMatrix());
         mat.mul4(_auxMatrix2, matrixInverse);
-        relativeVelocityVector = vec.prodVec3Mat4Aux(vec.diffTranslation3Aux(otherObject.getVelocityMatrix(), this._velocityMatrix), this.getRotationMatrixInverse()); // model space, world scale (m/s)
+        relativeVelocityVector = vec.prodMat4Vec3Aux(this._orientationMatrix, vec.diffTranslation3Aux(otherObject.getVelocityMatrix(), this._velocityMatrix)); // model space, world scale (m/s)
         vec.scale3(relativeVelocityVector, dt * 0.001 * this._inverseScalingFactor); // model scale (1/dt)
         _auxMatrix2[12] += relativeVelocityVector[0];
         _auxMatrix2[13] += relativeVelocityVector[1];
@@ -1308,11 +1283,11 @@ define([
         if (hasAngularVelocity) {
             rotationMatrix = mat.matrix3from4Aux(this._velocityMatrix);
             mat.mul3multi(rotationMatrix, mat.matrix3Aux(rotationMatrix), Math.round(dt * ANGULAR_VELOCITY_MATRIX_DURATION_INV));
-            mat.setProd3x3SubOf43(rotationMatrix,
+            mat.setProdRotationRotationInverse43(rotationMatrix,
                     mat.prod3x3SubOf43Aux(
                             this._orientationMatrix,
                             rotationMatrix),
-                    this.getRotationMatrixInverse());
+                    this._orientationMatrix);
             mat.transpose3(rotationMatrix);
             mat.mul43(_auxMatrix2, rotationMatrix);
         }
@@ -1532,7 +1507,6 @@ define([
             }
             mat.correctOrthogonal4(this._orientationMatrix);
             mat.correctOrthogonal4(this._velocityMatrix);
-            this._rotationMatrixInverseValid = false;
             this._modelMatrixValid = false;
             this._modelMatrixInverseValid = false;
         }

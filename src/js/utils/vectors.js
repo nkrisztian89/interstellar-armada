@@ -1057,6 +1057,17 @@ define(function () {
         return v;
     };
     /**
+     * Multiplies the given 3D row vector by the top left 3x3 submatrix of the given 4x4 matrix from the left, modifying it in-place.
+     * @param {Number[3]} v The vector to modify
+     * @param {Float32Array} m A 4x4 matrix.
+     */
+    vec.mulMat4Vec3 = function (v, m) {
+        var vox = v[0], voy = v[1], voz = v[2];
+        v[0] = m[0] * vox + m[1] * voy + m[2] * voz;
+        v[1] = m[4] * vox + m[5] * voy + m[6] * voz;
+        v[2] = m[8] * vox + m[9] * voy + m[10] * voz;
+    };
+    /**
      * Multiplies the passed vector with the passed 4x4 model matrix as if it had a w component of value 1
      * @param {Number[3]} v A 3D vector.
      * @param {Float32Array} mm A 4x4 model matrix (no projection component)

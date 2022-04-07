@@ -560,7 +560,7 @@ define([
                 }
             }
         }
-        this.translatev(vec.scale3(mat.translationVector3(this._velocityMatrix), dt / 1000));
+        this.translateByMatrixMul(this._velocityMatrix, dt * 0.001);
     };
     /**
      * Ceases emitting particles and clears the particle system for reuse when all last particles are gone.

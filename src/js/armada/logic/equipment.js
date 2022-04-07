@@ -1250,11 +1250,11 @@ define([
      */
     Missile.prototype.getTurningMatrix = function () {
         if (!this._turningMatrixValid) {
-            mat.setProd3x3SubOf4(this._turningMatrix,
+            mat.updateProdRotationRotationInverse4(this._turningMatrix,
                     mat.prod3x3SubOf4Aux(
                             this._physicalModel.getOrientationMatrix(),
                             this._physicalModel.getVelocityMatrix()),
-                    this._physicalModel.getRotationMatrixInverse());
+                    this._physicalModel.getOrientationMatrix());
             this._turningMatrixValid = true;
         }
         return this._turningMatrix;
