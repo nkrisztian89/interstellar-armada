@@ -184,29 +184,26 @@ define(function () {
      * @property {Number} pitch The pitch angle in radians
      */
     /**
-     * Returns a pair of angles: (yaw;pitch) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
+     * Calculates a pair of angles: (yaw;pitch) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
      * direction, a positive yaw corresponding to a counter-clockwise rotation angle around the Z axis in radians and the pitch 
      * corresponding to a counter-clockwise rotation around the yaw-rotated X axis in radians.
+     * @param {YawAndPitch} target The object to store the calculated angles in
      * @param {Number[3]} v
-     * @returns {YawAndPitch}
      */
-    vec.getYawAndPitch = function (v) {
-        var result = {}, yawRotated;
+    vec.getYawAndPitch = function (target, v) {
         if (Math.abs(v[2]) > CLOSE_TO_ONE) {
-            result.yaw = 0;
-            result.pitch = (v[2] > 0) ? -Math.PI / 2 : Math.PI / 2;
+            target.yaw = 0;
+            target.pitch = (v[2] > 0) ? -Math.PI / 2 : Math.PI / 2;
         } else {
-            result.yaw = vec.angle2yCapped(v[0], v[1]);
+            target.yaw = vec.angle2yCapped(v[0], v[1]);
             if (v[0] > 0) {
-                result.yaw = -result.yaw;
+                target.yaw = -target.yaw;
             }
-            yawRotated = vec.rotated2(v, -result.yaw);
-            result.pitch = vec.angle2xCapped(yawRotated[1], v[2]);
+            target.pitch = vec.angle2xCapped(v[0] * Math.sin(-target.yaw) + v[1] * Math.cos(-target.yaw), v[2]);
             if (v[2] < 0) {
-                result.pitch = -result.pitch;
+                target.pitch = -target.pitch;
             }
         }
-        return result;
     };
     /**
      * @typedef {Object} YawAndRoll
@@ -214,32 +211,30 @@ define(function () {
      * @property {Number} roll The roll angle in radians
      */
     /**
-     * Returns a pair of angles: (yaw;roll) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
+     * Calculates a pair of angles: (yaw;roll) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
      * direction, a positive yaw corresponding to a counter-clockwise rotation angle around the Z axis in radians and the roll 
      * corresponding to a counter-clockwise rotation around the Y axis in radians.
+     * @param {YawAndRoll} target The object to store the calculated angles in
      * @param {Number[3]} v
      * @param {Boolean} [positiveYawOnly=false] When true, larger than 90 degrees roll angles will be returned with positive yaw angles
      * instead of flipping the roll angle 180 degrees and inverting the yaw angle.
-     * @returns {YawAndRoll}
      */
-    vec.getRollAndYaw = function (v, positiveYawOnly) {
-        var result = {}, rollRotated;
+    vec.getRollAndYaw = function (target, v, positiveYawOnly) {
         if (Math.abs(v[1]) > CLOSE_TO_ONE) {
-            result.roll = 0;
-            result.yaw = (v[1] > 0) ? 0 : Math.PI;
+            target.roll = 0;
+            target.yaw = (v[1] > 0) ? 0 : Math.PI;
         } else {
-            result.roll = vec.angle2xCapped(v[0], v[2]);
+            target.roll = vec.angle2xCapped(v[0], v[2]);
             if (v[2] < 0) {
-                result.roll = -result.roll;
+                target.roll = -target.roll;
             }
-            rollRotated = vec.rotated2([v[0], v[2]], -result.roll);
-            result.yaw = vec.angle2yCapped(rollRotated[0], v[1]);
-            if (!positiveYawOnly && (Math.abs(result.roll) > Math.PI / 2)) {
-                result.yaw = -result.yaw;
-                result.roll -= Math.PI * Math.sign(result.roll);
+            target.yaw = vec.angle2yCapped(v[0] * Math.cos(-target.roll) + v[2] * Math.sin(target.roll), v[1]);
+            if (!positiveYawOnly && (Math.abs(target.roll) > Math.PI / 2)) {
+                target.yaw = -target.yaw;
+                target.roll -= Math.PI * ((target.roll > 0) ? 1 : -1);
             }
         }
-        return result;
+        return target;
     };
     /**
      * @typedef {Object} PitchAndRoll
@@ -247,32 +242,30 @@ define(function () {
      * @property {Number} roll The roll angle in radians
      */
     /**
-     * Returns a pair of angles: (pitch;roll) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
+     * Calculates a pair of angles: (pitch;roll) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
      * direction, a positive pitch corresponding to a counter-clockwise rotation angle around the X axis in radians and the roll 
      * corresponding to a counter-clockwise rotation around the Y axis in radians.
+     * @param {PitchAndRoll} target The object to store the calculated angles in
      * @param {Number[3]} v
      * @param {Boolean} [positivePitchOnly=false] When true, larger than 90 degrees roll angles will be returned with positive pitch angles
      * instead of flipping the roll angle 180 degrees and inverting the pitch angle.
-     * @returns {PitchAndRoll}
      */
-    vec.getRollAndPitch = function (v, positivePitchOnly) {
-        var result = {}, rollRotated;
+    vec.getRollAndPitch = function (target, v, positivePitchOnly) {
         if (Math.abs(v[1]) > CLOSE_TO_ONE) {
-            result.roll = 0;
-            result.pitch = (v[1] > 0) ? 0 : Math.PI;
+            target.roll = 0;
+            target.pitch = (v[1] > 0) ? 0 : Math.PI;
         } else {
-            result.roll = vec.angle2yCapped(v[0], v[2]);
+            target.roll = vec.angle2yCapped(v[0], v[2]);
             if (v[0] > 0) {
-                result.roll = -result.roll;
+                target.roll = -target.roll;
             }
-            rollRotated = vec.rotated2([v[0], v[2]], -result.roll);
-            result.pitch = vec.angle2xCapped(v[1], rollRotated[1]);
-            if (!positivePitchOnly && (Math.abs(result.roll) > Math.PI / 2)) {
-                result.pitch = -result.pitch;
-                result.roll -= Math.PI * Math.sign(result.roll);
+            target.pitch = vec.angle2xCapped(v[1], v[0] * Math.sin(-target.roll) + v[2] * Math.cos(-target.roll));
+            if (!positivePitchOnly && (Math.abs(target.roll) > Math.PI / 2)) {
+                target.pitch = -target.pitch;
+                target.roll -= Math.PI * ((target.roll) > 0 ? 1 : -1);
             }
         }
-        return result;
+        return target;
     };
     // -----------------------------------------------------------------------------
     // Functions that transform a vector and return a new, transformed vector

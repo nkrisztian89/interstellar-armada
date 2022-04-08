@@ -2226,7 +2226,7 @@ define([
      * by this angle (in radians), with 0 meaning the Y vector of the object should point upwards
      */
     function BackgroundBillboard(model, shader, textures, color, size, positionMatrix, angle) {
-        var up, direction, directionYawAndPitch, v;
+        var up, direction, angles = {yaw: 0, pitch: 0, roll: 0}, v;
         Particle.call(this, model, shader, textures, positionMatrix, [new ParticleState(color, size, 0)], false);
         // calculating an orientation matrix that has the Z vector pointing opposite to the position of the object, and a Y vector rotated
         // by the given angle compared to pointing towards the zenith ([0,0,1])
@@ -2234,12 +2234,12 @@ define([
         vec.rotate2(v, angle);
         up = [v[0], 0, v[1]];
         direction = vec.normalize3(mat.translationVector3(positionMatrix));
-        directionYawAndPitch = vec.getYawAndPitch(direction);
+        vec.getYawAndPitch(angles, direction);
         v = [0, v[1]];
-        vec.rotate2(v, directionYawAndPitch.pitch);
+        vec.rotate2(v, angles.pitch);
         up = [up[0], v[0], v[1]];
         v = [up[0], v[0]];
-        vec.rotate2(v, directionYawAndPitch.yaw);
+        vec.rotate2(v, angles.yaw);
         up = [v[0], v[1], up[2]];
         this.setOrientationMatrix(mat.lookTowards4(vec.scaled3(direction, -1), up));
         this._positionVector.length = 3;

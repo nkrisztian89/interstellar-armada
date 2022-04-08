@@ -303,7 +303,16 @@ define([
              * A pool containing trail segments for reuse, so that creation of objects while creating trails can be decreased for optimization.
              * @type Pool
              */
-            _trailSegmentPool;
+            _trailSegmentPool,
+            /**
+             * A reusable object to store the result of angle calculations
+             * @type Object
+             */
+            _angles = {
+                yaw: 0,
+                pitch: 0,
+                roll: 0
+            };
     Object.freeze(FlightMode);
     Object.freeze(WeaponAimStatus);
     Object.freeze(ThrusterUse);
@@ -1525,7 +1534,7 @@ define([
      * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      */
     Missile.prototype.simulate = function (dt, hitObjectOctree, pilotedCraft) {
-        var i, p, oriMatrix, targetYawAndPitch, threshold, hitCheckDT, enginePosition;
+        var i, p, oriMatrix, threshold, hitCheckDT, enginePosition;
         if (this.canBeReused()) {
             return;
         }
@@ -1548,14 +1557,14 @@ define([
                 this.resetThrusterBurn();
                 if (this._homing && !this._stopHoming) {
                     // for homing, calculate expected target hit position and the yaw and pitch angles towards it
-                    targetYawAndPitch = vec.getYawAndPitch(vec.normalize3(vec.prodMat4Vec3Aux(
+                    vec.getYawAndPitch(_angles, vec.normalize3(vec.prodMat4Vec3Aux(
                             oriMatrix,
                             vec.diffVec3Mat4Aux(this._getTargetHitPosition(), this._physicalModel.getPositionMatrix()))));
                     threshold = this._class.getMainBurnAngleThreshold();
                 }
                 // apply main thrust if the missile is not homing or is homing and sufficiently facing the target
                 // direction
-                if (!this._homing || this._stopHoming || (Math.abs(targetYawAndPitch.yaw) < threshold && Math.abs(targetYawAndPitch.pitch) < threshold)) {
+                if (!this._homing || this._stopHoming || (Math.abs(_angles.yaw) < threshold && Math.abs(_angles.pitch) < threshold)) {
                     this._physicalModel.applyForce(this._class.getThrust(), oriMatrix[4], oriMatrix[5], oriMatrix[6], dt);
                     this._mainBurn = true;
                     this.addThrusterBurnForward(1);
@@ -1570,7 +1579,7 @@ define([
                 // use maneuvering thrusters for homing
                 if (this._homing) {
                     if (!this._stopHoming) {
-                        this._turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                        this._turn(_angles.yaw, _angles.pitch, dt);
                     }
                     this._controlTurnThrusters(dt);
                     this._applyTurnThrust();
@@ -2238,7 +2247,7 @@ define([
      * @param {Number} dt The elapsed time, in milliseconds.
      */
     Weapon.prototype.aimTowards = function (targetPositionVector, turnThreshold, fireThreshold, shipScaledOriMatrix, dt) {
-        var basePointPosVector, vectorToTarget, yawAndPitch, rollAndYaw, inRange;
+        var basePointPosVector, vectorToTarget, inRange;
         if (!this._fixed) {
             // as a basis for calculating the direction pointing towards the target, the base point of the weapon is considered (in world 
             // space, transformed according to the current rotation angles of the weapon)
@@ -2251,12 +2260,12 @@ define([
             inRange = vec.extractLength3(vectorToTarget) <= this.getRange();
             switch (this._class.getRotationStyle()) {
                 case classes.WeaponRotationStyle.YAW_PITCH:
-                    yawAndPitch = vec.getYawAndPitch(vectorToTarget);
-                    this.rotateTo(-yawAndPitch.yaw, -yawAndPitch.pitch, turnThreshold, fireThreshold, dt);
+                    vec.getYawAndPitch(_angles, vectorToTarget);
+                    this.rotateTo(-_angles.yaw, -_angles.pitch, turnThreshold, fireThreshold, dt);
                     break;
                 case classes.WeaponRotationStyle.ROLL_YAW:
-                    rollAndYaw = vec.getRollAndYaw(vectorToTarget);
-                    this.rotateTo(rollAndYaw.roll, rollAndYaw.yaw, turnThreshold, fireThreshold, dt);
+                    vec.getRollAndYaw(_angles, vectorToTarget, false);
+                    this.rotateTo(_angles.roll, _angles.yaw, turnThreshold, fireThreshold, dt);
                     break;
                 default:
                     application.crash();
@@ -2715,7 +2724,7 @@ define([
      * @returns {Boolean}
      */
     MissileLauncher.prototype.isInLockingRange = function (target) {
-        var driftTime, burnTime, targetPosition, orientationMatrix, turnAngles, maxTurnAngle, turnTime, velocityVector, relativeTargetVelocity, angularAcceleration;
+        var driftTime, burnTime, targetPosition, orientationMatrix, maxTurnAngle, turnTime, velocityVector, relativeTargetVelocity, angularAcceleration;
         orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
         // velocity vector for the original drifting of the missile after it is launched, before igniting main engine
         velocityVector = vec.sum3(mat.translationVector3(this._spacecraft.getPhysicalVelocityMatrix()), vec.scaled3Aux(mat.getRowB43(orientationMatrix), this._class.getLaunchVelocity()));
@@ -2727,17 +2736,17 @@ define([
         if (this._class.getHomingMode() === classes.MissileHomingMode.NONE) {
             turnTime = 0;
         } else {
-            turnAngles = vec.getYawAndPitch(vec.normalize3(vec.prodMat4Vec3Aux(
+            vec.getYawAndPitch(_angles, vec.normalize3(vec.prodMat4Vec3Aux(
                     orientationMatrix,
                     vec.diffVec3Mat4Aux(targetPosition, this._spacecraft.getPhysicalPositionMatrix()))));
-            turnAngles.yaw = Math.abs(turnAngles.yaw);
-            turnAngles.pitch = Math.abs(turnAngles.pitch);
+            _angles.yaw = Math.abs(_angles.yaw);
+            _angles.pitch = Math.abs(_angles.pitch);
             if (this._class.getLockingAngle() > 0) {
-                if (Math.max(turnAngles.yaw, turnAngles.pitch) > this._class.getLockingAngle()) {
+                if (Math.max(_angles.yaw, _angles.pitch) > this._class.getLockingAngle()) {
                     return false;
                 }
             }
-            maxTurnAngle = Math.max(0, Math.max(turnAngles.yaw, turnAngles.pitch) - this._class.getMainBurnAngleThreshold());
+            maxTurnAngle = Math.max(0, Math.max(_angles.yaw, _angles.pitch) - this._class.getMainBurnAngleThreshold());
             angularAcceleration = this._class.getAngularAcceleration();
             turnTime = (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S * MISSILE_TURN_ACCELERATION_DURATION_S + maxTurnAngle) / (angularAcceleration * MISSILE_TURN_ACCELERATION_DURATION_S);
             if (turnTime < 2 * MISSILE_TURN_ACCELERATION_DURATION_S) {

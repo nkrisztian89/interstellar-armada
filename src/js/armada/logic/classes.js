@@ -4676,19 +4676,24 @@ define([
          * @type Number[2]
          */
         this._attackVectorAngles = [0, 0];
+        angles = {
+            yaw: 0,
+            pitch: 0,
+            roll: 0
+        };
         switch (this._turnStyle) {
             case SpacecraftTurnStyle.YAW_PITCH:
-                angles = vec.getYawAndPitch(this._attackVector);
+                vec.getYawAndPitch(angles, this._attackVector);
                 this._attackVectorAngles[0] = angles.yaw;
                 this._attackVectorAngles[1] = angles.pitch;
                 break;
             case SpacecraftTurnStyle.ROLL_YAW:
-                angles = vec.getRollAndYaw(this._attackVector);
+                vec.getRollAndYaw(angles, this._attackVector, false);
                 this._attackVectorAngles[0] = angles.roll;
                 this._attackVectorAngles[1] = angles.yaw;
                 break;
             case SpacecraftTurnStyle.ROLL_PITCH:
-                angles = vec.getRollAndPitch(this._attackVector);
+                vec.getRollAndPitch(angles, this._attackVector, false);
                 this._attackVectorAngles[0] = angles.roll;
                 this._attackVectorAngles[1] = angles.pitch;
                 break;

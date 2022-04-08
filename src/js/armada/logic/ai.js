@@ -299,6 +299,15 @@ define([
              */
             _aiConstructors,
             /**
+             * A reusable object to store the result of angle calculations
+             * @type Object
+             */
+            _angles = {
+                yaw: 0,
+                pitch: 0,
+                roll: 0
+            },
+            /**
              * The default AI context (storing the actual AIs) the methods of which are exposed by this module.
              * @type AIContext
              */
@@ -794,14 +803,14 @@ define([
      * @param {Number} dt Time elapsed since last simulation step (milliseconds)
      */
     SpacecraftAI.prototype._executeMoveCommand = function (positionVector, inverseOrientationMatrix, acceleration, dt) {
-        var vectorToTarget, relativeTargetDirection, targetDistance, targetYawAndPitch, facingTarget, isFar, moveCommandCompleted;
+        var vectorToTarget, relativeTargetDirection, targetDistance, facingTarget, isFar, moveCommandCompleted;
         switch (this._moveCommand) {
             case MoveCommand.REACH_DISTANCE:
                 if (!this._moveCommandTarget || !this._moveCommandTarget.isAlive() || this._moveCommandTarget.isAway()) {
                     this._cancelMoveCommand();
                     return;
                 }
-                vectorToTarget = vec.diff3(this._moveCommandTarget.getPhysicalPositionVector(), positionVector);
+                vectorToTarget = vec.diff3Aux(this._moveCommandTarget.getPhysicalPositionVector(), positionVector);
                 relativeTargetDirection = vec.prodVec3Mat4Aux(
                         vectorToTarget,
                         inverseOrientationMatrix);
@@ -810,9 +819,9 @@ define([
                 if (this._moveCommandMaxDistance !== 0) {
                     // approach target, because we are too far
                     if (targetDistance > this._moveCommandMaxDistance) {
-                        targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
-                        facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
-                        this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                        vec.getYawAndPitch(_angles, relativeTargetDirection);
+                        facingTarget = (Math.abs(_angles.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(_angles.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                        this.turn(_angles.yaw, _angles.pitch, dt);
                         isFar = targetDistance > this._moveCommandMaxDistance + FAR_APPROACH_THRESHOLD;
                         this._spacecraft.changeFlightMode(isFar ? equipment.FlightMode.CRUISE : equipment.FlightMode.COMBAT);
                         if (facingTarget) {
@@ -827,9 +836,9 @@ define([
                     // get away from target, because we are too close
                     if (targetDistance < this._moveCommandMinDistance) {
                         vec.scale3(relativeTargetDirection, -1);
-                        targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
-                        facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
-                        this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                        vec.getYawAndPitch(_angles, relativeTargetDirection);
+                        facingTarget = (Math.abs(_angles.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(_angles.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                        this.turn(_angles.yaw, _angles.pitch, dt);
                         isFar = targetDistance < this._moveCommandMinDistance - FAR_APPROACH_THRESHOLD;
                         this._spacecraft.changeFlightMode(isFar ? equipment.FlightMode.CRUISE : equipment.FlightMode.COMBAT);
                         if (facingTarget) {
@@ -1120,8 +1129,7 @@ define([
                 angularAcceleration, maxAngularVelocity,
                 worldProjectileVelocity,
                 closeInTriggerTime,
-                /** @type Object */
-                targetYawAndPitch,
+                range,
                 /** @type Boolean */
                 stillBlocked, strafingHandled,
                 /** @type Array */
@@ -1150,7 +1158,7 @@ define([
             acceleration = this._spacecraft.getMaxAcceleration();
             ownSize = this._spacecraft.getVisualModel().getScaledSize();
             // caching / referencing needed variables
-            positionVector = mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix());
+            positionVector = this._spacecraft.getPhysicalPositionVector();
             inverseOrientationMatrix = mat.inverseOfRotation4Aux(this._spacecraft.getPhysicalOrientationMatrix());
             speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             target = this._spacecraft.getTarget();
@@ -1173,8 +1181,8 @@ define([
                             vectorToTarget,
                             inverseOrientationMatrix);
                     this._targetDistance = vec.extractLength3(relativeTargetDirection);
-                    targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
-                    this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                    vec.getYawAndPitch(_angles, relativeTargetDirection);
+                    this.turn(_angles.yaw, _angles.pitch, dt);
                     this._spacecraft.setSpeedTarget(acceleration * CHARGE_EVADE_SPEED_FACTOR);
                     if ((this._targetDistance <= EXACT_PLACE_RANGE) || (relativeTargetDirection[1] < 0) || (speed < 0)) {
                         this._startNewAttackRun();
@@ -1188,13 +1196,15 @@ define([
                     // updating target offset and aim error, if it is time
                     if (this._targetOffsetUpdateTimeLeft <= 0) {
                         this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
-                        newOffset = vec.diff3(this._spacecraft.getTargetHitPosition(), targetPositionVector);
-                        if (vec.length3Squared(vec.diff3(this._targetOffset, newOffset)) < AIM_ERROR_REDUCTION_THRESHOLD) {
+                        newOffset = vec.diff3Aux(this._spacecraft.getTargetHitPosition(), targetPositionVector);
+                        if (vec.length3Squared(vec.diff3Aux(this._targetOffset, newOffset)) < AIM_ERROR_REDUCTION_THRESHOLD) {
                             this._maxAimError *= AIM_ERROR_REDUCTION_FACTOR;
                         } else {
                             this._maxAimError = MAX_AIM_ERROR;
                         }
-                        this._targetOffset = newOffset;
+                        this._targetOffset[0] = newOffset[0];
+                        this._targetOffset[1] = newOffset[1];
+                        this._targetOffset[2] = newOffset[2];
                         this._updateAimError();
                     } else {
                         this._targetOffsetUpdateTimeLeft -= dt;
@@ -1205,13 +1215,13 @@ define([
                             vectorToTarget,
                             inverseOrientationMatrix);
                     this._targetDistance = vec.extractLength3(relativeTargetDirection);
-                    targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
-                    targetYawAndPitch.yaw += this._aimError[0];
-                    targetYawAndPitch.pitch += this._aimError[1];
-                    this._facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                    vec.getYawAndPitch(_angles, relativeTargetDirection);
+                    _angles.yaw += this._aimError[0];
+                    _angles.pitch += this._aimError[1];
+                    this._facingTarget = (Math.abs(_angles.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(_angles.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // turning towards target
-                    this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                    this.turn(_angles.yaw, _angles.pitch, dt);
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // handling if another spacecraft blocks the attack path
                     if (this._isBlockedBy) {
@@ -1269,11 +1279,12 @@ define([
                             this._timeSinceLastTargetHit = 0;
                             this._hitCountByNonTarget = 0;
                         }
-                        if (vec.length3(vec.diff3Aux(this._spacecraft.getTargetHitPosition(), positionVector)) <= weapons[0].getRange(speed)) {
+                        range = weapons[0].getRange(speed);
+                        if (vec.length3Squared(vec.diff3Aux(this._spacecraft.getTargetHitPosition(), positionVector)) <= range * range) {
                             // within range...
                             this._attackingTarget = true;
-                            if ((Math.abs(targetYawAndPitch.yaw) < fireThresholdAngle) &&
-                                    (Math.abs(targetYawAndPitch.pitch) < fireThresholdAngle) &&
+                            if ((Math.abs(_angles.yaw) < fireThresholdAngle) &&
+                                    (Math.abs(_angles.pitch) < fireThresholdAngle) &&
                                     (!this._isBlockedBy || this._isBlockedBy.isHostile(this._spacecraft))) {
                                 // finished aiming...
                                 if (this._fireDelayLeft > 0) {
@@ -1480,14 +1491,13 @@ define([
                 positionVector, targetPositionVector, vectorToTarget,
                 relativeTargetDirection,
                 /** @type Number[2] */
-                angles, angleDifference,
+                angles,
                 /** @type Number */
                 targetDistance,
                 ownSize, targetSize, fireThresholdAngle,
                 acceleration, maxDistance, baseDistance,
                 thresholdAngle,
-                /** @type Object */
-                targetYawAndPitch, targetAngles,
+                range, angleDiff1, angleDiff2,
                 /** @type Boolean */
                 facingTarget, hostileTarget,
                 /** @type Array */
@@ -1513,7 +1523,7 @@ define([
             acceleration = this._spacecraft.getMaxAcceleration();
             ownSize = this._spacecraft.getVisualModel().getScaledSize();
             // caching / referencing needed variables
-            positionVector = mat.translationVector3(this._spacecraft.getPhysicalPositionMatrix());
+            positionVector = this._spacecraft.getPhysicalPositionVector();
             inverseOrientationMatrix = mat.inverseOfRotation4Aux(this._spacecraft.getPhysicalOrientationMatrix());
             target = this._spacecraft.getTarget();
             this._attackingTarget = false;
@@ -1527,8 +1537,8 @@ define([
                         inverseOrientationMatrix);
                 targetDistance = vec.extractLength3(relativeTargetDirection);
                 if (hostileTarget) {
-                    targetYawAndPitch = vec.getYawAndPitch(relativeTargetDirection);
-                    facingTarget = (Math.abs(targetYawAndPitch.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(targetYawAndPitch.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
+                    vec.getYawAndPitch(_angles, relativeTargetDirection);
+                    facingTarget = (Math.abs(_angles.yaw) < TARGET_FACING_ANGLE_THRESHOLD) && (Math.abs(_angles.pitch) < TARGET_FACING_ANGLE_THRESHOLD);
                 }
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // actions based on weapons
@@ -1553,7 +1563,7 @@ define([
                             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                             // turning towards target
                             if (targetDistance > maxDistance) {
-                                this.turn(targetYawAndPitch.yaw, targetYawAndPitch.pitch, dt);
+                                this.turn(_angles.yaw, _angles.pitch, dt);
                             } else {
                                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                 // orienting into attack position
@@ -1561,33 +1571,35 @@ define([
                                 thresholdAngle = this._spacecraft.getClass().getAttackThresholdAngle();
                                 switch (this._spacecraft.getClass().getTurnStyle()) {
                                     case classes.SpacecraftTurnStyle.YAW_PITCH:
-                                        if ((Math.abs(targetYawAndPitch.yaw - angles[0]) > thresholdAngle) || (Math.abs(targetYawAndPitch.pitch - angles[1]) > thresholdAngle)) {
-                                            this.turn(targetYawAndPitch.yaw - angles[0], targetYawAndPitch.pitch - angles[1], dt);
+                                        if ((Math.abs(_angles.yaw - angles[0]) > thresholdAngle) || (Math.abs(_angles.pitch - angles[1]) > thresholdAngle)) {
+                                            this.turn(_angles.yaw - angles[0], _angles.pitch - angles[1], dt);
                                         }
                                         break;
                                     case classes.SpacecraftTurnStyle.ROLL_YAW:
-                                        targetAngles = vec.getRollAndYaw(relativeTargetDirection, true);
-                                        angleDifference = [targetAngles.roll - angles[0], targetAngles.yaw - angles[1]];
-                                        if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
-                                            if (Math.abs(angleDifference[1]) > utils.HALF_PI) {
-                                                angleDifference[0] = 0;
-                                            } else if (Math.abs(angleDifference[0]) > utils.HALF_PI) {
-                                                angleDifference[1] = 0;
+                                        vec.getRollAndYaw(_angles, relativeTargetDirection, true);
+                                        angleDiff1 = _angles.roll - angles[0];
+                                        angleDiff2 = _angles.yaw - angles[1];
+                                        if ((Math.abs(angleDiff1) > thresholdAngle) || (Math.abs(angleDiff2) > thresholdAngle)) {
+                                            if (Math.abs(angleDiff2) > utils.HALF_PI) {
+                                                angleDiff1 = 0;
+                                            } else if (Math.abs(angleDiff1) > utils.HALF_PI) {
+                                                angleDiff2 = 0;
                                             }
-                                            this.rollAndYaw(angleDifference[0], angleDifference[1], dt);
+                                            this.rollAndYaw(angleDiff1, angleDiff2, dt);
                                         }
                                         break;
                                     case classes.SpacecraftTurnStyle.ROLL_PITCH:
-                                        targetAngles = vec.getRollAndPitch(relativeTargetDirection, true);
-                                        angleDifference = [targetAngles.roll - angles[0], targetAngles.pitch - angles[1]];
-                                        if ((Math.abs(angleDifference[0]) > thresholdAngle) || (Math.abs(angleDifference[1]) > thresholdAngle)) {
-                                            if (Math.abs(angleDifference[1]) > utils.HALF_PI) {
-                                                angleDifference[0] = 0;
-                                            } else if (Math.abs(angleDifference[0] - Math.sign(angleDifference[0]) * Math.PI) < Math.abs(angleDifference[0])) {
-                                                angleDifference[0] -= Math.sign(angleDifference[0]) * Math.PI;
-                                                targetAngles.pitch = -targetAngles.pitch;
+                                        vec.getRollAndPitch(_angles, relativeTargetDirection, true);
+                                        angleDiff1 = _angles.roll - angles[0];
+                                        angleDiff2 = _angles.pitch - angles[1];
+                                        if ((Math.abs(angleDiff1) > thresholdAngle) || (Math.abs(angleDiff2) > thresholdAngle)) {
+                                            if (Math.abs(angleDiff2) > utils.HALF_PI) {
+                                                angleDiff1 = 0;
+                                            } else if (Math.abs(angleDiff1 - Math.sign(angleDiff1) * Math.PI) < Math.abs(angleDiff1)) {
+                                                angleDiff1 -= Math.sign(angleDiff1) * Math.PI;
+                                                _angles.pitch = -_angles.pitch;
                                             }
-                                            this.rollAndPitch(angleDifference[0], targetAngles.pitch - angles[1], dt);
+                                            this.rollAndPitch(angleDiff1, _angles.pitch - angles[1], dt);
                                         }
                                         break;
                                 }
@@ -1595,8 +1607,8 @@ define([
                         }
                         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                         // firing
-                        if (vec.length3(vec.diff3(this._spacecraft.getTargetHitPosition(), positionVector)) - baseDistance <=
-                                weapons[0].getRange(this._spacecraft.getRelativeVelocityMatrix()[13])) {
+                        range = weapons[0].getRange(this._spacecraft.getRelativeVelocityMatrix()[13]);
+                        if (vec.length3Squared(vec.diff3Aux(this._spacecraft.getTargetHitPosition(), positionVector)) - baseDistance <= range * range) {
                             this._spacecraft.fire(true);
                             this._attackingTarget = true;
                         }
