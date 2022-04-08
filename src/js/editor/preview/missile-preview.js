@@ -227,8 +227,8 @@ define([
             _wireframeMissile = new equipment.Missile(_missileClass);
         }
         if (orientationMatrix) {
-            _missile.getPhysicalModel().setOrientationMatrix(mat.matrix4(orientationMatrix));
-            _wireframeMissile.getPhysicalModel().setOrientationMatrix(_missile.getPhysicalModel().getOrientationMatrix());
+            _missile.getPhysicalModel().updateOrientationMatrix(orientationMatrix);
+            _wireframeMissile.getPhysicalModel().updateOrientationMatrix(_missile.getPhysicalModel().getOrientationMatrix());
         }
         if (params.clearScene || shouldReload) {
             _missileClass.acquireResources({missileOnly: false, sound: true, trail: true});

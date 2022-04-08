@@ -644,7 +644,7 @@ define([
                             if (data.lead && (data.index > 0) && (data.jump.formation)) {
                                 // setting position and orientation based on a formation
                                 this._spacecraft.setPhysicalPosition(spacecraft.Spacecraft.getPositionInFormation(data.jump.formation, data.index, data.lead.getPhysicalPositionVector(), data.lead.getPhysicalOrientationMatrix()));
-                                this._spacecraft.setPhysicalOrientationMatrix(mat.matrix4(data.lead.getPhysicalOrientationMatrix()));
+                                this._spacecraft.updatePhysicalOrientationMatrix(data.lead.getPhysicalOrientationMatrix());
                             } else if (data.jump.anchor) {
                                 // clear cached reference to the anchor spacecraft for every new execution of the command
                                 if (data.clearCache) {
@@ -657,10 +657,10 @@ define([
                                     data.jump.anchorSpacecraft = anchor;
                                     // setting random position with matching orientation at given distance
                                     if (data.jump.distance) {
-                                        this._spacecraft.setPhysicalOrientationMatrix(mat.prod3x3SubOf4(
+                                        this._spacecraft.updatePhysicalOrientationMatrix(mat.prod3x3SubOf4Aux(
                                                 mat.rotationX4Aux((_jumpInPositionSeed() - 0.5) * Math.PI),
                                                 mat.rotationZ4Aux(_jumpInPositionSeed() * utils.DOUBLE_PI)));
-                                        this._spacecraft.setPhysicalPosition(vec.scaled3(
+                                        this._spacecraft.setPhysicalPosition(vec.scaled3Aux(
                                                 mat.getRowB4(this._spacecraft.getPhysicalOrientationMatrix()),
                                                 -data.jump.distance));
                                     } else {
@@ -670,15 +670,15 @@ define([
                                         }
                                         // overwriting orientation
                                         if (data.jump.rotations) {
-                                            this._spacecraft.setPhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.rotations));
+                                            this._spacecraft.updatePhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.rotations));
                                         }
                                     }
                                     // transforming to anchor-relative position and orientation
                                     if (data.jump.relative) {
-                                        this._spacecraft.setPhysicalPositionMatrix(mat.prodTranslationRotation4(
+                                        this._spacecraft.setPhysicalPosition(vec.prodTranslationModel3Aux(
                                                 this._spacecraft.getPhysicalPositionMatrix(),
                                                 anchor.getPhysicalOrientationMatrix()));
-                                        this._spacecraft.setPhysicalOrientationMatrix(mat.prod4(
+                                        this._spacecraft.updatePhysicalOrientationMatrix(mat.prod3x3SubOf4Aux(
                                                 this._spacecraft.getPhysicalOrientationMatrix(),
                                                 anchor.getPhysicalOrientationMatrix()));
                                     }
@@ -690,7 +690,7 @@ define([
                                     // fallback to a specified position if the anchor spacecraft has been destroyed (will not be deterministic, depends on camera location)
                                     this._spacecraft.setPhysicalPosition(data.jump.fallbackPosition);
                                     if (data.jump.fallbackRotations) {
-                                        this._spacecraft.setPhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.fallbackRotations));
+                                        this._spacecraft.updatePhysicalOrientationMatrix(mat.rotation4FromJSON(data.jump.fallbackRotations));
                                     }
                                 } else {
                                     application.log_DEBUG("Warning: '" + this._spacecraft.getDisplayName() + "' has an invalid anchor for inward jump: '" + data.jump.anchor + "' and no fallback specified. Jump will be skipped. Might be because the anchor is already destroyed.");
@@ -798,22 +798,21 @@ define([
      * Executes the current move command (if any) by turning/setting speed and cancels it if it has been conpleted
      * or no longer valid (e.g. the move command target has been destroyed or left)
      * @param {Number[3]} positionVector The position vector of the controlled spacecraft
-     * @param {Float32Array} inverseOrientationMatrix The inverse orientation matrix of the controlled spacecraft
+     * @param {Float32Array} orientationMatrix The orientation matrix of the controlled spacecraft
      * @param {Number} acceleration The acceleration of the controlled spacecraft (m/s^2)
      * @param {Number} dt Time elapsed since last simulation step (milliseconds)
      */
-    SpacecraftAI.prototype._executeMoveCommand = function (positionVector, inverseOrientationMatrix, acceleration, dt) {
-        var vectorToTarget, relativeTargetDirection, targetDistance, facingTarget, isFar, moveCommandCompleted;
+    SpacecraftAI.prototype._executeMoveCommand = function (positionVector, orientationMatrix, acceleration, dt) {
+        var relativeTargetDirection, targetDistance, facingTarget, isFar, moveCommandCompleted;
         switch (this._moveCommand) {
             case MoveCommand.REACH_DISTANCE:
                 if (!this._moveCommandTarget || !this._moveCommandTarget.isAlive() || this._moveCommandTarget.isAway()) {
                     this._cancelMoveCommand();
                     return;
                 }
-                vectorToTarget = vec.diff3Aux(this._moveCommandTarget.getPhysicalPositionVector(), positionVector);
-                relativeTargetDirection = vec.prodVec3Mat4Aux(
-                        vectorToTarget,
-                        inverseOrientationMatrix);
+                relativeTargetDirection = vec.prodMat4Vec3Aux(
+                        orientationMatrix,
+                        vec.diff3Aux(this._moveCommandTarget.getPhysicalPositionVector(), positionVector));
                 targetDistance = vec.extractLength3(relativeTargetDirection);
                 moveCommandCompleted = true;
                 if (this._moveCommandMaxDistance !== 0) {
@@ -1135,7 +1134,7 @@ define([
                 /** @type Array */
                 weapons,
                 /** @type Float32Array */
-                inverseOrientationMatrix;
+                orientationMatrix;
         // only perform anything if the controlled spacecraft still exists
         if (this._spacecraft) {
             // if the controlled spacecraft has been destroyed, remove the reference
@@ -1159,7 +1158,7 @@ define([
             ownSize = this._spacecraft.getVisualModel().getScaledSize();
             // caching / referencing needed variables
             positionVector = this._spacecraft.getPhysicalPositionVector();
-            inverseOrientationMatrix = mat.inverseOfRotation4Aux(this._spacecraft.getPhysicalOrientationMatrix());
+            orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
             speed = this._spacecraft.getRelativeVelocityMatrix()[13];
             target = this._spacecraft.getTarget();
             this._attackingTarget = false;
@@ -1170,16 +1169,16 @@ define([
                     i--;
                 }
             }
-            this._executeMoveCommand(positionVector, inverseOrientationMatrix, acceleration, dt);
+            this._executeMoveCommand(positionVector, orientationMatrix, acceleration, dt);
             if (this._moveCommand === MoveCommand.NONE) {
                 // .................................................................................................
                 // evade phase of charge maneuver
                 if (this._chargePhase === ChargePhase.EVADE) {
                     this._attackingTarget = !!target;
                     vectorToTarget = vec.diff3(this._chargeDestination, positionVector);
-                    relativeTargetDirection = vec.prodVec3Mat4Aux(
-                            vectorToTarget,
-                            inverseOrientationMatrix);
+                    relativeTargetDirection = vec.prodMat4Vec3Aux(
+                            orientationMatrix,
+                            vectorToTarget);
                     this._targetDistance = vec.extractLength3(relativeTargetDirection);
                     vec.getYawAndPitch(_angles, relativeTargetDirection);
                     this.turn(_angles.yaw, _angles.pitch, dt);
@@ -1211,9 +1210,9 @@ define([
                     }
                     vec.add3(targetPositionVector, this._targetOffset);
                     vectorToTarget = vec.diff3(targetPositionVector, positionVector);
-                    relativeTargetDirection = vec.prodVec3Mat4Aux(
-                            vectorToTarget,
-                            inverseOrientationMatrix);
+                    relativeTargetDirection = vec.prodMat4Vec3Aux(
+                            orientationMatrix,
+                            vectorToTarget);
                     this._targetDistance = vec.extractLength3(relativeTargetDirection);
                     vec.getYawAndPitch(_angles, relativeTargetDirection);
                     _angles.yaw += this._aimError[0];
@@ -1229,11 +1228,11 @@ define([
                         if (!this._isBlockedBy.canBeReused() && this._facingTarget) {
                             // checking if the blocking spacecraft is still in the way
                             if (this._isBlockedBy.getPhysicalModel().checkHit(mat.translation4vAux(targetPositionVector), mat.translation4vAux(vectorToTarget), 1000, ownSize * 0.25)) {
-                                relativeBlockerPosition = vec.prodVec3Mat4Aux(
+                                relativeBlockerPosition = vec.prodMat4Vec3Aux(
+                                        orientationMatrix,
                                         vec.diffVec3Mat4Aux(
                                                 positionVector,
-                                                this._isBlockedBy.getPhysicalPositionMatrix()),
-                                        inverseOrientationMatrix);
+                                                this._isBlockedBy.getPhysicalPositionMatrix()));
                                 blockAvoidanceSpeed = acceleration * BLOCK_AVOIDANCE_SPEED_FACTOR;
                                 if (relativeBlockerPosition[0] > 0) {
                                     this._spacecraft.strafeRight(blockAvoidanceSpeed);
@@ -1488,7 +1487,7 @@ define([
                 /** @type Spacecraft */
                 target,
                 /** @type Number[3] */
-                positionVector, targetPositionVector, vectorToTarget,
+                positionVector,
                 relativeTargetDirection,
                 /** @type Number[2] */
                 angles,
@@ -1503,7 +1502,7 @@ define([
                 /** @type Array */
                 weapons,
                 /** @type Float32Array */
-                inverseOrientationMatrix;
+                orientationMatrix;
         // only perform anything if the controlled spacecraft still exists
         if (this._spacecraft) {
             // if the controlled spacecraft has been destroyed, remove the reference
@@ -1524,17 +1523,15 @@ define([
             ownSize = this._spacecraft.getVisualModel().getScaledSize();
             // caching / referencing needed variables
             positionVector = this._spacecraft.getPhysicalPositionVector();
-            inverseOrientationMatrix = mat.inverseOfRotation4Aux(this._spacecraft.getPhysicalOrientationMatrix());
+            orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
             target = this._spacecraft.getTarget();
             this._attackingTarget = false;
-            this._executeMoveCommand(positionVector, inverseOrientationMatrix, acceleration, dt);
+            this._executeMoveCommand(positionVector, orientationMatrix, acceleration, dt);
             if (target) {
                 hostileTarget = target.isHostile(this._spacecraft);
-                targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
-                vectorToTarget = vec.diff3(targetPositionVector, positionVector);
-                relativeTargetDirection = vec.prodVec3Mat4(
-                        vectorToTarget,
-                        inverseOrientationMatrix);
+                relativeTargetDirection = vec.prodMat4Vec3(
+                        orientationMatrix,
+                        vec.diffTranslation3Aux(target.getPhysicalPositionMatrix(), this._spacecraft.getPhysicalPositionMatrix()));
                 targetDistance = vec.extractLength3(relativeTargetDirection);
                 if (hostileTarget) {
                     vec.getYawAndPitch(_angles, relativeTargetDirection);

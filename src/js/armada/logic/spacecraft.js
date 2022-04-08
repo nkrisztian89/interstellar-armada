@@ -1382,18 +1382,11 @@ define([
         return this._scoreValue;
     };
     /**
-     * Sets a new position matrix for the physical model of the spacecrafts based on the passed 3D vector.
+     * Sets a new position for the physical model of the spacecraft based on the passed 3D vector.
      * @param {Number[3]} vector
      */
     Spacecraft.prototype.setPhysicalPosition = function (vector) {
-        this._physicalModel.setPositionMatrix(mat.translation4v(vector));
-    };
-    /**
-     * Sets a new position matrix (directly) for the physical model of the spacecrafts.
-     * @param {Float32Array} value
-     */
-    Spacecraft.prototype.setPhysicalPositionMatrix = function (value) {
-        this._physicalModel.setPositionMatrix(value);
+        this._physicalModel.setPosition(vector[0], vector[1], vector[2]);
     };
     /**
      * Returns the 4x4 translation matrix describing the position of this 
@@ -1412,11 +1405,11 @@ define([
         return this._physicalPositionVector;
     };
     /**
-     * Sets a new orientation matrix (directly) for the physical model of the spacecrafts.
-     * @param {Float32Array} value
+     * Updates the orientation matrix for the physical model of the spacecraft.
+     * @param {Float32Array} value A 4x4 matrix to copy the values from
      */
-    Spacecraft.prototype.setPhysicalOrientationMatrix = function (value) {
-        this._physicalModel.setOrientationMatrix(value);
+    Spacecraft.prototype.updatePhysicalOrientationMatrix = function (value) {
+        this._physicalModel.updateOrientationMatrix(value);
     };
     /**
      * Returns the 4x4 rotation matrix describing the orientation of this 
@@ -1914,7 +1907,7 @@ define([
         this._class.acquireResources(params);
         resources.executeWhenReady(function () {
             if (this.isAlive()) {
-                this._physicalModel.setScalingMatrix(mat.scaling4(this._class.getModel().getScale()));
+                this._physicalModel.setScaling(this._class.getModel().getScale());
             }
         }.bind(this));
     };

@@ -310,8 +310,8 @@ define([
             _wireframeSpacecraft = new spacecraft.Spacecraft(_spacecraftClass);
         }
         if (orientationMatrix) {
-            _spacecraft.setPhysicalOrientationMatrix(mat.matrix4(orientationMatrix));
-            _wireframeSpacecraft.setPhysicalOrientationMatrix(_spacecraft.getPhysicalOrientationMatrix());
+            _spacecraft.updatePhysicalOrientationMatrix(orientationMatrix);
+            _wireframeSpacecraft.updatePhysicalOrientationMatrix(_spacecraft.getPhysicalOrientationMatrix());
         }
         if (loadoutChanged || environmentChanged || shouldReload) {
             if (_loadoutName) {

@@ -968,15 +968,6 @@ define([
     };
     // indirect getters and setters
     /**
-     * Sets the position for this object to the passed matrix.
-     * @param {Float32Array} value A 4x4 translation matrix.
-     */
-    PhysicalObject.prototype.setPositionMatrix = function (value) {
-        this._positionMatrix = value;
-        this._modelMatrixValid = false;
-        this._modelMatrixInverseValid = false;
-    };
-    /**
      * Sets a new position by updating the position matrix with the passed
      * coordinates
      * @param {Number} x
@@ -1004,11 +995,19 @@ define([
         this._modelMatrixInverseValid = false;
     };
     /**
-     * Sets the orientation for this object to the passed matrix.
+     * Updates the orientation for this object based on the values in the passed matrix..
      * @param {Float32Array} value A 4x4 rotation matrix.
      */
-    PhysicalObject.prototype.setOrientationMatrix = function (value) {
-        this._orientationMatrix = value;
+    PhysicalObject.prototype.updateOrientationMatrix = function (value) {
+        this._orientationMatrix[0] = value[0];
+        this._orientationMatrix[1] = value[1];
+        this._orientationMatrix[2] = value[2];
+        this._orientationMatrix[4] = value[4];
+        this._orientationMatrix[5] = value[5];
+        this._orientationMatrix[6] = value[6];
+        this._orientationMatrix[8] = value[8];
+        this._orientationMatrix[9] = value[9];
+        this._orientationMatrix[10] = value[10];
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
     };
@@ -1036,14 +1035,16 @@ define([
         this._modelMatrixInverseValid = false;
     };
     /**
-     * Sets the scaling for this object to the passed matrix.
-     * @param {Float32Array} value
+     * Sets the uniform scaling for this object to the passed value.
+     * @param {Number} value
      */
-    PhysicalObject.prototype.setScalingMatrix = function (value) {
-        this._scalingMatrix = value;
+    PhysicalObject.prototype.setScaling = function (value) {
+        this._scalingMatrix[0] = value;
+        this._scalingMatrix[5] = value;
+        this._scalingMatrix[10] = value;
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
-        this._inverseScalingFactor = 1 / this._scalingMatrix[0];
+        this._inverseScalingFactor = 1 / value;
     };
     /**
      * Returns the model matrix of the object, recalculating it if necessary
