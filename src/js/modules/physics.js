@@ -637,11 +637,6 @@ define([
          */
         this._scalingMatrix = mat.identity4();
         /**
-         * The cached inverse of the scaling matrix.
-         * @type Float32Array
-         */
-        this._scalingMatrixInverse = mat.identity4();
-        /**
          * The cached model matrix.
          * @type Float32Array
          */
@@ -763,7 +758,6 @@ define([
         mat.copyTranslation4(this._positionMatrix, positionMatrix);
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
         mat.copyScaling4(this._scalingMatrix, scalingMatrix);
-        mat.setInverseOfScaling4(this._scalingMatrixInverse, this._scalingMatrix);
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
         mat.setIdentity4(this._velocityMatrix);
@@ -1047,7 +1041,6 @@ define([
      */
     PhysicalObject.prototype.setScalingMatrix = function (value) {
         this._scalingMatrix = value;
-        mat.setInverseOfScaling4(this._scalingMatrixInverse, this._scalingMatrix);
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
         this._inverseScalingFactor = 1 / this._scalingMatrix[0];
@@ -1070,7 +1063,7 @@ define([
      */
     PhysicalObject.prototype.getModelMatrixInverse = function () {
         if (!this._modelMatrixInverseValid) {
-            mat.setModelMatrixInverse(this._modelMatrixInverse, this._positionMatrix, this._orientationMatrix, this._scalingMatrixInverse);
+            mat.updateModelMatrixInverse(this._modelMatrixInverse, this._positionMatrix, this._orientationMatrix, this._inverseScalingFactor);
             this._modelMatrixInverseValid = true;
         }
         return this._modelMatrixInverse;

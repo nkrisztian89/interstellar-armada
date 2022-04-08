@@ -2976,23 +2976,23 @@ define([
         m[14] = t[14];
     };
     /**
-     * Sets (updates) an inverse model matrix based on the passed translation,
-     * rotation and inverse scaling matrices.
+     * Updates an inverse model matrix based on the passed translation and rotation
+     * matrices and the inverse scaling factor isf (assuming uniform scaling)
      * @param {Float32Array} m The 4x4 matrix to update
      * @param {Float32Array} t A 4x4 translation matrix
      * @param {Float32Array} r A 4x4 rotation matrix
-     * @param {Float32Array} si A 4x4 scaling matrix, already inverted unlike the others
+     * @param {Number} isf The reciprocal of the uniform scaling factor
      */
-    mat.setModelMatrixInverse = function (m, t, r, si) {
-        m[0] = r[0] * si[0];
-        m[1] = r[4] * si[5];
-        m[2] = r[8] * si[10];
-        m[4] = r[1] * si[0];
-        m[5] = r[5] * si[5];
-        m[6] = r[9] * si[10];
-        m[8] = r[2] * si[0];
-        m[9] = r[6] * si[5];
-        m[10] = r[10] * si[10];
+    mat.updateModelMatrixInverse = function (m, t, r, isf) {
+        m[0] = r[0] * isf;
+        m[1] = r[4] * isf;
+        m[2] = r[8] * isf;
+        m[4] = r[1] * isf;
+        m[5] = r[5] * isf;
+        m[6] = r[9] * isf;
+        m[8] = r[2] * isf;
+        m[9] = r[6] * isf;
+        m[10] = r[10] * isf;
         m[12] = -m[0] * t[12] - m[4] * t[13] - m[8] * t[14];
         m[13] = -m[1] * t[12] - m[5] * t[13] - m[9] * t[14];
         m[14] = -m[2] * t[12] - m[6] * t[13] - m[10] * t[14];
