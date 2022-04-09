@@ -480,6 +480,21 @@ define(function () {
         return aux;
     };
     /**
+     * Returns the sum of a 3D vector and the translation component of a 4x4 matrix.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v The 3D vector.
+     * @param {Float32Array} m The 4x4 matrix
+     * @returns {Number[3]}
+     */
+    vec.sumVec3Mat4Aux = function (v, m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = v[0] + m[12];
+        aux[1] = v[1] + m[13];
+        aux[2] = v[2] + m[14];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Returns the sum of the 3D vectors given in the passed array.
      * @param {Number[3][]} vectors
      * @returns {Number[3]}
@@ -514,6 +529,36 @@ define(function () {
         aux[0] = v1[0] - v2[0];
         aux[1] = v1[1] - v2[1];
         aux[2] = v1[2] - v2[2];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the difference of a 3D vector and the translation component of a 4x4 transformation matrix
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v The 3D vector.
+     * @param {Float32Array} m The 4x4 transformation matrix.
+     * @returns {Number[3]} The difference of v and the translation component of m.
+     */
+    vec.diffVec3Mat4Aux = function (v, m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = v[0] - m[12];
+        aux[1] = v[1] - m[13];
+        aux[2] = v[2] - m[14];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the difference of the translation component of a 4x4 transformation matrix and a 3D vector
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Float32Array} m The 4x4 transformation matrix.
+     * @param {Number[3]} v The 3D vector.
+     * @returns {Number[3]} The difference of v and the translation component of m.
+     */
+    vec.diffMat4Vec3Aux = function (m, v) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = m[12] - v[0];
+        aux[1] = m[13] - v[1];
+        aux[2] = m[14] - v[2];
         _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
         return aux;
     };
@@ -1004,30 +1049,6 @@ define(function () {
         v[1] = m[13];
         v[2] = m[14];
         return v;
-    };
-    /**
-     * Returns the difference of a 3D vector and the translation component of a 4x4 transformation matrix
-     * @param {Number[3]} v The 3D vector.
-     * @param {Float32Array} m The 4x4 transformation matrix.
-     * @returns {Number[3]} The difference of v and the translation component of m.
-     */
-    vec.diffVec3Mat4 = function (v, m) {
-        return [v[0] - m[12], v[1] - m[13], v[2] - m[14]];
-    };
-    /**
-     * Returns the difference of a 3D vector and the translation component of a 4x4 transformation matrix
-     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
-     * @param {Number[3]} v The 3D vector.
-     * @param {Float32Array} m The 4x4 transformation matrix.
-     * @returns {Number[3]} The difference of v and the translation component of m.
-     */
-    vec.diffVec3Mat4Aux = function (v, m) {
-        var aux = _auxVectors[_auxVectorIndex];
-        aux[0] = v[0] - m[12];
-        aux[1] = v[1] - m[13];
-        aux[2] = v[2] - m[14];
-        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
-        return aux;
     };
     /**
      * Multiplies the given 3D row vector with the given 3x3 matrix from the right, modifying it in-place.

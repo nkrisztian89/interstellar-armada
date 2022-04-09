@@ -2389,10 +2389,10 @@ define([
      */
     Spacecraft.prototype.getSoundSourceForFireSound = function () {
         var posInCameraSpace;
-        posInCameraSpace = mat.translationVector3(this.getPositionMatrixInCameraSpace());
-        if ((Math.abs(posInCameraSpace[0]) <= _weaponFireSoundStackMinimumDistance) &&
-                (Math.abs(posInCameraSpace[1]) <= _weaponFireSoundStackMinimumDistance) &&
-                (Math.abs(posInCameraSpace[2]) <= _weaponFireSoundStackMinimumDistance)) {
+        posInCameraSpace = this.getPositionMatrixInCameraSpace();
+        if ((Math.abs(posInCameraSpace[12]) <= _weaponFireSoundStackMinimumDistance) &&
+                (Math.abs(posInCameraSpace[13]) <= _weaponFireSoundStackMinimumDistance) &&
+                (Math.abs(posInCameraSpace[14]) <= _weaponFireSoundStackMinimumDistance)) {
             return null;
         }
         return this.getSoundSource();
@@ -2403,11 +2403,12 @@ define([
      * and are currently aimed at their target.
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
-        var i, scaledOriMatrix, fired = false, projectileCount;
+        var i, scaledOriMatrix, fired = false, projectileCount, soudSource;
         if (!this._firingDisabled && !this._isJumping) {
             scaledOriMatrix = this.getScaledOriMatrix();
+            soudSource = this.getSoundSourceForFireSound();
             for (i = 0; i < this._weapons.length; i++) {
-                projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, this.getSoundSourceForFireSound());
+                projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, soudSource);
                 fired = (projectileCount > 0) || fired;
                 this._shotsFired += projectileCount;
             }

@@ -133,7 +133,7 @@ define([
          * particles towards ("unidirectional") or perpendicular ("planar") to this vector)
          * @type Number[3]
          */
-        this._direction = direction;
+        this._direction = direction || [0, 0, 0];
         /**
          * If true, the particles emitted by the explosion will belong to it as subnodes,
          * and change position and/or orientation with it, even after they have been emitted
@@ -183,7 +183,9 @@ define([
         this._class = explosionClass;
         mat.copyTranslation4(this._positionMatrix, positionMatrix);
         mat.setMatrix4(this._orientationMatrix, orientationMatrix);
-        this._direction = direction;
+        this._direction[0] = direction[0];
+        this._direction[1] = direction[1];
+        this._direction[2] = direction[2];
         this._carriesParticles = (carriesParticles === true);
         this._hasRelativeOrientation = (relativeOrientation === true);
         this._ignoreParticleCountFactor = (ignoreParticleCountFactor === true);

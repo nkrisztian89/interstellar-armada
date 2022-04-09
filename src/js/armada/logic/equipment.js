@@ -611,7 +611,7 @@ define([
         power = Math.min(this._timeLeft / this._class.getDissipationDuration(), 1);
         physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, power * relativeVelocity * this._class.getMass() * 1000, 1, 1);
         exp = explosion.getExplosion();
-        exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3(relativeVelocityDirectionInWorldSpace, -1), true, true, physicalHitObject.getVelocityMatrix());
+        exp.init(((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()), mat.translation4vAux(hitPositionVectorInWorldSpace), mat.IDENTITY4, vec.scaled3Aux(relativeVelocityDirectionInWorldSpace, -1), true, true, physicalHitObject.getVelocityMatrix());
         exp.addToSceneNow(this._visualModel.getNode().getScene().getRootNode(), hitObject.getSoundSource(), true);
         hitObject.damage(power * this._class.getDamage(), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, false, offset);
         this._timeLeft = 0;
@@ -1628,7 +1628,7 @@ define([
                 this._destruct(
                         this._class.getExplosionClass(),
                         this._physicalModel.getPositionMatrix(),
-                        vec.scaled3(vec.normalize3(mat.translationVector3(this._physicalModel.getVelocityMatrix())), -1),
+                        vec.scaled3Aux(vec.normalize3(mat.translationVector3(this._physicalModel.getVelocityMatrix())), -1),
                         this._physicalModel.getVelocityMatrix(),
                         audio.createSoundSource(mat.translationVector3(this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera()))),
                         false);
@@ -2727,8 +2727,8 @@ define([
         var driftTime, burnTime, targetPosition, orientationMatrix, maxTurnAngle, turnTime, velocityVector, relativeTargetVelocity, angularAcceleration;
         orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
         // velocity vector for the original drifting of the missile after it is launched, before igniting main engine
-        velocityVector = vec.sum3Aux(mat.translationVector3(this._spacecraft.getPhysicalVelocityMatrix()), vec.scaled3Aux(mat.getRowB43(orientationMatrix), this._class.getLaunchVelocity()));
-        relativeTargetVelocity = vec.diff3(mat.translationVector3(target.getPhysicalVelocityMatrix()), velocityVector);
+        velocityVector = vec.sumVec3Mat4Aux(vec.scaled3Aux(mat.getRowB43(orientationMatrix), this._class.getLaunchVelocity()), this._spacecraft.getPhysicalVelocityMatrix());
+        relativeTargetVelocity = vec.diffMat4Vec3Aux(target.getPhysicalVelocityMatrix(), velocityVector);
         driftTime = 0.001 * this._class.getIgnitionTime();
         // first, consider drifting after launch
         targetPosition = vec.sum3Aux(target.getPhysicalPositionVector(), vec.scaled3Aux(relativeTargetVelocity, driftTime));
@@ -2984,7 +2984,7 @@ define([
     /**
      * Used to filter the potential target list to include only hostiles
      * @param {Spacecraft} craft
-     * @returns {unresolved}
+     * @returns {Boolean}
      */
     TargetingComputer.prototype._filterHostileTarget = function (craft) {
         return this._spacecraft.isHostile(craft) && (mat.distanceSquared(this._spacecraft.getPhysicalPositionMatrix(), craft.getPhysicalPositionMatrix()) <= this._rangeSquared);
@@ -3022,8 +3022,8 @@ define([
             index: index,
             value: vec.angle3u(
                     mat.getRowB43(this._spacecraft.getPhysicalOrientationMatrix()),
-                    vec.normalize3(vec.diff3(
-                            craft.getPhysicalPositionVector(), this._spacecraft.getPhysicalPositionVector())))
+                    vec.normalize3(vec.diffTranslation3Aux(
+                            craft.getPhysicalPositionMatrix(), this._spacecraft.getPhysicalPositionMatrix())))
         };
     };
     /**
@@ -3036,7 +3036,7 @@ define([
      */
     TargetingComputer.prototype._mapTargetToCombinedValue = function (craft, index) {
         var
-                vector = vec.diffTranslation3(craft.getPhysicalPositionMatrix(), this._spacecraft.getPhysicalPositionMatrix()),
+                vector = vec.diffTranslation3Aux(craft.getPhysicalPositionMatrix(), this._spacecraft.getPhysicalPositionMatrix()),
                 distance = vec.extractLength3(vector);
         return {
             index: index,
