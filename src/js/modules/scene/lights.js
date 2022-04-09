@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides different types of light source classes to add to scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -110,7 +110,7 @@ define([
          * Stores the latest calculated LiSP transformation matrix
          * @type Float32Array
          */
-        this._lispMatrix = mat.matrix4([
+        this._lispMatrix = mat.copy([
             1, 0, 0, 0,
             0, 1, 0, -1,
             0, 0, 1, 0,
@@ -243,8 +243,8 @@ define([
         // o point, the w will be even more negative (w will follow the frustum, the bottom-left / top-right diagonal line here)
 
         return (Math.abs(x) - size * this._lispMatrix[0] < wp) && // left-right plane
-                ((y1 > 0) || (y1 > -(w - size))) &&               // far plane (w is calculated for y1 by also negating the added size)
-                ((y2 < 0) || (y2 < (w + size))) &&                // near plane (w is calculated for y2 by also negating the subtracted size)
+                ((y1 > 0) || (y1 > -(w - size))) && // far plane (w is calculated for y1 by also negating the added size)
+                ((y2 < 0) || (y2 < (w + size))) && // near plane (w is calculated for y2 by also negating the subtracted size)
                 (Math.abs(z) - size * this._lispMatrix[10] < wp); // top-bottom plane
     };
     /**

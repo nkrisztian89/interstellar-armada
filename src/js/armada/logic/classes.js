@@ -4234,7 +4234,7 @@ define([
                 this.movesRelativeToObject(),
                 this.getPositionFollowedObjectsForObject(model),
                 this.startsWithRelativePosition(),
-                mat.matrix4(this.getPositionMatrix()),
+                mat.copy(this.getPositionMatrix()),
                 this.getDistanceRange(),
                 this.getConfines(),
                 this.resetsWhenLeavingConfines());
@@ -4243,7 +4243,7 @@ define([
                 this.pointsTowardsObjects(),
                 this.isFPS(),
                 this.getOrientationFollowedObjectsForObject(model),
-                mat.matrix4(this.getOrientationMatrix()),
+                mat.copy(this.getOrientationMatrix()),
                 Math.degrees(angles.yaw), Math.degrees(angles.pitch),
                 this.getAlphaRange(),
                 this.getBetaRange(),

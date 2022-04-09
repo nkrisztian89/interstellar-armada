@@ -729,7 +729,7 @@ define([
                         _scene.getCamera().setViewDistance(FREE_CAMERA_VIEW_DISTANCE);
                     }
                     if (params.preserve) {
-                        _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.matrix4(_currentContext.cameraOrientationMatrix), true);
+                        _scene.getCamera().getConfiguration().setRelativeOrientationMatrix(mat.copy(_currentContext.cameraOrientationMatrix), true);
                     }
                 }
                 _elements.canvas.onmousedown = _handleMouseDown;

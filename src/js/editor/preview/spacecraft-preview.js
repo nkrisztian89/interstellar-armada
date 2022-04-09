@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2021 Krisztián Nagy
+ * Copyright 2016-2022 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for spacecraft classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -532,7 +532,7 @@ define([
     function _onModelRotate() {
         var explosion = _spacecraft && _spacecraft.getExplosion();
         if (explosion) {
-            explosion.getVisualModel().setOrientationMatrix(mat.matrix4(_spacecraft.getVisualModel().getOrientationMatrix()));
+            explosion.getVisualModel().setOrientationMatrix(mat.copy(_spacecraft.getVisualModel().getOrientationMatrix()));
         }
     }
     /**

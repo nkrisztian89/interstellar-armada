@@ -239,17 +239,13 @@ define([
      */
     mat.NULL4 = mat.null4();
     /**
-     * Return a 3x3 matrix comprised of the first 9 elements of the passed array.
-     * @param {Float32Array|Number[9]} m
+     * Copies the passed matrix into a new one and returns it.
+     * @param {Float32Array} m
      * @returns {Float32Array}
      */
-    mat.matrix3 = function (m) {
+    mat.copy = function (m) {
         _matrixCount++;
-        return new Float32Array([
-            m[0], m[1], m[2],
-            m[3], m[4], m[5],
-            m[6], m[7], m[8]
-        ]);
+        return new Float32Array(m);
     };
     /**
      * Return a 3x3 matrix comprised of the first 9 elements of the passed array.
@@ -259,32 +255,9 @@ define([
      */
     mat.matrix3Aux = function (m) {
         var aux = _auxMatrices3[_auxMatrix3Index];
-        aux[0] = m[0];
-        aux[1] = m[1];
-        aux[2] = m[2];
-        aux[3] = m[3];
-        aux[4] = m[4];
-        aux[5] = m[5];
-        aux[6] = m[6];
-        aux[7] = m[7];
-        aux[8] = m[8];
-        aux[9] = m[9];
+        aux.set(m);
         _auxMatrix3Index = (_auxMatrix3Index + 1) % AUX_MATRIX_COUNT;
         return aux;
-    };
-    /**
-     * Return a 4x4 matrix comprised of the first 16 elements of the passed array.
-     * @param {Float32Array|Number[16]} m
-     * @returns {Float32Array}
-     */
-    mat.matrix4 = function (m) {
-        _matrixCount++;
-        return new Float32Array([
-            m[0], m[1], m[2], m[3],
-            m[4], m[5], m[6], m[7],
-            m[8], m[9], m[10], m[11],
-            m[12], m[13], m[14], m[15]
-        ]);
     };
     /**
      * Return a 4x4 matrix comprised of the first 16 elements of the passed array.
@@ -294,22 +267,7 @@ define([
      */
     mat.matrix4Aux = function (m) {
         var aux = _auxMatrices[_auxMatrixIndex];
-        aux[0] = m[0];
-        aux[1] = m[1];
-        aux[2] = m[2];
-        aux[3] = m[3];
-        aux[4] = m[4];
-        aux[5] = m[5];
-        aux[6] = m[6];
-        aux[7] = m[7];
-        aux[8] = m[8];
-        aux[9] = m[9];
-        aux[10] = m[10];
-        aux[11] = m[11];
-        aux[12] = m[12];
-        aux[13] = m[13];
-        aux[14] = m[14];
-        aux[15] = m[15];
+        aux.set(m);
         _auxMatrixIndex = (_auxMatrixIndex + 1) % AUX_MATRIX_COUNT;
         return aux;
     };

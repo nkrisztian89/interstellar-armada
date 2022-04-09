@@ -228,10 +228,10 @@ define([
                 mat.rotationZ4Aux(angle * utils.RAD),
                 mat.rotationX4Aux(_getSetting(SETTINGS.ROTATION_VIEW_ANGLE) * utils.RAD));
         if (_solidModel) {
-            _solidModel.setOrientationMatrix(mat.matrix4(orientationMatrix));
+            _solidModel.setOrientationMatrix(mat.copy(orientationMatrix));
         }
         if (_wireframeModel) {
-            _wireframeModel.setOrientationMatrix(mat.matrix4(orientationMatrix));
+            _wireframeModel.setOrientationMatrix(mat.copy(orientationMatrix));
         }
     }
     /*

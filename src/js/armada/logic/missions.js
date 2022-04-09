@@ -1477,7 +1477,7 @@ define([
                 view.movesRelativeToObject(),
                 view.getPositionFollowedObjectsForScene(scene),
                 view.startsWithRelativePosition(),
-                mat.matrix4(view.getPositionMatrix()),
+                mat.copy(view.getPositionMatrix()),
                 view.getDistanceRange(),
                 view.getConfines(),
                 view.resetsWhenLeavingConfines());
@@ -1486,7 +1486,7 @@ define([
                 view.pointsTowardsObjects(),
                 view.isFPS(),
                 view.getOrientationFollowedObjectsForScene(scene),
-                mat.matrix4(view.getOrientationMatrix()),
+                mat.copy(view.getOrientationMatrix()),
                 Math.degrees(angles.yaw), Math.degrees(angles.pitch),
                 view.getAlphaRange(),
                 view.getBetaRange(),

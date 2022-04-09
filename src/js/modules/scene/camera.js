@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2022 Krisztián Nagy
  * @file Provides a capable camera class to use with scenes.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -134,7 +134,7 @@ define([
          * Stores a copy of the starting relative position matrix so it can be reset to it later.
          * @type Float32Array
          */
-        this._defaultRelativePositionMatrix = mat.matrix4(positionMatrix);
+        this._defaultRelativePositionMatrix = mat.copy(positionMatrix);
         /**
          * Describes the relative position stored in this configuration. Not the same as the world position of the camera
          * itself, as it can be relative to followed objects and the camera direction.
@@ -303,7 +303,7 @@ define([
                 this._movesRelativeToObject,
                 this._followedObjects.slice(),
                 this._startsWithRelativePosition,
-                mat.matrix4(this._defaultRelativePositionMatrix),
+                mat.copy(this._defaultRelativePositionMatrix),
                 this._distanceIsConfined ? [this._minimumDistance, this._maximumDistance] : null,
                 [
                     this._xIsConfined ? [this._minimumX, this._maximumX] : null,
@@ -312,8 +312,8 @@ define([
                 ],
                 this._resetsWhenLeavingConfines,
                 transitionCopy);
-        result._relativePositionMatrix = mat.matrix4(this._relativePositionMatrix);
-        result._worldPositionMatrix = mat.matrix4(this._worldPositionMatrix);
+        result._relativePositionMatrix = mat.copy(this._relativePositionMatrix);
+        result._worldPositionMatrix = mat.copy(this._worldPositionMatrix);
         result._isStarting = this._isStarting;
         return result;
     };
@@ -697,7 +697,7 @@ define([
          * Stores a copy of the starting relative orientation matrix so it can be reset to it later.
          * @type Float32Array
          */
-        this._defaultRelativeOrientationMatrix = mat.matrix4(orientationMatrix);
+        this._defaultRelativeOrientationMatrix = mat.copy(orientationMatrix);
         /**
          * If FPS mode is off, this matrix describes the orientation stored in this configuration. Not the same 
          * as the world orientation of the camera itself, as it can be relative to followed objects. (or their position)
@@ -880,7 +880,7 @@ define([
                 this._pointsTowardsObjects,
                 this._fps,
                 this._followedObjects.slice(),
-                mat.matrix4(this._defaultRelativeOrientationMatrix),
+                mat.copy(this._defaultRelativeOrientationMatrix),
                 this._alpha,
                 this._beta,
                 [this._minAlpha, this._maxAlpha],
@@ -888,8 +888,8 @@ define([
                 this._baseOrientation,
                 this._pointToFallback,
                 transitionCopy);
-        result._relativeOrientationMatrix = mat.matrix4(this._relativeOrientationMatrix);
-        result._worldOrientationMatrix = mat.matrix4(this._worldOrientationMatrix);
+        result._relativeOrientationMatrix = mat.copy(this._relativeOrientationMatrix);
+        result._worldOrientationMatrix = mat.copy(this._worldOrientationMatrix);
         return result;
     };
     /**
@@ -1348,8 +1348,8 @@ define([
                 this._fov,
                 [this._minFOV, this._maxFOV],
                 this._span);
-        result.setPositionMatrix(mat.matrix4(this.getPositionMatrix()));
-        result.setOrientationMatrix(mat.matrix4(this.getOrientationMatrix()));
+        result.setPositionMatrix(mat.copy(this.getPositionMatrix()));
+        result.setOrientationMatrix(mat.copy(this.getOrientationMatrix()));
         return result;
     };
     /**
@@ -1584,8 +1584,8 @@ define([
         var angles = mat.getYawAndPitch(orientationMatrix);
         return new CameraConfiguration(
                 utils.EMPTY_STRING,
-                new CameraPositionConfiguration(false, false, false, [], false, mat.matrix4(positionMatrix), null, null, false),
-                new CameraOrientationConfiguration(false, false, fps, [], mat.matrix4(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined,
+                new CameraPositionConfiguration(false, false, false, [], false, mat.copy(positionMatrix), null, null, false),
+                new CameraOrientationConfiguration(false, false, fps, [], mat.copy(orientationMatrix), Math.degrees(angles.yaw), Math.degrees(angles.pitch), undefined, undefined,
                         CameraOrientationConfiguration.BaseOrientation.WORLD,
                         CameraOrientationConfiguration.PointToFallback.POSITION_FOLLOWED_OBJECT_OR_WORLD),
                 fov, [minFOV, maxFOV],
