@@ -528,7 +528,7 @@ define([
                 }
                 // if the position is absolute, we will do the distance range check from the orientation followed object (if any)
             } else if (orientationFollowedObjectsPositionVector) {
-                translationVector = vec.diff3Aux(mat.translationVector3(relativePositionMatrix), orientationFollowedObjectsPositionVector);
+                translationVector = vec.diffVec3Mat4Aux(orientationFollowedObjectsPositionVector, relativePositionMatrix);
                 distance = vec.extractLength3(translationVector);
                 if ((distance < this._minimumDistance) || (distance > this._maximumDistance)) {
                     if ((distance > this._maximumDistance) && (this._resetsWhenLeavingConfines)) {
@@ -539,7 +539,7 @@ define([
                         return false;
                     }
                     distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
-                    relativePositionMatrix = mat.translation4vAux(vec.sum3(orientationFollowedObjectsPositionVector, vec.scale3(translationVector, distance)));
+                    relativePositionMatrix = mat.translation4vAux(vec.sum3Aux(orientationFollowedObjectsPositionVector, vec.scale3(translationVector, -distance)));
                 }
             }
         }
@@ -2633,9 +2633,10 @@ define([
             startPositionVector = this._previousConfiguration.getPositionVector();
             endPositionVector = this._currentConfiguration.getPositionVector();
             previousPositionVector = this.getCameraPositionVector();
-            this._setPositionv(vec.sum3(vec.scaled3(startPositionVector, 1 - transitionProgress), vec.scaled3(endPositionVector, transitionProgress)));
+            this._setPositionv(vec.sum3Aux(vec.scaled3Aux(startPositionVector, 1 - transitionProgress), vec.scaled3Aux(endPositionVector, transitionProgress)));
             // calculate the velocity vector
-            this._velocityVector = vec.scaled3(vec.prodMat4Vec3(this.getCameraOrientationMatrix(), vec.diff3(this.getCameraPositionVector(), previousPositionVector)), 1000 / dt);
+            vec.setProdMat4Vec3(this._velocityVector, this.getCameraOrientationMatrix(), vec.diff3Aux(this.getCameraPositionVector(), previousPositionVector));
+            vec.scale3(this._velocityVector, 1000 / dt);
             // calculate orientation
             // calculate the rotation matrix that describes the transformation that needs to be applied on the
             // starting orientation matrix to get the new oritentation matrix (relative to the original matrix)
@@ -2673,19 +2674,21 @@ define([
             // update the relative velocity vector
             if (this._currentConfiguration.positionFollowsObjects()) {
                 if (this._previousFollowedPositionVector) {
-                    this._velocityVector = vec.scaled3(
-                            vec.prodMat4Vec3(
-                                    this.getCameraOrientationMatrix(),
-                                    vec.diff3(
-                                            this._currentConfiguration.getFollowedPositionVector(),
-                                            this._previousFollowedPositionVector)),
-                            1000 / dt);
+                    vec.setProdMat4Vec3(this._velocityVector,
+                            this.getCameraOrientationMatrix(),
+                            vec.diff3Aux(
+                                    this._currentConfiguration.getFollowedPositionVector(),
+                                    this._previousFollowedPositionVector));
+                    vec.scale3(this._velocityVector, 1000 / dt)
                 } else {
-                    this._velocityVector = [0, 0, 0];
+                    this._velocityVector[0] = 0;
+                    this._velocityVector[1] = 0;
+                    this._velocityVector[2] = 0;
                 }
                 this._previousFollowedPositionVector = this._currentConfiguration.getFollowedPositionVector();
             } else {
-                this._velocityVector = vec.scaled3(vec.prodMat4Vec3(this.getCameraOrientationMatrix(), vec.diff3(this.getCameraPositionVector(), previousPositionVector)), 1000 / dt);
+                vec.setProdMat4Vec3(this._velocityVector, this.getCameraOrientationMatrix(), vec.diff3Aux(this.getCameraPositionVector(), previousPositionVector));
+                vec.scale3(this._velocityVector, 1000 / dt);
             }
         }
     };

@@ -456,9 +456,9 @@ define([
             // calculate the relative progress
             stateProgress = this._timeSinceLastTransition / this._states[nextStateIndex].timeToReach;
             this.setObjectIntensity(this._states[this._currentStateIndex].intensity * (1.0 - stateProgress) + this._states[nextStateIndex].intensity * stateProgress);
-            this.setColor(vec.sum3(
-                    vec.scaled3(this._states[this._currentStateIndex].color, 1.0 - stateProgress),
-                    vec.scaled3(this._states[nextStateIndex].color, stateProgress)));
+            this.setColor(vec.sum3Aux(
+                    vec.scaled3Aux(this._states[this._currentStateIndex].color, 1.0 - stateProgress),
+                    vec.scaled3Aux(this._states[nextStateIndex].color, stateProgress)));
         }
     };
     /**
@@ -534,7 +534,9 @@ define([
      * @param {Number[3]} value
      */
     PointLightSource.prototype.setColor = function (value) {
-        this._color = value;
+        this._color[0] = value[0];
+        this._color[1] = value[1];
+        this._color[2] = value[2];
         this._updateUniformColor();
     };
     /**

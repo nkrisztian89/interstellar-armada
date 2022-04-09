@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 Krisztián Nagy
+ * Copyright 2019-2022 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for missile classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -159,9 +159,9 @@ define([
         count = 3;
         segmentLength = length / count;
         dt = duration / (count * growthRate);
-        trailEmitter.startNew(preview.getScene(), vec.sum3(enginePosition, vec.scaled3(direction, count * segmentLength)));
+        trailEmitter.startNew(preview.getScene(), vec.sum3Aux(enginePosition, vec.scaled3Aux(direction, count * segmentLength)));
         for (i = 1; i <= count; i++) {
-            trailEmitter.addPoint(vec.sum3(enginePosition, vec.scaled3(direction, (count - i) * segmentLength)), dt);
+            trailEmitter.addPoint(vec.sum3Aux(enginePosition, vec.scaled3Aux(direction, (count - i) * segmentLength)), dt);
         }
         preview.requestRender();
     }

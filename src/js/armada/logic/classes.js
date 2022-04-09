@@ -548,7 +548,7 @@ define([
                 count = dataJSON.thrusterSlots[i].count;
                 for (j = 0; j < count; j++) {
                     thrusterSlots.push(new ThrusterSlot({//eslint-disable-line no-use-before-define
-                        position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),
+                        position: vec.sum3(startPosition, vec.scaled3Aux(translationVector, j)),
                         size: size,
                         groupIndex: groupIndex,
                         uses: uses
@@ -4750,7 +4750,7 @@ define([
                     count = dataJSON.weaponSlots[i].count;
                     for (j = 0; j < count; j++) {
                         this._weaponSlots.push(new WeaponSlot({
-                            position: vec.sum3(startPosition, vec.scaled3(translationVector, j)),
+                            position: vec.sum3(startPosition, vec.scaled3Aux(translationVector, j)),
                             rotations: rotations
                         }));
                     }

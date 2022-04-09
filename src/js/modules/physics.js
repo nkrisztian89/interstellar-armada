@@ -1175,17 +1175,17 @@ define([
         this._bodySize = 0;
         for (i = 0; i < this._bodies.length; i++) {
             vec.setTranslationVector3(bodyPos, this._bodies[i].getPositionMatrix());
-            halfDim = vec.prodVec3Mat3Aux(this._bodies[i].getHalfDimensions(), mat.prod3x3SubOf43(
+            halfDim = vec.prodVec3Mat3Aux(this._bodies[i].getHalfDimensions(), mat.prod3x3SubOf43Aux(
                     this._orientationMatrix,
                     this._bodies[i].getOrientationMatrix()));
-            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, halfDim)));
-            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, [halfDim[0], halfDim[1], -halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, [halfDim[0], -halfDim[1], halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, [halfDim[0], -halfDim[1], -halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, [-halfDim[0], halfDim[1], halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, [-halfDim[0], halfDim[1], -halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, [-halfDim[0], -halfDim[1], halfDim[2]])));
-            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3(bodyPos, [-halfDim[0], -halfDim[1], -halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3Aux(bodyPos, halfDim)));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3Aux(bodyPos, [halfDim[0], halfDim[1], -halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3Aux(bodyPos, [halfDim[0], -halfDim[1], halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3Aux(bodyPos, [halfDim[0], -halfDim[1], -halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3Aux(bodyPos, [-halfDim[0], halfDim[1], halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3Aux(bodyPos, [-halfDim[0], halfDim[1], -halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3Aux(bodyPos, [-halfDim[0], -halfDim[1], halfDim[2]])));
+            this._bodySize = Math.max(this._bodySize, vec.length3(vec.sum3Aux(bodyPos, [-halfDim[0], -halfDim[1], -halfDim[2]])));
         }
     };
     /**

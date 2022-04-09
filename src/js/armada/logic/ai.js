@@ -683,7 +683,7 @@ define([
                                                 anchor.getPhysicalOrientationMatrix()));
                                     }
                                     // adding position of the anchor ship
-                                    this._spacecraft.setPhysicalPosition(vec.sum3(
+                                    this._spacecraft.setPhysicalPosition(vec.sum3Aux(
                                             this._spacecraft.getPhysicalPositionVector(),
                                             anchor.getPhysicalPositionVector()));
                                 } else if (data.jump.fallbackPosition) {
@@ -1386,13 +1386,13 @@ define([
                                     this._chargePhase = ChargePhase.EVADE;
                                     this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
                                     directionToTarget = vec.normal3(vectorToTarget);
-                                    this._chargeDestination = vec.sum3(
+                                    vec.setSum3(this._chargeDestination,
                                             positionVector,
-                                            vec.scaled3(
-                                                    vec.diff3(
-                                                            vec.sum3(
+                                            vec.scaled3Aux(
+                                                    vec.diff3Aux(
+                                                            vec.sum3Aux(
                                                                     targetPositionVector,
-                                                                    vec.scaled3(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(directionToTarget), mat.rotation3Aux(directionToTarget, Math.random() * utils.DOUBLE_PI))), maxDistance)),
+                                                                    vec.scaled3Aux(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(directionToTarget), mat.rotation3Aux(directionToTarget, Math.random() * utils.DOUBLE_PI))), maxDistance)),
                                                             positionVector),
                                                     CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
                                 }

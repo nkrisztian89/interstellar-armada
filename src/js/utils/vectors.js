@@ -465,6 +465,21 @@ define(function () {
         return [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
     };
     /**
+     * Returns the sum of two 3D vectors.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v1 The first 3D vector.
+     * @param {Number[3]} v2 The second 3D vector.
+     * @returns {Number[3]} The sum of v1 and v2.
+     */
+    vec.sum3Aux = function (v1, v2) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = v1[0] + v2[0];
+        aux[1] = v1[1] + v2[1];
+        aux[2] = v1[2] + v2[2];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Returns the sum of the 3D vectors given in the passed array.
      * @param {Number[3][]} vectors
      * @returns {Number[3]}

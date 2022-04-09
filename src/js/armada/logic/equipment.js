@@ -776,7 +776,7 @@ define([
     TrailEmitter.prototype.addPoint = function (point, dt) {
         var segment, prevTime, direction;
         this._visualModel.setPositionv(point);
-        direction = vec.normalize3(vec.diff3(point, this._lastPoint));
+        direction = vec.normalize3(vec.diff3Aux(point, this._lastPoint));
         prevTime = this._lastSegment ? this._lastSegment.getEndTimeLeft() : 0;
         segment = _trailSegmentPool.getObject();
         segment.init(
@@ -2586,7 +2586,7 @@ define([
                         this._class.getModel(),
                         shader,
                         textures,
-                        mat.translation4v(vec.sum3(this._descriptor.tubePositions[i], [0, -j * scale * this._class.getLength(), 0])),
+                        mat.translation4v(vec.sum3Aux(this._descriptor.tubePositions[i], [0, -j * scale * this._class.getLength(), 0])),
                         mat.identity4(),
                         mat.scaling4(scale),
                         (wireframe === true),
@@ -2727,11 +2727,11 @@ define([
         var driftTime, burnTime, targetPosition, orientationMatrix, maxTurnAngle, turnTime, velocityVector, relativeTargetVelocity, angularAcceleration;
         orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
         // velocity vector for the original drifting of the missile after it is launched, before igniting main engine
-        velocityVector = vec.sum3(mat.translationVector3(this._spacecraft.getPhysicalVelocityMatrix()), vec.scaled3Aux(mat.getRowB43(orientationMatrix), this._class.getLaunchVelocity()));
+        velocityVector = vec.sum3Aux(mat.translationVector3(this._spacecraft.getPhysicalVelocityMatrix()), vec.scaled3Aux(mat.getRowB43(orientationMatrix), this._class.getLaunchVelocity()));
         relativeTargetVelocity = vec.diff3(mat.translationVector3(target.getPhysicalVelocityMatrix()), velocityVector);
         driftTime = 0.001 * this._class.getIgnitionTime();
         // first, consider drifting after launch
-        targetPosition = vec.sum3(target.getPhysicalPositionVector(), vec.scaled3Aux(relativeTargetVelocity, driftTime));
+        targetPosition = vec.sum3Aux(target.getPhysicalPositionVector(), vec.scaled3Aux(relativeTargetVelocity, driftTime));
         // consider turning before firing main engine
         if (this._class.getHomingMode() === classes.MissileHomingMode.NONE) {
             turnTime = 0;
@@ -2752,7 +2752,7 @@ define([
             if (turnTime < 2 * MISSILE_TURN_ACCELERATION_DURATION_S) {
                 turnTime = Math.sqrt(4 * maxTurnAngle / angularAcceleration);
             }
-            targetPosition = vec.sum3(targetPosition, vec.scaled3Aux(relativeTargetVelocity, turnTime));
+            vec.add3(targetPosition, vec.scaled3Aux(relativeTargetVelocity, turnTime));
         }
         // consider the phase accelerating towards the target (assuming straight line for simplicity)
         burnTime = 0.001 * this._class.getDuration() - driftTime - turnTime;
