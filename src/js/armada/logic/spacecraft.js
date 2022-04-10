@@ -1198,7 +1198,7 @@ define([
         separator = separator || DEFAULT_WEAPON_RANGE_STRING_SEPARATOR;
         var i, range, ranges = [];
         for (i = 0; i < this._weapons.length; i++) {
-            range = this._weapons[i].getRange();
+            range = this._weapons[i].getRange(0);
             if (ranges.indexOf(range) < 0) {
                 ranges.push(range);
             }

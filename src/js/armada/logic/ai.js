@@ -363,7 +363,7 @@ define([
          * Cached value of the range of the first weapon of the controlled spacecraft (at still position).
          * @type Number
          */
-        this._weaponRange = (this._spacecraft && (this._spacecraft.getWeapons().length > 0)) ? this._spacecraft.getWeapons()[0].getRange() : 0;
+        this._weaponRange = (this._spacecraft && (this._spacecraft.getWeapons().length > 0)) ? this._spacecraft.getWeapons()[0].getRange(0) : 0;
         /**
          * Whether the controlled spacecraft is currently attacking its target
          * Needs to be updated by the overridden control() method!!
@@ -675,7 +675,7 @@ define([
                                     }
                                     // transforming to anchor-relative position and orientation
                                     if (data.jump.relative) {
-                                        this._spacecraft.setPhysicalPosition(vec.prodTranslationModel3Aux(
+                                        this._spacecraft.setPhysicalPosition(vec.prodTranslationRotation3Aux(
                                                 this._spacecraft.getPhysicalPositionMatrix(),
                                                 anchor.getPhysicalOrientationMatrix()));
                                         this._spacecraft.updatePhysicalOrientationMatrix(mat.prod3x3SubOf4Aux(

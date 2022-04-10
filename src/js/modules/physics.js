@@ -1109,31 +1109,6 @@ define([
     /**
      * Simulates a force affecting the object that has an arbitrary point and direction
      * of attack, potentially affecting both the linear and angular momentum of the object.
-     * @param {Number[3]} position Point of attack relative to this object (meters)
-     * @param {Number[3]} direction Unit vector of the direction of the force to apply
-     * #persistent, #read-write
-     * @param {Number} strength Overall strength of the force in newtons
-     * @param {Number} [duration] The force and torque will be exterted for this duration (milliseconds)
-     * If omitted, they will be created as continuous.
-     */
-    PhysicalObject.prototype.addForceAndTorque = function (position, direction, strength, duration) {
-        var
-                lever = vec.length3(position),
-                leverDir = vec.scaled3(position, 1 / lever),
-                parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
-                perpendicularForce = vec.diff3Aux(direction, parallelForce);
-        this.addForce(new Force(
-                strength,
-                direction,
-                duration));
-        this.addTorque(new Torque(
-                strength * vec.length3(perpendicularForce) * lever,
-                vec.normalize3(vec.cross3(perpendicularForce, leverDir)),
-                duration));
-    };
-    /**
-     * Simulates a force affecting the object that has an arbitrary point and direction
-     * of attack, potentially affecting both the linear and angular momentum of the object.
      * Directly applies the force and the torque, without adding them to the list of 
      * active forces / torques
      * @param {Number[3]} position Point of attack relative to this object (meters)
@@ -1148,8 +1123,8 @@ define([
     PhysicalObject.prototype.applyForceAndTorque = function (position, direction, strength, torqueStrengthFactor, duration) {
         var
                 lever = vec.length3(position),
-                leverDir = vec.scaled3(position, 1 / lever),
-                parallelForce = vec.scaled3(leverDir, vec.dot3(direction, leverDir)),
+                leverDir = vec.scaled3Aux(position, 1 / lever),
+                parallelForce = vec.scaled3Aux(leverDir, vec.dot3(direction, leverDir)),
                 perpendicularForce = vec.diff3Aux(direction, parallelForce);
         this.applyForce(
                 strength,

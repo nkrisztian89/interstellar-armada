@@ -803,6 +803,19 @@ define(function () {
         return aux;
     };
     /**
+     * Returns the product of the translation component of a 4x4 matrix and the rotation component of another 4x4 matrix.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[4]} tm A 4x4 transformation matrix (only the translation component is considered)
+     * @param {Float32Array} rm A 4x4 transformation matrix (only the rotation/scaling component is considered)
+     * @returns {Number[4]} Only the first three components are set
+     */
+    vec.prodTranslationRotation3Aux = function (tm, rm) {
+        var aux = _auxVectors[_auxVectorIndex];
+        vec.setProdTranslationRotation3(aux, tm, rm);
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
      * Returns the product of the translation component of a 4x4 matrix and a 4x4 model matrix (a matrix
      * with translation, rotation and scaling, but no projection)
      * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
@@ -1177,6 +1190,18 @@ define(function () {
         v[0] = m[0] * vr[0] + m[1] * vr[1] + m[2] * vr[2];
         v[1] = m[4] * vr[0] + m[5] * vr[1] + m[6] * vr[2];
         v[2] = m[8] * vr[0] + m[9] * vr[1] + m[10] * vr[2];
+    };
+    /**
+     * Sets the given 3D vector to be equal to the product of the translation component of a 4x4 matrix and the rotation component of
+     * another 4x4 matrix
+     * @param {Number[3]} v The 3D vector to modify
+     * @param {Float32Array} tm A 4x4 transformation matrix (only the translation component is considered)
+     * @param {Float32Array} rm A 4x4 transformation matrix (only the rotation/scaling component is considered)
+     */
+    vec.setProdTranslationRotation3 = function (v, tm, rm) {
+        v[0] = rm[0] * tm[12] + rm[4] * tm[13] + rm[8] * tm[14];
+        v[1] = rm[1] * tm[12] + rm[5] * tm[13] + rm[9] * tm[14];
+        v[2] = rm[2] * tm[12] + rm[6] * tm[13] + rm[10] * tm[14];
     };
     /**
      * Sets the given 3D vector to be equal to the product of the translation component of a 4x4 matrix and a 4x4 model matrix (a matrix

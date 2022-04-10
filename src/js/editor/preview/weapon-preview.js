@@ -172,7 +172,7 @@ define([
                 valueDrop = value - _weapon.getFirepower(1);
                 result += "firepower: " + (Math.round(value * 100) / 100) + " (-" + (Math.round(valueDrop * 100) / 100) + " / arm.), ";
                 result += "fire rate: " + (Math.round(_weapon.getFireRate() * 100) / 100) + " / s, ";
-                result += "range: " + _weapon.getRange() + " m";
+                result += "range: " + _weapon.getRange(0) + " m";
             }
         }
         return result;

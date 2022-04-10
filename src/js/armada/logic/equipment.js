@@ -1728,13 +1728,13 @@ define([
          * the weapon slot and the point of attachment. (4x4 translation matrix)
          * @type Float32Array
          */
-        this._origoPositionMatrix = null;
+        this._origoPositionMatrix = mat.identity4();
         /**
          * Stores the calculated value of the scaling matrix of the parent spacecraft and the orientation of the weapon slot for speeding
          * up calculations.
          * @type Float32Array
          */
-        this._scaledOriMatrix = null;
+        this._scaledOriMatrix = mat.identity4();
         /**
          * The current angles at which the weapon is positioned (if it is turnable), in radians. The first number belong to the first 
          * rotator and the second one to the second rotator.
@@ -1816,7 +1816,7 @@ define([
      * @returns {Number}
      */
     Weapon.prototype.getRange = function (baseSpeed) {
-        return (this._class.getProjectileVelocity() + (baseSpeed || 0)) * this._class.getProjectileClass().getDuration() / 1000;
+        return (this._class.getProjectileVelocity() + baseSpeed) * this._class.getProjectileClass().getDuration() * 0.001;
     };
     /**
      * Return the duration this weapon needs between shots, in milliseconds.
@@ -1831,22 +1831,7 @@ define([
      * @returns {Float32Array}
      */
     Weapon.prototype.getOrigoPositionMatrix = function () {
-        this._origoPositionMatrix = this._origoPositionMatrix || mat.translatedByVector(
-                this._slot ? this._slot.positionMatrix : mat.IDENTITY4,
-                vec.prodVec3Mat4Aux(
-                        vec.scaled3(this._class.getAttachmentPoint(), -1),
-                        mat.prodScalingRotationAux(
-                                mat.scaling4(this._class.getModel().getScale() / (this._spacecraft ? this._spacecraft.getPhysicalScalingMatrix()[0] : 1)),
-                                this._slot ? this._slot.orientationMatrix : mat.IDENTITY4)));
         return this._origoPositionMatrix;
-    };
-    /**
-     * Returns the calculated value of the scaling matrix of the parent spacecraft and the orientation of the weapon slot.
-     * @returns {Float32Array}
-     */
-    Weapon.prototype.getScaledOriMatrix = function () {
-        this._scaledOriMatrix = this._scaledOriMatrix || mat.prodScalingRotation(this._visualModel.getScalingMatrix(), this._slot.orientationMatrix);
-        return this._scaledOriMatrix;
     };
     /**
      * Returns whether this weapon is fixed i.e. is pointing in one fix direction and does not have any rotators.
@@ -1864,10 +1849,10 @@ define([
     Weapon.prototype.getBasePointPosVector = function (shipScaledOriMatrix) {
         var
                 basePointPosVector,
-                weaponSlotPosVector = vec.prodTranslationModel3Aux(this.getOrigoPositionMatrix(), shipScaledOriMatrix);
+                weaponSlotPosVector = vec.prodTranslationRotation3Aux(this.getOrigoPositionMatrix(), shipScaledOriMatrix);
         vec.addVec3Mat4(weaponSlotPosVector, this._spacecraft.getPhysicalPositionMatrix());
         basePointPosVector = vec.prodVec4Mat4Aux(this._class.getBasePoint(), this._transformMatrix);
-        vec.mulVec3Mat4(basePointPosVector, this.getScaledOriMatrix());
+        vec.mulVec3Mat4(basePointPosVector, this._scaledOriMatrix);
         vec.mulVec3Mat4(basePointPosVector, shipScaledOriMatrix);
         vec.add3(basePointPosVector, weaponSlotPosVector);
         return basePointPosVector;
@@ -1917,6 +1902,13 @@ define([
         application.log_DEBUG("Adding weapon (" + this._class.getName() + ") to scene...", 2);
         shader = params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader();
         scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
+        mat.setTranslatedByVector(this._origoPositionMatrix,
+                this._slot ? this._slot.positionMatrix : mat.IDENTITY4,
+                vec.prodVec3Mat4Aux(
+                        vec.scaled3Aux(this._class.getAttachmentPoint(), -1),
+                        mat.prodScalingRotationAux(
+                                mat.scaling4Aux(scale),
+                                this._slot ? this._slot.orientationMatrix : mat.IDENTITY4)));
         visualModel = new renderableObjects.ParameterizedMesh(
                 this._class.getModel(),
                 shader,
@@ -1941,6 +1933,7 @@ define([
         if (!this._visualModel) {
             this._visualModel = visualModel;
         }
+        mat.setProdScalingRotation(this._scaledOriMatrix, this._visualModel.getScalingMatrix(), this._slot ? this._slot.orientationMatrix : mat.IDENTITY4);
         if (callback) {
             callback(visualModel);
         }
@@ -1977,19 +1970,18 @@ define([
      */
     Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex, relativeBarrelPosVector) {
         var
-                projectileClass = this._class.getBarrel(barrelIndex).getProjectileClass(),
-                muzzleFlashPosMatrix = mat.translation4vAux(relativeBarrelPosVector),
+                muzzleFlash = this._class.getBarrel(barrelIndex).getProjectileClass().getMuzzleFlash(),
                 particle = _particlePool.getObject();
         renderableObjects.initDynamicParticle(
                 particle,
-                projectileClass.getMuzzleFlash().getModel(),
-                projectileClass.getMuzzleFlash().getShader(),
-                projectileClass.getMuzzleFlash().getTexturesOfTypes(projectileClass.getMuzzleFlash().getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
-                projectileClass.getMuzzleFlash().getColor(),
-                projectileClass.getMuzzleFlash().getSize(),
-                muzzleFlashPosMatrix,
-                projectileClass.getMuzzleFlash().getDuration() || config.getSetting(config.BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION),
-                projectileClass.getMuzzleFlash().getInstancedShader());
+                muzzleFlash.getModel(),
+                muzzleFlash.getShader(),
+                muzzleFlash.getTexturesOfTypes(muzzleFlash.getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
+                muzzleFlash.getColor(),
+                muzzleFlash.getSize(),
+                mat.translation4vAux(relativeBarrelPosVector),
+                muzzleFlash.getDuration() || config.getSetting(config.BATTLE_SETTINGS.DEFAULT_MUZZLE_FLASH_DURATION),
+                muzzleFlash.getInstancedShader());
         return particle;
     };
     /**
@@ -2051,10 +2043,11 @@ define([
             this._rotationChanged = false;
         }
     };
-    // static auxiliary matrices to be used in the fire() method (to avoid created new matrices during each execution of the method)
+    // static auxiliary matrices/vectors to be used in the fire() method (to avoid creating new matrices/vectors during each execution of the method)
     Weapon._weaponSlotPosMatrix = mat.identity4();
     Weapon._projectilePosMatrix = mat.identity4();
     Weapon._projectileOriMatrix = mat.identity4();
+    Weapon._barrelPosVector = [0, 0, 0, 1];
     /**
      * Fires the weapon and adds the projectiles it fires (if any) to the passed pool.
      * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this weapon - it
@@ -2068,7 +2061,7 @@ define([
         var i, p, result,
                 weaponSlotPosVector,
                 projectileOriMatrix,
-                projectileClass, barrelPosVector, muzzleFlash, barrels, projectileLights, projClassName,
+                projectileClass, muzzleFlash, barrels, projectileLights, projClassName,
                 soundPosition, lighSource,
                 scene = this._visualModel.getNode().getScene();
         if (onlyIfAimedOrFixed && (this._lastAimStatus !== WeaponAimStatus.FIXED) && (this._lastAimStatus !== WeaponAimStatus.AIMED_IN_RANGE)) {
@@ -2078,7 +2071,7 @@ define([
         if (this._cooldown <= 0) {
             this._cooldown = this._class.getCooldown();
             // cache the matrices valid for the whole weapon
-            weaponSlotPosVector = vec.prodVec3Mat4Aux(mat.translationVector3(this.getOrigoPositionMatrix()), shipScaledOriMatrix);
+            weaponSlotPosVector = vec.prodTranslationRotation3Aux(this.getOrigoPositionMatrix(), shipScaledOriMatrix);
             mat.setTranslatedByVector(Weapon._weaponSlotPosMatrix, this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
             projectileOriMatrix = this.getProjectileOrientationMatrix();
             barrels = this._class.getBarrels();
@@ -2090,14 +2083,14 @@ define([
             for (i = 0; i < barrels.length; i++) {
                 // cache variables
                 projectileClass = barrels[i].getProjectileClass();
-                barrelPosVector = barrels[i].getPositionVector();
+                vec.setVector4(Weapon._barrelPosVector, barrels[i].getPositionVector());
                 if (!this._fixed) {
-                    barrelPosVector = vec.prodVec4Mat4(barrelPosVector, this._transformMatrix);
+                    vec.mulVec4Mat4(Weapon._barrelPosVector, this._transformMatrix);
                 }
                 // add the muzzle flash of this barrel
-                muzzleFlash = this._getMuzzleFlashForBarrel(i, barrelPosVector);
-                barrelPosVector = vec.prodVec3Mat4(barrelPosVector, mat.prod3x3SubOf4Aux(this.getScaledOriMatrix(), shipScaledOriMatrix));
-                mat.setTranslatedByVector(Weapon._projectilePosMatrix, Weapon._weaponSlotPosMatrix, barrelPosVector);
+                muzzleFlash = this._getMuzzleFlashForBarrel(i, Weapon._barrelPosVector);
+                vec.mulVec3Mat4(Weapon._barrelPosVector, mat.prod3x3SubOf4Aux(this._scaledOriMatrix, shipScaledOriMatrix));
+                mat.setTranslatedByVector(Weapon._projectilePosMatrix, Weapon._weaponSlotPosMatrix, Weapon._barrelPosVector);
                 this._visualModel.getNode().addSubnode(muzzleFlash.getNode() || new sceneGraph.RenderableNode(muzzleFlash, false, false, true));
                 // add the projectile of this barrel
                 p = _projectilePool.getObject();
@@ -2116,7 +2109,7 @@ define([
                 }
                 // create the counter-force affecting the firing ship
                 this._spacecraft.getPhysicalModel().applyForceAndTorque(
-                        vec.diffTranslation3(
+                        vec.diffTranslation3Aux(
                                 Weapon._projectilePosMatrix,
                                 this._spacecraft.getPhysicalPositionMatrix()),
                         mat.getRowB43Neg(projectileOriMatrix),
@@ -2257,7 +2250,7 @@ define([
             // transform to object space - relative to the weapon
             vectorToTarget = vec.prodMat4Vec3Aux(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
             vectorToTarget = vec.prodMat4Vec3Aux(this._slot.orientationMatrix, vectorToTarget);
-            inRange = vec.extractLength3(vectorToTarget) <= this.getRange();
+            inRange = vec.extractLength3(vectorToTarget) <= this.getRange(0);
             switch (this._class.getRotationStyle()) {
                 case classes.WeaponRotationStyle.YAW_PITCH:
                     vec.getYawAndPitch(_angles, vectorToTarget);
@@ -2323,6 +2316,8 @@ define([
         this._class = null;
         this._spacecraft = null;
         this._slot = null;
+        this._origoPositionMatrix = null;
+        this._scaledOriMatrix = null;
         if (this._visualModel) {
             this._visualModel.markAsReusable(true);
         }
