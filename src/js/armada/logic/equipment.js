@@ -2848,7 +2848,12 @@ define([
          * Cached value of the estimated future target position where the spacecraft should fire to hit it.
          * @type Number[3]
          */
-        this._targetHitPosition = null;
+        this._targetHitPosition = [0, 0, 0];
+        /**
+         * Whether the calculated estimated future target position is currently up-to-date
+         * @type Boolean
+         */
+        this._targetHitPositionValid = false;
         /**
          * A cached list of hostile targets from the list, ordered based on how much the spacecrat needs to turn to face them
          * @type Spacecraft[]
@@ -2955,7 +2960,7 @@ define([
                 this._target.setBeingUntargeted(this._spacecraft);
             }
             this._target = target;
-            this._targetHitPosition = null;
+            this._targetHitPositionValid = false;
             if (this._spacecraft.getVisualModel()) {
                 node = this._spacecraft.getVisualModel().getNode();
                 camera = node.getScene().getCamera();
@@ -3245,31 +3250,31 @@ define([
                 relativeTargetVelocity,
                 weapons,
                 projectileSpeed,
-                a, b, c, i, hitTime;
-        if (!this._targetHitPosition) {
-            targetPosition = this._target.getPhysicalPositionVector();
+                a, b, c, hitTime;
+        if (!this._targetHitPositionValid) {
+            this._targetHitPositionValid = true;
+            targetPosition = this._target.getPhysicalPositionMatrix();
             weapons = this._spacecraft.getWeapons();
             if (weapons.length === 0) {
+                this._targetHitPosition[0] = targetPosition[12];
+                this._targetHitPosition[1] = targetPosition[13];
+                this._targetHitPosition[2] = targetPosition[14];
                 return targetPosition;
             }
-            position = this._spacecraft.getPhysicalPositionVector();
-            relativeTargetVelocity = vec.diffTranslation3(this._target.getPhysicalVelocityMatrix(), this._spacecraft.getPhysicalVelocityMatrix());
+            position = this._spacecraft.getPhysicalPositionMatrix();
+            relativeTargetVelocity = vec.diffTranslation3Aux(this._target.getPhysicalVelocityMatrix(), this._spacecraft.getPhysicalVelocityMatrix());
             projectileSpeed = weapons[0].getProjectileVelocity();
             a = projectileSpeed * projectileSpeed - (relativeTargetVelocity[0] * relativeTargetVelocity[0] + relativeTargetVelocity[1] * relativeTargetVelocity[1] + relativeTargetVelocity[2] * relativeTargetVelocity[2]);
-            b = 0;
-            for (i = 0; i < 3; i++) {
-                b += (2 * relativeTargetVelocity[i] * (position[i] - targetPosition[i]));
-            }
-            c = 0;
-            for (i = 0; i < 3; i++) {
-                c += (-targetPosition[i] * targetPosition[i] - position[i] * position[i] + 2 * targetPosition[i] * position[i]);
-            }
+            b = 2 * (relativeTargetVelocity[0] * (position[12] - targetPosition[12]) +
+                    relativeTargetVelocity[1] * (position[13] - targetPosition[13]) +
+                    relativeTargetVelocity[2] * (position[14] - targetPosition[14]));
+            c = -targetPosition[12] * targetPosition[12] - position[12] * position[12] + 2 * targetPosition[12] * position[12] -
+                    targetPosition[13] * targetPosition[13] - position[13] * position[13] + 2 * targetPosition[13] * position[13] -
+                    targetPosition[14] * targetPosition[14] - position[14] * position[14] + 2 * targetPosition[14] * position[14];
             hitTime = utils.getGreaterSolutionOfQuadraticEquation(a, b, c);
-            this._targetHitPosition = [
-                targetPosition[0] + hitTime * relativeTargetVelocity[0],
-                targetPosition[1] + hitTime * relativeTargetVelocity[1],
-                targetPosition[2] + hitTime * relativeTargetVelocity[2]
-            ];
+            this._targetHitPosition[0] = targetPosition[12] + hitTime * relativeTargetVelocity[0];
+            this._targetHitPosition[1] = targetPosition[13] + hitTime * relativeTargetVelocity[1];
+            this._targetHitPosition[2] = targetPosition[14] + hitTime * relativeTargetVelocity[2];
         }
         return this._targetHitPosition;
     };
@@ -3284,7 +3289,7 @@ define([
         if (this._target && (this._target.canBeReused() || this._target.isAway() || !this.isInRange(this._target))) {
             this.setTarget(null);
         }
-        this._targetHitPosition = null;
+        this._targetHitPositionValid = false;
         if (this._timeUntilHostileOrderReset > 0) {
             this._timeUntilHostileOrderReset -= dt;
         }

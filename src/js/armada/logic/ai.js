@@ -308,6 +308,16 @@ define([
                 roll: 0
             },
             /**
+             * Reusable vector to avoid creating more garbage per frame
+             * @type Number[3]
+             */
+            _targetPositionVector = [0, 0, 0],
+            /**
+             * Reusable vector to avoid creating more garbage per frame
+             * @type Number[3]
+             */
+            _vectorToTarget = [0, 0, 0],
+            /**
              * The default AI context (storing the actual AIs) the methods of which are exposed by this module.
              * @type AIContext
              */
@@ -1115,7 +1125,7 @@ define([
                 /** @type Missile */
                 missile,
                 /** @type Number[3] */
-                positionVector, targetPositionVector, vectorToTarget, newOffset,
+                positionVector, newOffset,
                 directionToTarget, relativeTargetDirection, relativeBlockerPosition,
                 /** @type Number */
                 i,
@@ -1134,7 +1144,7 @@ define([
                 /** @type Array */
                 weapons,
                 /** @type Float32Array */
-                orientationMatrix;
+                orientationMatrix, targetPosition;
         // only perform anything if the controlled spacecraft still exists
         if (this._spacecraft) {
             // if the controlled spacecraft has been destroyed, remove the reference
@@ -1175,10 +1185,10 @@ define([
                 // evade phase of charge maneuver
                 if (this._chargePhase === ChargePhase.EVADE) {
                     this._attackingTarget = !!target;
-                    vectorToTarget = vec.diff3(this._chargeDestination, positionVector);
+                    vec.setDiff3(_vectorToTarget, this._chargeDestination, positionVector);
                     relativeTargetDirection = vec.prodMat4Vec3Aux(
                             orientationMatrix,
-                            vectorToTarget);
+                            _vectorToTarget);
                     this._targetDistance = vec.extractLength3(relativeTargetDirection);
                     vec.getYawAndPitch(_angles, relativeTargetDirection);
                     this.turn(_angles.yaw, _angles.pitch, dt);
@@ -1191,11 +1201,14 @@ define([
                 } else if (target) {
                     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     // setting up variables
-                    targetPositionVector = mat.translationVector3(target.getPhysicalPositionMatrix());
+                    targetPosition = target.getPhysicalPositionMatrix();
+                    _targetPositionVector[0] = targetPosition[12];
+                    _targetPositionVector[1] = targetPosition[13];
+                    _targetPositionVector[2] = targetPosition[14];
                     // updating target offset and aim error, if it is time
                     if (this._targetOffsetUpdateTimeLeft <= 0) {
                         this._targetOffsetUpdateTimeLeft = TARGET_OFFSET_UPDATE_INTERVAL;
-                        newOffset = vec.diff3Aux(this._spacecraft.getTargetHitPosition(), targetPositionVector);
+                        newOffset = vec.diff3Aux(this._spacecraft.getTargetHitPosition(), _targetPositionVector);
                         if (vec.length3Squared(vec.diff3Aux(this._targetOffset, newOffset)) < AIM_ERROR_REDUCTION_THRESHOLD) {
                             this._maxAimError *= AIM_ERROR_REDUCTION_FACTOR;
                         } else {
@@ -1208,11 +1221,11 @@ define([
                     } else {
                         this._targetOffsetUpdateTimeLeft -= dt;
                     }
-                    vec.add3(targetPositionVector, this._targetOffset);
-                    vectorToTarget = vec.diff3(targetPositionVector, positionVector);
+                    vec.add3(_targetPositionVector, this._targetOffset);
+                    vec.setDiff3(_vectorToTarget, _targetPositionVector, positionVector);
                     relativeTargetDirection = vec.prodMat4Vec3Aux(
                             orientationMatrix,
-                            vectorToTarget);
+                            _vectorToTarget);
                     this._targetDistance = vec.extractLength3(relativeTargetDirection);
                     vec.getYawAndPitch(_angles, relativeTargetDirection);
                     _angles.yaw += this._aimError[0];
@@ -1227,7 +1240,7 @@ define([
                         stillBlocked = false;
                         if (!this._isBlockedBy.canBeReused() && this._facingTarget) {
                             // checking if the blocking spacecraft is still in the way
-                            if (this._isBlockedBy.getPhysicalModel().checkHit(mat.translation4vAux(targetPositionVector), mat.translation4vAux(vectorToTarget), 1000, ownSize * 0.25)) {
+                            if (this._isBlockedBy.getPhysicalModel().checkHit(mat.translation4vAux(_targetPositionVector), mat.translation4vAux(_vectorToTarget), 1000, ownSize * 0.25)) {
                                 relativeBlockerPosition = vec.prodMat4Vec3Aux(
                                         orientationMatrix,
                                         vec.diffVec3Mat4Aux(
@@ -1385,13 +1398,13 @@ define([
                                 if (this._targetDistance <= maxDistance) {
                                     this._chargePhase = ChargePhase.EVADE;
                                     this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
-                                    directionToTarget = vec.normal3(vectorToTarget);
+                                    directionToTarget = vec.normal3(_vectorToTarget);
                                     vec.setSum3(this._chargeDestination,
                                             positionVector,
                                             vec.scaled3Aux(
                                                     vec.diff3Aux(
                                                             vec.sum3Aux(
-                                                                    targetPositionVector,
+                                                                    _targetPositionVector,
                                                                     vec.scaled3Aux(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(directionToTarget), mat.rotation3Aux(directionToTarget, Math.random() * utils.DOUBLE_PI))), maxDistance)),
                                                             positionVector),
                                                     CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
