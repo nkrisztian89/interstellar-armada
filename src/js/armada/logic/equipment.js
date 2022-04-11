@@ -987,12 +987,22 @@ define([
          * The sound source used to position the sound effects beloning to this missile in 3D sound (=camera) space
          * @type SoundSource
          */
-        this._soundSource = null;
+        this._soundSource = audio.createSoundSource(0, 0, 0);
         /**
-         * Reusable vector for storing the calculated sound source position
-         * @type Number[3]
+         * Torque to rotate along Z axis (yaw left/right)
+         * @type Torque
          */
-        this._soundSourcePosition = [0, 0, 0];
+        this._yawTorque = null;
+        /**
+         * Torque to rotate along X axis (pitch up/down)
+         * @type Torque
+         */
+        this._pitchTorque = null;
+        /**
+         * A reference to the sound clip playing the start sound for this missile so it can be stopped if needed
+         * @type SoundClip
+         */
+        this._startSound = null;
         /**
          * The callback function to execute when the missile hits a spacecraft.
          * (bound to this in the constructor so it can be readily passed to _checkHit)
@@ -1448,27 +1458,6 @@ define([
         }
     };
     /**
-     * Returns a 3D vector that can be used to position the sound source of this missile in the soundscape
-     * @returns {Number[3]}
-     */
-    Missile.prototype._getSoundSourcePosition = function () {
-        var pos = this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera());
-        this._soundSourcePosition[0] = Math.round(pos[12] * 10) * 0.1;
-        this._soundSourcePosition[1] = Math.round(pos[13] * 10) * 0.1;
-        this._soundSourcePosition[2] = Math.round(pos[14] * 10) * 0.1;
-        return this._soundSourcePosition;
-    };
-    /**
-     * Returns the sound source to be used for the sounds emitted by this missile.
-     * @returns {SoundSource}
-     */
-    Missile.prototype.getSoundSource = function () {
-        if (!this._soundSource) {
-            this._soundSource = audio.createSoundSource([0, 0, 0]);
-        }
-        return this._soundSource;
-    };
-    /**
      * Performs the destruction of the missile, complete with explosion
      * @param {ExplosionClass} explosionClass The class of the explosion to use
      * @param {Float32Array} positionMatrix The world position where the missile explodes
@@ -1534,7 +1523,7 @@ define([
      * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      */
     Missile.prototype.simulate = function (dt, hitObjectOctree, pilotedCraft) {
-        var i, p, oriMatrix, threshold, hitCheckDT, enginePosition;
+        var i, matrix, threshold, hitCheckDT, enginePosition;
         if (this.canBeReused()) {
             return;
         }
@@ -1553,19 +1542,19 @@ define([
         if (this._timeLeft > 0) {
             // set up and apply the main and maneuvering thrusters
             if ((this._timeLeftForIgnition <= 0) && this._target) {
-                oriMatrix = this._physicalModel.getOrientationMatrix();
+                matrix = this._physicalModel.getOrientationMatrix();
                 this.resetThrusterBurn();
                 if (this._homing && !this._stopHoming) {
                     // for homing, calculate expected target hit position and the yaw and pitch angles towards it
                     vec.getYawAndPitch(_angles, vec.normalize3(vec.prodMat4Vec3Aux(
-                            oriMatrix,
+                            matrix,
                             vec.diffVec3Mat4Aux(this._getTargetHitPosition(), this._physicalModel.getPositionMatrix()))));
                     threshold = this._class.getMainBurnAngleThreshold();
                 }
                 // apply main thrust if the missile is not homing or is homing and sufficiently facing the target
                 // direction
                 if (!this._homing || this._stopHoming || (Math.abs(_angles.yaw) < threshold && Math.abs(_angles.pitch) < threshold)) {
-                    this._physicalModel.applyForce(this._class.getThrust(), oriMatrix[4], oriMatrix[5], oriMatrix[6], dt);
+                    this._physicalModel.applyForce(this._class.getThrust(), matrix[4], matrix[5], matrix[6], dt);
                     this._mainBurn = true;
                     this.addThrusterBurnForward(1);
                     if (!this._started) {
@@ -1573,7 +1562,7 @@ define([
                         if (this._class.getHomingMode() === classes.MissileHomingMode.INITIAL) {
                             this._stopHoming = true;
                         }
-                        this._startSound = this._class.playStartSound(this.getSoundSource());
+                        this._startSound = this._class.playStartSound(this._soundSource);
                     }
                 }
                 // use maneuvering thrusters for homing
@@ -1590,8 +1579,11 @@ define([
             }
             // update sound position
             if (this._started) {
-                p = this._getSoundSourcePosition();
-                this.getSoundSource().setPosition(p[0], p[1], p[2]);
+                matrix = this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera());
+                this._soundSource.setPosition(
+                        Math.round(matrix[12] * 10) * 0.1,
+                        Math.round(matrix[13] * 10) * 0.1,
+                        Math.round(matrix[14] * 10) * 0.1);
             }
             // update lightsource
             if (this._lightSource) {
@@ -1625,12 +1617,13 @@ define([
             // self-destruct if the time has run out
             this._timeLeft = 0;
             if (!this._visualModel.canBeReused()) {
+                matrix = this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera());
                 this._destruct(
                         this._class.getExplosionClass(),
                         this._physicalModel.getPositionMatrix(),
                         vec.scaled3Aux(vec.normalize3(mat.translationVector3(this._physicalModel.getVelocityMatrix())), -1),
                         this._physicalModel.getVelocityMatrix(),
-                        audio.createSoundSource(mat.translationVector3(this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera()))),
+                        audio.createSoundSource(matrix[12], matrix[13], matrix[14]),
                         false);
             }
         }
@@ -1681,7 +1674,6 @@ define([
             this._startSound = null;
         }
         this._soundSource = null;
-        this._soundSourcePosition = null;
         this._lightSource = null;
         this._hitCallback = null;
         this._getHitOffset = null;

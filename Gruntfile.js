@@ -206,7 +206,9 @@ module.exports = function (grunt) {
                 ["minFOV"],
                 ["maxFOV"],
                 ["node"],
-                ["origoPositionMatrix"]
+                ["pannerNode"],
+                ["origoPositionMatrix"],
+                ["soundSource"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [

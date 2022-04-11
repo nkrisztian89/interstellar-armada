@@ -155,6 +155,12 @@ define([
              * @type String
              */
             DEFAULT_PANNING_MODEL = PanningModel.EQUAL_POWER,
+            /**
+             * The minimum amount of time that needs to pass between two updates to the position of
+             * a sound source (new updates issued within this interval are ignored), in seconds
+             * @type Number
+             */
+            MINIMUM_POSITION_CHANGE_INTERVAL = 0.15,
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -232,32 +238,39 @@ define([
      * @class
      * Represents a 3D sound source that can be used to play sound clips positioned in 3D space according to the settings given for this
      * object.
-     * @param {Number[3]} position The initial camera-space position of the sound source
+     * @param {Number} x The X coordinate of the initial camera-space position of the sound source
+     * @param {Number} y The Y coordinate of the initial camera-space position of the sound source
+     * @param {Number} z The Z coordinate of the initial camera-space position of the sound source
+     * @param {String} [panningModel] (enum PanningModel) The panning model to use (see Web Audio API)
      * @param {Number} [rolloffFactor=DEFAULT_ROLLOFF_FACTOR] The factor to determine how loud the sound should be at a 
      * specific distance. The formula used: 1 / (1 + rolloffFactor * (d - 1)), where d is the distance (reverse mode with refDistance=1)
-     * @param {String} [panningModel=DEFAULT_PANNING_MODEL] (enum PanningModel) The panning model to use (see Web Audio API)
      */
-    function SoundSource(position, rolloffFactor, panningModel) {
+    function SoundSource(x, y, z, panningModel, rolloffFactor) {
+        var currentTime;
         /**
-         * The camera-space position of the sound source
-         * @type Number[3]
-         */
-        this._position = position ? position.slice() : null;
-        /**
-         * The factor to determine how loud the sound should be at a specific distance
+         * The X coordinate of the camera-space position of the sound source
          * @type Number
          */
-        this._rolloffFactor = rolloffFactor || DEFAULT_ROLLOFF_FACTOR;
+        this._x = x;
+        /**
+         * The Y coordinate of the camera-space position of the sound source
+         * @type Number
+         */
+        this._y = y;
+        /**
+         * The Z coordinate of the camera-space position of the sound source
+         * @type Number
+         */
+        this._z = z;
+        /**
+         * @type Number
+         */
+        this._positionChangeTime = 0;
         /**
          * A reference to the node used to control the spatial position of this sound
          * @type PannerNode
          */
-        this._pannerNode = null;
-        /**
-         * (enum PanningModel) See the Web Audio API
-         * @type String
-         */
-        this._panningModel = panningModel || DEFAULT_PANNING_MODEL;
+        this._pannerNode = panningModel ? _context.createPanner() : null;
         /**
          * Associated sound clips organized by the names of the samples they play. This can be used
          * to stack clips - instead of adding multiple clips of the same sample at the same time or with
@@ -265,21 +278,24 @@ define([
          * @type Object.<String, SoundClip>
          */
         this._clips = {};
+        if (this._pannerNode) {
+            this._pannerNode.panningModel = panningModel;
+            this._pannerNode.refDistance = 1;
+            this._pannerNode.rolloffFactor = rolloffFactor || DEFAULT_ROLLOFF_FACTOR;
+            currentTime = _context.currentTime;
+            this._pannerNode.positionX.setValueAtTime(this._x, currentTime);
+            this._pannerNode.positionY.setValueAtTime(this._y, currentTime);
+            this._pannerNode.positionZ.setValueAtTime(this._z, currentTime);
+            this._positionChangeTime = currentTime;
+            this._pannerNode.connect(_effectGain);
+        }
     }
     /**
-     * If necessary, creates, and returns the AudioNode to which nodes can be connected to play their output at the 3D position determined
+     * Returns the AudioNode to which nodes can be connected to play their output at the 3D position determined
      * by this sound source.
      * @returns {PannerNode}
      */
     SoundSource.prototype.getPannerNode = function () {
-        if (!this._pannerNode) {
-            this._pannerNode = _context.createPanner();
-            this._pannerNode.panningModel = this._panningModel;
-            this._pannerNode.refDistance = 1;
-            this._pannerNode.rolloffFactor = this._rolloffFactor;
-            this._pannerNode.setPosition(this._position[0], this._position[1], this._position[2]);
-            this._pannerNode.connect(_effectGain);
-        }
         return this._pannerNode;
     };
     /**
@@ -289,36 +305,25 @@ define([
      * @param {Number} z
      */
     SoundSource.prototype.setPosition = function (x, y, z) {
-        var currentTime;
-        if ((x !== this._position[0]) || (y !== this._position[1]) || (z !== this._position[2])) {
-            this._position[0] = x;
-            this._position[1] = y;
-            this._position[2] = z;
-            if (this._pannerNode) {
-                // if possible, ramp with a small interval to avoid clicks / pops resulting from abrupt changes
-                // this requires more processing (AudioParam events), so only apply if the clip is not muted
-                if ((this._pannerNode.positionX) && (!this._gainNode || (this._gainNode.gain.value > 0))) {
-                    currentTime = _context.currentTime;
-                    // avoid inserting new events if possible
-                    if (this._pannerNode.positionX.value !== x) {
-                        this._pannerNode.positionX.cancelScheduledValues(currentTime);
-                        this._pannerNode.positionX.setValueAtTime(this._pannerNode.positionX.value, currentTime);
-                        this._pannerNode.positionX.linearRampToValueAtTime(x, currentTime + DEFAULT_RAMP_DURATION);
-                    }
-                    if (this._pannerNode.positionY.value !== y) {
-                        this._pannerNode.positionY.cancelScheduledValues(currentTime);
-                        this._pannerNode.positionY.setValueAtTime(this._pannerNode.positionY.value, currentTime);
-                        this._pannerNode.positionY.linearRampToValueAtTime(y, currentTime + DEFAULT_RAMP_DURATION);
-                    }
-                    if (this._pannerNode.positionZ.value !== z) {
-                        this._pannerNode.positionZ.cancelScheduledValues(currentTime);
-                        this._pannerNode.positionZ.setValueAtTime(this._pannerNode.positionZ.value, currentTime);
-                        this._pannerNode.positionZ.linearRampToValueAtTime(z, currentTime + DEFAULT_RAMP_DURATION);
-                    }
-                    // if the clip is muted or the position AudioParams are not available, do the fallback
-                } else {
-                    this._pannerNode.setPosition(x, y, z);
-                }
+        var currentTime = _context.currentTime;
+        if (((currentTime - this._positionChangeTime) >= MINIMUM_POSITION_CHANGE_INTERVAL) && ((x !== this._x) || (y !== this._y) || (z !== this._z))) {
+            this._x = x;
+            this._y = y;
+            this._z = z;
+            this._positionChangeTime = currentTime;
+            // ramp with a small interval to avoid clicks / pops resulting from abrupt changes
+            // avoid inserting new events if possible
+            if (this._pannerNode.positionX.value !== x) {
+                this._pannerNode.positionX.setValueAtTime(this._pannerNode.positionX.value, currentTime);
+                this._pannerNode.positionX.linearRampToValueAtTime(x, currentTime + DEFAULT_RAMP_DURATION);
+            }
+            if (this._pannerNode.positionY.value !== y) {
+                this._pannerNode.positionY.setValueAtTime(this._pannerNode.positionY.value, currentTime);
+                this._pannerNode.positionY.linearRampToValueAtTime(y, currentTime + DEFAULT_RAMP_DURATION);
+            }
+            if (this._pannerNode.positionZ.value !== z) {
+                this._pannerNode.positionZ.setValueAtTime(this._pannerNode.positionZ.value, currentTime);
+                this._pannerNode.positionZ.linearRampToValueAtTime(z, currentTime + DEFAULT_RAMP_DURATION);
             }
         }
     };
@@ -684,7 +689,7 @@ define([
     function playSound(sampleName, volume, position, rolloffFactor) {
         SoundClip.call(_clip, SoundCategory.SOUND_EFFECT, sampleName, volume, false);
         if (position) {
-            SoundSource.call(_source, position, rolloffFactor, DEFAULT_PANNING_MODEL);
+            SoundSource.call(_source, position[0], position[1], position[2], DEFAULT_PANNING_MODEL, rolloffFactor);
             _clip.setSource(_source);
         }
         _clip.play();
@@ -742,7 +747,10 @@ define([
     _uiGain = _context.createGain();
     _uiGain.connect(_masterGain);
     _clip = new SoundClip();
-    _source = new SoundSource();
+    _source = new SoundSource(0, 0, 0);
+    if (!_context.createPanner().positionX) {
+        application.showError("3D audio is not properly supported by your browser!", application.ErrorSeverity.SEVERE, "This game requires 3D positional audio to work properly. Please upgrade to a browser that supports it to play!");
+    }
     // -------------------------------------------------------------------------
     // Public interface
     return {

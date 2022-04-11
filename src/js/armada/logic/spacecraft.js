@@ -573,12 +573,7 @@ define([
          * The sound source used to position the sound effects beloning to this spacecraft in 3D sound (=camera) space
          * @type SoundSource
          */
-        this._soundSource = null;
-        /**
-         * Reusable vector for storing the calculated sound source position
-         * @type Number[3]
-         */
-        this._soundSourcePosition = [0, 0, 0];
+        this._soundSource = audio.createSoundSource(0, 0, 0);
         // ---------------------------------------
         // statistics
         /**
@@ -2910,24 +2905,10 @@ define([
         }
     };
     /**
-     * Returns a 3D vector that can be used to position the sound source of this spacecraft in the soundscape
-     * @returns {Number[3]}
-     */
-    Spacecraft.prototype._getSoundSourcePosition = function () {
-        var pos = this.getPositionMatrixInCameraSpace();
-        this._soundSourcePosition[0] = Math.round(pos[12] * 10) * 0.1;
-        this._soundSourcePosition[1] = Math.round(pos[13] * 10) * 0.1;
-        this._soundSourcePosition[2] = Math.round(pos[14] * 10) * 0.1;
-        return this._soundSourcePosition;
-    };
-    /**
      * Returns the sound source beloning to this spacecraft (that can be used to play sound effects positioned in 3D)
      * @returns {SoundSource}
      */
     Spacecraft.prototype.getSoundSource = function () {
-        if (!this._soundSource) {
-            this._soundSource = audio.createSoundSource([0, 0, 0]);
-        }
         return this._soundSource;
     };
     /**
@@ -3017,7 +2998,7 @@ define([
      * of the method
      */
     Spacecraft.prototype.simulate = function (dt, params) {
-        var i, p, v;
+        var i, matrix, v;
         if (!this._alive) {
             return;
         }
@@ -3027,8 +3008,11 @@ define([
         params = params || Spacecraft.DEFAULT_SIMULATE_PARAMS;
         this._targetingComputer.simulate(dt);
         // update the sound source position - will be used either way (for the explosion or for hum / thrusters / weapons... )
-        p = this._getSoundSourcePosition();
-        this.getSoundSource().setPosition(p[0], p[1], p[2]);
+        matrix = this.getPositionMatrixInCameraSpace();
+        this.getSoundSource().setPosition(
+                Math.round(matrix[12] * 10) * 0.1,
+                Math.round(matrix[13] * 10) * 0.1,
+                Math.round(matrix[14] * 10) * 0.1);
         // destruction of the spacecraft
         if (this._hitpoints <= 0) {
             if (this._timeElapsedSinceDestruction < 0) {

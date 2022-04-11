@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2021 Krisztián Nagy
+ * Copyright 2016-2018, 2020-2022 Krisztián Nagy
  * @file Provides functionality to parse and load the audio settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -69,6 +69,11 @@ define([
              * @type String
              */
             UI_VOLUME_LOCAL_STORAGE_ID = MODULE_LOCAL_STORAGE_PREFIX + "uiVolume",
+            /**
+             * If no value is set in the configuration file, spatial sound sources will use this panning model
+             * @type String
+             */
+            DEFAULT_PANNING_MODEL = audio.PanningModel.EQUAL_POWER,
             // --------------------------------------------------------------------------------------------
             // Private variables
             /**
@@ -144,7 +149,7 @@ define([
          * See Web Audio API
          * @type String
          */
-        this._panningModel = null;
+        this._panningModel = DEFAULT_PANNING_MODEL;
     }
     AudioSettingsContext.prototype = new asyncResource.AsyncResource();
     AudioSettingsContext.prototype.constructor = AudioSettingsContext;
@@ -346,11 +351,13 @@ define([
     /**
      * Creates and return a sound source that can be used for 3D sound effect positioning, using the configuration settings given for the
      * context.
-     * @param {Number[3]} position The initial position of the sound source, in camera-space
+     * @param {Number} x The X coordinate of the initial position of the sound source, in camera-space
+     * @param {Number} y The Y coordinate of the initial position of the sound source, in camera-space
+     * @param {Number} z The Z coordinate of the initial position of the sound source, in camera-space
      * @returns {SoundSource}
      */
-    AudioSettingsContext.prototype.createSoundSource = function (position) {
-        return new audio.SoundSource(position, this._rolloffFactor, this._panningModel);
+    AudioSettingsContext.prototype.createSoundSource = function (x, y, z) {
+        return new audio.SoundSource(x, y, z, this._panningModel, this._rolloffFactor);
     };
     // -------------------------------------------------------------------------
     // Public functions
