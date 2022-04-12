@@ -184,11 +184,11 @@ define(function () {
      * @property {Number} pitch The pitch angle in radians
      */
     /**
-     * Calculates a pair of angles: (yaw;pitch) describing the direction of the passed vectors, with (0;0) corresponding to the positive Y 
+     * Calculates a pair of angles: (yaw;pitch) describing the direction of the passed unit vector, with (0;0) corresponding to the positive Y 
      * direction, a positive yaw corresponding to a counter-clockwise rotation angle around the Z axis in radians and the pitch 
      * corresponding to a counter-clockwise rotation around the yaw-rotated X axis in radians.
      * @param {YawAndPitch} target The object to store the calculated angles in
-     * @param {Number[3]} v
+     * @param {Number[3]} v A 3D unit vector
      */
     vec.getYawAndPitch = function (target, v) {
         if (Math.abs(v[2]) > CLOSE_TO_ONE) {
@@ -199,10 +199,7 @@ define(function () {
             if (v[0] > 0) {
                 target.yaw = -target.yaw;
             }
-            target.pitch = vec.angle2xCapped(v[0] * Math.sin(-target.yaw) + v[1] * Math.cos(-target.yaw), v[2]);
-            if (v[2] < 0) {
-                target.pitch = -target.pitch;
-            }
+            target.pitch = Math.asin(v[2]);
         }
     };
     /**
@@ -607,6 +604,21 @@ define(function () {
             v1[2] * v2[0] - v1[0] * v2[2],
             v1[0] * v2[1] - v1[1] * v2[0]
         ];
+    };
+    /**
+     * Returns the cross product of the 2 given 3D vectors.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Number[3]} v1 A 3D vector.
+     * @param {Number[3]} v2 A 3D vector.
+     * @returns {Number[3]} The cross product.
+     */
+    vec.cross3Aux = function (v1, v2) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = v1[1] * v2[2] - v1[2] * v2[1];
+        aux[1] = v1[2] * v2[0] - v1[0] * v2[2];
+        aux[2] = v1[0] * v2[1] - v1[1] * v2[0];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
     };
     /**
      * Returns the angle of the two 2D unit vectors in radians.

@@ -867,8 +867,7 @@ define([
                 }
                 if (this._propulsion) {
                     this._propulsion.resetThrusterBurn();
-                    this._propulsion.simulate(0, this.getSoundSource(), false);
-                    this._propulsion.resetForcesAndTorques();
+                    this._propulsion.simulate(0, this._soundSource, false);
                 }
             } else {
                 if (this._visualModel) {
@@ -3009,7 +3008,7 @@ define([
         this._targetingComputer.simulate(dt);
         // update the sound source position - will be used either way (for the explosion or for hum / thrusters / weapons... )
         matrix = this.getPositionMatrixInCameraSpace();
-        this.getSoundSource().setPosition(
+        this._soundSource.updatePosition(
                 Math.round(matrix[12] * 10) * 0.1,
                 Math.round(matrix[13] * 10) * 0.1,
                 Math.round(matrix[14] * 10) * 0.1);

@@ -299,12 +299,15 @@ define([
         return this._pannerNode;
     };
     /**
-     * Sets a new position for the sound source. 
+     * Initiates a change of the position of the sound source. The position parameters will be ramped to their
+     * new values in a short amount of time instead of changing immediately to prevent pops and clicks.
+     * If called within MINIMUM_POSITION_CHANGE_INTERVAL after the previous call, has no effect to avoid overloading
+     * the sound engine with parameter changes.
      * @param {Number} x
      * @param {Number} y
      * @param {Number} z
      */
-    SoundSource.prototype.setPosition = function (x, y, z) {
+    SoundSource.prototype.updatePosition = function (x, y, z) {
         var currentTime = _context.currentTime;
         if (((currentTime - this._positionChangeTime) >= MINIMUM_POSITION_CHANGE_INTERVAL) && ((x !== this._x) || (y !== this._y) || (z !== this._z))) {
             this._x = x;
@@ -325,6 +328,32 @@ define([
                 this._pannerNode.positionZ.setValueAtTime(this._pannerNode.positionZ.value, currentTime);
                 this._pannerNode.positionZ.linearRampToValueAtTime(z, currentTime + DEFAULT_RAMP_DURATION);
             }
+        }
+    };
+    /**
+     * Directly sets a new position for the sound source, without respecting the minimum required delay
+     * between position changes and the not using ramping. Use this to set up an initial position for
+     * a sound source before starting to play any sound. Do not use it to change the position of a
+     * sound that is being played! Use updatePosition() for that.
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} z
+     */
+    SoundSource.prototype.setPositionImmediate = function (x, y, z) {
+        var currentTime = _context.currentTime;
+        this._x = x;
+        this._y = y;
+        this._z = z;
+        this._positionChangeTime = currentTime;
+        // avoid inserting new events if possible
+        if (this._pannerNode.positionX.value !== x) {
+            this._pannerNode.positionX.setValueAtTime(x, currentTime);
+        }
+        if (this._pannerNode.positionY.value !== y) {
+            this._pannerNode.positionY.setValueAtTime(y, currentTime);
+        }
+        if (this._pannerNode.positionZ.value !== z) {
+            this._pannerNode.positionZ.setValueAtTime(z, currentTime);
         }
     };
     /**

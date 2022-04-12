@@ -1490,87 +1490,6 @@ define([
      * @returns {Float32Array} The calculated inverse (transpose) rotation matrix.
      */
     mat.inverseOfRotation4Aux = mat.transposed4Aux;
-    /**
-     * A computationally efficient function to return the inverse of a 4x4 scaling
-     * matrix. (a transformation matrix that only hold scaling information)
-     * @param {Float32Array} m A 4x4 scaling matrix.
-     * @returns {Float32Array} The calculated inverse 4x4 matrix.
-     */
-    mat.inverseOfScaling4 = function (m) {
-        return mat.scaling4(1 / m[0], 1 / m[5], 1 / m[10]);
-    };
-    /**
-     * Returns a 3x3 matrix multiplied by a scalar.
-     * @param {Float32Array} m A 3x3 matrix.
-     * @param {Number} s A scalar.
-     * @returns {Float32Array} m multiplied by s.
-     */
-    mat.scaled3 = function (m, s) {
-        _matrixCount++;
-        return new Float32Array([
-            m[0] * s, m[1] * s, m[2] * s,
-            m[3] * s, m[4] * s, m[5] * s,
-            m[6] * s, m[7] * s, m[8] * s
-        ]);
-    };
-    /**
-     * Returns a 4x4 matrix multiplied by a scalar.
-     * @param {Float32Array} m A 4x4 matrix.
-     * @param {Number} s A scalar.
-     * @returns {Float32Array} m multiplied by s.
-     */
-    mat.scaled4 = function (m, s) {
-        _matrixCount++;
-        return new Float32Array([
-            m[0] * s, m[1] * s, m[2] * s, m[3] * s,
-            m[4] * s, m[5] * s, m[6] * s, m[7] * s,
-            m[8] * s, m[9] * s, m[10] * s, m[11] * s,
-            m[12] * s, m[13] * s, m[14] * s, m[15] * s
-        ]);
-    };
-    /**
-     * Returns a corrected matrix based on the passed one, which has orthogonal unit
-     * vectors as its rows. Suitable for correcting minor distortions of originally
-     * orthogonal matrices, which naturally occur after series of transformations
-     * due to float inaccuracy .
-     * @param {Float32Array} m The original (distorted) 4x4 matrix.
-     * @returns {Float32Array} An orthogonal 4x4 matrix.
-     */
-    mat.correctedOrthogonal4 = function (m) {
-        var
-                vx = vec.normalize3([m[0], m[1], m[2]]),
-                vy = vec.normalize3([m[4], m[5], m[6]]),
-                vz = vec.cross3(vx, vy);
-        vy = vec.cross3(vz, vx);
-        _matrixCount++;
-        return new Float32Array([
-            vx[0], vx[1], vx[2], 0.0,
-            vy[0], vy[1], vy[2], 0.0,
-            vz[0], vz[1], vz[2], 0.0,
-            0.0, 0.0, 0.0, 1.0]);
-    };
-    /**
-     * Returns a "straigthened" version of the passed matrix, wich means every value
-     * within the matrix that is at least epsilon-close to -1, 0 or 1 will be changed
-     * to -1, 0 or 1 respectively. Works with both 3x3 and 4x4 matrices.
-     * @param {Float32Array} m The input matrix.
-     * @param {Number} epsilon The difference threshold within the matrix components
-     * will be corrected.
-     * @returns {Float32Array}
-     */
-    mat.straightened = function (m, epsilon) {
-        _matrixCount++;
-        var i, result = new Float32Array(m);
-        for (i = 0; i < result.length; i++) {
-            result[i] = (Math.abs(m[i]) < epsilon) ?
-                    0.0 :
-                    ((Math.abs(1 - m[i]) < epsilon) ?
-                            1.0 :
-                            ((Math.abs(-1 - m[i]) < epsilon) ?
-                                    -1.0 : m[i]));
-        }
-        return result;
-    };
 // -----------------------------------------------------------------------------
 // Functions and operations with two matrices
     /**
@@ -3079,25 +2998,6 @@ define([
         m[11] = 0.0;
     };
     /**
-     * Modifies the passed matrix m to a "straigthened" version, which means every value
-     * within the matrix that is at least epsilon-close to -1, 0 or 1 will be changed
-     * to -1, 0 or 1 respectively. Works with both 3x3 and 4x4 matrices.
-     * @param {Float32Array} m The input matrix.
-     * @param {Number} epsilon The difference threshold within the matrix components
-     * will be corrected.
-     */
-    mat.straighten = function (m, epsilon) {
-        var i;
-        for (i = 0; i < m.length; i++) {
-            m[i] = (Math.abs(m[i]) < epsilon) ?
-                    0.0 :
-                    ((Math.abs(1 - m[i]) < epsilon) ?
-                            1.0 :
-                            ((Math.abs(-1 - m[i]) < epsilon) ?
-                                    -1.0 : m[i]));
-        }
-    };
-    /**
      * Modifies the passed 4x4 translation matrix m to a "straigthened" version, 
      * which means that the translation coordinates which are at least epsilon-close 
      * to -1, 0 or 1 will be changed to -1, 0 or 1 respectively.
@@ -3106,15 +3006,9 @@ define([
      * will be corrected.
      */
     mat.straightenTranslation = function (m, epsilon) {
-        var i;
-        for (i = 12; i < 14; i++) {
-            m[i] = (Math.abs(m[i]) < epsilon) ?
-                    0.0 :
-                    ((Math.abs(1 - m[i]) < epsilon) ?
-                            1.0 :
-                            ((Math.abs(-1 - m[i]) < epsilon) ?
-                                    -1.0 : m[i]));
-        }
+        m[12] = (Math.abs(m[12]) < epsilon) ? 0.0 : ((Math.abs(1 - m[12]) < epsilon) ? 1.0 : ((Math.abs(-1 - m[12]) < epsilon) ? -1.0 : m[12]));
+        m[13] = (Math.abs(m[13]) < epsilon) ? 0.0 : ((Math.abs(1 - m[13]) < epsilon) ? 1.0 : ((Math.abs(-1 - m[13]) < epsilon) ? -1.0 : m[13]));
+        m[14] = (Math.abs(m[14]) < epsilon) ? 0.0 : ((Math.abs(1 - m[14]) < epsilon) ? 1.0 : ((Math.abs(-1 - m[14]) < epsilon) ? -1.0 : m[14]));
     };
     /**
      * Modifies the passed 4x4 rotation matrix m to a "straigthened" version, 

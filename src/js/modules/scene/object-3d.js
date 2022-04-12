@@ -467,13 +467,15 @@ define([
             return this._scalingMatrix;
         }
         /**
-         * Sets a new scaling matrix.
-         * @param {Float32Array} value
+         * Sets a new scaling by updating the scaling matrix.
+         * @param {Number} x Scaling along the X axis.
+         * @param {Number} y Scaling along the Y axis.
+         * @param {Number} z Scaling along the Z axis.
          */
-        function setScalingMatrix(value) {
-            if (value) {
-                this._scalingMatrix = value;
-            }
+        function setScaling(x, y, z) {
+            this._scalingMatrix[0] = x;
+            this._scalingMatrix[5] = y;
+            this._scalingMatrix[10] = z;
             this._modelMatrixValid = false;
             this._cascadeScalingMatrixValid = false;
         }
@@ -485,7 +487,8 @@ define([
             this._scalingMatrix[0] = scale;
             this._scalingMatrix[5] = scale;
             this._scalingMatrix[10] = scale;
-            this.setScalingMatrix();
+            this._modelMatrixValid = false;
+            this._cascadeScalingMatrixValid = false;
         }
         /**
          * Returns a scaling matrix corresponding to the stacked scaling applied
@@ -655,7 +658,7 @@ define([
             this.prototype.setOrientationMatrix = setOrientationMatrix;
             this.prototype.setOrientationM4 = setOrientationM4;
             this.prototype.getScalingMatrix = getScalingMatrix;
-            this.prototype.setScalingMatrix = setScalingMatrix;
+            this.prototype.setScaling = setScaling;
             this.prototype.setScale = setScale;
             this.prototype.getPositionVector = getPositionVector;
             this.prototype.copyPositionToVector = copyPositionToVector;

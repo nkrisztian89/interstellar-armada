@@ -269,10 +269,10 @@ define([
     function _scaleModels(scale) {
         scale = Math.min(Math.max(_currentItemOriginalScale * _getSetting(SETTINGS.MIN_SIZE_FACTOR), scale), _currentItemOriginalScale * _getSetting(SETTINGS.MAX_SIZE_FACTOR));
         if (_wireframeModel) {
-            _wireframeModel.setScalingMatrix(mat.scaling4(scale));
+            _wireframeModel.setScale(scale);
         }
         if (_solidModel) {
-            _solidModel.setScalingMatrix(mat.scaling4(scale));
+            _solidModel.setScale(scale);
         }
     }
     /**

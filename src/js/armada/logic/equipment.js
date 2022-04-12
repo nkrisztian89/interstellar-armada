@@ -984,20 +984,10 @@ define([
          */
         this._lightSource = null;
         /**
-         * The sound source used to position the sound effects beloning to this missile in 3D sound (=camera) space
+         * The sound source used to position the sound effects belonging to this missile in 3D sound (=camera) space
          * @type SoundSource
          */
         this._soundSource = audio.createSoundSource(0, 0, 0);
-        /**
-         * Torque to rotate along Z axis (yaw left/right)
-         * @type Torque
-         */
-        this._yawTorque = null;
-        /**
-         * Torque to rotate along X axis (pitch up/down)
-         * @type Torque
-         */
-        this._pitchTorque = null;
         /**
          * A reference to the sound clip playing the start sound for this missile so it can be stopped if needed
          * @type SoundClip
@@ -1068,8 +1058,6 @@ define([
         this._burnForAngularVelocityChangeFactor = this._homing ? (1 / physics.ANGULAR_VELOCITY_MATRIX_DURATION_S * missileClass.getMass() / missileClass.getAngularThrust() * 1000) : 0;
         this._target = target || null;
         this._targetHitPositionValid = false;
-        this._yawTorque = null;
-        this._pitchTorque = null;
         this._mainBurn = false;
         this._started = false;
         this._stopHoming = false;
@@ -1385,20 +1373,21 @@ define([
     /**
      * Apply the torques caused by the currently operating maneuvering thrusters to the physical
      * model of the missile
+     * @param {Number} dt The time elapsed since the last simulation step, in milliseconds.
      */
-    Missile.prototype._applyTurnThrust = function () {
+    Missile.prototype._applyTurnThrust = function (dt) {
         var yawAxis, pitchAxis;
         yawAxis = mat.getRowC4(this._physicalModel.getOrientationMatrix());
         pitchAxis = mat.getRowA4(this._physicalModel.getOrientationMatrix());
         if (this._yawRight.burn > 0) {
-            this._yawTorque = this._physicalModel.addOrRenewTorque(this._yawTorque, this._class.getAngularThrust() * this._yawRight.burn, yawAxis);
+            this._physicalModel.applyTorque(this._class.getAngularThrust() * this._yawRight.burn, yawAxis, dt);
         } else if (this._yawLeft.burn > 0) {
-            this._yawTorque = this._physicalModel.addOrRenewTorque(this._yawTorque, -this._class.getAngularThrust() * this._yawLeft.burn, yawAxis);
+            this._physicalModel.applyTorque(-this._class.getAngularThrust() * this._yawLeft.burn, yawAxis, dt);
         }
         if (this._pitchUp.burn > 0) {
-            this._pitchTorque = this._physicalModel.addOrRenewTorque(this._pitchTorque, -this._class.getAngularThrust() * this._pitchUp.burn, pitchAxis);
+            this._physicalModel.applyTorque(-this._class.getAngularThrust() * this._pitchUp.burn, pitchAxis, dt);
         } else if (this._pitchDown.burn > 0) {
-            this._pitchTorque = this._physicalModel.addOrRenewTorque(this._pitchTorque, this._class.getAngularThrust() * this._pitchDown.burn, pitchAxis);
+            this._physicalModel.applyTorque(this._class.getAngularThrust() * this._pitchDown.burn, pitchAxis, dt);
         }
     };
     /**
@@ -1562,6 +1551,11 @@ define([
                         if (this._class.getHomingMode() === classes.MissileHomingMode.INITIAL) {
                             this._stopHoming = true;
                         }
+                        matrix = this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera());
+                        this._soundSource.setPositionImmediate(
+                                Math.round(matrix[12] * 10) * 0.1,
+                                Math.round(matrix[13] * 10) * 0.1,
+                                Math.round(matrix[14] * 10) * 0.1);
                         this._startSound = this._class.playStartSound(this._soundSource);
                     }
                 }
@@ -1571,7 +1565,7 @@ define([
                         this._turn(_angles.yaw, _angles.pitch, dt);
                     }
                     this._controlTurnThrusters(dt);
-                    this._applyTurnThrust();
+                    this._applyTurnThrust(dt);
                 }
                 for (i = 0; i < this._thrusters.length; i++) {
                     this._thrusters[i].updateVisuals();
@@ -1580,7 +1574,7 @@ define([
             // update sound position
             if (this._started) {
                 matrix = this._visualModel.getPositionMatrixInCameraSpace(this._visualModel.getNode().getScene().getCamera());
-                this._soundSource.setPosition(
+                this._soundSource.updatePosition(
                         Math.round(matrix[12] * 10) * 0.1,
                         Math.round(matrix[13] * 10) * 0.1,
                         Math.round(matrix[14] * 10) * 0.1);
@@ -1658,8 +1652,6 @@ define([
         this._yawRight = null;
         this._pitchUp = null;
         this._pitchDown = null;
-        this._yawTorque = null;
-        this._pitchTorque = null;
         if (this._visualModel && this._visualModel.getNode()) {
             this._visualModel.getNode().markAsReusable(true);
         }
@@ -3466,22 +3458,6 @@ define([
          * @type SoundClip
          */
         this._thrusterSoundClip = null;
-        // the continuous forces and torques used to move the ship
-        /**
-         * Torque to rotate along Z axis (yaw left/right)
-         * @type Torque
-         */
-        this._yawTorque = null;
-        /**
-         * Torque to rotate along X axis (pitch up/down)
-         * @type Torque
-         */
-        this._pitchTorque = null;
-        /**
-         * Torque to rotate along Y axis (roll left/right)
-         * @type Torque
-         */
-        this._rollTorque = null;
         // cache variables
         /**
          * Cached value to calculate thrust forces faster
@@ -3494,15 +3470,6 @@ define([
          */
         this._angularThrustFactor = this._class.getAngularThrust() / this._class.getMaxTurnBurnLevel();
     }
-    /**
-     * Nulls out the stored forces and torques - to be called afte the physical model of the spacecraft is reset and so
-     * the forces and torques should be readded to it.
-     */
-    Propulsion.prototype.resetForcesAndTorques = function () {
-        this._yawTorque = null;
-        this._pitchTorque = null;
-        this._rollTorque = null;
-    };
     /**
      * @param {PropulsionClass~ResourceParams} params 
      */
@@ -3740,19 +3707,19 @@ define([
                 this._drivenPhysicalObject.applyForce(-this._thrustFactor * this._lower.burn, yawAxis[0], yawAxis[1], yawAxis[2], dt);
             }
             if (this._yawRight.burn > 0) {
-                this._yawTorque = this._drivenPhysicalObject.addOrRenewTorque(this._yawTorque, this._angularThrustFactor * this._yawRight.burn, yawAxis);
+                this._drivenPhysicalObject.applyTorque(this._angularThrustFactor * this._yawRight.burn, yawAxis, dt);
             } else if (this._yawLeft.burn > 0) {
-                this._yawTorque = this._drivenPhysicalObject.addOrRenewTorque(this._yawTorque, -this._angularThrustFactor * this._yawLeft.burn, yawAxis);
+                this._drivenPhysicalObject.applyTorque(-this._angularThrustFactor * this._yawLeft.burn, yawAxis, dt);
             }
             if (this._pitchUp.burn > 0) {
-                this._pitchTorque = this._drivenPhysicalObject.addOrRenewTorque(this._pitchTorque, -this._angularThrustFactor * this._pitchUp.burn, pitchAxis);
+                this._drivenPhysicalObject.applyTorque(-this._angularThrustFactor * this._pitchUp.burn, pitchAxis, dt);
             } else if (this._pitchDown.burn > 0) {
-                this._pitchTorque = this._drivenPhysicalObject.addOrRenewTorque(this._pitchTorque, this._angularThrustFactor * this._pitchDown.burn, pitchAxis);
+                this._drivenPhysicalObject.applyTorque(this._angularThrustFactor * this._pitchDown.burn, pitchAxis, dt);
             }
             if (this._rollRight.burn > 0) {
-                this._rollTorque = this._drivenPhysicalObject.addOrRenewTorque(this._rollTorque, -this._angularThrustFactor * this._rollRight.burn, directionVector);
+                this._drivenPhysicalObject.applyTorque(-this._angularThrustFactor * this._rollRight.burn, directionVector, dt);
             } else if (this._rollLeft.burn > 0) {
-                this._rollTorque = this._drivenPhysicalObject.addOrRenewTorque(this._rollTorque, this._angularThrustFactor * this._rollLeft.burn, directionVector);
+                this._drivenPhysicalObject.applyTorque(this._angularThrustFactor * this._rollLeft.burn, directionVector, dt);
             }
         }
         if (!this._thrusterSoundClip) {
@@ -4776,7 +4743,7 @@ define([
      * Initiates the jump in sequence
      */
     JumpEngine.prototype.jumpIn = function () {
-        var directionVector, exp, physicalModel;
+        var directionVector, exp, physicalModel, matrix;
         // initiating jump in sequence
         if (this._state === JumpEngine.JumpState.NONE) {
             this._state = JumpEngine.JumpState.JUMPING_IN;
@@ -4800,8 +4767,13 @@ define([
             directionVector = mat.getRowB4(physicalModel.getOrientationMatrix());
             // calculate and set the starting velocity based on the set final velocity and total deceleration during the jump in sequence
             physicalModel.setVelocityv(vec.scaled3Aux(directionVector, this._class.getJumpInVelocity() + this._class.getJumpInDeceleration() * this._class.getJumpInDuration() * 0.001));
-            physicalModel.addForce(new physics.Force(physicalModel.getMass() * this._class.getJumpInDeceleration(), vec.scaled3(directionVector, -1), this._class.getJumpInDuration()));
             physicalModel.setDragFactor(0);
+            this._spacecraft.getVisualModel().setPositionM4(physicalModel.getPositionMatrix());
+            matrix = this._spacecraft.getPositionMatrixInCameraSpace();
+            this._spacecraft.getSoundSource().setPositionImmediate(
+                    Math.round(matrix[12] * 10) * 0.1,
+                    Math.round(matrix[13] * 10) * 0.1,
+                    Math.round(matrix[14] * 10) * 0.1);
             this._soundClip = this._class.createJumpInSoundClip(this._spacecraft.getSoundSource());
             if (this._soundClip) {
                 this._soundClip.play();
@@ -4815,14 +4787,14 @@ define([
      * @param {Number} dt The amount of time passed since the last simulation step, in milliseonds
      */
     JumpEngine.prototype.simulate = function (dt) {
-        var velocityMatrix, directionVector, exp, physicalModel, speedTarget;
+        var matrix, exp, physicalModel, speedTarget;
         switch (this._state) {
             case JumpEngine.JumpState.ALIGNING_VELOCITY:
-                velocityMatrix = this._spacecraft.getRelativeVelocityMatrix();
+                matrix = this._spacecraft.getRelativeVelocityMatrix();
                 speedTarget = this._spacecraft.getTopSpeed() ? Math.min(this._spacecraft.getTopSpeed(), this._class.getPrepareVelocity()) : this._class.getPrepareVelocity();
-                if ((Math.abs(velocityMatrix[12]) < JumpEngine.VELOCITY_TOLERANCE) &&
-                        (Math.abs(velocityMatrix[14]) < JumpEngine.VELOCITY_TOLERANCE) &&
-                        (Math.abs(velocityMatrix[13] - speedTarget) < JumpEngine.VELOCITY_TOLERANCE)) {
+                if ((Math.abs(matrix[12]) < JumpEngine.VELOCITY_TOLERANCE) &&
+                        (Math.abs(matrix[14]) < JumpEngine.VELOCITY_TOLERANCE) &&
+                        (Math.abs(matrix[13] - speedTarget) < JumpEngine.VELOCITY_TOLERANCE)) {
                     // switching to next state if the alignment is reached
                     this._state = JumpEngine.JumpState.PREPARING;
                     this._timeLeft = this._class.getPrepareDuration();
@@ -4846,10 +4818,7 @@ define([
                     if (this._soundClip) {
                         this._soundClip.play();
                     }
-                    physicalModel = this._spacecraft.getPhysicalModel();
-                    directionVector = mat.getRowB4(physicalModel.getOrientationMatrix());
-                    physicalModel.addForce(new physics.Force(physicalModel.getMass() * this._class.getJumpOutAcceleration(), directionVector, this._class.getJumpOutDuration()));
-                    physicalModel.setDragFactor(0);
+                    this._spacecraft.getPhysicalModel().setDragFactor(0);
                     // make sure the forward engines of the spacecraft are firing during the jump out sequence, despite the high velocity it will reach
                     this._spacecraft.unlockManeuvering();
                     this._spacecraft.setSpeedTarget(Number.MAX_VALUE);
@@ -4861,9 +4830,10 @@ define([
                 break;
             case JumpEngine.JumpState.JUMPING_OUT:
                 // stretching the spacecraft along the Y axis (by a linearly incrasing factor)
-                this._spacecraft.getVisualModel().setScalingMatrix(mat.prod3x3SubOf4(
-                        this._originalScalingMatrix,
-                        mat.scaling4(1, 1 + (1 - this._timeLeft / this._class.getJumpOutDuration()) * (this._class.getJumpOutScaling() - 1), 1)));
+                this._spacecraft.getVisualModel().setScaling(
+                        this._originalScalingMatrix[0],
+                        this._originalScalingMatrix[5] * (1 + (1 - this._timeLeft / this._class.getJumpOutDuration()) * (this._class.getJumpOutScaling() - 1)),
+                        this._originalScalingMatrix[10]);
                 // finishing up the particle effect when the time is up
                 if (this._timeLeft <= 0) {
                     this._state = JumpEngine.JumpState.NONE;
@@ -4877,9 +4847,13 @@ define([
                             true,
                             mat.IDENTITY4);
                     exp.addToSceneNow(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
-                    this._spacecraft.getVisualModel().setScalingMatrix(this._originalScalingMatrix);
+                    this._spacecraft.getVisualModel().setScale(this._originalScalingMatrix[0]);
                     this._spacecraft.setAway(true);
                     this._spacecraft.handleEvent(SpacecraftEvents.JUMPED_OUT);
+                } else {
+                    physicalModel = this._spacecraft.getPhysicalModel();
+                    matrix = physicalModel.getOrientationMatrix();
+                    physicalModel.applyForce(physicalModel.getMass() * this._class.getJumpOutAcceleration(), matrix[4], matrix[5], matrix[6], Math.min(dt, this._timeLeft));
                 }
                 this._timeLeft -= dt;
                 break;
@@ -4887,11 +4861,16 @@ define([
                 // the stretching needs to be poperly calculated - do not allow negative timeLeft values
                 if (this._timeLeft < 0) {
                     this._timeLeft = 0;
+                } else {
+                    physicalModel = this._spacecraft.getPhysicalModel();
+                    matrix = physicalModel.getOrientationMatrix();
+                    physicalModel.applyForce(physicalModel.getMass() * this._class.getJumpInDeceleration(), -matrix[4], -matrix[5], -matrix[6], Math.min(dt, this._timeLeft));
                 }
                 // stretching the spacecraft along the Y axis (by a linearly decreasing factor)
-                this._spacecraft.getVisualModel().setScalingMatrix(mat.prod3x3SubOf4(
-                        this._originalScalingMatrix,
-                        mat.scaling4(1, 1 + (this._timeLeft / this._class.getJumpInDuration()) * (this._class.getJumpInScaling() - 1), 1)));
+                this._spacecraft.getVisualModel().setScaling(
+                        this._originalScalingMatrix[0],
+                        this._originalScalingMatrix[5] * (1 + (this._timeLeft / this._class.getJumpInDuration()) * (this._class.getJumpInScaling() - 1)),
+                        this._originalScalingMatrix[10]);
                 // finishing the sequence if the time is up
                 if (this._timeLeft <= 0) {
                     this._state = JumpEngine.JumpState.NONE;

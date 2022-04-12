@@ -3821,7 +3821,7 @@ define([
                     }
                     // setting orientation of the target view model
                     if (_targetViewModel) {
-                        _targetViewModel.setOrientationM4(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION) ? mat.prod4Aux(
+                        _targetViewModel.setOrientationM4(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION) ? mat.prod3x3SubOf4Aux(
                                 target.getPhysicalOrientationMatrix(),
                                 mat.inverseOfRotation4Aux(mat.lookTowards4Aux(
                                         vec.normalize3(vec.diffTranslation3Aux(craft.getPhysicalPositionMatrix(), target.getPhysicalPositionMatrix())),
