@@ -402,7 +402,7 @@ define([
     /**
      * @class
      * An octree node that is used to partition spacecrafts. Recursively divides the given list of spacecrafts among its subnodes and can
-     * retrieve a subset of this list belonging to an area in space by choosing the appropriate subnodes.
+     * execute a callback for a subset of this list belonging to an area in space by choosing the appropriate subnodes.
      * @param {Spacecraft[]} objects The list of spacecrafts belonging to this node. (to be divided among its subnodes)
      * @param {Number} maximumDepth The maximum number of levels below this node that should be created when dividing the objects.
      * @param {Number} maximumObjectCount If the node has this much or fewer objects, it will not divide them further (become a leaf node)
@@ -418,13 +418,21 @@ define([
         this._objects = objects;
         /**
          * The world coordinates of the point in space which divides the region beloning to this node to 8 subregions (2x2x2), which belong
-         * to its subnodes. Null in the case of leaf nodes.
-         * @type Number[3]
+         * to its subnodes.
+         * @type Number
          */
-        this._center = null;
+        this._centerX = 0;
+        /**
+         * @type Number
+         */
+        this._centerY = 0;
+        /**
+         * @type Number
+         */
+        this._centerZ = 0;
         /*
          * The minimum and maximum coordinates for the 3 axes where any part of any of the contained spacecrafts reside.
-         * @type Number[2][3]
+         * @type Number[6]
          */
         this._boundaries = null;
         if (this._objects.length > 0) {
@@ -445,7 +453,7 @@ define([
         if (isRootNode) {
             p = this._objects[0].getPhysicalModel().getPositionMatrix();
             s = this._objects[0].getPhysicalModel().getSize();
-            this._boundaries = [[p[0] - s, p[0] + s], [p[1] - s, p[1] + s], [p[2] - s, p[2] + s]];
+            this._boundaries = [p[0] - s, p[0] + s, p[1] - s, p[1] + s, p[2] - s, p[2] + s];
         }
         for (i = 0, n = this._objects.length; i < n; i++) {
             p = this._objects[i].getPhysicalModel().getPositionMatrix();
@@ -454,30 +462,32 @@ define([
             z += p[14];
             if (isRootNode) {
                 s = this._objects[i].getPhysicalModel().getSize();
-                if ((p[12] - s) < this._boundaries[0][0]) {
-                    this._boundaries[0][0] = p[12] - s;
+                if ((p[12] - s) < this._boundaries[0]) {
+                    this._boundaries[0] = p[12] - s;
                 }
-                if ((p[12] + s) > this._boundaries[0][1]) {
-                    this._boundaries[0][1] = p[12] + s;
+                if ((p[12] + s) > this._boundaries[1]) {
+                    this._boundaries[1] = p[12] + s;
                 }
-                if ((p[13] - s) < this._boundaries[1][0]) {
-                    this._boundaries[1][0] = p[13] - s;
+                if ((p[13] - s) < this._boundaries[2]) {
+                    this._boundaries[2] = p[13] - s;
                 }
-                if ((p[13] + s) > this._boundaries[1][1]) {
-                    this._boundaries[1][1] = p[13] + s;
+                if ((p[13] + s) > this._boundaries[3]) {
+                    this._boundaries[3] = p[13] + s;
                 }
-                if ((p[14] - s) < this._boundaries[2][0]) {
-                    this._boundaries[2][0] = p[14] - s;
+                if ((p[14] - s) < this._boundaries[4]) {
+                    this._boundaries[4] = p[14] - s;
                 }
-                if ((p[14] + s) > this._boundaries[2][1]) {
-                    this._boundaries[2][1] = p[14] + s;
+                if ((p[14] + s) > this._boundaries[5]) {
+                    this._boundaries[5] = p[14] + s;
                 }
             }
         }
         x /= n;
         y /= n;
         z /= n;
-        this._center = [x, y, z];
+        this._centerX = x;
+        this._centerY = y;
+        this._centerZ = z;
     };
     /**
      * Creates and returns the list of subnodes for this node by dividing its objects among them based on its center point and the given 
@@ -502,45 +512,45 @@ define([
             o = this._objects[i];
             p = o.getPhysicalModel().getPositionMatrix();
             size = o.getPhysicalModel().getSize();
-            if ((p[12] - size) < this._center[0]) {
-                if ((p[13] - size) < this._center[1]) {
-                    if ((p[14] - size) < this._center[2]) {
+            if ((p[12] - size) < this._centerX) {
+                if ((p[13] - size) < this._centerY) {
+                    if ((p[14] - size) < this._centerZ) {
                         lxlylz = lxlylz || [];
                         lxlylz.push(o);
                     }
-                    if ((p[14] + size) >= this._center[2]) {
+                    if ((p[14] + size) >= this._centerZ) {
                         lxlyhz = lxlyhz || [];
                         lxlyhz.push(o);
                     }
                 }
-                if ((p[13] + size) >= this._center[1]) {
-                    if ((p[14] - size) < this._center[2]) {
+                if ((p[13] + size) >= this._centerY) {
+                    if ((p[14] - size) < this._centerZ) {
                         lxhylz = lxhylz || [];
                         lxhylz.push(o);
                     }
-                    if ((p[14] + size) >= this._center[2]) {
+                    if ((p[14] + size) >= this._centerZ) {
                         lxhyhz = lxhyhz || [];
                         lxhyhz.push(o);
                     }
                 }
             }
-            if ((p[12] + size) >= this._center[0]) {
-                if ((p[13] - size) < this._center[1]) {
-                    if ((p[14] - size) < this._center[2]) {
+            if ((p[12] + size) >= this._centerX) {
+                if ((p[13] - size) < this._centerY) {
+                    if ((p[14] - size) < this._centerZ) {
                         hxlylz = hxlylz || [];
                         hxlylz.push(o);
                     }
-                    if ((p[14] + size) >= this._center[2]) {
+                    if ((p[14] + size) >= this._centerZ) {
                         hxlyhz = hxlyhz || [];
                         hxlyhz.push(o);
                     }
                 }
-                if ((p[13] + size) >= this._center[1]) {
-                    if ((p[14] - size) < this._center[2]) {
+                if ((p[13] + size) >= this._centerY) {
+                    if ((p[14] - size) < this._centerZ) {
                         hxhylz = hxhylz || [];
                         hxhylz.push(o);
                     }
-                    if ((p[14] + size) >= this._center[2]) {
+                    if ((p[14] + size) >= this._centerZ) {
                         hxhyhz = hxhyhz || [];
                         hxhyhz.push(o);
                     }
@@ -559,66 +569,87 @@ define([
         return result;
     };
     /**
-     * Returns the list of spacecrafts inside the region specified by the given boundaries using the spatial partitions represented by this
-     * node and its subnodes.
+     * Executes the passed callback for all the spacecrafts inside the region specified by the given boundaries
+     * using the spatial partitions represented by this node and its subnodes.
      * @param {Number} minX
      * @param {Number} maxX
      * @param {Number} minY
      * @param {Number} maxY
      * @param {Number} minZ
      * @param {Number} maxZ
-     * @returns {Spacecraft[]}
+     * @param {Function} callback Executed once for each spacecraft, the spacecraft is passed as the only argument.
+     * If the function returns true, the execution stops there and the callback will not be called for the remaining spacecrafts.
      */
-    Octree.prototype.getObjects = function (minX, maxX, minY, maxY, minZ, maxZ) {
-        var result;
+    Octree.prototype.executeForObjects = function (minX, maxX, minY, maxY, minZ, maxZ, callback) {
+        var i;
         if (!this._subnodes) {
-            return this._objects;
+            for (i = 0; i < this._objects.length; i++) {
+                if (callback(this._objects[i])) {
+                    return true;
+                }
+            }
+            return false;
         }
         if (this._boundaries) {
-            if ((maxX < this._boundaries[0][0]) || (minX > this._boundaries[0][1]) ||
-                    (maxY < this._boundaries[1][0]) || (minY > this._boundaries[1][1]) ||
-                    (maxZ < this._boundaries[2][0]) || (minZ > this._boundaries[2][1])) {
-                return utils.EMPTY_ARRAY;
+            if ((maxX < this._boundaries[0]) || (minX > this._boundaries[1]) ||
+                    (maxY < this._boundaries[2]) || (minY > this._boundaries[3]) ||
+                    (maxZ < this._boundaries[4]) || (minZ > this._boundaries[5])) {
+                return false;
             }
         }
-        result = [];
-        if (minX < this._center[0]) {
-            if (minY < this._center[1]) {
-                if (minZ < this._center[2]) {
-                    result = result.concat(this._subnodes[0].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+        if (minX < this._centerX) {
+            if (minY < this._centerY) {
+                if (minZ < this._centerZ) {
+                    if (this._subnodes[0].executeForObjects(minX, maxX, minY, maxY, minZ, maxZ, callback)) {
+                        return true;
+                    }
                 }
-                if (maxZ >= this._center[2]) {
-                    result = result.concat(this._subnodes[1].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
-                }
-            }
-            if (maxY >= this._center[1]) {
-                if (minZ < this._center[2]) {
-                    result = result.concat(this._subnodes[2].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
-                }
-                if (maxZ >= this._center[2]) {
-                    result = result.concat(this._subnodes[3].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                if (maxZ >= this._centerZ) {
+                    if (this._subnodes[1].executeForObjects(minX, maxX, minY, maxY, minZ, maxZ, callback)) {
+                        return true;
+                    }
                 }
             }
-        }
-        if (maxX >= this._center[0]) {
-            if (minY < this._center[1]) {
-                if (minZ < this._center[2]) {
-                    result = result.concat(this._subnodes[4].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+            if (maxY >= this._centerY) {
+                if (minZ < this._centerZ) {
+                    if (this._subnodes[2].executeForObjects(minX, maxX, minY, maxY, minZ, maxZ, callback)) {
+                        return true;
+                    }
                 }
-                if (maxZ >= this._center[2]) {
-                    result = result.concat(this._subnodes[5].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
-                }
-            }
-            if (maxY >= this._center[1]) {
-                if (minZ < this._center[2]) {
-                    result = result.concat(this._subnodes[6].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
-                }
-                if (maxZ >= this._center[2]) {
-                    result = result.concat(this._subnodes[7].getObjects(minX, maxX, minY, maxY, minZ, maxZ));
+                if (maxZ >= this._centerZ) {
+                    if (this._subnodes[3].executeForObjects(minX, maxX, minY, maxY, minZ, maxZ, callback)) {
+                        return true;
+                    }
                 }
             }
         }
-        return result;
+        if (maxX >= this._centerX) {
+            if (minY < this._centerY) {
+                if (minZ < this._centerZ) {
+                    if (this._subnodes[4].executeForObjects(minX, maxX, minY, maxY, minZ, maxZ, callback)) {
+                        return true;
+                    }
+                }
+                if (maxZ >= this._centerZ) {
+                    if (this._subnodes[5].executeForObjects(minX, maxX, minY, maxY, minZ, maxZ, callback)) {
+                        return true;
+                    }
+                }
+            }
+            if (maxY >= this._centerY) {
+                if (minZ < this._centerZ) {
+                    if (this._subnodes[6].executeForObjects(minX, maxX, minY, maxY, minZ, maxZ, callback)) {
+                        return true;
+                    }
+                }
+                if (maxZ >= this._centerZ) {
+                    if (this._subnodes[7].executeForObjects(minX, maxX, minY, maxY, minZ, maxZ, callback)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     };
     // #########################################################################
     /**

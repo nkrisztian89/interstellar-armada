@@ -2791,7 +2791,7 @@ define([
                         // first, try to elongate the path of the projectile that hit
                         damageIndicatorPosition = [0, 0, 0, 1];
                         distToCenter = this._physicalModel.getBodySize();
-                        vec.setSum3(damageIndicatorPosition, damagePosition, vec.scaled3(damageDir, -distToCenter));
+                        vec.setSum3(damageIndicatorPosition, damagePosition, vec.scaled3Aux(damageDir, -distToCenter));
                         damageIndicatorPosition = this._physicalModel.checkHitRelative(damageIndicatorPosition, vec.scaled3(damageDir, -1), distToCenter, 0);
                         if (!damageIndicatorPosition) {
                             // if that doesn't work, do a second hitcheck towards the ship center with 0 offset and compare this new point on the ship surface, if far away enough, 

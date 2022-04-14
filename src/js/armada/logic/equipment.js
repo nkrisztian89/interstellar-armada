@@ -312,7 +312,63 @@ define([
                 yaw: 0,
                 pitch: 0,
                 roll: 0
-            };
+            },
+            // auxiliary variables to use during hit checking
+            /**
+             * Whether the projectile/missile currently being checked was fired by the piloted spacecraft
+             * @type Boolean
+             */
+            _isPiloted = false,
+            /**
+             * Whether the projectile/missile currently being checked can damage the spacecraft it was fired from
+             * @type Boolean
+             */
+            _canDamageSelf = false,
+            /**
+             * Whether the projectile/missile currently being checked can damage the player (the piloted spacecraft)
+             * @type Boolean
+             */
+            _canDamagePlayer = false,
+            /**
+             * The callback to calculate the offset for the current hitcheck
+             * @type Function
+             */
+            _offsetCallback = null,
+            /**
+             * The callback to execute if the hit check passes
+             * @type Function
+             */
+            _hitCallback = null,
+            /**
+             * The spacecraft that fired the currently checked projectile/missile
+             * @type Function
+             */
+            _origin,
+            /**
+             * The spacecraft piloted by the player
+             * @type Spacecraft
+             */
+            _pilotedCraft,
+            /**
+             * The position matrix of the currently checked projectile/missile
+             * @type Float32Array
+             */
+            _positionMatrix,
+            /**
+             * The velocity matrix of the currently checked projectile/missile
+             * @type Float32Array
+             */
+            _velocityMatrix,
+            /**
+             * The amount of time to consider for the hit check, in milliseconds
+             * @type Number
+             */
+            _hitCheckDT,
+            /**
+             * Reusable vector to store the relative velocity in
+             * @type Number[3]
+             */
+            _relativeVelocityDirectionInWorldSpace = [0, 0, 0];
     Object.freeze(FlightMode);
     Object.freeze(WeaponAimStatus);
     Object.freeze(ThrusterUse);
@@ -366,6 +422,38 @@ define([
         return pilotedToHostile ? _hitboxOffset : 0;
     }
     /**
+     * Checks if the projectile/missile set up according to the module variables has hit the passed spacecraft, and also calls the necessary
+     * callbacks to handle the hit if it did.
+     * @param {Spacecraft} hitObject
+     * @returns {Boolean} Whether there was a hit or not
+     */
+    function _checkHitForObject(hitObject) {
+        var
+                relativeVelocityDirectionInObjectSpace,
+                relativeVelocity,
+                physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, offset;
+        if (_showHitboxesForHitchecks) {
+            hitObject.showHitbox();
+        }
+        physicalHitObject = hitObject.getPhysicalModel();
+        if (physicalHitObject && (
+                ((hitObject === _origin) && _canDamageSelf) ||
+                ((hitObject !== _origin) && (_canDamagePlayer || (hitObject !== _pilotedCraft))))) {
+            offset = _offsetCallback(hitObject, _isPiloted && _pilotedCraft.isHostile(hitObject));
+            hitPositionVectorInObjectSpace = physicalHitObject.checkHit(_positionMatrix, _velocityMatrix, _hitCheckDT, offset);
+            if (hitPositionVectorInObjectSpace) {
+                vec.setDiffTranslation3(_relativeVelocityDirectionInWorldSpace, _velocityMatrix, physicalHitObject.getVelocityMatrix());
+                relativeVelocity = vec.extractLength3(_relativeVelocityDirectionInWorldSpace);
+                relativeVelocityDirectionInObjectSpace = vec.prodMat4Vec3Aux(hitObject.getVisualModel().getOrientationMatrix(), _relativeVelocityDirectionInWorldSpace);
+                hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObject.getVisualModel().getModelMatrix());
+                relativeHitPositionVectorInWorldSpace = vec.diffVec3Mat4Aux(hitPositionVectorInWorldSpace, physicalHitObject.getPositionMatrix());
+                _hitCallback(hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, _relativeVelocityDirectionInWorldSpace, relativeVelocity, offset);
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
      * @callback HitCallback
      * @param {Spacecraft} hitObject 
      * @param {PhysicalObject} physicalHitObject 
@@ -390,42 +478,26 @@ define([
      * @param {HitCallback} hitCallback The function to call if an object is hit, passing the parameters of the hit to it
      */
     function _checkHit(positionMatrix, velocityMatrix, hitObjectOctree, hitCheckDT, origin, pilotedCraft, offsetCallback, hitCallback) {
-        var i, hitObjects, isHostile, isPiloted,
-                relativeVelocityDirectionInObjectSpace,
-                relativeVelocity, relativeVelocityDirectionInWorldSpace,
-                physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, offset;
-        hitObjects = hitObjectOctree.getObjects(
+        // we pass the _checkHitForObject as the callback to the octree, so we set up the module variables it uses to describe
+        // the parameters of the hit check (to avoid creating new functions by binding for every hit check)
+        _positionMatrix = positionMatrix;
+        _velocityMatrix = velocityMatrix;
+        _hitCheckDT = hitCheckDT;
+        _origin = origin;
+        _pilotedCraft = pilotedCraft;
+        _offsetCallback = offsetCallback;
+        _hitCallback = hitCallback;
+        _isPiloted = (origin === pilotedCraft);
+        _canDamageSelf = _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !_isPiloted);
+        _canDamagePlayer = _isPlayerFriendlyFireDamageEnabled || !pilotedCraft || pilotedCraft.isHostile(origin);
+        hitObjectOctree.executeForObjects(
                 Math.min(positionMatrix[12], positionMatrix[12] - velocityMatrix[12] * hitCheckDT * 0.001),
                 Math.max(positionMatrix[12], positionMatrix[12] - velocityMatrix[12] * hitCheckDT * 0.001),
                 Math.min(positionMatrix[13], positionMatrix[13] - velocityMatrix[13] * hitCheckDT * 0.001),
                 Math.max(positionMatrix[13], positionMatrix[13] - velocityMatrix[13] * hitCheckDT * 0.001),
                 Math.min(positionMatrix[14], positionMatrix[14] - velocityMatrix[14] * hitCheckDT * 0.001),
-                Math.max(positionMatrix[14], positionMatrix[14] - velocityMatrix[14] * hitCheckDT * 0.001));
-        if (_showHitboxesForHitchecks) {
-            for (i = 0; i < hitObjects.length; i++) {
-                hitObjects[i].showHitbox();
-            }
-        }
-        isHostile = !pilotedCraft || pilotedCraft.isHostile(origin);
-        isPiloted = (origin === pilotedCraft);
-        for (i = 0; i < hitObjects.length; i++) {
-            physicalHitObject = hitObjects[i].getPhysicalModel();
-            if (physicalHitObject && (
-                    ((hitObjects[i] === origin) && _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !isPiloted)) ||
-                    ((hitObjects[i] !== origin) && (_isPlayerFriendlyFireDamageEnabled || (hitObjects[i] !== pilotedCraft) || isHostile)))) {
-                offset = offsetCallback(hitObjects[i], isPiloted && pilotedCraft.isHostile(hitObjects[i]));
-                hitPositionVectorInObjectSpace = physicalHitObject.checkHit(positionMatrix, velocityMatrix, hitCheckDT, offset);
-                if (hitPositionVectorInObjectSpace) {
-                    relativeVelocityDirectionInWorldSpace = vec.diffTranslation3(velocityMatrix, physicalHitObject.getVelocityMatrix());
-                    relativeVelocity = vec.extractLength3(relativeVelocityDirectionInWorldSpace);
-                    relativeVelocityDirectionInObjectSpace = vec.prodVec3Mat4Aux(relativeVelocityDirectionInWorldSpace, mat.inverseOfRotation4Aux(hitObjects[i].getVisualModel().getOrientationMatrix()));
-                    hitPositionVectorInWorldSpace = vec.prodVec4Mat4Aux(hitPositionVectorInObjectSpace, hitObjects[i].getVisualModel().getModelMatrix());
-                    relativeHitPositionVectorInWorldSpace = vec.diffVec3Mat4Aux(hitPositionVectorInWorldSpace, physicalHitObject.getPositionMatrix());
-                    hitCallback(hitObjects[i], physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset);
-                    return;
-                }
-            }
-        }
+                Math.max(positionMatrix[14], positionMatrix[14] - velocityMatrix[14] * hitCheckDT * 0.001),
+                _checkHitForObject);
     }
     // ##############################################################################
     /**
