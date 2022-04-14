@@ -1569,7 +1569,7 @@ define([
         this._destruct(
                 ((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()),
                 mat.translation4vAux(hitPositionVectorInWorldSpace),
-                vec.scaled3(relativeVelocityDirectionInWorldSpace, -1),
+                vec.scaled3Aux(relativeVelocityDirectionInWorldSpace, -1),
                 physicalHitObject.getVelocityMatrix(),
                 hitObject.getSoundSource(),
                 true);

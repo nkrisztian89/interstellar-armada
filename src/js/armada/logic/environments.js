@@ -171,7 +171,7 @@ define([
                         layers[i].getTexturesOfTypes(layers[i].getShader().getTextureTypes(), graphics.getTextureQualityPreferenceList()),
                         layers[i].getColor(),
                         layers[i].getSize() * this._size,
-                        mat.translation4v(vec.scaled3(this._direction, config.getSetting(config.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))),
+                        mat.translation4v(vec.scaled3Aux(this._direction, config.getSetting(config.BATTLE_SETTINGS.BACKGROUND_OBJECT_DISTANCE))),
                         this._angle);
                 layerParticle.setRelativeSize(1.0);
                 scene.addBackgroundObject(layerParticle);

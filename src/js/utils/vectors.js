@@ -38,13 +38,7 @@ define(function () {
              * uniform without creating a new Float32Array.
              * @type Float32Array
              */
-            _auxFloatVector3 = new Float32Array([0, 0, 0]),
-            /**
-             * An auxiliary 4D vector using typed array that can be used to convert a regular vector to a format to be passed as a shader
-             * uniform without creating a new Float32Array.
-             * @type Float32Array
-             */
-            _auxFloatVector4 = new Float32Array([0, 0, 0, 0]);
+            _auxFloatVector3 = new Float32Array([0, 0, 0]);
     // -----------------------------------------------------------------------------
     // Constant vectors
     /**
@@ -117,29 +111,8 @@ define(function () {
         _auxFloatVector3[2] = v[2];
         return _auxFloatVector3;
     };
-    /**
-     * Converts the passed vector to a 4D Float32Array using an auxiliary vector instead of creating a new one. To be used when passing
-     * a vector as a shader uniform.
-     * @param {Number[4]} v
-     * @returns {Float32Array}
-     */
-    vec.floatVector4Aux = function (v) {
-        _auxFloatVector4[0] = v[0];
-        _auxFloatVector4[1] = v[1];
-        _auxFloatVector4[2] = v[2];
-        _auxFloatVector4[3] = v[3];
-        return _auxFloatVector4;
-    };
     // -----------------------------------------------------------------------------
     // Functions of a single vector
-    /**
-     * Returns the length of a 2D vector.
-     * @param {Number[2]} v The 2D vector.
-     * @returns {Number} Length of v.
-     */
-    vec.length2 = function (v) {
-        return Math.sqrt(v[0] * v[0] + v[1] * v[1]);
-    };
     /**
      * Returns the length of a 3D vector.
      * @param {Number[3]} v The 3D vector.
@@ -266,47 +239,6 @@ define(function () {
     };
     // -----------------------------------------------------------------------------
     // Functions that transform a vector and return a new, transformed vector
-
-    /**
-     * Returns a 4D vector created from a 3D one by appending the given w component.
-     * @param {Number[3]} v The original 3D vector.
-     * @param {Number} w The W component to be added.
-     * @returns {Number[4]} A 4D vector with the components of v, with w appended.
-     */
-    vec.vector4From3 = function (v, w) {
-        return [v[0], v[1], v[2], w];
-    };
-    /**
-     * Returns a 4D vector created from a 3D one by appending 1.0 to it.
-     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
-     * @param {Number[3]} v The original 3D vector.
-     * @returns {Number[4]} A 4D vector with the components of v, with 1.0 appended.
-     */
-    vec.vector4From3Aux = function (v) {
-        var aux = _auxVectors[_auxVectorIndex];
-        aux[0] = v[0];
-        aux[1] = v[1];
-        aux[2] = v[2];
-        aux[3] = 1;
-        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
-        return aux;
-    };
-    /**
-     * Returns a 3D vector with the passed coordinates
-     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} z
-     * @returns {Number[3]}
-     */
-    vec.vector3Aux = function (x, y, z) {
-        var aux = _auxVectors[_auxVectorIndex];
-        aux[0] = x;
-        aux[1] = y;
-        aux[2] = z;
-        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
-        return aux;
-    };
     /**
      * Returns the (1,0,0) 3D X unit vector
      * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
@@ -347,17 +279,6 @@ define(function () {
         return aux;
     };
     /**
-     * Returns the passed 2D vector scaled to unit length.
-     * @param {Number[2]} v A 2D vector
-     * @returns {Number[2]} The normalized 3D vector.
-     */
-    vec.normal2 = function (v) {
-        var
-                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1]),
-                factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
-        return [v[0] * factor, v[1] * factor];
-    };
-    /**
      * Returns the passed 3D vector scaled to unit length.
      * @param {Number[3]} v A 3D vector
      * @returns {Number[3]} The normalized 3D vector.
@@ -367,23 +288,6 @@ define(function () {
                 divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
                 factor = (divisor === 0) ? 1.0 : 1.0 / divisor;
         return [v[0] * factor, v[1] * factor, v[2] * factor];
-    };
-    /**
-     * Returns the passed 3D vector scaled to unit length.
-     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
-     * @param {Number[3]} v A 3D vector
-     * @returns {Number[3]} The normalized 3D vector.
-     */
-    vec.normal3Aux = function (v) {
-        var
-                divisor = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]),
-                factor = (divisor === 0) ? 1.0 : 1.0 / divisor,
-                aux = _auxVectors[_auxVectorIndex];
-        aux[0] = v[0] * factor;
-        aux[1] = v[1] * factor;
-        aux[2] = v[2] * factor;
-        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
-        return aux;
     };
     /**
      * Returns a 2D vector multiplied by a scalar.
@@ -422,36 +326,8 @@ define(function () {
         _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
         return aux;
     };
-    /**
-     * Returns a 4D vector multiplied by a scalar.
-     * @param {Number[4]} v A 3D vector.
-     * @param {Number} s A scalar.
-     * @returns {Number[4]} v multiplied by s.
-     */
-    vec.scaled4 = function (v, s) {
-        return [
-            v[0] * s, v[1] * s, v[2] * s, v[3] * s
-        ];
-    };
-    /**
-     * Returns the vector which Rotating the given 2D vector (or the first to components of a 3D, 4D vector) counter-clockwise results in.
-     * @param {Number[2]} v 
-     * @param {Number} angle The angle of rotation, in radians
-     * @returns {Number[2]} 
-     */
-    vec.rotated2 = function (v, angle) {
-        var
-                cosAngle = Math.cos(angle),
-                sinAngle = Math.sin(angle),
-                result = [0, 0];
-        result[0] = v[0] * cosAngle + v[1] * -sinAngle;
-        result[1] = v[0] * sinAngle + v[1] * cosAngle;
-        return result;
-    };
-
     // -----------------------------------------------------------------------------
     // Functions and operations with two vectors
-
     /**
      * Returns the sum of two 3D vectors.
      * @param {Number[3]} v1 The first 3D vector.
@@ -490,20 +366,6 @@ define(function () {
         aux[2] = v[2] + m[14];
         _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
         return aux;
-    };
-    /**
-     * Returns the sum of the 3D vectors given in the passed array.
-     * @param {Number[3][]} vectors
-     * @returns {Number[3]}
-     */
-    vec.sumArray3 = function (vectors) {
-        var result = [0, 0, 0], i;
-        for (i = 0; i < vectors.length; i++) {
-            result[0] += vectors[i][0];
-            result[1] += vectors[i][1];
-            result[2] += vectors[i][2];
-        }
-        return result;
     };
     /**
      * Returns the difference of two 3D vectors.
@@ -561,15 +423,6 @@ define(function () {
     };
     /**
      * Returns the difference of the 3D translation components of two 4x4 transformation matrices.
-     * @param {Float32Array} m1 The first 4x4 matrix.
-     * @param {Float32Array} m2 The second 4x4 matrix.
-     * @returns {Number[3]}
-     */
-    vec.diffTranslation3 = function (m1, m2) {
-        return [m1[12] - m2[12], m1[13] - m2[13], m1[14] - m2[14]];
-    };
-    /**
-     * Returns the difference of the 3D translation components of two 4x4 transformation matrices.
      * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
      * @param {Float32Array} m1 The first 4x4 matrix.
      * @param {Float32Array} m2 The second 4x4 matrix.
@@ -621,15 +474,6 @@ define(function () {
         return aux;
     };
     /**
-     * Returns the angle of the two 2D unit vectors in radians.
-     * @param {Number[2]} v1 The first 2D vector.
-     * @param {Number[2]} v2 The second 2D vector.
-     * @returns {Number} The angle in radian.
-     */
-    vec.angle2u = function (v1, v2) {
-        return Math.acos(v1[0] * v2[0] + v1[1] * v2[1]);
-    };
-    /**
      * Returns the angle of the a 2D vector and the X unit vector
      * Returns NaN for null vectors!
      * @param {Number} x The x coordinate of the vector
@@ -648,18 +492,6 @@ define(function () {
      */
     vec.angle2y = function (x, y) {
         return Math.acos(y / Math.sqrt(x * x + y * y));
-    };
-    /**
-     * Returns the angle of the two 2D unit vectors in radians. The dot product
-     * of the vectors is capped between -1.0 and 1.0, and so this cannot return
-     * NaN accidentally (with the product falling slightly out of range due to
-     * float inaccuracy)
-     * @param {Number[2]} v1 The first 2D vector.
-     * @param {Number[2]} v2 The second 2D vector.
-     * @returns {Number} The angle in radian.
-     */
-    vec.angle2uCapped = function (v1, v2) {
-        return (Math.acos(Math.min(Math.max(-1.0, v1[0] * v2[0] + v1[1] * v2[1]), 1.0)));
     };
     /**
      * Returns the angle of the a 2D vector and the X unit vector. This cannot return
@@ -704,23 +536,8 @@ define(function () {
     vec.angle3uCapped = function (v1, v2) {
         return Math.acos(Math.min(Math.max(-1.0, v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]), 1.0));
     };
-
     // -----------------------------------------------------------------------------
     // Multiplying vectors with matrices.
-
-    /**
-     * Multiplies the given 3D row vector with the given 3x3 matrix. (from the right)
-     * @param {Number[3]} v A 3D vector.
-     * @param {Float32Array} m A 3x3 matrix.
-     * @returns {Number[3]} v*m
-     */
-    vec.prodVec3Mat3 = function (v, m) {
-        return [
-            m[0] * v[0] + m[3] * v[1] + m[6] * v[2],
-            m[1] * v[0] + m[4] * v[1] + m[7] * v[2],
-            m[2] * v[0] + m[5] * v[1] + m[8] * v[2]
-        ];
-    };
     /**
      * Multiplies the given 3D row vector with the given 3x3 matrix. (from the right)
      * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
@@ -730,23 +547,11 @@ define(function () {
      */
     vec.prodVec3Mat3Aux = function (v, m) {
         var aux = _auxVectors[_auxVectorIndex];
-        vec.setProdVec3Mat3(aux, v, m);
+        aux[0] = m[0] * v[0] + m[3] * v[1] + m[6] * v[2];
+        aux[1] = m[1] * v[0] + m[4] * v[1] + m[7] * v[2];
+        aux[2] = m[2] * v[0] + m[5] * v[1] + m[8] * v[2];
         _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
         return aux;
-    };
-    /**
-     * Multiplies the given 3D row vector with the top left 3x3 submatrix of the 
-     * given 4x4 matrix. (from the right)
-     * @param {Number[3]} v A 3D vector.
-     * @param {Float32Array} m A 4x4 matrix.
-     * @returns {Number[3]} v*m'
-     */
-    vec.prodVec3Mat4 = function (v, m) {
-        return [
-            m[0] * v[0] + m[4] * v[1] + m[8] * v[2],
-            m[1] * v[0] + m[5] * v[1] + m[9] * v[2],
-            m[2] * v[0] + m[6] * v[1] + m[10] * v[2]
-        ];
     };
     /**
      * Multiplies the given 3D row vector with the top left 3x3 submatrix of the the given 4x4 matrix. (from the right)
@@ -762,20 +567,6 @@ define(function () {
         return aux;
     };
     /**
-     * Multiplies the given 4D row vector with the given 4x4 matrix. (from the right)
-     * @param {Number[4]} v A 4D vector.
-     * @param {Float32Array} m A 4x4 matrix.
-     * @returns {Number[4]} v*m
-     */
-    vec.prodVec4Mat4 = function (v, m) {
-        return [
-            m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3],
-            m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3],
-            m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * v[3],
-            m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3]
-        ];
-    };
-    /**
      * Returns the product of the given 4D row vector with the given 4x4 matrix. (from the right)
      * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
      * @param {Number[4]} v A 4D vector.
@@ -789,32 +580,6 @@ define(function () {
         return aux;
     };
     /**
-     * Multiplies the a 4D row vector: (X, 0, 0, 1) with the given 4x4 matrix. (from the right)
-     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
-     * @param {Number} x The X coordinate of the vector
-     * @param {Float32Array} m A 4x4 matrix.
-     * @returns {Number[4]} v*m
-     */
-    vec.prodVecX4Mat4Aux = function (x, m) {
-        var aux = _auxVectors[_auxVectorIndex];
-        vec.setProdVecX4Mat4(aux, x, m);
-        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
-        return aux;
-    };
-    /**
-     * Multiplies the a 4D row vector: (0, Y, 0, 1) with the given 4x4 matrix. (from the right)
-     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
-     * @param {Number} y The Y coordinate of the vector
-     * @param {Float32Array} m A 4x4 matrix.
-     * @returns {Number[4]} v*m
-     */
-    vec.prodVecY4Mat4Aux = function (y, m) {
-        var aux = _auxVectors[_auxVectorIndex];
-        vec.setProdVecY4Mat4(aux, y, m);
-        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
-        return aux;
-    };
-    /**
      * Returns the product of the translation component of a 4x4 matrix and the rotation component of another 4x4 matrix.
      * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
      * @param {Number[4]} tm A 4x4 transformation matrix (only the translation component is considered)
@@ -823,7 +588,9 @@ define(function () {
      */
     vec.prodTranslationRotation3Aux = function (tm, rm) {
         var aux = _auxVectors[_auxVectorIndex];
-        vec.setProdTranslationRotation3(aux, tm, rm);
+        aux[0] = rm[0] * tm[12] + rm[4] * tm[13] + rm[8] * tm[14];
+        aux[1] = rm[1] * tm[12] + rm[5] * tm[13] + rm[9] * tm[14];
+        aux[2] = rm[2] * tm[12] + rm[6] * tm[13] + rm[10] * tm[14];
         _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
         return aux;
     };
@@ -840,19 +607,6 @@ define(function () {
         vec.setProdTranslationModel3(aux, tm, mm);
         _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
         return aux;
-    };
-    /**
-     * Multiplies the given 3x3 matrix with the given 3D row vector. (from the right)
-     * @param {Float32Array} m A 3x3 matrix.
-     * @param {Number[3]} v A 3D vector.
-     * @returns {Number[3]} m*v
-     */
-    vec.prodMat3Vec3 = function (m, v) {
-        return [
-            m[0] * v[0] + m[1] * v[1] + m[2] * v[2],
-            m[3] * v[0] + m[4] * v[1] + m[5] * v[2],
-            m[6] * v[0] + m[7] * v[1] + m[8] * v[2]
-        ];
     };
     /**
      * Multiplies the given 3D row vector with the top left 3x3 submatrix of the 
@@ -879,20 +633,6 @@ define(function () {
         vec.setProdMat4Vec3(aux, m, v);
         _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
         return aux;
-    };
-    /**
-     * Multiplies the given 4x4 matrix with the given 4D row vector. (from the right)
-     * @param {Float32Array} m A 4x4 matrix.
-     * @param {Number[4]} v A 4D vector.
-     * @returns {Number[4]} m*v
-     */
-    vec.prodMat4Vec4 = function (m, v) {
-        return [
-            m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3] * v[3],
-            m[4] * v[0] + m[5] * v[1] + m[6] * v[2] + m[7] * v[3],
-            m[8] * v[0] + m[9] * v[1] + m[10] * v[2] + m[11] * v[3],
-            m[12] * v[0] + m[13] * v[1] + m[14] * v[2] + m[15] * v[3]
-        ];
     };
     // -----------------------------------------------------------------------------
     // Functions that modify an existing vector
@@ -925,14 +665,6 @@ define(function () {
         left[1] = right[1];
         left[2] = right[2];
         left[3] = right[3];
-    };
-    /**
-     * Negates the passed 2D vector
-     * @param {Number[2]} v
-     */
-    vec.negate2 = function (v) {
-        v[0] = -v[0];
-        v[1] = -v[1];
     };
     /**
      * Scales the passed 2D vector to unit length.
@@ -1052,6 +784,18 @@ define(function () {
         v1[2] -= v2[2];
     };
     /**
+     * Modifies the passed 3D vector v to be equal to the cross product of the passed
+     * vectors v1 and v2.
+     * @param {Number[3]} v
+     * @param {Number[3]} v1
+     * @param {Number[3]} v2
+     */
+    vec.setCross3 = function (v, v1, v2) {
+        v[0] = v1[1] * v2[2] - v1[2] * v2[1];
+        v[1] = v1[2] * v2[0] - v1[0] * v2[2];
+        v[2] = v1[0] * v2[1] - v1[1] * v2[0];
+    };
+    /**
      * Cross multiplies the passed v1 vector with v2 in-place.
      * @param {Number[3]} v1 A 3D vector.
      * @param {Number[3]} v2 A 3D vector.
@@ -1097,17 +841,6 @@ define(function () {
         v[0] = m[0] * vox + m[3] * voy + m[6] * voz;
         v[1] = m[1] * vox + m[4] * voy + m[7] * voz;
         v[2] = m[2] * vox + m[5] * voy + m[8] * voz;
-    };
-    /**
-     * Sets the given vector to be equal to the product of the given 3D row vector and the given 3x3 matrix.
-     * @param {Number[3]} v The 3D vector to modify
-     * @param {Number[3]} vl A 3D vector on the left of the multiplication
-     * @param {Float32Array} mr A 3x3 matrix on the right of the multiplication
-     */
-    vec.setProdVec3Mat3 = function (v, vl, mr) {
-        v[0] = mr[0] * vl[0] + mr[3] * vl[1] + mr[6] * vl[2];
-        v[1] = mr[1] * vl[0] + mr[4] * vl[1] + mr[7] * vl[2];
-        v[2] = mr[2] * vl[0] + mr[5] * vl[1] + mr[8] * vl[2];
     };
     /**
      * Multiplies the given 3D row vector by the top left 3x3 submatrix of the given 4x4 matrix from the right, modifying it in-place.
@@ -1180,30 +913,6 @@ define(function () {
         v[3] = mr[3] * vl[0] + mr[7] * vl[1] + mr[11] * vl[2] + mr[15] * vl[3];
     };
     /**
-     * Sets the given vector to be equal to the product of the 4D row vector: (X, 0, 0, 1) and the given 4x4 matrix.
-     * @param {Number[4]} v The 4D vector to modify
-     * @param {Number} x The X coordinate of the 4D vector on the left of the multiplication
-     * @param {Float32Array} mr A 4x4 matrix on the right of the multiplication
-     */
-    vec.setProdVecX4Mat4 = function (v, x, mr) {
-        v[0] = mr[0] * x + mr[12];
-        v[1] = mr[1] * x + mr[13];
-        v[2] = mr[2] * x + mr[14];
-        v[3] = mr[3] * x + mr[15];
-    };
-    /**
-     * Sets the given vector to be equal to the product of the 4D row vector: (0, Y, 0, 1) and the given 4x4 matrix.
-     * @param {Number[4]} v The 4D vector to modify
-     * @param {Number} y The Y coordinate of the 4D vector on the left of the multiplication
-     * @param {Float32Array} mr A 4x4 matrix on the right of the multiplication
-     */
-    vec.setProdVecY4Mat4 = function (v, y, mr) {
-        v[0] = mr[4] * y + mr[12];
-        v[1] = mr[5] * y + mr[13];
-        v[2] = mr[6] * y + mr[14];
-        v[3] = mr[7] * y + mr[15];
-    };
-    /**
      * Sets the given vector to be equal to the product of the top left 3x3 submatrix of the passed 4x4 matrix and
      * the passed vector.
      * @param {Nubmer[3]} v The vectory to modify
@@ -1214,18 +923,6 @@ define(function () {
         v[0] = m[0] * vr[0] + m[1] * vr[1] + m[2] * vr[2];
         v[1] = m[4] * vr[0] + m[5] * vr[1] + m[6] * vr[2];
         v[2] = m[8] * vr[0] + m[9] * vr[1] + m[10] * vr[2];
-    };
-    /**
-     * Sets the given 3D vector to be equal to the product of the translation component of a 4x4 matrix and the rotation component of
-     * another 4x4 matrix
-     * @param {Number[3]} v The 3D vector to modify
-     * @param {Float32Array} tm A 4x4 transformation matrix (only the translation component is considered)
-     * @param {Float32Array} rm A 4x4 transformation matrix (only the rotation/scaling component is considered)
-     */
-    vec.setProdTranslationRotation3 = function (v, tm, rm) {
-        v[0] = rm[0] * tm[12] + rm[4] * tm[13] + rm[8] * tm[14];
-        v[1] = rm[1] * tm[12] + rm[5] * tm[13] + rm[9] * tm[14];
-        v[2] = rm[2] * tm[12] + rm[6] * tm[13] + rm[10] * tm[14];
     };
     /**
      * Sets the given 3D vector to be equal to the product of the translation component of a 4x4 matrix and a 4x4 model matrix (a matrix

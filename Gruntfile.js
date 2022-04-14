@@ -320,15 +320,25 @@ module.exports = function (grunt) {
                 ["resetDebugStats", "egomModel"],
                 ["getDebugStats", "egomModel"],
                 ["getDebugInfo"],
-                ["cuboidModel", null, true]
+                ["cuboidModel", null, true],
+                ["toString3", "vec", false, true],
+                ["toString4", "vec", false, true]
             ].map(
             function (replacement) {
-                var functionName = replacement[0], moduleName = (replacement.length > 1) ? replacement[1] : null, direct = (replacement.length > 2) ? replacement[2] : false,
-                        result = direct ? [{
+                var
+                        functionName = replacement[0],
+                        moduleName = (replacement.length > 1) ? replacement[1] : null,
+                        direct = (replacement.length > 2) ? replacement[2] : false,
+                        expression = (replacement.length > 3) ? replacement[3] : false,
+                        result = expression ? [{
                                 // remove the function definition and export (up to 2 levels of curly braces nesting in function body)
-                                match: new RegExp(functionName + ": function \\((\\w+,*\\s*)*\\) {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*},*", "g"),
+                                match: new RegExp(moduleName + "\\." + functionName + " = function \\((\\w+,*\\s*)*\\) {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*};", "g"),
                                 replacement: ""
-                            }] :
+                            }] : direct ? [{
+                        // remove the function definition and export (up to 2 levels of curly braces nesting in function body)
+                        match: new RegExp(functionName + ": function \\((\\w+,*\\s*)*\\) {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*},*", "g"),
+                        replacement: ""
+                    }] :
                         [{
                                 // remove the function definition (up to 2 levels of curly braces nesting in function body)
                                 match: new RegExp("function " + functionName + "\\((\\w+,*\\s*)*\\) {(?:[^}{]+|{(?:[^}{]+|{[^}{]*})*})*}", "g"),

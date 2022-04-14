@@ -2241,7 +2241,7 @@ define([
         v = [up[0], v[0]];
         vec.rotate2(v, angles.yaw);
         up = [v[0], v[1], up[2]];
-        this.setOrientationMatrix(mat.lookTowards4(vec.scaled3(direction, -1), up));
+        this.setOrientationMatrix(mat.lookTowards4(vec.scaled3Aux(direction, -1), up));
         this._positionVector.length = 3;
         /**
          * Cached value of the size to use for rendering, needed for in number (for uniform) and array (instance attribute) format

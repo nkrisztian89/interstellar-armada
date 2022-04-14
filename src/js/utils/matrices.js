@@ -2982,8 +2982,8 @@ define([
         var
                 vx = vec.normalize3([m[0], m[1], m[2]]),
                 vy = vec.normalize3([m[4], m[5], m[6]]),
-                vz = vec.cross3(vx, vy);
-        vy = vec.cross3(vz, vx);
+                vz = vec.cross3Aux(vx, vy);
+        vec.setCross3(vy, vz, vx);
         m[0] = vx[0];
         m[1] = vx[1];
         m[2] = vx[2];

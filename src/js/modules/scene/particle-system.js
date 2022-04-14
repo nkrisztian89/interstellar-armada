@@ -392,7 +392,7 @@ define([
         directionVector = (Math.abs(this._planeNormal[0]) < 0.75) ? vec.x3Aux() : ((Math.abs(this._planeNormal[1]) < 0.75) ? vec.y3Aux() : vec.z3Aux());
         vec.mulCross3(directionVector, this._planeNormal);
         vec.normalize3(directionVector);
-        velocityVector = vec.scaled3(directionVector, velocity);
+        velocityVector = vec.scaled3Aux(directionVector, velocity);
         vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(vec.cross3Aux(directionVector, this._planeNormal), (Math.random() - 0.5) * this._directionSpread));
         vec.mulVec3Mat3(velocityVector, mat.rotation3Aux(this._planeNormal, Math.random() * utils.DOUBLE_PI));
         particle.setVelocity(velocityVector[0], velocityVector[1], velocityVector[2]);

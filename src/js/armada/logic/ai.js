@@ -1126,7 +1126,7 @@ define([
                 missile,
                 /** @type Number[3] */
                 positionVector, newOffset,
-                directionToTarget, relativeTargetDirection, relativeBlockerPosition,
+                relativeTargetDirection, relativeBlockerPosition,
                 /** @type Number */
                 i,
                 targetHitTime, hitpoints,
@@ -1398,14 +1398,14 @@ define([
                                 if (this._targetDistance <= maxDistance) {
                                     this._chargePhase = ChargePhase.EVADE;
                                     this._spacecraft.changeFlightMode(equipment.FlightMode.COMBAT);
-                                    directionToTarget = vec.normal3(_vectorToTarget);
+                                    vec.normalize3(_vectorToTarget);
                                     vec.setSum3(this._chargeDestination,
                                             positionVector,
                                             vec.scaled3Aux(
                                                     vec.diff3Aux(
                                                             vec.sum3Aux(
                                                                     _targetPositionVector,
-                                                                    vec.scaled3Aux(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(directionToTarget), mat.rotation3Aux(directionToTarget, Math.random() * utils.DOUBLE_PI))), maxDistance)),
+                                                                    vec.scaled3Aux(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(_vectorToTarget), mat.rotation3Aux(_vectorToTarget, Math.random() * utils.DOUBLE_PI))), maxDistance)),
                                                             positionVector),
                                                     CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
                                 }

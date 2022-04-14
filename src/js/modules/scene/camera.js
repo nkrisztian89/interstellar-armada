@@ -616,9 +616,9 @@ define([
                     }
                 } else {
                     if (this._movesRelativeToObject) {
-                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.prodVec3Mat4Aux(velocityVector, mat.ROTATION_X_270), dt * 0.001));
+                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3Aux(vec.prodVec3Mat4Aux(velocityVector, mat.ROTATION_X_270), dt * 0.001));
                     } else {
-                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3(vec.prodVec3Mat4Aux(
+                        mat.translateByVector(this._relativePositionMatrix, vec.scaled3Aux(vec.prodVec3Mat4Aux(
                                 velocityVector,
                                 mat.prod3x3SubOf4Aux(
                                         worldOrientationMatrix,
@@ -1065,18 +1065,18 @@ define([
                 if (!worldPositionMatrix) {
                     application.crash();
                 } else {
-                    dirTowardsObject = vec.normalize3(vec.diff3(this.getFollowedObjectsPositionVector(), mat.translationVector3(worldPositionMatrix)));
+                    dirTowardsObject = vec.normalize3(vec.diffVec3Mat4Aux(this.getFollowedObjectsPositionVector(), worldPositionMatrix));
                     if (!this._fps) {
                         this._worldOrientationMatrix[8] = dirTowardsObject[0];
                         this._worldOrientationMatrix[9] = dirTowardsObject[1];
                         this._worldOrientationMatrix[10] = dirTowardsObject[2];
                         this._worldOrientationMatrix[11] = 0;
-                        axis = vec.cross3(vec.UNIT3_X, dirTowardsObject);
+                        axis = vec.cross3Aux(vec.UNIT3_X, dirTowardsObject);
                         this._worldOrientationMatrix[4] = axis[0];
                         this._worldOrientationMatrix[5] = axis[1];
                         this._worldOrientationMatrix[6] = axis[2];
                         this._worldOrientationMatrix[7] = 0;
-                        axis = vec.cross3(dirTowardsObject, axis);
+                        axis = vec.cross3Aux(dirTowardsObject, axis);
                         this._worldOrientationMatrix[0] = axis[0];
                         this._worldOrientationMatrix[1] = axis[1];
                         this._worldOrientationMatrix[2] = axis[2];
@@ -1101,7 +1101,7 @@ define([
                                 application.crash();
                         }
                         if (baseOrientationMatrix) {
-                            dirTowardsObject = vec.prodVec3Mat4Aux(dirTowardsObject, mat.inverseOfRotation4Aux(baseOrientationMatrix));
+                            dirTowardsObject = vec.prodMat4Vec3Aux(baseOrientationMatrix, dirTowardsObject);
                         } else {
                             baseOrientationMatrix = mat.IDENTITY4;
                         }

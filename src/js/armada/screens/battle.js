@@ -3746,7 +3746,7 @@ define([
                         visible1 = true;
                     }
                     // weapon crosshairs in the lines of fire
-                    futureDistance = vec.length3(vec.diff3(futureTargetPosition, position));
+                    futureDistance = vec.length3(vec.diff3Aux(futureTargetPosition, position));
                     m = craft.getPhysicalModel().getOrientationMatrix();
                     scale = craft.getVisualModel().getScalingMatrix()[0];
                     scaledOriMatrix = craft.getScaledOriMatrix();
@@ -3758,11 +3758,9 @@ define([
                         }
                         if (weapons[i].isFixed()) {
                             slotPosition = weapons[i].getOrigoPositionMatrix();
-                            indicatorPosition = vec.sumArray3([
-                                position,
-                                vec.scaled3Aux(mat.getRowB43(m), futureDistance),
-                                vec.scaled3Aux(mat.getRowA43(m), slotPosition[12] * scale),
-                                vec.scaled3Aux(mat.getRowC43(m), slotPosition[14] * scale)]);
+                            indicatorPosition = vec.sum3(position, vec.scaled3Aux(mat.getRowB43(m), futureDistance));
+                            vec.add3(indicatorPosition, vec.scaled3Aux(mat.getRowA43(m), slotPosition[12] * scale));
+                            vec.add3(indicatorPosition, vec.scaled3Aux(mat.getRowC43(m), slotPosition[14] * scale));
                         } else {
                             basePointPosition = weapons[i].getBasePointPosVector(scaledOriMatrix);
                             indicatorPosition = vec.sum3(
@@ -4155,7 +4153,8 @@ define([
                     direction[0] *= aspect;
                     vec.normalize2(direction);
                     if (behind) {
-                        vec.negate2(direction);
+                        direction[0] *= -1;
+                        direction[1] *= -1;
                     }
                     arrowPositionRadius = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHIP_ARROW_POSITION_RADIUS) * (utils.yScalesWithHeight(_centerCrosshairScaleMode, canvas.width, canvas.height) ? (1 / aspect) : 1);
                     indicator.setPosition(vec.scaled2([direction[0], direction[1] * aspect], arrowPositionRadius));
