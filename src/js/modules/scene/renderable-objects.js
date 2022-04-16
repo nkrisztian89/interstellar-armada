@@ -198,7 +198,7 @@ define([
     RenderableObject.prototype.init = function (shader, renderedWithDepthMask, renderedWithoutDepthMask, instancedShader, castsShadows) {
         this._shader = shader;
         this._textures = {};
-        this._textureRoles = [];
+        this._textureRoles.length = 0;
         this._isRenderedWithDepthMask = renderedWithDepthMask === undefined ? true : renderedWithDepthMask;
         this._isRenderedWithoutDepthMask = renderedWithoutDepthMask === undefined ? true : renderedWithoutDepthMask;
         this._instancedShader = instancedShader || null;
@@ -1973,12 +1973,12 @@ define([
      * @override
      * @param {Float32Array} matrix
      */
-    Particle.prototype.rotateByMatrix3 = function (matrix) {
+    Particle.prototype.rotateByMatrix = function (matrix) {
         if (this._velocityVector) {
-            vec.mulVec3Mat3(this._velocityVector, matrix);
+            vec.mulVec3Mat4(this._velocityVector, matrix);
             this._updateVelocity();
         } else {
-            RenderableObject3D.prototype.rotateByMatrix3.call(this, matrix);
+            RenderableObject3D.prototype.rotateByMatrix.call(this, matrix);
         }
     };
     /**

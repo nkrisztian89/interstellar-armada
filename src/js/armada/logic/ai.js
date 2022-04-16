@@ -671,7 +671,7 @@ define([
                                                 mat.rotationX4Aux((_jumpInPositionSeed() - 0.5) * Math.PI),
                                                 mat.rotationZ4Aux(_jumpInPositionSeed() * utils.DOUBLE_PI)));
                                         this._spacecraft.setPhysicalPosition(vec.scaled3Aux(
-                                                mat.getRowB4(this._spacecraft.getPhysicalOrientationMatrix()),
+                                                mat.getRowB43(this._spacecraft.getPhysicalOrientationMatrix()),
                                                 -data.jump.distance));
                                     } else {
                                         // overwriting position

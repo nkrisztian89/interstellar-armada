@@ -404,7 +404,7 @@ define([
                 if (_wireframeModel) {
                     _wireframeModel.setOrientationMatrix(_model.getOrientationMatrix());
                 }
-                mat.setMatrix4(_currentContext.modelOrientationMatrix, _model.getOrientationMatrix());
+                mat.copyRotation4(_currentContext.modelOrientationMatrix, _model.getOrientationMatrix());
                 if (_currentContext.functions.onModelRotate) {
                     _currentContext.functions.onModelRotate();
                 }
@@ -417,7 +417,7 @@ define([
                     0]);
                 camera.update(10000);
                 camera.setAngularVelocityVector([0, 0, 0]);
-                mat.setMatrix4(_currentContext.cameraOrientationMatrix, camera.getCameraOrientationMatrix());
+                mat.copyRotation4(_currentContext.cameraOrientationMatrix, camera.getCameraOrientationMatrix());
             }
         }
         if (_turningCamera) {
@@ -425,7 +425,7 @@ define([
                 camera.setAngularVelocityVector([-rotB, -rotA, 0]);
                 camera.update(10000);
                 camera.setAngularVelocityVector([0, 0, 0]);
-                mat.setMatrix4(_currentContext.cameraOrientationMatrix, camera.getCameraOrientationMatrix());
+                mat.copyRotation4(_currentContext.cameraOrientationMatrix, camera.getCameraOrientationMatrix());
             } else {
                 _scene.getCamera().setControlledVelocityVector([
                     -(event.screenX - _mousePos[0]) * CAMERA_PAN_MOUSE_SENSITIVITY,

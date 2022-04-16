@@ -423,12 +423,12 @@ define([
      * @param {Number} mass The mass of the physical object in kg.
      * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the initial position of the object. (in meters)
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix describing the initial orientation of the object.
-     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix describing the initial scaling of the object.
+     * @param {Number} scale The initial uniform scaling factor of the object.
      * @param {Float32Array} initialVelocityMatrix The 4x4 translation matrix  describing the initial velocity of the object. (in m/s)
      * @param {Body[]} [bodies] The array of bodies this object is comprised of.
      * @param {Number} [dragFactor=1] If there is a global drag coefficient set, the drag experienced by this object will be multiplied by this factor
      */
-    function PhysicalObject(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, dragFactor) {
+    function PhysicalObject(mass, positionMatrix, orientationMatrix, scale, initialVelocityMatrix, bodies, dragFactor) {
         /**
          * The mass in kilograms.
          * @type Number
@@ -543,24 +543,26 @@ define([
             reverse: false
         };
         if (positionMatrix) {
-            this.init(mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, dragFactor);
+            this.init(mass, positionMatrix, orientationMatrix, scale, initialVelocityMatrix, bodies, dragFactor);
         }
     }
     /**
      * @param {Number} mass The mass of the physical object in kg.
      * @param {Float32Array} positionMatrix The 4x4 translation matrix describing the initial position of the object. (in meters)
      * @param {Float32Array} orientationMatrix The 4x4 rotation matrix describing the initial orientation of the object.
-     * @param {Float32Array} scalingMatrix The 4x4 scaling matrix describing the initial scaling of the object.
+     * @param {Number} scale The initial uniform scaling factor of the object.
      * @param {Float32Array} initialVelocityMatrix The 4x4 translation matrix  describing the initial velocity of the object. (in m/s)
      * @param {Body[]} [bodies] The array of bodies this object is comprised of.
      * @param {Number} [dragFactor=1] If there is a global drag coefficient set, the drag experienced by this object will be multiplied by this factor
      */
-    PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scalingMatrix, initialVelocityMatrix, bodies, dragFactor) {
+    PhysicalObject.prototype.init = function (mass, positionMatrix, orientationMatrix, scale, initialVelocityMatrix, bodies, dragFactor) {
         this._mass = mass;
         this._inverseMass = 1 / mass;
         mat.copyTranslation4(this._positionMatrix, positionMatrix);
-        mat.setMatrix4(this._orientationMatrix, orientationMatrix);
-        mat.copyScaling4(this._scalingMatrix, scalingMatrix);
+        mat.copyRotation4(this._orientationMatrix, orientationMatrix);
+        this._scalingMatrix[0] = scale;
+        this._scalingMatrix[5] = scale;
+        this._scalingMatrix[10] = scale;
         this._modelMatrixValid = false;
         this._modelMatrixInverseValid = false;
         mat.setIdentity4(this._velocityMatrix);

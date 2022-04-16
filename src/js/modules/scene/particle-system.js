@@ -530,7 +530,7 @@ define([
      * @param {Number} dt
      */
     ParticleSystem.prototype.performAnimate = function (dt) {
-        var i, j, particles, modelMatrix, orientationMatrix;
+        var i, j, particles, modelMatrix;
         if ((!this._keepAlive) && (this._age > this._duration)) {
             this.getNode().markAsReusable(true);
             return;
@@ -545,10 +545,9 @@ define([
                     }
                 } else if (this._hasRelativeOrientation) {
                     modelMatrix = this.getModelMatrix();
-                    orientationMatrix = mat.matrix3from4Aux(modelMatrix);
                     for (j = 0; j < particles.length; j++) {
                         particles[j].translateByMatrix(modelMatrix);
-                        particles[j].rotateByMatrix3(orientationMatrix);
+                        particles[j].rotateByMatrix(modelMatrix);
                         this.getNode().getScene().addNode(particles[j].getNode() || new sceneGraph.RenderableNode(particles[j], false, false, true));
                     }
                 } else {

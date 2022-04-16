@@ -322,7 +322,12 @@ module.exports = function (grunt) {
                 ["getDebugInfo"],
                 ["cuboidModel", null, true],
                 ["toString3", "vec", false, true],
-                ["toString4", "vec", false, true]
+                ["toString4", "vec", false, true],
+                ["clearMatrixCount", "mat", false, true],
+                ["getMatrixCount", "mat", false, true],
+                ["toString3", "mat", false, true],
+                ["toString4", "mat", false, true],
+                ["toHTMLString4", "mat", false, true]
             ].map(
             function (replacement) {
                 var
@@ -384,12 +389,14 @@ module.exports = function (grunt) {
                 "_stereoscopicFrameBuffer",
                 "_leftShader",
                 "_rightShader",
-                "_sideBySideOriginalAspect"
+                "_sideBySideOriginalAspect",
+                "_leftEye",
+                "_rightEye"
             ].map(
             function (fieldName) {
                 return {
                     // remove field setter
-                    match: new RegExp("this\\." + fieldName + " = [\\w\\.]+;", "g"),
+                    match: new RegExp("this\\." + fieldName + " = [^;]+;", "g"),
                     replacement: ""
                 };
             }),
@@ -722,6 +729,12 @@ module.exports = function (grunt) {
                         }, {
                             match: '!silentDiscard',
                             replacement: 'false'
+                        }, {
+                            match: 'if (this._leftEye) {',
+                            replacement: 'if (false) {'
+                        }, {
+                            match: 'if (this._rightEye) {',
+                            replacement: 'if (false) {'
                         }
                     ]))),
                     usePrefix: false

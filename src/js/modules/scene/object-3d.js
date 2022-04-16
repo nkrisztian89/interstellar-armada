@@ -155,7 +155,7 @@ define([
         function init(positionMatrix, orientationMatrix, scalingMatrix, size, childrenAlwaysInside, ignoreTransform) {
             this._parent = null;
             mat.copyTranslation4(this._positionMatrix, positionMatrix || mat.IDENTITY4);
-            mat.setMatrix4(this._orientationMatrix, orientationMatrix || mat.IDENTITY4);
+            mat.copyRotation4(this._orientationMatrix, orientationMatrix || mat.IDENTITY4);
             mat.copyScaling4(this._scalingMatrix, scalingMatrix || mat.IDENTITY4);
             this._modelMatrixForFrame = this._modelMatrix;
             this._cascadeScalingMatrixValid = false;
@@ -386,7 +386,7 @@ define([
          * @param {Float32Array} m
          */
         function setOrientationM4(m) {
-            mat.setMatrix4(this._orientationMatrix, m);
+            mat.copyRotation4(this._orientationMatrix, m);
             this._modelMatrixValid = false;
             if (this._handleOrientationChanged) {
                 this._handleOrientationChanged();
@@ -447,15 +447,6 @@ define([
          */
         function rotateByMatrix(matrix) {
             mat.mulRotationRotation4(this._orientationMatrix, matrix);
-            this.setOrientationMatrix();
-        }
-        /**
-         * Rotates the current orientation by multiplying it by the given 
-         * 3x3 rotation matrix.
-         * @param {Float32Array} matrix
-         */
-        function rotateByMatrix3(matrix) {
-            mat.mulRotation43(this._orientationMatrix, matrix);
             this.setOrientationMatrix();
         }
         //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -673,7 +664,6 @@ define([
             this.prototype.getZDirectionVector = getZDirectionVector;
             this.prototype.rotate = rotate;
             this.prototype.rotateByMatrix = rotateByMatrix;
-            this.prototype.rotateByMatrix3 = rotateByMatrix3;
             this.prototype.getCascadeScalingMatrix = getCascadeScalingMatrix;
             this.prototype.getModelMatrix = getModelMatrix;
             this.prototype.getSize = getSize;

@@ -1080,15 +1080,15 @@ define([
          */
         this._getHitOffset = Missile.prototype._getHitOffset.bind(this);
         if (missileClass) {
-            this.init(missileClass, positionMatrix, orientationMatrix, spacecraft, muzzleVelocity, target);
+            this.init(missileClass, positionMatrix || mat.IDENTITY4, orientationMatrix || mat.IDENTITY4, spacecraft, muzzleVelocity, target);
         }
     }
     /**
      * We reuse the same Missile instance for multiple missiles in a single games, as old missiles are
      * destroyed. This method is called to reinitialize this Missile instance for a new missile.
      * @param {MissileClass} missileClass The class of the missile defining its general properties.
-     * @param {Float32Array} [positionMatrix] The transformation matrix describing the initial position of the missile.
-     * @param {Float32Array} [orientationMatrix] The transformation matrix describing the initial oriantation of the missile.
+     * @param {Float32Array} positionMatrix The transformation matrix describing the initial position of the missile.
+     * @param {Float32Array} orientationMatrix The transformation matrix describing the initial oriantation of the missile.
      * @param {Spacecraft} [spacecraft] The spacecraft which launched the missile.
      * @param {Number} [muzzleVelocity] The starting velocity of the missile, in its +Y direction, in m/s
      * @param {Spacecraft} [target] 
@@ -1106,9 +1106,9 @@ define([
         this._class = missileClass;
         this._physicalModel.init(
                 missileClass.getMass(),
-                positionMatrix || mat.IDENTITY4,
-                orientationMatrix || mat.IDENTITY4,
-                mat.scaling4Aux(missileClass.getModelScale()),
+                positionMatrix,
+                orientationMatrix,
+                missileClass.getModelScale(),
                 velocityMatrix,
                 utils.EMPTY_ARRAY,
                 missileClass.getDragFactor());
@@ -1449,8 +1449,8 @@ define([
      */
     Missile.prototype._applyTurnThrust = function (dt) {
         var yawAxis, pitchAxis;
-        yawAxis = mat.getRowC4(this._physicalModel.getOrientationMatrix());
-        pitchAxis = mat.getRowA4(this._physicalModel.getOrientationMatrix());
+        yawAxis = mat.getRowC43(this._physicalModel.getOrientationMatrix());
+        pitchAxis = mat.getRowA43(this._physicalModel.getOrientationMatrix());
         if (this._yawRight.burn > 0) {
             this._physicalModel.applyTorque(this._class.getAngularThrust() * this._yawRight.burn, yawAxis, dt);
         } else if (this._yawLeft.burn > 0) {
@@ -1962,8 +1962,8 @@ define([
                 this._slot ? this._slot.positionMatrix : mat.IDENTITY4,
                 vec.prodVec3Mat4Aux(
                         vec.scaled3Aux(this._class.getAttachmentPoint(), -1),
-                        mat.prodScalingRotationAux(
-                                mat.scaling4Aux(scale),
+                        mat.scaledRotationAux(
+                                scale,
                                 this._slot ? this._slot.orientationMatrix : mat.IDENTITY4)));
         visualModel = new renderableObjects.ParameterizedMesh(
                 this._class.getModel(),
@@ -3760,9 +3760,9 @@ define([
     Propulsion.prototype.simulate = function (dt, spacecraftSoundSource, applyForces) {
         var directionVector, yawAxis, pitchAxis;
         if (applyForces !== false) {
-            directionVector = mat.getRowB4(this._drivenPhysicalObject.getOrientationMatrix());
-            yawAxis = mat.getRowC4(this._drivenPhysicalObject.getOrientationMatrix());
-            pitchAxis = mat.getRowA4(this._drivenPhysicalObject.getOrientationMatrix());
+            directionVector = mat.getRowB43(this._drivenPhysicalObject.getOrientationMatrix());
+            yawAxis = mat.getRowC43(this._drivenPhysicalObject.getOrientationMatrix());
+            pitchAxis = mat.getRowA43(this._drivenPhysicalObject.getOrientationMatrix());
             if (this._forward.burn > 0) {
                 this._drivenPhysicalObject.applyForce(this._thrustFactor * this._forward.burn, directionVector[0], directionVector[1], directionVector[2], dt);
             } else if (this._reverse.burn > 0) {
@@ -4836,7 +4836,7 @@ define([
             exp.addToSceneNow(this._spacecraft.getVisualModel().getNode().getScene().getRootNode(), this._spacecraft.getSoundSource());
             this._originalScalingMatrix = mat.copy(this._spacecraft.getVisualModel().getScalingMatrix());
             physicalModel = this._spacecraft.getPhysicalModel();
-            directionVector = mat.getRowB4(physicalModel.getOrientationMatrix());
+            directionVector = mat.getRowB43(physicalModel.getOrientationMatrix());
             // calculate and set the starting velocity based on the set final velocity and total deceleration during the jump in sequence
             physicalModel.setVelocityv(vec.scaled3Aux(directionVector, this._class.getJumpInVelocity() + this._class.getJumpInDeceleration() * this._class.getJumpInDuration() * 0.001));
             physicalModel.setDragFactor(0);

@@ -82,7 +82,7 @@ define([
          * The inverse of the rotation matrix pointing towards this light source.
          * @type Float32Array
          */
-        this._orientationMatrix = mat.inverseOfRotation4(mat.lookTowards4(this._direction));
+        this._orientationMatrix = mat.inverseOfRotation4(mat.lookTowards4Aux(this._direction));
         /**
          * The matrix that transforms a world coordinate into a shadow map coordinate for this light source. Depends on the camera position,
          * but does not take into account that the actual center of the shadow map is in front of the camera, at different positions for

@@ -765,10 +765,10 @@ define([
         this._maxHitpoints = this._class.getHitpoints();
         this._physicalModel = new physics.PhysicalObject(
                 this._class.getMass(),
-                positionMatrix || mat.identity4(),
-                orientationMatrix || mat.identity4(),
-                mat.identity4(),
-                mat.identity4(),
+                positionMatrix || mat.IDENTITY4,
+                orientationMatrix || mat.IDENTITY4,
+                1,
+                mat.IDENTITY4,
                 this._class.getBodies(),
                 this._class.getDragFactor());
         this._weapons = [];

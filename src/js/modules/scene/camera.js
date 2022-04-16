@@ -268,8 +268,8 @@ define([
         this._movesRelativeToObject = movesRelativeToObject;
         this._followedObjects = followedObjects || [];
         this._startsWithRelativePosition = startsWithRelativePosition;
-        mat.setMatrix4(this._defaultRelativePositionMatrix, positionMatrix);
-        mat.setMatrix4(this._relativePositionMatrix, positionMatrix);
+        mat.copyTranslation4(this._defaultRelativePositionMatrix, positionMatrix);
+        mat.copyTranslation4(this._relativePositionMatrix, positionMatrix);
         mat.setIdentity4(this._worldPositionMatrix);
         this._worldPositionMatrixValid = false;
         this._distanceIsConfined = distanceRange ? true : false;
@@ -337,7 +337,7 @@ define([
         if (this._camera && !doNotNotifyCamera) {
             this._camera.positionConfigurationWillChange();
         }
-        mat.setMatrix4(this._relativePositionMatrix, this._defaultRelativePositionMatrix);
+        mat.copyTranslation4(this._relativePositionMatrix, this._defaultRelativePositionMatrix);
         this._worldPositionMatrixValid = false;
         this._isStarting = true;
     };
@@ -442,7 +442,7 @@ define([
             if (k > 0) {
                 this._followedObjects.splice(i, k);
                 if (this._followedObjects.length === 0) {
-                    mat.setMatrix4(this._relativePositionMatrix, (this._worldPositionMatrixValid && this._worldPositionMatrix) || this._relativePositionMatrix || this._defaultRelativePositionMatrix);
+                    mat.copyTranslation4(this._relativePositionMatrix, (this._worldPositionMatrixValid && this._worldPositionMatrix) || this._relativePositionMatrix || this._defaultRelativePositionMatrix);
                 }
             }
         }
@@ -474,10 +474,10 @@ define([
                 }
             }
             if (this._startsWithRelativePosition) {
-                mat.setMatrix4(this._relativePositionMatrix, this._worldPositionMatrix);
+                mat.copyTranslation4(this._relativePositionMatrix, this._worldPositionMatrix);
             }
         } else {
-            mat.setMatrix4(this._worldPositionMatrix, this._relativePositionMatrix);
+            mat.copyTranslation4(this._worldPositionMatrix, this._relativePositionMatrix);
         }
         this._worldPositionMatrixValid = true;
     };
@@ -578,7 +578,7 @@ define([
                             this.getFollowedObjectOrientationMatrix())),
                     this.getFollowedPositionMatrix());
         } else {
-            mat.setMatrix4(this._relativePositionMatrix, relativePositionMatrix);
+            mat.copyTranslation4(this._relativePositionMatrix, relativePositionMatrix);
         }
         return true;
     };
@@ -612,7 +612,7 @@ define([
                             velocityVector[2] = 0;
                             distance = Math.min(Math.max(distance, this._minimumDistance), this._maximumDistance);
                         }
-                        mat.setTranslation4v(this._relativePositionMatrix, vec.scale3(translationVector, distance));
+                        mat.updateTranslation4v(this._relativePositionMatrix, vec.scale3(translationVector, distance));
                     }
                 } else {
                     if (this._movesRelativeToObject) {
@@ -850,8 +850,8 @@ define([
         this._pointsTowardsObjects = pointsTowardsObjects;
         this._fps = fps;
         this._followedObjects = followedObjects || [];
-        mat.setMatrix4(this._defaultRelativeOrientationMatrix, orientationMatrix);
-        mat.setMatrix4(this._relativeOrientationMatrix, orientationMatrix);
+        mat.copyRotation4(this._defaultRelativeOrientationMatrix, orientationMatrix);
+        mat.copyRotation4(this._relativeOrientationMatrix, orientationMatrix);
         mat.setIdentity4(this._worldOrientationMatrix);
         this._worldOrientationMatrixValid = false;
         this._defaultAlpha = alpha || 0;
@@ -907,7 +907,7 @@ define([
         if (this._camera && !doNotNotifyCamera) {
             this._camera.orientationConfigurationWillChange();
         }
-        mat.setMatrix4(this._relativeOrientationMatrix, this._defaultRelativeOrientationMatrix);
+        mat.copyRotation4(this._relativeOrientationMatrix, this._defaultRelativeOrientationMatrix);
         this._alpha = this._defaultAlpha;
         this._beta = this._defaultBeta;
         this._worldOrientationMatrixValid = false;
@@ -1021,7 +1021,7 @@ define([
                     }
                     // point-to modes have an explicitly set fallback option, but for other modes switch to absolute orientation
                     if (!this._pointsTowardsObjects) {
-                        mat.setMatrix4(this._relativeOrientationMatrix, (this._worldOrientationMatrixValid && this._worldOrientationMatrix) || this._relativeOrientationMatrix || this._defaultRelativeOrientationMatrix);
+                        mat.copyRotation4(this._relativeOrientationMatrix, (this._worldOrientationMatrixValid && this._worldOrientationMatrix) || this._relativeOrientationMatrix || this._defaultRelativeOrientationMatrix);
                         this._fps = false;
                     }
                     this._followedObjects.splice(i, k);
@@ -1055,7 +1055,7 @@ define([
                     if (this._fps) {
                         mat.setProd3x3SubOf4(this._worldOrientationMatrix, mat.ROTATION_X_270, this._relativeOrientationMatrix);
                     } else {
-                        mat.setMatrix4(this._worldOrientationMatrix, this._relativeOrientationMatrix);
+                        mat.copyRotation4(this._worldOrientationMatrix, this._relativeOrientationMatrix);
                     }
                 }.bind(this);
         if (this._followedObjects.length > 0) {
@@ -1121,7 +1121,7 @@ define([
                                         mat.ROTATION_X_270,
                                         mat.rotationX4Aux(this._beta)),
                                 mat.rotationZ4Aux(this._alpha));
-                        mat.mul4(this._worldOrientationMatrix, baseOrientationMatrix);
+                        mat.mulRotationRotation4(this._worldOrientationMatrix, baseOrientationMatrix);
                     }
                 }
             }
@@ -1199,12 +1199,12 @@ define([
             } else {
                 factor = utils.RAD * dt / 1000;
                 if (this._followedObjects.length > 0) {
-                    mat.mul4(this._relativeOrientationMatrix, mat.prod34Aux(
+                    mat.mulRotationRotation4(this._relativeOrientationMatrix, mat.prod34Aux(
                             mat.rotation4Aux(vec.normalize3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[2] * factor),
                             mat.rotation4Aux(vec.normalize3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * factor),
                             mat.rotation4Aux(vec.normalize3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[1] * factor)));
                 } else {
-                    mat.mul4(this._relativeOrientationMatrix, mat.prod34Aux(
+                    mat.mulRotationRotation4(this._relativeOrientationMatrix, mat.prod34Aux(
                             mat.rotation4Aux(vec.normalize3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[2] * factor),
                             mat.rotation4Aux(vec.normalize3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * factor),
                             mat.rotation4Aux(vec.normalize3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[1] * factor)));
@@ -1942,7 +1942,7 @@ define([
      */
     Camera.prototype.getCameraPositionMatrix = function () {
         var ori;
-        mat.setMatrix4(this._posMatrix, this._object3D.getPositionMatrix());
+        mat.copyTranslation4(this._posMatrix, this._object3D.getPositionMatrix());
         if (this._leftEye) {
             ori = this._object3D.getOrientationMatrix();
             this._posMatrix[12] -= this._interocularHalfDistance * ori[0];
@@ -1970,7 +1970,7 @@ define([
      * @returns {Float32Array}
      */
     Camera.prototype.getCameraOrientationMatrix = function () {
-        mat.setMatrix4(this._oriMatrix, this._object3D.getOrientationMatrix());
+        mat.copyRotation4(this._oriMatrix, this._object3D.getOrientationMatrix());
         if (this._leftEye) {
             mat.rotate4(this._oriMatrix, mat.getRowB43(this._oriMatrix), this._stereoAngle);
         } else if (this._rightEye) {
@@ -2679,7 +2679,7 @@ define([
                             vec.diff3Aux(
                                     this._currentConfiguration.getFollowedPositionVector(),
                                     this._previousFollowedPositionVector));
-                    vec.scale3(this._velocityVector, 1000 / dt)
+                    vec.scale3(this._velocityVector, 1000 / dt);
                 } else {
                     this._velocityVector[0] = 0;
                     this._velocityVector[1] = 0;
@@ -2696,7 +2696,7 @@ define([
      * Puts the camera in the passed stereoscopic state.
      * @param {Number} mode (enum Camera.Stereoscopy)
      */
-    Camera.prototype.setStereoscopy = function (mode) {
+    Camera.prototype._setStereoscopy = function (mode) {
         if (this._stereoscopy !== mode) {
             this._stereoscopy = mode;
             this._leftEye = (mode === Camera.Stereoscopy.LEFT);
@@ -2710,13 +2710,13 @@ define([
      * Puts the camera in the stereoscopic state corresponding to the left eye.
      */
     Camera.prototype.setLeftEye = function () {
-        this.setStereoscopy(Camera.Stereoscopy.LEFT);
+        this._setStereoscopy(Camera.Stereoscopy.LEFT);
     };
     /**
      * Puts the camera in the stereoscopic state corresponding to the right eye.
      */
     Camera.prototype.setRightEye = function () {
-        this.setStereoscopy(Camera.Stereoscopy.RIGHT);
+        this._setStereoscopy(Camera.Stereoscopy.RIGHT);
     };
     /**
      * Sets a new interocular distance used for stereoscopic rendering.
@@ -2741,7 +2741,7 @@ define([
      * @param {Number} convergenceDistance
      */
     Camera.prototype.copyStereoscopy = function (mode, interocularHalfDistance, convergenceDistance) {
-        this.setStereoscopy(mode);
+        this._setStereoscopy(mode);
         if (mode !== Camera.Stereoscopy.NONE) {
             this._interocularHalfDistance = interocularHalfDistance;
             this._stereoscopicConvergenceDistance = convergenceDistance;

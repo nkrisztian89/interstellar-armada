@@ -182,7 +182,7 @@ define([
     Explosion.prototype.init = function (explosionClass, positionMatrix, orientationMatrix, direction, carriesParticles, relativeOrientation, velocityMatrix, ignoreParticleCountFactor) {
         this._class = explosionClass;
         mat.copyTranslation4(this._positionMatrix, positionMatrix);
-        mat.setMatrix4(this._orientationMatrix, orientationMatrix);
+        mat.copyRotation4(this._orientationMatrix, orientationMatrix);
         this._direction[0] = direction[0];
         this._direction[1] = direction[1];
         this._direction[2] = direction[2];
