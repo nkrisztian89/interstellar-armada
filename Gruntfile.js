@@ -535,7 +535,12 @@ module.exports = function (grunt) {
                 options: {
                     baseUrl: "js",
                     name: "editor-main",
-                    optimize: "none",
+                    optimize: "uglify2",
+                    uglify2: {
+                        mangle: {
+                            keep_fnames: true
+                        }
+                    },
                     out: "js/editor-main.js",
                     preserveLicenseComments: false
                 }
