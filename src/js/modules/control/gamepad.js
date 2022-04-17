@@ -398,6 +398,7 @@ define([
     GamepadInputInterpreter.prototype.handleGamepadConnected = function (event) {
         if (!this._gamepad && (this._gamepadSetIndex === GAMEPAD_UNSET)) {
             this._gamepad = event.gamepad;
+            this.setProfile(this._getProfile(event.gamepad), false);
         }
     };
     /**
@@ -552,7 +553,7 @@ define([
      * @private
      * This is an internal method to execute the things needed to be done when a specific gamepad is selected by
      * the user or loaded from preference. From outside the class, setGamepad() is available which also handles
-     * the case when no gamepad (null) is to be selected and checks if the pased gamepad is valid and connected
+     * the case when no gamepad (null) is to be selected and checks if the passed gamepad is valid and connected
      * @param {Gamepad} gamepad
      */
     GamepadInputInterpreter.prototype._setGamepad = function (gamepad) {
