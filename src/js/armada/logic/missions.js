@@ -144,6 +144,11 @@ define([
              */
             _missilePool,
             /**
+             * A pool containing trails for reuse, so that creation of objects while creating trails can be decreased for optimization.
+             * @type Pool
+             */
+            _trailPool,
+            /**
              * A pool containing trail segments for reuse, so that creation of objects while creating trails can be decreased for optimization.
              * @type Pool
              */
@@ -1735,6 +1740,7 @@ define([
                 _explosionPool.prefill(Math.ceil(this.getMaxExplosionCount() * config.getSetting(config.BATTLE_SETTINGS.EXPLOSION_POOL_PREFILL_FACTOR)), function (exp) {
                     exp.createVisualModel();
                 });
+                _trailPool.prefill(Math.ceil(this.getMaxMissileCount() * config.getSetting(config.BATTLE_SETTINGS.MISSILE_POOL_PREFILL_FACTOR)));
                 _trailSegmentPool.prefill(Math.ceil(this.getMaxMissileCount() * config.getSetting(config.BATTLE_SETTINGS.MISSILE_POOL_PREFILL_FACTOR) * config.getSetting(config.BATTLE_SETTINGS.TRAIL_SEGMENT_POOL_PREFILL_FACTOR)));
             }.bind(this));
         }
@@ -1772,6 +1778,16 @@ define([
         missile.simulate(dt, octree, this._pilotedCraft);
         if (missile.canBeReused()) {
             _missilePool.markAsFree(indexInPool);
+        }
+    };
+    /**
+     * Function to execute during every simulation step on trails taken from the pool
+     * @param {Trail} trail The trail to handle
+     * @param {Number} indexInPool The index of the trail within the pool
+     */
+    Mission._handleTrail = function (trail, indexInPool) {
+        if (trail.canBeReused()) {
+            _trailPool.markAsFree(indexInPool);
         }
     };
     /**
@@ -1913,6 +1929,9 @@ define([
         if (_particlePool.hasLockedObjects()) {
             _particlePool.executeForLockedObjects(Mission._handleParticle);
         }
+        if (_trailPool.hasLockedObjects()) {
+            _trailPool.executeForLockedObjects(Mission._handleTrail);
+        }
         if (_trailSegmentPool.hasLockedObjects()) {
             _trailSegmentPool.executeForLockedObjects(Mission._handleTrailSegment);
         }
@@ -1930,7 +1949,8 @@ define([
                     "Proj: " + _projectilePool.getLockedObjectCount() + " / " + _projectilePool._objects.length + "<br/>" +
                     "Miss: " + _missilePool.getLockedObjectCount() + " / " + _missilePool._objects.length + "<br/>" +
                     "Expl: " + _explosionPool.getLockedObjectCount() + " / " + _explosionPool._objects.length + "<br/>" +
-                    "Trai: " + _trailSegmentPool.getLockedObjectCount() + " / " + _trailSegmentPool._objects.length;
+                    "Trai: " + _trailPool.getLockedObjectCount() + " / " + _trailPool._objects.length + "<br/>" +
+                    "TrSe: " + _trailSegmentPool.getLockedObjectCount() + " / " + _trailSegmentPool._objects.length;
         }
     };
     /**
@@ -1970,6 +1990,7 @@ define([
         _projectilePool.clear();
         _missilePool.clear();
         _explosionPool.clear();
+        _trailPool.clear();
         _trailSegmentPool.clear();
     };
     // #########################################################################
@@ -2660,6 +2681,7 @@ define([
     _particlePool = pools.getPool(logicConstants.PARTICLE_POOL_NAME, renderableObjects.Particle);
     _projectilePool = pools.getPool(logicConstants.PROJECTILE_POOL_NAME, equipment.Projectile);
     _missilePool = pools.getPool(logicConstants.MISSILE_POOL_NAME, equipment.Missile);
+    _trailPool = pools.getPool(logicConstants.TRAIL_POOL_NAME, renderableObjects.Trail);
     _trailSegmentPool = pools.getPool(logicConstants.TRAIL_SEGMENT_POOL_NAME, renderableObjects.TrailSegment);
     _explosionPool = pools.getPool(logicConstants.EXPLOSION_POOL_NAME, explosion.Explosion);
     // creating the default context

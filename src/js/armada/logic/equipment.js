@@ -305,6 +305,11 @@ define([
              */
             _missilePool,
             /**
+             * A pool containing trails for reuse, so that creation of objects while creating trails can be decreased for optimization.
+             * @type Pool
+             */
+            _trailPool,
+            /**
              * A pool containing trail segments for reuse, so that creation of objects while creating trails can be decreased for optimization.
              * @type Pool
              */
@@ -832,8 +837,9 @@ define([
         vec.setVector3(this._lastPoint, point);
         this._emitting = true;
         this._lastSegment = null;
-        this._visualModel = new renderableObjects.Trail(this._descriptor.getSize());
-        scene.addNode(new sceneGraph.RenderableNode(this._visualModel, false, true));
+        this._visualModel = _trailPool.getObject();
+        this._visualModel.init(this._descriptor.getSize());
+        scene.addNode(this._visualModel.getNode() || new sceneGraph.RenderableNode(this._visualModel, false, true));
         if (this._lastScene !== scene) {
             scene.addObjectToMove(this);
             this._lastScene = scene;
@@ -890,6 +896,9 @@ define([
     TrailEmitter.prototype.detach = function () {
         this._emitting = false;
         this._lastSegment = null;
+        if (this._visualModel) {
+            this._visualModel.detach();
+        }
         this._visualModel = null;
     };
     /**
@@ -5158,6 +5167,7 @@ define([
     _particlePool = pools.getPool(constants.PARTICLE_POOL_NAME, renderableObjects.Particle);
     _projectilePool = pools.getPool(constants.PROJECTILE_POOL_NAME, Projectile);
     _missilePool = pools.getPool(constants.MISSILE_POOL_NAME, Missile);
+    _trailPool = pools.getPool(constants.TRAIL_POOL_NAME, renderableObjects.Trail);
     _trailSegmentPool = pools.getPool(constants.TRAIL_SEGMENT_POOL_NAME, renderableObjects.TrailSegment);
     // caching configuration settings
     config.executeWhenReady(function () {

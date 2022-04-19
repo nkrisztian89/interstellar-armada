@@ -1425,8 +1425,13 @@ define([
      */
     function Trail(size) {
         RenderableObject3D.call(this);
+        /**
+         * Whether the trail is no longer being generated
+         * @type Boolean
+         */
+        this._detached = false;
         if (size) {
-            this.init(null, false, false, null, null, null, null, size, true, true);
+            this.init(size);
         }
         this.setUniformValueFunction(UNIFORM_MODEL_MATRIX_NAME, function () {
             return this.getModelMatrix();
@@ -1434,6 +1439,30 @@ define([
     }
     Trail.prototype = new RenderableObject3D();
     Trail.prototype.constructor = Trail;
+    /**
+     * @override
+     * @param {Number} size Initial size to be set for the trail
+     */
+    Trail.prototype.init = function (size) {
+        RenderableObject3D.prototype.init.call(this, null, false, false, null, null, null, null, size, true, true);
+        this._detached = false;
+    };
+    /**
+     * Marks that the trail is no longer being generated, and so it can be removed when the last of its segments expire
+     */
+    Trail.prototype.detach = function () {
+        this._detached = true;
+    };
+    /**
+     * @override
+     */
+    Trail.prototype.performAnimate = function () {
+        if (this._detached) {
+            if (this.getNode().getSubnodes().getLength() === 0) {
+                this.markAsReusable(true);
+            }
+        }
+    };
     /**
      * @override
      * TrailSegments don't use the traditional matrix hierarchy just position vectors 

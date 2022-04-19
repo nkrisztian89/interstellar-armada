@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2022 Krisztián Nagy
  * @file Provides some constants to be used in other game logic modules
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -51,6 +51,11 @@ define(function () {
              */
             MISSILE_POOL_NAME = "Missile",
             /**
+             * Name of the pool for reusable Trail instances
+             * @type String
+             */
+            TRAIL_POOL_NAME = "Trail",
+            /**
              * Name of the pool for reusable TrailSegment instances
              * @type String
              */
@@ -81,6 +86,7 @@ define(function () {
         PARTICLE_POOL_NAME: PARTICLE_POOL_NAME,
         PROJECTILE_POOL_NAME: PROJECTILE_POOL_NAME,
         MISSILE_POOL_NAME: MISSILE_POOL_NAME,
+        TRAIL_POOL_NAME: TRAIL_POOL_NAME,
         TRAIL_SEGMENT_POOL_NAME: TRAIL_SEGMENT_POOL_NAME,
         EXPLOSION_POOL_NAME: EXPLOSION_POOL_NAME,
         MULTI_HOST_DATA_LENGTH: MULTI_HOST_DATA_LENGTH,
