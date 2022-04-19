@@ -7734,7 +7734,7 @@
                     "intensity": 100
                 }],
             "humSound": {
-                "name": "spacecraftHum",
+                "name": "commRelay",
                 "volume": 0.65
             },
             "damageIndicators": [{

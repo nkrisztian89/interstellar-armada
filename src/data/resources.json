@@ -1564,6 +1564,9 @@
             "name": "spacecraftHum",
             "samples": ["spacecraft/hum.ogg"]
         }, {
+            "name": "commRelay",
+            "samples": ["spacecraft/comm_relay.ogg"]
+        }, {
             "name": "thruster",
             "samples": ["spacecraft/thruster.ogg"]
         }, {

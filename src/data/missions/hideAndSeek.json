@@ -380,7 +380,8 @@
             "name": "Hermes",
             "team": "pirates",
             "class": "commRelay",
-            "excludeFromReferenceScore": true
+            "excludeFromReferenceScore": true,
+            "initialBlinkTime": 1000
         }, {
             "squad": "raider",
             "team": "pirates",
