@@ -1112,7 +1112,7 @@ define([
                             this._alpha = -this._alpha;
                         }
                         mat.setProd3x3SubOf4(this._worldOrientationMatrix, mat.ROTATION_X_270, mat.rotationZ4Aux(this._alpha));
-                        this._beta = vec.angle3uCapped(mat.getRowC43Neg(this._worldOrientationMatrix), dirTowardsObject);
+                        this._beta = vec.angle3uCapped(vec.getRowC43ScaledAux(this._worldOrientationMatrix, -1), dirTowardsObject);
                         if (dirTowardsObject[2] > 0) {
                             this._beta = -this._beta;
                         }
@@ -1200,14 +1200,14 @@ define([
                 factor = utils.RAD * dt / 1000;
                 if (this._followedObjects.length > 0) {
                     mat.mulRotationRotation4(this._relativeOrientationMatrix, mat.prod34Aux(
-                            mat.rotation4Aux(vec.normalize3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[2] * factor),
-                            mat.rotation4Aux(vec.normalize3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * factor),
-                            mat.rotation4Aux(vec.normalize3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[1] * factor)));
+                            mat.rotation4Aux(vec.normalize3(vec.getRowB43Aux(this._relativeOrientationMatrix)), angularVelocityVector[2] * factor),
+                            mat.rotation4Aux(vec.normalize3(vec.getRowA43Aux(this._relativeOrientationMatrix)), angularVelocityVector[0] * factor),
+                            mat.rotation4Aux(vec.normalize3(vec.getRowC43Aux(this._relativeOrientationMatrix)), angularVelocityVector[1] * factor)));
                 } else {
                     mat.mulRotationRotation4(this._relativeOrientationMatrix, mat.prod34Aux(
-                            mat.rotation4Aux(vec.normalize3(mat.getRowC43(this._relativeOrientationMatrix)), angularVelocityVector[2] * factor),
-                            mat.rotation4Aux(vec.normalize3(mat.getRowA43(this._relativeOrientationMatrix)), angularVelocityVector[0] * factor),
-                            mat.rotation4Aux(vec.normalize3(mat.getRowB43(this._relativeOrientationMatrix)), angularVelocityVector[1] * factor)));
+                            mat.rotation4Aux(vec.normalize3(vec.getRowC43Aux(this._relativeOrientationMatrix)), angularVelocityVector[2] * factor),
+                            mat.rotation4Aux(vec.normalize3(vec.getRowA43Aux(this._relativeOrientationMatrix)), angularVelocityVector[0] * factor),
+                            mat.rotation4Aux(vec.normalize3(vec.getRowB43Aux(this._relativeOrientationMatrix)), angularVelocityVector[1] * factor)));
                 }
             }
         }
@@ -1972,9 +1972,9 @@ define([
     Camera.prototype.getCameraOrientationMatrix = function () {
         mat.copyRotation4(this._oriMatrix, this._object3D.getOrientationMatrix());
         if (this._leftEye) {
-            mat.rotate4(this._oriMatrix, mat.getRowB43(this._oriMatrix), this._stereoAngle);
+            mat.rotate4(this._oriMatrix, vec.getRowB43Aux(this._oriMatrix), this._stereoAngle);
         } else if (this._rightEye) {
-            mat.rotate4(this._oriMatrix, mat.getRowB43(this._oriMatrix), -this._stereoAngle);
+            mat.rotate4(this._oriMatrix, vec.getRowB43Aux(this._oriMatrix), -this._stereoAngle);
         }
         return this._oriMatrix;
     };

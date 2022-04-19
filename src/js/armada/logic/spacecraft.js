@@ -3028,7 +3028,7 @@ define([
                         this._class.getExplosionClass(),
                         this._physicalModel.getPositionMatrix(),
                         this._physicalModel.getOrientationMatrix(),
-                        mat.getRowC43(this._physicalModel.getPositionMatrix()),
+                        vec.getRowC43Aux(this._physicalModel.getPositionMatrix()),
                         true,
                         true,
                         this._physicalModel.getVelocityMatrix());

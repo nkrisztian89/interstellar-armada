@@ -711,47 +711,6 @@ define([
     // -----------------------------------------------------------------------------
     // Functions of a single matrix
     /**
-     * Returns the first row vector of a 4x4 matrix clipped to a 3D vector.
-     * (same as getRowA3)
-     * @param {Float32Array} m A 4x4 matrix.
-     * @returns {Number[3]}
-     */
-    mat.getRowA43 = function (m) {
-        return [m[0], m[1], m[2]];
-    };
-    /**
-     * Returns the first 3 elements of the second row vector of a 4x4 matrix.
-     * @param {Float32Array} m A 4x4 matrix.
-     * @returns {Number[3]}
-     */
-    mat.getRowB43 = function (m) {
-        return [m[4], m[5], m[6]];
-    };
-    /**
-     * Returns the first 3 elements of the opposite of the second row vector of a 4x4 matrix.
-     * @param {Float32Array} m A 4x4 matrix.
-     * @returns {Number[3]}
-     */
-    mat.getRowB43Neg = function (m) {
-        return [-m[4], -m[5], -m[6]];
-    };
-    /**
-     * Returns the first 3 elements of the third row vector of a 4x4 matrix.
-     * @param {Float32Array} m A 4x4 matrix.
-     * @returns {Number[3]}
-     */
-    mat.getRowC43 = function (m) {
-        return [m[8], m[9], m[10]];
-    };
-    /**
-     * Returns the opposite of the first 3 elements of the third row vector of a 4x4 matrix.
-     * @param {Float32Array} m A 4x4 matrix.
-     * @returns {Number[3]}
-     */
-    mat.getRowC43Neg = function (m) {
-        return [-m[8], -m[9], -m[10]];
-    };
-    /**
      * Returns the fourth row vector of a 4x4 matrix.
      * @param {Float32Array} m A 4x4 matrix.
      * @returns {Number[4]}
@@ -825,15 +784,15 @@ define([
     mat.getRotations = function (m) {
         var dot, halfMatrix, result = {};
         // calculate the rotation of axis Y needed
-        dot = vec.dot3(vec.UNIT3_Y, mat.getRowB43(m));
+        dot = vec.dot3(vec.UNIT3_Y, vec.getRowB43Aux(m));
         // if the angle of the two Y vectors is (around) 0 or 180 degrees, their cross product will be of zero length
         // and we cannot use it as a rotation axis, therefore fall back to axis Z in this case
         if (Math.abs(dot) > CLOSE_TO_ONE_THRESHOLD) {
             result.alphaAxis = [0, 0, 1];
             result.alpha = dot > 0 ? 0 : Math.PI;
         } else {
-            result.alphaAxis = vec.normalize3(vec.cross3(mat.getRowB43(m), vec.UNIT3_Y));
-            result.alpha = vec.angle3u(mat.getRowB43(m), vec.UNIT3_Y);
+            result.alphaAxis = vec.normalize3(vec.cross3(vec.getRowB43Aux(m), vec.UNIT3_Y));
+            result.alpha = vec.angle3u(vec.getRowB43Aux(m), vec.UNIT3_Y);
         }
         if (result.alpha > Math.PI) {
             result.alpha -= utils.DOUBLE_PI;
@@ -843,13 +802,13 @@ define([
         mat.correctOrthogonal4(halfMatrix);
         // X and Z vectors might still be out of place, therefore do the same calculations as before to 
         // get the second rotation needed, which will put all vectors in place
-        dot = vec.dot3(vec.UNIT3_X, mat.getRowA43(halfMatrix));
+        dot = vec.dot3(vec.UNIT3_X, vec.getRowA43Aux(halfMatrix));
         if (Math.abs(dot) > CLOSE_TO_ONE_THRESHOLD) {
             result.gammaAxis = [0, 1, 0];
             result.gamma = dot > 0 ? 0 : Math.PI;
         } else {
-            result.gammaAxis = vec.normalize3(vec.cross3(mat.getRowA43(halfMatrix), vec.UNIT3_X));
-            result.gamma = vec.angle3u(mat.getRowA43(halfMatrix), vec.UNIT3_X);
+            result.gammaAxis = vec.normalize3(vec.cross3(vec.getRowA43Aux(halfMatrix), vec.UNIT3_X));
+            result.gamma = vec.angle3u(vec.getRowA43Aux(halfMatrix), vec.UNIT3_X);
         }
         if (result.gamma > Math.PI) {
             result.gamma -= utils.DOUBLE_PI;

@@ -260,7 +260,7 @@ define([
     DirectionalLightSource.prototype.startShadowMap = function (context, camera, rangeIndex, range, depth) {
         var viewDir, cos;
         context.setCurrentFrameBuffer(this.getShadowMapBufferName(rangeIndex));
-        viewDir = mat.getRowC43(camera.getCameraOrientationMatrix());
+        viewDir = vec.getRowC43Aux(camera.getCameraOrientationMatrix());
         cos = Math.abs(vec.dot3(viewDir, this._direction)); // parallelism, which will determine the amount of perspective transformation
         this._shadowMapParams[0] = range;
         this._shadowMapParams[1] = depth;

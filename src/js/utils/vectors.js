@@ -973,6 +973,78 @@ define(function () {
         v[2] *= factor;
         return divisor;
     };
+    /**
+     * Returns the first 3 coordinates of the first row of a 4x4 matrix.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Floar32Array} m A 4x4 matrix
+     * @returns {Number[3]}
+     */
+    vec.getRowA43Aux = function (m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = m[0];
+        aux[1] = m[1];
+        aux[2] = m[2];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the first 3 coordinates of the second row of a 4x4 matrix.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Floar32Array} m A 4x4 matrix
+     * @returns {Number[3]}
+     */
+    vec.getRowB43Aux = function (m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = m[4];
+        aux[1] = m[5];
+        aux[2] = m[6];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the first 3 coordinates of the second row of a 4x4 matrix scaled by the given number
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Floar32Array} m A 4x4 matrix
+     * @param {Number} s The scaling factor
+     * @returns {Number[3]}
+     */
+    vec.getRowB43ScaledAux = function (m, s) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = m[4] * s;
+        aux[1] = m[5] * s;
+        aux[2] = m[6] * s;
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the first 3 coordinates of the third row of a 4x4 matrix.
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Floar32Array} m A 4x4 matrix
+     * @returns {Number[3]}
+     */
+    vec.getRowC43Aux = function (m) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = m[8];
+        aux[1] = m[9];
+        aux[2] = m[10];
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
+    /**
+     * Returns the first 3 coordinates of the third row of a 4x4 matrix scaled by the given number
+     * Uses one of the auxiliary vectors instead of creating a new one - use when the result is needed only temporarily!
+     * @param {Floar32Array} m A 4x4 matrix
+     * @param {Number} s The scaling factor
+     * @returns {Number[3]}
+     */
+    vec.getRowC43ScaledAux = function (m, s) {
+        var aux = _auxVectors[_auxVectorIndex];
+        aux[0] = m[8] * s;
+        aux[1] = m[9] * s;
+        aux[2] = m[10] * s;
+        _auxVectorIndex = (_auxVectorIndex + 1) % AUX_VECTOR_COUNT;
+        return aux;
+    };
     // ----------------------------------------------------------------------
     // Initialization
     (function () {

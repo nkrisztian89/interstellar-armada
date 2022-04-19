@@ -3758,14 +3758,14 @@ define([
                         }
                         if (weapons[i].isFixed()) {
                             slotPosition = weapons[i].getOrigoPositionMatrix();
-                            indicatorPosition = vec.sum3(position, vec.scaled3Aux(mat.getRowB43(m), futureDistance));
-                            vec.add3(indicatorPosition, vec.scaled3Aux(mat.getRowA43(m), slotPosition[12] * scale));
-                            vec.add3(indicatorPosition, vec.scaled3Aux(mat.getRowC43(m), slotPosition[14] * scale));
+                            indicatorPosition = vec.sum3(position, vec.getRowB43ScaledAux(m, futureDistance));
+                            vec.add3(indicatorPosition, vec.scaled3Aux(vec.getRowA43Aux(m), slotPosition[12] * scale));
+                            vec.add3(indicatorPosition, vec.getRowC43ScaledAux(m, slotPosition[14] * scale));
                         } else {
                             basePointPosition = weapons[i].getBasePointPosVector(scaledOriMatrix);
                             indicatorPosition = vec.sum3(
                                     basePointPosition,
-                                    vec.scaled3Aux(mat.getRowB43(weapons[i].getProjectileOrientationMatrix()), vec.length3(
+                                    vec.getRowB43ScaledAux(weapons[i].getProjectileOrientationMatrix(), vec.length3(
                                             vec.diff3Aux(futureTargetPosition, basePointPosition))));
                         }
                         if (_aimAssistCrosshairs) {
@@ -3793,7 +3793,7 @@ define([
                         }
                         visible2 = true;
                     }
-                    if (!targetInRange || (craft.isFighter() && (vec.dot3(mat.getRowB43(m), vectorToTarget) < 0))) {
+                    if (!targetInRange || (craft.isFighter() && (vec.dot3(vec.getRowB43Aux(m), vectorToTarget) < 0))) {
                         visible1 = false;
                         _aimAssistAppearTime = _hudAimAssistAppearAnimationDuration;
                     } else {
@@ -3823,7 +3823,7 @@ define([
                                 target.getPhysicalOrientationMatrix(),
                                 mat.inverseOfRotation4Aux(mat.lookTowards4Aux(
                                         vec.normalize3(vec.diffTranslation3Aux(craft.getPhysicalPositionMatrix(), target.getPhysicalPositionMatrix())),
-                                        mat.getRowC43(craft.getPhysicalOrientationMatrix())))) :
+                                        vec.getRowC43Aux(craft.getPhysicalOrientationMatrix())))) :
                                 mat.IDENTITY4);
                     }
                     _targetScene.setRelativeViewport(

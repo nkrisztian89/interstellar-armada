@@ -154,7 +154,7 @@ define([
                 enginePosition, direction, length, count, segmentLength, dt, i;
         enginePosition = model.getPositionVector();
         vec.add3(enginePosition, vec.prodVec3Mat3Aux(_missileClass.getEnginePosition(), mat.prodScalingRotation3Aux(model.getScalingMatrix(), model.getOrientationMatrix())));
-        direction = (vec.length3Squared(enginePosition) > 0) ? vec.normal3(enginePosition) : mat.getRowB43Neg(model.getOrientationMatrix());
+        direction = (vec.length3Squared(enginePosition) > 0) ? vec.normal3(enginePosition) : vec.getRowB43ScaledAux(model.getOrientationMatrix(), -1);
         length = _missileClass.getLength() * 5;
         count = 3;
         segmentLength = length / count;

@@ -397,8 +397,8 @@ define([
         if (_model) {
             if (_turningModel) {
                 cameraOri = camera.getCameraOrientationMatrix();
-                axisA = mat.getRowA43(cameraOri);
-                axisB = mat.getRowB43(cameraOri);
+                axisA = vec.getRowA43Aux(cameraOri);
+                axisB = vec.getRowB43Aux(cameraOri);
                 _model.rotate(axisB, rotA);
                 _model.rotate(axisA, rotB);
                 if (_wireframeModel) {
