@@ -210,6 +210,12 @@ define([
              * @type Number
              */
             MISSILE_COLLISION_FORCE_FACTOR = 1200,
+            /**
+             * Absolute angular velociy matrix values lower than this will be taken as zero when turning missiles
+             * Should by synced with physics.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD
+             * @type Number
+             */
+            ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD = 0.00001,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -1423,29 +1429,24 @@ define([
     /**
      * Sets the appropriate thruster burn levels for the maneuvering thrusters of the missile 
      * based on the current targets (pitch and yaw)
+     * @param {Number} yawAngle The yaw angle of the current turning matrix of the missile
+     * @param {Number} pitchAngle The pitch angle of the current turning matrix of the missile
      * @param {Number} dt The time elapsed since the last control step, in ms
      */
-    Missile.prototype._controlTurnThrusters = function (dt) {
-        var
-                // grab flight parameters for turning control
-                turningMatrix = this.getTurningMatrix(),
-                turnThreshold = physics.ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD,
-                // for caching turn parameters (in rad / ANGULAR_VELOCITY_MATRIX_DURATION ms),
-                yawAngle, pitchAngle, turnEnd;
+    Missile.prototype._controlTurnThrusters = function (yawAngle, pitchAngle, dt) {
+        var turnEnd;
         // controlling yaw
-        yawAngle = Math.sign(turningMatrix[4]) * vec.angle2y(turningMatrix[4], turningMatrix[5]);
-        if ((this._yawTarget - yawAngle) > turnThreshold) {
+        if ((this._yawTarget - yawAngle) > ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD) {
             this.addThrusterBurnYawRight(Math.min(1, this.getNeededBurnForAngularVelocityChange(this._yawTarget - yawAngle, dt)));
-        } else if ((this._yawTarget - yawAngle) < -turnThreshold) {
+        } else if ((this._yawTarget - yawAngle) < -ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD) {
             this.addThrusterBurnYawLeft(Math.min(1, this.getNeededBurnForAngularVelocityChange(yawAngle - this._yawTarget, dt)));
         } else {
             turnEnd = true;
         }
         // controlling pitch
-        pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2x(turningMatrix[5], turningMatrix[6]);
-        if ((this._pitchTarget - pitchAngle) > turnThreshold) {
+        if ((this._pitchTarget - pitchAngle) > ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD) {
             this.addThrusterBurnPitchUp(Math.min(1, this.getNeededBurnForAngularVelocityChange(this._pitchTarget - pitchAngle, dt)));
-        } else if ((this._pitchTarget - pitchAngle) < -turnThreshold) {
+        } else if ((this._pitchTarget - pitchAngle) < -ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD) {
             this.addThrusterBurnPitchDown(Math.min(1, this.getNeededBurnForAngularVelocityChange(pitchAngle - this._pitchTarget, dt)));
         } else if (turnEnd && this._stopHoming) {
             this._homing = false;
@@ -1501,12 +1502,13 @@ define([
      * To be executed while the missile is actively homing.
      * @param {Number} yaw The yaw angle of the direction to turn towards, with a positive number meaning a direction to the left, in radians.
      * @param {Number} pitch The pitch angle of the direction to turn towards, with a positive number meaning a direction upwards, in radians.
+     * @param {Number} turnYawAngle The yaw angle of the current turning matrix of the missile
+     * @param {Number} turnPitchAngle The pitch angle of the current turning matrix of the missile
      * @param {Number} dt The time passed since the last turn command in milliseconds - for an estimation of the time the set yaw and pitch 
      * angular velocity will be in effect, so that they can be limited to avoid overshooting the desired angles
      */
-    Missile.prototype._turn = function (yaw, pitch, dt) {
-        var turningMatrix, angularVelocity, angularAcceleration, turnStopAngle, turnIntensityFactor;
-        turningMatrix = this.getTurningMatrix();
+    Missile.prototype._turn = function (yaw, pitch, turnYawAngle, turnPitchAngle, dt) {
+        var angularVelocity, angularAcceleration, turnStopAngle, turnIntensityFactor;
         angularAcceleration = this._class.getAngularAcceleration();
         // a turn intensity of 1 means to accelerate the angular velocity to TURN_ACCELERATION_DURATION_S * acceleration (in rad / sec) and
         // lower values represent a linear portion of this intended angular velocity
@@ -1515,14 +1517,14 @@ define([
         // milliseconds (which will mean about the next simulation step with relatively stable framerates)
         turnIntensityFactor = MISSILE_TURN_INTENSITY_BASE_FACTOR / (angularAcceleration * dt);
         // calculating how much will the missile turn at the current angular velocity if it starts decelerating right now
-        angularVelocity = Math.sign(turningMatrix[4]) * vec.angle2y(turningMatrix[4], turningMatrix[5]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        angularVelocity = turnYawAngle * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), MISSILE_TURN_THRESHOLD_ANGLE);
         if (yaw > turnStopAngle) {
             this.yawLeft(Math.min(Math.max(0, turnIntensityFactor * (yaw - turnStopAngle)), 1));
         } else if (yaw < -turnStopAngle) {
             this.yawRight(Math.min(Math.max(0, turnIntensityFactor * (-yaw - turnStopAngle)), 1));
         }
-        angularVelocity = Math.sign(turningMatrix[6]) * vec.angle2x(turningMatrix[5], turningMatrix[6]) * ANGULAR_VELOCITY_CONVERSION_FACTOR;
+        angularVelocity = turnPitchAngle * ANGULAR_VELOCITY_CONVERSION_FACTOR;
         turnStopAngle = Math.max(angularVelocity * angularVelocity / (2 * angularAcceleration), MISSILE_TURN_THRESHOLD_ANGLE);
         if (pitch > turnStopAngle) {
             this.pitchUp(Math.min(Math.max(0, turnIntensityFactor * (pitch - turnStopAngle)), 1));
@@ -1607,7 +1609,7 @@ define([
      * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      */
     Missile.prototype.simulate = function (dt, hitObjectOctree, pilotedCraft) {
-        var i, matrix, threshold, hitCheckDT, enginePosition;
+        var i, matrix, threshold, hitCheckDT, enginePosition, turningMatrix, yawAngle, pitchAngle;
         if (this.canBeReused()) {
             return;
         }
@@ -1652,10 +1654,13 @@ define([
                 }
                 // use maneuvering thrusters for homing
                 if (this._homing) {
+                    turningMatrix = this.getTurningMatrix();
+                    yawAngle = Math.sign(turningMatrix[4]) * vec.angle2y(turningMatrix[4], turningMatrix[5]);
+                    pitchAngle = Math.sign(turningMatrix[6]) * vec.angle2x(turningMatrix[5], turningMatrix[6]);
                     if (!this._stopHoming) {
-                        this._turn(_angles.yaw, _angles.pitch, hitCheckDT);
+                        this._turn(_angles.yaw, _angles.pitch, yawAngle, pitchAngle, hitCheckDT);
                     }
-                    this._controlTurnThrusters(hitCheckDT);
+                    this._controlTurnThrusters(yawAngle, pitchAngle, hitCheckDT);
                     this._applyTurnThrust(hitCheckDT);
                 }
                 for (i = 0; i < this._thrusters.length; i++) {
