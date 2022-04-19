@@ -205,6 +205,11 @@ define([
              * @type Number
              */
             MISSILE_TURN_INTENSITY_BASE_FACTOR = 1000 / MISSILE_TURN_ACCELERATION_DURATION_S,
+            /**
+             * The force applied to a missile and the spacecraft it collides with will be determined using this factor.
+             * @type Number
+             */
+            MISSILE_COLLISION_FORCE_FACTOR = 1200,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -701,23 +706,21 @@ define([
         if (this.canBeReused()) {
             return;
         }
-        // avoid hit checking right after the projectile is fired, as it could hit the firing ship
-        hitCheckDT = Math.min(dt, this._class.getDuration() - this._timeLeft);
+        hitCheckDT = Math.min(dt, this._timeLeft);
+        if ((physics.getDrag() > 0) && (this._class.getDragFactor() > 0)) {
+            physics.applyDrag(this._velocityMatrix, hitCheckDT, this._class.getDragFactor());
+        }
+        this._visualModel.translateByMatrixMul(this._velocityMatrix, hitCheckDT * 0.001);
+        if (this._timeLeft < this._class.getDissipationDuration()) {
+            power = this._timeLeft / this._class.getDissipationDuration();
+            this._visualModel.setDirectionW(power);
+            if (this._lightSource) {
+                this._lightSource.setObjectIntensity(power * this._class.getLightIntensity());
+            }
+        }
+        _checkHit(this._visualModel.getPositionMatrix(), this._velocityMatrix, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, _getDefaultOffset, this._hitCallback);
         this._timeLeft -= dt;
-        if (this._timeLeft > 0) {
-            if ((physics.getDrag() > 0) && (this._class.getDragFactor() > 0)) {
-                physics.applyDrag(this._velocityMatrix, dt, this._class.getDragFactor());
-            }
-            this._visualModel.translateByMatrixMul(this._velocityMatrix, dt * 0.001);
-            if (this._timeLeft < this._class.getDissipationDuration()) {
-                power = this._timeLeft / this._class.getDissipationDuration();
-                this._visualModel.setDirectionW(power);
-                if (this._lightSource) {
-                    this._lightSource.setObjectIntensity(power * this._class.getLightIntensity());
-                }
-            }
-            _checkHit(this._visualModel.getPositionMatrix(), this._velocityMatrix, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, _getDefaultOffset, this._hitCallback);
-        } else {
+        if (this._timeLeft <= 0) {
             this._visualModel.markAsReusable(true);
         }
     };
@@ -1565,16 +1568,27 @@ define([
      * @param {Number} offset
      */
     Missile.prototype._hitCallback = function (hitObject, physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInObjectSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity, offset) {
-        physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000, 1, 1);
-        this._destruct(
-                ((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()),
-                mat.translation4vAux(hitPositionVectorInWorldSpace),
-                vec.scaled3Aux(relativeVelocityDirectionInWorldSpace, -1),
-                physicalHitObject.getVelocityMatrix(),
-                hitObject.getSoundSource(),
-                true);
-        hitObject.damage(this._class.getDamage(0), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, true, offset);
-        this._timeLeft = 0;
+        if (this._timeLeftForIgnition <= 0) {
+            // if the missile is already ignited, it explodes, dealing damage
+            physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._class.getKineticFactor() * this._physicalModel.getMass() * 1000, 1, 1);
+            this._destruct(
+                    ((hitObject.getShieldIntegrity() > 0) ? this._class.getShieldExplosionClass() : this._class.getExplosionClass()),
+                    mat.translation4vAux(hitPositionVectorInWorldSpace),
+                    vec.scaled3Aux(relativeVelocityDirectionInWorldSpace, -1),
+                    physicalHitObject.getVelocityMatrix(),
+                    hitObject.getSoundSource(),
+                    true);
+            hitObject.damage(this._class.getDamage(0), hitPositionVectorInObjectSpace, vec.scaled3(relativeVelocityDirectionInObjectSpace, -1), this._origin, true, offset);
+            this._timeLeft = 0;
+        } else {
+            // if the missile is not ignited yet, it simply collides with the object
+            physicalHitObject.applyForceAndTorque(relativeHitPositionVectorInWorldSpace, relativeVelocityDirectionInWorldSpace, relativeVelocity * this._physicalModel.getMass() * MISSILE_COLLISION_FORCE_FACTOR, 1, 1);
+            this._physicalModel.applyForce(relativeVelocity * this._physicalModel.getMass() * MISSILE_COLLISION_FORCE_FACTOR,
+                    -relativeVelocityDirectionInWorldSpace[0],
+                    -relativeVelocityDirectionInWorldSpace[1],
+                    -relativeVelocityDirectionInWorldSpace[2],
+                    1);
+        }
     };
     /**
      * Simulates the movement of the missile and checks if it hit any objects.
@@ -1588,19 +1602,15 @@ define([
         if (this.canBeReused()) {
             return;
         }
-        // avoid hit checking right after the missile is launched, as it could hit the launching ship
-        hitCheckDT = Math.min(dt, this._class.getDuration() - this._timeLeft);
-        this._timeLeft -= dt;
-        this._timeLeftForIgnition -= dt;
+        hitCheckDT = Math.min(dt, this._timeLeft);
         // if the target the missile is trying to home in on has been destroyed, self-destruct the missile
         if (this._target && this._homing && !this._target.isAlive()) {
             this._target = null;
             if (this._timeLeftForIgnition <= 0) {
                 this._timeLeft = 0;
             }
-        }
-        this._mainBurn = false;
-        if (this._timeLeft > 0) {
+        } else {
+            this._mainBurn = false;
             // set up and apply the main and maneuvering thrusters
             if ((this._timeLeftForIgnition <= 0) && this._target) {
                 matrix = this._physicalModel.getOrientationMatrix();
@@ -1615,7 +1625,7 @@ define([
                 // apply main thrust if the missile is not homing or is homing and sufficiently facing the target
                 // direction
                 if (!this._homing || this._stopHoming || (Math.abs(_angles.yaw) < threshold && Math.abs(_angles.pitch) < threshold)) {
-                    this._physicalModel.applyForce(this._class.getThrust(), matrix[4], matrix[5], matrix[6], dt);
+                    this._physicalModel.applyForce(this._class.getThrust(), matrix[4], matrix[5], matrix[6], hitCheckDT);
                     this._mainBurn = true;
                     this.addThrusterBurnForward(1);
                     if (!this._started) {
@@ -1634,10 +1644,10 @@ define([
                 // use maneuvering thrusters for homing
                 if (this._homing) {
                     if (!this._stopHoming) {
-                        this._turn(_angles.yaw, _angles.pitch, dt);
+                        this._turn(_angles.yaw, _angles.pitch, hitCheckDT);
                     }
-                    this._controlTurnThrusters(dt);
-                    this._applyTurnThrust(dt);
+                    this._controlTurnThrusters(hitCheckDT);
+                    this._applyTurnThrust(hitCheckDT);
                 }
                 for (i = 0; i < this._thrusters.length; i++) {
                     this._thrusters[i].updateVisuals();
@@ -1655,7 +1665,7 @@ define([
             if (this._lightSource) {
                 this._lightSource.setObjectIntensity(this._mainBurn ? this._class.getLightIntensity() : 0);
             }
-            this._physicalModel.simulate(dt);
+            this._physicalModel.simulate(hitCheckDT);
             this._turningMatrixValid = false;
             this._targetHitPositionValid = false;
             this._visualModel.setPositionMatrix(this._physicalModel.getPositionMatrix());
@@ -1668,7 +1678,7 @@ define([
                     if (!this._trailEmitter.isEmitting()) {
                         this._trailEmitter.startNew(this._visualModel.getNode().getScene(), enginePosition);
                     } else {
-                        this._trailEmitter.addPoint(enginePosition, dt);
+                        this._trailEmitter.addPoint(enginePosition, hitCheckDT);
                     }
                 } else {
                     if (this._trailEmitter.isEmitting()) {
@@ -1676,10 +1686,13 @@ define([
                     }
                 }
             }
-            if ((hitCheckDT > 0) && (this._timeLeftForIgnition <= 0)) {
+            if (hitCheckDT > 0) {
                 _checkHit(this._physicalModel.getPositionMatrix(), this._physicalModel.getVelocityMatrix(), hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, this._getHitOffset, this._hitCallback);
             }
-        } else {
+        }
+        this._timeLeft -= dt;
+        this._timeLeftForIgnition -= dt;
+        if (this._timeLeft <= 0) {
             // self-destruct if the time has run out
             this._timeLeft = 0;
             if (!this._visualModel.canBeReused()) {
