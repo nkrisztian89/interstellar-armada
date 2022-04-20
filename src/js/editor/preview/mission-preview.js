@@ -89,10 +89,17 @@ define([
              */
             GRID_COLOR = [1, 1, 1, 0.1],
             /** 
-             * Position markers for spacecrafts are rendered with this color in the mission preview
+             * Position markers for spacecrafts are rendered with this color in the mission preview,
+             * if the spacecraft has a positive Z coordinate
              * @type Number[4]
              */
-            MARKER_COLOR = [1, 1, 0, 0.25],
+            MARKER_COLOR_POSITIVE = [1, 1, 0, 0.25],
+            /** 
+             * Position markers for spacecrafts are rendered with this color in the mission preview,
+             * if the spacecraft has a negative Z coordinate
+             * @type Number[4]
+             */
+            MARKER_COLOR_NEGATIVE = [1, 0.5, 0, 0.25],
             /** 
              * Friendly spacecrafts are rendered with this color in the mission preview
              * @type Number[4]
@@ -235,7 +242,8 @@ define([
                 gridColor: GRID_COLOR,
                 gridCount: GRID_COUNT,
                 smallestGridSize: SMALLEST_GRID_SIZE,
-                markerColor: MARKER_COLOR,
+                markerColorPositive: MARKER_COLOR_POSITIVE,
+                markerColorNegative: MARKER_COLOR_NEGATIVE,
                 markerSize: MARKER_SIZE,
                 friendlyColor: FRIENDLY_COLOR,
                 hostileColor: HOSTILE_COLOR,

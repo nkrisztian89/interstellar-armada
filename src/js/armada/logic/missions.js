@@ -1599,7 +1599,8 @@ define([
      * @property {Number} gridCount
      * @property {Number} smallestGridSize
      * @property {Number} markerSize
-     * @property {Number[4]} markerColor
+     * @property {Number[4]} markerColorPositive
+     * @property {Number[4]} markerColorNegative
      * @property {Number[4]} friendlyColor 
      * @property {Number[4]} hostileColor 
      * @property {Number} smallestSizeWhenDrawn
@@ -1616,7 +1617,7 @@ define([
      */
     Mission.prototype.addToScene = function (battleScene, targetScene, previewParams) {
         var i, preview = !!previewParams, spacecraftCount, addedSpacecrafts,
-                friendly, friendlyColor, hostileColor, markerColor, callback,
+                friendly, friendlyColor, hostileColor, markerColorPositive, markerColorNegative, callback,
                 white = [1, 1, 1],
                 getSpacecraftColor;
         this._environment.addToScene(battleScene);
@@ -1624,7 +1625,8 @@ define([
             // add grids
             graphics.getShader(previewParams.gridShaderName);
             graphics.getShader(previewParams.markerShaderName);
-            markerColor = previewParams.markerColor;
+            markerColorPositive = previewParams.markerColorPositive;
+            markerColorNegative = previewParams.markerColorNegative;
             resources.getOrAddModel(egomModel.gridModel(GRID_MODEL_NAME, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize + 1, 2 * previewParams.smallestGridSize + 1, white));
             resources.getOrAddModel(egomModel.positionMarkerModel(MARKER_MODEL_NAME, 8, white));
             resources.executeWhenReady(function () {
@@ -1667,7 +1669,7 @@ define([
                     marker = new renderableObjects.ShadedLODMesh(resources.getModel(MARKER_MODEL_NAME).getEgomModel(), graphics.getManagedShader(previewParams.markerShaderName), {},
                             mat.translation4(position[12], position[13], 0), mat.identity4(), mat.scaling4(previewParams.markerSize, previewParams.markerSize, position[14]), true, 0, previewParams.smallestSizeWhenDrawn);
                     marker.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
-                        return markerColor;
+                        return (position[14] > 0) ? markerColorPositive : markerColorNegative;
                     });
                     battleScene.addObject(marker, false);
                 }
