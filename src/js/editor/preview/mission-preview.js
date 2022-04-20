@@ -138,7 +138,12 @@ define([
              * descriptor JSON
              * @type Number
              */
-            _selectedSpacecraftIndex;
+            _selectedSpacecraftIndex,
+            /**
+             * A reusable array to pass color values to uniforms
+             * @type Number[4]
+             */
+            _color = [0, 0, 0, 0];
     // ----------------------------------------------------------------------
     // Private Functions
     /**
@@ -152,12 +157,29 @@ define([
         }
     }
     /**
+     * @param {Number[4]} color
+     * @param {Number} colorFactor
+     * @param {Number} alphaFactor
+     * @returns {Number[4]}
+     */
+    function _getColor(color, colorFactor, alphaFactor) {
+        _color[0] = colorFactor * color[0];
+        _color[1] = colorFactor * color[1];
+        _color[2] = colorFactor * color[2];
+        _color[3] = alphaFactor * color[3];
+        return _color;
+    }
+    /**
      * Returns the color the passed spacecraft should be rendered with in the preview (if not selected)
      * @param {Spacecraft} spacecraft
      * @returns {Number[4]}
      */
     function _spacecraftColorFunction(spacecraft) {
-        return (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_COLOR : FRIENDLY_COLOR;
+        var
+                color = (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_COLOR : FRIENDLY_COLOR,
+                colorFactor = spacecraft.isAway() ? AWAY_COLOR_FACTOR : 1,
+                alphaFactor = spacecraft.isAway() ? AWAY_ALPHA_FACTOR : 1;
+        return _getColor(color, colorFactor, alphaFactor);
     }
     /**
      * Returns the color the passed spacecraft should be rendered with in the preview if selected
@@ -165,7 +187,11 @@ define([
      * @returns {Number[4]}
      */
     function _highlightedSpacecraftColorFunction(spacecraft) {
-        return (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_HIGHTLIGHTED_COLOR : FRIENDLY_HIGHTLIGHTED_COLOR;
+        var
+                color = (_mission.getPilotedSpacecraft() && _mission.getPilotedSpacecraft().isHostile(spacecraft)) ? HOSTILE_HIGHTLIGHTED_COLOR : FRIENDLY_HIGHTLIGHTED_COLOR,
+                colorFactor = spacecraft.isAway() ? AWAY_COLOR_FACTOR : 1,
+                alphaFactor = spacecraft.isAway() ? AWAY_ALPHA_FACTOR : 1;
+        return _getColor(color, colorFactor, alphaFactor);
     }
     /**
      * Update the preview for the current spacecraft selection
