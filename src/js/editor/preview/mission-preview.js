@@ -6,13 +6,15 @@
  */
 
 /**
+ * @param resources
  * @param renderableObjects
  * @param preview
  */
 define([
+    "modules/media-resources",
     "modules/scene/renderable-objects",
     "editor/preview/webgl-preview"
-], function (renderableObjects, preview) {
+], function (resources, renderableObjects, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -353,10 +355,12 @@ define([
      * @param {Number} [index] If the property is an array, this is the index of the element in the array being edited
      */
     function handleStartEdit(name, index) {
-        if (name === "spacecrafts") {
-            _selectedSpacecraftIndex = index;
-            _updateForSpacecraftSelection();
-            preview.requestRender();
+        if ((name === "spacecrafts") && _mission.getData().spacecrafts && (_mission.getData().spacecrafts.length > 0)) {
+            resources.executeWhenReady(function () {
+                _selectedSpacecraftIndex = index;
+                _updateForSpacecraftSelection();
+                preview.requestRender();
+            });
         }
     }
     /**

@@ -68,6 +68,7 @@ define([
             POPUP_BOTTOM_MARGIN = 4,
             EVENT_SHOW_NAME = "show",
             EVENT_HIDE_NAME = "hide",
+            EVENT_REMOVE_HIDE_NAME = "removeHide",
             // ------------------------------------------------------------------------------
             // Private variables
             /**
@@ -604,6 +605,11 @@ define([
         var i;
         for (i = 0; i < this._childPopups.length; i++) {
             this._childPopups[i].remove();
+        }
+        if (this.isVisible()) {
+            if (this._eventHandlers[EVENT_REMOVE_HIDE_NAME]) {
+                this._eventHandlers[EVENT_REMOVE_HIDE_NAME]();
+            }
         }
         if (this._element.parentNode) {
             this._element.parentNode.removeChild(this._element);

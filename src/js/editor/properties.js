@@ -217,6 +217,11 @@ define([
                 if (hideHandler) {
                     hideHandler();
                 }
+            },
+            removeHide: function () {
+                if (_preview && !parentPopup) {
+                    _preview.handleStopEdit(topName);
+                }
             }
         });
     }
@@ -639,6 +644,9 @@ define([
                 indexChangeHandler();
             }, ADD_BUTTON_TOOLTIP);
             removeElementButton = common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                if (_preview && !parentPopup) {
+                    _preview.handleStopEdit(topName);
+                }
                 data.splice(indexSelector.selectedIndex, 1);
                 _updateData(topName);
                 refreshIndices();

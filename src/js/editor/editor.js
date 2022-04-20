@@ -482,13 +482,13 @@ define([
             if (_selectedItemElement) {
                 _selectedItemElement.classList.remove(SELECTED_CLASS);
             }
+            common.removePopups();
             _clearPreview();
             _selectedItem.type = type;
             _selectedItem.name = name;
             _selectedItem.category = category;
             _selectedItem.reference = reference;
             _selectedItem.data = reference.getData();
-            common.removePopups();
             _loadProperties();
             _loadPreview();
             if (!element) {
