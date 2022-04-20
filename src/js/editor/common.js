@@ -222,13 +222,19 @@ define([
     /**
      * Sets the appropriate <option> tags for the passed <select> element to correspond to the list of options specified in the passed
      * string list (with text contents and value attributes both being equal to the strings)
+     * Alternatively, objects can be in the array with a value (string) property, which will be used for both the value and the text,
+     * and a color (string) property, which will be used as the CSS text color for the option.
      * @param {Element} selector
-     * @param {String[]} options
+     * @param {String[]|Object[]} options
      */
     function setSelectorOptions(selector, options) {
         var i, s = "";
         for (i = 0; i < options.length; i++) {
-            s += '<option value="' + options[i] + '">' + options[i] + '</option>';
+            if (typeof options[i] === "string") {
+                s += '<option value="' + options[i] + '">' + options[i] + '</option>';
+            } else if (typeof options[i] === "object") {
+                s += '<option value="' + options[i].value + '" style="color: ' + options[i].color + ';">' + options[i].value + '</option>';
+            }
         }
         selector.innerHTML = s;
     }

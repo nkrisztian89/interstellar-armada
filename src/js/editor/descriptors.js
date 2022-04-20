@@ -197,6 +197,7 @@ define([
             NAME_PROPERTY_NAME = "name",
             BASED_ON_PROPERTY_NAME = "basedOn",
             LONG_TEXT_PREVIEW_LENGTH = 12,
+            SPACECRAFT_AWAY_COLOR = "#666666",
             /**
              * @type Editor~TypeDescriptor
              */
@@ -4505,6 +4506,9 @@ define([
                 getName: function (instance) {
                     return instance.name || (instance.squad || instance.class) + (instance.count ? (" (" + instance.count + ")") : "");
                 },
+                getColor: function (instance) {
+                    return instance.away ? SPACECRAFT_AWAY_COLOR : undefined;
+                },
                 properties: {
                     NAME: {
                         name: "name",
@@ -4756,6 +4760,18 @@ define([
             return this._descriptor.getName(instance);
         }
         return instance[NAME_PROPERTY_NAME];
+    };
+    /**
+     * Returns the color to be used for the option corresponding to the passed instance when
+     * selecting it within an array
+     * @param {Object} instance
+     * @returns {String}
+     */
+    Type.prototype.getInstanceColor = function (instance) {
+        if (this._descriptor.getColor) {
+            return this._descriptor.getColor(instance);
+        }
+        return undefined;
     };
     /**
      * Returns the name of the type 

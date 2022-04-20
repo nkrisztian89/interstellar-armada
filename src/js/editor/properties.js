@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2021 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2022 Krisztián Nagy
  * @file Provides the content and event handlers for the Properties window of the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -529,19 +529,31 @@ define([
                 popup = _createPopup(button, parentPopup, topName),
                 isArray = (data instanceof Array),
                 type = new descriptors.Type(typeDescriptor),
-                indices, indexLabel, indexSelector,
+                indices, indexLabel, indexSelector, color,
                 addElementButton, removeElementButton, moveUpElementButton, moveDownElementButton, duplicateElementButton,
-                propertiesTable, getIndexText, addPropertiesTable, indexChangeHandler, updateButtonText, refreshIndices, update,
+                propertiesTable, getIndexText, getIndexColor, addPropertiesTable, indexChangeHandler, updateButtonText, refreshIndices, update,
+                updateIndex,
                 minCount = (arrayType ? arrayType.getMinLength() || 0 : 0),
                 maxCount = (arrayType ? arrayType.getMaxLength() || 0 : 0);
         getIndexText = function (index) {
             var instanceName = ((index >= 0) && data[index]) ? type.getInstanceName(data[index]) : "";
             return (index + 1).toString() + (instanceName ? ": " + instanceName : "");
         };
+        getIndexColor = function (index) {
+            return ((index >= 0) && data[index]) ? type.getInstanceColor(data[index]) : undefined;
+        };
         refreshIndices = function () {
             return common.setSelectorOptions(indexSelector, data.map(function (entry, index) {
-                return getIndexText(index);
+                color = getIndexColor(index);
+                return color ? {
+                    value: getIndexText(index),
+                    color: color
+                } : getIndexText(index);
             }));
+        };
+        updateIndex = function (index) {
+            indexSelector.options[index].text = getIndexText(index);
+            indexSelector.options[index].style.color = getIndexColor(index) || "inherit";
         };
         addPropertiesTable = function (index) {
             propertiesTable = _createProperties(popup.getElement(), (index === undefined) ? data : data[index], typeDescriptor.properties, topName, parent, topParent, popup, update);
@@ -585,7 +597,7 @@ define([
         update = function () {
             updateButtonText();
             if (indexSelector && (indexSelector.selectedIndex >= 0)) {
-                indexSelector.options[indexSelector.selectedIndex].text = getIndexText(indexSelector.selectedIndex);
+                updateIndex(indexSelector.selectedIndex);
             }
             if (changeHandler) {
                 changeHandler();
@@ -605,7 +617,11 @@ define([
             // if the array elements have a "name" property, use the values of that instead of indices for selection
             indices = [];
             while (indices.length < data.length) {
-                indices.push(getIndexText(indices.length));
+                color = getIndexColor(indices.length);
+                indices.push(color ? {
+                    value: getIndexText(indices.length),
+                    color: color
+                } : getIndexText(indices.length));
             }
             indexLabel = common.createLabel((data.length > 0) ? typeDescriptor.name : EMPTY_LIST_TEXT);
             indexSelector = common.createSelector(indices, indices[0], false, indexChangeHandler);
@@ -615,6 +631,7 @@ define([
                 newIndex = document.createElement("option");
                 newIndex.value = getIndexText(data.length - 1);
                 newIndex.text = newIndex.value;
+                newIndex.style.color = getIndexColor(data.length - 1);
                 indexSelector.add(newIndex);
                 _updateData(topName);
                 indexSelector.selectedIndex = data.length - 1;
@@ -637,6 +654,7 @@ define([
                 newIndex = document.createElement("option");
                 newIndex.value = getIndexText(data.length - 1);
                 newIndex.text = newIndex.value;
+                newIndex.style.color = getIndexColor(data.length - 1);
                 indexSelector.add(newIndex);
                 _updateData(topName);
                 indexSelector.selectedIndex = data.length - 1;
@@ -647,8 +665,8 @@ define([
                 data.splice(indexSelector.selectedIndex - 1, 2, data[indexSelector.selectedIndex], data[indexSelector.selectedIndex - 1]);
                 updateButtonText();
                 _updateData(topName);
-                indexSelector.options[indexSelector.selectedIndex].text = getIndexText(indexSelector.selectedIndex);
-                indexSelector.options[indexSelector.selectedIndex - 1].text = getIndexText(indexSelector.selectedIndex - 1);
+                updateIndex(indexSelector.selectedIndex);
+                updateIndex(indexSelector.selectedIndex - 1);
                 indexSelector.selectedIndex -= 1;
                 indexChangeHandler();
             }, MOVE_UP_BUTTON_TOOLTIP);
@@ -656,8 +674,8 @@ define([
                 data.splice(indexSelector.selectedIndex, 2, data[indexSelector.selectedIndex + 1], data[indexSelector.selectedIndex]);
                 updateButtonText();
                 _updateData(topName);
-                indexSelector.options[indexSelector.selectedIndex].text = getIndexText(indexSelector.selectedIndex);
-                indexSelector.options[indexSelector.selectedIndex + 1].text = getIndexText(indexSelector.selectedIndex + 1);
+                updateIndex(indexSelector.selectedIndex);
+                updateIndex(indexSelector.selectedIndex + 1);
                 indexSelector.selectedIndex += 1;
                 indexChangeHandler();
             }, MOVE_DOWN_BUTTON_TOOLTIP);
