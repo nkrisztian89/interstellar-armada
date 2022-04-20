@@ -154,6 +154,18 @@ Copyright: freesound user qubodup, license: CC0 1.0
 
 ---
 
+spacecraft/comm_relay.ogg
+
+Copyright 2022 Krisztián Nagy
+Created (edited and mixed) by Krisztián Nagy with Bfxr and Audacity
+License: CC BY 4.0
+Using the following sound effect:
+
+https://freesound.org/people/Tim_Verberne/sounds/558940
+Copyright: Tim Verberne, license: CC0 1.0
+
+---
+
 spacecraft/collision.ogg
 
 Edited by Krisztián Nagy with Audacity
