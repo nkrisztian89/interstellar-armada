@@ -10,8 +10,9 @@
         "build-with-editor": "grunt build-with-editor",
         "dev-build": "grunt dev-build",
         "start": "google-chrome --allow-file-access-from-files --user-data-dir=/tmp file://${INIT_CWD}/index.html#local",
-        "snap-build": "electron-builder --linux snap",
-        "snap-clean": "grunt clean-snap"
+        "build-snap": "grunt set-platform-snap; electron-builder --linux snap; grunt reset-platform;",
+        "build-appimage": "grunt set-platform-appimage; electron-builder --linux appimage; grunt reset-platform;",
+        "clean-snap": "grunt clean-snap"
     },
     "build": {
         "appId": "interstellar-armada",

@@ -88,7 +88,7 @@ define([
     AboutScreen.prototype._updateComponents = function () {
         var names, i, j, index, nameParts, reversed, nameLists;
         screens.HTMLScreen.prototype._updateComponents.call(this);
-        this._versionParagraph.customizeContent({version: game.getVersion()});
+        this._versionParagraph.customizeContent({version: game.getVersion() + " (" + game.getPlatform() + ")"});
         this._aboutGameDevParagraph.customizeContent({
             facebook: _link("https://www.facebook.com/interstellar.armada", "facebook"),
             github: _link("https://github.com/nkrisztian89/interstellar-armada", "github"),

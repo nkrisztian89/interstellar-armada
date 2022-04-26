@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2017, 2020-2022 Krisztián Nagy
  * @file A low level module with no dependencies that offers general functionality useful for managing basic application functions such
  * as accessing files from a directory structure using AJAX.
  * Usage:
@@ -84,6 +84,11 @@ define(function () {
              * @type Boolean
              */
             _isDebugVersion = true,
+            /**
+             * The distribution platform of the game (web/electron/snap/appimage)
+             * @type String
+             */
+            _platform = "web",
             /**
              * Whether the application is packaged using Electron (https://electron.atom.io/).
              * @type Boolean
@@ -209,6 +214,13 @@ define(function () {
             return _version;
         },
         /**
+         * Returns the string representing the distribution platform of the game (web/electron/snap/appimage)
+         * @returns {String}
+         */
+        getPlatform: function () {
+            return _platform;
+        },
+        /**
          * Return an argument that can be appended to URLs, marking them with the current application version.
          * @returns {String}
          */
@@ -225,6 +237,18 @@ define(function () {
             requirejs.config({
                 urlArgs: this.getVersionURLArg()
             });
+        },
+        /**
+         * Set the distribution platform of the game (will only take effect if the game uses electron, otherwise
+         * it will stay "web")
+         * @param {String} value
+         */
+        setPlatform: function (value) {
+            if (_usesElectron) {
+                _platform = (value !== "web") ? value : "electron";
+            } else {
+                _platform = "web";
+            }
         },
         /**
          * Sets the string identifying the version of the program that was run the previous time the application was run.

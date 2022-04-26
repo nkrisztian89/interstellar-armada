@@ -169,7 +169,7 @@ define([
             return;
         }
         _loginSent = true;
-        _queueRequest("start" + (newUser ? "" : ("/" + _id + "/" + _userID)) + "?version=" + application.getVersion().split(" ")[0], 1000, false, function (request) {
+        _queueRequest("start" + (newUser ? "" : ("/" + _id + "/" + _userID)) + "?version=" + application.getVersion().split(" ")[0] + "&platform=" + application.getPlatform(), 1000, false, function (request) {
             var data = JSON.parse(request.responseText);
             if (data.error) {
                 application.log_DEBUG("Creation of new user failed with error: " + data.error, 1);

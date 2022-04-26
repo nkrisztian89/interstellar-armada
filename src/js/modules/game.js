@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2017, 2020-2021 Krisztián Nagy
+ * Copyright 2014-2017, 2020-2022 Krisztián Nagy
  * @file This module builds on Application to provide a template for creating games.
  * To use, just augment this module, calling
  * - setGameName()
@@ -131,9 +131,11 @@ define([
                     application.setFolders(configJSON.folders);
                     application.setLogVerbosity(configJSON.logVerbosity);
                     application.setVersion(configJSON.version);
+                    application.setPlatform(configJSON.platform);
                     application.setDebugVersion(configJSON.debugVersion);
                     application.setReleases(configJSON.releases);
                     application.log("Game version is: " + application.getVersion(), 1);
+                    application.log("Game platform is: " + application.getPlatform(), 1);
                     _defaultLanguage = configJSON.defaultLanguage;
                     _stringsFileDescriptors = configJSON.configFiles.strings;
                     requirejs([

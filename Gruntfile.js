@@ -861,6 +861,48 @@ module.exports = function (grunt) {
                 files: [
                     {expand: true, flatten: true, src: ['css/*.css'], dest: './css'}
                 ]
+            },
+            setSnap: {
+                options: {
+                    patterns: [
+                        {
+                            match: /"platform":"\w+"/g,
+                            replacement: '"platform":"snap"'
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, cwd: 'config/', src: ['config.json'], dest: 'config/'}
+                ]
+            },
+            setAppimage: {
+                options: {
+                    patterns: [
+                        {
+                            match: /"platform":"\w+"/g,
+                            replacement: '"platform":"appimage"'
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, cwd: 'config/', src: ['config.json'], dest: 'config/'}
+                ]
+            },
+            resetPlatform: {
+                options: {
+                    patterns: [
+                        {
+                            match: /"platform":"\w+"/g,
+                            replacement: '"platform":"web"'
+                        }
+                    ],
+                    usePrefix: false
+                },
+                files: [
+                    {expand: true, cwd: 'config/', src: ['config.json'], dest: 'config/'}
+                ]
             }
         },
         _watch: {
@@ -917,4 +959,7 @@ module.exports = function (grunt) {
     grunt.registerTask('lint', ['_eslint']);
     grunt.registerTask('dev-build', ['_concurrent:dev']);
     grunt.registerTask('watch', ['_concurrent:watch']);
+    grunt.registerTask('set-platform-snap', ['_replace:setSnap']);
+    grunt.registerTask('set-platform-appimage', ['_replace:setAppimage']);
+    grunt.registerTask('reset-platform', ['_replace:resetPlatform']);
 };

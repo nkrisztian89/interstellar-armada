@@ -79,10 +79,10 @@ The last release of Electron tested with the game: 17.1.2
 Snap packaging
 --------------
 
-Run `npm run snap-build` after you have created a game build to use [electron-builder](https://www.electron.build/) to package the build
+Run `npm run build-snap` after you have created a game build to use [electron-builder](https://www.electron.build/) to package the build
 together with Electron into a [Snap](https://snapcraft.io/). The package file and other build artifacts will be generated in the `dist` folder.
 
-To clean the folder up, run `npm run snap-clean`.
+To clean the folder up, run `npm run clean-snap`.
 
 Latest versions tested:
 
