@@ -7,17 +7,26 @@ Play now!
 =========
 
 Though the game is far from being ready, it is possible to try out what has already
-been completed from it. **Just head to [this page](https://nkrisztian89.github.io/interstellar-armada/) 
-to launch the latest alpha release right in your browser.**
+been completed from it.
+
+## Web version
+Just head to **[this page](https://nkrisztian89.github.io/interstellar-armada/)** 
+to launch the latest alpha release! **Note:** The perfomance greatly varies depending on the used browser. In my experience,
+on most configurations **Chrome/Chromium** provides the best experience (by far).
+## Snap version
+If you are on Ubuntu or another Linux distribution with snap support, you can install the game from the **[Snap Store](https://snapcraft.io/interstellar-armada)**. This comes with the advantage that you will be able to play offline, as all the resources are included, and the game will automatically be updated to the latest version when I publish a new release.
+## Appimage
+If you are on Linux but you don't use snaps, you can also download the appimage for the latest **[release](https://github.com/nkrisztian89/interstellar-armada/releases)**. This also allows for offline play, but you will have to manually check here for updates.
+## Flatpak
+Creating Flatpak builds is a little more complicated, because the build system I use does not support it out of the box, but I plan to add Flatpaks for future releases (from 0.6).
+## Windows and Max OS
+If you are using these operating systems (or Android, iOS or anything else), just run the web version I linked as the first option, preferably from Chromium or Chrome. Currently I have no plans to add pre-packaged builds for these systems.
+
+# Performance
 
 If you experience performance issues, adjust the level of graphics detail from the menu.
 Or if you have a powerful computer, you might want to increase the default settings.
 As this is an early version, the performance is subject to changes (and bugs).
-The perfomance also greatly varies depending on the used browser. In my experience,
-on most configurations **Chrome** provides the best experience.
-
-With game related questions, suggestions and feedback please contact me at
-<armada.galactic.ace@gmail.com>.
 
 For developers
 ==============
@@ -84,6 +93,11 @@ together with Electron into a [Snap](https://snapcraft.io/). The package file an
 
 To clean the folder up, run `npm run clean-snap`.
 
+Appimage packaging
+------------------
+
+The same goes as for snaps, just use `npm run build-appimage` instead.
+
 Latest versions tested:
 
 Electron: 17.1.2
@@ -98,6 +112,9 @@ In short, most of the source code of the game is released under the [GNU GPLv3](
 and most of the assets are released under the [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license, but for exceptions,
 details and attributions please do check LICENSE.txt.
 
+With game related questions, suggestions and feedback please contact me at
+<armada.galactic.ace@gmail.com>.
+
 Krisztián Nagy
 
-16.03.2022.
+27.04.2022.
