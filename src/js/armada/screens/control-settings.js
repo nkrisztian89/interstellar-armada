@@ -214,9 +214,11 @@ define([
             _settingAltState = false;
             document.onkeydown = function (event) {
                 handleKeyDownWhileSetting(event);
+                event.preventDefault();
             };
             document.onkeyup = function (event) {
                 handleKeyUpWhileSetting(event);
+                event.preventDefault();
             };
         }
     }
