@@ -460,7 +460,7 @@ define([
         var gamepads, i, index;
         gamepads = getDevices();
         // if the player selected a specific controller to use, we choose it unless it is disconnected
-        if (this._gamepadSetIndex !== GAMEPAD_UNSET) {
+        if (this._gamepadSetIndex >= 0) {
             if (gamepads[this._gamepadSetIndex]) {
                 this._gamepad = gamepads[this._gamepadSetIndex];
             } else {
@@ -572,6 +572,7 @@ define([
     GamepadInputInterpreter.prototype.setGamepad = function (gamepad) {
         var i, gamepads = getDevices();
         if (!gamepad) {
+            this._gamepad = null;
             this._gamepadSetIndex = GAMEPAD_DISABLED;
             this._preferredGamepadId = PREFERRED_GAMEPAD_NULL_VALUE;
             localStorage[_modulePrefix + PREFERRED_GAMEPAD_SUFFIX] = PREFERRED_GAMEPAD_NULL_VALUE;
