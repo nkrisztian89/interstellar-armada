@@ -461,7 +461,7 @@ define([
         gamepads = getDevices();
         // if the player selected a specific controller to use, we choose it unless it is disconnected
         if (this._gamepadSetIndex !== GAMEPAD_UNSET) {
-            if (gamepads[this._gamepadSetIndex] !== null) {
+            if (gamepads[this._gamepadSetIndex]) {
                 this._gamepad = gamepads[this._gamepadSetIndex];
             } else {
                 this._gamepadSetIndex = GAMEPAD_UNSET;
@@ -474,7 +474,7 @@ define([
             // if we haven't detected any controllers so far, try to choose one based on the previous user preference
             if (this._detectingPreference) {
                 for (i = 0; i < gamepads.length; i++) {
-                    if (gamepads[i] !== null) {
+                    if (gamepads[i]) {
                         this._detectingPreference = false;
                         if (gamepads[i].id === this._preferredGamepadId) {
                             this._setGamepad(gamepads[i]);
@@ -489,7 +489,7 @@ define([
                 // if we don't have a specific controller selected and have already detected controllers in the past,
                 // go with the first connected one
                 for (i = 0; i < gamepads.length; i++) {
-                    if (gamepads[i] !== null) {
+                    if (gamepads[i]) {
                         this._gamepad = gamepads[i];
                         if (gamepads[i].index !== index) {
                             this.setProfile(this._getProfile(gamepads[i]), false);
