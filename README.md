@@ -100,9 +100,9 @@ The same goes as for snaps, just use `npm run build-appimage` instead.
 
 Latest versions tested:
 
-Electron: 17.1.2
+Electron: 18.2.0
 
-electron-builder: 22.14.13
+electron-builder: 23.0.3
 
 License and copyright
 =====================
@@ -117,4 +117,4 @@ With game related questions, suggestions and feedback please contact me at
 
 Krisztián Nagy
 
-27.04.2022.
+30.04.2022.
