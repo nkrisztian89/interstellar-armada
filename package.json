@@ -22,7 +22,21 @@
             "grade": "stable",
             "title": "Interstellar Armada: Galactic Ace",
             "summary": "A 3D space combat action/sim game in development.",
-            "plugs": ["desktop", "desktop-legacy", "wayland", "x11", "unity7", "home", "gsettings", "browser-support", "network", "audio-playback", "opengl", "hardware-observe", "joystick"]
+            "plugs": [
+                "desktop",
+                "desktop-legacy",
+                "wayland",
+                "x11",
+                "unity7",
+                "home",
+                "gsettings",
+                "browser-support",
+                "network",
+                "audio-playback",
+                "opengl",
+                "hardware-observe",
+                "joystick"
+            ]
         },
         "files": [
             "**/*",
@@ -56,8 +70,8 @@
         "url": "https://github.com/nkrisztian89/interstellar-armada/issues"
     },
     "devDependencies": {
-        "electron": "^17.1.2",
-        "electron-builder": "^22.14.13",
+        "electron": "^18.2.0",
+        "electron-builder": "^23.0.3",
         "grunt": "^1.5.2",
         "grunt-concurrent": "^3.0.0",
         "grunt-contrib-clean": "^2.0.0",
