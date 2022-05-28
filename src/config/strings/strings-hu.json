@@ -972,6 +972,10 @@
             "name": "Pirája",
             "description": "Versenygép eredetének köszönhetően a Pirája mozgékonyságban verhetetlen a vadászgépek között. Illegális műhelyekben minimális páncélzattal szerelték fel, a szárnyak végén a manőverező hajtoművek mellé pedig fegyverfelfüggesztési pontokat szereltek be, így létrehozva ezt a félelmetes kalóz harci gépet, amely kitűnően alkalmas gyors rajtaütések végrehajtására. A súlytöbblet lelassítja ugyan némileg az eredeti versenyváltozathoz képest, ám még így is túlszárnyalja bármelyik birodalmi vadászt gyorsulásban és manőverezhetőségben. Kis méretéből adódóan nem rendelkezik raktérrel az elrabolt rakomány szállításához, emiatt a kalózok kénytelenek más hajókkal együtt bevetni a támadásaik során. Ha közvetlen összecsapásra kerül a sor, elhanyagolható páncélzata, fegyverzete és a rakétavetők hiánya szintén komoly hátrányt jelent, melyet csak a legtehetségesebb pilóták képességei képesek ellensúlyozni."
         },
+        "stingray": {
+            "name": "Rája",
+            "description": "A Seyron Starforge népszerű Adapta modellje egyike az elérhető legtestreszabhatóbb kis méretű űrhajóknak. Széles körben használják különböző konfigurációit: személyszállításra, fejvadászatra vagy akár a helyi rendfenntartó erők járőrvadászaként - így gyakori látvány a lakott csillagrendszerekben. Újabb fejlemény azonban, hogy kalóz rajtaütések során is feltűnt egy szokatlanul erősen felfegyverzett változata, mely a nagyobb és erősebben páncélozott célpontok támadására is alkalmas, és a Rája megjelölést kapta. Két torpedóvetővel van felszerelve, ezáltal veszélyt jelent bármilyen kisebb vagy közepes méretű hajóra, ami szerencsétlenségére szembetalálkozik vele. Bár a katonai bombázókénál gyengébb a páncélzata, meglepően hatékony a vadászbombázó szerepben négy fegyverfelfüggesztési pontjának és méretéhez képest remek manőverezhetőségének köszönhetően."
+        },
         "buoy": {
             "name": "Navigációs bólya"
         },

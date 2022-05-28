@@ -56,6 +56,12 @@
             "class": "piranha",
             "position": [92, 200, -100],
             "rotations": ["z+180"]
+        },
+        {
+            "team": "pirates",
+            "class": "stingray",
+            "position": [112, 200, -100],
+            "rotations": ["z+180"]
         }
     ]
 }
