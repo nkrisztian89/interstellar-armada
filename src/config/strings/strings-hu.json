@@ -387,7 +387,9 @@
         "hydra": "Hüdra",
         "reaper": "Kaszás",
         "raider": "Betyár",
-        "marauder": "Martalóc"
+        "marauder": "Martalóc",
+        "bandit": "Bandita",
+        "brigand": "Haramia"
     },
     "mission": {
         "targetPracticeBoxes": {

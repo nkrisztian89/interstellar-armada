@@ -520,7 +520,9 @@
         "hydra": "Hydra",
         "reaper": "Reaper",
         "raider": "Raider",
-        "marauder": "Marauder"
+        "marauder": "Marauder",
+        "bandit": "Bandit",
+        "brigand": "Brigand"
     },
     "battle": {
         "developmentVersionNotice": "Interstellar Armada: Galactic Ace alpha {version}",
