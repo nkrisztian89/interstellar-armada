@@ -247,7 +247,7 @@ define([
                 conditionState = !this._all;
             }
         }
-        if ((this._previousConditionState === this._falsy) && (conditionState !== this._falsy)) {
+        if ((this._previousConditionState === false) && (conditionState === true)) {
             this.fire(mission);
         }
         this._previousConditionState = conditionState;
