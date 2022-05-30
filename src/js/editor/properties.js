@@ -178,16 +178,35 @@ define([
      * @param {String} data The starting value
      * @param {Object} [parent] See _changeData
      * @param {String} [name] See _changeData
+     * @param {String[]} [suggestions] A list of text suggestions to show for the user
      * @param {Function} [onChange] A function to execute every time after the value of the string was changed using this control
      * @returns {Element}
      */
-    function _createStringControl(topName, data, parent, name, onChange) {
-        var result = document.createElement("input");
+    function _createStringControl(topName, data, parent, name, suggestions, onChange) {
+        var datalist, option, id, i, result = document.createElement("input");
         result.type = "text";
         result.value = data;
         result.onchange = function () {
             _changeData(topName, result.value, parent, name, onChange);
         };
+        if (suggestions) {
+            id = "dl-" + topName + "-" + name;
+            datalist = document.getElementById(id);
+            if (datalist) {
+                datalist.innerHTML = "";
+            } else {
+                datalist = document.createElement("datalist");
+                datalist.id = id;
+            }
+            for (i = 0; i < suggestions.length; i++) {
+                option = document.createElement("option");
+                option.value = suggestions[i];
+                option.textContent = suggestions[i];
+                datalist.appendChild(option);
+            }
+            document.body.appendChild(datalist);
+            result.setAttribute("list", id);
+        }
         return result;
     }
     /**
@@ -1357,7 +1376,7 @@ define([
                     if (type.isLong()) {
                         result = _createLongStringControl(topName, data, parent, propertyDescriptor.name, parentPopup, changeHandler);
                     } else {
-                        result = _createStringControl(topName, data, parent, propertyDescriptor.name, changeHandler);
+                        result = _createStringControl(topName, data, parent, propertyDescriptor.name, propertyDescriptor.getSuggestions && propertyDescriptor.getSuggestions(), changeHandler);
                     }
                     break;
                 case descriptors.BaseType.ENUM:

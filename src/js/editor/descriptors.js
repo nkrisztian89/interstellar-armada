@@ -137,6 +137,7 @@ define([
              * @property {} [newValue] When a new object is created having this property, this value will be set as its value.
              * @property {String} [defaultText] The text to show in the editor when the property is unset and has no default value or it is better to show
              * some explanation instead of the default value
+             * @property {Function} [getSuggestions] Function to return a list of auto-complete suggestions to display for a string property
              */
             /**
              * @typedef {Object.<String, PropertyDescriptor>} Editor~ItemDescriptor
@@ -4518,8 +4519,13 @@ define([
                     },
                     SQUAD: {
                         name: "squad",
-                        type: BaseType.STRING, // should be an enum with the squad names from strings, with an optional index
+                        type: BaseType.STRING,
                         optional: true,
+                        getSuggestions: function () {
+                            return strings.getKeys("squad").map(function (key) {
+                                return key.substring(6);
+                            });
+                        },
                         defaultText: "none"
                     },
                     TEAM: {
