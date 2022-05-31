@@ -547,6 +547,17 @@
                 "win": "Megvannak a koordináták! Szép munka!"
             }
         },
+        "holdingOut": {
+            "name": "Kitartás",
+            "description": "[p]Kalózok egy nagyobb csoportja, köztük Rája osztályú bombázókkal, az utóbbi hónapokban nagy pusztítást végzett a Sheenuba rendszerben. Ezidáig sikerült elkerülniük erőinket, ám a feltört átjátszóállomás segítségével megszerzett adatoknak hála már szorosan a nyomukban vagyunk. A kalózok bázisának megostromlására készülünk, és nem engedhetjük meg, hogy hasonló csoportok siessenek a segítségére. Ezért előbb őket kell felszámolnunk.[p]A kalózok tisztában vannak a társaik ellen elért sikereivel, és ha bosszúról van szó, nem éppen az önmegtartóztatásukról híresek. Ha tőlük nem messze felbukkan, valószínűleg a közeledő hadihajóinkra fittyet hányva fogják célba venni Önt. [b]Ha fel tudja őket tartóztatni mindössze néhány perc erejéig[], korvettjeink behozhatják őket, és végre véget vethetünk a pusztításuknak![p][b]Ez egy rendkívül veszélyes küldetés, mivel roppant túlerővel fog szembenézni![] Két bátor pilótánk önként jelentkezett, hogy társai legyenek, így hármuknak kell majd feltartóztatnia a mintegy 30 hajóból álló kalózbandát. Mindazonáltal a korábbi kalóz-ellenes műveletek során nyújtott kiemelkedő teljesítménye tudatában nem kételkedünk benne, hogy sikerrel fog járni! [b]Bánjon el annyi hajóval, amennyit biztonságosan meg tud semmisíteni, de elsősorban a saját épségére ügyeljen[], mert a többit úgyis gyorsan elintézi majd az erősítés, amikor megérkezik. Amint meglátja őket, Ön szabadon elhagyhatja a helyszínt.",
+            "messages": {
+                "start": "Gyorsan! Szedjük le őket, mielőtt ideér a többi!",
+                "threat": "Most megfizetsz!",
+                "almostDone": "Már csak pár másodperc!",
+                "overkill1": "Hihetetlen! Megcsináltuk!",
+                "overkill2": "Ezért tuti jár egy előléptetés!"
+            }
+        },
         "test": {
             "name": "Teszt",
             "description": "Egy homokozó jellegű tesztpálya, ami felvonultatja a játékban szereplő legtöbb hajóosztályt, részben véletlenszerűen elhelyezve. Az űrhajók mozdulatlanul állnak. Demó módban a küldetés egy mindenki mindenki ellen jellegű összecsapássá változik, melynek célja a játék fejlesztés alatti teljesítménytesztelése.",
@@ -1098,6 +1109,9 @@
         },
         "imperialFighterMk3": {
             "name": "Nehéz vadászgép pajzs"
+        },
+        "imperialFighterMk4": {
+            "name": "Fejlett vadászgép pajzs"
         },
         "imperialBomberMk1": {
             "name": "Könnyű bombázó pajzs"

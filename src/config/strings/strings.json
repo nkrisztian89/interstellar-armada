@@ -485,6 +485,16 @@
                 "win": "We've got the base coordinates! Well done!"
             }
         },
+        "holdingOut": {
+            "name": "Holding out",
+            "messages": {
+                "start": "Quickly! Take them out before the rest arrives!",
+                "threat": "You will pay now!",
+                "almostDone": "Just a few more seconds!",
+                "overkill1": "Unbelievable! We did it!",
+                "overkill2": "They have to give us a promotion after this!"
+            }
+        },
         "test": {
             "name": "Sandbox test",
             "messages": {

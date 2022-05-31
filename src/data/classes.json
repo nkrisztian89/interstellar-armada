@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.5.2-dev:1079 (2022.05.17.)",
-        "creationTime": "Sat May 28 2022 18:47:18 GMT+0200 (közép-európai nyári idő)"
+        "version": "0.5.2-dev:1086 (2022.05.30.)",
+        "creationTime": "Tue May 31 2022 02:09:34 GMT+0200 (közép-európai nyári idő)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -3186,6 +3186,19 @@
             },
             "scoreValue": 25
         }, {
+            "name": "imperialFighterMk4",
+            "fullName": "Advanced fighter shield",
+            "capacity": 10,
+            "rechargeDelay": 650,
+            "rechargeRate": 2.5,
+            "rechargeColor": [0.5, 0.85, 1],
+            "rechargeAnimationDuration": 1000,
+            "rechargeStartSound": {
+                "name": "shieldUp",
+                "volume": 1
+            },
+            "scoreValue": 35
+        }, {
             "name": "imperialBomberMk1",
             "fullName": "Light bomber shield",
             "capacity": 10,
@@ -3875,6 +3888,12 @@
                     },
                     "shield": {
                         "class": "imperialFighterMk3"
+                    }
+                }, {
+                    "name": "player-tier4",
+                    "basedOn": "player-tier3",
+                    "shield": {
+                        "class": "imperialFighterMk4"
                     }
                 }, {
                     "name": "training",
