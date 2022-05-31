@@ -51,6 +51,11 @@ select {
     height: 1.6em;
 }
 
+a, a:visited, a:active {
+    color: #44aaff;
+    font-weight: bold;
+}
+
 span.propertyControl.withSetButton {
     margin-right: 3.5em;
 }

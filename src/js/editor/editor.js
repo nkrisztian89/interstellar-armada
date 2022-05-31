@@ -127,6 +127,7 @@ define([
             PREVIEW_CANVAS_ID = "previewCanvas",
             PREVIEW_INFO_ID = "previewInfo",
             NO_ITEM_SELECTED_TEXT = "select an item from the left or click New or Import in the top left menu",
+            TUTORIAL_TEXT = 'for more information, check out the <a href="docs/editor/tutorial/01-getting-started.html" target="_blank">Getting started guide</a>',
             NO_PREVIEW_TEXT = "preview not available for this type of item",
             NO_PROPERTIES_TEXT = "properties not available for this type of item",
             // ------------------------------------------------------------------------------
@@ -1217,7 +1218,7 @@ define([
                         application.log("Game settings loaded.", 1);
                         localStorage[constants.VERSION_LOCAL_STORAGE_ID] = application.getVersion();
                         application.log("Initialization completed.");
-                        _setLabel(document.getElementById(PREVIEW_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
+                        _setLabel(document.getElementById(PREVIEW_WINDOW_ID), NO_ITEM_SELECTED_TEXT + "<br>" + TUTORIAL_TEXT);
                         _setLabel(document.getElementById(PROPERTIES_WINDOW_ID), NO_ITEM_SELECTED_TEXT);
                         _loadItems();
                         _loadHistoryButtons();

@@ -1,0 +1,18 @@
+body {
+    background-color: #aaaaaa;
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
+
+div.main-content {
+    margin: 0  auto;
+    padding: 2em;
+    background-color: white;
+    width: 75em;
+    box-shadow: #444444 0 0 10em;
+}
+
+h1,h2,h3 {
+    font-family: sans-serif;
+}
