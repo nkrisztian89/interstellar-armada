@@ -1301,7 +1301,7 @@ define([
             }
             if (followedCraft) {
                 // handling the loss of the spacecraft that is followed by the camera
-                if (followedCraft.canBeReused() || followedCraft.isAway()) {
+                if (!followedCraft.isAlive() || followedCraft.isAway()) {
                     if (control.isInPilotMode()) {
                         control.switchToSpectatorMode(true);
                     } else if (_demoMode) {

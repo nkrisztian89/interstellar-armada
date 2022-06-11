@@ -619,8 +619,8 @@ define([
         var spacecraft = data.spacecraft;
         // if being hit by a (still alive and present) hostile ship while having different target
         if (
-                this._spacecraft && !this._spacecraft.canBeReused() &&
-                !spacecraft.canBeReused() && !spacecraft.isAway() && spacecraft.isHostile(this._spacecraft) &&
+                this._spacecraft && this._spacecraft.isAlive() &&
+                spacecraft.isAlive() && !spacecraft.isAway() && spacecraft.isHostile(this._spacecraft) &&
                 this._spacecraft.getTarget() && (this._spacecraft.getTarget() !== spacecraft)) {
             // switch target in case the current target is not targeting us anyway or is out of range
             if ((this._spacecraft.getTarget().getTarget() !== this._spacecraft) || !this._attackingTarget) {
@@ -1077,7 +1077,7 @@ define([
         // (but not evading) we mark the hit spacecraft as blocking the firing path, triggering blocker avoidance strafing maneuvers
         // if a blocking spacecraft is already mark, we overwrite it only if it is hostile, as the new one might be friendly, which means
         // we should not continue firing until the path is clear again
-        if (this._spacecraft && !this._spacecraft.canBeReused() && (spacecraft !== this._spacecraft) && (this._chargePhase !== ChargePhase.EVADE) && (spacecraft !== this._spacecraft.getTarget()) && (!this._isBlockedBy || (this._isBlockedBy.isHostile(this._spacecraft)))) {
+        if (this._spacecraft && this._spacecraft.isAlive() && (spacecraft !== this._spacecraft) && (this._chargePhase !== ChargePhase.EVADE) && (spacecraft !== this._spacecraft.getTarget()) && (!this._isBlockedBy || (this._isBlockedBy.isHostile(this._spacecraft)))) {
             this._isBlockedBy = spacecraft;
             // block avoidance controls strafing just like evasive maneuvers, therefore both cannot be active at the same time
             this._evasiveManeuverTime = -1;
@@ -1146,7 +1146,7 @@ define([
         // only perform anything if the controlled spacecraft still exists
         if (this._spacecraft) {
             // if the controlled spacecraft has been destroyed, remove the reference
-            if (this._spacecraft.canBeReused()) {
+            if (!this._spacecraft.isAlive()) {
                 this._spacecraft = null;
                 return;
             }
@@ -1236,7 +1236,7 @@ define([
                     // handling if another spacecraft blocks the attack path
                     if (this._isBlockedBy) {
                         stillBlocked = false;
-                        if (!this._isBlockedBy.canBeReused() && this._facingTarget) {
+                        if (this._isBlockedBy.isAlive() && this._facingTarget) {
                             // checking if the blocking spacecraft is still in the way
                             if (this._isBlockedBy.getPhysicalModel().checkHit(mat.translation4vAux(_targetPositionVector), mat.translation4vAux(_vectorToTarget), 1000, ownSize * 0.25)) {
                                 relativeBlockerPosition = vec.prodMat4Vec3Aux(
@@ -1517,7 +1517,7 @@ define([
         // only perform anything if the controlled spacecraft still exists
         if (this._spacecraft) {
             // if the controlled spacecraft has been destroyed, remove the reference
-            if (this._spacecraft.canBeReused()) {
+            if (!this._spacecraft.isAlive()) {
                 this._spacecraft = null;
                 return;
             }

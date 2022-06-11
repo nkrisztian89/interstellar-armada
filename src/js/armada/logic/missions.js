@@ -962,14 +962,14 @@ define([
                 this._updateObjectivesState();
             }
             // if the player is destroyed, the mission state is always defeat
-            if (this._pilotedCraft.canBeReused()) {
+            if (!this._pilotedCraft.isAlive()) {
                 this._state = MissionState.DEFEAT;
                 return;
             } else {
                 // a battle with a player can be completed if there are no hostiles left
                 if (this._state === MissionState.BATTLE) {
                     for (i = 0; i < this._spacecrafts.length; i++) {
-                        if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused() && this._pilotedCraft.isHostile(this._spacecrafts[i])) {
+                        if (this._spacecrafts[i] && this._spacecrafts[i].isAlive() && this._pilotedCraft.isHostile(this._spacecrafts[i])) {
                             return;
                         }
                     }
@@ -1008,7 +1008,7 @@ define([
     Mission.prototype.noHostilesPresent = function () {
         var i, team = null, spacecraftTeam;
         for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
+            if (this._spacecrafts[i] && this._spacecrafts[i].isAlive()) {
                 spacecraftTeam = this._spacecrafts[i].getTeam();
                 if (spacecraftTeam && team && (spacecraftTeam !== team)) {
                     return false;
@@ -1026,7 +1026,7 @@ define([
     Mission.prototype.getSpacecraftCountForTeam = function (team) {
         var i, result = 0;
         for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused()) {
+            if (this._spacecrafts[i] && this._spacecrafts[i].isAlive()) {
                 if (this._spacecrafts[i].getTeam() === team) {
                     result++;
                 }
@@ -1043,7 +1043,7 @@ define([
     Mission.prototype.getHostileSpacecraftCount = function (craft, presentOnly) {
         var i, result = 0;
         for (i = 0; i < this._spacecrafts.length; i++) {
-            if (this._spacecrafts[i] && !this._spacecrafts[i].canBeReused() && (!presentOnly || !this._spacecrafts[i].isAway())) {
+            if (this._spacecrafts[i] && this._spacecrafts[i].isAlive() && (!presentOnly || !this._spacecrafts[i].isAway())) {
                 if (this._spacecrafts[i].isHostile(craft)) {
                     result++;
                 }
@@ -1881,13 +1881,13 @@ define([
         }
         for (i = 0; i < this._spacecrafts.length; i++) {
             this._spacecrafts[i].simulate(dt);
-            if (this._spacecrafts[i].canBeReused() || this._spacecrafts[i].isAway()) {
+            if (!this._spacecrafts[i].isAlive() || this._spacecrafts[i].isAway()) {
                 index = this._hitObjects.indexOf(this._spacecrafts[i]);
                 if (index >= 0) {
                     this._hitObjects[index] = null;
                     this._hitObjects.splice(index, 1);
                 }
-                if (this._spacecrafts[i].canBeReused()) {
+                if (!this._spacecrafts[i].isAlive()) {
                     this._spacecrafts[i].destroy(true);
                     if (!multi) {
                         this._spacecrafts[i] = null;

@@ -489,7 +489,7 @@ define([
      */
     FighterController.prototype.executeActions = function (triggeredActions, dt) {
         if (this._controlledSpacecraft) {
-            if (!this._controlledSpacecraft.canBeReused()) {
+            if (this._controlledSpacecraft.isAlive()) {
                 this._controlledSpacecraft.prepareForControl();
                 // executing user-triggered actions
                 control.Controller.prototype.executeActions.call(this, triggeredActions);

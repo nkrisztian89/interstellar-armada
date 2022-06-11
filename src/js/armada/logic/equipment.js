@@ -3317,7 +3317,7 @@ define([
      * @returns {Spacecraft|null}
      */
     TargetingComputer.prototype.getTarget = function () {
-        if (this._target && (this._target.canBeReused() || this._target.isAway())) {
+        if (this._target && (!this._target.isAlive() || this._target.isAway())) {
             this.setTarget(null);
         }
         return this._target;
@@ -3369,7 +3369,7 @@ define([
         if (this._rangeSquared === 0) {
             return;
         }
-        if (this._target && (this._target.canBeReused() || this._target.isAway() || !this.isInRange(this._target))) {
+        if (this._target && (!this._target.isAlive() || this._target.isAway() || !this.isInRange(this._target))) {
             this.setTarget(null);
         }
         this._targetHitPositionValid = false;
