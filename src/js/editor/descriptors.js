@@ -22,6 +22,7 @@
  * @param missionActions Used to access enums
  * @param missionEvents Used to access enums
  * @param equipment Used to access enums 
+ * @param formations Used to access enums 
  * @param spacecraft Used to access enums 
  * @param ai Used to access the list of valid AI types
  * @param battle Used to access HUD enums
@@ -43,6 +44,7 @@ define([
     "armada/logic/missions/actions",
     "armada/logic/missions/events",
     "armada/logic/equipment",
+    "armada/logic/formations",
     "armada/logic/spacecraft",
     "armada/logic/ai",
     "armada/screens/battle",
@@ -51,7 +53,7 @@ define([
         utils,
         managedGL, egomModel, camera, resources,
         config, graphics, strings,
-        classes, environments, missions, conditions, missionActions, missionEvents, equipment, spacecraft, ai,
+        classes, environments, missions, conditions, missionActions, missionEvents, equipment, formations, spacecraft, ai,
         battle,
         common) {
     "use strict";
@@ -3756,9 +3758,9 @@ define([
             /**
              * @type Editor~TypeDescriptor
              */
-            SPACECRAFT_FORMATION = {
+            FORMATION_TYPE = {
                 baseType: BaseType.ENUM,
-                values: spacecraft.SpacecraftFormation
+                values: formations.FormationType
             },
             /**
              * @type Editor~TypeDescriptor
@@ -3772,7 +3774,7 @@ define([
                 properties: {
                     TYPE: {
                         name: "type",
-                        type: SPACECRAFT_FORMATION
+                        type: FORMATION_TYPE
                     },
                     SPACING: {
                         name: "spacing",

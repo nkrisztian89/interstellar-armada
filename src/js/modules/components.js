@@ -1963,6 +1963,13 @@ define([
             this._valueSelector.enable();
         }
     };
+    /**
+     * Re-selects the current value (based on index).
+     * Useful for updating the string after the value list has changed.
+     */
+    Selector.prototype.refreshValue = function () {
+        this.selectValueWithIndex(this._valueIndex);
+    };
     // #########################################################################
     /**
      * @typedef {Object} Slider~Params

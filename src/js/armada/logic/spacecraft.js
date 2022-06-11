@@ -62,22 +62,6 @@ define([
     "use strict";
     var
             // ------------------------------------------------------------------------------
-            // enums
-            /**
-             * Spacecrafts can take one of these formations (e.g. for placing them initially in a mission or when jumping in)
-             * @enum {String}
-             */
-            SpacecraftFormation = {
-                /** X offset is alternating (+/-), all offset factors increase for every second ship */
-                WEDGE: "wedge",
-                /** Each ship is offset by the given spacing from the previous one */
-                LINE: "line",
-                /** The offsets for the 3 ships after the lead: +X+Y+Z, -X+Y+Z, +2Y+2Z, then continues relative to the 4th */
-                DIAMOND: "diamond",
-                /** The position is randomly generated within the +/- X/2,Y/2,Z/2 around the lead position */
-                RANDOM: "random"
-            },
-            // ------------------------------------------------------------------------------
             // constants
             /**
              * The string to be inserted between the name of the spacecraft and the index of the body of its physical model, when the name for
@@ -186,11 +170,6 @@ define([
              */
             _scoreFactorForKill,
             /**
-             * A random function with a specific seed
-             * @type Function
-             */
-            _random,
-            /**
              * Whether we are playing multiplayer as a guest (not host)
              * @type Boolean
              */
@@ -207,9 +186,6 @@ define([
             _parameterArrays[_luminosityFactorsArrayName] = managedGL.ShaderVariableType.FLOAT;
         }
         _dynamicLights = graphics.areDynamicLightsAvailable() && (graphics.getMaxPointLights() > 0);
-    }
-    function resetRandomSeed() {
-        _random = Math.seed(config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED));
     }
     /**
      * Set whether we are playing multiplayer as a guest (not host)
@@ -691,57 +667,6 @@ define([
             this._init(spacecraftClass, name, positionMatrix, orientationMatrix, loadoutName, spacecraftArray, environment);
         }
     }
-    /**
-     * Returns the relative position for a spacecraft in a formation
-     * @param {SpacecraftEvents~JumpFormationData} formation The descriptor of the formation
-     * @param {Number} index The index of the spacecraft within the formation (the lead is 0)
-     * @param {Number[3]} [leadPosition] The 3D position vector of the lead ship in the formation
-     * @param {Float32Array} [orientation] The 4x4 orientation matrix of the formation
-     * @returns {Number[3]}
-     */
-    Spacecraft.getPositionInFormation = function (formation, index, leadPosition, orientation) {
-        var result, factor, modulus;
-        switch (formation.type) {
-            case SpacecraftFormation.WEDGE:
-                factor = Math.ceil(index / 2);
-                result = [
-                    (((index % 2) === 1) ? 1 : -1) * factor * formation.spacing[0],
-                    factor * formation.spacing[1],
-                    factor * formation.spacing[2]];
-                break;
-            case SpacecraftFormation.LINE:
-                result = [
-                    index * formation.spacing[0],
-                    index * formation.spacing[1],
-                    index * formation.spacing[2]];
-                break;
-            case SpacecraftFormation.DIAMOND:
-                modulus = (index % 3);
-                factor = Math.floor(index / 3) * 2 + ((modulus > 0) ? 1 : 0);
-                result = [
-                    ((modulus === 0) ? 0 : (modulus === 1) ? 1 : -1) * formation.spacing[0],
-                    factor * formation.spacing[1],
-                    factor * formation.spacing[2]];
-                break;
-            case SpacecraftFormation.RANDOM:
-                result = [
-                    _random() * formation.spacing[0] - formation.spacing[0] / 2,
-                    _random() * formation.spacing[1] - formation.spacing[1] / 2,
-                    _random() * formation.spacing[2] - formation.spacing[2] / 2
-                ];
-                break;
-            default:
-                application.showError("Unknown formation type specified: '" + formation.type + "!");
-                return [0, 0, 0];
-        }
-        if (orientation) {
-            vec.mulVec3Mat4(result, orientation);
-        }
-        if (leadPosition) {
-            vec.add3(result, leadPosition);
-        }
-        return result;
-    };
     // initializer
     /**
      * Initializes the properties of the spacecraft. Used by the constructor
@@ -3392,7 +3317,6 @@ define([
         _hitZoneColor = config.getSetting(config.BATTLE_SETTINGS.HITBOX_COLOR);
         _weaponFireSoundStackMinimumDistance = config.getSetting(config.BATTLE_SETTINGS.WEAPON_FIRE_SOUND_STACK_MINIMUM_DISTANCE);
         _scoreFactorForKill = config.getSetting(config.BATTLE_SETTINGS.SCORE_FRACTION_FOR_KILL);
-        resetRandomSeed();
         graphics.executeWhenReady(handleGraphicsSettingsChanged);
         graphics.onSettingsChange(handleGraphicsSettingsChanged);
     });
@@ -3401,8 +3325,6 @@ define([
     return {
         MULTI_HOST_DATA_LENGTH: MULTI_HOST_DATA_LENGTH,
         MULTI_GUEST_DATA_LENGTH: MULTI_GUEST_DATA_LENGTH,
-        SpacecraftFormation: SpacecraftFormation,
-        resetRandomSeed: resetRandomSeed,
         setMultiGuest: setMultiGuest,
         Spacecraft: Spacecraft
     };

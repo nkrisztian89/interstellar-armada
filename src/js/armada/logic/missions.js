@@ -30,6 +30,7 @@
  * @param SpacecraftEvents Used to trigger spacecraft events
  * @param spacecraft Used for creating spacecrafts
  * @param equipment Used for accessing the common projectile pool
+ * @param formations Used for setting up formations
  * @param explosion Used for explosion pool management
  * @param ai Used for setting the artificial intelligence pilots when creating a mission.
  * @param missionActions Used for accessing mission event action types
@@ -60,6 +61,7 @@ define([
     "armada/logic/SpacecraftEvents",
     "armada/logic/spacecraft",
     "armada/logic/equipment",
+    "armada/logic/formations",
     "armada/logic/explosion",
     "armada/logic/ai",
     "armada/logic/missions/actions",
@@ -70,7 +72,7 @@ define([
         application, asyncResource, resourceManager, resources, pools, egomModel, physics,
         camera, renderableObjects,
         constants, control, graphics, classes, config, strings,
-        logicConstants, environments, SpacecraftEvents, spacecraft, equipment, explosion, ai,
+        logicConstants, environments, SpacecraftEvents, spacecraft, equipment, formations, explosion, ai,
         missionActions, missionEvents) {
     "use strict";
     var
@@ -233,7 +235,7 @@ define([
                         if (positions) {
                             application.showError("Both positions and formation have been defined for spacecraft group - formation will be used!", application.ErrorSeverity.MINOR);
                         }
-                        spacecraftData.position = spacecraft.Spacecraft.getPositionInFormation(formation, j, spacecraftData.position, orientation);
+                        spacecraftData.position = formations.getPositionInFormation(formation, j, spacecraftData.position, orientation);
                     }
                     if (initialBlinkTime !== undefined) {
                         spacecraftData.initialBlinkTime = initialBlinkTime + (j * (initialBlinkTimeDelta || 0));
@@ -1288,7 +1290,7 @@ define([
         application.log_DEBUG("Loading mission from JSON file...", 2);
         this._difficultyLevel = _context.getDifficultyLevel(difficulty);
         equipment.handleDifficultySet(this._difficultyLevel);
-        spacecraft.resetRandomSeed();
+        formations.resetRandomSeed();
         this._dataJSON = dataJSON;
         this._title = dataJSON.title || "";
         this._nextMissionName = dataJSON.nextMission || null;

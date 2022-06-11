@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Krisztián Nagy
+ * Copyright 2021-2022 Krisztián Nagy
  * @file Provides the networking functionality using WebSockets and WebRTC for multiplayer games.
  * Relies on a WebSocket server to discover, host and join games and connect with
  * the other players of the same game. If possible, establishes a direct WebRTC
@@ -75,6 +75,7 @@
 /**
  * @typedef {Object} Game The model of the game state as kept on this client
  * @property {String} name The name of the game (unique within all games)
+ * @property {String} mode (enum GameMode) The game mode (ffa/coop)
  * @property {String} host The name of the hosting player
  * @property {Player[]} players
  * @property {Number} maxPlayers Number of maximum allowed players, with the
@@ -90,16 +91,18 @@
 /**
  * @param application For logging
  * @param constants To get spacecraft update message data lengths
+ * @param formations To set up formations when creating game data
  */
 define([
     "modules/application",
-    "armada/logic/constants"
-], function (application, constants) {
+    "armada/logic/constants",
+    "armada/logic/formations"
+], function (application, constants, formations) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
             // constants
-            API_VERSION = "1.0",
+            API_VERSION = "1.1",
             STUN_SERVER_URL = "stun:stun.l.google.com:19302",
             HEARTBEAT_INTERVAL = 15000,
             WELCOME_TIMEOUT = 10000,
@@ -146,6 +149,7 @@ define([
             SPACECRAFT_HOST_DATA_LENGTH = constants.MULTI_HOST_DATA_LENGTH,
             GUEST_DATA_LENGTH = constants.MULTI_GUEST_DATA_LENGTH,
             GUEST_REPEAT_INTERVAL = 100,
+            GUEST_DEAD_REPEAT_INTERVAL = 1000,
             /** @type GameSettings */
             DEFAULT_GAME_SETTINGS = {
                 environment: "reddim",
@@ -153,6 +157,13 @@ define([
             },
             PING_MESSAGE = {
                 type: MSG_TYPE_PING
+            },
+            /** @enum {String}
+             * @type Object
+             */
+            GameMode = {
+                ffa: "ffa",
+                coop: "coop"
             },
             // ------------------------------------------------------------------------------
             // private variables
@@ -1221,6 +1232,7 @@ define([
             type: MSG_TYPE_HOST,
             playerName: _playerName,
             gameName: params.gameName,
+            gameMode: params.gameMode,
             settings: Object.assign({}, DEFAULT_GAME_SETTINGS, params.settings),
             maxPlayers: params.maxPlayers
         }, function (data) {
@@ -1233,6 +1245,7 @@ define([
             _game = {
                 host: gameInfo.host,
                 name: gameInfo.name,
+                mode: gameInfo.mode,
                 players: [{name: _playerName, ping: 0, peer: false, ready: false, me: true, settings: gameInfo.players[0].settings, stats: gameInfo.players[0].stats}],
                 maxPlayers: gameInfo.maxPlayers,
                 settings: gameInfo.settings,
@@ -1418,6 +1431,7 @@ define([
             var i;
             _game = {
                 name: data.gameName,
+                mode: data.gameMode,
                 players: data.players,
                 settings: data.settings,
                 started: false
@@ -1642,12 +1656,15 @@ define([
                     return index / playerCount * Math.PI * 2;
                 },
                 playerIndex = _getPlayerIndex(),
+                teams, spacecrafts, events, formation;
+        switch (_game.mode) {
+            case GameMode.ffa:
                 teams = _game.players.map(function (player, index) {
                     return {
                         name: "Team " + (index + 1),
                         color: player.settings.color.concat(1)
                     };
-                }),
+                });
                 spacecrafts = _game.players.map(function (player, index) {
                     var angle = getAngle(index);
                     return {
@@ -1661,11 +1678,89 @@ define([
                         loadout: _game.settings.loadout
                     };
                 });
+                break;
+            case GameMode.coop:
+                teams = [{
+                        name: "Players"
+                    }, {
+                        faction: "pirates"
+                    }];
+                formation = {
+                    type: formations.FormationType.WEDGE,
+                    spacing: [40, -10, 0]
+                };
+                spacecrafts = _game.players.map(function (player, index) {
+                    return {
+                        name: player.name,
+                        squad: "Player " + (index + 1),
+                        team: "Players",
+                        class: player.settings.spacecraft,
+                        piloted: index === playerIndex,
+                        multi: !(_isHost && (index === 0)),
+                        position: formations.getPositionInFormation(formation, index),
+                        loadout: _game.settings.loadout
+                    };
+                });
+                spacecrafts.push({
+                    squad: "raider",
+                    team: "pirates",
+                    class: "wolf",
+                    loadout: "pirate-weak",
+                    ai: "fighter",
+                    multi: !_isHost,
+                    position: [0, 1000, 0],
+                    count: 3,
+                    formation: formation
+                });
+                spacecrafts.push({
+                    squad: "marauder",
+                    team: "pirates",
+                    class: "wolf",
+                    loadout: "pirate-shielded",
+                    ai: "fighter",
+                    multi: !_isHost,
+                    position: [0, 3000, 0],
+                    count: 3,
+                    away: true
+                });
+                events = [{
+                        trigger: {
+                            conditions: [{
+                                    type: "destroyed",
+                                    subjects: {
+                                        squads: ["raider"]
+                                    }
+                                }],
+                            delay: 1500
+                        },
+                        actions: [{
+                                type: "command",
+                                subjects: {
+                                    squads: ["marauder"]
+                                },
+                                params: {
+                                    command: "jump",
+                                    jump: {
+                                        way: "in",
+                                        formation: {
+                                            type: formations.FormationType.WEDGE,
+                                            spacing: [60, 10, 0]
+                                        }
+                                    }
+                                }
+                            }]
+                    }];
+                break;
+            default:
+                application.showError("Cannot create game! Unsupported game mode: " + _game.mode + "!");
+                return null;
+        }
         return {
             title: _game.name,
             environment: _game.settings.environment,
             teams: teams,
-            spacecrafts: spacecrafts
+            spacecrafts: spacecrafts,
+            events: events
         };
 
     }
@@ -1703,12 +1798,19 @@ define([
      */
     function sendGuestUpdate(spacecraft) {
         var now = performance.now(), i, data = spacecraft.getMultiGuestData();
-        if (now - _lastGuestUpdateTime > GUEST_REPEAT_INTERVAL) {
-            _sendGuestUpdate(now, data);
-            return;
-        }
-        for (i = 0; i < GUEST_DATA_LENGTH; i++) {
-            if (data[i] !== _lastGuestUpdate[i]) {
+        if (spacecraft.isAlive()) {
+            if (now - _lastGuestUpdateTime > GUEST_REPEAT_INTERVAL) {
+                _sendGuestUpdate(now, data);
+                return;
+            }
+            for (i = 0; i < GUEST_DATA_LENGTH; i++) {
+                if (data[i] !== _lastGuestUpdate[i]) {
+                    _sendGuestUpdate(now, data);
+                    return;
+                }
+            }
+        } else {
+            if (now - _lastGuestUpdateTime > GUEST_DEAD_REPEAT_INTERVAL) {
                 _sendGuestUpdate(now, data);
                 return;
             }
@@ -1728,6 +1830,7 @@ define([
         ERROR_CODE_SERVER_IS_FULL: ERROR_CODE_SERVER_IS_FULL,
         ERROR_CODE_INCOMPATIBLE_API_VERSION: ERROR_CODE_INCOMPATIBLE_API_VERSION,
         ERROR_CODE_NO_WELCOME: ERROR_CODE_NO_WELCOME,
+        GameMode: GameMode,
         init: init,
         getClientApiVersion: getClientApiVersion,
         isConnected: isConnected,

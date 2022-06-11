@@ -229,6 +229,11 @@
         "noAvailableGamesLabel": "There are no available games right now.",
         "onlineGamesTitle": "Online games:",
         "gameNameColumn": "Game name",
+        "gameModeColumn": "Game mode",
+        "gameMode": {
+            "ffa": "free for all",
+            "coop": "cooperative"
+        },
         "hostingPlayerColumn": "Hosting player",
         "playersColumn": "Players",
         "startedColumn": "Started",
@@ -237,6 +242,7 @@
             "no": "no"
         },
         "joinButton": "Join",
+        "mode": "Game mode:",
         "maxPlayers": "Maximum players:",
         "createGameHeader": "Create game",
         "createGameNameLabel": "Game name:",

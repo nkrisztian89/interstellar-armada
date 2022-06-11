@@ -1228,9 +1228,7 @@ define([
             _timeSinceHostUpdate += dt;
             control.control(dt);
             if (_multi && !networking.isHost()) {
-                if (!_mission.getPilotedSpacecraft().canBeReused()) {
-                    networking.sendGuestUpdate(_mission.getPilotedSpacecraft());
-                }
+                networking.sendGuestUpdate(_mission.getPilotedSpacecraft());
             }
             ai.control(dt);
             followedCraft = _mission.getFollowedSpacecraftForScene(_battleScene);

@@ -109,12 +109,16 @@ define([
         EU: {name: "serverRegion.EU"},
         US: {name: "serverRegion.US"}
     };
+    strings.MULTI_GAME_MODE = {
+        PREFIX: {name: "multiGames.gameMode.", optional: true}
+    };
     strings.MULTI_GAMES = {
         BACK: {name: "multiGames.backButton"},
         TITLE: {name: "multiGames.title"},
         STARTED_YES: {name: "multiGames.started.yes"},
         STARTED_NO: {name: "multiGames.started.no"},
         JOIN_BUTTON: {name: "multiGames.joinButton"},
+        GAME_MODE: {name: "multiGames.mode"},
         MAX_PLAYERS: {name: "multiGames.maxPlayers"},
         DISCONNECT_MESSAGE: {name: "multiGames.disconnectMessage"},
         CANNOT_CONNECT_MESSAGE: {name: "multiGames.cannotConnectMessage"},

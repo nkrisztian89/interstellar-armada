@@ -15,8 +15,8 @@
  * @param config Used for accessing game configuration/settings.
  * @param SpacecraftEvents Used for setting spacecraft event handlers
  * @param classes used for accessing spacecraft turn style enum type
- * @param spacecraft Used for formations
  * @param equipment Used to access the FlightMode enum
+ * @param formations Used for formations
  */
 define([
     "utils/utils",
@@ -27,10 +27,10 @@ define([
     "armada/configuration",
     "armada/logic/SpacecraftEvents",
     "armada/logic/classes",
-    "armada/logic/spacecraft",
     "armada/logic/equipment",
+    "armada/logic/formations",
     "utils/polyfill"
-], function (utils, vec, mat, application, physics, config, SpacecraftEvents, classes, spacecraft, equipment) {
+], function (utils, vec, mat, application, physics, config, SpacecraftEvents, classes, equipment, formations) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -653,7 +653,7 @@ define([
                         if (data.jump) {
                             if (data.lead && (data.index > 0) && (data.jump.formation)) {
                                 // setting position and orientation based on a formation
-                                this._spacecraft.setPhysicalPosition(spacecraft.Spacecraft.getPositionInFormation(data.jump.formation, data.index, data.lead.getPhysicalPositionVector(), data.lead.getPhysicalOrientationMatrix()));
+                                this._spacecraft.setPhysicalPosition(formations.getPositionInFormation(data.jump.formation, data.index, data.lead.getPhysicalPositionVector(), data.lead.getPhysicalOrientationMatrix()));
                                 this._spacecraft.updatePhysicalOrientationMatrix(data.lead.getPhysicalOrientationMatrix());
                             } else if (data.jump.anchor) {
                                 // clear cached reference to the anchor spacecraft for every new execution of the command
@@ -1425,7 +1425,7 @@ define([
                 // .................................................................................................
                 // performing evasive maneuver when hit
                 if ((this._evasiveManeuverTime >= 0) && (this._evasiveManeuverDelayLeft <= 0)) {
-                    // when initiating an evasive maneuver, the evasive velocity vector is a unit vector pointin in the opposite direction
+                    // when initiating an evasive maneuver, the evasive velocity vector is a unit vector pointing in the opposite direction
                     // to where the spacecraft has been hit, so we scale it to the required speed and randomly rotate it -90 to +90 degrees
                     if (this._evasiveManeuverTime === 0) {
                         this._evasiveVelocityVector[0] *= acceleration * EVASIVE_MANEUVER_SPEED_FACTOR;

@@ -243,6 +243,11 @@
         "noAvailableGamesLabel": "Jelenleg nincsenek aktív játékok.",
         "onlineGamesTitle": "Aktív játékok:",
         "gameNameColumn": "Játék neve",
+        "gameModeColumn": "Játékmód",
+        "gameMode": {
+            "ffa": "mki mki ellen",
+            "coop": "kooperatív"
+        },
         "hostingPlayerColumn": "Házigazda",
         "playersColumn": "Játékosok",
         "startedColumn": "Elindult",
@@ -251,6 +256,7 @@
             "no": "nem"
         },
         "joinButton": "Csatlakozás",
+        "mode": "Játékmód:",
         "maxPlayers": "Maximum játékosok:",
         "createGameHeader": "Játék létrehozása",
         "createGameNameLabel": "Játék neve:",

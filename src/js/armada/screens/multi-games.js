@@ -55,11 +55,13 @@ define([
             PLAYER_OK_BUTTON_ID = "playerOkButton",
             PLAYER_CANCEL_BUTTON_ID = "playerCancelButton",
             CREATE_GAME_POPUP_BACKGROUND_ID = "createGamePopupBackground",
+            CREATE_GAME_MODE_CONTAINER_ID = "createGameModeContainer",
             CREATE_GAME_MAX_PLAYERS_CONTAINER_ID = "createGameMaxPlayersContainer",
             CREATE_GAME_SPACECRAFTS_CONTAINER_ID = "createGameSpacecraftsContainer",
             CREATE_GAME_CREATE_BUTTON_ID = "createGameCreateButton",
             CREATE_GAME_CANCEL_BUTTON_ID = "createGameCancelButton",
             CREATE_GAME_NAME_ID = "createGameName",
+            CREATE_GAME_MODE_ID = "createGameMode",
             CREATE_GAME_MAX_PLAYERS_ID = "createGameMaxPlayers",
             CREATE_GAME_SPACECRAFTS_ID = "createGameSpacecrafts",
             SMALL_NUMBER_SELECTOR_CLASS = "smallNumberSelector",
@@ -73,6 +75,9 @@ define([
             MAX_GAME_NAME_LENGTH = 18;
     // ------------------------------------------------------------------------------
     // private functions
+    function _mapGameModeValue(option) {
+        return strings.get(strings.MULTI_GAME_MODE.PREFIX, option, option);
+    }
     function _mapMaxPlayerValue(option) {
         return option.toString();
     }
@@ -83,6 +88,9 @@ define([
             },
             value: option
         };
+    }
+    function _getGameModeValues() {
+        return Object.keys(networking.GameMode).map(_mapGameModeValue);
     }
     function _getMaxPlayerValues() {
         return config.getSetting(config.MULTI_SETTINGS.MAX_PLAYER_OPTIONS).map(_mapMaxPlayerValue);
@@ -156,6 +164,8 @@ define([
         /** @type SimpleComponent */
         this._playerNameInput = this.registerSimpleComponent(PLAYER_NAME_INPUT_ID);
         /** @type Selector */
+        this._createGameModeSelector = null;
+        /** @type Selector */
         this._createGameMaxPlayersSelector = null;
         /** @type CheckGroup */
         this._createGameSpacecraftsCheckGroup = null;
@@ -175,6 +185,17 @@ define([
         /** @type Number */
         this._interval = -1;
         config.executeWhenReady(function () {
+            this._createGameModeSelector = this.registerExternalComponent(
+                    new components.Selector(
+                            CREATE_GAME_MODE_ID,
+                            armadaScreens.SELECTOR_SOURCE,
+                            {
+                                cssFilename: armadaScreens.SELECTOR_CSS,
+                                selectorClassName: SMALL_NUMBER_SELECTOR_CLASS
+                            },
+                            {id: strings.MULTI_GAMES.GAME_MODE.name},
+                            _getGameModeValues()),
+                    CREATE_GAME_MODE_CONTAINER_ID);
             this._createGameMaxPlayersSelector = this.registerExternalComponent(
                     new components.Selector(
                             CREATE_GAME_MAX_PLAYERS_ID,
@@ -423,6 +444,7 @@ define([
         this._createGameCreateButton.getElement().onclick = function () {
             networking.createGame({
                 gameName: this._createGameNameInput.getElement().value,
+                gameMode: Object.keys(networking.GameMode)[this._createGameModeSelector.getSelectedIndex()],
                 maxPlayers: +this._createGameMaxPlayersSelector.getSelectedValue(),
                 settings: {
                     spacecrafts: this._createGameSpacecraftsCheckGroup.getValue()
@@ -447,6 +469,14 @@ define([
             return false;
         }.bind(this);
         this._createGamePopupBackground.hide();
+    };
+    /**
+     * @override
+     */
+    MultiGamesScreen.prototype._updateComponents = function () {
+        screens.HTMLScreen.prototype._updateComponents.call(this);
+        this._createGameModeSelector.setValueList(_getGameModeValues());
+        this._createGameModeSelector.refreshValue();
     };
     /**
      * Updates the game list display according to the passed data (the "games"
@@ -480,6 +510,9 @@ define([
                 tr = document.createElement("tr");
                 td = document.createElement("td");
                 td.textContent = game.name;
+                tr.appendChild(td);
+                td = document.createElement("td");
+                td.textContent = strings.get(strings.MULTI_GAME_MODE.PREFIX, game.mode, game.mode);
                 tr.appendChild(td);
                 td = document.createElement("td");
                 td.textContent = game.host;
