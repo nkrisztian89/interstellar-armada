@@ -4495,7 +4495,7 @@ define([
                 return !data.positions;
             },
             _craftCanHaveFormation = function (data) {
-                return _craftIsMulti(data) && _craftHasNoPositions(data);
+                return data.count && _craftHasNoPositions(data);
             },
             _craftCanHaveInitialBlinkTimeDelta = function (data) {
                 return _craftIsMulti(data) && (data.initialBlinkTime !== undefined);

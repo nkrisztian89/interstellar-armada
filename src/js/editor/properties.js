@@ -7,16 +7,18 @@
 
 /**
  * @param utils Used for enum handling
+ * @param application Used for showing errors
  * @param config Used to obtain configuration settings
  * @param descriptors Used to obtain the appropriate properties description object
  * @param common Used to create selectors
  */
 define([
     "utils/utils",
+    "modules/application",
     "armada/configuration",
     "editor/descriptors",
     "editor/common"
-], function (utils, config, descriptors, common) {
+], function (utils, application, config, descriptors, common) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -92,6 +94,14 @@ define([
              * @type Function
              */
             _selectItemFunction,
+            /**
+             * Stores the callback functions to be called to edit the properties of the current item. The keys are the property
+             * names, and the values are the callbacks, taking one parameter for the index of the element for array properties.
+             * E.g. calling _editCallbacks["spacecrafts"](2) would set the editing of the spacecrafts[2] element. Passing -1 as
+             * index indicates to stop editing that property.
+             * @type Object
+             */
+            _editCallbacks,
             // ------------------------------------------------------------------------------
             // Private functions
             _createControl, _createProperties, createProperties;
@@ -724,13 +734,25 @@ define([
         // create a button using which the popup can be opened
         button.type = "button";
         updateButtonText();
-        button.onclick = function () {
-            if (isArray) {
-                indexSelector.selectedIndex = 0;
-                indexChangeHandler();
+        // this can be called (through _editCallbacks) to start editing this property programmatically
+        button.edit = function (index) {
+            if (index === undefined) {
+                popup.toggle();
+            } else if (index < 0) {
+                popup.hide();
+            } else {
+                popup.show();
             }
-            popup.toggle();
+            if (isArray && ((index === undefined) || (index !== indexSelector.selectedIndex))) {
+                indexSelector.selectedIndex = index || 0;
+                if (popup.isVisible()) {
+                    indexChangeHandler();
+                }
+            }
             updateButtonText();
+        };
+        button.onclick = function () {
+            button.edit();
         };
         button.popup = popup; // custom property referencing the popup
         button.title = "Click to toggle property editor";
@@ -1335,6 +1357,19 @@ define([
         return result;
     }
     /**
+     * Start (or stop) editing a property.
+     * @param {String} propertyName Name of the property to edit.
+     * @param {Number} index Index of the element of the property to edit, if it is an array property.
+     * Passing -1 means to stop editing the property.
+     */
+    function editProperty(propertyName, index) {
+        if (_editCallbacks[propertyName]) {
+            _editCallbacks[propertyName](index);
+        } else {
+            application.showError("Cannot edit property '" + propertyName + "': no edit callback found!");
+        }
+    }
+    /**
      * Creates and returns a control that can be used to edit the value of the property described by the passed property description object.
      * Creates the appripriate type of control depending on the type of the property.
      * @param {Editor~PropertyDescriptor} propertyDescriptor Should contain the name and type of the property
@@ -1503,6 +1538,15 @@ define([
             row.valueCell = valueCell;
             row.hidden = !valid;
             row.required = required;
+            if (!topName) {
+                _editCallbacks[propertyDescriptor.name] = function (index) {
+                    if (control.edit) {
+                        control.edit(index);
+                    } else {
+                        control.click();
+                    }
+                };
+            }
         };
         generateTable = function () {
             var i, row;
@@ -1553,9 +1597,13 @@ define([
         _element = element;
         _item = item;
         _preview = preview;
+        if (_preview && _preview.setEditProperty) {
+            _preview.setEditProperty(editProperty);
+        }
         _nameChangeHandler = changeHandler;
         _selectItemFunction = selectItemFunction;
         _updateBasedOn();
+        _editCallbacks = {};
         _createProperties(element, item.data, descriptors.itemDescriptors[item.category], null, null, item.data, null, changeHandler);
     };
     // ------------------------------------------------------------------------------

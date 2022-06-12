@@ -83,6 +83,7 @@ define([
             MAX_DISTANCE_FACTOR = 100,
             VIEW_NAME = "standard",
             FOV = 45,
+            CLICK_THRESHOLD = 3,
             WIREFRAME_SHADER_NAME = "oneColor",
             WIREFRAME_COLOR = [1, 1, 1, 1],
             // ----------------------------------------------------------------------
@@ -114,11 +115,11 @@ define([
             /**
              * @type Number[2]
              */
-            _mousePos,
+            _mousePos = [0, 0],
             /**
              * @type Boolean
              */
-            _turningModel, _turningCamera,
+            _turningModel, _turningCamera, _rotated,
             /**
              * A reference to the object storing the HTML elements to be used for the preview
              * @type Object
@@ -164,6 +165,12 @@ define([
              */
             _fps,
             /**
+             * The callback to be called to start/stop/change editing a property in the editor.
+             * The parameters are the property name, and the index if it is an array property.
+             * @type Function
+             */
+            _editProperty,
+            /**
              * 
              * @type Object
              */
@@ -195,6 +202,8 @@ define([
      * @property {Function} createOptions
      * @property {Function} animate
      * @property {Function} onModelRotate
+     * @property {Function} onMouseMove
+     * @property {Function} onClick
      * @property {Function} getInfo
      */
     /**
@@ -393,7 +402,11 @@ define([
         var camera = _scene.getCamera(), cameraOri,
                 rotA = -(event.screenX - _mousePos[0]) * Math.radians(ROTATION_MOUSE_SENSITIVITY),
                 rotB = -(event.screenY - _mousePos[1]) * Math.radians(ROTATION_MOUSE_SENSITIVITY),
-                axisA, axisB;
+                axisA, axisB, renderRequired = false,
+                dist, rect, aspect, x, y, camOri, direction;
+        if (_turningModel || _turningCamera) {
+            _rotated += Math.abs(event.screenX - _mousePos[0]) + Math.abs(event.screenY - _mousePos[1]);
+        }
         if (_model) {
             if (_turningModel) {
                 cameraOri = camera.getCameraOrientationMatrix();
@@ -427,15 +440,31 @@ define([
                 camera.setAngularVelocityVector([0, 0, 0]);
                 mat.copyRotation4(_currentContext.cameraOrientationMatrix, camera.getCameraOrientationMatrix());
             } else {
-                _scene.getCamera().setControlledVelocityVector([
+                camera.setControlledVelocityVector([
                     -(event.screenX - _mousePos[0]) * CAMERA_PAN_MOUSE_SENSITIVITY,
                     (event.screenY - _mousePos[1]) * CAMERA_PAN_MOUSE_SENSITIVITY,
                     0]);
-                _scene.getCamera().update(1000);
-                _scene.getCamera().setControlledVelocityVector([0, 0, 0]);
+                camera.update(1000);
+                camera.setControlledVelocityVector([0, 0, 0]);
             }
         }
-        requestRender();
+        if (_currentContext.functions.onMouseMove) {
+            dist = camera.getSpan() / (2 * Math.tan(camera.getFOV() * utils.RAD * 0.5));
+            rect = _elements.canvas.getBoundingClientRect();
+            aspect = rect.width / rect.height;
+            x = ((event.clientX - rect.left) / rect.width - 0.5) * aspect;
+            y = 0.5 - (event.clientY - rect.top) / rect.height;
+            camOri = camera.getCameraOrientationMatrix();
+            direction = [0, 0, 0];
+            vec.add3(direction, vec.getRowC43ScaledAux(camOri, -dist));
+            vec.add3(direction, vec.scaled3Aux(vec.getRowA43Aux(camOri), camera.getSpan() * x));
+            vec.add3(direction, vec.getRowB43ScaledAux(camOri, camera.getSpan() * y));
+            vec.normalize3(direction);
+            renderRequired = _currentContext.functions.onMouseMove(camera.getCameraPositionMatrix(), direction, _turningModel, _turningCamera);
+        }
+        if (_turningCamera || _turningModel || renderRequired) {
+            requestRender();
+        }
         _mousePos = [event.screenX, event.screenY];
     }
     /**
@@ -454,7 +483,13 @@ define([
         }
         if (!_turningModel && !_turningCamera) {
             document.body.onmousemove = null;
+            _elements.canvas.onmousemove = _handleMouseMove;
             document.body.onmouseup = null;
+        }
+        if ((event.target === _elements.canvas) && (_rotated <= CLICK_THRESHOLD)) {
+            if (_currentContext.functions.onClick) {
+                _currentContext.functions.onClick(event);
+            }
         }
         event.preventDefault();
         event.stopPropagation();
@@ -474,8 +509,10 @@ define([
                 _turningCamera = true;
                 break;
         }
+        _rotated = 0;
         if (_turningModel || _turningCamera) {
             _mousePos = [event.screenX, event.screenY];
+            _elements.canvas.onmousemove = null;
             document.body.onmousemove = _handleMouseMove;
             // once the user releases the mouse button, the event handlers should be cancelled
             document.body.onmouseup = _handleMouseUp;
@@ -733,6 +770,7 @@ define([
                     }
                 }
                 _elements.canvas.onmousedown = _handleMouseDown;
+                _elements.canvas.onmousemove = _handleMouseMove;
                 _elements.canvas.onwheel = _handleWheel;
                 _context.executeWhenReady(function () {
                     _updateForRenderMode();
@@ -853,13 +891,32 @@ define([
             requestRender();
         }
     }
-    // initializazion
+    /**
+     * When the preview wants to trigger the editing of a property in the editor, it will
+     * call the function passed to this method (with the name of the property and the index
+     * of the element (if it is an array property) passed to it)
+     * @param {Function} callback
+     */
+    function setEditProperty(callback) {
+        _editProperty = callback;
+    }
+    /**
+     * Call this in the specific previews extending webgl-preview to trigger the editing of
+     * a property in the editor
+     * @param {String} propertyName
+     * @param {Number} [index] The index of the element to edit, if it is an array property
+     */
+    function editProperty(propertyName, index) {
+        _editProperty(propertyName, index);
+    }
+    // initialization
     // obtaining pool references
     _particlePool = pools.getPool(constants.PARTICLE_POOL_NAME, renderableObjects.Particle);
     _explosionPool = pools.getPool(constants.EXPLOSION_POOL_NAME, explosion.Explosion);
     // ----------------------------------------------------------------------
     // The public interface of the module
     return {
+        FREE_CAMERA_VIEW_DISTANCE: FREE_CAMERA_VIEW_DISTANCE,
         WebGLPreviewContext: WebGLPreviewContext,
         setContext: setContext,
         getScene: getScene,
@@ -876,6 +933,8 @@ define([
         updateCanvas: updateCanvas,
         refresh: refresh,
         clear: clear,
-        handleDataChanged: handleDataChanged
+        handleDataChanged: handleDataChanged,
+        setEditProperty: setEditProperty,
+        editProperty: editProperty
     };
 });

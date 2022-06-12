@@ -6,15 +6,21 @@
  */
 
 /**
+ * @param utils
+ * @param vec
+ * @param mat
  * @param resources
  * @param renderableObjects
  * @param preview
  */
 define([
+    "utils/utils",
+    "utils/vectors",
+    "utils/matrices",
     "modules/media-resources",
     "modules/scene/renderable-objects",
     "editor/preview/webgl-preview"
-], function (resources, renderableObjects, preview) {
+], function (utils, vec, mat, resources, renderableObjects, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -127,6 +133,12 @@ define([
              * @type Number 
              */
             SMALLEST_SIZE_WHEN_DRAWN = 0.1,
+            /**
+             * When checking if we are hovering over a spacecraft with the cursor, the boundaries of the spacecraft
+             * will be extended by this offset (in meters)
+             * @type Number
+             */
+            SPACECRAFT_HOVER_OFFSET = 1,
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -148,6 +160,12 @@ define([
              * @type Number
              */
             _selectedSpacecraftIndex,
+            /**
+             * The index of the spacecraft entry highlighted by hovering the mouse
+             * cursor over one of the spacecrafts belonging to it
+             * @type index
+             */
+            _highlightedSpacecraftIndex,
             /**
              * A reusable array to pass color values to uniforms
              * @type Number[4]
@@ -203,10 +221,27 @@ define([
         return _getColor(color, colorFactor, alphaFactor);
     }
     /**
-     * Update the preview for the current spacecraft selection
+     * Returns the index of the spacecraft descriptor entry that corresponds to the spacecraft with
+     * the passed index within the mission's spacecraft array
+     * @param {Number} index
+     * @returns {Number}
+     */
+    function _getDescriptorIndexForSpacecraft(index) {
+        var i, currentIndex, spacecraftData = _mission.getData().spacecrafts;
+        currentIndex = 0;
+        for (i = 0; i < spacecraftData.length; i++) {
+            if (index < currentIndex + (spacecraftData[i].count || 1)) {
+                return i;
+            }
+            currentIndex += (spacecraftData[i].count || 1);
+        }
+        return -1;
+    }
+    /**
+     * Update the preview for the current spacecraft selection (and highlight)
      */
     function _updateForSpacecraftSelection() {
-        var i, startIndex, endIndex, spacecraftData = _mission.getData().spacecrafts, spacecrafts = _mission.getSpacecrafts();
+        var i, startIndex, endIndex, highlightStartIndex, highlightEndIndex, spacecraftData = _mission.getData().spacecrafts, spacecrafts = _mission.getSpacecrafts();
         if (_selectedSpacecraftIndex >= 0) {
             startIndex = 0;
             for (i = 0; i < _selectedSpacecraftIndex; i++) {
@@ -217,8 +252,18 @@ define([
             startIndex = -1;
             endIndex = -1;
         }
+        if (_highlightedSpacecraftIndex >= 0) {
+            highlightStartIndex = 0;
+            for (i = 0; i < _highlightedSpacecraftIndex; i++) {
+                highlightStartIndex += (spacecraftData[i].count || 1);
+            }
+            highlightEndIndex = highlightStartIndex + (spacecraftData[i].count || 1);
+        } else {
+            highlightStartIndex = -1;
+            highlightEndIndex = -1;
+        }
         for (i = 0; i < spacecrafts.length; i++) {
-            spacecrafts[i].getVisualModel().setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, ((i >= startIndex) && (i < endIndex)) ?
+            spacecrafts[i].getVisualModel().setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, (((i >= startIndex) && (i < endIndex)) || ((i >= highlightStartIndex) && (i < highlightEndIndex))) ?
                     _highlightedSpacecraftColorFunction.bind(this, spacecrafts[i]) :
                     _spacecraftColorFunction.bind(this, spacecrafts[i]));
         }
@@ -322,6 +367,53 @@ define([
         }
         return result;
     }
+    /**
+     * Called when the mouse cursor is moved - highlights the spacecrafts we are hovering over
+     * @param {Float32Array} cameraPositionMatrix
+     * @param {Number[3]} direction The 3D direction in which we are pointing with the cursor (from camera focus point towards the 3D position of the cursor)
+     * @returns {Boolean} Whether we should trigger a re-rendering of the preview
+     */
+    function _onMouseMove(cameraPositionMatrix, direction) {
+        var i, spacecrafts, spacecraft, hit, distance, range, matrix, hitIndex = -1, hitDistance = 0, index, offset;
+        spacecrafts = _mission.getSpacecrafts();
+        range = preview.FREE_CAMERA_VIEW_DISTANCE;
+        offset = SPACECRAFT_HOVER_OFFSET;
+        matrix = mat.translation4(
+                cameraPositionMatrix[12] + direction[0] * range,
+                cameraPositionMatrix[13] + direction[1] * range,
+                cameraPositionMatrix[14] + direction[2] * range);
+        for (i = 0; i < spacecrafts.length; i++) {
+            spacecraft = spacecrafts[i];
+            if (!spacecraft.isAway() || (spacecraft.getPhysicalPositionMatrix()[12] !== 0) || (spacecraft.getPhysicalPositionMatrix()[13] !== 0) || (spacecraft.getPhysicalPositionMatrix()[14] !== 0)) {
+                hit = spacecraft.getPhysicalModel().checkHit(matrix, mat.translation4v(vec.scaled3(direction, range)), 1000, offset);
+                if (hit) {
+                    distance = vec.dot3(vec.diff3Aux(spacecraft.getPhysicalPositionVector(), mat.translationVector3(cameraPositionMatrix)), direction);
+                    if ((hitIndex < 0) || (distance < hitDistance)) {
+                        hitIndex = i;
+                        hitDistance = distance;
+                    }
+                }
+            }
+        }
+        index = (hitIndex >= 0) ? _getDescriptorIndexForSpacecraft(hitIndex) : -1;
+        if (_highlightedSpacecraftIndex !== index) {
+            _highlightedSpacecraftIndex = index;
+            resources.executeWhenReady(function () {
+                _updateForSpacecraftSelection();
+                preview.requestRender();
+            });
+        }
+        return false;
+    }
+    /**
+     * Called when we click on the preview canvas (but not when releasing the mouse button after turning the camera)
+     * @param {MouseEvent} event
+     */
+    function _onClick(event) {
+        if (event.which === utils.MouseButton.LEFT) {
+            preview.editProperty("spacecrafts", _highlightedSpacecraftIndex);
+        }
+    }
     // ----------------------------------------------------------------------
     // Public Functions
     /**
@@ -386,7 +478,9 @@ define([
         updateForRefresh: _updateForRefresh,
         getInfo: _getInfo,
         clearSettingsForNewItem: _clearSettingsForNewItem,
-        createOptions: _createOptions
+        createOptions: _createOptions,
+        onMouseMove: _onMouseMove,
+        onClick: _onClick
     });
     // ----------------------------------------------------------------------
     // The public interface of the module
@@ -395,6 +489,7 @@ define([
         clear: preview.clear,
         handleDataChanged: preview.handleDataChanged,
         handleStartEdit: handleStartEdit,
-        handleStopEdit: handleStopEdit
+        handleStopEdit: handleStopEdit,
+        setEditProperty: preview.setEditProperty
     };
 });
