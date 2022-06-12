@@ -696,13 +696,13 @@ define([
      * @returns {Number}
      */
     RenderableObject3D.prototype.getRenderQueueBits = function (camera, parentQueueBits) {
-        var result = RenderQueueBits.NONE, baseMatrix, scalingMatrix, size;
+        var result = RenderQueueBits.NONE, baseMatrix, size;
         if (this.isInsideParent()) {
             return parentQueueBits;
         }
         baseMatrix = this.getPositionMatrixInCameraSpace(camera);
-        scalingMatrix = this.getCascadeScalingMatrix();
-        size = this.getSize() * scalingMatrix[0];
+        this.getCascadeScalingMatrix();
+        size = this.getSize() * this._largestScalingFactor;
         if ((baseMatrix[14] - size <= -camera.getNearDistance()) && ((baseMatrix[14] + size) > -camera.getViewDistance())) {
             result |= RenderQueueBits.FRONT_QUEUE_BIT;
         }
@@ -982,6 +982,13 @@ define([
      */
     ShadedLODMesh.prototype.getSize = function () {
         return this._modelSize;
+    };
+    /**
+     * Manually override the calculated model size for this mesh.
+     * @param {Number} value
+     */
+    ShadedLODMesh.prototype.setModelSize = function (value) {
+        this._modelSize = value;
     };
     /**
      * 

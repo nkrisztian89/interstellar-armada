@@ -10,6 +10,7 @@
  * @param vec
  * @param mat
  * @param resources
+ * @param camera
  * @param renderableObjects
  * @param preview
  */
@@ -18,9 +19,10 @@ define([
     "utils/vectors",
     "utils/matrices",
     "modules/media-resources",
+    "modules/scene/camera",
     "modules/scene/renderable-objects",
     "editor/preview/webgl-preview"
-], function (utils, vec, mat, resources, renderableObjects, preview) {
+], function (utils, vec, mat, resources, camera, renderableObjects, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -31,7 +33,8 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "environment",
-                "spacecrafts"
+                "spacecrafts",
+                "events"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
@@ -108,6 +111,11 @@ define([
              * @type Number[4]
              */
             MARKER_COLOR_NEGATIVE = [1, 0.5, 0, 0.25],
+            /**
+             * Jump markers (lines from the anchor to the spacecraft) are rendered with this color in the mission preview
+             * @type Number[4]
+             */
+            JUMP_MARKER_COLOR = [0.4, 0.7, 1.0, 0.5],
             /** 
              * Friendly spacecrafts are rendered with this color in the mission preview
              * @type Number[4]
@@ -292,6 +300,7 @@ define([
                 markerColorPositive: MARKER_COLOR_POSITIVE,
                 markerColorNegative: MARKER_COLOR_NEGATIVE,
                 markerSize: MARKER_SIZE,
+                jumpMarkerColor: JUMP_MARKER_COLOR,
                 friendlyColor: FRIENDLY_COLOR,
                 hostileColor: HOSTILE_COLOR,
                 smallestSizeWhenDrawn: SMALLEST_SIZE_WHEN_DRAWN,
@@ -376,7 +385,7 @@ define([
     function _onMouseMove(cameraPositionMatrix, direction) {
         var i, spacecrafts, spacecraft, hit, distance, range, matrix, hitIndex = -1, hitDistance = 0, index, offset;
         spacecrafts = _mission.getSpacecrafts();
-        range = preview.FREE_CAMERA_VIEW_DISTANCE;
+        range = preview.FREE_CAMERA_VIEW_DISTANCE * camera.CAMERA_EXTENSION_FACTOR;
         offset = SPACECRAFT_HOVER_OFFSET;
         matrix = mat.translation4(
                 cameraPositionMatrix[12] + direction[0] * range,

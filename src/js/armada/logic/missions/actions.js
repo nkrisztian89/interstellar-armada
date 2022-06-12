@@ -347,6 +347,20 @@ define([
     CommandAction.prototype = new Action();
     CommandAction.prototype.constructor = CommandAction;
     /**
+     * @returns {SpacecraftEvents.CommandData}
+     */
+    CommandAction.prototype.getParams = function () {
+        return this._params;
+    };
+    /**
+     * Returns all the subjects of this command.
+     * @param {Mission} mission
+     * @returns {Spacecraft[]}
+     */
+    CommandAction.prototype.getSpacecrafts = function (mission) {
+        return this._subjects.getSpacecrafts(mission, true);
+    };
+    /**
      * @override
      * @param {SpacecraftEvents~CommandData} params 
      * @returns {Boolean}

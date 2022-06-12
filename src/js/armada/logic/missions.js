@@ -5,6 +5,8 @@
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  */
 
+/* global Map */
+
 /**
  * @param utils Used for format strings and useful constants
  * @param types Used for type checking when loading from local storage
@@ -111,6 +113,7 @@ define([
             NUMBERED_FACTION_NAME = "numbered",
             GRID_MODEL_NAME = "grid",
             MARKER_MODEL_NAME = "marker",
+            LINE_MODEL_NAME = "line",
             /**
              * The damage spacecrafts suffer from collisions is calculated as the square of the relative velocity (in m/s) multiplied
              * by this factor (and it cannot exceed the maximum hitpoints of either of the ships)
@@ -1603,6 +1606,7 @@ define([
      * @property {Number} markerSize
      * @property {Number[4]} markerColorPositive
      * @property {Number[4]} markerColorNegative
+     * @property {Number[4]} jumpMarkerColor
      * @property {Number[4]} friendlyColor 
      * @property {Number[4]} hostileColor 
      * @property {Number} smallestSizeWhenDrawn
@@ -1618,19 +1622,23 @@ define([
      * @param {PreviewParams} [previewParams]
      */
     Mission.prototype.addToScene = function (battleScene, targetScene, previewParams) {
-        var i, preview = !!previewParams, spacecraftCount, addedSpacecrafts,
-                friendly, friendlyColor, hostileColor, markerColorPositive, markerColorNegative, callback,
-                white = [1, 1, 1],
+        var i, j, k, preview = !!previewParams, spacecraftCount, addedSpacecrafts, spacecraft, actions, data, positioned, index,
+                friendly, friendlyColor, hostileColor, markerColorPositive, markerColorNegative, jumpMarkerColor, callback,
+                white = [1, 1, 1], jumpMarkers,
                 getSpacecraftColor;
         this._environment.addToScene(battleScene);
         if (preview) {
+            jumpMarkers = new Map();
+            ai.resetJumpInPositionSeed();
             // add grids
             graphics.getShader(previewParams.gridShaderName);
             graphics.getShader(previewParams.markerShaderName);
             markerColorPositive = previewParams.markerColorPositive;
             markerColorNegative = previewParams.markerColorNegative;
+            jumpMarkerColor = previewParams.jumpMarkerColor;
             resources.getOrAddModel(egomModel.gridModel(GRID_MODEL_NAME, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize + 1, 2 * previewParams.smallestGridSize + 1, white));
             resources.getOrAddModel(egomModel.positionMarkerModel(MARKER_MODEL_NAME, 8, white));
+            resources.getOrAddModel(egomModel.lineModel(LINE_MODEL_NAME, [1, 1, 1], white));
             resources.executeWhenReady(function () {
                 var i, size, grid,
                         gridColor = previewParams.gridColor,
@@ -1675,6 +1683,15 @@ define([
                     });
                     battleScene.addObject(marker, false);
                 }
+                if (jumpMarkers.has(spacecraft)) {
+                    marker = new renderableObjects.ShadedLODMesh(resources.getModel(LINE_MODEL_NAME).getEgomModel(), graphics.getManagedShader(previewParams.markerShaderName), {},
+                            mat.translation4(position[12], position[13], position[14]), mat.identity4(), mat.scaling4(jumpMarkers.get(spacecraft)[0], jumpMarkers.get(spacecraft)[1], jumpMarkers.get(spacecraft)[2]), true, 0, previewParams.smallestSizeWhenDrawn);
+                    marker.setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, function () {
+                        return jumpMarkerColor;
+                    });
+                    marker.setModelSize(vec.length3(jumpMarkers.get(spacecraft)) / Math.max(Math.abs(jumpMarkers.get(spacecraft)[0]), Math.abs(jumpMarkers.get(spacecraft)[1]), Math.abs(jumpMarkers.get(spacecraft)[2])));
+                    battleScene.addObject(marker, false);
+                }
                 addedSpacecrafts++;
                 if ((addedSpacecrafts === spacecraftCount) && previewParams.callback) {
                     previewParams.callback();
@@ -1685,7 +1702,37 @@ define([
         addedSpacecrafts = 0;
         for (i = 0; i < this._spacecrafts.length; i++) {
             if (preview) {
-                friendly = !this.getPilotedSpacecraft() || !this._spacecrafts[i].isHostile(this.getPilotedSpacecraft());
+                spacecraft = this._spacecrafts[i];
+                friendly = !this.getPilotedSpacecraft() || !spacecraft.isHostile(this.getPilotedSpacecraft());
+                if (spacecraft.isAway() && (spacecraft.getPhysicalPositionMatrix()[12] === 0) && (spacecraft.getPhysicalPositionMatrix()[13] === 0) && (spacecraft.getPhysicalPositionMatrix()[14] === 0)) {
+                    positioned = false;
+                    for (j = 0; j < this._events.length; j++) {
+                        actions = this._events[j].getActions();
+                        for (k = 0; k < actions.length; k++) {
+                            if ((actions[k].getType() === missionActions.ActionType.COMMAND) && (actions[k].getParams().command === ai.SpacecraftCommand.JUMP)) {
+                                data = actions[k].getParams();
+                                if (data.jump && (data.jump.way !== ai.JumpCommandWay.OUT)) {
+                                    index = actions[k].getSpacecrafts(this).indexOf(spacecraft);
+                                    if (index >= 0) {
+                                        data = Object.assign({}, data);
+                                        data.lead = actions[k].getSpacecrafts(this)[0];
+                                        data.index = index;
+                                        data.clearCache = true;
+                                        ai.positionForInwardJump(spacecraft, data, this);
+                                        positioned = true;
+                                        if (index === 0) {
+                                            jumpMarkers.set(spacecraft, vec.diff3(data.jump.anchorSpacecraft.getPhysicalPositionVector(), spacecraft.getPhysicalPositionVector()));
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (positioned) {
+                            break;
+                        }
+                    }
+                }
             }
             this._spacecrafts[i].addToScene(battleScene, undefined, preview, {
                 hitboxes: application.isDebugVersion(),
@@ -1703,6 +1750,7 @@ define([
                 shield: !preview,
                 sound: !preview
             }, {
+                replaceVisualModel: preview,
                 randomAnimationTime: true,
                 smallestSizeWhenDrawn: preview ? previewParams.smallestSizeWhenDrawn : undefined,
                 shaderName: preview ? previewParams.spacecraftShaderName : null

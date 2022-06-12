@@ -2812,6 +2812,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        CAMERA_EXTENSION_FACTOR: CAMERA_EXTENSION_FACTOR,
         CameraPositionConfiguration: CameraPositionConfiguration,
         CameraOrientationConfiguration: CameraOrientationConfiguration,
         CameraConfiguration: CameraConfiguration,

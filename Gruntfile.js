@@ -208,7 +208,8 @@ module.exports = function (grunt) {
                 ["node"],
                 ["pannerNode"],
                 ["origoPositionMatrix"],
-                ["soundSource"]
+                ["soundSource"],
+                ["params"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [
@@ -321,6 +322,8 @@ module.exports = function (grunt) {
                 ["getDebugStats", "egomModel"],
                 ["getDebugInfo"],
                 ["cuboidModel", null, true],
+                ["gridModel", null, true],
+                ["positionMarkerModel", null, true],
                 ["toString3", "vec", false, true],
                 ["toString4", "vec", false, true],
                 ["clearMatrixCount", "mat", false, true],

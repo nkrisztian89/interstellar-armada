@@ -65,6 +65,13 @@ define([
          */
         this._cascadeScalingMatrixValid = false;
         /**
+         * The cached value of the largest out of the three (X, Y, Z) scaling factors from the cascade scaling matrix,
+         * in absolute value (so out of 3, 5, -10, this would be 10)
+         * The value is valid whenever _cascadeScalingMatrixValid is true.
+         * @type Number
+         */
+        this._largestScalingFactor = 1;
+        /**
          * Cache variable to store the calculated value of the combined model matrix.
          * @type Float32Array
          */
@@ -493,6 +500,7 @@ define([
                 } else {
                     mat.copyScaling4(this._cascadeScalingMatrix, this._scalingMatrix);
                 }
+                this._largestScalingFactor = Math.max(Math.abs(this._cascadeScalingMatrix[0]), Math.abs(this._cascadeScalingMatrix[5]), Math.abs(this._cascadeScalingMatrix[10]));
                 this._cascadeScalingMatrixValid = true;
             }
             return this._cascadeScalingMatrix;
@@ -584,14 +592,14 @@ define([
          * @returns {Object} 
          */
         function getSizeInsideViewFrustum(camera, checkNearAndFarPlanes) {
-            var size, scalingMatrix, baseMatrix, projMatrix, positionX, positionY, xOffset, yOffset, factor;
+            var size, baseMatrix, projMatrix, positionX, positionY, xOffset, yOffset, factor;
             // scaling and orientation is lost here, since we create a new translation matrix based on the original transformation
             baseMatrix = this.getPositionMatrixInCameraSpace(camera);
             if (baseMatrix[14] !== 0) {
-                scalingMatrix = this.getCascadeScalingMatrix();
+                this.getCascadeScalingMatrix();
                 // frustum culling: back and front
                 if (checkNearAndFarPlanes) {
-                    size = this.getSize() * scalingMatrix[0];
+                    size = this.getSize() * this._largestScalingFactor;
                     if ((baseMatrix[14] - size >= -camera.getNearDistance()) || ((baseMatrix[14] + size) < -camera.getViewDistance())) {
                         this._lastSizeInsideViewFrustum.width = 0;
                         this._lastSizeInsideViewFrustum.height = 0;
@@ -608,8 +616,8 @@ define([
                 positionY = baseMatrix[13] * projMatrix[5] * factor;
                 // Z coordinate is not needed
                 // frustum culling: sides
-                xOffset = Math.abs(scalingMatrix[0] * projMatrix[0] * size * factor);
-                yOffset = Math.abs(scalingMatrix[5] * projMatrix[5] * size * factor);
+                xOffset = Math.abs(this._largestScalingFactor * projMatrix[0] * size * factor);
+                yOffset = Math.abs(this._largestScalingFactor * projMatrix[5] * size * factor);
                 if (!((positionX + xOffset < -1) || (positionX - xOffset > 1)) &&
                         !((positionY + yOffset < -1) || (positionY - yOffset > 1))) {
                     this._lastSizeInsideViewFrustum.width = xOffset;
