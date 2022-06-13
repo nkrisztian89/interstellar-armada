@@ -444,6 +444,14 @@ li.element.dragover {
     padding: 0;
 }
 
+#previewTooltip {
+    position: fixed;
+    font-size: 0.8vw;
+    background-color: #444444;
+    padding: 0.2em;
+    pointer-events: none;
+}
+
 span.objectives {
     font-weight: bold;
     position: relative;

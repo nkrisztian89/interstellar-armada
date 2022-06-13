@@ -147,6 +147,16 @@ define([
              * @type Number
              */
             SPACECRAFT_HOVER_OFFSET = 1,
+            /**
+             * The tooltip will be displayed offset to the right by this amount relative to the cursor
+             * @type Number
+             */
+            TOOLTIP_OFFSET_X = 10,
+            /**
+             * The tooltip will be displayed offset downwards by this amount relative to the cursor
+             * @type Number
+             */
+            TOOLTIP_OFFSET_Y = 10,
             // ----------------------------------------------------------------------
             // Private variables
             /**
@@ -171,14 +181,24 @@ define([
             /**
              * The index of the spacecraft entry highlighted by hovering the mouse
              * cursor over one of the spacecrafts belonging to it
-             * @type index
+             * @type Number
              */
             _highlightedSpacecraftIndex,
             /**
              * A reusable array to pass color values to uniforms
              * @type Number[4]
              */
-            _color = [0, 0, 0, 0];
+            _color = [0, 0, 0, 0],
+            /**
+             * The index of the spacecraft for which the tooltip is currently shown
+             * @type Number
+             */
+            _tooltipSpacecraftIndex,
+            /**
+             * A reference to the HTML element used to show the tooltip
+             * @type HTMLDivElement
+             */
+            _tooltip;
     // ----------------------------------------------------------------------
     // Private Functions
     /**
@@ -378,11 +398,12 @@ define([
     }
     /**
      * Called when the mouse cursor is moved - highlights the spacecrafts we are hovering over
+     * @param {MouseEvent} event
      * @param {Float32Array} cameraPositionMatrix
      * @param {Number[3]} direction The 3D direction in which we are pointing with the cursor (from camera focus point towards the 3D position of the cursor)
      * @returns {Boolean} Whether we should trigger a re-rendering of the preview
      */
-    function _onMouseMove(cameraPositionMatrix, direction) {
+    function _onMouseMove(event, cameraPositionMatrix, direction) {
         var i, spacecrafts, spacecraft, hit, distance, range, matrix, hitIndex = -1, hitDistance = 0, index, offset;
         spacecrafts = _mission.getSpacecrafts();
         range = preview.FREE_CAMERA_VIEW_DISTANCE * camera.CAMERA_EXTENSION_FACTOR;
@@ -404,6 +425,17 @@ define([
                 }
             }
         }
+        if (hitIndex !== _tooltipSpacecraftIndex) {
+            if (hitIndex >= 0) {
+                _tooltip.textContent = spacecrafts[hitIndex].getDisplayName() || spacecrafts[hitIndex].getClass().getDisplayName();
+                _tooltip.hidden = false;
+            } else {
+                _tooltip.hidden = true;
+            }
+            _tooltipSpacecraftIndex = hitIndex;
+        }
+        _tooltip.style.left = (event.clientX + TOOLTIP_OFFSET_X) + "px";
+        _tooltip.style.top = (event.clientY + TOOLTIP_OFFSET_Y) + "px";
         index = (hitIndex >= 0) ? _getDescriptorIndexForSpacecraft(hitIndex) : -1;
         if (_highlightedSpacecraftIndex !== index) {
             _highlightedSpacecraftIndex = index;
@@ -434,9 +466,8 @@ define([
      */
     function refresh(elements, missionDescriptor, params) {
         var sameClass = (_missionDescriptor === missionDescriptor);
-
         preview.setContext(_previewContext);
-
+        _tooltip = elements.tooltip;
         _missionDescriptor = missionDescriptor;
         if (sameClass) {
             if (!params) {

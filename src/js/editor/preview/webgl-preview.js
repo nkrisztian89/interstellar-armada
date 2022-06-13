@@ -460,7 +460,7 @@ define([
             vec.add3(direction, vec.scaled3Aux(vec.getRowA43Aux(camOri), camera.getSpan() * x));
             vec.add3(direction, vec.getRowB43ScaledAux(camOri, camera.getSpan() * y));
             vec.normalize3(direction);
-            renderRequired = _currentContext.functions.onMouseMove(camera.getCameraPositionMatrix(), direction, _turningModel, _turningCamera);
+            renderRequired = _currentContext.functions.onMouseMove(event, camera.getCameraPositionMatrix(), direction, _turningModel, _turningCamera);
         }
         if (_turningCamera || _turningModel || renderRequired) {
             requestRender();
@@ -640,6 +640,7 @@ define([
      * @property {HTMLCanvasElement} canvas The canvas that can be used to display a preview image of the selected object
      * @property {Element} options The div that houses the preview options
      * @property {Element} info The div that houses the bottom info bar
+     * @property {Element} tooltip The div that houses the tooltip
      */
     /**
      * @typedef {Object} Editor~RefreshParams

@@ -126,6 +126,7 @@ define([
             PREVIEW_DIV_ID = "previewDiv",
             PREVIEW_CANVAS_ID = "previewCanvas",
             PREVIEW_INFO_ID = "previewInfo",
+            PREVIEW_TOOLTIP_ID = "previewTooltip",
             NO_ITEM_SELECTED_TEXT = "select an item from the left or click New or Import in the top left menu",
             TUTORIAL_TEXT = 'for more information, check out the <a href="docs/editor/tutorial/01-getting-started.html" target="_blank">Getting started guide</a>',
             NO_PREVIEW_TEXT = "preview not available for this type of item",
@@ -265,18 +266,21 @@ define([
                 previewOptions = previewWindowContent.querySelector("div#" + PREVIEW_OPTIONS_ID),
                 previewDiv = document.getElementById(PREVIEW_DIV_ID),
                 previewCanvas = document.getElementById(PREVIEW_CANVAS_ID),
-                previewInfo = document.getElementById(PREVIEW_INFO_ID);
+                previewInfo = document.getElementById(PREVIEW_INFO_ID),
+                previewTooltip = document.getElementById(PREVIEW_TOOLTIP_ID);
         if (_selectedItem.type === common.ItemType.NONE) {
             previewDiv.hidden = true;
             previewCanvas.hidden = true;
             previewOptions.hidden = true;
             previewInfo.hidden = true;
+            previewTooltip.hidden = true;
             _setLabel(previewWindowContent, NO_ITEM_SELECTED_TEXT);
         } else if (!_previews[_selectedItem.category]) {
             previewDiv.hidden = true;
             previewCanvas.hidden = true;
             previewOptions.hidden = true;
             previewInfo.hidden = true;
+            previewTooltip.hidden = true;
             _setLabel(previewWindowContent, NO_PREVIEW_TEXT);
         } else {
             _hideLabel(previewWindowContent);
@@ -284,7 +288,8 @@ define([
                 options: previewOptions,
                 div: previewDiv,
                 canvas: previewCanvas,
-                info: previewInfo
+                info: previewInfo,
+                tooltip: previewTooltip
             }, _selectedItem.reference);
         }
     }
