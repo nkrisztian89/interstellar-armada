@@ -50,16 +50,17 @@ define([
             JUMP_TO_REFERENCE_BUTTON_CAPTION = "↷",
             JUMP_TO_REFERENCE_BUTTON_TOOLTIP = "Jump to referenced item",
             WITH_JUMP_TO_REFERENCE_BUTTON_CLASS = "withJumpButton",
-            ADD_BUTTON_CAPTION = "+",
-            ADD_BUTTON_TOOLTIP = "Add a new element with default values",
-            DUPLICATE_BUTTON_CAPTION = "#",
-            DUPLICATE_BUTTON_TOOLTIP = "Duplicate this element",
-            MOVE_UP_BUTTON_CAPTION = "↑",
-            MOVE_UP_BUTTON_TOOLTIP = "Move this element up in the list",
-            MOVE_DOWN_BUTTON_CAPTION = "↓",
-            MOVE_DOWN_BUTTON_TOOLTIP = "Move this element down in the list",
-            REMOVE_BUTTON_CAPTION = "x",
-            REMOVE_BUTTON_TOOLTIP = "Remove this element",
+            ADD_BUTTON_CLASS = "add icon",
+            ADD_BUTTON_TOOLTIP = "Add a new {element} with default values",
+            DUPLICATE_BUTTON_CLASS = "copy icon",
+            DUPLICATE_BUTTON_TOOLTIP = "Duplicate this {element}",
+            MOVE_UP_BUTTON_CLASS = "up icon",
+            MOVE_UP_BUTTON_TOOLTIP = "Move this {element} up in the list",
+            MOVE_DOWN_BUTTON_CLASS = "down icon",
+            MOVE_DOWN_BUTTON_TOOLTIP = "Move this {element} down in the list",
+            REMOVE_BUTTON_CLASS = "delete icon",
+            REMOVE_BUTTON_TOOLTIP = "Delete this {element}",
+            PROPERTY_EDIT_BUTTON_TOOLTIP = "Toggle editing {property}",
             NEW_OBJECT_NAME_PREFIX = "new",
             DUPLICATE_ELEMENT_SUFFIX = "_copy",
             // ------------------------------------------------------------------------------
@@ -541,12 +542,20 @@ define([
             buttons[i].classList.add(PROPERTY_EDITOR_HEADER_BUTTON_CLASS);
             result.appendChild(buttons[i]);
         }
+        result.onmousedown = function (event) {
+            var passedEvent;
+            if ((event.target.tagName === "DIV") || (event.target.tagName === "SPAN")) {
+                passedEvent = new MouseEvent("mousedown", {screenX: event.screenX, screenY: event.screenY});
+                popup.getElement().dispatchEvent(passedEvent);
+            }
+        };
         popup.getElement().appendChild(result);
     }
     /**
      * Creates and returns a control that can be used to edit object properties. (by opening a popup to edit the properties of that object)
      * Can create editors for arrays of objects (of the same type)
      * @param {String} topName Name of the top property being edited (under which this object resides)
+     * @param {String} propertyName Name of the property that is being directly edited
      * @param {Editor~TypeDescriptor} typeDescriptor The descriptor object, with BaseType.OBJECT basetype, that describes the properties
      * @param {Object|Array} data The data itself to be modified (an instance of the object the type of which is described, or an array of
      * such objects)
@@ -557,7 +566,7 @@ define([
      * @param {Type} [arrayType] For object arrays: The type object created from the type descriptor of the array
      * @returns {Element}
      */
-    function _createObjectControl(topName, typeDescriptor, data, parent, topParent, parentPopup, changeHandler, arrayType) {
+    function _createObjectControl(topName, propertyName, typeDescriptor, data, parent, topParent, parentPopup, changeHandler, arrayType) {
         var
                 i, button = document.createElement("button"),
                 popup = _createPopup(button, parentPopup, topName),
@@ -659,7 +668,7 @@ define([
             }
             indexLabel = common.createLabel((data.length > 0) ? typeDescriptor.name : EMPTY_LIST_TEXT);
             indexSelector = common.createSelector(indices, indices[0], false, indexChangeHandler);
-            addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+            addElementButton = common.createButton({class: ADD_BUTTON_CLASS}, function () {
                 var newIndex;
                 data.push(_getDefaultValue({type: typeDescriptor}, null, null, null, topParent, true, undefined, undefined, data.length));
                 newIndex = document.createElement("option");
@@ -671,8 +680,8 @@ define([
                 indexSelector.selectedIndex = data.length - 1;
                 update();
                 indexChangeHandler();
-            }, ADD_BUTTON_TOOLTIP);
-            removeElementButton = common.createButton(REMOVE_BUTTON_CAPTION, function () {
+            }, utils.formatString(ADD_BUTTON_TOOLTIP, {element: typeDescriptor.name}));
+            removeElementButton = common.createButton({class: REMOVE_BUTTON_CLASS}, function () {
                 if (_preview && !parentPopup) {
                     _preview.handleStopEdit(topName);
                 }
@@ -681,8 +690,8 @@ define([
                 refreshIndices();
                 update();
                 indexChangeHandler();
-            }, REMOVE_BUTTON_TOOLTIP);
-            duplicateElementButton = common.createButton(DUPLICATE_BUTTON_CAPTION, function () {
+            }, utils.formatString(REMOVE_BUTTON_TOOLTIP, {element: typeDescriptor.name}));
+            duplicateElementButton = common.createButton({class: DUPLICATE_BUTTON_CLASS}, function () {
                 var newIndex;
                 data.push(utils.deepCopy(data[indexSelector.selectedIndex]));
                 if (type.hasNameProperty() && data[data.length - 1][descriptors.NAME_PROPERTY_NAME]) {
@@ -697,8 +706,8 @@ define([
                 indexSelector.selectedIndex = data.length - 1;
                 update();
                 indexChangeHandler();
-            }, DUPLICATE_BUTTON_TOOLTIP);
-            moveUpElementButton = common.createButton(MOVE_UP_BUTTON_CAPTION, function () {
+            }, utils.formatString(DUPLICATE_BUTTON_TOOLTIP, {element: typeDescriptor.name}));
+            moveUpElementButton = common.createButton({class: MOVE_UP_BUTTON_CLASS}, function () {
                 data.splice(indexSelector.selectedIndex - 1, 2, data[indexSelector.selectedIndex], data[indexSelector.selectedIndex - 1]);
                 updateButtonText();
                 _updateData(topName);
@@ -706,8 +715,8 @@ define([
                 updateIndex(indexSelector.selectedIndex - 1);
                 indexSelector.selectedIndex -= 1;
                 indexChangeHandler();
-            }, MOVE_UP_BUTTON_TOOLTIP);
-            moveDownElementButton = common.createButton(MOVE_DOWN_BUTTON_CAPTION, function () {
+            }, utils.formatString(MOVE_UP_BUTTON_TOOLTIP, {element: typeDescriptor.name}));
+            moveDownElementButton = common.createButton({class: MOVE_DOWN_BUTTON_CLASS}, function () {
                 data.splice(indexSelector.selectedIndex, 2, data[indexSelector.selectedIndex + 1], data[indexSelector.selectedIndex]);
                 updateButtonText();
                 _updateData(topName);
@@ -715,7 +724,7 @@ define([
                 updateIndex(indexSelector.selectedIndex + 1);
                 indexSelector.selectedIndex += 1;
                 indexChangeHandler();
-            }, MOVE_DOWN_BUTTON_TOOLTIP);
+            }, utils.formatString(MOVE_DOWN_BUTTON_TOOLTIP, {element: typeDescriptor.name}));
             _addPropertyEditorHeader(popup, [indexLabel, indexSelector], (arrayType && arrayType.getFixedLength()) ?
                     [moveUpElementButton, moveDownElementButton] :
                     [addElementButton, duplicateElementButton, moveUpElementButton, moveDownElementButton, removeElementButton]);
@@ -755,7 +764,7 @@ define([
             button.edit();
         };
         button.popup = popup; // custom property referencing the popup
-        button.title = "Click to toggle property editor";
+        button.title = utils.formatString(PROPERTY_EDIT_BUTTON_TOOLTIP, {property: propertyName});
         return button;
     }
     /**
@@ -832,7 +841,7 @@ define([
                         _createControl({name: index, type: elementTypeDescriptor}, array[index], topName, array, parent, null, topParent, parentPopup, elementChangeHandler)
                     ];
                     if ((minCount === 0) || (array.length > minCount)) {
-                        elements.push(common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                        elements.push(common.createButton({class: REMOVE_BUTTON_CLASS}, function () {
                             array.splice(index, 1);
                             updateLabel();
                             refreshTable();
@@ -850,7 +859,7 @@ define([
             }
             addElementButton.hidden = (maxCount > 0) && (array.length >= maxCount);
         };
-        addElementButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+        addElementButton = common.createButton({class: ADD_BUTTON_CLASS}, function () {
             array.push(_getDefaultValue({type: elementTypeDescriptor}, null, parent, null, topParent, true));
             updateLabel();
             refreshTable();
@@ -970,7 +979,7 @@ define([
                     _addPairRow(table,
                             _createControl({name: 0, type: typeDescriptor.first.type}, data[index][0], topName, data[index], null, null, topParent, parentPopup),
                             _createControl({name: 1, type: typeDescriptor.second.type}, data[index][1], topName, data[index], null, null, topParent, parentPopup),
-                            common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                            common.createButton({class: REMOVE_BUTTON_CLASS}, function () {
                                 data.splice(index, 1);
                                 updateLabel();
                                 updateButtonText();
@@ -986,7 +995,7 @@ define([
                 addPairEditor(i);
             }
         };
-        addPairButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+        addPairButton = common.createButton({class: ADD_BUTTON_CLASS}, function () {
             data.push([
                 _getDefaultValue({type: typeDescriptor.first.type}, null, null, null, topParent),
                 _getDefaultValue({type: typeDescriptor.second.type}, null, null, null, topParent)]);
@@ -1039,7 +1048,7 @@ define([
                     _addPairRow(table,
                             _createControl({name: "axis", type: descriptors.AXIS}, data[index].axis, topName, data[index], null, null, null, parentPopup, updateButtonText),
                             _createControl({name: "degrees", type: {baseType: descriptors.BaseType.NUMBER, min: -360, max: 360}}, data[index].degrees, topName, data[index], null, null, null, parentPopup, updateButtonText),
-                            common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                            common.createButton({class: REMOVE_BUTTON_CLASS}, function () {
                                 data.splice(index, 1);
                                 updateButtonText();
                                 refreshTable();
@@ -1054,7 +1063,7 @@ define([
                 addRotationEditor(i);
             }
         };
-        addRotationButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+        addRotationButton = common.createButton({class: ADD_BUTTON_CLASS}, function () {
             data.push({
                 axis: _getDefaultValue({type: descriptors.AXIS}),
                 degrees: _getDefaultValue({type: descriptors.BaseType.NUMBER})
@@ -1186,7 +1195,7 @@ define([
                     _addPairRow(table,
                             common.createLabel(key),
                             _createControl({name: key, type: elementTypeDescriptor}, data[key], topName, data, null, null, topParent, parentPopup),
-                            common.createButton(REMOVE_BUTTON_CAPTION, function () {
+                            common.createButton({class: REMOVE_BUTTON_CLASS}, function () {
                                 delete data[key];
                                 updateButtonText();
                                 updateEntryKeySelector();
@@ -1216,7 +1225,7 @@ define([
                 addEntryButton.disabled = (newEntryKeySelector.value.length === 0);
             });
         }
-        addEntryButton = common.createButton(ADD_BUTTON_CAPTION, function () {
+        addEntryButton = common.createButton({class: ADD_BUTTON_CLASS}, function () {
             data[getKeyEditor().value] = _getDefaultValue({type: elementTypeDescriptor}, null, null, null, topParent);
             updateButtonText();
             updateEntryKeySelector();
@@ -1453,7 +1462,7 @@ define([
                 case descriptors.BaseType.ARRAY:
                     elementType = type.getElementType();
                     if (elementType.getBaseType() === descriptors.BaseType.OBJECT) {
-                        result = _createObjectControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler, type);
+                        result = _createObjectControl(topName, propertyDescriptor.name, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler, type);
                     } else {
                         result = _createArrayControl(topName, elementType.getDescriptor(), data, parent, topParent, parentPopup, changeHandler, type);
                     }
@@ -1462,7 +1471,7 @@ define([
                     result = _createAssocArrayControl(topName, type.getValidKeys(), type.getElementType().getDescriptor(), data, topParent, parentPopup);
                     break;
                 case descriptors.BaseType.OBJECT:
-                    result = _createObjectControl(topName, propertyDescriptor.type, data, parent, topParent, parentPopup, changeHandler);
+                    result = _createObjectControl(topName, propertyDescriptor.name, propertyDescriptor.type, data, parent, topParent, parentPopup, changeHandler);
                     break;
                 default:
                     result = _createDefaultControl(data);

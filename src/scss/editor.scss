@@ -28,6 +28,31 @@ button {
     font-family: gameFont, Ubuntu light, Verdana, Geneva, sans-serif;
     font-size: 0.8vw;
     height: 1.6em;
+    
+    &.icon {
+        background-size: 1.3em;
+        border: 1px solid #888;
+        border-radius: 2px;
+        width: 1.6em;
+        background-repeat: no-repeat;
+        background-position: center center;
+    }
+    
+    &.add {
+        background-image: url(../assets/images/editor/add.png);
+    }
+    &.delete {
+        background-image: url(../assets/images/editor/delete.png);
+    }
+    &.copy {
+        background-image: url(../assets/images/editor/copy.png);
+    }
+    &.up {
+        background-image: url(../assets/images/editor/up.png);
+    }
+    &.down {
+        background-image: url(../assets/images/editor/down.png);
+    }
 }
 
 input {
@@ -142,6 +167,8 @@ select.withJumpButton, select.withUnsetButton {
 
     padding-top: 0.2em;
     padding-bottom: 0.2em;
+    
+    cursor: move;
 }
 
 .popup, .dialog {
@@ -505,6 +532,7 @@ span.settingLabel {
 
 .popup > .propertiesTable {
     margin-bottom: 0;
+    cursor: default;
 }
 
 tr.property {

@@ -154,14 +154,26 @@ define([
     }
     /**
      * Creates and returns a button.
-     * @param {String} caption The text to show on the button (innerHTML)
+     * @param {String|Object} captionOrParams The text to show on the button (textContent),
+     * or an object with optional class (CSS class name) and caption properties
      * @param {Function} clickHandler The handler for the click event on the button
      * @param {String} [tooltip] The tooltip to display when hovering over the button
      * @returns {Element}
      */
-    function createButton(caption, clickHandler, tooltip) {
+    function createButton(captionOrParams, clickHandler, tooltip) {
         var result = document.createElement("button");
-        result.textContent = caption;
+        if (typeof captionOrParams === "string") {
+            result.textContent = captionOrParams;
+        } else {
+            if (captionOrParams.class) {
+                result.className = captionOrParams.class;
+            }
+            if (captionOrParams.caption) {
+                result.textContent = captionOrParams.caption;
+            } else {
+                result.innerHTML = "&nbsp;";
+            }
+        }
         result.type = "button";
         result.onclick = clickHandler;
         if (tooltip) {
@@ -440,11 +452,45 @@ define([
      */
     function Popup(invoker, parent, eventHandlers) {
         /**
+         * If the user manually positions the popup, this property holds the left coordinate, in pixels.
+         * Otherwise set to -1.
+         * @type Number
+         */
+        this._setLeft = -1;
+        /**
+         * If the user manually positions the popup, this property holds the top coordinate, in pixels.
+         * Otherwise set to -1.
+         * @type Number
+         */
+        this._setTop = -1;
+        /**
          * The HTML element that represents this popup.
          * @type Element
          */
         this._element = document.createElement("div");
         this._element.classList.add(POPUP_CLASS);
+        this._element.onmousedown = function (event) {
+            if (event.target === this._element) {
+                var startX, startY, startLeft, startTop;
+                if (event.which === utils.MouseButton.LEFT) {
+                    startX = event.screenX;
+                    startY = event.screenY;
+                    startLeft = parseFloat(this._element.style.left);
+                    startTop = parseFloat(this._element.style.top);
+                    document.body.onmousemove = function (moveEvent) {
+                        this.alignPosition(true, startLeft + moveEvent.screenX - startX, startTop + moveEvent.screenY - startY);
+                        moveEvent.preventDefault();
+                    }.bind(this);
+                    document.body.onmouseup = function (event) {
+                        if (event.which === utils.MouseButton.LEFT) {
+                            document.body.onmousemove = null;
+                            this._setLeft = parseFloat(this._element.style.left);
+                            this._setTop = parseFloat(this._element.style.top);
+                        }
+                    }.bind(this);
+                }
+            }
+        }.bind(this);
         this._element.hidden = true;
         /**
          * The children of this popup.
@@ -495,13 +541,15 @@ define([
     /**
      * If the popup does not fit on the screen, tries to reposition it.
      * @param {Boolean} [recursive=false] If true, all children of the popup are aligned recursively
+     * @param {Number} [x] If given, we will align left position to this value
+     * @param {Number} [y] If given, we will align top position to this value
      */
-    Popup.prototype.alignPosition = function (recursive) {
+    Popup.prototype.alignPosition = function (recursive, x, y) {
         var invokerRect, rect, left, i;
         if (this.isVisible()) {
             invokerRect = this._invoker.getBoundingClientRect();
-            this._element.style.left = invokerRect.left + "px";
-            this._element.style.top = invokerRect.bottom + "px";
+            this._element.style.left = ((x !== undefined) ? x : (this._setLeft >= 0) ? this._setLeft : invokerRect.left) + "px";
+            this._element.style.top = ((y !== undefined) ? y : (this._setTop >= 0) ? this._setTop : invokerRect.bottom) + "px";
             this._element.style.width = "";
             this._element.style.height = "";
             // first horizontal alignment, as it can change the height by canceling out text wrapping
@@ -517,7 +565,7 @@ define([
                 }
             }
             if (rect.bottom > window.innerHeight - POPUP_BOTTOM_MARGIN) {
-                if (invokerRect.top - rect.height > POPUP_BOTTOM_MARGIN) {
+                if ((x === undefined) && (y === undefined) && (invokerRect.top - rect.height > POPUP_BOTTOM_MARGIN)) {
                     this._element.style.top = (invokerRect.top - rect.height) + "px";
                 } else {
                     this._element.style.height = (window.innerHeight - rect.top - 10 - POPUP_BOTTOM_MARGIN) + "px";
@@ -529,7 +577,7 @@ define([
             rect = this._element.getBoundingClientRect();
             if (recursive) {
                 for (i = 0; i < this._childPopups.length; i++) {
-                    this._childPopups[i].alignPosition();
+                    this._childPopups[i].alignPosition(true);
                 }
             }
         }
@@ -557,6 +605,8 @@ define([
             }
             // show this popup at the right position
             this._element.hidden = false;
+            this._setLeft = -1;
+            this._setTop = -1;
             this.alignPosition();
             this._element.style.zIndex = _maxZIndex;
             _maxZIndex++;

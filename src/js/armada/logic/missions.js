@@ -1721,7 +1721,11 @@ define([
                                         ai.positionForInwardJump(spacecraft, data, this);
                                         positioned = true;
                                         if (index === 0) {
-                                            jumpMarkers.set(spacecraft, vec.diff3(data.jump.anchorSpacecraft.getPhysicalPositionVector(), spacecraft.getPhysicalPositionVector()));
+                                            if (data.jump.anchorSpacecraft) {
+                                                jumpMarkers.set(spacecraft, vec.diff3(data.jump.anchorSpacecraft.getPhysicalPositionVector(), spacecraft.getPhysicalPositionVector()));
+                                            } else {
+                                                application.showError(spacecraft.getDisplayName() + " has invalid anchor: " + data.jump.anchor + "!");
+                                            }
                                         }
                                         break;
                                     }
