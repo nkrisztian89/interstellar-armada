@@ -271,7 +271,7 @@
         "readyButton": "Ready",
         "startButton": "Start game",
         "title": "Multiplayer",
-        "gameTitle": "Game lobby - {name}",
+        "gameTitle": "Game lobby - {name} - {mode}",
         "playerNameColumn": "Name",
         "spacecraftColumn": "Spacecraft",
         "connectionColumn": "Connection",

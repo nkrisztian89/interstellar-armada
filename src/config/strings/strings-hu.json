@@ -285,7 +285,7 @@
         "readyButton": "Kész",
         "startButton": "Játék indítása",
         "title": "Többjátékos mód",
-        "gameTitle": "Váróterem - {name}",
+        "gameTitle": "Váróterem - {name} - {mode}",
         "playerNameColumn": "Név",
         "spacecraftColumn": "Űrhajó",
         "connectionColumn": "Kapcsolat",

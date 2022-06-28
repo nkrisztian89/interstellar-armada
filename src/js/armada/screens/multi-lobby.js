@@ -275,7 +275,10 @@ define([
     MultiLobbyScreen.prototype.setActive = function (active) {
         screens.HTMLScreen.prototype.setActive.call(this, active);
         if (active) {
-            this._gameTitle.setTextContent(strings.get(strings.MULTI_LOBBY.GAME_TITLE), {name: networking.getGameName()});
+            this._gameTitle.setTextContent(strings.get(strings.MULTI_LOBBY.GAME_TITLE), {
+                name: networking.getGameName(),
+                mode: strings.get(strings.MULTI_GAME_MODE.PREFIX, networking.getGameMode())
+            });
             this._updatePlayersList();
             networking.onDisconnect(function () {
                 this._cancelInterval();
