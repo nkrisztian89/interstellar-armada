@@ -162,8 +162,8 @@ define([
              * @type Object
              */
             GameMode = {
-                ffa: "ffa",
-                coop: "coop"
+                FFA: "ffa",
+                COOP: "coop"
             },
             // ------------------------------------------------------------------------------
             // private variables
@@ -1186,6 +1186,13 @@ define([
         return _game ? _game.name : "";
     }
     /**
+     * The game mode set for the current (hosted or joined) game
+     * @returns {String} (enum GameMode)
+     */
+    function getGameMode() {
+        return _game ? _game.mode : null;
+    }
+    /**
      * Returns the general game settings, which the host has authority to change
      * @returns {GameSettings}
      */
@@ -1658,7 +1665,7 @@ define([
                 playerIndex = _getPlayerIndex(),
                 teams, spacecrafts, events, formation;
         switch (_game.mode) {
-            case GameMode.ffa:
+            case GameMode.FFA:
                 teams = _game.players.map(function (player, index) {
                     return {
                         name: "Team " + (index + 1),
@@ -1679,9 +1686,10 @@ define([
                     };
                 });
                 break;
-            case GameMode.coop:
+            case GameMode.COOP:
                 teams = [{
-                        name: "Players"
+                        faction: "empire",
+                        color: _game.players[0].settings.color.concat(1)
                     }, {
                         faction: "pirates"
                     }];
@@ -1692,8 +1700,8 @@ define([
                 spacecrafts = _game.players.map(function (player, index) {
                     return {
                         name: player.name,
-                        squad: "Player " + (index + 1),
-                        team: "Players",
+                        squad: "alpha " + (index + 1),
+                        team: "empire",
                         class: player.settings.spacecraft,
                         piloted: index === playerIndex,
                         multi: !(_isHost && (index === 0)),
@@ -1846,6 +1854,7 @@ define([
         isInGame: isInGame,
         isHost: isHost,
         getGameName: getGameName,
+        getGameMode: getGameMode,
         getGameSettings: getGameSettings,
         getHostName: getHostName,
         listGames: listGames,

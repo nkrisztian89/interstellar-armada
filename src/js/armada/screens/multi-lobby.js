@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Krisztián Nagy
+ * Copyright 2021-2022 Krisztián Nagy
  * @file This module manages and provides the Multiplayer Lobby screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -73,6 +73,9 @@ define([
             ];
     // ------------------------------------------------------------------------------
     // private functions
+    function _canChangePlayerColor() {
+        return networking.isHost() || (networking.getGameMode() === networking.GameMode.FFA);
+    }
     function _mapLocationName(environment) {
         return environments.getEnvironment(environment).getDisplayName();
     }
@@ -87,6 +90,9 @@ define([
     }
     function _getCSSColor(color) {
         return "rgb(" + Math.round(color[0] * 255) + "," + Math.round(color[1] * 255) + "," + Math.round(color[2] * 255) + ")";
+    }
+    function _getPlayerColor(player) {
+        return _getCSSColor((networking.getGameMode() === networking.GameMode.FFA) ? player.settings.color : networking.getPlayers()[0].settings.color);
     }
     function _colorsEqual(a, b) {
         var epsilon = 0.05;
@@ -477,7 +483,7 @@ define([
             td = document.createElement("td");
             td.textContent = player.name;
             tr.appendChild(td);
-            tr.innerHTML += '<td><div ' + (player.me ? 'id="' + colorSelectorId + '"' : '') + ' class="colorIndicator' + ((player.me && !player.ready) ? ' colorSelector' : '') + '" style="background-color: ' + _getCSSColor(player.settings.color) + '"></div></td>' +
+            tr.innerHTML += '<td><div ' + ((player.me && _canChangePlayerColor()) ? 'id="' + colorSelectorId + '"' : '') + ' class="colorIndicator' + ((player.me && !player.ready && _canChangePlayerColor()) ? ' colorSelector' : '') + '" style="background-color: ' + _getPlayerColor(player) + '"></div></td>' +
                     '<td>' + ((player.me && !player.ready) ? '<button id="' + spacecraftSelectorId + '" class="' + SPACECRAFT_SELECTOR_BUTTON_CLASS + '">' : '') + classes.getSpacecraftClass(player.settings.spacecraft).getDisplayName() + ((player.me && !player.ready) ? '</button>' : '') + '</td>' +
                     '<td>' + (player.me ? "" : strings.get(player.peer ? strings.MULTI_LOBBY.CONNECTION_DIRECT : strings.MULTI_LOBBY.CONNECTION_SERVER)) + '</td>' +
                     '<td>' + (player.me ? "" : (player.ping ? Math.round(player.ping) + " ms" : "?")) + '</td>' +
@@ -486,7 +492,9 @@ define([
                     '</tr>';
             this._playersList.getElement().appendChild(tr);
         }.bind(this));
-        document.getElementById(colorSelectorId).onclick = colorSelectorAction.bind(this);
+        if (_canChangePlayerColor()) {
+            document.getElementById(colorSelectorId).onclick = colorSelectorAction.bind(this);
+        }
         spacecraftSelector = document.getElementById(spacecraftSelectorId);
         if (spacecraftSelector) {
             spacecraftSelector.onclick = spacecraftSelectorAction.bind(this);

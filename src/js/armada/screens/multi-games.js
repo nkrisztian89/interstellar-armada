@@ -90,7 +90,7 @@ define([
         };
     }
     function _getGameModeValues() {
-        return Object.keys(networking.GameMode).map(_mapGameModeValue);
+        return Object.values(networking.GameMode).map(_mapGameModeValue);
     }
     function _getMaxPlayerValues() {
         return config.getSetting(config.MULTI_SETTINGS.MAX_PLAYER_OPTIONS).map(_mapMaxPlayerValue);
@@ -444,7 +444,7 @@ define([
         this._createGameCreateButton.getElement().onclick = function () {
             networking.createGame({
                 gameName: this._createGameNameInput.getElement().value,
-                gameMode: Object.keys(networking.GameMode)[this._createGameModeSelector.getSelectedIndex()],
+                gameMode: Object.values(networking.GameMode)[this._createGameModeSelector.getSelectedIndex()],
                 maxPlayers: +this._createGameMaxPlayersSelector.getSelectedValue(),
                 settings: {
                     spacecrafts: this._createGameSpacecraftsCheckGroup.getValue()
