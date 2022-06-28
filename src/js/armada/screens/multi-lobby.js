@@ -100,19 +100,26 @@ define([
     }
     function _getNextAvailableColor(color) {
         var index, i, players = networking.getPlayers();
-        for (index = 0; index < PLAYER_COLORS.length; index++) {
-            if (_colorsEqual(color, PLAYER_COLORS[index])) {
-                break;
+        if (networking.getGameMode() === networking.GameMode.FFA) {  
+            for (index = 0; index < PLAYER_COLORS.length; index++) {
+                if (_colorsEqual(color, PLAYER_COLORS[index])) {
+                    break;
+                }
             }
-        }
-        index = (index >= PLAYER_COLORS.length) ? 0 : ((index + 1) % PLAYER_COLORS.length);
-        for (i = 0; i < players.length; i++) {
-            if (!players[i].me && _colorsEqual(PLAYER_COLORS[index], players[i].settings.color)) {
-                i = -1;
-                index = (index + 1) % PLAYER_COLORS.length;
+            index = (index >= PLAYER_COLORS.length) ? 0 : ((index + 1) % PLAYER_COLORS.length);
+            for (i = 0; i < players.length; i++) {
+                if (!players[i].me && _colorsEqual(PLAYER_COLORS[index], players[i].settings.color)) {
+                    i = -1;
+                    index = (index + 1) % PLAYER_COLORS.length;
+                }
             }
+            return PLAYER_COLORS[index];
+        } else {
+            index = PLAYER_COLORS.findIndex(function (color) {
+                return _colorsEqual(color, players[0].settings.color);
+            });
+            return PLAYER_COLORS[(index + 1) % PLAYER_COLORS.length];
         }
-        return PLAYER_COLORS[index];
     }
     function _getNextAvailableSpacecraft(spacecraft) {
         var
