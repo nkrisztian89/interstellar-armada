@@ -310,6 +310,7 @@
             "multi-tier3": "3. szintű",
             "multi-hardcore": "Hardcore"
         },
+        "difficultyLabel": "Nehézség:",
         "hostLeftMessage": "A házigazda kilépett a játékból.",
         "kickedMessage": "A házigazda kirúgott a játékból.",
         "gameCreatedMessage": "Játék ({name}) létrehozva!",

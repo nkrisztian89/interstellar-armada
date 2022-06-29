@@ -133,14 +133,14 @@ define([
              * @type Spacecraft
              */
             _spacecraft;
-    function _mapDifficultyName(difficulty) {
-        return strings.get(strings.SETTING.PREFIX, difficulty);
-    }
-    function _getDifficultyValues() {
-        return missions.getDifficultyNames().map(_mapDifficultyName);
-    }
     function _validateString(value, min, max) {
         return (typeof value === "string") && ((min === undefined) || (value.length >= min)) && ((max === undefined) || (value.length <= max));
+    }
+    function mapDifficultyName(difficulty) {
+        return strings.get(strings.SETTING.PREFIX, difficulty);
+    }
+    function getDifficultyValues() {
+        return missions.getDifficultyNames().map(mapDifficultyName);
     }
     // #########################################################################
     /**
@@ -357,7 +357,7 @@ define([
                                 propertyContainerClassName: "smallSelectorPropertyContainer"
                             },
                             {id: strings.MISSIONS.DIFFICULTY.name},
-                            _getDifficultyValues()),
+                            getDifficultyValues()),
                     DIFFICULTY_CONTAINER_ID);
         }.bind(this));
         this._updateSubmitMissionButton = this._updateSubmitMissionButton.bind(this);
@@ -1030,7 +1030,7 @@ define([
     MissionsScreen.prototype._updateComponents = function () {
         var missionHubTermsLink;
         screens.HTMLScreen.prototype._updateComponents.call(this);
-        this._difficultySelector.setValueList(_getDifficultyValues());
+        this._difficultySelector.setValueList(getDifficultyValues());
         this._updateValues();
         this._updateScores();
         missionHubTermsLink = document.getElementById(MISSION_HUB_TERMS_LINK_ID);
@@ -1066,6 +1066,8 @@ define([
     return {
         getMissionsScreen: function () {
             return new MissionsScreen();
-        }
+        },
+        mapDifficultyName: mapDifficultyName,
+        getDifficultyValues: getDifficultyValues
     };
 });

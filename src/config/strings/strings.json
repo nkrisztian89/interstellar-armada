@@ -296,6 +296,7 @@
             "multi-tier3": "Tier 3",
             "multi-hardcore": "Hardcore"
         },
+        "difficultyLabel": "Difficulty:",
         "hostLeftMessage": "The host has left the game.",
         "kickedMessage": "You have been kicked out of the game by the host.",
         "gameCreatedMessage": "Game {name} has been created!",

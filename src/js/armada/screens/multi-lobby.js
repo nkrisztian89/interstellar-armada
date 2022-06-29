@@ -17,8 +17,10 @@
  * game server
  * @param strings Used for translation
  * @param armadaScreens Used for navigation
+ * @param missionsScreen Used for getting translated difficulty names
  * @param classes Used to get the name of the spacecraft classes to display
  * @param environments Used to load the list of environments to select from
+ * @param missions Used to get the list of difficulty ids
  */
 define([
     "utils/utils",
@@ -31,9 +33,11 @@ define([
     "armada/networking",
     "armada/strings",
     "armada/screens/shared",
+    "armada/screens/missions",
     "armada/logic/classes",
-    "armada/logic/environments"
-], function (utils, game, analytics, components, screens, config, audio, networking, strings, armadaScreens, classes, environments) {
+    "armada/logic/environments",
+    "armada/logic/missions"
+], function (utils, game, analytics, components, screens, config, audio, networking, strings, armadaScreens, missionsScreen, classes, environments, missions) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -60,8 +64,11 @@ define([
             GUEST_SETTINGS_ID = "guestSettings",
             LOCATION_VALUE_ID = "locationValue",
             LOADOUT_VALUE_ID = "loadoutValue",
+            DIFFICULTY_VALUE_ID = "difficultyValue",
+            DIFFICULTY_CONTAINER_ID = "difficultyContainer",
             LOCATION_SELECTOR_ID = "locationSelector",
             LOADOUT_SELECTOR_ID = "loadoutSelector",
+            DIFFICULTY_SELECTOR_ID = "difficultySelector",
             PLAYER_COLORS = [
                 [0.8, 0.2, 0.2],
                 [0.2, 0.2, 0.8],
@@ -100,7 +107,7 @@ define([
     }
     function _getNextAvailableColor(color) {
         var index, i, players = networking.getPlayers();
-        if (networking.getGameMode() === networking.GameMode.FFA) {  
+        if (networking.getGameMode() === networking.GameMode.FFA) {
             for (index = 0; index < PLAYER_COLORS.length; index++) {
                 if (_colorsEqual(color, PLAYER_COLORS[index])) {
                     break;
@@ -178,12 +185,18 @@ define([
         this._locationValue = this.registerSimpleComponent(LOCATION_VALUE_ID);
         /** @type SimpleComponent */
         this._loadoutValue = this.registerSimpleComponent(LOADOUT_VALUE_ID);
+        /** @type SimpleComponent */
+        this._difficultyValue = this.registerSimpleComponent(DIFFICULTY_VALUE_ID);
+        /** @type SimpleComponent */
+        this._difficultyContainer = this.registerSimpleComponent(DIFFICULTY_CONTAINER_ID);
         /** @type Number */
         this._pingInterval = -1;
         /** @type Selector*/
         this._locationSelector = null;
         /** @type Selector*/
         this._loadoutSelector = null;
+        /** @type Selector*/
+        this._difficultySelector = null;
         /**
          * @type InfoBox
          */
@@ -197,21 +210,33 @@ define([
                     buttonselect: armadaScreens.playButtonSelectSound,
                     buttonclick: armadaScreens.playButtonClickSound
                 }));
-        environments.executeWhenReady(function () {
-            this._locationSelector = this.registerExternalComponent(
+        config.executeWhenReady(function () {
+            this._difficultySelector = this.registerExternalComponent(
                     new components.Selector(
-                            LOCATION_SELECTOR_ID,
+                            DIFFICULTY_SELECTOR_ID,
                             armadaScreens.SELECTOR_SOURCE,
                             {
                                 cssFilename: armadaScreens.SELECTOR_CSS,
                                 selectorClassName: "smallSelector",
                                 propertyContainerClassName: "smallSelectorPropertyContainer"
                             },
-                            {id: strings.MULTI_LOBBY.LOCATION_LABEL.name},
-                            _getLocationValues()),
+                            {id: strings.MULTI_LOBBY.DIFFICULTY_LABEL.name},
+                            missionsScreen.getDifficultyValues()),
                     HOST_SETTINGS_ID);
-        }.bind(this));
-        config.executeWhenReady(function () {
+            environments.executeWhenReady(function () {
+                this._locationSelector = this.registerExternalComponent(
+                        new components.Selector(
+                                LOCATION_SELECTOR_ID,
+                                armadaScreens.SELECTOR_SOURCE,
+                                {
+                                    cssFilename: armadaScreens.SELECTOR_CSS,
+                                    selectorClassName: "smallSelector",
+                                    propertyContainerClassName: "smallSelectorPropertyContainer"
+                                },
+                                {id: strings.MULTI_LOBBY.LOCATION_LABEL.name},
+                                _getLocationValues()),
+                        HOST_SETTINGS_ID);
+            }.bind(this));
             this._loadoutSelector = this.registerExternalComponent(
                     new components.Selector(
                             LOADOUT_SELECTOR_ID,
@@ -343,7 +368,7 @@ define([
                 game.setScreen(armadaScreens.BATTLE_SCREEN_NAME);
                 game.getScreen().startNewBattle({
                     missionData: networking.getMissionData(),
-                    difficulty: "hard",
+                    difficulty: networking.getGameSettings().difficulty,
                     demoMode: false,
                     multi: true
                 });
@@ -372,6 +397,8 @@ define([
             this._chatSend.disable();
             this._pingInterval = setInterval(networking.ping, 3000);
             this._updateGameSettings();
+            this._difficultyContainer.setVisible(networking.getGameMode() === networking.GameMode.COOP);
+            this._difficultySelector.setVisible(networking.getGameMode() === networking.GameMode.COOP);
             this._hostSettings.setVisible(networking.isHost());
             this._guestSettings.setVisible(!networking.isHost());
         } else {
@@ -448,6 +475,11 @@ define([
                 loadout: config.getSetting(config.MULTI_SETTINGS.LOADOUTS)[this._loadoutSelector.getSelectedIndex()]
             });
         }.bind(this);
+        this._difficultySelector.onChange = function () {
+            networking.updateGameSettings({
+                difficulty: missions.getDifficultyNames()[this._difficultySelector.getSelectedIndex()]
+            });
+        }.bind(this);
     };
     /**
      * @override
@@ -456,6 +488,7 @@ define([
         screens.HTMLScreen.prototype._updateComponents.call(this);
         this._locationSelector.setValueList(_getLocationValues());
         this._loadoutSelector.setValueList(_getLoadoutValues());
+        this._difficultySelector.setValueList(missionsScreen.getDifficultyValues());
     };
     /**
      * Update the player list display with the current player information
@@ -526,13 +559,16 @@ define([
      * game settings
      */
     MultiLobbyScreen.prototype._updateGameSettings = function () {
-        var settings = networking.getGameSettings(), location, loadout;
+        var settings = networking.getGameSettings(), location, loadout, difficulty;
         location = _mapLocationName(settings.environment);
         loadout = _mapLoadoutName(settings.loadout);
+        difficulty = missionsScreen.mapDifficultyName(settings.difficulty);
         this._locationValue.setTextContent(location);
         this._loadoutValue.setTextContent(loadout);
+        this._difficultyValue.setTextContent(difficulty);
         this._locationSelector.selectValue(location);
         this._loadoutSelector.selectValue(loadout);
+        this._difficultySelector.selectValue(difficulty);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

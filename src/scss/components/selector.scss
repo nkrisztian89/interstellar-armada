@@ -30,6 +30,9 @@ div.selectorPropertyContainer {
 
 div.smallSelector {
     display: table;
+    &[hidden] {
+        display: none;
+    }
 }
 
 div.smallSelectorPropertyContainer {

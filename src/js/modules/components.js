@@ -733,6 +733,17 @@ define([
         }
         return false;
     };
+    /**
+     * Shows / hides the component, if needed to achieve the passed visibility
+     * @param {Boolean} visible The desired visibility of the component
+     */
+    ExternalComponent.prototype.setVisible = function (visible) {
+        if (visible) {
+            this.show();
+        } else {
+            this.hide();
+        }
+    };
     // #########################################################################
     /**
      * @class A loading box component, that has a title, a progress bar and a status

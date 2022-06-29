@@ -145,6 +145,7 @@ define([
         LOCATION_LABEL: {name: "multiLobby.locationLabel"},
         LOADOUT_LABEL: {name: "multiLobby.loadoutLabel"},
         LOADOUT_PREFIX: {name: "multiLobby.loadout.", optional: true},
+        DIFFICULTY_LABEL: {name: "multiLobby.difficultyLabel"},
         HOST_LEFT_MESSAGE: {name: "multiLobby.hostLeftMessage"},
         KICKED_MESSAGE: {name: "multiLobby.kickedMessage"},
         GAME_CREATED_MESSAGE: {name: "multiLobby.gameCreatedMessage"},

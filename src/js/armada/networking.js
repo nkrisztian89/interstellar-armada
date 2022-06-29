@@ -67,6 +67,8 @@
  */
 /**
  * @typedef {Object} GameSettings
+ * @property {String} difficulty The string ID of the difficulty level to play
+ * the multiplayer game on (for cooperative games)
  * @property {String} environment The string ID of the environment to load for
  * the game
  * @property {String} loadout The string ID of the loadout to use for the player
@@ -102,7 +104,7 @@ define([
     var
             // ------------------------------------------------------------------------------
             // constants
-            API_VERSION = "1.1",
+            API_VERSION = "2.0",
             STUN_SERVER_URL = "stun:stun.l.google.com:19302",
             HEARTBEAT_INTERVAL = 15000,
             WELCOME_TIMEOUT = 10000,
@@ -152,6 +154,7 @@ define([
             GUEST_DEAD_REPEAT_INTERVAL = 1000,
             /** @type GameSettings */
             DEFAULT_GAME_SETTINGS = {
+                difficulty: "hard",
                 environment: "reddim",
                 loadout: "multi-tier1"
             },
