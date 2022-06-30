@@ -1333,6 +1333,9 @@ define([
             }
             if (spacecrafts[i].multi) {
                 craft.setAsMultiControlled(spacecrafts[i].piloted, i);
+                if (!spacecrafts[i].piloted && spacecrafts[i].multiPiloted) {
+                    craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
+                }
             }
             teamID = spacecrafts[i].team;
             if (teamID) {
@@ -1372,7 +1375,9 @@ define([
                 }
                 if (this._pilotedCraft.isFriendly(craft)) {
                     if (craft !== this._pilotedCraft) {
-                        craft.multiplyMaxHitpoints(factor);
+                        if (!spacecrafts[i].multiPiloted) {
+                            craft.multiplyMaxHitpoints(factor);
+                        }
                         if (craft.hasWeapons() || craft.hasMissiles()) {
                             this._initialTeamMission = true;
                             count++;

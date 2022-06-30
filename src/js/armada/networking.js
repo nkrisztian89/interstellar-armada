@@ -1683,6 +1683,7 @@ define([
                         class: player.settings.spacecraft,
                         piloted: index === playerIndex,
                         multi: !(_isHost && (index === 0)),
+                        multiPiloted: true,
                         position: [radius * Math.sin(angle), radius * -Math.cos(angle), 0],
                         rotations: ["z-" + Math.round(Math.degrees(angle))],
                         loadout: _game.settings.loadout
@@ -1708,6 +1709,7 @@ define([
                         class: player.settings.spacecraft,
                         piloted: index === playerIndex,
                         multi: !(_isHost && (index === 0)),
+                        multiPiloted: true,
                         position: formations.getPositionInFormation(formation, index),
                         loadout: _game.settings.loadout
                     };
