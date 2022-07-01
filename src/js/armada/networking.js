@@ -69,6 +69,8 @@
  * @typedef {Object} GameSettings
  * @property {String} difficulty The string ID of the difficulty level to play
  * the multiplayer game on (for cooperative games)
+ * @property {Boolean} friendlyFire Whether friendly fire among players is enabled
+ * (for cooperative games)
  * @property {String} environment The string ID of the environment to load for
  * the game
  * @property {String} loadout The string ID of the loadout to use for the player
@@ -155,6 +157,7 @@ define([
             /** @type GameSettings */
             DEFAULT_GAME_SETTINGS = {
                 difficulty: "hard",
+                friendlyFire: false,
                 environment: "reddim",
                 loadout: "multi-tier1"
             },

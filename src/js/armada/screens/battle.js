@@ -4611,6 +4611,9 @@ define([
         _timeSinceMultiMatchEnded = 0;
         _timeSincePlayerLeft = 0;
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
+        if (_multi) {
+            equipment.setFriendlyFire(networking.getGameSettings().friendlyFire);
+        }
         shadows = graphics.isShadowMappingEnabled();
         if (_mission.hasShadows()) {
             graphics.setShadowMapping();

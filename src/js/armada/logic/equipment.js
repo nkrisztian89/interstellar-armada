@@ -406,6 +406,13 @@ define([
         _isPlayerFriendlyFireDamageEnabled = difficulty.getPlayerFriendlyFireDamage();
         _hitboxOffset = difficulty.getHitboxOffset();
     }
+    /**
+     * Enable / disable applying friendly fire damage to players
+     * @param {Boolean} enabled
+     */
+    function setFriendlyFire(enabled) {
+        _isPlayerFriendlyFireDamageEnabled = enabled;
+    }
     // ------------------------------------------------------------------------------
     // private functions
     /**
@@ -5188,6 +5195,7 @@ define([
         FlightMode: FlightMode,
         ThrusterUse: ThrusterUse,
         handleDifficultySet: handleDifficultySet,
+        setFriendlyFire: setFriendlyFire,
         Projectile: Projectile,
         Missile: Missile,
         Weapon: Weapon,
