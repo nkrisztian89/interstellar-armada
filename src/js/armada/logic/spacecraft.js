@@ -523,6 +523,12 @@ define([
          * @type Number
          */
         this._indexInSquad = 0;
+        /**
+         * This flag is true if this spacecraft is piloted by any human player (including the local player
+         * or any others in a multiplayer game)
+         * @type Boolean
+         */
+        this._piloted = false;
         // ---------------------------------------
         // sound
         /**
@@ -870,6 +876,22 @@ define([
         this._guestPiloted = piloted;
         this._multiControlled = !piloted;
         this._multiGuestData[0] = index;
+    };
+    /**
+     * Set whether this spacecraft is piloted by a human player (either the local player
+     * or someone remote in a multiplayer game)
+     * @param {Boolean} value
+     */
+    Spacecraft.prototype.setPiloted = function (value) {
+        this._piloted = value;
+    };
+    /**
+     * Whether this spacecraft is piloted by a human player (either the local player
+     * or someone remote in a multiplayer game)
+     * @returns {Boolean}
+     */
+    Spacecraft.prototype.isPiloted = function () {
+        return this._piloted;
     };
     /**
      * Returns the object describing class of this spacecraft.

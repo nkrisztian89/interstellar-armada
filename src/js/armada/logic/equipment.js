@@ -361,11 +361,6 @@ define([
              */
             _origin,
             /**
-             * The spacecraft piloted by the player
-             * @type Spacecraft
-             */
-            _pilotedCraft,
-            /**
              * The position matrix of the currently checked projectile/missile
              * @type Float32Array
              */
@@ -454,8 +449,8 @@ define([
         physicalHitObject = hitObject.getPhysicalModel();
         if (physicalHitObject && (
                 ((hitObject === _origin) && _canDamageSelf) ||
-                ((hitObject !== _origin) && (_canDamagePlayer || (hitObject !== _pilotedCraft))))) {
-            offset = _offsetCallback(hitObject, _isPiloted && _pilotedCraft.isHostile(hitObject));
+                ((hitObject !== _origin) && (_canDamagePlayer || !hitObject.isPiloted())))) {
+            offset = _offsetCallback(hitObject, _isPiloted && _origin.isHostile(hitObject));
             hitPositionVectorInObjectSpace = physicalHitObject.checkHit(_positionMatrix, _velocityMatrix, _hitCheckDT, offset);
             if (hitPositionVectorInObjectSpace) {
                 vec.setDiffTranslation3(_relativeVelocityDirectionInWorldSpace, _velocityMatrix, physicalHitObject.getVelocityMatrix());
@@ -500,10 +495,9 @@ define([
         _velocityMatrix = velocityMatrix;
         _hitCheckDT = hitCheckDT;
         _origin = origin;
-        _pilotedCraft = pilotedCraft;
         _offsetCallback = offsetCallback;
         _hitCallback = hitCallback;
-        _isPiloted = (origin === pilotedCraft);
+        _isPiloted = origin.isPiloted();
         _canDamageSelf = _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !_isPiloted);
         _canDamagePlayer = _isPlayerFriendlyFireDamageEnabled || !pilotedCraft || pilotedCraft.isHostile(origin);
         hitObjectOctree.executeForObjects(

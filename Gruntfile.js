@@ -209,7 +209,8 @@ module.exports = function (grunt) {
                 ["pannerNode"],
                 ["origoPositionMatrix"],
                 ["soundSource"],
-                ["params"]
+                ["params"],
+                ["piloted", "is"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [
@@ -252,7 +253,8 @@ module.exports = function (grunt) {
                 ["smallestSizeWhenDrawn"],
                 ["clearColor"],
                 ["ambientColor"],
-                ["revealState"]
+                ["revealState"],
+                ["piloted"]
             ].map(
             function (replacement) {
 // create the replacements for each simple setter

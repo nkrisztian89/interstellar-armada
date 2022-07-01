@@ -1337,6 +1337,7 @@ define([
                     craft.multiplyMaxHitpoints(this._difficultyLevel.getPlayerHitpointsFactor());
                 }
             }
+            craft.setPiloted(!!spacecrafts[i].piloted || !!spacecrafts[i].multiPiloted);
             teamID = spacecrafts[i].team;
             if (teamID) {
                 team = this.getTeam(teamID);
