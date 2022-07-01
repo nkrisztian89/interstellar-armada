@@ -294,6 +294,21 @@ define([
              */
             _jumpInPositionSeed,
             /**
+             * The random generator for determining AI aim errors.
+             * @type Function
+             */
+            _aimErrorSeed,
+            /**
+             * The random generator used when determining AI evasive maneuver vectors.
+             * @type Function
+             */
+            _evasionSeed,
+            /**
+             * The random generator used when determining AI charge maneuver vectors.
+             * @type Function
+             */
+            _chargeSeed,
+            /**
              * An associative array storing the constructors for the various types of AI by the string identifiers of the types.
              * @type Object
              */
@@ -337,6 +352,15 @@ define([
      */
     function resetJumpInPositionSeed() {
         _jumpInPositionSeed = Math.seed(config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED));
+    }
+    /**
+     * Resets all the seeds that are used to generate random values in this module.
+     */
+    function resetRandomSeeds() {
+        resetJumpInPositionSeed();
+        _aimErrorSeed = Math.seed(config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED));
+        _evasionSeed = Math.seed(config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED));
+        _chargeSeed = Math.seed(config.getSetting(config.GENERAL_SETTINGS.DEFAULT_RANDOM_SEED));
     }
     /**
      * Sets the position of the passed spacecraft according to the passed jump in command data.
@@ -1023,8 +1047,8 @@ define([
      * Calculates a new random aiming error based on the current maximum.
      */
     FighterAI.prototype._updateAimError = function () {
-        this._aimError[0] = (Math.random() - 0.5) * 2 * this._maxAimError;
-        this._aimError[1] = (Math.random() - 0.5) * 2 * this._maxAimError;
+        this._aimError[0] = (_aimErrorSeed() - 0.5) * 2 * this._maxAimError;
+        this._aimError[1] = (_aimErrorSeed() - 0.5) * 2 * this._maxAimError;
     };
     /**
      * Sets up the state of the AI to perform a new attack run, to be used when switching to a new target or after a charge maneuver has 
@@ -1119,7 +1143,7 @@ define([
                 this._facingTarget && this._spacecraft && this._spacecraft.getTarget() && (this._spacecraft.getTarget().getTarget() === this._spacecraft) &&
                 (this._targetDistance > this._weaponRange * MIN_EVADE_DISTANCE_FACTOR)) {
             if (this._triggerEvasiveManeuver()) {
-                angle = Math.random() * utils.DOUBLE_PI;
+                angle = _evasionSeed() * utils.DOUBLE_PI;
                 this._evasiveVelocityVector[0] = 1;
                 this._evasiveVelocityVector[1] = 0;
                 vec.rotate2(this._evasiveVelocityVector, angle);
@@ -1426,7 +1450,7 @@ define([
                                                     vec.diff3Aux(
                                                             vec.sum3Aux(
                                                                     _targetPositionVector,
-                                                                    vec.scaled3Aux(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(_vectorToTarget), mat.rotation3Aux(_vectorToTarget, Math.random() * utils.DOUBLE_PI))), maxDistance)),
+                                                                    vec.scaled3Aux(vec.normalize3(vec.prodVec3Mat3Aux(vec.perpendicular3(_vectorToTarget), mat.rotation3Aux(_vectorToTarget, _chargeSeed() * utils.DOUBLE_PI))), maxDistance)),
                                                             positionVector),
                                                     CHARGE_EVADE_VECTOR_LENGTH_FACTOR));
                                 }
@@ -1453,7 +1477,7 @@ define([
                     if (this._evasiveManeuverTime === 0) {
                         this._evasiveVelocityVector[0] *= acceleration * EVASIVE_MANEUVER_SPEED_FACTOR;
                         this._evasiveVelocityVector[1] *= acceleration * EVASIVE_MANEUVER_SPEED_FACTOR;
-                        vec.rotate2(this._evasiveVelocityVector, (Math.random() - 0.5) * Math.PI);
+                        vec.rotate2(this._evasiveVelocityVector, (_evasionSeed() - 0.5) * Math.PI);
                     }
                     // setting the appropriate strafing speeds
                     if (this._evasiveVelocityVector[0] > 0) {
@@ -1718,6 +1742,9 @@ define([
         _turnAccelerationDuration = config.getSetting(config.BATTLE_SETTINGS.TURN_ACCELERATION_DURATION_S);
         _turnIntensityBaseFactor = 1000 / _turnAccelerationDuration;
         _jumpInPositionSeed = Math.seed(Math.random());
+        _aimErrorSeed = Math.seed(Math.random());
+        _evasionSeed = Math.seed(Math.random());
+        _chargeSeed = Math.seed(Math.random());
     });
     // -------------------------------------------------------------------------
     // The public interface of the module
@@ -1728,6 +1755,7 @@ define([
         JumpCommandWay: JumpCommandWay,
         getAITypes: getAITypes,
         resetJumpInPositionSeed: resetJumpInPositionSeed,
+        resetRandomSeeds: resetRandomSeeds,
         positionForInwardJump: positionForInwardJump,
         clearAIs: _context.clearAIs.bind(_context),
         addAI: _context.addAI.bind(_context),

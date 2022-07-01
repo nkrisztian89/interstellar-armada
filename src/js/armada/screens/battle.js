@@ -4613,6 +4613,7 @@ define([
         this._updateLoadingStatus(strings.get(strings.BATTLE.LOADING_BOX_BUILDING_SCENE), LOADING_BUILDING_SCENE_PROGRESS);
         if (_multi) {
             equipment.setFriendlyFire(networking.getGameSettings().friendlyFire);
+            ai.resetRandomSeeds();
         }
         shadows = graphics.isShadowMappingEnabled();
         if (_mission.hasShadows()) {
