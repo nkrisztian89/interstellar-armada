@@ -2325,7 +2325,7 @@
             "model": "turret",
             "texture": "falcon",
             "defaultLuminosityFactors": [[0, 0], [1, 1]],
-            "cooldown": 250,
+            "cooldown": 500,
             "barrels": [{
                     "projectile": "plasma",
                     "projectileVelocity": 900,

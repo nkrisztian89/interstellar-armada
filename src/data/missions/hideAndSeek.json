@@ -450,7 +450,7 @@
             "class": "wolf",
             "ai": "fighter",
             "count": 3,
-            "loadout": "pirate-shielded",
+            "loadouts": ["pirate-shielded", "pirate-medium", "pirate-medium"],
             "away": true
         }, {
             "squad": "wraith",

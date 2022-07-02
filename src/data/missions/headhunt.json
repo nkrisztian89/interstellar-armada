@@ -127,7 +127,7 @@
                             "distance": 1000,
                             "formation": {
                                 "type": "wedge",
-                                "spacing": [10, -50, -10]
+                                "spacing": [50, -50, -10]
                             }
                         }
                     }
@@ -146,7 +146,7 @@
                             "distance": 1000,
                             "formation": {
                                 "type": "wedge",
-                                "spacing": [10, -50, -10]
+                                "spacing": [50, -50, -10]
                             }
                         }
                     }
@@ -165,7 +165,7 @@
                             "distance": 1000,
                             "formation": {
                                 "type": "wedge",
-                                "spacing": [10, -50, -10]
+                                "spacing": [50, -50, -10]
                             }
                         }
                     }
@@ -229,7 +229,7 @@
                             "distance": 1000,
                             "formation": {
                                 "type": "wedge",
-                                "spacing": [10, -50, -10]
+                                "spacing": [50, -50, -10]
                             }
                         }
                     }
