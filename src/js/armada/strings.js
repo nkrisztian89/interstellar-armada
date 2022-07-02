@@ -21,6 +21,7 @@ define([
     strings.FIRST_RUN_NOTE = {
         HEADER: {name: "firstRunNote.header"},
         MESSAGE: {name: "firstRunNote.message"},
+        MESSAGE_WEB: {name: "firstRunNote.messageWeb"},
         BUTTON: {name: "firstRunNote.button"}
     };
     strings.RELEASE_NOTES = {

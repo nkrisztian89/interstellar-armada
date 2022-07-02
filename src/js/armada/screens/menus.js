@@ -143,9 +143,10 @@ define([
                                 armadaScreens.openDialog({
                                     header: strings.get(strings.FIRST_RUN_NOTE.HEADER),
                                     message: utils.formatString(strings.get(strings.FIRST_RUN_NOTE.MESSAGE), {
-                                        chrome: '<a target="_blank" rel="noopener" href="https://www.google.com/chrome/">Google Chrome</a>',
                                         facebook: '<a target="_blank" rel="noopener" href="https://www.facebook.com/interstellar.armada">facebook</a>'
-                                    }),
+                                    }) + (application.usesElectron() ? "" : utils.formatString(strings.get(strings.FIRST_RUN_NOTE.MESSAGE_WEB), {
+                                        chrome: '<a target="_blank" rel="noopener" href="https://www.google.com/chrome/">Google Chrome</a>'
+                                    })),
                                     buttons: [{
                                             caption: strings.get(strings.FIRST_RUN_NOTE.BUTTON),
                                             action: function () {
