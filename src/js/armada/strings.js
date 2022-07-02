@@ -146,6 +146,7 @@ define([
         LOADOUT_LABEL: {name: "multiLobby.loadoutLabel"},
         LOADOUT_PREFIX: {name: "multiLobby.loadout.", optional: true},
         DIFFICULTY_LABEL: {name: "multiLobby.difficultyLabel"},
+        ENEMIES_PER_WAVE_LABEL: {name: "multiLobby.enemiesPerWaveLabel"},
         HOST_LEFT_MESSAGE: {name: "multiLobby.hostLeftMessage"},
         KICKED_MESSAGE: {name: "multiLobby.kickedMessage"},
         GAME_CREATED_MESSAGE: {name: "multiLobby.gameCreatedMessage"},

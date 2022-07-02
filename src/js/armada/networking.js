@@ -75,6 +75,8 @@
  * the game
  * @property {String} loadout The string ID of the loadout to use for the player
  * spacecrafts
+ * @property {Number} enemiesPerWave The number of enemies to generate per wave
+ * for cooperative games.
  */
 /**
  * @typedef {Object} Game The model of the game state as kept on this client
@@ -159,7 +161,8 @@ define([
                 difficulty: "hard",
                 friendlyFire: false,
                 environment: "reddim",
-                loadout: "multi-tier1"
+                loadout: "multi-tier1",
+                enemiesPerWave: 3
             },
             PING_MESSAGE = {
                 type: MSG_TYPE_PING
@@ -1717,6 +1720,10 @@ define([
                         loadout: _game.settings.loadout
                     };
                 });
+                formation = {
+                    type: formations.FormationType.WEDGE,
+                    spacing: [75, 10, -10]
+                };
                 spacecrafts.push({
                     squad: "raider",
                     team: "pirates",
@@ -1724,8 +1731,9 @@ define([
                     loadout: "pirate-weak",
                     ai: "fighter",
                     multi: !_isHost,
-                    position: [0, 1000, 0],
-                    count: 3,
+                    position: [0, 2500, 0],
+                    rotations: [{axis: "Z", degrees: 180}],
+                    count: _game.settings.enemiesPerWave,
                     formation: formation
                 });
                 spacecrafts.push({
@@ -1736,7 +1744,35 @@ define([
                     ai: "fighter",
                     multi: !_isHost,
                     position: [0, 3000, 0],
-                    count: 3,
+                    rotations: [{axis: "Z", degrees: 180}],
+                    formation: formation,
+                    count: _game.settings.enemiesPerWave,
+                    away: true
+                });
+                spacecrafts.push({
+                    squad: "bandit",
+                    team: "pirates",
+                    class: "piranha",
+                    loadout: "pirate-shielded",
+                    ai: "fighter",
+                    multi: !_isHost,
+                    position: [3000, 0, 0],
+                    rotations: [{axis: "Z", degrees: 270}],
+                    formation: formation,
+                    count: _game.settings.enemiesPerWave,
+                    away: true
+                });
+                spacecrafts.push({
+                    squad: "brigand",
+                    team: "pirates",
+                    class: "stingray",
+                    loadout: "pirate-tier2",
+                    ai: "fighter",
+                    multi: !_isHost,
+                    position: [-3000, 0, 0],
+                    rotations: [{axis: "Z", degrees: 90}],
+                    formation: formation,
+                    count: _game.settings.enemiesPerWave,
                     away: true
                 });
                 events = [{
@@ -1755,14 +1791,45 @@ define([
                                     squads: ["marauder"]
                                 },
                                 params: {
-                                    command: "jump",
-                                    jump: {
-                                        way: "in",
-                                        formation: {
-                                            type: formations.FormationType.WEDGE,
-                                            spacing: [60, 10, 0]
-                                        }
+                                    command: "jump"
+                                }
+                            }]
+                    }, {
+                        trigger: {
+                            conditions: [{
+                                    type: "destroyed",
+                                    subjects: {
+                                        squads: ["marauder"]
                                     }
+                                }],
+                            delay: 1500
+                        },
+                        actions: [{
+                                type: "command",
+                                subjects: {
+                                    squads: ["bandit"]
+                                },
+                                params: {
+                                    command: "jump"
+                                }
+                            }]
+                    }, {
+                        trigger: {
+                            conditions: [{
+                                    type: "destroyed",
+                                    subjects: {
+                                        squads: ["bandit"]
+                                    }
+                                }],
+                            delay: 1500
+                        },
+                        actions: [{
+                                type: "command",
+                                subjects: {
+                                    squads: ["brigand"]
+                                },
+                                params: {
+                                    command: "jump"
                                 }
                             }]
                     }];

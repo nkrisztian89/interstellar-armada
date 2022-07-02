@@ -311,6 +311,7 @@
             "multi-hardcore": "Hardcore"
         },
         "difficultyLabel": "Nehézség:",
+        "enemiesPerWaveLabel": "Ellenségek hullámonként:",
         "hostLeftMessage": "A házigazda kilépett a játékból.",
         "kickedMessage": "A házigazda kirúgott a játékból.",
         "gameCreatedMessage": "Játék ({name}) létrehozva!",

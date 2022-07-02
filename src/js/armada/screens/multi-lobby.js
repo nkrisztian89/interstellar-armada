@@ -66,9 +66,12 @@ define([
             LOADOUT_VALUE_ID = "loadoutValue",
             DIFFICULTY_VALUE_ID = "difficultyValue",
             DIFFICULTY_CONTAINER_ID = "difficultyContainer",
+            ENEMIES_PER_WAVE_VALUE_ID = "enemiesPerWaveValue",
+            ENEMIES_PER_WAVE_CONTAINER_ID = "enemiesPerWaveContainer",
             LOCATION_SELECTOR_ID = "locationSelector",
             LOADOUT_SELECTOR_ID = "loadoutSelector",
             DIFFICULTY_SELECTOR_ID = "difficultySelector",
+            ENEMIES_PER_WAVE_SELECTOR_ID = "enemiesPerWaveSelector",
             PLAYER_COLORS = [
                 [0.8, 0.2, 0.2],
                 [0.2, 0.2, 0.8],
@@ -77,7 +80,8 @@ define([
                 [0.8, 0.2, 0.8],
                 [0.1, 0.1, 0.1],
                 [0.9, 0.9, 0.9]
-            ];
+            ],
+            ENEMIES_PER_WAVE_OPTIONS = [3, 5, 7, 9];
     // ------------------------------------------------------------------------------
     // private functions
     function _canChangePlayerColor() {
@@ -189,6 +193,10 @@ define([
         this._difficultyValue = this.registerSimpleComponent(DIFFICULTY_VALUE_ID);
         /** @type SimpleComponent */
         this._difficultyContainer = this.registerSimpleComponent(DIFFICULTY_CONTAINER_ID);
+        /** @type SimpleComponent */
+        this._enemiesPerWaveValue = this.registerSimpleComponent(ENEMIES_PER_WAVE_VALUE_ID);
+        /** @type SimpleComponent */
+        this._enemiesPerWaveContainer = this.registerSimpleComponent(ENEMIES_PER_WAVE_CONTAINER_ID);
         /** @type Number */
         this._pingInterval = -1;
         /** @type Selector*/
@@ -197,6 +205,8 @@ define([
         this._loadoutSelector = null;
         /** @type Selector*/
         this._difficultySelector = null;
+        /** @type Selector*/
+        this._enemiesPerWaveSelector = null;
         /**
          * @type InfoBox
          */
@@ -248,6 +258,18 @@ define([
                             },
                             {id: strings.MULTI_LOBBY.LOADOUT_LABEL.name},
                             _getLoadoutValues()),
+                    HOST_SETTINGS_ID);
+            this._enemiesPerWaveSelector = this.registerExternalComponent(
+                    new components.Selector(
+                            ENEMIES_PER_WAVE_SELECTOR_ID,
+                            armadaScreens.SELECTOR_SOURCE,
+                            {
+                                cssFilename: armadaScreens.SELECTOR_CSS,
+                                selectorClassName: "smallSelector",
+                                propertyContainerClassName: "smallSelectorPropertyContainer"
+                            },
+                            {id: strings.MULTI_LOBBY.ENEMIES_PER_WAVE_LABEL.name},
+                            ENEMIES_PER_WAVE_OPTIONS),
                     HOST_SETTINGS_ID);
         }.bind(this));
 
@@ -305,6 +327,7 @@ define([
      * @param {Boolean} active
      */
     MultiLobbyScreen.prototype.setActive = function (active) {
+        var coop;
         screens.HTMLScreen.prototype.setActive.call(this, active);
         if (active) {
             this._gameTitle.setTextContent(strings.get(strings.MULTI_LOBBY.GAME_TITLE), {
@@ -397,8 +420,11 @@ define([
             this._chatSend.disable();
             this._pingInterval = setInterval(networking.ping, 3000);
             this._updateGameSettings();
-            this._difficultyContainer.setVisible(networking.getGameMode() === networking.GameMode.COOP);
-            this._difficultySelector.setVisible(networking.getGameMode() === networking.GameMode.COOP);
+            coop = networking.getGameMode() === networking.GameMode.COOP;
+            this._difficultyContainer.setVisible(coop);
+            this._difficultySelector.setVisible(coop);
+            this._enemiesPerWaveContainer.setVisible(coop);
+            this._enemiesPerWaveSelector.setVisible(coop);
             this._hostSettings.setVisible(networking.isHost());
             this._guestSettings.setVisible(!networking.isHost());
         } else {
@@ -478,6 +504,11 @@ define([
         this._difficultySelector.onChange = function () {
             networking.updateGameSettings({
                 difficulty: missions.getDifficultyNames()[this._difficultySelector.getSelectedIndex()]
+            });
+        }.bind(this);
+        this._enemiesPerWaveSelector.onChange = function () {
+            networking.updateGameSettings({
+                enemiesPerWave: this._enemiesPerWaveSelector.getSelectedValue()
             });
         }.bind(this);
     };
@@ -566,9 +597,11 @@ define([
         this._locationValue.setTextContent(location);
         this._loadoutValue.setTextContent(loadout);
         this._difficultyValue.setTextContent(difficulty);
+        this._enemiesPerWaveValue.setTextContent(settings.enemiesPerWave);
         this._locationSelector.selectValue(location);
         this._loadoutSelector.selectValue(loadout);
         this._difficultySelector.selectValue(difficulty);
+        this._enemiesPerWaveSelector.selectValue(settings.enemiesPerWave);
     };
     // -------------------------------------------------------------------------
     // The public interface of the module

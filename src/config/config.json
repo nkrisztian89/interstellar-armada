@@ -1,5 +1,5 @@
 {
-    "version": "0.5.3-dev:1103 (2022.07.02.)",
+    "version": "0.5.3-dev:1104 (2022.07.02.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "platform": "web",
@@ -21,7 +21,8 @@
     },
     "analyticsEnabled": true,
     "analyticsUrl": "https://armada-analytics.herokuapp.com/",
-    "multiUrl": "wss://armada-multi.herokuapp.com/",
+    "multiUrl_": "wss://armada-multi.herokuapp.com/",
+    "multiUrl": "ws://localhost:5000/",
     "missionHubUrl": "https://armada-missions.herokuapp.com/",
     "defaultLanguage": "English",
     "configFiles": {
