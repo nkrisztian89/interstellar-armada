@@ -1,4 +1,4 @@
-body {
+html, body {
     background-color: #aaaaaa;
     padding: 0;
     margin: 0;
@@ -10,6 +10,7 @@ div.main-content {
     padding: 2em;
     background-color: white;
     width: 75em;
+    max-width: 90%;
     box-shadow: #444444 0 0 10em;
 }
 
