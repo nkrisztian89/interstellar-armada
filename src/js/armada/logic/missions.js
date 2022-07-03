@@ -1720,7 +1720,7 @@ define([
                                 if (data.jump && (data.jump.way !== ai.JumpCommandWay.OUT)) {
                                     index = actions[k].getSpacecrafts(this).indexOf(spacecraft);
                                     if (index >= 0) {
-                                        data = Object.assign({}, data);
+                                        data = utils.deepCopy(data);
                                         data.lead = actions[k].getSpacecrafts(this)[0];
                                         data.index = index;
                                         data.clearCache = true;
