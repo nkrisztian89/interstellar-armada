@@ -341,11 +341,6 @@ define([
              */
             _canDamageSelf = false,
             /**
-             * Whether the projectile/missile currently being checked can damage the player (the piloted spacecraft)
-             * @type Boolean
-             */
-            _canDamagePlayer = false,
-            /**
              * The callback to calculate the offset for the current hitcheck
              * @type Function
              */
@@ -449,15 +444,16 @@ define([
         var
                 relativeVelocityDirectionInObjectSpace,
                 relativeVelocity,
-                physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, offset;
+                physicalHitObject, hitPositionVectorInObjectSpace, hitPositionVectorInWorldSpace, relativeHitPositionVectorInWorldSpace, hostile, offset;
         if (_showHitboxesForHitchecks) {
             hitObject.showHitbox();
         }
         physicalHitObject = hitObject.getPhysicalModel();
+        hostile = _origin.isHostile(hitObject);
         if (physicalHitObject && (
-                ((hitObject === _origin) && _canDamageSelf) ||
-                ((hitObject !== _origin) && (_canDamagePlayer || !hitObject.isPiloted())))) {
-            offset = _offsetCallback(hitObject, _isPiloted && _origin.isHostile(hitObject));
+                ((hitObject !== _origin) && (_isPlayerFriendlyFireDamageEnabled || !hitObject.isPiloted() || hostile)) ||
+                ((hitObject === _origin) && _canDamageSelf))) {
+            offset = _offsetCallback(hitObject, _isPiloted && hostile);
             hitPositionVectorInObjectSpace = physicalHitObject.checkHit(_positionMatrix, _velocityMatrix, _hitCheckDT, offset);
             if (hitPositionVectorInObjectSpace) {
                 vec.setDiffTranslation3(_relativeVelocityDirectionInWorldSpace, _velocityMatrix, physicalHitObject.getVelocityMatrix());
@@ -490,12 +486,11 @@ define([
      * @param {Octree} hitObjectOctree The octree containing the objects that our projectile/missile can hit
      * @param {Number} hitCheckDT The elapsed time to consider for the hit check (since last hitcheck, in ms)
      * @param {Spacecraft} origin The spacecraft that fired our projectile / missile (for self hit checks)
-     * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      * @param {Function} offsetCallback The function to return the offset to be used for the hitchecks (modifying
      * the hitbox sizes so that e.g. missiles can already hit the object from farther away)
      * @param {HitCallback} hitCallback The function to call if an object is hit, passing the parameters of the hit to it
      */
-    function _checkHit(positionMatrix, velocityMatrix, hitObjectOctree, hitCheckDT, origin, pilotedCraft, offsetCallback, hitCallback) {
+    function _checkHit(positionMatrix, velocityMatrix, hitObjectOctree, hitCheckDT, origin, offsetCallback, hitCallback) {
         // we pass the _checkHitForObject as the callback to the octree, so we set up the module variables it uses to describe
         // the parameters of the hit check (to avoid creating new functions by binding for every hit check)
         _positionMatrix = positionMatrix;
@@ -506,7 +501,6 @@ define([
         _hitCallback = hitCallback;
         _isPiloted = origin.isPiloted();
         _canDamageSelf = _isSelfFireEnabled && (_isPlayerSelfDamageEnabled || !_isPiloted);
-        _canDamagePlayer = _isPlayerFriendlyFireDamageEnabled || !pilotedCraft || pilotedCraft.isHostile(origin);
         hitObjectOctree.executeForObjects(
                 Math.min(positionMatrix[12], positionMatrix[12] - velocityMatrix[12] * hitCheckDT * 0.001),
                 Math.max(positionMatrix[12], positionMatrix[12] - velocityMatrix[12] * hitCheckDT * 0.001),
@@ -711,9 +705,8 @@ define([
      * @param {Number} dt The passed time since the last simulation in milliseconds.
      * @param {Octree} hitObjectOctree The root node of the octree that is used to spatially partition the spacecrafts this projectile can
      * hit.
-     * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      */
-    Projectile.prototype.simulate = function (dt, hitObjectOctree, pilotedCraft) {
+    Projectile.prototype.simulate = function (dt, hitObjectOctree) {
         var hitCheckDT, power;
         if (this.canBeReused()) {
             return;
@@ -730,7 +723,7 @@ define([
                 this._lightSource.setObjectIntensity(power * this._class.getLightIntensity());
             }
         }
-        _checkHit(this._visualModel.getPositionMatrix(), this._velocityMatrix, hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, _getDefaultOffset, this._hitCallback);
+        _checkHit(this._visualModel.getPositionMatrix(), this._velocityMatrix, hitObjectOctree, hitCheckDT, this._origin, _getDefaultOffset, this._hitCallback);
         this._timeLeft -= dt;
         if (this._timeLeft <= 0) {
             this._visualModel.markAsReusable(true);
@@ -1607,9 +1600,8 @@ define([
      * @param {Number} dt The passed time since the last simulation in milliseconds.
      * @param {Octree} hitObjectOctree The root node of the octree that is used to spatially partition the spacecrafts this missile can
      * hit.
-     * @param {Spacecraft} [pilotedCraft] The spacecraft the player pilots in the current mission
      */
-    Missile.prototype.simulate = function (dt, hitObjectOctree, pilotedCraft) {
+    Missile.prototype.simulate = function (dt, hitObjectOctree) {
         var i, matrix, threshold, hitCheckDT, enginePosition, turningMatrix, yawAngle, pitchAngle;
         if (this.canBeReused()) {
             return;
@@ -1702,7 +1694,7 @@ define([
                 }
             }
             if (hitCheckDT > 0) {
-                _checkHit(this._physicalModel.getPositionMatrix(), this._physicalModel.getVelocityMatrix(), hitObjectOctree, hitCheckDT, this._origin, pilotedCraft, this._getHitOffset, this._hitCallback);
+                _checkHit(this._physicalModel.getPositionMatrix(), this._physicalModel.getVelocityMatrix(), hitObjectOctree, hitCheckDT, this._origin, this._getHitOffset, this._hitCallback);
             }
         }
         this._timeLeft -= dt;

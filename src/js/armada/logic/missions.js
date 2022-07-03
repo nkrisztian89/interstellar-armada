@@ -1824,7 +1824,7 @@ define([
      * @param {Number} indexInPool The index of the projectile within the projectile pool
      */
     Mission._handleProjectile = function (dt, octree, projectile, indexInPool) {
-        projectile.simulate(dt, octree, this._pilotedCraft);
+        projectile.simulate(dt, octree);
         if (projectile.canBeReused()) {
             _projectilePool.markAsFree(indexInPool);
         }
@@ -1837,7 +1837,7 @@ define([
      * @param {Number} indexInPool The index of the missile within the missile pool
      */
     Mission._handleMissile = function (dt, octree, missile, indexInPool) {
-        missile.simulate(dt, octree, this._pilotedCraft);
+        missile.simulate(dt, octree);
         if (missile.canBeReused()) {
             _missilePool.markAsFree(indexInPool);
         }
