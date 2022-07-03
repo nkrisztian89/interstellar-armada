@@ -24,6 +24,7 @@
  * @param constants Used for Accessing global localStorage prefixes
  * @param control Used to trigger gamepad vibration effects
  * @param graphics Used to access graphics settings
+ * @param networking Used to query whether we are hosting the game
  * @param classes Used to load and access the classes of Interstellar Armada
  * @param config Used to access game settings/configuration
  * @param strings Used for translation support
@@ -55,6 +56,7 @@ define([
     "armada/constants",
     "armada/control",
     "armada/graphics",
+    "armada/networking",
     "armada/logic/classes",
     "armada/configuration",
     "armada/strings",
@@ -73,7 +75,7 @@ define([
         utils, types, vec, mat,
         application, asyncResource, resourceManager, resources, pools, egomModel, physics,
         camera, renderableObjects,
-        constants, control, graphics, classes, config, strings,
+        constants, control, graphics, networking, classes, config, strings,
         logicConstants, environments, SpacecraftEvents, spacecraft, equipment, formations, explosion, ai,
         missionActions, missionEvents) {
     "use strict";
@@ -1998,7 +2000,7 @@ define([
             _trailSegmentPool.executeForLockedObjects(Mission._handleTrailSegment);
         }
         // moving the scene back to the origo if the camera is too far away to avoid floating point errors becoming visible
-        if (mainScene) {
+        if (mainScene && (!multi || networking.isHost())) {
             v = mainScene.moveCameraToOrigoIfNeeded(config.getSetting(config.BATTLE_SETTINGS.MOVE_TO_ORIGO_DISTANCE));
             if (v) {
                 ai.handleSceneMoved(v);
