@@ -1631,8 +1631,7 @@ define([
      */
     Mission.prototype.addToScene = function (battleScene, targetScene, previewParams) {
         var i, j, k, preview = !!previewParams, spacecraftCount, addedSpacecrafts, spacecraft, actions, data, positioned, index,
-                friendly, friendlyColor, hostileColor, markerColorPositive, markerColorNegative, jumpMarkerColor, callback,
-                white = [1, 1, 1], jumpMarkers,
+                friendly, friendlyColor, hostileColor, markerColorPositive, markerColorNegative, jumpMarkerColor, callback, jumpMarkers,
                 getSpacecraftColor;
         this._environment.addToScene(battleScene);
         if (preview) {
@@ -1644,9 +1643,9 @@ define([
             markerColorPositive = previewParams.markerColorPositive;
             markerColorNegative = previewParams.markerColorNegative;
             jumpMarkerColor = previewParams.jumpMarkerColor;
-            resources.getOrAddModel(egomModel.gridModel(GRID_MODEL_NAME, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize + 1, 2 * previewParams.smallestGridSize + 1, white));
-            resources.getOrAddModel(egomModel.positionMarkerModel(MARKER_MODEL_NAME, 8, white));
-            resources.getOrAddModel(egomModel.lineModel(LINE_MODEL_NAME, [1, 1, 1], white));
+            resources.getOrAddModel(egomModel.gridModel(GRID_MODEL_NAME, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize, 2 * previewParams.smallestGridSize + 1, 2 * previewParams.smallestGridSize + 1));
+            resources.getOrAddModel(egomModel.positionMarkerModel(MARKER_MODEL_NAME, 8));
+            resources.getOrAddModel(egomModel.lineModel(LINE_MODEL_NAME, [1, 1, 1]));
             resources.executeWhenReady(function () {
                 var i, size, grid,
                         gridColor = previewParams.gridColor,

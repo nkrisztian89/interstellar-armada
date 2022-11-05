@@ -66,7 +66,7 @@ define([
              * The list of EgomModel versions that can be loaded from file.
              * @type String[]
              */
-            _supportedVersions = ["3.3"];
+            _supportedVersions = ["3.4"];
     // freezing enum objects
     Object.freeze(VertexAttributeRole);
     // -------------------------------------------------------------------------
@@ -97,9 +97,8 @@ define([
      * @param {Number} x 
      * @param {Number} y 
      * @param {Number} z 
-     * @param {Number[2]} texCoords Texture coordinates.
      */
-    function Vertex(x, y, z, texCoords) {
+    function Vertex(x, y, z) {
         /**
          * The X coordinate of the vertex.
          * @type Number
@@ -115,35 +114,14 @@ define([
          * @type Number
          */
         this.z = z;
-        // if no texture coordinates were given, default to (x;y)
-        texCoords = texCoords || [this.x, this.y];
-        /**
-         * The U (horizontal) texture coordinate of the vertex.
-         * @type Number
-         */
-        this.u = texCoords[0];
-        /**
-         * The V (vertical) texture coordinate of the vertex.
-         * @type Number
-         */
-        this.v = texCoords[1];
     }
-    /**
-     * Returns the texture coordinates associated with this vertex.
-     * @returns {Number[2]}
-     */
-    Vertex.prototype.getTexCoords = function () {
-        return [this.u, this.v];
-    };
     // ############################################################################################
     /**
      * @class Represents a line connecting two vertices in a model.
      * @param {Number} a The index of the starting vertex of the line.
      * @param {Number} b The index of the end vertex of the line.
-     * @param {Number[3]} color The color of the line. ([red, green, blue])
-     * @param {Number[3]} normal The normal vector associated with the line.
      */
-    function Line(a, b, color, normal) {
+    function Line(a, b) {
         /**
          * The index (in the model) of the starting vertex of the line.
          * @type Number
@@ -154,16 +132,6 @@ define([
          * @type Number
          */
         this.b = b;
-        /**
-         * The color of the line for rendering. ([red, green, blue])
-         * @type Number
-         */
-        this.color = color;
-        /**
-         * The normal vector associated with the line for shading.
-         * @type Number[3]
-         */
-        this.normal = normal;
     }
     // ############################################################################################
     /**
@@ -453,10 +421,9 @@ define([
     /**
      * Adds a new vertex to the first available index.
      * @param {Number[3]} position
-     * @param {Number[2]} [texCoords]
      */
-    Mesh.prototype.appendVertex = function (position, texCoords) {
-        this.setVertex(this._vertices.length, new Vertex(position[0], position[1], position[2], texCoords));
+    Mesh.prototype.appendVertex = function (position) {
+        this.setVertex(this._vertices.length, new Vertex(position[0], position[1], position[2]));
     };
     /**
      * Deletes the lines of the mesh.
@@ -504,19 +471,11 @@ define([
     };
     /**
      * Adds a new triangle to the mesh. Does not check if the same triangle
-     * already exists. Also adds 3 lines corresponding to the edges of the 
-     * triangle, unless specified otherwise in the parameters.
+     * already exists.
      * @param {Triangle} triangle
-     * @param {Boolean} [withoutLines=false]
      */
-    Mesh.prototype.addTriangle = function (triangle, withoutLines) {
+    Mesh.prototype.addTriangle = function (triangle) {
         this._triangles.push(triangle);
-        // the default setting is to also add the corresponding border lines of the triangle
-        if (!withoutLines) {
-            this._lines.push(new Line(triangle.a, triangle.b, triangle.color, triangle.getNormal(0)));
-            this._lines.push(new Line(triangle.b, triangle.c, triangle.color, triangle.getNormal(0)));
-            this._lines.push(new Line(triangle.c, triangle.a, triangle.color, triangle.getNormal(0)));
-        }
         // important to update the appropriate count
         if (triangle.color[3] < 1.0) {
             this._nTransparentTriangles++;
@@ -527,8 +486,6 @@ define([
     /**
      * @typedef {Object} Mesh~TriangleParams
      * @property {Number[4]} color 
-     * @property {Boolean} useVertexTexCoords Whether to take the texture coordinates from the vertices of the model (if not, the default 
-     * ones set for the model or the custom ones given will be used)
      * @property {Number[3][2]} texCoords The texture coordinates of the vertices of the triangle
      * @property {Number[][3]} normals The normal vector(s) for the triangle. If one vector is given, it will be used for all three 
      * vertices, if 3 are given, they will be used separately. If none are given, the normal of th surface of the triangles will be 
@@ -550,16 +507,14 @@ define([
         color = params.color || [1.0, 1.0, 1.0, 1.0];
         // texture coordinates may be taken from the vertices, from the parameters
         // passed to this function or from the default coordinates set for the model
-        texCoords = params.useVertexTexCoords ?
-                [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
-                (params.texCoords || [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+        texCoords = params.texCoords || [this._texCoords[0], this._texCoords[1], this._texCoords[2]];
         // normals are taken from the parameters - can be 1 or 3 element long
         normals = params.normals;
         // if not specified, use the model's default group index
         groupIndices = params.groupIndices || this._currentGroupIndices;
         // create and add the new triangle
         triangle = new Triangle(this, a, b, c, color, texCoords, normals, groupIndices);
-        this.addTriangle(triangle, params.withoutLines);
+        this.addTriangle(triangle);
         return triangle;
     };
     /**
@@ -572,49 +527,33 @@ define([
      * single triangles.
      */
     Mesh.prototype.addQuad = function (a, b, c, d, params) {
-        var triangle1Params, triangle2Params, color, normals;
+        var triangle1Params, triangle2Params;
         params = params || {};
         // adding the first triangle
         // first, create the approrpiate parameters for the triangle based on the
         // parameters given for the quad
         triangle1Params = Object.create(params);
-        // no lines should be added, as we will add the 4 lines for the whole quad
-        // in the end
-        triangle1Params.withoutLines = true;
         // for texture coordinates and normals, the first 3 values need to be used
-        triangle1Params.texCoords = params.useVertexTexCoords ?
-                [this._vertices[a].getTexCoords(), this._vertices[b].getTexCoords(), this._vertices[c].getTexCoords()] :
-                (params.texCoords ?
-                        [params.texCoords[0], params.texCoords[1], params.texCoords[2]] :
-                        [this._texCoords[0], this._texCoords[1], this._texCoords[2]]);
+        triangle1Params.texCoords = params.texCoords ?
+                [params.texCoords[0], params.texCoords[1], params.texCoords[2]] :
+                [this._texCoords[0], this._texCoords[1], this._texCoords[2]];
         triangle1Params.normals = params.normals ?
                 (params.normals.length === 4 ?
                         [params.normals[0], params.normals[1], params.normals[2]] :
                         params.normals) :
                 null;
         this.addTriangleWithParams(a, b, c, triangle1Params);
-        // adding the first triangle
+        // adding the second triangle
         triangle2Params = Object.create(params);
-        triangle2Params.texCoords = params.useVertexTexCoords ?
-                [this._vertices[c].getTexCoords(), this._vertices[d].getTexCoords(), this._vertices[a].getTexCoords()] :
-                (params.texCoords ?
-                        [params.texCoords[2], params.texCoords[3], params.texCoords[0]] :
-                        [this._texCoords[2], this._texCoords[3], this._texCoords[0]]);
+        triangle2Params.texCoords = params.texCoords ?
+                [params.texCoords[2], params.texCoords[3], params.texCoords[0]] :
+                [this._texCoords[2], this._texCoords[3], this._texCoords[0]];
         triangle2Params.normals = params.normals ?
                 (params.normals.length === 4 ?
                         [params.normals[2], params.normals[3], params.normals[0]] :
                         params.normals) :
                 null;
         this.addTriangleWithParams(c, d, a, triangle2Params);
-        // adding the 4 lines around the quad
-        if (!params.withoutLines) {
-            color = params.color || [1.0, 1.0, 1.0, 1.0];
-            normals = params.normals ? params.normals[0] : this._triangles[this._triangles.length - 1].getNormal(0);
-            this._lines.push(new Line(a, b, color, normals));
-            this._lines.push(new Line(b, c, color, normals));
-            this._lines.push(new Line(c, d, color, normals));
-            this._lines.push(new Line(d, a, color, normals));
-        }
     };
     /**
      * Returns the size of the model, which is calculated as the double of the
@@ -747,23 +686,23 @@ define([
             }
             normalData = new Float32Array(nLines * 6);
             for (i = 0; i < nLines; i++) {
-                normalData[i * 6] = this._lines[i].normal[0];
-                normalData[i * 6 + 1] = this._lines[i].normal[1];
-                normalData[i * 6 + 2] = this._lines[i].normal[2];
-                normalData[i * 6 + 3] = this._lines[i].normal[0];
-                normalData[i * 6 + 4] = this._lines[i].normal[1];
-                normalData[i * 6 + 5] = this._lines[i].normal[2];
+                normalData[i * 6] = 0;
+                normalData[i * 6 + 1] = 0;
+                normalData[i * 6 + 2] = 1;
+                normalData[i * 6 + 3] = 0;
+                normalData[i * 6 + 4] = 0;
+                normalData[i * 6 + 5] = 1;
             }
             colorData = new Float32Array(nLines * 8);
             for (i = 0; i < nLines; i++) {
-                colorData[i * 8] = this._lines[i].color[0];
-                colorData[i * 8 + 1] = this._lines[i].color[1];
-                colorData[i * 8 + 2] = this._lines[i].color[2];
-                colorData[i * 8 + 3] = 1.0;
-                colorData[i * 8 + 4] = this._lines[i].color[0];
-                colorData[i * 8 + 5] = this._lines[i].color[1];
-                colorData[i * 8 + 6] = this._lines[i].color[2];
-                colorData[i * 8 + 7] = 1.0;
+                colorData[i * 8] = 1;
+                colorData[i * 8 + 1] = 1;
+                colorData[i * 8 + 2] = 1;
+                colorData[i * 8 + 3] = 1;
+                colorData[i * 8 + 4] = 1;
+                colorData[i * 8 + 5] = 1;
+                colorData[i * 8 + 6] = 1;
+                colorData[i * 8 + 7] = 1;
             }
             groupIndexData = new Float32Array(nLines * 4);
             for (i = 0; i < nLines; i++) {
@@ -1286,7 +1225,7 @@ define([
     Model.prototype.addTriangleDirect = function (minLOD, maxLOD, a, b, c, params) {
         var i, triangle = this._meshes[minLOD].addTriangleWithParams(a, b, c, params);
         for (i = minLOD + 1; i <= maxLOD; i++) {
-            this._meshes[i].addTriangle(triangle, params.withoutLines);
+            this._meshes[i].addTriangle(triangle);
         }
         return triangle;
     };
@@ -1360,6 +1299,8 @@ define([
         // loading vertices
         nVertices = dataJSON.vertices.length;
         index = 0;
+        minLOD = defaultMinLOD;
+        maxLOD = defaultMaxLOD;
         for (i = 0; i < nVertices; i++) {
             length = dataJSON.vertices[i].length;
             if (length === 1) {
@@ -1368,9 +1309,6 @@ define([
                 if (dataJSON.vertices[i].length >= 5) {
                     minLOD = dataJSON.vertices[i][3];
                     maxLOD = dataJSON.vertices[i][4];
-                } else {
-                    minLOD = defaultMinLOD;
-                    maxLOD = defaultMaxLOD;
                 }
                 vertex = new Vertex(dataJSON.vertices[i][0], dataJSON.vertices[i][1], dataJSON.vertices[i][2]); // x,y,z
                 this.setVertex(minLOD, maxLOD, index, vertex);
@@ -1380,25 +1318,23 @@ define([
         application.log_DEBUG("Loaded " + nVertices + " vertices.", 3);
         // loading lines
         nLines = dataJSON.lines.length;
+        minLOD = defaultMinLOD;
+        maxLOD = defaultMaxLOD;
         for (i = 0; i < nLines; i++) {
-            if (dataJSON.lines[i].length >= 8) {
-                minLOD = dataJSON.lines[i][6];
-                maxLOD = dataJSON.lines[i][7];
-            } else {
-                minLOD = defaultMinLOD;
-                maxLOD = defaultMaxLOD;
+            if (dataJSON.lines[i].length >= 4) {
+                minLOD = dataJSON.lines[i][2];
+                maxLOD = dataJSON.lines[i][3];
             }
             line = new Line(
                     dataJSON.lines[i][0], // a
-                    dataJSON.lines[i][0] + dataJSON.lines[i][1], // b
-                    colorPalette[dataJSON.lines[i][2]],
-                    0,
-                    dataJSON.lines[i].slice(3, 6)); // normal
+                    dataJSON.lines[i][0] + dataJSON.lines[i][1]); // b
             this.addLineDirect(minLOD, maxLOD, line);
         }
         application.log_DEBUG("Loaded " + nLines + " lines.", 3);
         // loading triangles
         nTriangles = dataJSON.triangles.length;
+        minLOD = defaultMinLOD;
+        maxLOD = defaultMaxLOD;
         params = {};
         for (i = 0; i < nTriangles; i++) {
             // triangles are defined by 3 arrays:
@@ -1409,9 +1345,6 @@ define([
             if ((length === 6) || (length === 12)) { // two cases, with and without texCoords being omitted
                 minLOD = dataJSON.triangles[i][0][length - 2];
                 maxLOD = dataJSON.triangles[i][0][length - 1];
-            } else {
-                minLOD = defaultMinLOD;
-                maxLOD = defaultMaxLOD;
             }
             params.color = colorPalette[dataJSON.triangles[i][0][3]];
             params.texCoords = (length >= 10) ? [dataJSON.triangles[i][0].slice(4, 6), dataJSON.triangles[i][0].slice(6, 8), dataJSON.triangles[i][0].slice(8, 10)] : params.texCoords;
@@ -1423,7 +1356,6 @@ define([
             params.groupIndices = (dataJSON.triangles[i].length >= 3) ?
                     ((dataJSON.triangles[i][2].length > 0) ? dataJSON.triangles[i][2] : params.groupIndices) :
                     null;
-            params.withoutLines = true;
             index = dataJSON.triangles[i][0][0];
             this.addTriangleDirect(minLOD, maxLOD,
                     index, // a
@@ -1832,10 +1764,9 @@ define([
     /**
      * Adds a new vertex to the currently edited mesh(es).
      * @param {Number[3]} position
-     * @param {Number[2]} [texCoords]
      */
-    Model.prototype.appendVertex = function (position, texCoords) {
-        this.getMeshWithLOD(0).appendVertex(position, texCoords);
+    Model.prototype.appendVertex = function (position) {
+        this.getMeshWithLOD(0).appendVertex(position);
     };
 
     /**
@@ -2004,18 +1935,16 @@ define([
          * @param {String} [name] The name of the model to be created.
          * @param {Number[3]} vector The vector pointing from the origo towards 
          * the second vertex.
-         * @param {Number[3]} color The RGB components of the color to use for 
-         * the line.
          * @returns {Model}
          */
-        lineModel: function (name, vector, color) {
+        lineModel: function (name, vector) {
             var result = new Model();
             if (name) {
                 result.setName(name);
             }
             result.appendVertex([0.0, 0.0, 0.0]);
             result.appendVertex(vector);
-            result.addLine(new Line(0, 1, color, vector));
+            result.addLine(new Line(0, 1));
             return result;
         },
         /**
@@ -2026,10 +1955,9 @@ define([
          * @param {Number} height The size of the grid on the Y axis
          * @param {Number} xCount The number of lines dividing the X axis
          * @param {Number} yCount The number of lines dividing the Y axis
-         * @param {Number[3]} color The color of the lines
          */
-        gridModel: function (name, width, height, xCount, yCount, color) {
-            var i, v = [0, 0, 0], normal = [0, 0, 1], result = new Model();
+        gridModel: function (name, width, height, xCount, yCount) {
+            var i, v = [0, 0, 0], result = new Model();
             if (name) {
                 result.setName(name);
             }
@@ -2039,7 +1967,7 @@ define([
                 result.appendVertex(v);
                 v[1] = height * 0.5;
                 result.appendVertex(v);
-                result.addLine(new Line(i * 2, i * 2 + 1, color, normal));
+                result.addLine(new Line(i * 2, i * 2 + 1));
             }
             for (i = 0; i < yCount; i++) {
                 v[0] = width * -0.5;
@@ -2047,7 +1975,7 @@ define([
                 result.appendVertex(v);
                 v[0] = width * 0.5;
                 result.appendVertex(v);
-                result.addLine(new Line((xCount + i) * 2, (xCount + i) * 2 + 1, color, normal));
+                result.addLine(new Line((xCount + i) * 2, (xCount + i) * 2 + 1));
             }
             return result;
         },
@@ -2056,10 +1984,9 @@ define([
          * with an extra line pointing up from the center of the cirle towards +Z
          * @param {String} [name] The name to set for the model
          * @param {Number} count The amount of vertices to create the circle
-         * @param {Number[3]} color The color of the lines
          */
-        positionMarkerModel: function (name, count, color) {
-            var i, v = [1, 0, 0], normal = [0, 0, 1], angle, result = new Model();
+        positionMarkerModel: function (name, count) {
+            var i, v = [1, 0, 0], angle, result = new Model();
             if (name) {
                 result.setName(name);
             }
@@ -2069,16 +1996,16 @@ define([
                 v[0] = Math.cos(angle);
                 v[1] = Math.sin(angle);
                 result.appendVertex(v);
-                result.addLine(new Line(i - 1, i, color, normal));
+                result.addLine(new Line(i - 1, i));
             }
-            result.addLine(new Line(i - 1, 0, color, normal));
+            result.addLine(new Line(i - 1, 0));
             v[0] = 0;
             v[1] = 0;
             v[2] = 0;
             result.appendVertex(v);
             v[2] = 1;
             result.appendVertex(v);
-            result.addLine(new Line(i, i + 1, color, normal));
+            result.addLine(new Line(i, i + 1));
             return result;
         }
     };

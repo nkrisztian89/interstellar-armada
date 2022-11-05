@@ -1214,7 +1214,7 @@ define([
      * @override
      */
     DustCloudClass.prototype.acquireResources = function () {
-        ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.lineModel(DUST_MODEL_NAME, [1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0])});
+        ShadedModelClass.prototype.acquireResources.call(this, {model: egomModel.lineModel(DUST_MODEL_NAME, [1, 1, 1])});
     };
     /**
      * @returns {Number}
