@@ -66,7 +66,7 @@ define([
              * The list of EgomModel versions that can be loaded from file.
              * @type String[]
              */
-            _supportedVersions = ["3.4"];
+            _supportedVersions = ["3.5"];
     // freezing enum objects
     Object.freeze(VertexAttributeRole);
     // -------------------------------------------------------------------------
@@ -1243,7 +1243,7 @@ define([
                 defaultMinLOD = null,
                 defaultMaxLOD = null,
                 minLOD, maxLOD,
-                version, colorPalette,
+                version, colorPalette, hasColor,
                 params,
                 nVertices, nLines, nTriangles,
                 index, vertex, line, length,
@@ -1298,22 +1298,16 @@ define([
         colorPalette = dataJSON.info.colorPalette;
         // loading vertices
         nVertices = dataJSON.vertices.length;
-        index = 0;
         minLOD = defaultMinLOD;
         maxLOD = defaultMaxLOD;
         for (i = 0; i < nVertices; i++) {
             length = dataJSON.vertices[i].length;
-            if (length === 1) {
-                index += dataJSON.vertices[i][0];
-            } else {
-                if (dataJSON.vertices[i].length >= 5) {
-                    minLOD = dataJSON.vertices[i][3];
-                    maxLOD = dataJSON.vertices[i][4];
-                }
-                vertex = new Vertex(dataJSON.vertices[i][0], dataJSON.vertices[i][1], dataJSON.vertices[i][2]); // x,y,z
-                this.setVertex(minLOD, maxLOD, index, vertex);
-                index++;
+            if (dataJSON.vertices[i].length >= 5) {
+                minLOD = dataJSON.vertices[i][3];
+                maxLOD = dataJSON.vertices[i][4];
             }
+            vertex = new Vertex(dataJSON.vertices[i][0], dataJSON.vertices[i][1], dataJSON.vertices[i][2]); // x,y,z
+            this.setVertex(minLOD, maxLOD, i, vertex);
         }
         application.log_DEBUG("Loaded " + nVertices + " vertices.", 3);
         // loading lines
@@ -1335,27 +1329,31 @@ define([
         nTriangles = dataJSON.triangles.length;
         minLOD = defaultMinLOD;
         maxLOD = defaultMaxLOD;
-        params = {};
+        params = {
+            color: 0
+        };
         for (i = 0; i < nTriangles; i++) {
-            // triangles are defined by 3 arrays:
-            // first: [a, b, c, color, <texCoords(6)>, <lod(2)>] where texCoords are omitted if the same as for the previous triangle, lod is omitted if default
-            // second: normals: one normal if same for all three vertices, three normals (flattened to 9 numbers) if different, empty array if normals are the same as previous triangle
-            // third: group indices: omitted if default, empty array if the same as for the previous triangle
+            // triangles are defined by 1 or 2 arrays:
+            // first: [a, b, c, <color>, <texCoords(6)>, <lod(2)>] where color, texCoords and lod are omitted if the same as for the previous triangle
+            // second: [<normals(3|9))>, <groupIndices(2)>]: normals: one normal if same for all three vertices, three normals (flattened to 9 numbers) if different, omitted if normals are the same as previous triangle; group indices omitted if the same as for the previous triangle
+            // The whole second array is omitted if both normals and group indices are the same as for the previous triangle
             length = dataJSON.triangles[i][0].length;
-            if ((length === 6) || (length === 12)) { // two cases, with and without texCoords being omitted
+            if ((length === 5) || (length === 6) || (length === 11) || (length === 12)) { // with and without color/texCoords being omitted
                 minLOD = dataJSON.triangles[i][0][length - 2];
                 maxLOD = dataJSON.triangles[i][0][length - 1];
             }
-            params.color = colorPalette[dataJSON.triangles[i][0][3]];
-            params.texCoords = (length >= 10) ? [dataJSON.triangles[i][0].slice(4, 6), dataJSON.triangles[i][0].slice(6, 8), dataJSON.triangles[i][0].slice(8, 10)] : params.texCoords;
-            params.normals = (dataJSON.triangles[i][1].length > 0) ?
-                    ((dataJSON.triangles[i][1].length > 3) ?
+            hasColor = 1 - (length % 2);
+            params.color = hasColor ? colorPalette[dataJSON.triangles[i][0][3]] : params.color;
+            params.texCoords = (length >= 9) ? [dataJSON.triangles[i][0].slice(3 + hasColor, 6), dataJSON.triangles[i][0].slice(5 + hasColor, 8), dataJSON.triangles[i][0].slice(7 + hasColor, 10)] : params.texCoords;
+            length = dataJSON.triangles[i].length;
+            params.normals = ((length > 1) && (dataJSON.triangles[i][1].length > 2)) ?
+                    ((dataJSON.triangles[i][1].length >= 9) ?
                             [dataJSON.triangles[i][1].slice(0, 3), dataJSON.triangles[i][1].slice(3, 6), dataJSON.triangles[i][1].slice(6, 9)] :
-                            [dataJSON.triangles[i][1]]) :
+                            [dataJSON.triangles[i][1].slice(0, 3)]) :
                     params.normals;
-            params.groupIndices = (dataJSON.triangles[i].length >= 3) ?
-                    ((dataJSON.triangles[i][2].length > 0) ? dataJSON.triangles[i][2] : params.groupIndices) :
-                    null;
+            params.groupIndices = ((length > 1) && ((dataJSON.triangles[i][1].length % 3) === 2)) ?
+                    dataJSON.triangles[i][1].slice(-2) :
+                    params.groupIndices;
             index = dataJSON.triangles[i][0][0];
             this.addTriangleDirect(minLOD, maxLOD,
                     index, // a
