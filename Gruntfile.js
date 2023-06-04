@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2016-2018, 2020-2023 Krisztián Nagy
  * @file Grunt configuration file for the Interstellar Armada game
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -853,20 +853,6 @@ module.exports = function (grunt) {
                     {expand: true, cwd: 'js/', src: ['**'], dest: 'js/'}
                 ]
             },
-            sass: {
-                options: {
-                    patterns: [
-                        {
-                            match: 'sourceMappingURL=css/',
-                            replacement: 'sourceMappingURL='
-                        }
-                    ],
-                    usePrefix: false
-                },
-                files: [
-                    {expand: true, flatten: true, src: ['css/*.css'], dest: './css'}
-                ]
-            },
             setSnap: {
                 options: {
                     patterns: [
@@ -920,7 +906,7 @@ module.exports = function (grunt) {
             },
             sass: {
                 files: ['src/scss/**'],
-                tasks: ['_sass:dev', '_replace:sass'],
+                tasks: ['_sass:dev'],
                 options: {
                     spawn: true
                 }
@@ -928,7 +914,7 @@ module.exports = function (grunt) {
         },
         _concurrent: {
             watch: ['_watch:dev', '_watch:sass'],
-            dev: [['_sass:dev', '_replace:sass'], '_copy:devData', '_copy:js'],
+            dev: [['_sass:dev'], '_copy:devData', '_copy:js'],
             build: ['_sass:dist', ['_copy:distData', '_replace:distConfig', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_clean:editor', '_replace:preOptimizeCommon', '_replace:preOptimizeGame', '_replace:optimizeCommon', '_replace:optimizeGame', '_requirejs:game', '_clean:dist', '_replace:postOptimize']],
             buildWithEditor: ['_sass:dist', ['_copy:distData', '_replace:distConfig', '_replace:distData', '_minify:config', '_minify:data'], ['_copy:js', '_replace:preOptimizeCommon', '_replace:optimizeCommon', '_requirejs:editor', '_replace:preOptimizeGame', '_replace:optimizeGame', '_requirejs:game', '_clean:distWithEditor', '_replace:postOptimize']]
         }

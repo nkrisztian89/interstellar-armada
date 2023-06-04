@@ -182,7 +182,7 @@ $dialog-width: 20em;
 .dialog {
     position: absolute;
     width: $dialog-width;
-    left: calc(50% - #{$dialog-width/2});
+    left: calc(50% - #{$dialog-width*0.5});
     top: calc(40% - 4.5em);
     padding: 1em;
 }
@@ -326,8 +326,8 @@ $classes-dialog-height: 7em;
 #classesExportDialog {
     width: $classes-dialog-width;
     height: $classes-dialog-height;
-    left: calc(50% - #{$classes-dialog-width/2});
-    top: calc(50% - #{$classes-dialog-height/2});
+    left: calc(50% - #{$classes-dialog-width*0.5});
+    top: calc(50% - #{$classes-dialog-height*0.5});
 
     padding-top: 0.9em;
 }
