@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2023 Krisztián Nagy
  * @file 
  * Provides a class representing a 3D model with several meshes storing the geometry of the model at different levels of detail. The model
  * can be edited directly, loaded from an EgomModel (egm) file, can provide its vertex data in a format suitable to be loaded to WebGL
@@ -66,7 +66,7 @@ define([
              * The list of EgomModel versions that can be loaded from file.
              * @type String[]
              */
-            _supportedVersions = ["3.5"];
+            _supportedVersions = ["3.6"];
     // freezing enum objects
     Object.freeze(VertexAttributeRole);
     // -------------------------------------------------------------------------
@@ -247,6 +247,15 @@ define([
          */
         this._lines = [];
         /**
+         * Stores which vertices are connected to which others by lines.
+         * e.g. [[2,5],[3,7]] would mean there are lines between these vertices:
+         * (0->2), (0->5), (1->3), (1->7)
+         * Each line is only recorded once, with the starting vertex index
+         * (indicated by the first index in this array) being lower.
+         * @type Number[][]
+         */
+        this._linesByVertices = [];
+        /**
          * The array of triangles of the model for solid rendering.
          * @type Triangle[]
          */
@@ -424,6 +433,43 @@ define([
      */
     Mesh.prototype.appendVertex = function (position) {
         this.setVertex(this._vertices.length, new Vertex(position[0], position[1], position[2]));
+    };
+    /**
+     * Initializes/resets the _linesByVertices array to mark no lines.
+     */
+    Mesh.prototype.setupLinesByVertices = function () {
+        var i, count = this._vertices.length - 1;
+        this._linesByVertices.length = count;
+        for (i = 0; i < count; i++) {
+            this._linesByVertices[i] = [];
+        }
+    };
+    /**
+     * Mark a line between the vertices a and b (vertex indices in the mesh)
+     * in the _linesByVertices array.
+     * @param {Number} a The index of the start vertex of the line
+     * @param {Number} b The index of the end vertex of the line
+     */
+    Mesh.prototype.markLineByVertex = function (a, b) {
+        var start = Math.min(a, b), end = Math.max(a, b); 
+        if (this._linesByVertices[start].indexOf(end) < 0) {
+            this._linesByVertices[start].push(end);
+        }
+    };
+    /**
+     * Add all the lines marked in the _linesByVertices array (filled by calling
+     * markLineByVertex()) to the actual _lines array that is used to generate
+     * geometry data for rendering.
+     */
+    Mesh.prototype.addLinesByVertices = function () {
+        var i, j, lines, count = this._linesByVertices.length; 
+        for (i = 0; i < count; i++) {
+            lines = this._linesByVertices[i];
+            for (j = 0; j < lines.length; j++) {
+                this.addLine(new Line(i, lines[j]));
+            }
+        }
+        this._linesByVertices = null;
     };
     /**
      * Deletes the lines of the mesh.
@@ -1212,6 +1258,45 @@ define([
         }
     };
     /**
+     * Initializes/resets the _linesByVertices array to mark no lines for the
+     * meshes in the specified LOD range.
+     * @param {Number} minLOD The minimum LOD
+     * @param {Number} maxLOD The maximum LOD
+     */
+    Model.prototype.setupLinesByVertices = function (minLOD, maxLOD) {
+        var i;
+        for (i = minLOD; i <= maxLOD; i++) {
+            this._meshes[i].setupLinesByVertices();
+        }
+    };
+    /**
+     * Mark a line between the vertices a and b (vertex indices in the mesh)
+     * in the _linesByVertices array for the meshes in the specified LOD range.
+     * @param {Number} minLOD The minimum LOD
+     * @param {Number} maxLOD The maximum LOD
+     * @param {Number} a The index of the start vertex of the line
+     * @param {Number} b The index of the end vertex of the line
+     */
+    Model.prototype.markLineByVertex = function (minLOD, maxLOD, a, b) {
+        var i;
+        for (i = minLOD; i <= maxLOD; i++) {
+            this._meshes[i].markLineByVertex(a, b);
+        }
+    };
+    /**
+     * Add all the lines marked in the _linesByVertices array (filled by calling
+     * markLineByVertex()) to the actual _lines array that is used to generate
+     * geometry data for rendering for the meshes in the specified LOD range.
+     * @param {Number} minLOD The minimum LOD
+     * @param {Number} maxLOD The maximum LOD
+     */
+    Model.prototype.addLinesByVertices = function (minLOD, maxLOD) {
+        var i;
+        for (i = minLOD; i <= maxLOD; i++) {
+            this._meshes[i].addLinesByVertices();
+        }
+    };
+    /**
      * Directly adds a triangle with the passed parameters in the meshes belonging in the passed LOD range (no LOD existence check),
      * and also returns it
      * @param {Number} minLOD
@@ -1237,16 +1322,17 @@ define([
      * @returns {Boolean} Whether the model has been successfully loaded.
      */
     Model.prototype.loadFromJSON = function (filename, dataJSON, defaultLOD) {
-        var i, str,
+        var i, j, str,
                 minLoadedLOD = null,
                 maxLoadedLOD = null,
                 defaultMinLOD = null,
                 defaultMaxLOD = null,
                 minLOD, maxLOD,
-                version, colorPalette, hasColor,
+                version, colorPalette, hasColor, hasTexCoords, texCoords, normals,
                 params,
-                nVertices, nLines, nTriangles,
-                index, vertex, line, length,
+                nVertices, nPolygons,
+                offset, count, array,
+                index, vertex, length,
                 resetNewLoadedMeshes = function (newMinLoadedLOD, newMaxLoadedLOD) {
                     var lod;
                     if (minLoadedLOD === null) {
@@ -1310,58 +1396,71 @@ define([
             this.setVertex(minLOD, maxLOD, i, vertex);
         }
         application.log_DEBUG("Loaded " + nVertices + " vertices.", 3);
-        // loading lines
-        nLines = dataJSON.lines.length;
+        // loading polygons
+        nPolygons = dataJSON.polygons.length;
         minLOD = defaultMinLOD;
         maxLOD = defaultMaxLOD;
-        for (i = 0; i < nLines; i++) {
-            if (dataJSON.lines[i].length >= 4) {
-                minLOD = dataJSON.lines[i][2];
-                maxLOD = dataJSON.lines[i][3];
-            }
-            line = new Line(
-                    dataJSON.lines[i][0], // a
-                    dataJSON.lines[i][0] + dataJSON.lines[i][1]); // b
-            this.addLineDirect(minLOD, maxLOD, line);
-        }
-        application.log_DEBUG("Loaded " + nLines + " lines.", 3);
-        // loading triangles
-        nTriangles = dataJSON.triangles.length;
-        minLOD = defaultMinLOD;
-        maxLOD = defaultMaxLOD;
+        this.setupLinesByVertices(minLOD, maxLOD);
         params = {
-            color: 0
+            color: colorPalette[0]
         };
-        for (i = 0; i < nTriangles; i++) {
-            // triangles are defined by 1 or 2 arrays:
-            // first: [a, b, c, <color>, <texCoords(6)>, <lod(2)>] where color, texCoords and lod are omitted if the same as for the previous triangle
-            // second: [<normals(3|9))>, <groupIndices(2)>]: normals: one normal if same for all three vertices, three normals (flattened to 9 numbers) if different, omitted if normals are the same as previous triangle; group indices omitted if the same as for the previous triangle
-            // The whole second array is omitted if both normals and group indices are the same as for the previous triangle
-            length = dataJSON.triangles[i][0].length;
-            if ((length === 5) || (length === 6) || (length === 11) || (length === 12)) { // with and without color/texCoords being omitted
-                minLOD = dataJSON.triangles[i][0][length - 2];
-                maxLOD = dataJSON.triangles[i][0][length - 1];
+        count = 3;
+        for (i = 0; i < nPolygons; i++) {
+            // polygons are defined by 1 or 2 arrays:
+            // first: [<-count>, vertices(count), <color>, <texCoords(2*count)>, <lod(2)>]
+            //   count: How many vertices does this polygon contain. Negated. Omitted if the same as for the previous polygon.
+            //   vertices: The index of the starting vertex followed by the differences between this index and the indices of the other vertices.
+            //   color: The index of the color of this face within the color palette. Omitted if the same as for the previous polygon.
+            //   texCoords: X and Y (U and V) coordinates for each of the vertices. Omitted if the same as for the previous polygon.
+            //   lod: Minimum and maximum LOD values for this polygon. Omitted if the same as for the previous polygon.
+            // second: [<normals(3|3*count))>, <groupIndices(2)>]:
+            //   normals: One normal if it is the same for all the vertices, or one normal per vertex if different, omitted if the same as for the previous polygon.
+            //   groupIndices: transform and luminosity group indices. Omitted if the same as for the previous polygon.
+            // The whole second array is omitted if both normals and group indices are the same as for the previous polygon.
+            array = dataJSON.polygons[i][0];
+            length = array.length;
+            offset = (array[0] < 0) ? 1 : 0;
+            if (offset === 1) {
+                count = -array[0];
             }
-            hasColor = 1 - (length % 2);
-            params.color = hasColor ? colorPalette[dataJSON.triangles[i][0][3]] : params.color;
-            params.texCoords = (length >= 9) ? [dataJSON.triangles[i][0].slice(3 + hasColor, 6), dataJSON.triangles[i][0].slice(5 + hasColor, 8), dataJSON.triangles[i][0].slice(7 + hasColor, 10)] : params.texCoords;
-            length = dataJSON.triangles[i].length;
-            params.normals = ((length > 1) && (dataJSON.triangles[i][1].length > 2)) ?
-                    ((dataJSON.triangles[i][1].length >= 9) ?
-                            [dataJSON.triangles[i][1].slice(0, 3), dataJSON.triangles[i][1].slice(3, 6), dataJSON.triangles[i][1].slice(6, 9)] :
-                            [dataJSON.triangles[i][1].slice(0, 3)]) :
-                    params.normals;
-            params.groupIndices = ((length > 1) && ((dataJSON.triangles[i][1].length % 3) === 2)) ?
-                    dataJSON.triangles[i][1].slice(-2) :
+            hasColor = (length - offset - count) % 2;
+            hasTexCoords = ((length - offset - count - hasColor) > 2) ? 2 * count : 0;
+            if ((length - offset - count - hasColor - hasTexCoords) >= 2) {
+                minLOD = array[length - 2];
+                maxLOD = array[length - 1];
+            }
+            params.color = hasColor ? colorPalette[array[offset + count]] : params.color;
+            if (hasTexCoords) {
+                texCoords = array.slice(offset + count + hasColor, offset + count + hasColor + hasTexCoords);
+            }
+            length = dataJSON.polygons[i].length;
+            if ((length > 1) && (dataJSON.polygons[i][1].length > 2)) {
+                normals = dataJSON.polygons[i][1];
+            }
+            params.groupIndices = ((length > 1) && ((dataJSON.polygons[i][1].length % 3) === 2)) ?
+                    dataJSON.polygons[i][1].slice(-2) :
                     params.groupIndices;
-            index = dataJSON.triangles[i][0][0];
-            this.addTriangleDirect(minLOD, maxLOD,
-                    index, // a
-                    index + dataJSON.triangles[i][0][1], // b
-                    index + dataJSON.triangles[i][0][2], // c
-                    params);
+            for (j = 0; j < count - 2; j++) {
+                params.texCoords = [
+                    [texCoords[0], texCoords[1]],
+                    [texCoords[j * 2 + 2], texCoords[j * 2 + 3]],
+                    [texCoords[j * 2 + 4], texCoords[j * 2 + 5]]];
+                params.normals = (normals.length >= count * 3) ?
+                        [normals.slice(0, 3), normals.slice(j * 3 + 3, j * 3 + 6), normals.slice(j * 3 + 6, j * 3 + 9)] :
+                        [normals.slice(0, 3)];
+                index = array[offset];
+                this.addTriangleDirect(minLOD, maxLOD,
+                        index, // a
+                        index + array[offset + j + 1], // b
+                        index + array[offset + j + 2], // c
+                        params);
+                this.markLineByVertex(minLOD, maxLOD, index + array[offset + j + 1], index + array[offset + j + 2]);
+            }
+            this.markLineByVertex(minLOD, maxLOD, index, index + array[offset + count - 1]);
+            this.markLineByVertex(minLOD, maxLOD, index, index + array[offset + 1]);
         }
-        application.log_DEBUG("Loaded " + nTriangles + " triangles.", 3);
+        application.log_DEBUG("Loaded " + nPolygons + " polygons.", 3);
+        this.addLinesByVertices(defaultMinLOD, defaultMaxLOD);
         application.log_DEBUG("Model loaded: " + this._name + ". Details: " + this._minLOD + "-" + this._maxLOD, 2);
         if (application.isDebugVersion()) {
             str = "Number of triangles per LOD for " + this._name + ": ";
