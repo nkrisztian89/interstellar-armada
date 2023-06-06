@@ -30,27 +30,22 @@ def get_group_index_from_group(group):
     return round(group.weight * WEIGHT_FACTOR)
 
 
-# Get EGM group index for MeshLoopTriangle 'triangle' inside object 'ob' of
+# Get EGM group index for MeshPolygon 'polygon' inside object 'ob' of
 # group with index 'group'
-def get_group_index(ob, triangle, group):
-    i1 = 0
-    i2 = 0
-    i3 = 0
-    v = ob.data.vertices[triangle.vertices[0]]
-    for g in v.groups:
-        if g.group == group:
-            i1 = get_group_index_from_group(g)
-    v = ob.data.vertices[triangle.vertices[1]]
-    for g in v.groups:
-        if g.group == group:
-            i2 = get_group_index_from_group(g)
-    v = ob.data.vertices[triangle.vertices[2]]
-    for g in v.groups:
-        if g.group == group:
-            i3 = get_group_index_from_group(g)
-    if i1 != i2 or i1 != i3:
-        return 0
-    return i1
+def get_group_index(ob, polygon, group):
+    index = 0
+    vertices = ob.data.vertices
+    for i in range(len(polygon.vertices)):
+        v = vertices[polygon.vertices[i]]
+        for g in v.groups:
+            if g.group == group:
+                group_index = get_group_index_from_group(g)
+                if i == 0:
+                    index = group_index
+                else:
+                    if index != group_index:
+                        return 0
+    return index
 
 
 # Convert float to string with rounding (max 4 decimals)
@@ -107,6 +102,11 @@ def vec_eq(v1, v2):
     return v1[0] == v2[0] and v1[1] == v2[1] and v1[2] == v2[2]
 
 
+# [[1,2],[3,4]] -> [1,2,3,4]
+def flatten(nested_list):
+    return [item for sub_list in nested_list for item in sub_list]
+
+
 def get_triangles(obs, vstart, minLOD, maxLOD, transparent):
     ttext = []
     prev_lu = 0
@@ -114,12 +114,11 @@ def get_triangles(obs, vstart, minLOD, maxLOD, transparent):
     prev_mat = 0
     prev_normals = []
     oindex = 0
-    conv_triangles = []
+    vcount = 3
+    uvs = []
     for ob in obs:
         lod_string = get_lod_string(ob, minLOD, maxLOD)
-        ob_lod = get_lod_from_object(ob, minLOD, maxLOD)
-        # Triangulate faces, calculate split normals
-        ob.data.calc_loop_triangles()
+        # Calculate split normals
         ob.data.calc_normals_split()
         # Determine the indices of the transform and luminosity vertex groups,
         # if they exist
@@ -131,125 +130,103 @@ def get_triangles(obs, vstart, minLOD, maxLOD, transparent):
             lum = ob.vertex_groups['luminosity'].index
         else:
             lum = -1
-        triangles = ob.data.loop_triangles
         first = True
-        uvs = []
         uv = ob.data.uv_layers.active.data
-#        loops = ob.data.loops
-        for t in triangles:
+        split_normals = [loop.normal for loop in ob.data.loops]
+        for p in ob.data.polygons:
             # Skip transparent triangles for opaque list and vice versa
-            mat = obs[0].material_slots[t.material_index].material
+            mat = obs[0].material_slots[p.material_index].material
             if (get_color(mat)[3] < 1) != transparent:
                 continue
-            # Vertex indices and color
+            tt = "[["
             start = vstart[oindex]
-            if t.vertices[0] < t.vertices[1] and t.vertices[0] < t.vertices[2]:
-                a = t.vertices[0]
-                b = t.vertices[1]
-                c = t.vertices[2]
-                la = t.loops[0]
-                lb = t.loops[1]
-                lc = t.loops[2]
-                normals = t.split_normals
-            elif (t.vertices[1] < t.vertices[0] and
-                  t.vertices[1] < t.vertices[2]):
-                a = t.vertices[1]
-                b = t.vertices[2]
-                c = t.vertices[0]
-                la = t.loops[1]
-                lb = t.loops[2]
-                lc = t.loops[0]
-                normals = [t.split_normals[1],
-                           t.split_normals[2],
-                           t.split_normals[0]]
-            else:
-                a = t.vertices[2]
-                b = t.vertices[0]
-                c = t.vertices[1]
-                la = t.loops[2]
-                lb = t.loops[0]
-                lc = t.loops[1]
-                normals = [t.split_normals[2],
-                           t.split_normals[0],
-                           t.split_normals[1]]
-            tt = "[["+str(start+a)+","+str(b-a)+","+str(c-a)
-            conv_triangle = [[start+a, b-a, c-a, t.material_index]]
-            if t.material_index != prev_mat:
-                tt += ","+str(t.material_index)
-                prev_mat = t.material_index
+            # Vertex indices
+            vertices = p.vertices
+            # vertices is a bpy_prop_array, not an array, so this doesn't work:
+            # index = vertices.index(min(vertices))
+            minv = min(vertices)
+            index = -1
+            for i in range(len(vertices)):
+                if vertices[i] == minv:
+                    index = i
+                    break
+            if len(vertices) != vcount:
+                vcount = len(vertices)
+                tt += str(-vcount) + ","
+            index_map = [index + i for i in range(vcount - index)]
+            index_map += [i for i in range(index)]
+            tt += str(start + vertices[index])
+            for i in range(1, vcount):
+                tt += "," + str(vertices[index_map[i]] - vertices[index])
+            # Color
+            if p.material_index != prev_mat:
+                tt += "," + str(p.material_index)
+                prev_mat = p.material_index
             # Texture coordinates
             if (first or (
-                  uvs[0] != uv[la].uv[0] or
-                  uvs[1] != 1 - uv[la].uv[1] or
-                  uvs[2] != uv[lb].uv[0] or
-                  uvs[3] != 1 - uv[lb].uv[1] or
-                  uvs[4] != uv[lc].uv[0] or
-                  uvs[5] != 1 - uv[lc].uv[1])):
-                uvs = [uv[la].uv[0],
-                       1 - uv[la].uv[1],
-                       uv[lb].uv[0],
-                       1 - uv[lb].uv[1],
-                       uv[lc].uv[0],
-                       1 - uv[lc].uv[1]]
+                  len(uvs) != vcount*2 or
+                  not all([
+                    uvs[i*2] == uv[p.loop_indices[index_map[i]]].uv[0] and
+                    uvs[i*2+1] == 1 - uv[p.loop_indices[index_map[i]]].uv[1]
+                    for i in range(vcount)
+                  ]))):
+                uvs = flatten([[
+                      uv[p.loop_indices[index_map[i]]].uv[0],
+                      1 - uv[p.loop_indices[index_map[i]]].uv[1]]
+                    for i in range(vcount)
+                  ])
                 tt += "," + ",".join(map(f2s3, uvs))
-            conv_triangle.append(uvs)
+            # LOD
             if first:
                 tt += lod_string
                 first = False
             tt += "]"
-            conv_triangle.append(ob_lod)
             # Normal vectors
+            normals = [split_normals[i] for i in p.loop_indices]
+            normals = [normals[index_map[i]] for i in range(vcount)]
+            # normals = split_normals[p.loop_indices]
             normals_written = False
             # Check if we have split normals differing from the main one
-            if (
-                  normals[0][0] != t.normal.x or
-                  normals[0][1] != t.normal.y or
-                  normals[0][2] != t.normal.z or
-                  normals[1][0] != t.normal.x or
-                  normals[1][1] != t.normal.y or
-                  normals[1][2] != t.normal.z or
-                  normals[2][0] != t.normal.x or
-                  normals[2][1] != t.normal.y or
-                  normals[2][2] != t.normal.z):
+            if not all([
+                normals[i][0] == p.normal.x and
+                normals[i][1] == p.normal.y and
+                normals[i][2] == p.normal.z
+                for i in range(vcount)
+            ]):
                 # Check if our split normals are different from the ones of the
                 # previous triangle
-                if (len(prev_normals) != 3
+                if (len(prev_normals) != vcount
                     or not all(
                     [vec_eq(prev_normals[i], normals[i])
-                     for i in range(len(normals))
+                     for i in range(vcount)
                      ])):
-                    tt += (",[" + f2s(normals[0][0]) + ","
-                                + f2s(normals[0][1]) + ","
-                                + f2s(normals[0][2]) + ","
-                                + f2s(normals[1][0]) + ","
-                                + f2s(normals[1][1]) + ","
-                                + f2s(normals[1][2]) + ","
-                                + f2s(normals[2][0]) + ","
-                                + f2s(normals[2][1]) + ","
-                                + f2s(normals[2][2]))
+                    tt += ",[" + ",".join(map(f2s, flatten([[
+                        normals[i][0],
+                        normals[i][1],
+                        normals[i][2]
+                    ] for i in range(vcount)])))
                     prev_normals = normals
                     normals_written = True
             else:
                 # Check if the main normal is different from the one of the
                 # previous triangle
                 if (len(prev_normals) != 1 or
-                   t.normal.x != prev_normals[0][0] or
-                   t.normal.y != prev_normals[0][1] or
-                   t.normal.z != prev_normals[0][2]):
+                   p.normal.x != prev_normals[0][0] or
+                   p.normal.y != prev_normals[0][1] or
+                   p.normal.z != prev_normals[0][2]):
                     tt += (",["
-                           + f2s(t.normal.x) + ","
-                           + f2s(t.normal.y) + ","
-                           + f2s(t.normal.z))
-                    prev_normals = [[t.normal.x, t.normal.y, t.normal.z]]
+                           + f2s(p.normal.x) + ","
+                           + f2s(p.normal.y) + ","
+                           + f2s(p.normal.z))
+                    prev_normals = [[p.normal.x, p.normal.y, p.normal.z]]
                     normals_written = True
-            conv_triangle.append(prev_normals)
             # Group indices
             tr = 0
             lu = 0
             if tra >= 0:
-                tr = get_group_index(ob, t, tra)
+                tr = get_group_index(ob, p, tra)
             if lum >= 0:
-                lu = get_group_index(ob, t, lum)
+                lu = get_group_index(ob, p, lum)
             if tr == prev_tr and lu == prev_lu:
                 if normals_written:
                     tt += "]"
@@ -261,12 +238,9 @@ def get_triangles(obs, vstart, minLOD, maxLOD, transparent):
                 tt += str(tr)+","+str(lu)+"]"
             prev_tr = tr
             prev_lu = lu
-            conv_triangle.append((prev_tr, prev_lu))
             tt += "]"
             ttext.append(tt)
-            conv_triangles.append(conv_triangle)
         oindex += 1
-#    return conv_triangles
     return ",".join(ttext)
 
 
@@ -315,7 +289,6 @@ def write_egm(path, obs):
     vtext = []
     vstart = []
     vindex = 0
-#    conv_vertices = []
     for ob in obs:
         (obMinLOD, obMaxLOD) = get_lod_from_object(ob, minLOD, maxLOD)
         lod_string = get_lod_string(ob, minLOD, maxLOD)
@@ -329,7 +302,6 @@ def write_egm(path, obs):
                          + f2s3(v.co[1]) + ","
                          + f2s3(v.co[2]) +
                          (lod_string if first else "") + "]")
-#            conv_vertices.append([f2s3(v.co[0]),f2s3(v.co[1]),f2s3(v.co[2]),obMinLOD,obMaxLOD])
             first = False
     f.write(",".join(vtext))
     # Export polygons
