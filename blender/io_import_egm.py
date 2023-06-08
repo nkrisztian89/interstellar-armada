@@ -177,10 +177,15 @@ class ImportEGM(Operator, ImportHelper):
                     faces.append(tuple(indices))
                     # Set normals (from second array if given)
                     if len(t) < 2 or len(t[1]) < 3:
-                        for i in range(points):
-                            normals.append([prevNormals[i][0],
-                                            prevNormals[i][1],
-                                            prevNormals[i][2]])
+                        if len(prevNormals) < points:
+                            normals += [[prevNormals[0][0],
+                                        prevNormals[0][1],
+                                        prevNormals[0][2]]] * points
+                        else:
+                            normals += [[prevNormals[i][0],
+                                         prevNormals[i][1],
+                                         prevNormals[i][2]]
+                                        for i in range(points)]
                     elif len(t[1]) < 3*points:
                         for i in range(points):
                             normals.append([t[1][0], t[1][1], t[1][2]])
@@ -191,15 +196,11 @@ class ImportEGM(Operator, ImportHelper):
                                             t[1][i*3+2]])
                 # Parse second array containing normals
                 if len(t) > 1 and len(t[1]) > 2:
-                    prevNormals = []
                     if len(t[1]) < 3*points:
-                        for i in range(points):
-                            prevNormals.append([t[1][0], t[1][1], t[1][2]])
+                        prevNormals = [[t[1][0], t[1][1], t[1][2]]]
                     else:
-                        for i in range(points):
-                            prevNormals.append([t[1][i*3],
-                                                t[1][i*3+1],
-                                                t[1][i*3+2]])
+                        prevNormals = [[t[1][i*3], t[1][i*3+1], t[1][i*3+2]]
+                                       for i in range(points)]
             mesh.from_pydata(verts, edges, faces)
             mesh.use_auto_smooth = True
             mesh.normals_split_custom_set(normals)
