@@ -326,11 +326,11 @@ def write_egm(path, obs):
         # properties 'minLOD' and 'maxLOD'
         if 'minLOD' in ob:
             minLOD = min(minLOD, ob['minLOD'])
-        elif 'minLOD' in ob.data:
+        elif 'data' in ob and 'minLOD' in ob.data:
             minLOD = min(minLOD, ob.data['minLOD'])
         if 'maxLOD' in ob:
             maxLOD = max(maxLOD, ob['maxLOD'])
-        elif 'maxLOD' in ob.data:
+        elif 'data' in ob and 'maxLOD' in ob.data:
             maxLOD = max(maxLOD, ob.data['maxLOD'])
     # Default values in case none was specified in the objects
     if minLOD >= 999:
