@@ -11,6 +11,7 @@ from bpy.types import (
     MeshPolygon,
     Object,
     Operator,
+    VertexGroupElement,
 )
 from bpy_extras.io_utils import (
     ExportHelper,
@@ -37,25 +38,29 @@ WEIGHT_FACTOR = 1000
 
 
 # Get EGM group index from VertexGroupElement 'group'
-def get_group_index_from_group(group):
+def get_group_index_from_group(group: VertexGroupElement) -> int:
     return round(group.weight * WEIGHT_FACTOR)
 
 
 # Get EGM group index for MeshPolygon 'polygon' inside object 'ob' of
 # group with index 'group'
-def get_group_index(ob, polygon, group):
+def get_group_index(ob: Object, polygon: MeshPolygon, group: int) -> int:
     index = 0
     vertices = ob.data.vertices
     for i in range(len(polygon.vertices)):
         v = vertices[polygon.vertices[i]]
+        group_index = 0
         for g in v.groups:
             if g.group == group:
                 group_index = get_group_index_from_group(g)
-                if i == 0:
-                    index = group_index
-                else:
-                    if index != group_index:
-                        return 0
+                break
+        if i == 0:
+            if group_index == 0:
+                return 0
+            index = group_index
+        else:
+            if index != group_index:
+                return 0
     return index
 
 
