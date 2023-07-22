@@ -1006,6 +1006,10 @@
         "commRelay": {
             "name": "Átjátszóállomás",
             "description": "Ezek a kis méretű, személyzet nélküli állomások alkotják a megbízható, nagy hatótávolságú, fénysebességnél gyorsabb kommunikációs hálózat gerincét. Navigációs jeladóként is szolgálnak, és kisebb mennyiségű vészhelyzeti ellátmánnyal is rendelkeznek a megsérült űrhajók számára, amelyek rajtuk keresztül hívhatnak segítséget. Manőverező hajtóművekkel is fel vannak szerelve, és elég üzemanyaggal tölthetők fel, hogy két karbantartás között képesek legyenek tartani a pályájukat."
+        },
+        "athens": {
+            "name": "Athén",
+            "description": "Sokoldalú, közepes méretű űrállomás. Számos feladatra berendezhető, alkalmazható kereskedelmi, kutatási és diplomáciai célokra is. Felszerelhető fegyverekkel, és 48 vadászgép állomásoztatására képes, így a Galaktikus Birodalom előszeretettel használja katonai támaszpontként olyan szektorok felügyeletére, ahol nincsen szükség komolyabb katonai jelenlétre."
         }
     },
     "weaponClass": {
