@@ -4,6 +4,7 @@ from typing import (
 
 import bpy
 from bpy.props import (
+    IntProperty,
     StringProperty,
 )
 from bpy.types import (
@@ -82,23 +83,23 @@ def f2s4(x):
     return f'{(round(x * 10000) / 10000):g}'
 
 
-def get_lod_from_object(ob, minLOD, maxLOD):
+def get_lod_from_object(ob: Object, minLOD: int, maxLOD: int):
     if 'minLOD' in ob:
-        obMinLOD = ob['minLOD']
+        obMinLOD = max(ob['minLOD'], minLOD)
     elif 'minLOD' in ob.data:
-        obMinLOD = ob.data['minLOD']
+        obMinLOD = max(ob.data['minLOD'], minLOD)
     else:
         obMinLOD = minLOD
     if 'maxLOD' in ob:
-        obMaxLOD = ob['maxLOD']
+        obMaxLOD = min(ob['maxLOD'], maxLOD)
     elif 'maxLOD' in ob.data:
-        obMaxLOD = ob.data['maxLOD']
+        obMaxLOD = min(ob.data['maxLOD'], maxLOD)
     else:
         obMaxLOD = maxLOD
     return (obMinLOD, obMaxLOD)
 
 
-def get_lod_string(ob, minLOD, maxLOD):
+def get_lod_string(ob: Object, minLOD: int, maxLOD: int):
     (obMinLOD, obMaxLOD) = get_lod_from_object(ob, minLOD, maxLOD)
     if obMinLOD != minLOD or obMaxLOD != maxLOD:
         return ","+str(obMinLOD)+","+str(obMaxLOD)
@@ -216,6 +217,8 @@ def get_triangles(obs: list[Object],
     # into the polygon_data array
     for ob in obs:
         (obMinLOD, obMaxLOD) = get_lod_from_object(ob, minLOD, maxLOD)
+        if obMinLOD > maxLOD or obMaxLOD < minLOD:
+            continue
         # Calculate split normals for this object
         ob.data.calc_normals_split()
         # Determine the indices of the transform and luminosity vertex groups,
@@ -321,9 +324,8 @@ def get_triangles(obs: list[Object],
     return ",".join(ttext)
 
 
-# Export blender objects 'obs' into an EgomModel file at 'path'
-def write_egm(path, obs):
-    # Determining minimum and maximum LOD considering all of the objects
+# Determine minimum and maximum LOD considering the passed objects
+def determine_lod_range(obs: list[Object]):
     minLOD = 999
     maxLOD = -1
     for ob in obs:
@@ -342,11 +344,18 @@ def write_egm(path, obs):
         minLOD = 0
     if maxLOD < 0:
         maxLOD = 4
+    return (minLOD, maxLOD)
+
+
+# Export blender objects 'obs' into an EgomModel file at 'path'
+def write_egm(path, obs, props):
+    minLOD = props.min_lod
+    maxLOD = props.max_lod
     # Write file header
     f = open(path, "w")
     f.write('{"format":"EgomModel","version":"3.6","info":{"name":"'
-            + bpy.path.clean_name(obs[0].name)
-            + '","author":"Krisztian Nagy","scale":'
+            + props.model_name
+            + '","author":"' + props.author + '","scale":'
             + f2s3(obs[0].scale[0])
             + ',"LOD":[' + str(minLOD) + ',' + str(maxLOD)
             + '],"colorPalette":[')
@@ -387,6 +396,8 @@ def write_egm(path, obs):
 
     for ob in obs:
         (obMinLOD, obMaxLOD) = get_lod_from_object(ob, minLOD, maxLOD)
+        if obMinLOD > maxLOD or obMaxLOD < minLOD:
+            continue
         vertices = ob.data.vertices
         vstart.append(vindex)
         vindex += len(vertices)
@@ -426,14 +437,43 @@ class ExportEGM(Operator, ExportHelper):
 
     filename_ext = ".egm"
     filter_glob: StringProperty(default="*.egm", options={'HIDDEN'})
+    
+    model_name: StringProperty(
+      name="Model name",
+      description="The name of the model as written in the info section")
+    author: StringProperty(
+      name="Author",
+      description="Name of the person who created the model",
+      default="Krisztian Nagy")
+    min_lod: IntProperty(
+        name="Min LOD", description="The minimum level of detail (LOD) exported",
+        default=0, min=0, max=4, subtype="UNSIGNED")
+    max_lod: IntProperty(
+        name="Max LOD", description="The maximum level of detail (LOD) exported",
+        default=4, min=0, max=4, subtype="UNSIGNED")
+        
+    def invoke(self, context, event):
+        obs = context.selected_objects
+        self.properties.model_name = bpy.path.clean_name(obs[0].name)
+        (minLOD, maxLOD) = determine_lod_range(obs)
+        self.properties.min_lod = minLOD
+        self.properties.max_lod = maxLOD
+        wm = context.window_manager
+        wm.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
     def execute(self, context):
-        write_egm(self.filepath, context.selected_objects)
+        obs = context.selected_objects
+        write_egm(self.filepath, obs, self.properties)
         self.report({'INFO'}, "File saved successfully!")
         return {'FINISHED'}
 
     def draw(self, context):
-        pass
+        layout = self.layout
+        layout.prop(self.properties, "model_name")
+        layout.prop(self.properties, "author")
+        layout.prop(self.properties, "min_lod")
+        layout.prop(self.properties, "max_lod")
 
 
 def menu_export(self, context):
