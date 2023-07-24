@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.5.4-dev:1122 (2023.06.13.)",
-        "creationTime": "Fri Jul 21 2023 00:55:23 GMT+0200 (Central European Summer Time)"
+        "version": "0.5.4-dev:1123 (2023.07.22.)",
+        "creationTime": "Mon Jul 24 2023 14:26:49 GMT+0200 (Central European Summer Time)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -2648,6 +2648,43 @@
                 "volume": 1
             },
             "scoreValue": 50
+        }, {
+            "name": "pirateTurret",
+            "fullName": "Pirate plasma turret",
+            "shader": "ship",
+            "model": "pirateTurret",
+            "texture": "libra",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
+            "cooldown": 500,
+            "barrels": [{
+                    "projectile": "redPlasma",
+                    "projectileVelocity": 600,
+                    "position": [0, 6.16, 2]
+                }, {
+                    "projectile": "redPlasma",
+                    "projectileVelocity": 600,
+                    "position": [0, 5.46, 3.5]
+                }],
+            "rotationStyle": "yawPitch",
+            "basePoint": [0, 0, 2],
+            "rotators": [{
+                    "axis": [0, 0, 1],
+                    "center": [0, 0, 0],
+                    "defaultAngle": 0,
+                    "rotationRate": 60,
+                    "transformGroupIndex": 0
+                }, {
+                    "axis": [1, 0, 0],
+                    "center": [0, 0, 2],
+                    "range": [-90, 3],
+                    "rotationRate": 30,
+                    "transformGroupIndex": 1
+                }],
+            "fireSound": {
+                "name": "piratePlasmaShot",
+                "volume": 1
+            },
+            "scoreValue": 35
         }, {
             "name": "smallProtonCannon",
             "fullName": "Proton cannon",
@@ -6042,6 +6079,17 @@
                     "shield": {
                         "class": "rebelCorvetteMk1"
                     }
+                }, {
+                    "name": "pirate",
+                    "basedOn": "unarmed",
+                    "weapons": [{
+                            "class": "pirateTurret"
+                        }, {
+                            "class": "pirateTurret"
+                        }],
+                    "shield": {
+                        "class": "rebelCorvetteMk1"
+                    }
                 }],
             "defaultLoadout": "imperial-tier1",
             "humSound": {
@@ -8901,6 +8949,32 @@
                             "slotIndex": 8
                         }, {
                             "class": "damagedSmallPlasmaTurret",
+                            "slotIndex": 9
+                        }],
+                    "propulsion": {
+                        "class": "largeStation"
+                    },
+                    "sensors": {
+                        "class": "standardSensors"
+                    },
+                    "shield": {
+                        "class": "rebelStationMk1"
+                    }
+                }, {
+                    "name": "pirate",
+                    "weapons": [{
+                            "class": "pirateTurret"
+                        }, {
+                            "class": "pirateTurret"
+                        }, {
+                            "class": "pirateTurret"
+                        }, {
+                            "class": "pirateTurret"
+                        }, {
+                            "class": "pirateTurret",
+                            "slotIndex": 8
+                        }, {
+                            "class": "pirateTurret",
                             "slotIndex": 9
                         }],
                     "propulsion": {
