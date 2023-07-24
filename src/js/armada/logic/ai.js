@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2022 Krisztián Nagy
+ * Copyright 2016-2023 Krisztián Nagy
  * @file A stateful module providing a collection to which AIs of different types (at the moment only one type, an AI for fighters) can be
  * added which control their respective spacecraft when the control function of the module is called.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -98,6 +98,11 @@ define([
              * @type String
              */
             SHIP_AI_NAME = "ship",
+            /**
+             * The type identifier to be used when creating station AIs.
+             * @type String
+             */
+            STATION_AI_NAME = "station",
             /**
              * Spacecrafts will stop turning towards the specified direction when reaching this angle (in radians).
              * @type Number
@@ -1520,7 +1525,7 @@ define([
      * An AI that is suitable to control a ship - that is a spacecraft with the assumptions that it is larger, its weapons are rotatable,
      * it has an attack vector and threshold angle defined which determine the direction of the ship while attacking and it has a turning
      * style defined which governs how to orient itself to the proper direction.
-     * @param {Spacecraft} ship the ship to control
+     * @param {Spacecraft} ship The ship to control
      * @param {Mission} mission The mission within which this AI will control the ship
      */
     function ShipAI(ship, mission) {
@@ -1686,6 +1691,116 @@ define([
     // ##############################################################################
     /**
      * @class
+     * @extends SpacecraftAI
+     * An AI that is suitable to control a space station - that is a spacecraft with the assumption that it shouldn't rotate
+     * or move (unless specifically ordered via a move command), just aim its turrets at the most suitable enemy target and fire.
+     * @param {Spacecraft} station The station to control
+     * @param {Mission} mission The mission within which this AI will control the station
+     */
+    function StationAI(station, mission) {
+        SpacecraftAI.call(this, station, mission);
+    }
+    StationAI.prototype = new SpacecraftAI();
+    StationAI.prototype.constructor = StationAI;
+    /**
+     * Updates the AI state for the case when the battle scene with all objects has been moved by a vector, updating stored world-space
+     * positions.
+     */
+    StationAI.prototype.handleSceneMoved = function () {
+        return;
+    };
+    /**
+     * Performs all spacecraft controlling actions (turning, orienting, targeting, firing, setting speed etc) based on the current
+     * state of the AI and updates the state accordingly. Should be called once in every battle simulation step.
+     * @param {Number} dt The time elapsed since the last control step, in milliseconds.
+     */
+    StationAI.prototype.control = function (dt) {
+        var
+                /** @type Spacecraft */
+                target,
+                /** @type Number[3] */
+                positionVector,
+                relativeTargetDirection,
+                /** @type Number */
+                targetDistance,
+                ownSize, targetSize, fireThresholdAngle,
+                acceleration, baseDistance,
+                range,
+                /** @type Boolean */
+                hostileTarget,
+                /** @type Array */
+                weapons,
+                /** @type Float32Array */
+                orientationMatrix;
+        // only perform anything if the controlled spacecraft still exists
+        if (this._spacecraft) {
+            // if the controlled spacecraft has been destroyed, remove the reference
+            if (!this._spacecraft.isAlive()) {
+                this._spacecraft = null;
+                return;
+            }
+            // if the spacecraft is not on the battlefield, don't do anything
+            if (this._spacecraft.isAway()) {
+                return;
+            }
+            // .................................................................................................
+            // targeting
+            this._updateTarget();
+            // .................................................................................................
+            // caching / referencing commonly needed variables
+            acceleration = this._spacecraft.getMaxAcceleration();
+            ownSize = this._spacecraft.getVisualModel().getScaledSize();
+            // caching / referencing needed variables
+            positionVector = this._spacecraft.getPhysicalPositionVector();
+            orientationMatrix = this._spacecraft.getPhysicalOrientationMatrix();
+            target = this._spacecraft.getTarget();
+            this._attackingTarget = false;
+            this._executeMoveCommand(positionVector, orientationMatrix, acceleration, dt);
+            if (target) {
+                hostileTarget = target.isHostile(this._spacecraft);
+                relativeTargetDirection = vec.prodMat4Vec3(
+                        orientationMatrix,
+                        vec.diffTranslation3Aux(target.getPhysicalPositionMatrix(), this._spacecraft.getPhysicalPositionMatrix()));
+                targetDistance = vec.extractLength3(relativeTargetDirection);
+                if (hostileTarget) {
+                    vec.getYawAndPitch(_angles, relativeTargetDirection);
+                }
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                // actions based on weapons
+                weapons = this._spacecraft.getWeapons();
+                if (weapons && weapons.length > 0) {
+                    targetSize = target.getVisualModel().getScaledSize();
+                    fireThresholdAngle = Math.atan(FIRE_THRESHOLD_ANGLE_FACTOR * targetSize / targetDistance);
+                    if (hostileTarget) {
+                        baseDistance = 0.25 * ownSize;
+                    }
+                    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    // aiming turnable weapons towards target
+                    this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, fireThresholdAngle, dt);
+                    if (hostileTarget) {
+                        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        // firing
+                        range = weapons[0].getRange(this._spacecraft.getRelativeVelocityMatrix()[13]);
+                        if (vec.length3Squared(vec.diff3Aux(this._spacecraft.getTargetHitPosition(), positionVector)) - baseDistance <= range * range) {
+                            this._spacecraft.fire(true);
+                            this._attackingTarget = true;
+                        }
+                    }
+                }
+            } else {
+                // if there is no target...
+                // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                // aiming turnable weapons towards default position
+                this._spacecraft.aimWeapons(TURN_THRESHOLD_ANGLE, 0, dt);
+            }
+            if (this._moveCommand === MoveCommand.NONE) {
+                this._spacecraft.resetSpeed();
+            }
+        }
+    };
+    // ##############################################################################
+    /**
+     * @class
      * Stores and manages a list of AIs that belong to the same battle simulation.
      */
     function AIContext() {
@@ -1735,6 +1850,7 @@ define([
     _aiConstructors = {};
     _aiConstructors[FIGHTER_AI_NAME] = FighterAI;
     _aiConstructors[SHIP_AI_NAME] = ShipAI;
+    _aiConstructors[STATION_AI_NAME] = StationAI;
     // creating the default context
     _context = new AIContext(_aiConstructors);
     // caching frequently used configuration values
@@ -1749,8 +1865,6 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
-        FIGHTER_AI_NAME: FIGHTER_AI_NAME,
-        SHIP_AI_NAME: SHIP_AI_NAME,
         SpacecraftCommand: SpacecraftCommand,
         JumpCommandWay: JumpCommandWay,
         getAITypes: getAITypes,
