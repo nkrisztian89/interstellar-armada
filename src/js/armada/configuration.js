@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file Stores the current game configuration and settings and provides functions to load and access them.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1053,6 +1053,20 @@ define([
              */
             RELATIVE_TARGET_ORIENTATION: {
                 name: "relativeTargetOrientation",
+                type: "boolean"
+            },
+            /**
+             * Whether to show the game version in the top center by default
+             */
+            SHOW_VERSION_INFO: {
+                name: "showVersionInfo",
+                type: "boolean"
+            },
+            /**
+             * Whether to show the FPS counter in the bottom left corner by default
+             */
+            SHOW_FPS_COUNTER: {
+                name: "showFpsCounter",
                 type: "boolean"
             },
             HIGHLIGHT_INTERVAL: {

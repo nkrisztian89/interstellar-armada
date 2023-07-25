@@ -778,6 +778,8 @@
         "targetHealthAtCenter": "Target integrity bar always at center:",
         "offsetImpactIndicators": "Offset impact indicators:",
         "relativeTargetOrientation": "Show target in relative orientation:",
+        "showVersionInfo": "Show game version:",
+        "showFpsCounter": "Show FPS counter:",
         "preferredFighterView": "Preferred fighter view:",
         "preferredShipView": "Preferred ship view:",
         "demoViewSwitching": "Automatic view switching in demo mode:",

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 Krisztián Nagy
+ * Copyright 2017-2023 Krisztián Nagy
  * @file This module manages and provides the gameplay settings screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -61,6 +61,8 @@ define([
             TARGET_HULL_AT_CENTER_SELECTOR_ID = "targetHullAtCenterSelector",
             OFFSET_IMPACT_INDICATORS_SELECTOR_ID = "offsetImpactIndicatorsSelector",
             RELATIVE_TARGET_ORIENTATION_SELECTOR_ID = "relativeTargetOrientationSelector",
+            SHOW_VERSION_INFO_SELECTOR_ID = "showVersionInfoSelector",
+            SHOW_FPS_COUNTER_SELECTOR_ID = "showFpsCounterSelector",
             PREFERRED_FIGHTER_VIEW_SELECTOR_ID = "preferredFighterViewSelector",
             PREFERRED_SHIP_VIEW_SELECTOR_ID = "preferredShipViewSelector",
             DEMO_VIEW_SWITCHING_SELECTOR_ID = "demoViewSwitchSelector",
@@ -104,6 +106,10 @@ define([
         /** @type Selector */
         this._relativeTargetOrientationSelector = null;
         /** @type Selector */
+        this._showVersionInfoSelector = null;
+        /** @type Selector */
+        this._showFpsCounterSelector = null;
+        /** @type Selector */
         this._preferredFighterViewSelector = null;
         /** @type Selector */
         this._preferredShipViewSelector = null;
@@ -113,26 +119,27 @@ define([
         this._defaultSalvoModeSelector = null;
         config.executeWhenReady(function () {
             this._targetHullAtCenterSelector = this._registerSelector(TARGET_HULL_AT_CENTER_SELECTOR_ID,
-                    strings.GAMEPLAY_SETTINGS.TARGET_HEALTH_AT_CENTER.name,
-                    strings.getOnOffSettingValues(), HUD_OPTION_PARENT_ID);
+                    strings.GAMEPLAY_SETTINGS.TARGET_HEALTH_AT_CENTER.name);
             this._offsetImpactIndicatorsSelector = this._registerSelector(OFFSET_IMPACT_INDICATORS_SELECTOR_ID,
-                    strings.GAMEPLAY_SETTINGS.OFFSET_IMPACT_INDICATORS.name,
-                    strings.getOnOffSettingValues(), HUD_OPTION_PARENT_ID);
+                    strings.GAMEPLAY_SETTINGS.OFFSET_IMPACT_INDICATORS.name);
             this._relativeTargetOrientationSelector = this._registerSelector(RELATIVE_TARGET_ORIENTATION_SELECTOR_ID,
-                    strings.GAMEPLAY_SETTINGS.RELATIVE_TARGET_ORIENTATION.name,
-                    strings.getOnOffSettingValues(), HUD_OPTION_PARENT_ID);
+                    strings.GAMEPLAY_SETTINGS.RELATIVE_TARGET_ORIENTATION.name);
+            this._showVersionInfoSelector = this._registerSelector(SHOW_VERSION_INFO_SELECTOR_ID,
+                    strings.GAMEPLAY_SETTINGS.SHOW_VERSION_INFO.name);
+            this._showFpsCounterSelector = this._registerSelector(SHOW_FPS_COUNTER_SELECTOR_ID,
+                    strings.GAMEPLAY_SETTINGS.SHOW_FPS_COUNTER.name);
             this._preferredFighterViewSelector = this._registerSelector(PREFERRED_FIGHTER_VIEW_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.PREFERRED_FIGHTER_VIEW.name,
-                    _getFighterViewSettingValues(), CAMERA_OPTION_PARENT_ID);
+                    CAMERA_OPTION_PARENT_ID, _getFighterViewSettingValues());
             this._preferredShipViewSelector = this._registerSelector(PREFERRED_SHIP_VIEW_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.PREFERRED_SHIP_VIEW.name,
-                    _getShipViewSettingValues(), CAMERA_OPTION_PARENT_ID);
+                    CAMERA_OPTION_PARENT_ID, _getShipViewSettingValues());
             this._demoViewSwitchingSelector = this._registerSelector(DEMO_VIEW_SWITCHING_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEMO_VIEW_SWITCHING.name,
-                    strings.getOnOffSettingValues(), CAMERA_OPTION_PARENT_ID);
+                    CAMERA_OPTION_PARENT_ID);
             this._defaultSalvoModeSelector = this._registerSelector(DEFAULT_SALVO_MODE_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEFAULT_SALVO_MODE.name,
-                    strings.getOnOffSettingValues(), CONTROLS_OPTION_PARENT_ID);
+                    CONTROLS_OPTION_PARENT_ID);
         }.bind(this));
     }
     GameplaySettingsScreen.prototype = new screens.HTMLScreen();
@@ -140,18 +147,18 @@ define([
     /**
      * @param {String} name
      * @param {String} propertyLabelID
-     * @param {String[]} valueList
-     * @param {String} [parentID=OPTION_PARENT_ID]
+     * @param {String} [parentID=HUD_OPTION_PARENT_ID]
+     * @param {String[]} [valueList]
      * @returns {Selector}
      */
-    GameplaySettingsScreen.prototype._registerSelector = function (name, propertyLabelID, valueList, parentID) {
+    GameplaySettingsScreen.prototype._registerSelector = function (name, propertyLabelID, parentID, valueList) {
         return this.registerExternalComponent(
                 new components.Selector(
                         name,
                         armadaScreens.SELECTOR_SOURCE,
                         {cssFilename: armadaScreens.SELECTOR_CSS},
                         {id: propertyLabelID},
-                        valueList),
+                        valueList || strings.getOnOffSettingValues()),
                 parentID || HUD_OPTION_PARENT_ID);
     };
     /**
@@ -161,6 +168,8 @@ define([
         config.setHUDSetting(config.BATTLE_SETTINGS.HUD.ALWAYS_SHOW_TARGET_HULL_BAR_AT_CENTER, (this._targetHullAtCenterSelector.getSelectedIndex() === SETTING_ON_INDEX));
         config.setHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_CROSSHAIRS, (this._offsetImpactIndicatorsSelector.getSelectedIndex() === SETTING_ON_INDEX));
         config.setHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION, (this._relativeTargetOrientationSelector.getSelectedIndex() === SETTING_ON_INDEX));
+        config.setHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_VERSION_INFO, (this._showVersionInfoSelector.getSelectedIndex() === SETTING_ON_INDEX));
+        config.setHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_FPS_COUNTER, (this._showFpsCounterSelector.getSelectedIndex() === SETTING_ON_INDEX));
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME, _fighterViewOptions[this._preferredFighterViewSelector.getSelectedIndex()]);
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME, _shipViewOptions[this._preferredShipViewSelector.getSelectedIndex()]);
         config.setBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING, (this._demoViewSwitchingSelector.getSelectedIndex() === SETTING_ON_INDEX));
@@ -192,6 +201,8 @@ define([
         this._targetHullAtCenterSelector.setValueList(strings.getOnOffSettingValues());
         this._offsetImpactIndicatorsSelector.setValueList(strings.getOnOffSettingValues());
         this._relativeTargetOrientationSelector.setValueList(strings.getOnOffSettingValues());
+        this._showVersionInfoSelector.setValueList(strings.getOnOffSettingValues());
+        this._showFpsCounterSelector.setValueList(strings.getOnOffSettingValues());
         this._preferredFighterViewSelector.setValueList(_getFighterViewSettingValues());
         this._preferredShipViewSelector.setValueList(_getShipViewSettingValues());
         this._demoViewSwitchingSelector.setValueList(strings.getOnOffSettingValues());
@@ -206,6 +217,8 @@ define([
             this._targetHullAtCenterSelector.selectValueWithIndex((config.getHUDSetting(config.BATTLE_SETTINGS.HUD.ALWAYS_SHOW_TARGET_HULL_BAR_AT_CENTER) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._offsetImpactIndicatorsSelector.selectValueWithIndex((config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_CROSSHAIRS) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._relativeTargetOrientationSelector.selectValueWithIndex((config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
+            this._showVersionInfoSelector.selectValueWithIndex((config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_VERSION_INFO) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
+            this._showFpsCounterSelector.selectValueWithIndex((config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_FPS_COUNTER) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._preferredFighterViewSelector.selectValueWithIndex(_fighterViewOptions.indexOf(config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_FIGHTER_VIEW_NAME)));
             this._preferredShipViewSelector.selectValueWithIndex(_shipViewOptions.indexOf(config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME)));
             this._demoViewSwitchingSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);

@@ -811,6 +811,8 @@
         "targetHealthAtCenter": "Célpont állapota mindig középen:",
         "offsetImpactIndicators": "Célzás eltolt becsapódásjelzőkkel:",
         "relativeTargetOrientation": "Célpont mutatása relatív helyzetben:",
+        "showVersionInfo": "Játék verziószám mutatása:",
+        "showFpsCounter": "FPS számláló mutatása:",
         "preferredFighterView": "Alapértelmezett vadászgép nézet:",
         "preferredShipView": "Alapértelmezett hadihajó nézet:",
         "demoViewSwitching": "Automatikus nézetváltogatás demo módban:",

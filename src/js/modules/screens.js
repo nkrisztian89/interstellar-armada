@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file Provides wrapper classes that can be used to manage (loading, assemblin, displaying, hiding, translating...) HTML based screens for
  * an application.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -1598,6 +1598,13 @@ define([
     CanvasText.prototype.setColor = function (color) {
         this._color = color;
         this._cssColor = utils.getCSSColor(_getColor(color));
+    };
+    /**
+     * Whether the text is rendered whenever calling render()
+     * @returns {Boolean}
+     */
+    CanvasText.prototype.isVisible = function () {
+        return this._visible;
     };
     /**
      * After calling this, the text is rendered whenever calling render() (until hidden)

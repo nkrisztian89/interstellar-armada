@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2022 Krisztián Nagy
+ * Copyright 2016-2023 Krisztián Nagy
  * @file Augments the general strings module with constants and functions to conveniently access strings in the game and to verify their 
  * presence in the strings files.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -416,6 +416,8 @@ define([
         TARGET_HEALTH_AT_CENTER: {name: "gameplaySettings.targetHealthAtCenter"},
         OFFSET_IMPACT_INDICATORS: {name: "gameplaySettings.offsetImpactIndicators"},
         RELATIVE_TARGET_ORIENTATION: {name: "gameplaySettings.relativeTargetOrientation"},
+        SHOW_VERSION_INFO: {name: "gameplaySettings.showVersionInfo"},
+        SHOW_FPS_COUNTER: {name: "gameplaySettings.showFpsCounter"},
         PREFERRED_FIGHTER_VIEW: {name: "gameplaySettings.preferredFighterView"},
         PREFERRED_SHIP_VIEW: {name: "gameplaySettings.preferredShipView"},
         DEMO_VIEW_SWITCHING: {name: "gameplaySettings.demoViewSwitching"},

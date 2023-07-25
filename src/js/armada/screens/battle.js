@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file This module manages and provides the Battle screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -988,6 +988,11 @@ define([
              * @type Boolean
              */
             _aimAssistCrosshairs,
+            /**
+             * Whether the target display should show the targeted spacecraft in its orientation relative to the player (or just top-down)
+             * @type Boolean
+             */
+            _relativeTargetOrientation,
             /**
              * (enum ScaleMode) Stores the scaling mode to use for the center crosshair for quicker access.
              * @type String
@@ -2474,6 +2479,19 @@ define([
                 {
                     activate: function () {
                         _aimAssistCrosshairs = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.AIM_ASSIST_CROSSHAIRS);
+                        _relativeTargetOrientation = config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION);
+                        if (_smallHeaderText) {
+                            if (config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_VERSION_INFO)) {
+                                _smallHeaderText.show();
+                            } else {
+                                _smallHeaderText.hide();
+                            }
+                        }
+                        if (config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_FPS_COUNTER)) {
+                            this._stats.show();
+                        } else {
+                            this._stats.hide();
+                        }
                     }
                 });
         /**
@@ -2990,27 +3008,20 @@ define([
         }
     };
     /**
-     * Shows the stats (FPS, draw stats) component.
-     */
-    BattleScreen.prototype.showDevelopmentInfo = function () {
-        this._stats.show();
-        _smallHeaderText.show();
-    };
-    /**
-     * Hides the stats (FPS, draw stats) component.
-     */
-    BattleScreen.prototype.hideDevelopmentInfo = function () {
-        this._stats.hide();
-        _smallHeaderText.hide();
-    };
-    /**
      * Toggles the visibility of the development related information (e.g. version info header and FPS count) on the screen.
      */
     BattleScreen.prototype.toggleDevInfoVisibility = function () {
-        if (this._stats.isVisible()) {
-            this.hideDevelopmentInfo();
+        if (_smallHeaderText.isVisible()) {
+            _smallHeaderText.hide();
+            config.setHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_VERSION_INFO, false);
+        } else if (this._stats.isVisible()) {
+            this._stats.hide();
+            config.setHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_FPS_COUNTER, false);
         } else {
-            this.showDevelopmentInfo();
+            this._stats.show();
+            _smallHeaderText.show();
+            config.setHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_VERSION_INFO, true);
+            config.setHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_FPS_COUNTER, true);
         }
     };
     /**
@@ -3817,7 +3828,7 @@ define([
                     }
                     // setting orientation of the target view model
                     if (_targetViewModel) {
-                        _targetViewModel.setOrientationM4(config.getHUDSetting(config.BATTLE_SETTINGS.HUD.RELATIVE_TARGET_ORIENTATION) ? mat.prod3x3SubOf4Aux(
+                        _targetViewModel.setOrientationM4(_relativeTargetOrientation ? mat.prod3x3SubOf4Aux(
                                 target.getPhysicalOrientationMatrix(),
                                 mat.inverseOfRotation4Aux(mat.lookTowards4Aux(
                                         vec.normalize3(vec.diffTranslation3Aux(craft.getPhysicalPositionMatrix(), target.getPhysicalPositionMatrix())),
@@ -4753,6 +4764,9 @@ define([
                 this._updateLoadingStatus(strings.get(strings.LOADING.READY), 100);
                 application.log("Game data loaded in " + ((performance.now() - _loadingStartTime) / 1000).toFixed(3) + " seconds!", 1);
                 _smallHeaderText.setText(strings.get(strings.BATTLE.DEVELOPMENT_VERSION_NOTICE), {version: application.getVersion()});
+                if (!config.getHUDSetting(config.BATTLE_SETTINGS.HUD.SHOW_VERSION_INFO)) {
+                    _smallHeaderText.hide();
+                }
                 document.body.classList.remove("wait");
                 control.switchToSpectatorMode(false, true);
                 this.setHeaderContent(custom ?
