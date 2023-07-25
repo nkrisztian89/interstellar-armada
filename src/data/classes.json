@@ -3095,7 +3095,7 @@
             "color": [0, 0.8, 1, 1],
             "referenceMass": 200000000,
             "thrust": 5,
-            "angularThrust": 100,
+            "angularThrust": 8,
             "maxMoveBurnLevel": 0.5,
             "maxTurnBurnLevel": 0.35,
             "thrusterSound": {
@@ -8836,30 +8836,68 @@
                     "size": [74, 40, 41]
                 }],
             "weaponSlots": [{
-                    "position": [50, 60, 28]
+                    "position": [50, 60, 28],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": 45
+                        }]
                 }, {
-                    "position": [-50, 60, 28]
+                    "position": [-50, 60, 28],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": -45
+                        }]
                 }, {
-                    "position": [50, -60, 28]
+                    "position": [50, -60, 28],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": 135
+                        }]
                 }, {
-                    "position": [-50, -60, 28]
+                    "position": [-50, -60, 28],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": -135
+                        }]
                 }, {
-                    "position": [80, 90, 27]
+                    "position": [80, 90, 27],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": 45
+                        }]
                 }, {
-                    "position": [-80, 90, 27]
+                    "position": [-80, 90, 27],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": -45
+                        }]
                 }, {
-                    "position": [80, -90, 27]
+                    "position": [80, -90, 27],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": 135
+                        }]
                 }, {
-                    "position": [-80, -90, 27]
+                    "position": [-80, -90, 27],
+                    "rotations": [{
+                            "axis": "Z",
+                            "degrees": -135
+                        }]
                 }, {
                     "position": [-15, 0, -120],
                     "rotations": [{
+                            "axis": "Z",
+                            "degrees": 90
+                        }, {
                             "axis": "Y",
                             "degrees": 180
                         }]
                 }, {
                     "position": [15, 0, -120],
                     "rotations": [{
+                            "axis": "Z",
+                            "degrees": -90
+                        }, {
                             "axis": "Y",
                             "degrees": 180
                         }]
