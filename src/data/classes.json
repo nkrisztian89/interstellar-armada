@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.5.4-dev:1123 (2023.07.22.)",
-        "creationTime": "Mon Jul 24 2023 14:26:49 GMT+0200 (Central European Summer Time)"
+        "version": "0.5.4-dev:1129 (2023.07.25.)",
+        "creationTime": "Tue Jul 25 2023 11:57:30 GMT+0200 (Central European Summer Time)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -2685,6 +2685,39 @@
                 "volume": 1
             },
             "scoreValue": 35
+        }, {
+            "name": "damagedPirateTurret",
+            "fullName": "Damaged pirate plasma turret",
+            "shader": "ship",
+            "model": "pirateTurret",
+            "texture": "libra",
+            "defaultLuminosityFactors": [[0, 0], [1, 1]],
+            "cooldown": 750,
+            "barrels": [{
+                    "projectile": "redPlasma",
+                    "projectileVelocity": 550,
+                    "position": [0, 6.16, 2]
+                }],
+            "rotationStyle": "yawPitch",
+            "basePoint": [0, 0, 2],
+            "rotators": [{
+                    "axis": [0, 0, 1],
+                    "center": [0, 0, 0],
+                    "defaultAngle": 0,
+                    "rotationRate": 60,
+                    "transformGroupIndex": 0
+                }, {
+                    "axis": [1, 0, 0],
+                    "center": [0, 0, 2],
+                    "range": [-90, 3],
+                    "rotationRate": 30,
+                    "transformGroupIndex": 1
+                }],
+            "fireSound": {
+                "name": "piratePlasmaShot",
+                "volume": 1
+            },
+            "scoreValue": 20
         }, {
             "name": "smallProtonCannon",
             "fullName": "Proton cannon",
@@ -9034,7 +9067,7 @@
             },
             "explosion": "largeStationExplosion",
             "showTimeRatioDuringExplosion": 0.23,
-            "scoreValue": 500,
+            "scoreValue": 800,
             "defaultLoadout": "civilian",
             "lights": [{
                     "position": [80, 60, 9],
