@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file Implementation of the Spacecraft game-logic-level class
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -2344,12 +2344,12 @@ define([
      * and are currently aimed at their target.
      */
     Spacecraft.prototype.fire = function (onlyIfAimedOrFixed) {
-        var i, scaledOriMatrix, fired = false, projectileCount, soudSource;
+        var i, scaledOriMatrix, fired = false, projectileCount, soundSource;
         if (!this._firingDisabled && !this._isJumping) {
             scaledOriMatrix = this.getScaledOriMatrix();
-            soudSource = this.getSoundSourceForFireSound();
+            soundSource = this.getSoundSourceForFireSound();
             for (i = 0; i < this._weapons.length; i++) {
-                projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, soudSource);
+                projectileCount = this._weapons[i].fire(scaledOriMatrix, onlyIfAimedOrFixed, soundSource);
                 fired = (projectileCount > 0) || fired;
                 this._shotsFired += projectileCount;
             }

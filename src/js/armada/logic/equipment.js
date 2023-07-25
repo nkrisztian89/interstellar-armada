@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file Implementations of the various classes that represent all the different types of equipment to be added to spacecrafts
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -104,7 +104,12 @@ define([
                 /**
                  * The weapon is currently aimed at the direction towards the target, and the target is within its range (ready to fire).
                  */
-                AIMED_IN_RANGE: 5
+                AIMED_IN_RANGE: 5,
+                /**
+                 * The weapon is currently aimed at the direction towards the target, and the target is within its range, but the line of fire
+                 * is blocked by the spacecraft the weapon is installed on.
+                 */
+                AIMED_BLOCKED: 6
             },
             /**
              * @enum {String}
@@ -2140,11 +2145,8 @@ define([
                 projectileClass, muzzleFlash, barrels, projectileLights, projClassName,
                 soundPosition, lighSource,
                 scene = this._visualModel.getNode().getScene();
-        if (onlyIfAimedOrFixed && (this._lastAimStatus !== WeaponAimStatus.FIXED) && (this._lastAimStatus !== WeaponAimStatus.AIMED_IN_RANGE)) {
-            return 0;
-        }
-        // check cooldown
-        if (this._cooldown <= 0) {
+        // check cooldown and aim status
+        if ((this._cooldown <= 0) && (this._lastAimStatus !== WeaponAimStatus.AIMED_BLOCKED) && (!onlyIfAimedOrFixed || (this._lastAimStatus === WeaponAimStatus.FIXED) || (this._lastAimStatus === WeaponAimStatus.AIMED_IN_RANGE))) {
             this._cooldown = this._class.getCooldown();
             // cache the matrices valid for the whole weapon
             weaponSlotPosVector = vec.prodTranslationRotation3Aux(this.getOrigoPositionMatrix(), shipScaledOriMatrix);
@@ -2232,74 +2234,81 @@ define([
      * @param {Number} dt The elapsed time, in milliseconds
      */
     Weapon.prototype.rotateTo = function (angleOne, angleTwo, turnThreshold, fireThreshold, dt) {
-        var angleDifference, rotators, i, rotationAmount;
-        if (!this._fixed) {
-            this._lastAimStatus = WeaponAimStatus.AIMED_IN_RANGE;
-            rotators = this._class.getRotators();
-            for (i = 0; i < rotators.length; i++) {
-                switch (i) {
-                    case 0:
-                        angleDifference = angleOne - this._rotationAngles[0];
-                        // roll-yaw type weapons can yaw in the opposite direction if that results in less rolling
-                        if (this._class.getRotationStyle() === classes.WeaponRotationStyle.ROLL_YAW) {
-                            if (Math.abs(angleDifference - Math.sign(angleDifference) * Math.PI) < Math.abs(angleDifference)) {
-                                angleDifference -= Math.sign(angleDifference) * Math.PI;
-                                angleTwo = -angleTwo;
-                            }
+        var angleDifference, rotators, i, rotationAmount,
+                aiming = false, outOfReach = false;
+        rotators = this._class.getRotators();
+        for (i = 0; i < rotators.length; i++) {
+            switch (i) {
+                case 0:
+                    angleDifference = angleOne - this._rotationAngles[0];
+                    // roll-yaw type weapons can yaw in the opposite direction if that results in less rolling
+                    if (this._class.getRotationStyle() === classes.WeaponRotationStyle.ROLL_YAW) {
+                        if (Math.abs(angleDifference - Math.sign(angleDifference) * Math.PI) < Math.abs(angleDifference)) {
+                            angleDifference -= Math.sign(angleDifference) * Math.PI;
+                            angleTwo = -angleTwo;
                         }
-                        break;
-                    case 1:
-                        angleDifference = angleTwo - this._rotationAngles[1];
-                        break;
-                    default:
-                        application.crash();
+                    }
+                    break;
+                case 1:
+                    angleDifference = angleTwo - this._rotationAngles[1];
+                    break;
+                default:
+                    application.crash();
+            }
+            // if the weapon can freely turn around in 360 degrees, it is faster to turn in the other direction in case the angle 
+            // difference is larger than 180 degrees
+            if (!rotators[i].restricted) {
+                if (angleDifference > Math.PI) {
+                    angleDifference -= utils.DOUBLE_PI;
+                } else if (angleDifference < -Math.PI) {
+                    angleDifference += utils.DOUBLE_PI;
                 }
-                // if the weapon can freely turn around in 360 degrees, it is faster to turn in the other direction in case the angle 
-                // difference is larger than 180 degrees
-                if (!rotators[i].restricted) {
-                    if (angleDifference > Math.PI) {
-                        angleDifference -= utils.DOUBLE_PI;
-                    } else if (angleDifference < -Math.PI) {
-                        angleDifference += utils.DOUBLE_PI;
-                    }
-                }
-                // perform the actual turn, if needed
-                rotationAmount = 0;
-                if (Math.abs(angleDifference) > turnThreshold) {
-                    rotationAmount = rotators[i].rotationRate * dt / 1000;
-                    if (angleDifference > 0) {
-                        this._rotationAngles[i] += Math.min(rotationAmount, angleDifference);
-                    } else {
-                        this._rotationAngles[i] -= Math.min(rotationAmount, -angleDifference);
-                    }
-                    this._rotationChanged = true;
-                    if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
-                        this._lastAimStatus = WeaponAimStatus.AIMING;
-                    }
-                }
-                if (!rotators[i].restricted) {
-                    // if the weapon can turn around in 360 degrees, make sure its angle stays in the -180,180 range
-                    if (this._rotationAngles[i] > Math.PI) {
-                        this._rotationAngles[i] -= utils.DOUBLE_PI;
-                    }
-                    if (this._rotationAngles[i] < -Math.PI) {
-                        this._rotationAngles[i] += utils.DOUBLE_PI;
-                    }
+            }
+            // perform the actual turn, if needed
+            rotationAmount = 0;
+            if (Math.abs(angleDifference) > turnThreshold) {
+                rotationAmount = rotators[i].rotationRate * dt / 1000;
+                if (angleDifference > 0) {
+                    this._rotationAngles[i] += Math.min(rotationAmount, angleDifference);
                 } else {
-                    // if the weapon is restricted in turning around, apply the restriction
-                    if (this._rotationAngles[i] > rotators[i].range[1]) {
-                        this._rotationAngles[i] = rotators[i].range[1];
-                        if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
-                            this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
-                        }
-                    }
-                    if (this._rotationAngles[i] < rotators[i].range[0]) {
-                        this._rotationAngles[i] = rotators[i].range[0];
-                        if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
-                            this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
-                        }
+                    this._rotationAngles[i] -= Math.min(rotationAmount, -angleDifference);
+                }
+                this._rotationChanged = true;
+                if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
+                    aiming = true;
+                }
+            }
+            if (!rotators[i].restricted) {
+                // if the weapon can turn around in 360 degrees, make sure its angle stays in the -180,180 range
+                if (this._rotationAngles[i] > Math.PI) {
+                    this._rotationAngles[i] -= utils.DOUBLE_PI;
+                }
+                if (this._rotationAngles[i] < -Math.PI) {
+                    this._rotationAngles[i] += utils.DOUBLE_PI;
+                }
+            } else {
+                // if the weapon is restricted in turning around, apply the restriction
+                if (this._rotationAngles[i] > rotators[i].range[1]) {
+                    this._rotationAngles[i] = rotators[i].range[1];
+                    if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
+                        outOfReach = true;
                     }
                 }
+                if (this._rotationAngles[i] < rotators[i].range[0]) {
+                    this._rotationAngles[i] = rotators[i].range[0];
+                    if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
+                        outOfReach = true;
+                    }
+                }
+            }
+        }
+        if (outOfReach) {
+            this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
+        } else if (aiming) {
+            this._lastAimStatus = WeaponAimStatus.AIMING;
+        } else {
+            if ((this._lastAimStatus !== WeaponAimStatus.AIMED_BLOCKED) || this._rotationChanged) {
+                this._lastAimStatus = WeaponAimStatus.AIMED_IN_RANGE;
             }
         }
     };
@@ -2316,7 +2325,7 @@ define([
      * @param {Number} dt The elapsed time, in milliseconds.
      */
     Weapon.prototype.aimTowards = function (targetPositionVector, turnThreshold, fireThreshold, shipScaledOriMatrix, dt) {
-        var basePointPosVector, vectorToTarget, inRange;
+        var basePointPosVector, vectorToTarget, vectorToTargetObjSpace, inRange;
         if (!this._fixed) {
             // as a basis for calculating the direction pointing towards the target, the base point of the weapon is considered (in world 
             // space, transformed according to the current rotation angles of the weapon)
@@ -2324,23 +2333,32 @@ define([
             // calculate the vector pointing towards the target in world coordinates
             vectorToTarget = vec.diff3Aux(targetPositionVector, basePointPosVector);
             // transform to object space - relative to the weapon
-            vectorToTarget = vec.prodMat4Vec3Aux(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
-            vectorToTarget = vec.prodMat4Vec3Aux(this._slot.orientationMatrix, vectorToTarget);
-            inRange = vec.extractLength3(vectorToTarget) <= this.getRange(0);
+            vectorToTargetObjSpace = vec.prodMat4Vec3Aux(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
+            vectorToTargetObjSpace = vec.prodMat4Vec3Aux(this._slot.orientationMatrix, vectorToTargetObjSpace);
+            inRange = vec.extractLength3(vectorToTargetObjSpace) <= this.getRange(0);
             switch (this._class.getRotationStyle()) {
                 case classes.WeaponRotationStyle.YAW_PITCH:
-                    vec.getYawAndPitch(_angles, vectorToTarget);
+                    vec.getYawAndPitch(_angles, vectorToTargetObjSpace);
                     this.rotateTo(-_angles.yaw, -_angles.pitch, turnThreshold, fireThreshold, dt);
                     break;
                 case classes.WeaponRotationStyle.ROLL_YAW:
-                    vec.getRollAndYaw(_angles, vectorToTarget, false);
+                    vec.getRollAndYaw(_angles, vectorToTargetObjSpace, false);
                     this.rotateTo(_angles.roll, _angles.yaw, turnThreshold, fireThreshold, dt);
                     break;
                 default:
                     application.crash();
             }
-            if (!inRange && this._lastAimStatus === WeaponAimStatus.AIMED_IN_RANGE) {
-                this._lastAimStatus = WeaponAimStatus.AIMED_OUT_OF_RANGE;
+            if (this._lastAimStatus === WeaponAimStatus.AIMED_IN_RANGE) {
+                if (inRange) {
+                    // check if the line of fire is blocked by our own spacecraft (for performance, only check if we are about to fire)
+                    if (this._rotationChanged && (this._cooldown <= 0)) {
+                        if (this._spacecraft.getPhysicalModel().checkHit(mat.translation4vAux(targetPositionVector), mat.translation4vAux(vectorToTarget), 1000, 0)) {
+                            this._lastAimStatus = WeaponAimStatus.AIMED_BLOCKED;
+                        }
+                    }
+                } else {
+                    this._lastAimStatus = WeaponAimStatus.AIMED_OUT_OF_RANGE;
+                }
             }
         }
     };
