@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file The classes defining actions which can be executed during mission events
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -254,11 +254,14 @@ define([
      * of the message, and the message is not played if the ship is already destroyed
      * @property {Number} [duration] The duration to display the message for, in milliseconds. If not given, an automatic
      * duration will be set based on the length of the text
+     * @property {Boolean} [typewriter=true] Whether to play the "typewriter" animation when displaying the message
      * @property {Boolean} [permanent] If true, the message keeps being displayed until a new urgent
      * message is added or the queue is cleared
      * @property {Boolean} [urgent] Whether the message should be displayed before non-urgent messages (interrupting already displayed
      * non-urgent messages)
      * @property {Number[4]} [color] When given, the message should be displayed using this text color 
+     * @property {Boolean} [silent] If true, no sound effect is played when the message is shown
+     * @property {Boolean} [noBackground] If true, the semi-transparent background bar is not shown with the message
      */
     /**
      * @override
@@ -276,8 +279,11 @@ define([
                 ((this._params.textID !== undefined) && (typeof this._params.textID !== "string")) ||
                 ((this._params.source !== undefined) && (typeof this._params.source !== "string")) ||
                 ((this._params.duration !== undefined) && (typeof this._params.duration !== "number")) ||
+                ((this._params.typewriter !== undefined) && (typeof this._params.typewriter !== "boolean")) ||
                 ((this._params.permanent !== undefined) && (typeof this._params.permanent !== "boolean")) ||
                 ((this._params.urgent !== undefined) && (typeof this._params.urgent !== "boolean")) ||
+                ((this._params.silent !== undefined) && (typeof this._params.silent !== "boolean")) ||
+                ((this._params.noBackground !== undefined) && (typeof this._params.noBackground !== "boolean")) ||
                 ((this._params.color !== undefined) && ((typeof this._params.color !== "object") || !(this._params.color instanceof Array)))) {
             this._handleWrongParams();
             return false;
@@ -303,9 +309,11 @@ define([
                     utils.getFilenameWithoutExtension(mission.getName()) + strings.MISSION.MESSAGES_SUFFIX.name + this._params.textID,
                     (typeof this._params.text === "object") ? this._params.text[strings.getLanguage()] : this._params.text),
             duration: this._params.duration,
-            appearAnimation: true,
+            appearAnimation: this._params.typewriter !== false,
             permanent: this._params.permanent,
             color: this._params.color,
+            silent: this._params.silent,
+            noBackground: this._params.noBackground,
             source: source
         }, this._params.urgent);
     };

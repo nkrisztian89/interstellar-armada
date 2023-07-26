@@ -450,6 +450,7 @@ define([
              * @property {Number[4]} [color] When given, the text is displayed using this text color
              * @property {Number} [blinkInterval] When given, the text will blink with this interval, in milliseconds
              * @property {Boolean} [silent=false] When true, the message sound effect will not be played for this message
+             * @property {Boolean} [noBackground=false] When true, the background box will not be shown for the message
              * @property {Boolean} [new=false] When a new message is put at the front of the queue, this flag is set to true
              * @property {Boolean} [appearAnimation=false] If true, the message will have a "typewriter" style appearing animation
              * @property {Number} appearDuration If appearAnimation is true, this holds the calculated value for the duration of the appear animation, in milliseconds
@@ -1547,6 +1548,7 @@ define([
                     blinkInterval: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_BLINK_INTERVAL),
                     duration: config.getHUDSetting(config.BATTLE_SETTINGS.HUD.NEW_HOSTILES_ALERT_DURATION),
                     silent: true,
+                    noBackground: true,
                     queue: HOSTILE_ALERT_QUEUE
                 };
                 _battleScreen.queueHUDMessage(_newHostilesMessage, true);
@@ -3675,20 +3677,24 @@ define([
                     } else {
                         messageQueue[0].timeLeft -= dt;
                     }
-                    if (messageQueue[0].timeLeft <= 0) {
-                        messageQueue.shift();
-                        if (messageQueue.length > 0) {
-                            messageQueue[0].new = true;
-                        }
-                    }
                 }
                 if (!skip) {
-                    _messageBackground.applyLayout(_messageBackgroundLayout, canvas.width, canvas.height);
-                    _messageBackground.show();
+                    if (!messageQueue[0].noBackground) {
+                        _messageBackground.applyLayout(_messageBackgroundLayout, canvas.width, canvas.height);
+                        _messageBackground.show();
+                    } else {
+                        _messageBackground.hide();
+                    }
                     _messageTextLayer.show();
                 } else {
                     _messageTextLayer.hide();
                     _messageBackground.hide();
+                }
+                if (messageQueue[0].timeLeft <= 0) {
+                    messageQueue.shift();
+                    if (messageQueue.length > 0) {
+                        messageQueue[0].new = true;
+                    }
                 }
             } else {
                 _messageTextLayer.hide();

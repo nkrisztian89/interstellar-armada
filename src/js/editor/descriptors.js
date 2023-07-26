@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2022 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2023 Krisztián Nagy
  * @file Provides the descriptor objects that outline the structure of properties for the various resource / class categories of 
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -3955,6 +3955,12 @@ define([
             _parentIsMessageAction = function (data, parent) {
                 return !!parent && (parent.type === ActionType.MESSAGE);
             },
+            _messageCanHaveDuration = function (data, parent) {
+                return _parentIsMessageAction(data, parent) && !data.permanent;
+            },
+            _messageCanBePermanent = function (data, parent) {
+                return _parentIsMessageAction(data, parent) && (data.duration === undefined);
+            },
             _parentIsCommandAction = function (data, parent) {
                 return !!parent && (parent.type === ActionType.COMMAND);
             },
@@ -4065,24 +4071,44 @@ define([
                         name: "source",
                         type: SPACECRAFT_REFERENCE,
                         optional: true,
+                        defaultText: "none",
                         isValid: _parentIsMessageAction
                     },
                     DURATION: {
                         name: "duration",
-                        type: NON_NEGATIVE_MILLISECONDS,
+                        type: POSITIVE_MILLISECONDS,
                         optional: true,
-                        isValid: _parentIsMessageAction
+                        defaultText: "automatic",
+                        isValid: _messageCanHaveDuration
                     },
                     PERMANENT: {
                         name: "permanent",
                         type: BaseType.BOOLEAN,
-                        optional: true,
-                        isValid: _parentIsMessageAction
+                        defaultValue: false,
+                        isValid: _messageCanBePermanent
                     },
                     URGENT: {
                         name: "urgent",
                         type: BaseType.BOOLEAN,
-                        optional: true,
+                        defaultValue: false,
+                        isValid: _parentIsMessageAction
+                    },
+                    TYPEWRITER: {
+                        name: "typewriter",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: true,
+                        isValid: _parentIsMessageAction
+                    },
+                    SILENT: {
+                        name: "silent",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false,
+                        isValid: _parentIsMessageAction
+                    },
+                    NO_BACKGROUND: {
+                        name: "noBackground",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false,
                         isValid: _parentIsMessageAction
                     },
                     COLOR: {
