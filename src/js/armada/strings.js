@@ -413,6 +413,7 @@ define([
         HUD_TITLE: {name: "gameplaySettings.hudTitle"},
         CAMERA_TITLE: {name: "gameplaySettings.cameraTitle"},
         CONTROLS_TITLE: {name: "gameplaySettings.controlsTitle"},
+        OTHER_TITLE: {name: "gameplaySettings.otherTitle"},
         TARGET_HEALTH_AT_CENTER: {name: "gameplaySettings.targetHealthAtCenter"},
         OFFSET_IMPACT_INDICATORS: {name: "gameplaySettings.offsetImpactIndicators"},
         RELATIVE_TARGET_ORIENTATION: {name: "gameplaySettings.relativeTargetOrientation"},
@@ -421,7 +422,8 @@ define([
         PREFERRED_FIGHTER_VIEW: {name: "gameplaySettings.preferredFighterView"},
         PREFERRED_SHIP_VIEW: {name: "gameplaySettings.preferredShipView"},
         DEMO_VIEW_SWITCHING: {name: "gameplaySettings.demoViewSwitching"},
-        DEFAULT_SALVO_MODE: {name: "gameplaySettings.defaultSalvoMode"}
+        DEFAULT_SALVO_MODE: {name: "gameplaySettings.defaultSalvoMode"},
+        SHOW_READY_MESSAGE: {name: "gameplaySettings.showReadyMessage"}
     };
     strings.AUDIO = {
         PREFIX: {name: "audio.", optional: true},

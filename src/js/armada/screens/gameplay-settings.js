@@ -53,10 +53,6 @@ define([
             // ------------------------------------------------------------------------------
             // constants
             BACK_BUTTON_ID = "backButton",
-            TITLE_HEADING_ID = "title",
-            HUD_TITLE_HEADING_ID = "hudTitle",
-            CAMERA_TITLE_HEADING_ID = "cameraTitle",
-            CONTROLS_TITLE_HEADING_ID = "controlsTitle",
             DEFAULTS_BUTTON_ID = "defaultsButton",
             TARGET_HULL_AT_CENTER_SELECTOR_ID = "targetHullAtCenterSelector",
             OFFSET_IMPACT_INDICATORS_SELECTOR_ID = "offsetImpactIndicatorsSelector",
@@ -67,9 +63,11 @@ define([
             PREFERRED_SHIP_VIEW_SELECTOR_ID = "preferredShipViewSelector",
             DEMO_VIEW_SWITCHING_SELECTOR_ID = "demoViewSwitchSelector",
             DEFAULT_SALVO_MODE_SELECTOR_ID = "defaultSalvoModeSelector",
+            SHOW_READY_MESSAGE_SELECTOR_ID = "showReadyMessage",
             HUD_OPTION_PARENT_ID = "hudSettingsDiv",
             CAMERA_OPTION_PARENT_ID = "cameraSettingsDiv",
             CONTROLS_OPTION_PARENT_ID = "controlsSettingsDiv",
+            OTHER_OPTION_PARENT_ID = "otherSettingsDiv",
             SETTING_ON_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.ON)),
             SETTING_OFF_INDEX = strings.getOnOffSettingValues().indexOf(strings.get(strings.SETTING.OFF));
     // ##############################################################################
@@ -90,14 +88,6 @@ define([
         /** @type SimpleComponent */
         this._backButton = this.registerSimpleComponent(BACK_BUTTON_ID);
         /** @type SimpleComponent */
-        this._titleHeading = this.registerSimpleComponent(TITLE_HEADING_ID);
-        /** @type SimpleComponent */
-        this._hudTitleHeading = this.registerSimpleComponent(HUD_TITLE_HEADING_ID);
-        /** @type SimpleComponent */
-        this._cameraTitleHeading = this.registerSimpleComponent(CAMERA_TITLE_HEADING_ID);
-        /** @type SimpleComponent */
-        this._controlsTitleHeading = this.registerSimpleComponent(CONTROLS_TITLE_HEADING_ID);
-        /** @type SimpleComponent */
         this._defaultsButton = this.registerSimpleComponent(DEFAULTS_BUTTON_ID);
         /** @type Selector */
         this._targetHullAtCenterSelector = null;
@@ -117,6 +107,8 @@ define([
         this._demoViewSwitchingSelector = null;
         /** @type Selector */
         this._defaultSalvoModeSelector = null;
+        /** @type Selector */
+        this._showReadyMessageSelector = null;
         config.executeWhenReady(function () {
             this._targetHullAtCenterSelector = this._registerSelector(TARGET_HULL_AT_CENTER_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.TARGET_HEALTH_AT_CENTER.name);
@@ -140,6 +132,9 @@ define([
             this._defaultSalvoModeSelector = this._registerSelector(DEFAULT_SALVO_MODE_SELECTOR_ID,
                     strings.GAMEPLAY_SETTINGS.DEFAULT_SALVO_MODE.name,
                     CONTROLS_OPTION_PARENT_ID);
+            this._showReadyMessageSelector = this._registerSelector(SHOW_READY_MESSAGE_SELECTOR_ID,
+                    strings.GAMEPLAY_SETTINGS.SHOW_READY_MESSAGE.name,
+                    OTHER_OPTION_PARENT_ID);
         }.bind(this));
     }
     GameplaySettingsScreen.prototype = new screens.HTMLScreen();
@@ -174,6 +169,7 @@ define([
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME, _shipViewOptions[this._preferredShipViewSelector.getSelectedIndex()]);
         config.setBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING, (this._demoViewSwitchingSelector.getSelectedIndex() === SETTING_ON_INDEX));
         config.setBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE, (this._defaultSalvoModeSelector.getSelectedIndex() === SETTING_ON_INDEX));
+        config.setBattleSetting(config.BATTLE_SETTINGS.SHOW_READY_MESSAGE, (this._showReadyMessageSelector.getSelectedIndex() === SETTING_ON_INDEX));
         game.closeOrNavigateTo(armadaScreens.SETTINGS_SCREEN_NAME);
     };
     /**
@@ -207,6 +203,7 @@ define([
         this._preferredShipViewSelector.setValueList(_getShipViewSettingValues());
         this._demoViewSwitchingSelector.setValueList(strings.getOnOffSettingValues());
         this._defaultSalvoModeSelector.setValueList(strings.getOnOffSettingValues());
+        this._showReadyMessageSelector.setValueList(strings.getOnOffSettingValues());
         this._updateValues();
     };
     /**
@@ -223,6 +220,7 @@ define([
             this._preferredShipViewSelector.selectValueWithIndex(_shipViewOptions.indexOf(config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SHIP_VIEW_NAME)));
             this._demoViewSwitchingSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.DEMO_VIEW_SWITCHING) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
             this._defaultSalvoModeSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.DEFAULT_SALVO_MODE) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
+            this._showReadyMessageSelector.selectValueWithIndex((config.getBattleSetting(config.BATTLE_SETTINGS.SHOW_READY_MESSAGE) === true) ? SETTING_ON_INDEX : SETTING_OFF_INDEX);
         }.bind(this));
     };
     /**

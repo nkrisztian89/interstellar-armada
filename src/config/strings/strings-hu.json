@@ -808,6 +808,7 @@
         "hudTitle": "HUD",
         "cameraTitle": "Kamera",
         "controlsTitle": "Irányítás",
+        "otherTitle": "Egyéb",
         "targetHealthAtCenter": "Célpont állapota mindig középen:",
         "offsetImpactIndicators": "Célzás eltolt becsapódásjelzőkkel:",
         "relativeTargetOrientation": "Célpont mutatása relatív helyzetben:",
@@ -816,7 +817,8 @@
         "preferredFighterView": "Alapértelmezett vadászgép nézet:",
         "preferredShipView": "Alapértelmezett hadihajó nézet:",
         "demoViewSwitching": "Automatikus nézetváltogatás demo módban:",
-        "defaultSalvoMode": "Alapértelmezett sortűz mód rakétákhoz:"
+        "defaultSalvoMode": "Alapértelmezett sortűz mód rakétákhoz:",
+        "showReadyMessage": "Küldetés kezdetén üzenet mutatása:"
     },
     "controller": {
         "general": "Általános",

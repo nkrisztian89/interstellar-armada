@@ -2531,15 +2531,7 @@ define([
                         if (game.getScreen() !== _battleScreen) {
                             return;
                         }
-                        this.resumeBattle();
-                        resumeTime();
-                        if (!_demoMode) {
-                            control.switchToPilotMode(_mission.getPilotedSpacecraft(), true);
-                        } else {
-                            control.switchToSpectatorMode(false, true);
-                            _battleScene.getCamera().followNextNode();
-                            _timeInSameView = 0;
-                        }
+                        this._doStartBattle();
                     }.bind(this),
                     buttonselect: armadaScreens.playButtonSelectSound,
                     buttonclick: armadaScreens.playButtonClickSound
@@ -2611,6 +2603,21 @@ define([
      */
     BattleScreen.prototype._updateComponents = function () {
         screens.HTMLScreenWithCanvases.prototype._updateComponents.call(this);
+    };
+    /**
+     * Start the time and switch to player / spectator camera. Called when the
+     * "ready message" is closed or at the start of battle if it is disabled.
+     */
+    BattleScreen.prototype._doStartBattle = function () {
+        this.resumeBattle();
+        resumeTime();
+        if (!_demoMode) {
+            control.switchToPilotMode(_mission.getPilotedSpacecraft(), true);
+        } else {
+            control.switchToSpectatorMode(false, true);
+            _battleScene.getCamera().followNextNode();
+            _timeInSameView = 0;
+        }
     };
     /**
      * Pauses the battle by canceling all control, simulation and the render loop (e.g. for when a menu is 
@@ -4779,7 +4786,7 @@ define([
                         _mission.getTitle() || (_missionSourceFilename && utils.getFilenameWithoutExtension(_missionSourceFilename)) || _mission.getName() :
                         strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(_missionSourceFilename) + strings.MISSION.NAME_SUFFIX.name));
                 _battleCursor = document.body.style.cursor;
-                if (!_multi) {
+                if (!_multi && config.getBattleSetting(config.BATTLE_SETTINGS.SHOW_READY_MESSAGE)) {
                     this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
                         menuKey: _getMenuKeyHTMLString()
                     }), undefined, true);
@@ -4921,6 +4928,9 @@ define([
                         this._render(PREPARE_SCENE_DT);
                     }
                     _battleScene.setShouldAnimate(false);
+                }
+                if (!_multi && !config.getBattleSetting(config.BATTLE_SETTINGS.SHOW_READY_MESSAGE)) {
+                    this._doStartBattle();
                 }
             }.bind(this));
         }.bind(this));

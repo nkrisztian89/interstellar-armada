@@ -738,6 +738,13 @@ define([
             defaultValue: 60
         },
         /**
+         * Whether to show the popup infobox with the ready message at the start of battles
+         */
+        SHOW_READY_MESSAGE: {
+            name: "showReadyMessage",
+            type: "boolean"
+        },
+        /**
          * When prefilling the particle pool at the start of a battle, the size of the pool will be set to the maximum possible amount of 
          * particles multiplied by this factor.
          */

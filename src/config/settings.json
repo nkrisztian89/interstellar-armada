@@ -162,6 +162,7 @@
         "battle": {
             "battleRenderFPS": 60,
             "simulationStepsPerSecond": 60,
+            "showReadyMessage": true,
             "particlePoolPrefillFactor": 0.2,
             "projectilePoolPrefillFactor": 0.75,
             "missilePoolPrefillFactor": 0.2,
