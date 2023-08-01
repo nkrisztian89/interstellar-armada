@@ -1860,6 +1860,11 @@ define([
          */
         this._aimBlocked = new Array(this._class.getBarrels().length);
         this._aimBlocked.fill(false);
+        /**
+         * The node housing the barrel markers for this weapon (for the Editor)
+         * @type RenderableNode
+         */
+        this._barrelMarkers = null;
     }
     /**
      * Returns the name of the weapon in a way that can be displayed to the user (translated)
@@ -1978,6 +1983,9 @@ define([
      * @property {Float32Array} [orientationMatrix]
      * @property {Boolean} [projectileResources=false] Whether to acquire resources for firing projectiles
      * @property {Boolean} [sound=false] Whether to acquire resources for sound effects
+     * @property {Boolean} [barrelMarkers=false] Whether to add barrel markers to the weapon
+     * @property {Number} [barrelMarkerSize] The size factor to scale the barrel markers with
+     * @property {String} [barrelMarkerShaderName] The shader to render the barrel markers with
      */
     /**
      * @typedef {Function} logic~addToSceneCallback
@@ -1993,7 +2001,7 @@ define([
      * @param {logic~addToSceneCallback} [callback] See addToScene()
      */
     Weapon.prototype.addToSceneNow = function (parentNode, lod, wireframe, params, callback) {
-        var visualModel, scale, shader;
+        var visualModel, scale, shader, i, barrels, marker, markerScale;
         application.log_DEBUG("Adding weapon (" + this._class.getName() + ") to scene...", 2);
         shader = params.shaderName ? graphics.getManagedShader(params.shaderName) : this._class.getShader();
         scale = this._class.getModel().getScale() / parentNode.getRenderableObject().getScalingMatrix()[0];
@@ -2025,6 +2033,17 @@ define([
         if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
             visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
         }
+        if (params.barrelMarkers) {
+            barrels = this._class.getBarrels();
+            this._barrelMarkers = new sceneGraph.RenderableNode(new renderableObjects.ContainerObject(shader), false);
+            for (i = 0; i < barrels.length; i++) {
+                markerScale = (params.barrelMarkerSize || 1) / scale * this.getProjectileClass().getMuzzleFlash().getSize();
+                marker = new renderableObjects.ShadedLODMesh(resources.getModel(classes.MARKER_MODEL_NAME).getEgomModel(), graphics.getManagedShader(params.barrelMarkerShaderName), {}, mat.translation4v(barrels[i].getPositionVector()), mat.rotationX4(Math.PI * 0.5), mat.scaling4(markerScale), true, 0, 0);
+                this._barrelMarkers.addSubnode(new sceneGraph.RenderableNode(marker));
+            }
+            visualModel.getNode().addSubnode(this._barrelMarkers);
+            this._barrelMarkers.hide();
+        }
         if (!this._visualModel) {
             this._visualModel = visualModel;
         }
@@ -2048,7 +2067,13 @@ define([
      */
     Weapon.prototype.addToScene = function (parentNode, lod, wireframe, params, callback) {
         if (!params.skipResources) {
-            this.acquireResources({omitShader: !!params.shaderName, projectileResources: params.projectileResources, sound: params.sound});
+            this.acquireResources({
+                omitShader: !!params.shaderName,
+                projectileResources: params.projectileResources,
+                sound: params.sound,
+                barrelMarkers: params.barrelMarkers,
+                barrelMarkerShaderName: params.barrelMarkerShaderName
+            });
             if (params.shaderName) {
                 graphics.getShader(params.shaderName);
             }
@@ -2402,6 +2427,13 @@ define([
         return this._class.getMaxParticleCount();
     };
     /**
+     * Returns the renderable node housing all the barrel markers added for this weapon.
+     * @returns {RenderableNode}
+     */
+    Weapon.prototype.getBarrelMarkers = function () {
+        return this._barrelMarkers;
+    };
+    /**
      * Removes all references stored by this object
      */
     Weapon.prototype.destroy = function () {
@@ -2410,6 +2442,10 @@ define([
         this._slot = null;
         this._origoPositionMatrix = null;
         this._scaledOriMatrix = null;
+        if (this._barrelMarkers) {
+            this._barrelMarkers.markAsReusable(true);
+        }
+        this._barrelMarkers = null;
         if (this._visualModel) {
             this._visualModel.markAsReusable(true);
         }

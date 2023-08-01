@@ -1,22 +1,24 @@
 /**
- * Copyright 2016-2021 Krisztián Nagy
+ * Copyright 2016-2021, 2023 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for weapon classes within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
  */
 
 /**
+ * @param renderableObjects Used for accessing uniform name constants
  * @param lights Used for creating the light sources for the preview scene
  * @param graphics Used to set graphics settings
  * @param equipment Used to create the preview weapons
  * @param preview
  */
 define([
+    "modules/scene/renderable-objects",
     "modules/scene/lights",
     "armada/graphics",
     "armada/logic/equipment",
     "editor/preview/webgl-preview"
-], function (lights, graphics, equipment, preview) {
+], function (renderableObjects, lights, graphics, equipment, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -28,12 +30,27 @@ define([
                 }
             ],
             /**
+             * The color used for barrel markers
+             * @type Number[]
+             */
+            BARREL_MARKER_COLOR = [0.0, 0.5, 0.5, 1],
+            /**
+             * The color used for the currently edited barrel marker
+             * @type Number[]
+             */
+            BARREL_MARKER_HIGHLIGHT_COLOR = [0.8, 0.4, 0.3, 1],
+            /**
+             * The scaling factor for barrel markers
+             * @type Number
+             */
+            BARREL_MARKER_SIZE = 0.2,
+            /**
              * The names of properties the change of which should trigger an update of the preview canvas
              * @type String[]
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "model", "shader", "texture",
-                "defaultLuminosityFactors"
+                "defaultLuminosityFactors", "barrels"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
@@ -46,7 +63,7 @@ define([
              * @type String[]
              */
             INFO_UPDATE_PROPERTIES = [
-                "cooldown", "barrels"
+                "cooldown", "projectileClass", "projectileVelocity"
             ],
             // ----------------------------------------------------------------------
             // Private variables
@@ -60,12 +77,53 @@ define([
              */
             _weaponClass,
             /**
+             * Whether the barrel markers are currently visible
+             * @type Boolean
+             */
+            _showBarrelMarkers,
+            /**
+             * Used to highlight the barrel marker that is currently being edited
+             * @type Number
+             */
+            _highlightedBarrelMarkerIndex,
+            /**
              * Stores the WebGL preview context information for weapon class previews
              * @type WebGLPreviewContext
              */
             _previewContext;
     // ----------------------------------------------------------------------
     // Private Functions
+    /**
+     * Returns the regular barrel marker color
+     * @returns {Number[4]}
+     */
+    function _barrelMarkerColorFunction() {
+        return BARREL_MARKER_COLOR;
+    }
+    /**
+     * Returns the color to be used for the currently edited barrel marker
+     * @returns {Number[4]}
+     */
+    function _highlightedBarrelMarkerColorFunction() {
+        return BARREL_MARKER_HIGHLIGHT_COLOR;
+    }
+    /**
+     * Sets the appropriate barrel marker visibility and colors for the current settings
+     */
+    function _updateForBarrelMarkerState() {
+        var i, node, nodes = _weapon.getBarrelMarkers().getSubnodes();
+        if (_showBarrelMarkers) {
+            i = 0;
+            for (node = nodes.getFirst(); node; node = node.next, i++) {
+                node.getRenderableObject().setUniformValueFunction(renderableObjects.UNIFORM_COLOR_NAME, (i === _highlightedBarrelMarkerIndex) ?
+                        _highlightedBarrelMarkerColorFunction :
+                        _barrelMarkerColorFunction);
+            }
+            _weapon.getBarrelMarkers().show();
+        } else {
+            _weapon.getBarrelMarkers().hide();
+        }
+    }
     /**
      * For the WebGL preview context.
      * Clears the object references of the currently stored weapon (if any)
@@ -111,7 +169,10 @@ define([
                     {
                         projectileResources: false,
                         sound: false,
-                        orientationMatrix: orientationMatrix
+                        orientationMatrix: orientationMatrix,
+                        barrelMarkers: true,
+                        barrelMarkerSize: BARREL_MARKER_SIZE,
+                        barrelMarkerShaderName: preview.getWireframeShaderName()
                     },
                     shouldReload ?
                     function (model) {
@@ -138,7 +199,7 @@ define([
      * The settings that persist across different items are not reset.
      */
     function _clearSettingsForNewItem() {
-        return true;
+        _showBarrelMarkers = false;
     }
     /**
      * For the WebGL preview context.
@@ -150,10 +211,9 @@ define([
     }
     /**
      * For the WebGL preview context.
-     * Currently does nothing, the model does not need to be changed when refreshed.
      */
     function _updateForRefresh() {
-        return true;
+        _updateForBarrelMarkerState();
     }
     /**
      * Returns additional information to be displayed in the info section of the preview
@@ -206,15 +266,27 @@ define([
     }
     /**
      * Updates the preview for the case when a property of the previewed item is being edited
+     * @param {String} name The name of the property that is edited (under which the editing is happening)
+     * @param {Number} [index] If the property is an array, this is the index of the element in the array being edited
      */
-    function handleStartEdit() {
-        return true;
+    function handleStartEdit(name, index) {
+        if (name === "barrels") {
+            _showBarrelMarkers = true;
+            _highlightedBarrelMarkerIndex = index;
+            _updateForBarrelMarkerState();
+            preview.requestRender();
+        }
     }
     /**
      * Updates the preview for the case when a property of the previewed item is no longer being edited
+     * @param {String} name The name of the property that is no longer edited 
      */
-    function handleStopEdit() {
-        return true;
+    function handleStopEdit(name) {
+        if (name === "barrels") {
+            _showBarrelMarkers = false;
+            _updateForBarrelMarkerState();
+            preview.requestRender();
+        }
     }
     // ----------------------------------------------------------------------
     // Initialization

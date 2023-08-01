@@ -224,6 +224,11 @@ define([
              */
             DUST_MODEL_NAME = "dust",
             /**
+             * When a model is created for position (e.g. barrel position) markers, this ID will be given to it, so that all markers can refer to the same model
+             * @type String
+             */
+            MARKER_MODEL_NAME = "marker",
+            /**
              * When a model is created for projectiles, this ID will be used as a prefix to the model ID with the following part being dependent of
              * the parameters of the model, so that projectiles having models with the same parameters can use the same model
              * @type String
@@ -2574,6 +2579,8 @@ define([
      * @property {Boolean} [projectileResources=false] Whether to load resources
      * for this weapon firing its projectiles (and them hitting things) as well
      * @property {Boolean} [sound=false] Whether to load resources for sound effects
+     * @property {Boolean} [barrelMarkers] Whether to load resources for barrel markers
+     * @property {String} [barrelMarkerShaderName] The name of the shader to use for rendering barrel markers
      */
     /**
      * @override
@@ -2586,6 +2593,12 @@ define([
         }
         if (params.sound) {
             _loadSoundEffect(this._fireSound);
+        }
+        if (params.barrelMarkers) {
+            resources.getOrAddModel(egomModel.positionMarkerModel(MARKER_MODEL_NAME, 8));
+            if (params.barrelMarkerShaderName) {
+                graphics.getShader(params.barrelMarkerShaderName);
+            }
         }
     };
     /**
@@ -5172,6 +5185,7 @@ define([
     // -------------------------------------------------------------------------
     // The public interface of the module
     return {
+        MARKER_MODEL_NAME: MARKER_MODEL_NAME,
         SHADER_VARIANT_INSTANCED_NAME: SHADER_VARIANT_INSTANCED_NAME,
         SOUND_EFFECT: SOUND_EFFECT,
         ParticleEmitterType: ParticleEmitterType,
