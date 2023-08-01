@@ -1844,11 +1844,16 @@ define([
          */
         this._targetDistance = 0;
         /**
+         * Whether this weapon can freely fire without checking if the line of fire is blocked
+         * @type Boolean
+         */
+        this._clear = this._slot.clear;
+        /**
          * Whether or not we have calculated if the line of fire of the rotating weapon is blocked by the carrying
          * spacecraft at the current rotation.
-         * @type Number
+         * @type Boolean
          */
-        this._aimBlockCalculated = this._fixed;
+        this._aimBlockCalculated = this._fixed || this._clear;
         /**
          * Whether the line of fire of each barrel is blocked by the carrying spacecraft at the current rotation.
          * @type Boolean[]
@@ -2252,7 +2257,7 @@ define([
             this._rotationAngles[0] = angleOne * utils.RAD;
             this._rotationAngles[1] = angleTwo * utils.RAD;
             this._rotationChanged = true;
-            this._aimBlockCalculated = false;
+            this._aimBlockCalculated = this._clear;
         }
     };
     /**
@@ -2334,7 +2339,7 @@ define([
             }
             if (this._rotationAngles[i] !== originalAngle) {
                 this._rotationChanged = true;
-                this._aimBlockCalculated = false;
+                this._aimBlockCalculated = this._clear;
             }
         }
     };

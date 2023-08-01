@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2019-2022 Krisztián Nagy
+ * Copyright 2016-2017, 2019-2023 Krisztián Nagy
  * @file Provides the content and event handlers for the Properties window of the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -1530,7 +1530,7 @@ define([
             nameCell = document.createElement("td");
             nameCell.classList.add(PROPERTY_CLASS);
             nameCell.innerHTML = propertyDescriptor.name;
-            nameCell.title = propertyDescriptor.name;
+            nameCell.title = propertyDescriptor.name + (propertyDescriptor.description ? ": " + propertyDescriptor.description : "");
             row.appendChild(nameCell);
             valueCell = document.createElement("td");
             valid = !propertyDescriptor.isValid || propertyDescriptor.isValid(data, parent, _item.name);

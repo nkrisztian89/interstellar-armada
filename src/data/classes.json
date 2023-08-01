@@ -3,8 +3,8 @@
         "name": "classes",
         "author": "Krisztián Nagy",
         "comment": "Created by Interstellar Armada editor",
-        "version": "0.5.4-dev:1129 (2023.07.25.)",
-        "creationTime": "Tue Jul 25 2023 11:57:30 GMT+0200 (Central European Summer Time)"
+        "version": "0.5.4-dev:1135 (2023.08.01.)",
+        "creationTime": "Tue Aug 01 2023 15:04:24 GMT+0200 (Central European Summer Time)"
     },
     "skyboxClasses": [{
             "name": "stars_sparse",
@@ -3983,13 +3983,17 @@
                     "size": [20, 40, 10]
                 }],
             "weaponSlots": [{
-                    "position": [14, 13, 1.85]
+                    "position": [14, 13, 1.85],
+                    "clear": true
                 }, {
-                    "position": [-14, 13, 1.85]
+                    "position": [-14, 13, 1.85],
+                    "clear": true
                 }, {
-                    "position": [22, 9, 1.85]
+                    "position": [22, 9, 1.85],
+                    "clear": true
                 }, {
-                    "position": [-22, 9, 1.85]
+                    "position": [-22, 9, 1.85],
+                    "clear": true
                 }],
             "missileLaunchers": [{
                     "tubes": [{
@@ -5177,21 +5181,25 @@
                 }, {
                     "position": [-7, -6, 0.7]
                 }, {
-                    "position": [4, 3, -1]
+                    "position": [4, 3, -1],
+                    "clear": true
                 }, {
-                    "position": [-4, 3, -1]
+                    "position": [-4, 3, -1],
+                    "clear": true
                 }, {
                     "position": [4, 3, 1],
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
-                        }]
+                        }],
+                    "clear": true
                 }, {
                     "position": [-4, 3, 1],
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
-                        }]
+                        }],
+                    "clear": true
                 }],
             "missileLaunchers": [{
                     "tubes": [{
@@ -5568,7 +5576,8 @@
                     "size": [1.5, 3.5, 4.8]
                 }],
             "weaponSlots": [{
-                    "position": [0, 4.5, -1.1]
+                    "position": [0, 4.5, -1.1],
+                    "clear": true
                 }],
             "thrusterSlots": [{
                     "group": 1,
@@ -5902,9 +5911,11 @@
                     "size": [135, 30, 5]
                 }],
             "weaponSlots": [{
-                    "position": [56, -10, 45]
+                    "position": [56, -10, 45],
+                    "clear": true
                 }, {
-                    "position": [-56, -10, 45]
+                    "position": [-56, -10, 45],
+                    "clear": true
                 }],
             "thrusterSlots": [{
                     "group": 1,
@@ -6280,13 +6291,17 @@
                     "size": [100, 120, 50]
                 }],
             "weaponSlots": [{
-                    "position": [175, 290, -80]
+                    "position": [175, 290, -80],
+                    "clear": true
                 }, {
-                    "position": [-175, 290, -80]
+                    "position": [-175, 290, -80],
+                    "clear": true
                 }, {
-                    "position": [117, 230, 20]
+                    "position": [117, 230, 20],
+                    "clear": true
                 }, {
-                    "position": [-117, 230, 20]
+                    "position": [-117, 230, 20],
+                    "clear": true
                 }],
             "thrusterSlots": [{
                     "group": 1,
@@ -7483,19 +7498,22 @@
                 }],
             "scoreValue": 40,
             "weaponSlots": [{
-                    "position": [0, 5, -26]
+                    "position": [0, 5, -26],
+                    "clear": true
                 }, {
                     "position": [48.44, -1, -6.42],
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 80
-                        }]
+                        }],
+                    "clear": true
                 }, {
                     "position": [-48.44, -1, -6.42],
                     "rotations": [{
                             "axis": "Y",
                             "degrees": -80
-                        }]
+                        }],
+                    "clear": true
                 }],
             "missileLaunchers": [{
                     "tubes": [{
@@ -7737,14 +7755,6 @@
                 }],
             "defaultLuminosityFactors": [[18, 1]]
         }, {
-            "name": "rubyBlade",
-            "basedOn": "wolf",
-            "showInDatabase": false,
-            "hitpoints": 50,
-            "texture": "ruby_blade",
-            "scoreValue": 100,
-            "defaultLuminosityFactors": [[0, 1], [18, 1]]
-        }, {
             "name": "piranha",
             "type": "interceptor",
             "fullName": "Piranha",
@@ -7858,13 +7868,15 @@
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 90
-                        }]
+                        }],
+                    "clear": true
                 }, {
                     "position": [-29, 3, 0],
                     "rotations": [{
                             "axis": "Y",
                             "degrees": -90
-                        }]
+                        }],
+                    "clear": true
                 }],
             "missileLaunchers": [],
             "loadouts": [{
@@ -8924,7 +8936,8 @@
                         }, {
                             "axis": "Y",
                             "degrees": 180
-                        }]
+                        }],
+                    "clear": true
                 }, {
                     "position": [15, 0, -120],
                     "rotations": [{
@@ -8933,13 +8946,15 @@
                         }, {
                             "axis": "Y",
                             "degrees": 180
-                        }]
+                        }],
+                    "clear": true
                 }, {
                     "position": [0, 0, -120],
                     "rotations": [{
                             "axis": "Y",
                             "degrees": 180
-                        }]
+                        }],
+                    "clear": true
                 }],
             "views": [{
                     "name": "free",

@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file Provides functionality for loading the definitions for in-game classes from a JSON file and then accessing the loaded classes by
  * type and name. Also provides constructors for those classes of which custom instances can be created.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -3506,6 +3506,11 @@ define([
          * @type Float32Array
          */
         this.orientationMatrix = dataJSON ? (mat.rotation4FromJSON(dataJSON.rotations || [])) : null;
+        /**
+         * Whether a turret installed at this slot can freely fire in 360 degrees without hitting the ship.
+         * @type Boolean
+         */
+        this.clear = dataJSON ? dataJSON.clear || false : false;
     }
     // ##############################################################################
     /**
@@ -4604,7 +4609,7 @@ define([
      * @param {Object} dataJSON 
      */
     SpacecraftClass.prototype._overrideData = function (otherSpacecraftClass, dataJSON) {
-        var i, j, startPosition, translationVector, rotations, count, angles;
+        var i, j, startPosition, translationVector, rotations, count, clear, angles;
         TexturedModelClass.prototype._overrideData.call(this, otherSpacecraftClass, dataJSON);
         /**
          * The type of spacecraft this class belongs to.
@@ -4748,10 +4753,12 @@ define([
                     translationVector = dataJSON.weaponSlots[i].vector || _missingVector3(this, "weaponSlot array vector");
                     rotations = dataJSON.weaponSlots[i].rotations;
                     count = dataJSON.weaponSlots[i].count;
+                    clear = dataJSON.weaponSlots[i].clear;
                     for (j = 0; j < count; j++) {
                         this._weaponSlots.push(new WeaponSlot({
                             position: vec.sum3(startPosition, vec.scaled3Aux(translationVector, j)),
-                            rotations: rotations
+                            rotations: rotations,
+                            clear: clear
                         }));
                     }
                 } else {

@@ -2058,6 +2058,12 @@ define([
                         name: "rotations",
                         type: BaseType.ROTATIONS,
                         optional: true
+                    },
+                    CLEAR: {
+                        name: "clear",
+                        description: "Whether a turret installed at this slot can freely fire in 360 degrees without hitting the ship",
+                        type: BaseType.BOOLEAN,
+                        defaultValue: false
                     }
                 }
             },
