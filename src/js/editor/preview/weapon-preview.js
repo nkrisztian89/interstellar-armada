@@ -10,15 +10,17 @@
  * @param lights Used for creating the light sources for the preview scene
  * @param graphics Used to set graphics settings
  * @param equipment Used to create the preview weapons
- * @param preview
+ * @param common Used to create numberic input elements for options
+ * @param preview This module is based on the common WebGL preview module
  */
 define([
     "modules/scene/renderable-objects",
     "modules/scene/lights",
     "armada/graphics",
     "armada/logic/equipment",
+    "editor/common",
     "editor/preview/webgl-preview"
-], function (renderableObjects, lights, graphics, equipment, preview) {
+], function (renderableObjects, lights, graphics, equipment, common, preview) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -50,20 +52,21 @@ define([
              */
             CANVAS_UPDATE_PROPERTIES = [
                 "model", "shader", "texture",
-                "defaultLuminosityFactors", "barrels"
+                "defaultLuminosityFactors", "barrels", "rotators"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the preview options
              * @type String[]
              */
             OPTION_REFRESH_PROPERIES = [
+                "rotators"
             ],
             /**
              * The names of the properties the change of which should trigger a refresh of the info text
              * @type String[]
              */
             INFO_UPDATE_PROPERTIES = [
-                "cooldown", "projectileClass", "projectileVelocity"
+                "cooldown", "projectile", "projectileVelocity"
             ],
             // ----------------------------------------------------------------------
             // Private variables
@@ -76,6 +79,11 @@ define([
              * @type WeaponClass
              */
             _weaponClass,
+            /**
+             * A reference to the object storing the HTML elements to be used for the preview
+             * @type Object
+             */
+            _elements,
             /**
              * Whether the barrel markers are currently visible
              * @type Boolean
@@ -90,7 +98,15 @@ define([
              * Stores the WebGL preview context information for weapon class previews
              * @type WebGLPreviewContext
              */
-            _previewContext;
+            _previewContext,
+            /**
+             * 
+             * @type Object
+             */
+            _optionElements = {
+                rotator1Angle: null,
+                rotator2Angle: null
+            };
     // ----------------------------------------------------------------------
     // Private Functions
     /**
@@ -119,10 +135,29 @@ define([
                         _highlightedBarrelMarkerColorFunction :
                         _barrelMarkerColorFunction);
             }
+            _weapon.getBarrelMarkers().getRenderableObject().setOrientationM4(_weapon.getTransformMatrix());
+            _weapon.getBarrelMarkers().getRenderableObject().setPositionM4(_weapon.getTransformMatrix());
             _weapon.getBarrelMarkers().show();
         } else {
             _weapon.getBarrelMarkers().hide();
         }
+    }
+    /**
+     * Updates the weapon's rotations according to the current rotator settings.
+     */
+    function _updateRotators() {
+        _weapon.setRotation(_optionElements.rotator1Angle.value, _optionElements.rotator2Angle.value);
+        _weapon.simulate(0);
+        _wireframeWeapon.setRotation(_optionElements.rotator1Angle.value, _optionElements.rotator2Angle.value);
+        _wireframeWeapon.simulate(0);
+    }
+    /**
+     * Updates the rotator options.
+     */
+    function _updateRotatorEditors() {
+        var rotators = _weaponClass.getRotators();
+        _optionElements.rotator1Angle.parentElement.hidden = rotators.length < 1;
+        _optionElements.rotator2Angle.parentElement.hidden = rotators.length < 2;
     }
     /**
      * For the WebGL preview context.
@@ -141,6 +176,7 @@ define([
      * Updates the content of the preview canvas according to the current preview settings
      * @param {Editor~RefreshParams} params
      * @param {Float32Array} orientationMatrix
+     * @returns {Boolean}
      */
     function _load(params, orientationMatrix) {
         var
@@ -192,6 +228,8 @@ define([
                     } :
                     null);
         }
+        _updateRotatorEditors();
+        return shouldReload;
     }
     /**
      * For the WebGL preview context.
@@ -204,15 +242,24 @@ define([
     /**
      * For the WebGL preview context.
      * Creates the controls that form the content of the preview options and adds them to the page.
-     * Currently does nothing, no preview options are yet implemented for weapon previews.
      */
     function _createOptions() {
-        return true;
+        var changeHandler = function () {
+            _updateRotators();
+            _updateForBarrelMarkerState();
+            preview.requestRender();
+        };
+        _optionElements.rotator1Angle = common.createNumericInput(0, {}, changeHandler);
+        _optionElements.rotator2Angle = common.createNumericInput(0, {}, changeHandler);
+        _elements.options.appendChild(preview.createSetting(_optionElements.rotator1Angle, "Rotator 1 angle:"));
+        _elements.options.appendChild(preview.createSetting(_optionElements.rotator2Angle, "Rotator 2 angle:"));
     }
     /**
      * For the WebGL preview context.
      */
     function _updateForRefresh() {
+        _updateRotatorEditors();
+        _updateRotators();
         _updateForBarrelMarkerState();
     }
     /**
@@ -251,6 +298,7 @@ define([
 
         preview.setContext(_previewContext);
 
+        _elements = elements;
         _weaponClass = weaponClass;
         if (sameClass) {
             if (!params) {

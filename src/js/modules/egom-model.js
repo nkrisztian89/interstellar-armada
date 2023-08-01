@@ -120,8 +120,9 @@ define([
      * @class Represents a line connecting two vertices in a model.
      * @param {Number} a The index of the starting vertex of the line.
      * @param {Number} b The index of the end vertex of the line.
+     * @param {Number} transformGroupIndex The index of the transform group of the line.
      */
-    function Line(a, b) {
+    function Line(a, b, transformGroupIndex) {
         /**
          * The index (in the model) of the starting vertex of the line.
          * @type Number
@@ -132,6 +133,11 @@ define([
          * @type Number
          */
         this.b = b;
+        /**
+         * The index of the transform group this line belongs to.
+         * @type Number
+         */
+        this.transformGroupIndex = transformGroupIndex || 0;
     }
     // ############################################################################################
     /**
@@ -449,11 +455,12 @@ define([
      * in the _linesByVertices array.
      * @param {Number} a The index of the start vertex of the line
      * @param {Number} b The index of the end vertex of the line
+     * @param {Number} transformGroupIndex The index of the transform group of the line
      */
-    Mesh.prototype.markLineByVertex = function (a, b) {
-        var start = Math.min(a, b), end = Math.max(a, b); 
-        if (this._linesByVertices[start].indexOf(end) < 0) {
-            this._linesByVertices[start].push(end);
+    Mesh.prototype.markLineByVertex = function (a, b, transformGroupIndex) {
+        var start = Math.min(a, b), end = Math.max(a, b);
+        if (this._linesByVertices[start].indexOf(end) % 2) {
+            this._linesByVertices[start].push(end, transformGroupIndex);
         }
     };
     /**
@@ -462,11 +469,11 @@ define([
      * geometry data for rendering.
      */
     Mesh.prototype.addLinesByVertices = function () {
-        var i, j, lines, count = this._linesByVertices.length; 
+        var i, j, lines, count = this._linesByVertices.length;
         for (i = 0; i < count; i++) {
             lines = this._linesByVertices[i];
-            for (j = 0; j < lines.length; j++) {
-                this.addLine(new Line(i, lines[j]));
+            for (j = 0; j < lines.length; j += 2) {
+                this.addLine(new Line(i, lines[j], lines[j + 1]));
             }
         }
         this._linesByVertices = null;
@@ -752,9 +759,9 @@ define([
             }
             groupIndexData = new Float32Array(nLines * 4);
             for (i = 0; i < nLines; i++) {
-                groupIndexData[i * 4] = 0;
+                groupIndexData[i * 4] = this._lines[i].transformGroupIndex;
                 groupIndexData[i * 4 + 1] = 0;
-                groupIndexData[i * 4 + 2] = 0;
+                groupIndexData[i * 4 + 2] = this._lines[i].transformGroupIndex;
                 groupIndexData[i * 4 + 3] = 0;
             }
             nTriangles = this._triangles.length;
@@ -1276,11 +1283,12 @@ define([
      * @param {Number} maxLOD The maximum LOD
      * @param {Number} a The index of the start vertex of the line
      * @param {Number} b The index of the end vertex of the line
+     * @param {Number} transformGroupIndex The index of the transform group of the line
      */
-    Model.prototype.markLineByVertex = function (minLOD, maxLOD, a, b) {
+    Model.prototype.markLineByVertex = function (minLOD, maxLOD, a, b, transformGroupIndex) {
         var i;
         for (i = minLOD; i <= maxLOD; i++) {
-            this._meshes[i].markLineByVertex(a, b);
+            this._meshes[i].markLineByVertex(a, b, transformGroupIndex);
         }
     };
     /**
@@ -1454,10 +1462,10 @@ define([
                         index + array[offset + j + 1], // b
                         index + array[offset + j + 2], // c
                         params);
-                this.markLineByVertex(minLOD, maxLOD, index + array[offset + j + 1], index + array[offset + j + 2]);
+                this.markLineByVertex(minLOD, maxLOD, index + array[offset + j + 1], index + array[offset + j + 2], params.groupIndices[0]);
             }
-            this.markLineByVertex(minLOD, maxLOD, index, index + array[offset + count - 1]);
-            this.markLineByVertex(minLOD, maxLOD, index, index + array[offset + 1]);
+            this.markLineByVertex(minLOD, maxLOD, index, index + array[offset + count - 1], params.groupIndices[0]);
+            this.markLineByVertex(minLOD, maxLOD, index, index + array[offset + 1], params.groupIndices[0]);
         }
         application.log_DEBUG("Loaded " + nPolygons + " polygons.", 3);
         this.addLinesByVertices(defaultMinLOD, defaultMaxLOD);

@@ -502,6 +502,9 @@ div.objectives.popup {
     display: inline-block;
     padding-left: 0.5em;
     margin-bottom: 0.6em;
+    &[hidden] {
+        display: none;
+    }
 }
 
 span.settingLabel {

@@ -2399,6 +2399,13 @@ define([
         }
     };
     /**
+     * Returns the matrix that transforms points according to the rotations of the rotatable weapon.
+     * @returns {Float32Array}
+     */
+    Weapon.prototype.getTransformMatrix = function () {
+        return this._transformMatrix;
+    };
+    /**
      * Returns the amount of score points to be added to the total score value of spacecrafts that have this weapon equipped
      * @returns {Number}
      */
