@@ -74,44 +74,6 @@ define([
                 CRUISE: "cruise"
             },
             /**
-             * @enum {Number}
-             * When aiming (rotating), weapons determine in which of these states they are within the aiming process. It is used when 
-             * deciding whether to fire or not.
-             * @type Object
-             */
-            WeaponAimStatus = {
-                /**
-                 * The weapon cannot be rotated and thus cannot be aimed at targets.
-                 */
-                FIXED: 0,
-                /**
-                 * The weapon can be rotated, but it currently does not have a target to aim for (and is rotating back to the default position)
-                 */
-                NO_TARGET: 1,
-                /**
-                 * The weapon is currently trying to aim at a target, but the target lies out of the region accessible based on the restrictions
-                 * of the weapon's rotators.
-                 */
-                AIMING_OUT_OF_REACH: 2,
-                /**
-                 * The weapon is in the process of aiming at a target (rotating).
-                 */
-                AIMING: 3,
-                /**
-                 * The weapon is currently aimed at the direction towards the target, but the target is out of its range.
-                 */
-                AIMED_OUT_OF_RANGE: 4,
-                /**
-                 * The weapon is currently aimed at the direction towards the target, and the target is within its range (ready to fire).
-                 */
-                AIMED_IN_RANGE: 5,
-                /**
-                 * The weapon is currently aimed at the direction towards the target, and the target is within its range, but the line of fire
-                 * is blocked by the spacecraft the weapon is installed on.
-                 */
-                AIMED_BLOCKED: 6
-            },
-            /**
              * @enum {String}
              * The valid thruster use identifiers.
              * @type Object
@@ -221,6 +183,37 @@ define([
              * @type Number
              */
             ANGULAR_VELOCITY_MATRIX_ERROR_THRESHOLD = 0.00001,
+            // ------------------------------------------------------------------------------
+            // enum constants
+            /**
+             * When aiming (rotating), weapons determine in which of these states they are within the aiming process. It is used when 
+             * deciding whether to fire or not.
+             */
+            /**
+             * The weapon cannot be rotated and thus cannot be aimed at targets.
+             */
+            AIM_STATUS_FIXED = 0,
+            /**
+             * The weapon can be rotated, but it currently does not have a target to aim for (and is rotating back to the default position)
+             */
+            AIM_STATUS_NO_TARGET = 1,
+            /**
+             * The weapon is currently trying to aim at a target, but the target lies out of the region accessible based on the restrictions
+             * of the weapon's rotators.
+             */
+            AIM_STATUS_OUT_OF_REACH = 2,
+            /**
+             * The weapon is in the process of aiming at a target (rotating).
+             */
+            AIM_STATUS_AIMING = 3,
+            /**
+             * The weapon is currently aimed at the direction towards the target, but the target is out of its range.
+             */
+            AIM_STATUS_AIMED_OUT_OF_RANGE = 4,
+            /**
+             * The weapon is currently aimed at the direction towards the target, and the target is within its range (ready to fire).
+             */
+            AIM_STATUS_AIMED_IN_RANGE = 5,
             // ------------------------------------------------------------------------------
             // private variables
             /**
@@ -381,7 +374,6 @@ define([
              */
             _relativeVelocityDirectionInWorldSpace = [0, 0, 0];
     Object.freeze(FlightMode);
-    Object.freeze(WeaponAimStatus);
     Object.freeze(ThrusterUse);
     // #########################################################################
     // public functions
@@ -1845,7 +1837,24 @@ define([
          * The saved value of the current aiming state of the weapon refreshed every time the weapon is rotated.
          * @type Number
          */
-        this._lastAimStatus = this._fixed ? WeaponAimStatus.FIXED : WeaponAimStatus.NO_TARGET;
+        this._lastAimStatus = this._fixed ? AIM_STATUS_FIXED : AIM_STATUS_NO_TARGET;
+        /**
+         * The distance from the weapon to its currently tracked target, in meters.
+         * @type Number
+         */
+        this._targetDistance = 0;
+        /**
+         * Whether or not we have calculated if the line of fire of the rotating weapon is blocked by the carrying
+         * spacecraft at the current rotation.
+         * @type Number
+         */
+        this._aimBlockCalculated = this._fixed;
+        /**
+         * Whether the line of fire of each barrel is blocked by the carrying spacecraft at the current rotation.
+         * @type Boolean[]
+         */
+        this._aimBlocked = new Array(this._class.getBarrels().length);
+        this._aimBlocked.fill(false);
     }
     /**
      * Returns the name of the weapon in a way that can be displayed to the user (translated)
@@ -2128,7 +2137,10 @@ define([
     Weapon._weaponSlotPosMatrix = mat.identity4();
     Weapon._projectilePosMatrix = mat.identity4();
     Weapon._projectileOriMatrix = mat.identity4();
+    Weapon._projectileTargetMatrix = mat.identity4();
+    Weapon._projectileDirection = [0, 0, 0];
     Weapon._barrelPosVector = [0, 0, 0, 1];
+    Weapon._muzzleFlashPosVector = [0, 0, 0, 1];
     /**
      * Fires the weapon and adds the projectiles it fires (if any) to the passed pool.
      * @param {Float32Array} shipScaledOriMatrix A 4x4 matrix describing the scaling and rotation of the spacecraft having this weapon - it
@@ -2146,12 +2158,12 @@ define([
                 soundPosition, lighSource,
                 scene = this._visualModel.getNode().getScene();
         // check cooldown and aim status
-        if ((this._cooldown <= 0) && (this._lastAimStatus !== WeaponAimStatus.AIMED_BLOCKED) && (!onlyIfAimedOrFixed || (this._lastAimStatus === WeaponAimStatus.FIXED) || (this._lastAimStatus === WeaponAimStatus.AIMED_IN_RANGE))) {
-            this._cooldown = this._class.getCooldown();
+        if ((this._cooldown <= 0) && (!onlyIfAimedOrFixed || (this._lastAimStatus === AIM_STATUS_FIXED) || (this._lastAimStatus === AIM_STATUS_AIMED_IN_RANGE))) {
             // cache the matrices valid for the whole weapon
             weaponSlotPosVector = vec.prodTranslationRotation3Aux(this.getOrigoPositionMatrix(), shipScaledOriMatrix);
             mat.setTranslatedByVector(Weapon._weaponSlotPosMatrix, this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
             projectileOriMatrix = this.getProjectileOrientationMatrix();
+            vec.setRowB43(Weapon._projectileDirection, projectileOriMatrix);
             barrels = this._class.getBarrels();
             if (_dynamicLights) {
                 projectileLights = {};
@@ -2160,15 +2172,29 @@ define([
             // generate the muzzle flashes and projectiles for each barrel
             for (i = 0; i < barrels.length; i++) {
                 // cache variables
-                projectileClass = barrels[i].getProjectileClass();
                 vec.setVector4(Weapon._barrelPosVector, barrels[i].getPositionVector());
                 if (!this._fixed) {
                     vec.mulVec4Mat4(Weapon._barrelPosVector, this._transformMatrix);
                 }
-                // add the muzzle flash of this barrel
-                muzzleFlash = this._getMuzzleFlashForBarrel(i, Weapon._barrelPosVector);
+                vec.setVector4(Weapon._muzzleFlashPosVector, Weapon._barrelPosVector);
                 vec.mulVec3Mat4(Weapon._barrelPosVector, mat.prod3x3SubOf4Aux(this._scaledOriMatrix, shipScaledOriMatrix));
                 mat.setTranslatedByVector(Weapon._projectilePosMatrix, Weapon._weaponSlotPosMatrix, Weapon._barrelPosVector);
+                // if the weapon has been rotated since the last check, check if the line of fire from this barrel is blocked by our own spacecraft
+                if (!this._aimBlockCalculated) {
+                    mat.setTranslatedByVector(Weapon._projectileTargetMatrix, Weapon._projectilePosMatrix, vec.scaled3Aux(Weapon._projectileDirection, this._targetDistance));
+                    if (this._spacecraft.getPhysicalModel().checkHit(Weapon._projectileTargetMatrix, mat.translation4vAux(Weapon._projectileDirection), this._targetDistance * 1000, 0)) {
+                        this._aimBlocked[i] = true;
+                    } else {
+                        this._aimBlocked[i] = false;
+                    }
+                }
+                // if the line of fire is blocked, the barrel will not fire
+                if (this._aimBlocked[i]) {
+                    continue;
+                }
+                projectileClass = barrels[i].getProjectileClass();
+                // add the muzzle flash of this barrel
+                muzzleFlash = this._getMuzzleFlashForBarrel(i, Weapon._muzzleFlashPosVector);
                 this._visualModel.getNode().addSubnode(muzzleFlash.getNode() || new sceneGraph.RenderableNode(muzzleFlash, false, false, true));
                 // add the projectile of this barrel
                 p = _projectilePool.getObject();
@@ -2197,17 +2223,21 @@ define([
                         );
                 result++;
             }
-            if (_dynamicLights) {
-                for (projClassName in projectileLights) {
-                    if (projectileLights.hasOwnProperty(projClassName)) {
-                        scene.addPointLightSource(projectileLights[projClassName], constants.PROJECTILE_LIGHT_PRIORITY);
+            this._aimBlockCalculated = true;
+            if (result > 0) {
+                this._cooldown = this._class.getCooldown();
+                if (_dynamicLights) {
+                    for (projClassName in projectileLights) {
+                        if (projectileLights.hasOwnProperty(projClassName)) {
+                            scene.addPointLightSource(projectileLights[projClassName], constants.PROJECTILE_LIGHT_PRIORITY);
+                        }
                     }
                 }
+                if (!shipSoundSource) {
+                    soundPosition = mat.translationVector3(p.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera()));
+                }
+                this._class.playFireSound(soundPosition, shipSoundSource, _fireSoundStackingTimeThreshold, _fireSoundStackingVolumeFactor);
             }
-            if (!shipSoundSource) {
-                soundPosition = mat.translationVector3(p.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera()));
-            }
-            this._class.playFireSound(soundPosition, shipSoundSource, _fireSoundStackingTimeThreshold, _fireSoundStackingVolumeFactor);
             return result;
         }
         return 0;
@@ -2222,6 +2252,7 @@ define([
             this._rotationAngles[0] = angleOne * utils.RAD;
             this._rotationAngles[1] = angleTwo * utils.RAD;
             this._rotationChanged = true;
+            this._aimBlockCalculated = false;
         }
     };
     /**
@@ -2234,9 +2265,9 @@ define([
      * @param {Number} dt The elapsed time, in milliseconds
      */
     Weapon.prototype.rotateTo = function (angleOne, angleTwo, turnThreshold, fireThreshold, dt) {
-        var angleDifference, rotators, i, rotationAmount,
-                aiming = false, outOfReach = false;
+        var angleDifference, rotators, i, rotationAmount, originalAngle;
         rotators = this._class.getRotators();
+        this._lastAimStatus = AIM_STATUS_AIMED_IN_RANGE;
         for (i = 0; i < rotators.length; i++) {
             switch (i) {
                 case 0:
@@ -2264,6 +2295,7 @@ define([
                     angleDifference += utils.DOUBLE_PI;
                 }
             }
+            originalAngle = this._rotationAngles[i];
             // perform the actual turn, if needed
             rotationAmount = 0;
             if (Math.abs(angleDifference) > turnThreshold) {
@@ -2273,9 +2305,8 @@ define([
                 } else {
                     this._rotationAngles[i] -= Math.min(rotationAmount, -angleDifference);
                 }
-                this._rotationChanged = true;
                 if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
-                    aiming = true;
+                    this._lastAimStatus = AIM_STATUS_AIMING;
                 }
             }
             if (!rotators[i].restricted) {
@@ -2291,24 +2322,19 @@ define([
                 if (this._rotationAngles[i] > rotators[i].range[1]) {
                     this._rotationAngles[i] = rotators[i].range[1];
                     if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
-                        outOfReach = true;
+                        this._lastAimStatus = AIM_STATUS_OUT_OF_REACH;
                     }
                 }
                 if (this._rotationAngles[i] < rotators[i].range[0]) {
                     this._rotationAngles[i] = rotators[i].range[0];
                     if ((Math.abs(angleDifference) - rotationAmount) > fireThreshold) {
-                        outOfReach = true;
+                        this._lastAimStatus = AIM_STATUS_OUT_OF_REACH;
                     }
                 }
             }
-        }
-        if (outOfReach) {
-            this._lastAimStatus = WeaponAimStatus.AIMING_OUT_OF_REACH;
-        } else if (aiming) {
-            this._lastAimStatus = WeaponAimStatus.AIMING;
-        } else {
-            if ((this._lastAimStatus !== WeaponAimStatus.AIMED_BLOCKED) || this._rotationChanged) {
-                this._lastAimStatus = WeaponAimStatus.AIMED_IN_RANGE;
+            if (this._rotationAngles[i] !== originalAngle) {
+                this._rotationChanged = true;
+                this._aimBlockCalculated = false;
             }
         }
     };
@@ -2335,7 +2361,8 @@ define([
             // transform to object space - relative to the weapon
             vectorToTargetObjSpace = vec.prodMat4Vec3Aux(this._spacecraft.getPhysicalOrientationMatrix(), vectorToTarget);
             vectorToTargetObjSpace = vec.prodMat4Vec3Aux(this._slot.orientationMatrix, vectorToTargetObjSpace);
-            inRange = vec.extractLength3(vectorToTargetObjSpace) <= this.getRange(0);
+            this._targetDistance = vec.extractLength3(vectorToTargetObjSpace);
+            inRange = this._targetDistance <= this.getRange(0);
             switch (this._class.getRotationStyle()) {
                 case classes.WeaponRotationStyle.YAW_PITCH:
                     vec.getYawAndPitch(_angles, vectorToTargetObjSpace);
@@ -2348,17 +2375,8 @@ define([
                 default:
                     application.crash();
             }
-            if (this._lastAimStatus === WeaponAimStatus.AIMED_IN_RANGE) {
-                if (inRange) {
-                    // check if the line of fire is blocked by our own spacecraft (for performance, only check if we are about to fire)
-                    if (this._rotationChanged && (this._cooldown <= 0)) {
-                        if (this._spacecraft.getPhysicalModel().checkHit(mat.translation4vAux(targetPositionVector), mat.translation4vAux(vectorToTarget), 1000, 0)) {
-                            this._lastAimStatus = WeaponAimStatus.AIMED_BLOCKED;
-                        }
-                    }
-                } else {
-                    this._lastAimStatus = WeaponAimStatus.AIMED_OUT_OF_RANGE;
-                }
+            if (!inRange && (this._lastAimStatus === AIM_STATUS_AIMED_IN_RANGE)) {
+                this._lastAimStatus = AIM_STATUS_AIMED_OUT_OF_RANGE;
             }
         }
     };
@@ -2372,7 +2390,7 @@ define([
         if (!this._fixed) {
             rotators = this._class.getRotators();
             this.rotateTo(rotators[0].defaultAngle, rotators[1].defaultAngle, threshold, 0, dt);
-            this._lastAimStatus = WeaponAimStatus.NO_TARGET;
+            this._lastAimStatus = AIM_STATUS_NO_TARGET;
         }
     };
     /**

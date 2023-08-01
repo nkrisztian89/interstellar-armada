@@ -107,7 +107,7 @@ define([
              * Spacecrafts will stop turning towards the specified direction when reaching this angle (in radians).
              * @type Number
              */
-            TURN_THRESHOLD_ANGLE = 0.001,
+            TURN_THRESHOLD_ANGLE = 0.002,
             /**
              * The factor to apply when converting angular velocity (turning) matrix angles to rad / s.
              * @type Number

@@ -1,5 +1,5 @@
 {
-    "version": "0.5.4-dev:1133 (2023.07.26.)",
+    "version": "0.5.4-dev:1134 (2023.08.01.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "platform": "web",
@@ -640,7 +640,7 @@
             },
             {
                 "type": "fighter",
-                "weaponAimThreshold": 0.001,
+                "weaponAimThreshold": 0.002,
                 "actions": [
                     {
                         "name": "fire",
