@@ -2398,16 +2398,6 @@ define([
      */
     function Barrel(dataJSON) {
         /**
-         * The class of the projectile being shot from this barrel.
-         * @type ProjectileClass
-         */
-        this._projectileClass = dataJSON ? (getProjectileClass(dataJSON.projectile || _missingString(this, "projectile")) || application.crash()) : null;
-        /**
-         * The relative velocity that a projectile shot from this barrel should gain from the force of firing.
-         * @type Number
-         */
-        this._projectileVelocity = dataJSON ? (dataJSON.projectileVelocity || _missingNumber(this, "projectileVelocity")) : 0;
-        /**
          * The coordinates of the barrel's position relative to the weapon itself. Reading a 3 element vector and complementing it with a 
          * 1.0 to make it 4 element, as it is used in multiplication with 4x4 matrices.
          * @type Number[4]
@@ -2418,61 +2408,10 @@ define([
         }
     }
     /**
-     * @returns {ProjectileClass}
-     */
-    Barrel.prototype.getProjectileClass = function () {
-        return this._projectileClass;
-    };
-    /**
-     * Returns the velocity (m/s) at which this barrel is firing projectiles.
-     * @returns {Number}
-     */
-    Barrel.prototype.getProjectileVelocity = function () {
-        return this._projectileVelocity;
-    };
-    /**
-     * The force firing a projectile from this barrel exerts on the spacecraft
-     * @returns {Number} In newtons (kg*m/s^2)
-     */
-    Barrel.prototype.getFireForce = function () {
-        return this._projectileVelocity * this._projectileClass.getMass() * 1000; // ms -> s
-    };
-    /**
      * @returns {Number[4]}
      */
     Barrel.prototype.getPositionVector = function () {
         return this._positionVector;
-    };
-    /**
-     * @param {ProjectileClass~ResourceParams} params 
-     */
-    Barrel.prototype.acquireResources = function (params) {
-        this._projectileClass.acquireResources(params);
-    };
-    /**
-     * Returns the highest number of projectiles that might be used for this barrel simultaneously in one battle, given the passed cooldown.
-     * @param {Number} cooldown The cooldown determining the firing rate, in milliseconds.
-     * @returns {Number}
-     */
-    Barrel.prototype.getMaxProjectileCount = function (cooldown) {
-        return Math.ceil(this._projectileClass.getDuration() / cooldown);
-    };
-    /**
-     * Returns the highest number of explosions that might be used for this barrel simultaneously in one battle, given the passed cooldown.
-     * @param {Number} cooldown The cooldown determining the firing rate, in milliseconds.
-     * @returns {Number}
-     */
-    Barrel.prototype.getMaxExplosionCount = function (cooldown) {
-        return Math.ceil(Math.max(this._projectileClass.getExplosionClass().getTotalDuration(), this._projectileClass.getShieldExplosionClass().getTotalDuration()) / cooldown);
-    };
-    /**
-     * Returns the highest number of particles that might be used for this barrel simultaneously in one battle, given the passed cooldown.
-     * @param {Number} cooldown The cooldown determining the firing rate, in milliseconds.
-     * @returns {Number}
-     */
-    Barrel.prototype.getMaxParticleCount = function (cooldown) {
-        // one for the muzzle flash
-        return 1 + this.getMaxExplosionCount(cooldown) * Math.max(this._projectileClass.getExplosionClass().getMaxParticleCount(), this._projectileClass.getShieldExplosionClass().getMaxParticleCount());
     };
     // ##############################################################################
     /**
@@ -2549,6 +2488,16 @@ define([
          * @type String
          */
         this._fullName = dataJSON ? (dataJSON.fullName || this.getName()) : null;
+        /**
+         * The class of the projectiles being shot from the barrels of this weapon.
+         * @type ProjectileClass
+         */
+        this._projectileClass = dataJSON ? (getProjectileClass(dataJSON.projectile || _missingString(this, "projectile")) || application.crash()) : null;
+        /**
+         * The relative velocity that a projectile shot from this weapon should gain from the force of firing.
+         * @type Number
+         */
+        this._projectileVelocity = dataJSON ? (dataJSON.projectileVelocity || _missingNumber(this, "projectileVelocity")) : 0;
         /**
          * The time the weapon needs between two shots to "cool down", in milliseconds.
          * @type Number
@@ -2631,13 +2580,9 @@ define([
      * @param {WeaponClass~ResourceParams} params
      */
     WeaponClass.prototype.acquireResources = function (params) {
-        var i, projectileParams;
         TexturedModelClass.prototype.acquireResources.call(this, params);
         if (params.projectileResources) {
-            projectileParams = {projectileOnly: false, sound: params.sound};
-            for (i = 0; i < this._barrels.length; i++) {
-                this._barrels[i].acquireResources(projectileParams);
-            }
+            this._projectileClass.acquireResources({projectileOnly: false, sound: params.sound});
         }
         if (params.sound) {
             _loadSoundEffect(this._fireSound);
@@ -2656,13 +2601,6 @@ define([
      */
     WeaponClass.prototype.getCooldown = function () {
         return this._cooldown;
-    };
-    /**
-     * @param {Number} index
-     * @returns {Barrel}
-     */
-    WeaponClass.prototype.getBarrel = function (index) {
-        return this._barrels[index];
     };
     /**
      * @returns {Barrel[]}
@@ -2701,18 +2639,25 @@ define([
         return this._rotators;
     };
     /**
-     * Returns the class of projectiles the first barrel of this weapon class fires.
+     * Returns the class of projectiles this weapon class fires.
      * @returns {ProjectileClass}
      */
     WeaponClass.prototype.getProjectileClass = function () {
-        return this._barrels[0].getProjectileClass();
+        return this._projectileClass;
     };
     /**
-     * Returns the velocity (m/s) at which the first barrel of this weapon class fires projectiles.
+     * Returns the velocity (m/s) at which this weapon class fires projectiles.
      * @returns {Number}
      */
     WeaponClass.prototype.getProjectileVelocity = function () {
-        return this._barrels[0].getProjectileVelocity();
+        return this._projectileVelocity;
+    };
+    /**
+     * The force firing a projectile from this weapon exerts on the spacecraft
+     * @returns {Number} In newtons (kg*m/s^2)
+     */
+    WeaponClass.prototype.getFireForce = function () {
+        return this._projectileVelocity * this._projectileClass.getMass() * 1000; // ms -> s
     };
     /**
      * Returns the damage one shot (from all barrels) of a weapon of this class deals to a target with the passed armor rating.
@@ -2720,12 +2665,7 @@ define([
      * @returns {Number}
      */
     WeaponClass.prototype.getDamage = function (armorRating) {
-        var result = 0, i;
-        armorRating = armorRating || 0;
-        for (i = 0; i < this._barrels.length; i++) {
-            result += Math.max(0, this._barrels[i].getProjectileClass().getDamage() - armorRating);
-        }
-        return result;
+        return this._barrels.length * Math.max(0, this.getProjectileClass().getDamage() - (armorRating || 0));
     };
     /**
      * Returns the damage per second dealt by a weapon of this class to a target with the passed armor rating.
@@ -2771,33 +2711,22 @@ define([
      * @returns {Number}
      */
     WeaponClass.prototype.getMaxProjectileCount = function () {
-        var result = 0, i;
-        for (i = 0; i < this._barrels.length; i++) {
-            result += this._barrels[i].getMaxProjectileCount(this._cooldown);
-        }
-        return result;
+        return this._barrels.length * Math.ceil(this._projectileClass.getDuration() / this._cooldown);
     };
     /**
      * Returns the highest number of explosions that might be used for weapons of this class simultaneously in one battle.
      * @returns {Number}
      */
     WeaponClass.prototype.getMaxExplosionCount = function () {
-        var result = 0, i;
-        for (i = 0; i < this._barrels.length; i++) {
-            result += this._barrels[i].getMaxExplosionCount(this._cooldown);
-        }
-        return result;
+        return this._barrels.length * Math.ceil(Math.max(this._projectileClass.getExplosionClass().getTotalDuration(), this._projectileClass.getShieldExplosionClass().getTotalDuration()) / this._cooldown);
     };
     /**
      * Returns the highest number of particles that might be used for weapons of this class simultaneously in one battle.
      * @returns {Number}
      */
     WeaponClass.prototype.getMaxParticleCount = function () {
-        var result = 0, i;
-        for (i = 0; i < this._barrels.length; i++) {
-            result += this._barrels[i].getMaxParticleCount(this._cooldown);
-        }
-        return result;
+        // one for the muzzle flash
+        return this._barrels.length * (1 + this.getMaxExplosionCount(this._cooldown) * Math.max(this._projectileClass.getExplosionClass().getMaxParticleCount(), this._projectileClass.getShieldExplosionClass().getMaxParticleCount()));
     };
     // ##############################################################################
     /**

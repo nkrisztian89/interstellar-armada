@@ -1566,15 +1566,6 @@ define([
                 baseType: BaseType.OBJECT,
                 name: "Barrel",
                 properties: {
-                    PROJECTILE: {
-                        name: "projectile",
-                        type: PROJECTILE_CLASS_REFERENCE
-                    },
-                    PROJECTILE_VELOCITY: {
-                        name: "projectileVelocity",
-                        type: POSITIVE_METERS_PER_SECOND,
-                        newValue: 1
-                    },
                     POSITION: {
                         name: "position",
                         type: BaseType.VECTOR3
@@ -1663,6 +1654,15 @@ define([
                     type: LUMINOSITY_FACTOR_PAIRS,
                     optional: true,
                     defaultText: "all zeros"
+                },
+                PROJECTILE: {
+                    name: "projectile",
+                    type: PROJECTILE_CLASS_REFERENCE
+                },
+                PROJECTILE_VELOCITY: {
+                    name: "projectileVelocity",
+                    type: POSITIVE_METERS_PER_SECOND,
+                    newValue: 1
                 },
                 COOLDOWN: {
                     name: "cooldown",

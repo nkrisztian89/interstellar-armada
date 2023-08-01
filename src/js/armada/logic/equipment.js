@@ -1847,7 +1847,7 @@ define([
          * Whether this weapon can freely fire without checking if the line of fire is blocked
          * @type Boolean
          */
-        this._clear = this._slot.clear;
+        this._clear = this._slot ? this._slot.clear : true;
         /**
          * Whether or not we have calculated if the line of fire of the rotating weapon is blocked by the carrying
          * spacecraft at the current rotation.
@@ -2057,15 +2057,14 @@ define([
     };
     /**
      * Returns the renderable object representing the muzzle flash that is visible
-     * when the barrel having the passed index is firing a projectile.
-     * @param {Number} barrelIndex
+     * when the barrel with the passed relative position vector is firing a projectile.
      * @param {Number[3] relativeBarrelPosVector The position of the barrel (muzzle) in object-space (where the object is the spacecraft
      * having this weapon)
      * @returns {Particle}
      */
-    Weapon.prototype._getMuzzleFlashForBarrel = function (barrelIndex, relativeBarrelPosVector) {
+    Weapon.prototype._getMuzzleFlashForBarrel = function (relativeBarrelPosVector) {
         var
-                muzzleFlash = this._class.getBarrel(barrelIndex).getProjectileClass().getMuzzleFlash(),
+                muzzleFlash = this._class.getProjectileClass().getMuzzleFlash(),
                 particle = _particlePool.getObject();
         renderableObjects.initDynamicParticle(
                 particle,
@@ -2080,38 +2079,22 @@ define([
         return particle;
     };
     /**
-     * 
-     * @param {Scene} scene
-     * @param {Number} barrelIndex
-     * @param {String} resourceID
-     * @returns {Function}
-     */
-    Weapon.prototype.getResourceAdderFunction = function (scene, barrelIndex, resourceID) {
-        return function () {
-            var particle;
-            if (!scene.hasResourcesOfObject(resourceID)) {
-                particle = this._getMuzzleFlashForBarrel(barrelIndex, [0, 0, 0]);
-                scene.addResourcesOfObject(particle);
-            }
-        }.bind(this);
-    };
-    /**
      * Adds the resources required to render the projeciles fired by this weapon
      * to the passed scene, so they get loaded at the next resource load as well 
      * as added to any context the scene is added to.
      * @param {Scene} scene
      */
     Weapon.prototype.addProjectileResourcesToScene = function (scene) {
-        var i, projectile, barrels, resourceID = WEAPON_RESOURCE_ID_PREFIX + this._class.getName();
-        barrels = this._class.getBarrels();
-        for (i = 0; i < barrels.length; i++) {
-            projectile = new Projectile(barrels[i].getProjectileClass());
-            projectile.addResourcesToScene(scene);
-            resources.executeWhenReady(this.getResourceAdderFunction(scene, i, resourceID).bind(this));
-        }
+        var projectile, resourceID = WEAPON_RESOURCE_ID_PREFIX + this._class.getName();
+        projectile = new Projectile(this.getProjectileClass());
+        projectile.addResourcesToScene(scene);
         resources.executeWhenReady(function () {
-            scene.addResourcesOfObject(null, resourceID);
-        });
+            var particle;
+            if (!scene.hasResourcesOfObject(resourceID)) {
+                particle = this._getMuzzleFlashForBarrel([0, 0, 0]);
+                scene.addResourcesOfObject(particle, resourceID);
+            }
+        }.bind(this));
     };
     /**
      * Does all the needed updates to the weapon's state for one simulation step.
@@ -2159,7 +2142,7 @@ define([
         var i, p, result,
                 weaponSlotPosVector,
                 projectileOriMatrix,
-                projectileClass, muzzleFlash, barrels, projectileLights, projClassName,
+                projectileClass, muzzleFlash, barrels,
                 soundPosition, lighSource,
                 scene = this._visualModel.getNode().getScene();
         // check cooldown and aim status
@@ -2169,10 +2152,8 @@ define([
             mat.setTranslatedByVector(Weapon._weaponSlotPosMatrix, this._spacecraft.getPhysicalPositionMatrix(), weaponSlotPosVector);
             projectileOriMatrix = this.getProjectileOrientationMatrix();
             vec.setRowB43(Weapon._projectileDirection, projectileOriMatrix);
+            projectileClass = this.getProjectileClass();
             barrels = this._class.getBarrels();
-            if (_dynamicLights) {
-                projectileLights = {};
-            }
             result = 0;
             // generate the muzzle flashes and projectiles for each barrel
             for (i = 0; i < barrels.length; i++) {
@@ -2197,23 +2178,21 @@ define([
                 if (this._aimBlocked[i]) {
                     continue;
                 }
-                projectileClass = barrels[i].getProjectileClass();
                 // add the muzzle flash of this barrel
-                muzzleFlash = this._getMuzzleFlashForBarrel(i, Weapon._muzzleFlashPosVector);
+                muzzleFlash = this._getMuzzleFlashForBarrel(Weapon._muzzleFlashPosVector);
                 this._visualModel.getNode().addSubnode(muzzleFlash.getNode() || new sceneGraph.RenderableNode(muzzleFlash, false, false, true));
                 // add the projectile of this barrel
                 p = _projectilePool.getObject();
                 p.init(projectileClass, this._spacecraft);
-                p.addToSceneNow(scene, false, Weapon._projectilePosMatrix, projectileOriMatrix, barrels[i].getProjectileVelocity());
+                p.addToSceneNow(scene, false, Weapon._projectilePosMatrix, projectileOriMatrix, this.getProjectileVelocity());
                 if (_dynamicLights && projectileClass.getLightColor()) {
-                    // creating the light source / adding the projectile to the emitting objects if a light source for this class of fired projectiles has already
-                    // been created, so that projectiles from the same weapon and of the same class only use one light source object
-                    if (!projectileLights[projectileClass.getName()]) {
+                    // creating the light source / adding the projectile to the emitting objects if a light source has already
+                    // been created, so that projectiles from the same weapon only use one light source object
+                    if (!lighSource) {
                         lighSource = new lights.PointLightSource(projectileClass.getLightColor(), projectileClass.getLightIntensity(), vec.NULL3, [p.getVisualModel()]);
-                        projectileLights[projectileClass.getName()] = lighSource;
                         p.setLightSource(lighSource);
                     } else {
-                        projectileLights[projectileClass.getName()].addEmittingObject(p.getVisualModel());
+                        lighSource.addEmittingObject(p.getVisualModel());
                     }
                 }
                 // create the counter-force affecting the firing ship
@@ -2222,7 +2201,7 @@ define([
                                 Weapon._projectilePosMatrix,
                                 this._spacecraft.getPhysicalPositionMatrix()),
                         vec.getRowB43ScaledAux(projectileOriMatrix, -1),
-                        barrels[i].getFireForce(),
+                        this._class.getFireForce(),
                         1,
                         1
                         );
@@ -2231,12 +2210,8 @@ define([
             this._aimBlockCalculated = true;
             if (result > 0) {
                 this._cooldown = this._class.getCooldown();
-                if (_dynamicLights) {
-                    for (projClassName in projectileLights) {
-                        if (projectileLights.hasOwnProperty(projClassName)) {
-                            scene.addPointLightSource(projectileLights[projClassName], constants.PROJECTILE_LIGHT_PRIORITY);
-                        }
-                    }
+                if (lighSource) {
+                    scene.addPointLightSource(lighSource, constants.PROJECTILE_LIGHT_PRIORITY);
                 }
                 if (!shipSoundSource) {
                     soundPosition = mat.translationVector3(p.getVisualModel().getPositionMatrixInCameraSpace(scene.getCamera()));
