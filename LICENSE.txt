@@ -21,6 +21,6 @@ Some minor modifications to the Aldrich font were made by Krisztián Nagy, detai
 The images, 3D models, textures and music files were all created by Krisztián Nagy (Copyright (C) 2014-2023) and are released under the 
 CC BY 4.0 license found at license/CC-BY-4.0.txt or at https://creativecommons.org/licenses/by/4.0. 
 
-The sound effects were also created by Krisztián Nagy (Copyright (C) 2016-2022) and are released under the CC BY 4.0 and in some cases
+The sound effects were also created by Krisztián Nagy (Copyright (C) 2016-2023) and are released under the CC BY 4.0 and in some cases
 the CC BY-NC 4.0 licenses, but sound samples from 3rd parties were used in the process. The detailed license and attribution information
 about these can be found at license/sfx-license.txt.

@@ -196,6 +196,6 @@ weapon/weaponshot_plasma.ogg
 weapon/weaponshot-proton.ogg
 weapon/weaponshot_training.ogg
 
-Copyright 2016-2017 Krisztián Nagy
+Copyright 2016-2017, 2023 Krisztián Nagy
 Created using Bfxr, Audacity
 License: CC BY 4.0

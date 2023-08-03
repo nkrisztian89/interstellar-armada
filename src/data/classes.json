@@ -2412,7 +2412,7 @@
                 "duration": 450
             },
             "lightColor": [0, 0.6, 1],
-            "lightIntensity": 1296,
+            "lightIntensity": 1600,
             "explosion": "largeHitExplosion",
             "shieldExplosion": "largeShieldHitExplosion"
         }],
@@ -2774,7 +2774,7 @@
                 }],
             "fireSound": {
                 "name": "ionShot",
-                "volume": 4
+                "volume": 6
             },
             "scoreValue": 100
         }],
