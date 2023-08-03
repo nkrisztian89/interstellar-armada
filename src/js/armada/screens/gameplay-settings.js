@@ -204,6 +204,11 @@ define([
         this._demoViewSwitchingSelector.setValueList(strings.getOnOffSettingValues());
         this._defaultSalvoModeSelector.setValueList(strings.getOnOffSettingValues());
         this._showReadyMessageSelector.setValueList(strings.getOnOffSettingValues());
+        if (config.getGeneralSetting(config.GENERAL_SETTINGS.SHOW_DEMO_BUTTON)) {
+            this._demoViewSwitchingSelector.show();
+        } else {
+            this._demoViewSwitchingSelector.hide();
+        }
         this._updateValues();
     };
     /**

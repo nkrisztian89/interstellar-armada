@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2022 Krisztián Nagy
+ * Copyright 2016-2023 Krisztián Nagy
  * @file This module manages and provides the Missions screen of the Interstellar Armada game.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -13,6 +13,7 @@
  * @param analytics Used for reporting custom mission load events
  * @param strings Used for translation support
  * @param audio Used for music management (switching track when launching a mission)
+ * @param config
  * @param armadaScreens Used for navigation
  * @param spacecraft Used for creating the spacecraft representing the player craft in missions for previewing its data
  * @param missions Used for accessing information about missions
@@ -26,11 +27,12 @@ define([
     "modules/analytics",
     "armada/strings",
     "armada/audio",
+    "armada/configuration",
     "armada/screens/shared",
     "armada/logic/spacecraft",
     "armada/logic/missions",
     "armada/logic/mission-hub"
-], function (utils, game, screens, components, analytics, strings, audio, armadaScreens, spacecraft, missions, missionHub) {
+], function (utils, game, screens, components, analytics, strings, audio, config, armadaScreens, spacecraft, missions, missionHub) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -1036,6 +1038,11 @@ define([
         missionHubTermsLink = document.getElementById(MISSION_HUB_TERMS_LINK_ID);
         if (missionHubTermsLink) {
             missionHubTermsLink.href = "license/mission-hub-" + strings.getLanguage() + ".txt";
+        }
+        if (config.getGeneralSetting(config.GENERAL_SETTINGS.SHOW_DEMO_BUTTON)) {
+            this._demoButton.show();
+        } else {
+            this._demoButton.hide();
         }
     };
     /**

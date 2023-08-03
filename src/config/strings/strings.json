@@ -738,7 +738,8 @@
         "title": "General settings",
         "language": "Language:",
         "analytics": "Report anonymous statistics:",
-        "analyticsNote": "No personal information is included in the reports, only statistics of feature usage and in-game performance with a random generated ID. Please help the development by keeping this option turned on."
+        "analyticsNote": "No personal information is included in the reports, only statistics of feature usage and in-game performance with a random generated ID. Please help the development by keeping this option turned on.",
+        "showDemoButton": "Show 'Launch demo' button for missions:"
     },
     "graphics": {
         "backButton": "Back to menu",

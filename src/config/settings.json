@@ -108,7 +108,8 @@
             "buttonClickSound": {
                 "name": "buttonClick",
                 "volume": 0.35
-            }
+            },
+            "showDemoButton": false
         },
         "multi": {
             "maxPlayerOptions": [2, 3, 4],

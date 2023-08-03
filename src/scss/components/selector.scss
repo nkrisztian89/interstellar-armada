@@ -9,6 +9,10 @@ div.selector {
     
     background-color: $panel-back-color;
     @include bordered;
+    
+    &[hidden] {
+        display: none;
+    }
 }
 
 div.selectorButtonContainer {

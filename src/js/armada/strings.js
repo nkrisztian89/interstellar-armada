@@ -382,7 +382,8 @@ define([
         TITLE: {name: "generalSettings.title"},
         LANGUAGE: {name: "generalSettings.language"},
         ANALYTICS: {name: "generalSettings.analytics"},
-        ANALYTICS_NOTE: {name: "generalSettings.analyticsNote"}
+        ANALYTICS_NOTE: {name: "generalSettings.analyticsNote"},
+        SHOW_DEMO_BUTTON: {name: "generalSettings.showDemoButton"}
     };
     strings.GRAPHICS = {
         PREFIX: {name: "graphics.", optional: true},

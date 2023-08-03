@@ -424,6 +424,13 @@ define([
         BUTTON_CLICK_SOUND: {
             name: "buttonClickSound",
             type: classes.SOUND_EFFECT
+        },
+        /**
+         * Whether to show the "Launch demo" button on the mission selection screen.
+         */
+        SHOW_DEMO_BUTTON: {
+            name: "showDemoButton",
+            type: "boolean"
         }
     };
     MULTI_SETTINGS = {
@@ -1809,10 +1816,31 @@ define([
     };
     /**
      * Returns the setting value for the passed setting definition object.
+     * Only checks default, static values.
      * @param {Object} settingDefinitionObject
      */
     ConfigurationContext.prototype.getSetting = function (settingDefinitionObject) {
         return this._settings[settingDefinitionObject.name];
+    };
+    /**
+     * Returns the general setting value for the passed setting definition object.
+     * Checks locally stored settings as well as defaults.
+     * @param {Object} settingDefinitionObject
+     */
+    ConfigurationContext.prototype.getGeneralSetting = function (settingDefinitionObject) {
+        var local;
+        if (localStorage[MODULE_LOCAL_STORAGE_PREFIX + settingDefinitionObject.name] !== undefined) {
+            local = types.getValueOfTypeFromLocalStorage(settingDefinitionObject.type, MODULE_LOCAL_STORAGE_PREFIX + settingDefinitionObject.name);
+        }
+        return (local !== undefined) ? local : this._settings[settingDefinitionObject.name];
+    };
+    /**
+     * Overrides the local value for the general setting identified by the passed setting definition object (storing it in local storage)
+     * @param {Object} settingDefinitionObject
+     * @param {} value
+     */
+    ConfigurationContext.prototype.setGeneralSetting = function (settingDefinitionObject, value) {
+        localStorage[MODULE_LOCAL_STORAGE_PREFIX + settingDefinitionObject.name] = value;
     };
     /**
      * Returns the value for the battle setting identified by the passed setting definition object.
@@ -1857,6 +1885,18 @@ define([
     ConfigurationContext.prototype.setHUDSetting = function (settingDefinitionObject, value) {
         localStorage[LOCAL_STORAGE_HUD_PREFIX + settingDefinitionObject.name] = value;
         this._hudSettings[settingDefinitionObject.name] = value;
+    };
+    /**
+     * Removes all local overrides for general settings, resetting them to their default values (coming from the settings JSON)
+     */
+    ConfigurationContext.prototype.resetGeneralSettings = function () {
+        var i, name, keys = Object.keys(GENERAL_SETTINGS);
+        for (i = 0; i < keys.length; i++) {
+            if (typeof GENERAL_SETTINGS[keys[i]] === "object") {
+                name = GENERAL_SETTINGS[keys[i]].name;
+                localStorage.removeItem(MODULE_LOCAL_STORAGE_PREFIX + name);
+            }
+        }
     };
     /**
      * Removes all local overrides for HUD settings, resetting them to their default values (coming from the settings JSON)
@@ -1953,10 +1993,13 @@ define([
         loadSettingsFromJSON: _context.loadSettingsFromJSON.bind(_context),
         getConfigurationSetting: _context.getConfigurationSetting.bind(_context),
         getSetting: _context.getSetting.bind(_context),
+        getGeneralSetting: _context.getGeneralSetting.bind(_context),
+        setGeneralSetting: _context.setGeneralSetting.bind(_context),
         getHUDSetting: _context.getHUDSetting.bind(_context),
         setHUDSetting: _context.setHUDSetting.bind(_context),
         getBattleSetting: _context.getBattleSetting.bind(_context),
         setBattleSetting: _context.setBattleSetting.bind(_context),
+        resetGeneralSettings: _context.resetGeneralSettings.bind(_context),
         resetHUDSettings: _context.resetHUDSettings.bind(_context),
         resetBattleSettings: _context.resetBattleSettings.bind(_context),
         getDefaultCameraFOV: _context.getDefaultCameraFOV.bind(_context),

@@ -771,7 +771,8 @@
         "title": "Általános beállítások",
         "language": "Nyelv:",
         "analytics": "Névtelen statisztikák küldése:",
-        "analyticsNote": "Az elküldött statisztikák nem tartalmaznak semmilyen személyes adatot, csak a játék funkcióinak használatára és a játékos teljesítményére vonatkozó információkat. Kérlek, segítsd a fejlesztést azzal, hogy nem kapcsolod ki ezt a funkciót!"
+        "analyticsNote": "Az elküldött statisztikák nem tartalmaznak semmilyen személyes adatot, csak a játék funkcióinak használatára és a játékos teljesítményére vonatkozó információkat. Kérlek, segítsd a fejlesztést azzal, hogy nem kapcsolod ki ezt a funkciót!",
+        "showDemoButton": "'Demo' gomb mutatása a küldetésekhez:"
     },
     "graphics": {
         "backButton": "Vissza a menübe",
