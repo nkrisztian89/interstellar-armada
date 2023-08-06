@@ -382,6 +382,21 @@
                 "high": "_1024"
             }
         }, {
+            "name": "civilian",
+            "basepath": "spacecraft/",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "civilian",
+                "specular": "libra_specular",
+                "emissive": "libra_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
             "name": "wolf",
             "basepath": "spacecraft/wolf",
             "format": "png",
@@ -435,6 +450,21 @@
                 "diffuse": "wolf",
                 "specular": "wolf_specular",
                 "emissive": "stingray_luminosity"
+            },
+            "qualitySuffixes": {
+                "low": "_256",
+                "medium": "",
+                "high": "_1024"
+            }
+        }, {
+            "name": "pirate",
+            "basepath": "spacecraft/pirate",
+            "format": "png",
+            "useMipmap": true,
+            "typeSuffixes": {
+                "diffuse": "",
+                "specular": "_specular",
+                "emissive": "_luminosity"
             },
             "qualitySuffixes": {
                 "low": "_256",

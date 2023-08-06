@@ -7745,6 +7745,14 @@
                 }],
             "defaultLuminosityFactors": [[18, 1]]
         }, {
+            "name": "rubyBlade",
+            "basedOn": "wolf",
+            "showInDatabase": false,
+            "hitpoints": 50,
+            "texture": "ruby_blade",
+            "scoreValue": 100,
+            "defaultLuminosityFactors": [[0, 1], [18, 1]]
+        }, {
             "name": "piranha",
             "type": "interceptor",
             "fullName": "Piranha",
@@ -8754,7 +8762,7 @@
             "armor": 1,
             "model": "athens",
             "shader": "ship",
-            "texture": "libra",
+            "texture": "civilian",
             "defaultLuminosityFactors": [[18, 1]],
             "mass": 200000000,
             "bodies": [{
@@ -9345,5 +9353,15 @@
                     "hullIntegrity": 10,
                     "class": "largeFire"
                 }]
+        }, {
+            "name": "athensEmpire",
+            "basedOn": "athens",
+            "showInDatabase": false,
+            "texture": "libra"
+        }, {
+            "name": "athensPirate",
+            "basedOn": "athens",
+            "showInDatabase": false,
+            "texture": "pirate"
         }]
 }
