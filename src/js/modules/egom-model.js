@@ -1410,7 +1410,8 @@ define([
         maxLOD = defaultMaxLOD;
         this.setupLinesByVertices(minLOD, maxLOD);
         params = {
-            color: colorPalette[0]
+            color: colorPalette[0],
+            groupIndices: [0, 0]
         };
         count = 3;
         for (i = 0; i < nPolygons; i++) {
