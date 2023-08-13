@@ -3126,6 +3126,21 @@
                 "volume": 2.5
             },
             "scoreValue": 25
+        }, {
+            "name": "pirateLargeStation",
+            "shader": "particle",
+            "texture": "flare",
+            "color": [1, 0.3882, 0.3882, 1],
+            "referenceMass": 200000000,
+            "thrust": 5,
+            "angularThrust": 8,
+            "maxMoveBurnLevel": 0.5,
+            "maxTurnBurnLevel": 0.35,
+            "thrusterSound": {
+                "name": "thruster",
+                "volume": 2.5
+            },
+            "scoreValue": 25
         }],
     "sensorsClasses": [{
             "name": "standardSensors",
@@ -9060,7 +9075,7 @@
                             "slotIndex": 9
                         }],
                     "propulsion": {
-                        "class": "largeStation"
+                        "class": "pirateLargeStation"
                     },
                     "sensors": {
                         "class": "standardSensors"
