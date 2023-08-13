@@ -2060,20 +2060,18 @@ define([
      * If not given, all available LODs will be added for dynamic LOD rendering.
      * @param {Boolean} [wireframe=false] Whether to add the models in wireframe
      * drawing mode (or in solid).
-     * @param {Spacecraft~Supplements} [addSupplements] An object describing what additional
+     * @param {Spacecraft~Supplements} addSupplements An object describing what additional
      * supplementary objects / resources to add to the scene along with the
      * basic representation of the ship. Contains boolean properties for each
      * possible supplement, marking if that particular supplement should be 
      * added.
-     * @param {Spacecraft~AddToSceneParams} [params]
+     * @param {Spacecraft~AddToSceneParams} params
      * @param {logic~addToSceneCallback} [callback]
      * @param {logic~addToSceneCallback} [weaponCallback]
      * @param {logic~addToSceneCallback} [missileCallback]
      */
     Spacecraft.prototype.addToScene = function (scene, lod, wireframe, addSupplements, params, callback, weaponCallback, missileCallback) {
         var i, blinkerDescriptors, weaponParams, missileParams;
-        addSupplements = addSupplements || utils.EMPTY_OBJECT;
-        params = params || utils.EMPTY_OBJECT;
         // getting resources
         if (!params.skipResources) {
             this.acquireResources((addSupplements.hitboxes === true), {

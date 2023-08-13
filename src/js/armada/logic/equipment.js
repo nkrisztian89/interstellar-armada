@@ -2022,17 +2022,9 @@ define([
                 (wireframe === true),
                 lod,
                 undefined,
-                _parameterArrays);
+                _parameterArrays,
+                this._visualModel);
         parentNode.addSubnode(new sceneGraph.RenderableNode(visualModel));
-        // setting the starting values of the parameter arrays
-        // setting an identity transformation for all transform groups
-        if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
-            visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
-        }
-        // setting the default luminosity for all luminosity groups
-        if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
-            visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
-        }
         if (params.barrelMarkers) {
             barrels = this._class.getBarrels();
             this._barrelMarkers = new sceneGraph.RenderableNode(new renderableObjects.ContainerObject(shader), false);
@@ -2045,6 +2037,15 @@ define([
             this._barrelMarkers.hide();
         }
         if (!this._visualModel) {
+            // setting the starting values of the parameter arrays
+            // setting an identity transformation for all transform groups
+            if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
+                visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
+            }
+            // setting the default luminosity for all luminosity groups
+            if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
+                visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+            }
             this._visualModel = visualModel;
         }
         mat.setProdScalingRotation(this._scaledOriMatrix, this._visualModel.getScalingMatrix(), this._slot ? this._slot.orientationMatrix : mat.IDENTITY4);

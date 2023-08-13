@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2018, 2020-2022 Krisztián Nagy
+ * Copyright 2014-2018, 2020-2023 Krisztián Nagy
  * @file A general purpose WebGL scene engine building on the functionality of ManagedGL.
  * Create a Scene, add background and main scene objects and light sources, then add it to a ManagedGLContext (or several ones), and it can
  * be rendered on them.
@@ -35,6 +35,11 @@ define([
     var
             // ----------------------------------------------------------------------
             // constants
+            /**
+             * The bits to use when putting objects into render queues
+             */
+            RENDER_QUEUE_FRONT_BIT = renderableObjects.RENDER_QUEUE_FRONT_BIT,
+            RENDER_QUEUE_DISTANCE_BIT = renderableObjects.RENDER_QUEUE_DISTANCE_BIT,
             /**
              * For new LOD contexts, this will be the default value for the reference size
              * @type Number
@@ -469,7 +474,7 @@ define([
         if (transparent || opaque) {
             if (distanceRendering) {
                 queueBits = this._renderableObject.getRenderQueueBits(camera, parentQueueBits);
-                if (queueBits & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
+                if (queueBits & RENDER_QUEUE_FRONT_BIT) {
                     if (transparent) {
                         this.addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
                     }
@@ -477,7 +482,7 @@ define([
                         this.addToRenderQueue(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX]);
                     }
                 }
-                if (queueBits & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
+                if (queueBits & RENDER_QUEUE_DISTANCE_BIT) {
                     if (transparent) {
                         this.addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
                     }
@@ -498,7 +503,7 @@ define([
         if (this._subnodes.getLength() > 0) {
             // if children are inside the parent, they will take its render queue bits, so make sure they are calculated
             if (queueBits === undefined) {
-                queueBits = distanceRendering ? this._renderableObject.getRenderQueueBits(camera, parentQueueBits) : renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT;
+                queueBits = distanceRendering ? this._renderableObject.getRenderQueueBits(camera, parentQueueBits) : RENDER_QUEUE_FRONT_BIT;
             }
             if (!this._hasInstancedSubnodes || !this._subnodes.getFirst().getInstancing()) {
                 for (subnode = this._subnodes.getFirst(); subnode; subnode = next) {
@@ -533,7 +538,7 @@ define([
                     opaque = subnode.getRenderableObject().isRenderedWithDepthMask();
                     if (transparent || opaque) {
                         queueBits = subnode.getRenderableObject().getRenderQueueBits(camera, queueBits);
-                        if (queueBits & renderableObjects.RenderQueueBits.FRONT_QUEUE_BIT) {
+                        if (queueBits & RENDER_QUEUE_FRONT_BIT) {
                             if (transparent) {
                                 renderQueueIndex = subnode.addToRenderQueue(renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX]);
                                 renderQueues[FRONT_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();
@@ -545,7 +550,7 @@ define([
                                 this._subnodes.appendToArray(renderQueues[FRONT_OPAQUE_RENDER_QUEUES_INDEX][renderQueueIndex]);
                             }
                         }
-                        if (queueBits & renderableObjects.RenderQueueBits.DISTANCE_QUEUE_BIT) {
+                        if (queueBits & RENDER_QUEUE_DISTANCE_BIT) {
                             if (transparent) {
                                 renderQueueIndex = subnode.addToRenderQueue(renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX]);
                                 renderQueues[DISTANCE_TRANSPARENT_RENDER_QUEUES_INDEX][renderQueueIndex].pop();

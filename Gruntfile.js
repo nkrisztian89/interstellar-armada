@@ -210,7 +210,9 @@ module.exports = function (grunt) {
                 ["origoPositionMatrix"],
                 ["soundSource"],
                 ["params"],
-                ["piloted", "is"]
+                ["piloted", "is"],
+                ["viewDistance"],
+                ["nearDistance", "get", "near"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [
