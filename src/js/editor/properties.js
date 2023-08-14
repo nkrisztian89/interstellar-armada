@@ -196,6 +196,7 @@ define([
     function _createStringControl(topName, data, parent, name, suggestions, onChange) {
         var datalist, option, id, i, result = document.createElement("input");
         result.type = "text";
+        result.className = common.STRING_INPUT_CLASS;
         result.value = data;
         result.onchange = function () {
             _changeData(topName, result.value, parent, name, onChange);

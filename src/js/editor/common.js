@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017, 2020-2022 Krisztián Nagy
+ * Copyright 2016-2017, 2020-2023 Krisztián Nagy
  * @file Provides some common functions to be used for the Interstellar Armada editor.
  * Interstellar Armada for the editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -54,6 +54,7 @@ define([
             // ------------------------------------------------------------------------------
             // Constants
             LABEL_CLASS = "label",
+            STRING_INPUT_CLASS = "stringInput",
             NUMERIC_INPUT_CLASS = "numericInput",
             COLOR_COMPONENT_CLASS = "colorComponent",
             COLOR_PICKER_CLASS = "colorPicker",
@@ -212,7 +213,11 @@ define([
     function createNumericInput(data, params, changeHandler) {
         var result = document.createElement("input");
         result.classList.add(NUMERIC_INPUT_CLASS);
-        result.type = "text";
+        result.type = params.integer ? "number" : "text";
+        if (params.integer) {
+            result.min = params.min;
+            result.max = params.max;
+        }
         result.value = data;
         result.onchange = function () {
             var number = params.integer ? parseInt(result.value, 10) : parseFloat(result.value);
@@ -691,6 +696,7 @@ define([
     // ------------------------------------------------------------------------------
     // The public interface of the module
     return {
+        STRING_INPUT_CLASS: STRING_INPUT_CLASS,
         ItemType: ItemType,
         getItemReference: getItemReference,
         getItemReferencesOfSameCategory: getItemReferencesOfSameCategory,

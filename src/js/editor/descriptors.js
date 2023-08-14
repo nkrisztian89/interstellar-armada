@@ -388,6 +388,18 @@ define([
                 baseType: BaseType.NUMBER,
                 min: 0.001
             },
+            TRANSFORM_GROUP_INDEX = {
+                baseType: BaseType.NUMBER,
+                integer: true,
+                min: 0,
+                max: 1 // = config.graphics.shaders.maxGroupTransforms - 1
+            },
+            LUMINOSITY_GROUP_INDEX = {
+                baseType: BaseType.NUMBER,
+                integer: true,
+                min: 0,
+                max: 19 // = config.graphics.shaders.maxLuminosityFactors - 1
+            },
             /**
              * @type Editor~TypeDescriptor
              */
@@ -546,7 +558,7 @@ define([
                 baseType: BaseType.PAIRS,
                 first: {
                     name: "group",
-                    type: NON_NEGATIVE_INTEGER
+                    type: LUMINOSITY_GROUP_INDEX
                 },
                 second: {
                     name: "luminosity",
@@ -1300,7 +1312,7 @@ define([
                 properties: {
                     GROUP: {
                         name: "group",
-                        type: NON_NEGATIVE_INTEGER
+                        type: LUMINOSITY_GROUP_INDEX
                     },
                     USES: {
                         name: "uses",
@@ -1613,7 +1625,7 @@ define([
                     },
                     TRANSFORM_GROUP_INDEX: {
                         name: "transformGroupIndex",
-                        type: NON_NEGATIVE_INTEGER
+                        type: TRANSFORM_GROUP_INDEX
                     }
                 }
             },
