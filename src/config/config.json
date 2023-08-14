@@ -1,5 +1,5 @@
 {
-    "version": "0.5.4-dev:1146 (2023.08.13.)",
+    "version": "0.5.4-dev:1147 (2023.08.14.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "platform": "web",
@@ -333,7 +333,7 @@
             "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR",
             "maxLuminosityFactors": 20,
             "maxLuminosityFactorsDefineName": "MAX_LUMINOSITY_FACTORS",
-            "maxGroupTransforms": 3,
+            "maxGroupTransforms": 2,
             "maxGroupTransformsDefineName": "MAX_GROUP_TRANSFORMS",
             "depthTexturesDefineName": "DEPTH_TEXTURES",
             "maxShininess": "512.0",

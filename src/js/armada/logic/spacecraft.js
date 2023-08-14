@@ -1921,10 +1921,8 @@ define([
                     (wireframe === true),
                     lod,
                     params.smallestSizeWhenDrawn,
-                    _parameterArrays);
-            if (!this._visualModel || params.replaceVisualModel) {
-                this._visualModel = visualModel;
-            }
+                    _parameterArrays,
+                    params.replaceVisualModel ? null : this._visualModel);
             if (this._name) {
                 visualModel.setName(this._name);
             }
@@ -1939,14 +1937,17 @@ define([
             visualModel.setUniformValueFunction(UNIFORM_SHIELD_STATE_NAME, function () {
                 return this.getShieldState();
             }.bind(this));
-            // setting the starting values of the parameter arrays
-            // setting an identity transformation for all transform groups
-            if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
-                visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
-            }
-            // setting the default luminosity for all luminosity groups
-            if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
-                visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+            if (!this._visualModel || params.replaceVisualModel) {
+                // setting the starting values of the parameter arrays
+                // setting an identity transformation for all transform groups
+                if (visualModel.hasParameterArray(_groupTransformsArrayName)) {
+                    visualModel.setParameterArray(_groupTransformsArrayName, graphics.getGroupTransformIdentityArray());
+                }
+                // setting the default luminosity for all luminosity groups
+                if (graphics.areLuminosityTexturesAvailable() && visualModel.hasParameterArray(_luminosityFactorsArrayName)) {
+                    visualModel.setParameterArray(_luminosityFactorsArrayName, this._class.getDefaultGroupLuminosityFactors());
+                }
+                this._visualModel = visualModel;
             }
             node = scene.addObject(visualModel);
             if (params.visualModel) {

@@ -2736,7 +2736,7 @@
                     "range": [-2, 2],
                     "defaultAngle": 0,
                     "rotationRate": 2,
-                    "transformGroupIndex": 2
+                    "transformGroupIndex": 1
                 }],
             "fireSound": {
                 "name": "protonShot",
