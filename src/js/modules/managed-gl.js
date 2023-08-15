@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2021, 2023 Krisztián Nagy
  * @file Provides an interface to interact with WebGL in a managed way. Offers
  * rather low level functionality, but using it is still much more transparent 
  * than accessing WebGL directly.
@@ -1877,6 +1877,20 @@ define([
      */
     ManagedShader.prototype.getBlendMode = function () {
         return this._blendMode;
+    };
+    /**
+     * Returns the processed vertex shader source code for this shader.
+     * @returns {String}
+     */
+    ManagedShader.prototype.getVertexShaderSource = function () {
+        return this._vertexShaderSource;
+    };
+    /**
+     * Returns the processed fragment shader source code for this shader.
+     * @returns {String}
+     */
+    ManagedShader.prototype.getFragmentShaderSource = function () {
+        return this._fragmentShaderSource;
     };
     /**
      * Assigns the uniforms that have an associated value function in 

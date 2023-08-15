@@ -1,5 +1,5 @@
 /**
- * Copyright 2017, 2020-2021 Krisztián Nagy
+ * Copyright 2017, 2020-2021, 2023 Krisztián Nagy
  * @file Provides the setup and event-handling for the preview window used for shader resources within the Interstellar Armada editor.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -7,10 +7,12 @@
 
 /**
  * @param resources Used to request the loading of the shader
+ * @param graphics Used to process the shader source code according to current graphics settings
  */
 define([
-    "modules/media-resources"
-], function (resources) {
+    "modules/media-resources",
+    "armada/graphics"
+], function (resources, graphics) {
     "use strict";
     var
             // ----------------------------------------------------------------------
@@ -57,12 +59,12 @@ define([
     }
     /**
      * Process and return raw GLSL shader source code to be displayed as syntax highlighted HTML text
+     * (as HTML table content with the line numbers in one column and the code lines next to it)
      * @param {String} code
      * @returns {String}
      */
     function _processCode(code) {
         code = code.replace(/\/\/(.*?)\n/g, '<span class="glsl-comment">$&</span>');
-        code = code.replace(/\n/g, "<br/>");
         code = code.replace(/ {2}/g, "&nbsp;&nbsp;");
         code = _markupCode(code, ["#version", "#define", "#elseif", "#ifdef", "#ifndef", "#endif", "#if", "#else"], "glsl-directive");
         code = _markupCode(code, ["uniform ", "attribute ", "varying ", "precision ", "lowp ", "mediump ", "highp ", "struct", "return", "discard", "\\bif\\b", "\\belse\\b", "\\bswitch\\b", "\\bcase\\b", "\\bfor\\b", "\\bbreak\\b", "\\bcontinue\\b"], "glsl-keyword");
@@ -70,7 +72,7 @@ define([
         code = _markupCode(code, ["gl_Position", "gl_FragColor"], "glsl-variable");
         code = _markupCode(code, ["dot\\(", "cross\\(", "length\\(", "normalize\\(", "reflect\\(", "abs\\(", "sign\\(", "fract\\(", "min\\(", "max\\(", "pow\\(", "sin\\(", "cos\\(", "mix\\(", "step\\(", "clamp\\(", "texture2D\\(", "textureCube\\("], "glsl-function");
         code = _markupCode(code, ["\\(", "\\)", "\\[", "\\]"], "glsl-operator");
-        return code;
+        return "<tbody>" + code.split("\n").map((line, index) => '<tr><td class="shader-line-number">' + index + "</td><td>" + line + "</td></tr>").join("") + "</tbody>";
     }
     // ----------------------------------------------------------------------
     // Public Functions
@@ -81,6 +83,7 @@ define([
      * @param {SpacecraftClass} [shaderResource] The shader resource to preview
      */
     function refresh(elements, shaderResource) {
+        var managedShader;
         _shaderResource = shaderResource || _shaderResource;
         _elements = elements || _elements;
         resources.executeWhenReady(function () {
@@ -90,24 +93,26 @@ define([
             _elements.canvas.hidden = true;
             _elements.info.hidden = true;
             
+            managedShader = graphics.getManagedShader(_shaderResource.getName());
+            
             _codeDiv = document.createElement("div");
             _codeDiv.classList.add("previewContent");
             vertexShaderTitle = document.createElement("h1");
             vertexShaderTitle.textContent = "Vertex shader";
             vertexShaderTitle.classList.add("glsl-header");
             _codeDiv.appendChild(vertexShaderTitle);
-            vertexShaderCode = document.createElement("p");
+            vertexShaderCode = document.createElement("table");
             vertexShaderCode.classList.add("glsl-code");
-            code = _shaderResource.getVertexShaderSource();
+            code = managedShader.getVertexShaderSource();
             vertexShaderCode.innerHTML = _processCode(code);
             _codeDiv.appendChild(vertexShaderCode);
             fragmentShaderTitle = document.createElement("h1");
             fragmentShaderTitle.textContent = "Fragment shader";
             fragmentShaderTitle.classList.add("glsl-header");
             _codeDiv.appendChild(fragmentShaderTitle);
-            fragmentShaderCode = document.createElement("p");
+            fragmentShaderCode = document.createElement("table");
             fragmentShaderCode.classList.add("glsl-code");
-            code = _shaderResource.getFragmentShaderSource();
+            code = managedShader.getFragmentShaderSource();
             fragmentShaderCode.innerHTML = _processCode(code);
             _codeDiv.appendChild(fragmentShaderCode);
             _elements.div.appendChild(_codeDiv);

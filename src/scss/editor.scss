@@ -641,8 +641,17 @@ h1.glsl-header {
 
 .glsl-code {
     font-family: monospace;
-    font-size: 0.75vw;
     margin-left: 1em;
+    border-collapse: collapse;
+    & td {
+        background: inherit;
+        vertical-align: top;
+    }
+}
+
+.shader-line-number {
+    width: 2em;
+    color: #888888;
 }
 
 *:not(.glsl-comment) > .glsl-keyword {
