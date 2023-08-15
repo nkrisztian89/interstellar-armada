@@ -1,1 +1,1 @@
-uniform mat4 u_viewProjMatrix;
+uniform highp mat4 u_viewProjMatrix;
