@@ -107,6 +107,7 @@ define([
             // constants
             /** @type String */
             STATS_PARAGRAPH_ID = "stats",
+            TOUCH_CONTROL_SHEET_ID = "touchControlSheet",
             LOADING_BOX_ID = "loadingBox",
             INFO_BOX_ID = "infoBox",
             BATTLE_CANVAS_ID = "battleCanvas",
@@ -2501,6 +2502,10 @@ define([
          */
         this._stats = this.registerSimpleComponent(STATS_PARAGRAPH_ID);
         /**
+         * @type SimpleComponent
+         */
+        this._touchControlSheet = this.registerSimpleComponent(TOUCH_CONTROL_SHEET_ID);
+        /**
          * @type LoadingBox
          */
         this._loadingBox = this.registerExternalComponent(new components.LoadingBox(
@@ -2596,6 +2601,11 @@ define([
             control.setScreenCenter(canvas.width / 2, canvas.height / 2);
         };
         window.addEventListener("resize", _handleResize);
+        this._touchControlSheet.hide();
+        this._touchControlSheet.getElement().onclick = function () {
+            this._touchControlSheet.hide();
+            this._doStartBattle();
+        }.bind(this);
         _handleResize();
     };
     /**
@@ -4787,9 +4797,13 @@ define([
                         strings.get(strings.MISSION.PREFIX, utils.getFilenameWithoutExtension(_missionSourceFilename) + strings.MISSION.NAME_SUFFIX.name));
                 _battleCursor = document.body.style.cursor;
                 if (!_multi && config.getBattleSetting(config.BATTLE_SETTINGS.SHOW_READY_MESSAGE)) {
-                    this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
-                        menuKey: _getMenuKeyHTMLString()
-                    }), undefined, true);
+                    if (utils.areTouchEventsSupported()) {
+                        this._touchControlSheet.show();
+                    } else {
+                        this.showMessage(utils.formatString(strings.get(strings.BATTLE.MESSAGE_READY), {
+                            menuKey: _getMenuKeyHTMLString()
+                        }), undefined, true);
+                    }
                 }
                 _mission.applyToSpacecrafts(function (craft) {
                     craft.addEventHandler(SpacecraftEvents.FIRED, _handleSpacecraftFired.bind(craft));

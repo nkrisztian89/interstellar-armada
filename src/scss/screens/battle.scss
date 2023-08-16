@@ -1,3 +1,5 @@
+@import "../_common.scss";
+
 /* the canvas element where the game (WebGL) scene is rendered */
 canvas.battleCanvas {
     width: 100%;
@@ -17,4 +19,100 @@ p.battleScreenStats {
     position: absolute;
     bottom: 5px;
     left: 5px;
+}
+
+$touch-icon-size: 8vh;
+$touch-icon-padding: 1vh;
+$touch-text-size: 3vh;
+$touch-text-top: ($touch-icon-size - $touch-text-size) * 0.45;
+$touch-text-pos: $touch-icon-size + $touch-icon-padding;
+
+div.quarter {
+    position: fixed;
+    width: 50vw;
+    height: 50vh;
+    backdrop-filter: blur(5px);
+    box-sizing: border-box;
+    font-weight: bold;
+    font-variant: small-caps;
+    font-size: $touch-text-size;
+    &.top-left {
+        top: 0;
+        left: 0;
+        background: rgba(0, 128, 0, 0.5);
+        &>div {
+            position: absolute;
+            top: 5vh;
+            left: 5vh;
+            &>div>span {
+                left: $touch-text-pos;
+            }
+        }
+    }
+    &.top-right{
+        top: 0;
+        right: 0;
+        background: rgba(128, 128, 0, 0.5);
+        &>div {
+            position: absolute;
+            top: 5vh;
+            right: 5vh;
+            text-align: right;
+            &>div>span {
+                right: $touch-text-pos;
+            }
+        }
+    }
+    &.bottom-left {
+        bottom: 0;
+        left: 0;
+        background: rgba(0, 64, 128, 0.5);
+        &>div {
+            position: absolute;
+            bottom: 5vh;
+            left: 5vh;
+            &>div>span {
+                left: $touch-text-pos;
+            }
+        }
+    }
+    &.bottom-right {
+        bottom: 0;
+        right: 0;
+        background: rgba(128, 64, 0, 0.5);
+        &>div {
+            position: absolute;
+            bottom: 5vh;
+            right: 5vh;
+            text-align: right;
+            &>div>span {
+                right: $touch-text-pos;
+            }
+        }
+    }
+    &>div>div {
+        height: $touch-icon-size;
+        position: relative;
+        width: calc(50vw - 10vh);
+        &>img {
+            height: $touch-icon-size;
+            margin: 0;
+        }
+        &>span {
+            position: absolute;
+            top: $touch-text-top;
+        }
+    }
+}
+
+div.touch-control-sheet-center-message {
+    position: fixed;
+    text-align: center;
+    width: 50vw;
+    height: 14vh;
+    padding: 3vh;
+    font-size: 4vh;
+    top: 40vh;
+    left: 25vw;
+    background: $panel-back-color; 
 }
