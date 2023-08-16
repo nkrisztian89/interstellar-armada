@@ -8,8 +8,8 @@
 
 precision mediump float;
 
-uniform mat4 u_modelMatrix;
-uniform mat4 u_lightMatrix;
+uniform highp mat4 u_modelMatrix;
+uniform highp mat4 u_lightMatrix;
 uniform vec3 u_shadowMapParams;
 
 attribute vec3 a_position;

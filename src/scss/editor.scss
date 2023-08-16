@@ -652,6 +652,7 @@ h1.glsl-header {
 .shader-line-number {
     width: 2em;
     color: #888888;
+    user-select: none;
 }
 
 *:not(.glsl-comment) > .glsl-keyword {

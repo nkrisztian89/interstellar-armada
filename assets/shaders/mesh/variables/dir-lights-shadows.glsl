@@ -3,8 +3,8 @@
 struct DirLight
     {
         lowp vec3 color;
-        vec4 direction;
-        mat4 matrix;
+        highp vec4 direction;
+        highp mat4 matrix;
     };
 
 uniform DirLight u_dirLights[MAX_DIR_LIGHTS];

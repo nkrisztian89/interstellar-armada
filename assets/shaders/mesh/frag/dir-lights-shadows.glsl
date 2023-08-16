@@ -50,7 +50,7 @@
                         shadowMapPosition = v_shadowMapPosition[i].xyz;
                         shadowMapPosition += normalize(v_shadowMapNormal[i]) * (normalOffsetScale * range * (-1.0 * diffuseFactor * diffuseFactor + 1.0));
                         // calculate texture coordinates on the current shadow map
-                        float shMapDepthCoord = shadowMapPosition.z;
+                        highp float shMapDepthCoord = shadowMapPosition.z;
                         
 #include "lisptm.glsl"
                         vec4 temp = LiSPTM * vec4(shadowMapPosition.xy - vec2(0.0, parallelism * range + near), shMapDepthCoord - parallelism * range, 1.0);
@@ -67,7 +67,7 @@
                                         max((abs(shadowMapPosition.y) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0) +
                                         clamp((abs(shMapDepthCoord) - SHADOW_DISTANCE_FADEOUT_START) * SHADOW_DISTANCE_FADEOUT_FACTOR, 0.0, 1.0),
                                     0.0, 1.0);
-                            vec4 shadowMapTexel[NUM_SHADOW_MAP_SAMPLES];
+                            highp vec4 shadowMapTexel[NUM_SHADOW_MAP_SAMPLES];
                             // read the value of the texel from the shadow map
                             // indexing samplers with loop variables is not supported by specification
                             int shMapIndex = i * u_numRanges + j;

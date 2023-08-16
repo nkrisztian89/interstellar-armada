@@ -1389,6 +1389,7 @@ define([
      * @property {Number} requiredVaryingVectors
      * @property {Number} requiredTextureUnits
      * @property {Number} requiredFragmentUniformVectors
+     * @property {Boolean} fragmentShaderHighPrecision
      */
     /**
      * @class
@@ -2295,6 +2296,11 @@ define([
          * @type Number
          */
         this._maxVaryings = 0;
+        /**
+         * Whether high precision floats are supported in fragment shaders.
+         * @type Boolean
+         */
+        this._fragmentShaderHighPrecisionSupport = false;
         this._createContext(supressAntialiasingError);
         this.setFiltering(filtering);
     }
@@ -2364,6 +2370,7 @@ define([
         this._maxVertexShaderUniforms = gl_.getParameter(gl_.MAX_VERTEX_UNIFORM_VECTORS);
         this._maxFragmentShaderUniforms = gl_.getParameter(gl_.MAX_FRAGMENT_UNIFORM_VECTORS);
         this._maxVaryings = gl_.getParameter(gl_.MAX_VARYING_VECTORS);
+        this._fragmentShaderHighPrecisionSupport = gl_.getShaderPrecisionFormat(gl_.FRAGMENT_SHADER, gl_.HIGH_FLOAT).precision > 0;
         application.log("WebGL context successfully created.\n" + this.getInfoString(), 1);
         // -------------------------------------------------------------------------------------------------------
         // initializing extensions
@@ -2421,7 +2428,8 @@ define([
                 "Available texture units: " + this._maxBoundTextures + "\n" +
                 "Maximum texture size: " + this._maxTextureSize + "\n" +
                 "Maximum cubemap size: " + this._maxCubemapSize + "\n" +
-                "Maximum renderbuffer size: " + this._maxRenderbufferSize
+                "Maximum renderbuffer size: " + this._maxRenderbufferSize + "\n" +
+                "Fragment shader high precision float support: " + (this._fragmentShaderHighPrecisionSupport ? "yes" : "no")
                 :
                 "N/A";
     };
@@ -2989,7 +2997,8 @@ define([
                 (this._maxVertexShaderUniforms >= requirements.requiredVertexUniformVectors) &&
                 (this._maxVaryings >= requirements.requiredVaryingVectors) &&
                 (this._maxFragmentShaderUniforms >= requirements.requiredFragmentUniformVectors) &&
-                (this._maxBoundTextures >= requirements.requiredTextureUnits);
+                (this._maxBoundTextures >= requirements.requiredTextureUnits) &&
+                (!requirements.fragmentShaderHighPrecision || this._fragmentShaderHighPrecisionSupport);
     };
     /**
      * Returns the maximum size of textures supported by the graphics driver for this context.

@@ -14,7 +14,7 @@
 
 #include "mesh/variables/shadow-mapping-constants.glsl"
 
-uniform sampler2D u_shadowMaps[MAX_SHADOW_MAPS];
+uniform highp sampler2D u_shadowMaps[MAX_SHADOW_MAPS];
 uniform float u_shadowMapRanges[MAX_SHADOW_MAP_RANGES];
 uniform int u_numRanges;
 uniform float u_shadowMapDepthRatio;

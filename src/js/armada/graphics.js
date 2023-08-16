@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2021 Krisztián Nagy
+ * Copyright 2014-2021, 2023 Krisztián Nagy
  * @file Provides functionality to parse and load the graphics settings of Interstellar Armada from an external file as well as to save them
  * to or load from HTML5 local storage and access derived settings.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -164,6 +164,7 @@ define([
             REQ_TEXTURE_UNITS_PER_PROP_NAME = "requiredTextureUnitsPer",
             REQ_FRAGMENT_UNIFORMS_PROP_NAME = "requiredFragmentUniformVectors",
             REQ_FRAGMENT_UNIFORMS_PER_PROP_NAME = "requiredFragmentUniformVectorsPer",
+            REQ_FRAGMENT_SHADER_HIGH_PRECISION = "fragmentShaderHighPrecision",
             /**
              * The definition object used to type-verify shader requirements descriptors. A shader requirements descriptor contains all
              * static and dependent requirements of a shader from which the actual requirements can be calculated for any given combination
@@ -257,6 +258,14 @@ define([
                         name: REQ_FRAGMENT_UNIFORMS_PER_PROP_NAME,
                         type: DEPENDENT_SHADER_REQUIREMENT_DESCRIPTOR_TYPE,
                         defaultValue: {}
+                    },
+                    /**
+                     * Whether high precision float support is required in fragment shaders.
+                     */
+                    FRAGMENT_SHADER_HIGH_PRECISION: {
+                        name: REQ_FRAGMENT_SHADER_HIGH_PRECISION,
+                        type: "boolean",
+                        defaultValue: false
                     }
                 }
             },
@@ -823,7 +832,9 @@ define([
                     _getDependentShaderRequirement(requirementsDescriptor[REQ_TEXTURE_UNITS_PER_PROP_NAME], params),
             requiredFragmentUniformVectors:
                     requirementsDescriptor[REQ_FRAGMENT_UNIFORMS_PROP_NAME] +
-                    _getDependentShaderRequirement(requirementsDescriptor[REQ_FRAGMENT_UNIFORMS_PER_PROP_NAME], params)
+                    _getDependentShaderRequirement(requirementsDescriptor[REQ_FRAGMENT_UNIFORMS_PER_PROP_NAME], params),
+            fragmentShaderHighPrecision:
+                    requirementsDescriptor[REQ_FRAGMENT_SHADER_HIGH_PRECISION]
         };
     }
     /**
@@ -838,7 +849,8 @@ define([
             requiredAttributeVectors: r.requiredAttributeVectors + s.requiredAttributeVectors,
             requiredVaryingVectors: r.requiredVaryingVectors + s.requiredVaryingVectors,
             requiredTextureUnits: r.requiredTextureUnits + s.requiredTextureUnits,
-            requiredFragmentUniformVectors: r.requiredFragmentUniformVectors + s.requiredFragmentUniformVectors
+            requiredFragmentUniformVectors: r.requiredFragmentUniformVectors + s.requiredFragmentUniformVectors,
+            fragmentShaderHighPrecision: r.fragmentShaderHighPrecision || s.fragmentShaderHighPrecision
         };
     }
     // ############################################################################################
