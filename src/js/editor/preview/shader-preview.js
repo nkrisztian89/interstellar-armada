@@ -72,7 +72,9 @@ define([
         code = _markupCode(code, ["gl_Position", "gl_FragColor"], "glsl-variable");
         code = _markupCode(code, ["dot\\(", "cross\\(", "length\\(", "normalize\\(", "reflect\\(", "abs\\(", "sign\\(", "fract\\(", "min\\(", "max\\(", "pow\\(", "sin\\(", "cos\\(", "mix\\(", "step\\(", "clamp\\(", "texture2D\\(", "textureCube\\("], "glsl-function");
         code = _markupCode(code, ["\\(", "\\)", "\\[", "\\]"], "glsl-operator");
-        return "<tbody>" + code.split("\n").map((line, index) => '<tr><td class="shader-line-number">' + index + "</td><td>" + line + "</td></tr>").join("") + "</tbody>";
+        return "<tbody>" + code.split("\n").map(function (line, index) {
+            return '<tr><td class="shader-line-number">' + index + "</td><td>" + line + "</td></tr>";
+        }).join("") + "</tbody>";
     }
     // ----------------------------------------------------------------------
     // Public Functions
@@ -92,9 +94,9 @@ define([
             _elements.div.hidden = false;
             _elements.canvas.hidden = true;
             _elements.info.hidden = true;
-            
+
             managedShader = graphics.getManagedShader(_shaderResource.getName());
-            
+
             _codeDiv = document.createElement("div");
             _codeDiv.classList.add("previewContent");
             vertexShaderTitle = document.createElement("h1");
@@ -116,7 +118,7 @@ define([
             fragmentShaderCode.innerHTML = _processCode(code);
             _codeDiv.appendChild(fragmentShaderCode);
             _elements.div.appendChild(_codeDiv);
-            
+
             _elements.div.style.height = (_elements.div.parentNode.clientHeight - (_elements.options.clientHeight + _elements.info.clientHeight)) + "px";
         });
         resources.requestResourceLoad();

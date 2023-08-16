@@ -2370,7 +2370,7 @@ define([
         this._maxVertexShaderUniforms = gl_.getParameter(gl_.MAX_VERTEX_UNIFORM_VECTORS);
         this._maxFragmentShaderUniforms = gl_.getParameter(gl_.MAX_FRAGMENT_UNIFORM_VECTORS);
         this._maxVaryings = gl_.getParameter(gl_.MAX_VARYING_VECTORS);
-        this._fragmentShaderHighPrecisionSupport = gl_.getShaderPrecisionFormat(gl_.FRAGMENT_SHADER, gl_.HIGH_FLOAT).precision > 0;
+        this._fragmentShaderHighPrecisionSupport = !!gl_.getShaderPrecisionFormat && (gl_.getShaderPrecisionFormat(gl_.FRAGMENT_SHADER, gl_.HIGH_FLOAT).precision > 0);
         application.log("WebGL context successfully created.\n" + this.getInfoString(), 1);
         // -------------------------------------------------------------------------------------------------------
         // initializing extensions
