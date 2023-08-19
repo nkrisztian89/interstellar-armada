@@ -27,6 +27,11 @@ $touch-text-size: 3vh;
 $touch-text-top: ($touch-icon-size - $touch-text-size) * 0.45;
 $touch-text-pos: $touch-icon-size + $touch-icon-padding;
 
+div.touch-control-sheet {
+    position: absolute;
+    z-index: 1;
+}
+
 div.quarter {
     position: fixed;
     width: 50vw;
