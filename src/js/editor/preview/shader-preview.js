@@ -88,6 +88,7 @@ define([
         var managedShader;
         _shaderResource = shaderResource || _shaderResource;
         _elements = elements || _elements;
+        graphics.getShader(_shaderResource.getName());
         resources.executeWhenReady(function () {
             var vertexShaderTitle, vertexShaderCode, code, fragmentShaderTitle, fragmentShaderCode;
             _elements.options.hidden = true;
