@@ -472,6 +472,13 @@ define([
                     type: "string"
                 },
                 /**
+                 * The name of the #define that determines the texture size (both with and height, in pixels) in shaders.
+                 */
+                SHADOW_MAP_TEXTURE_SIZE_DEFINE_NAME: {
+                    name: "shadowMapTextureSizeDefineName",
+                    type: "string"
+                },
+                /**
                  * The name of the #define that determines the maximum number of available shadow map ranges (for each directional light 
                  * source) in shaders.
                  */
@@ -493,6 +500,13 @@ define([
                  */
                 NUM_SHADOW_MAP_SAMPLES_DEFINE_NAME: {
                     name: "numShadowMapSamplesDefineName",
+                    type: "string"
+                },
+                /**
+                 * The name of the #define that determines the ratio of depth and width/height of area covered by a shadow map
+                 */
+                SHADOW_MAP_DEPTH_RATIO_DEFINE_NAME: {
+                    name: "shadowMapDepthRatioDefineName",
                     type: "string"
                 },
                 /**
@@ -2337,9 +2351,11 @@ define([
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_DIR_LIGHTS_DEFINE_NAME)] = this.getMaxDirLights();
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_POINT_LIGHTS_DEFINE_NAME)] = this.getMaxPointLights();
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_SPOT_LIGHTS_DEFINE_NAME)] = this.getMaxSpotLights();
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.SHADOW_MAP_TEXTURE_SIZE_DEFINE_NAME)] = this.getShadowMapTextureSize() + ".0";
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_SHADOW_MAP_RANGES_DEFINE_NAME)] = this.getNumShadowMapRanges();
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_SHADOW_MAPS_DEFINE_NAME)] = this.getMaxDirLights() * this.getNumShadowMapRanges();
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.NUM_SHADOW_MAP_SAMPLES_DEFINE_NAME)] = this.getNumShadowMapSamples();
+        replacedDefines[this.getShaderConfig(SHADER_CONFIG.SHADOW_MAP_DEPTH_RATIO_DEFINE_NAME)] = this.getShadowDepthRatio() + ".0";
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.DUST_LENGTH_DIVISOR);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_LUMINOSITY_FACTORS);
         replacedDefines[this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS_DEFINE_NAME)] = this.getShaderConfig(SHADER_CONFIG.MAX_GROUP_TRANSFORMS);

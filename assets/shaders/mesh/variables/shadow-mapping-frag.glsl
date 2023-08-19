@@ -1,3 +1,5 @@
+#define SHADOW_MAP_TEXTURE_SIZE 1024.0
+
 #define MAX_SHADOW_MAP_RANGES 6
 #define MAX_SHADOW_MAPS 12
 
@@ -8,6 +10,8 @@
 
 #define NUM_SHADOW_MAP_SAMPLES 9
 
+#define SHADOW_MAP_DEPTH_RATIO 16.0
+
 #define NORMAL_OFFSET_SCALE 2.0
 
 #define DEPTH_TEXTURES 0
@@ -17,8 +21,6 @@
 uniform highp sampler2D u_shadowMaps[MAX_SHADOW_MAPS];
 uniform float u_shadowMapRanges[MAX_SHADOW_MAP_RANGES];
 uniform int u_numRanges;
-uniform float u_shadowMapDepthRatio;
-uniform float u_shadowMapTextureSize;
 uniform vec2 u_shadowMapSampleOffsets[NUM_SHADOW_MAP_SAMPLES];
 
 varying vec3 v_shadowMapPosition[MAX_DIR_LIGHTS];

@@ -89,8 +89,6 @@ define([
             UNIFORM_EYE_POSITION_VECTOR_NAME = "eyePos",
             UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME = "numRanges",
             UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME = "shadowMapRanges",
-            UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME = "shadowMapDepthRatio",
-            UNIFORM_SHADOW_MAPPING_TEXTURE_SIZE_NAME = "shadowMapTextureSize",
             UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME = "shadowMaps",
             UNIFORM_SHADOW_MAPPING_SHADOW_MAP_SAMPLE_OFFSET_ARRAY_NAME = "shadowMapSampleOffsets",
             SHADOW_MAP_SAMPLE_OFFSETS = [
@@ -1591,12 +1589,6 @@ define([
             });
             this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME, function () {
                 return this._shadowMapRanges;
-            });
-            this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_DEPTH_RATIO_NAME, function () {
-                return this._shadowMapDepthRatio;
-            });
-            this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_TEXTURE_SIZE_NAME, function () {
-                return this._shadowMapTextureSize;
             });
             this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_SHADOW_MAP_SAMPLE_OFFSET_ARRAY_NAME, function () {
                 return this._shadowMapSampleOffsets;

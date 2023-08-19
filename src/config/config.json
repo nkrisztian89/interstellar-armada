@@ -1,5 +1,5 @@
 {
-    "version": "0.5.4-dev:1156 (2023.08.19.)",
+    "version": "0.5.4-dev:1157 (2023.08.19.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "platform": "web",
@@ -327,9 +327,11 @@
             "maxDirLightsDefineName": "MAX_DIR_LIGHTS",
             "maxPointLightsDefineName": "MAX_POINT_LIGHTS",
             "maxSpotLightsDefineName": "MAX_SPOT_LIGHTS",
+            "shadowMapTextureSizeDefineName": "SHADOW_MAP_TEXTURE_SIZE",
             "maxShadowMapRangesDefineName": "MAX_SHADOW_MAP_RANGES",
             "maxShadowMapsDefineName": "MAX_SHADOW_MAPS",
             "numShadowMapSamplesDefineName": "NUM_SHADOW_MAP_SAMPLES",
+            "shadowMapDepthRatioDefineName": "SHADOW_MAP_DEPTH_RATIO",
             "dustLengthDivisor": "100.0",
             "dustLengthDivisorDefineName": "DUST_LENGTH_DIVISOR",
             "maxLuminosityFactors": 20,
