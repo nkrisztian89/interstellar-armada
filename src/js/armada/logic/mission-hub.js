@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2022 Krisztián Nagy
+ * Copyright 2021-2023 Krisztián Nagy
  * @file This module connects to the Mission Hub backend and provides methods
  * to use the API of the Mission Hub
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
@@ -9,15 +9,18 @@
 /**
  * 
  * @param application Used for retrieving application version
+ * @param analytics Used for checking if analytics is turned on when sending analytics event
  * @param constants Used for accessing local storage keys
  * @param missions Used for creating MissionDescriptor instances
  */
 define([
     "modules/application",
+    "modules/analytics",
     "armada/constants",
     "armada/logic/missions"
 ], function (
         application,
+        analytics,
         constants,
         missions
         ) {
@@ -95,6 +98,7 @@ define([
                 var descriptor = JSON.parse(mission.mission);
                 descriptor.name = descriptor.info.name + ".json";
                 descriptor.custom = true;
+                descriptor.id = mission.id;
                 return new missions.MissionDescriptor(descriptor);
             });
             _missionNames = _missionDescriptors.map(function (missionDescriptor) {
@@ -291,6 +295,36 @@ define([
         }
     }
     /**
+     * Sends an analytics event to the Mission Hub backend
+     * @param {String} eventName
+     * @param {String[]} [urlParams]
+     * @param {Object} [queryParams]
+     */
+    function sendEvent(eventName, urlParams, queryParams) {
+        var path, i, p, request;
+        if (!analytics.isEnabled()) {
+            return;
+        }
+        path = eventName;
+        if (urlParams) {
+            for (i = 0; i < urlParams.length; i++) {
+                path += "/" + urlParams[i];
+            }
+        }
+        path += "?" + _versionParam;
+        if (queryParams) {
+            path += "&";
+            p = Object.keys(queryParams);
+            for (i = 0; i < p.length; i++) {
+                path += p[i] + "=" + queryParams[p[i]] + "&";
+            }
+        }
+        request = new XMLHttpRequest();
+        request.overrideMimeType("text/plain; charset=utf-8");
+        request.open("POST", _url + path, true);
+        request.send(null);
+    }
+    /**
      * Returns the list of names (unique titles) of all the loaded missions
      * @returns {String[]}
      */
@@ -337,6 +371,7 @@ define([
         submitMission: submitMission,
         getSubmissions: getSubmissions,
         deleteSubmission: deleteSubmission,
+        sendEvent: sendEvent,
         getMissionNames: getMissionNames,
         getMissionDescriptor: getMissionDescriptor,
         getMissionDescriptors: getMissionDescriptors,

@@ -160,6 +160,7 @@
         "submissionTitleColumn": "Title",
         "submissionDateColumn": "Sent",
         "submissionStatusColumn": "Status",
+        "submissionStatsColumn": "Stats",
         "submissionActionsColumn": "Actions",
         "deleteSubmissionButton": "Delete",
         "revokeSubmissionButton": "Revoke",
@@ -169,6 +170,11 @@
             "pending": "Pending...",
             "approved": "Approved!",
             "rejected": "Rejected:"
+        },
+        "submissionStats": {
+            "started": "Started: {count}",
+            "won": "Won: {count}",
+            "lost": "Lost: {count}"
         }
     },
     "missionHubError": {

@@ -254,6 +254,12 @@ table.submissions {
         white-space: normal;
         width: auto;
     }
+    & th.submissionStatsColumn {
+        width: 7em;
+    }
+    & td.submissionStatsColumn {
+        width: 8em;
+    }
     & .submissionActionsColumn {
         width: 10.5em;
         font-size: 100%;

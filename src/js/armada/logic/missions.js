@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file Implementation of loading and managing missions - including the main game simulation loop
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -819,6 +819,13 @@ define([
      */
     Mission.prototype.getData = function () {
         return this._dataJSON;
+    };
+    /**
+     * Returns the numeric ID assigned to this mission if it is from the Mission Hub
+     * @returns {Number}
+     */
+    Mission.prototype.getId = function () {
+        return this._dataJSON.id;
     };
     /**
      * Returns the mission title as given in the data JSON

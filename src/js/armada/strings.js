@@ -102,7 +102,10 @@ define([
         DELETE_SUBMISSION_SUCCESS: {name: "missions.deleteSubmissionSuccess"},
         SUBMISSION_STATUS_PENDING: {name: "missions.submissionStatus.pending"},
         SUBMISSION_STATUS_APPROVED: {name: "missions.submissionStatus.approved"},
-        SUBMISSION_STATUS_REJECTED: {name: "missions.submissionStatus.rejected"}
+        SUBMISSION_STATUS_REJECTED: {name: "missions.submissionStatus.rejected"},
+        SUBMISSION_STATS_STARTED: {name: "missions.submissionStats.started"},
+        SUBMISSION_STATS_WON: {name: "missions.submissionStats.won"},
+        SUBMISSION_STATS_LOST: {name: "missions.submissionStats.lost"}
     };
     strings.SERVER_REGION = {
         PREFIX: {name: "serverRegion.", optional: true},

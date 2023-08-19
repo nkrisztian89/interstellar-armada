@@ -174,6 +174,7 @@
         "submissionTitleColumn": "Cím",
         "submissionDateColumn": "Beküldve",
         "submissionStatusColumn": "Állapot",
+        "submissionStatsColumn": "Számláló",
         "submissionActionsColumn": "Lehetőségek",
         "deleteSubmissionButton": "Törlés",
         "revokeSubmissionButton": "Visszavonás",
@@ -183,6 +184,11 @@
             "pending": "Függőben...",
             "approved": "Elfogadva!",
             "rejected": "Visszautasítva:"
+        },
+        "submissionStats": {
+            "started": "Elkezdve: {count}",
+            "won": "Megnyerve: {count}",
+            "lost": "Elveszítve: {count}"
         }
     },
     "missionHubError": {

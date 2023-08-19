@@ -67,6 +67,7 @@ define([
             SUBMISSION_TITLE_COLUMN_CLASS = "submissionTitleColumn",
             SUBMISSION_DATE_COLUMN_CLASS = "submissionDateColumn",
             SUBMISSION_STATUS_COLUMN_CLASS = "submissionStatusColumn",
+            SUBMISSION_STATS_COLUMN_CLASS = "submissionStatsColumn",
             SUBMISSION_ACTIONS_COLUMN_CLASS = "submissionActionsColumn",
             MANAGE_SUBMISSIONS_CLOSE_BUTTON_ID = "manageSubmissionsCloseButton",
             SUBMISSIONS_LIST_ID = "submissionsList",
@@ -849,6 +850,13 @@ define([
                     status.textContent = " " + missions[i].review;
                     cell.appendChild(status);
                 }
+                row.appendChild(cell);
+                cell = document.createElement("td");
+                cell.className = SUBMISSION_STATS_COLUMN_CLASS;
+                cell.innerHTML =
+                        utils.formatString(strings.get(strings.MISSIONS.SUBMISSION_STATS_STARTED), { count: missions[i].start }) + "<br>" +
+                        utils.formatString(strings.get(strings.MISSIONS.SUBMISSION_STATS_WON), { count: missions[i].win }) + "<br>" +
+                        utils.formatString(strings.get(strings.MISSIONS.SUBMISSION_STATS_LOST), { count: missions[i].lose });
                 row.appendChild(cell);
                 cell = document.createElement("td");
                 cell.className = SUBMISSION_ACTIONS_COLUMN_CLASS;

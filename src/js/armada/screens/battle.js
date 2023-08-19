@@ -29,6 +29,7 @@
  * @param SpacecraftEvents used for setting spacecraft event handlers
  * @param missions Used for creating the Mission object, accessing enums.
  * @param missionEvents Used for accessing enums.
+ * @param missionHub Used to send analytics events to Mission Hub.
  * @param equipment Used to access flight mode constants
  * @param spacecraft Used for multiplayer data messaging and state setup
  * @param ai Used for performing the AI control operations in the battle simulation loop.
@@ -57,6 +58,7 @@ define([
     "armada/logic/SpacecraftEvents",
     "armada/logic/missions",
     "armada/logic/missions/events",
+    "armada/logic/mission-hub",
     "armada/logic/equipment",
     "armada/logic/spacecraft",
     "armada/logic/ai",
@@ -67,7 +69,7 @@ define([
         renderableObjects, sceneGraph,
         analytics,
         strings, armadaScreens, graphics, audio, networking, classes, config, control,
-        SpacecraftEvents, missions, missionEvents, equipment, spacecraft, ai) {
+        SpacecraftEvents, missions, missionEvents, missionHub, equipment, spacecraft, ai) {
     "use strict";
     var
             // ------------------------------------------------------------------------------
@@ -4434,6 +4436,8 @@ define([
                 isRecord = missionDescriptor.updateBestScore(perfStats.score, perfStats.performance);
                 analytics.sendEvent("score", [utils.getFilenameWithoutExtension(_missionSourceFilename)], {difficulty: _difficulty, score: perfStats.score});
             }
+        } else if (victory && _mission.getId()) {
+            missionHub.sendEvent("score", [_mission.getId()], {difficulty: _difficulty, score: perfStats.score});
         }
         game.getScreen(armadaScreens.DEBRIEFING_SCREEN_NAME).setData({
             missionState: _mission.getState(),
@@ -4525,7 +4529,7 @@ define([
                     if (_timeSinceGameStateChanged >= config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY)) {
                         victory = _mission.getState() === missionEvents.MissionState.COMPLETED;
                         time = Math.round(_elapsedTime / 1000);
-                        if (_missionSourceFilename && !missions.getMissionDescriptor(_mission.getName()).isCustom()) {
+                        if ((_missionSourceFilename && !missions.getMissionDescriptor(_mission.getName()).isCustom()) || _mission.getId()) {
                             analyticsParams = {difficulty: _difficulty, time: time};
                             if (_analyticsState) {
                                 if (_analyticsState.win) {
@@ -4536,7 +4540,11 @@ define([
                                 analyticsParams.prevdifficulty = _analyticsState.difficulty;
                                 analyticsParams.prevtime = _analyticsState.time;
                             }
-                            analytics.sendEvent(victory ? "win" : "lose", [utils.getFilenameWithoutExtension(_missionSourceFilename)], analyticsParams);
+                            if (_mission.getId()) {
+                                missionHub.sendEvent(victory ? "win" : "lose", [_mission.getId()], analyticsParams);
+                            } else {
+                                analytics.sendEvent(victory ? "win" : "lose", [utils.getFilenameWithoutExtension(_missionSourceFilename)], analyticsParams);
+                            }
                             _analyticsState = {
                                 win: victory,
                                 difficulty: _difficulty,
@@ -4639,6 +4647,10 @@ define([
             }
         } else {
             custom = true;
+            if (mission.getId()) {
+                _analyticsState = null;
+                missionHub.sendEvent("start", [mission.getId()]);
+            }
         }
         _displayedMissionState = _mission.getState();
         _timeSinceGameStateChanged = config.getSetting(config.BATTLE_SETTINGS.GAME_STATE_DISPLAY_DELAY);
