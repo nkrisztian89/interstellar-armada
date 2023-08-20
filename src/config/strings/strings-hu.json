@@ -1035,6 +1035,10 @@
         "athens": {
             "name": "Athén",
             "description": "Sokoldalú, közepes méretű űrállomás. Számos feladatra berendezhető, alkalmazható kereskedelmi, kutatási és diplomáciai célokra is. Felszerelhető fegyverekkel, és 48 vadászgép állomásoztatására képes, így a Galaktikus Birodalom előszeretettel használja katonai támaszpontként olyan szektorok felügyeletére, ahol nincsen szükség komolyabb katonai jelenlétre."
+        },
+        "sentinel": {
+            "name": "Őrszem",
+            "description": "Egy régebbi tervezésű védelmi platform lövegtoronnyal és könnyű páncélzattal. Távolról vezérelve és automata üzemmódban is képes működni. Űrállomások és más helyhez kötött objektumok védelmére használható. Miután leváltották az újabb modellek, nagy mennyiségben jutott belőle a feketepiacra, így hamar a kalózok és más törvényen kívüliek kedvencévé vált."
         }
     },
     "weaponClass": {
