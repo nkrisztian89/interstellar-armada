@@ -5099,6 +5099,9 @@ define([
         var values = new Type(propertyDescriptor.type).getValues(false, parent, topParent, itemName);
         // an object cannot reference itself (e.g. a fighter class cannot be based on itself)
         if (parent && (propertyDescriptor.name === BASED_ON_PROPERTY_NAME)) {
+            // the original array is the list of available classes from the class manager
+            // we do not want to modify that, or we make the removed class unlisted
+            values = values.slice();
             utils.removeFromArray(values, parent[NAME_PROPERTY_NAME]);
         }
         return values;
