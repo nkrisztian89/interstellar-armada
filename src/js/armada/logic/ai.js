@@ -104,6 +104,11 @@ define([
              */
             STATION_AI_NAME = "station",
             /**
+             * The type identifier to be used when creating sentry AIs.
+             * @type String
+             */
+            SENTRY_AI_NAME = "sentry",
+            /**
              * Spacecrafts will stop turning towards the specified direction when reaching this angle (in radians).
              * @type Number
              */
@@ -626,6 +631,55 @@ define([
             this._spacecraft.setSpeedTarget(-maxSpeed);
         } else {
             this._spacecraft.resetSpeed();
+        }
+    };
+    /**
+     * Turns the spacecraft (engages turning thrusters) according to its turn style to make sure its attack vector points
+     * towards the given target direction. (within the spacecraft's attack threshold angle)
+     * @param {Number[3]} relativeTargetDirection The direction (unit) vector pointing towards the target in object space
+     * @param {Number} dt The milliseconds passed since the last simulation step
+     */
+    SpacecraftAI.prototype.orientToAttackPosition = function (relativeTargetDirection, dt) {
+        var
+                /** @type Number[2] */
+                angles,
+                /** @type Number */
+                thresholdAngle, angleDiff1, angleDiff2;
+        angles = this._spacecraft.getClass().getAttackVectorAngles();
+        thresholdAngle = this._spacecraft.getClass().getAttackThresholdAngle();
+        switch (this._spacecraft.getClass().getTurnStyle()) {
+            case classes.SpacecraftTurnStyle.YAW_PITCH:
+                if ((Math.abs(_angles.yaw - angles[0]) > thresholdAngle) || (Math.abs(_angles.pitch - angles[1]) > thresholdAngle)) {
+                    this.turn(_angles.yaw - angles[0], _angles.pitch - angles[1], dt);
+                }
+                break;
+            case classes.SpacecraftTurnStyle.ROLL_YAW:
+                vec.getRollAndYaw(_angles, relativeTargetDirection, true);
+                angleDiff1 = _angles.roll - angles[0];
+                angleDiff2 = _angles.yaw - angles[1];
+                if ((Math.abs(angleDiff1) > thresholdAngle) || (Math.abs(angleDiff2) > thresholdAngle)) {
+                    if (Math.abs(angleDiff2) > utils.HALF_PI) {
+                        angleDiff1 = 0;
+                    } else if (Math.abs(angleDiff1) > utils.HALF_PI) {
+                        angleDiff2 = 0;
+                    }
+                    this.rollAndYaw(angleDiff1, angleDiff2, dt);
+                }
+                break;
+            case classes.SpacecraftTurnStyle.ROLL_PITCH:
+                vec.getRollAndPitch(_angles, relativeTargetDirection, true);
+                angleDiff1 = _angles.roll - angles[0];
+                angleDiff2 = _angles.pitch - angles[1];
+                if ((Math.abs(angleDiff1) > thresholdAngle) || (Math.abs(angleDiff2) > thresholdAngle)) {
+                    if (Math.abs(angleDiff2) > utils.HALF_PI) {
+                        angleDiff1 = 0;
+                    } else if (Math.abs(angleDiff1 - Math.sign(angleDiff1) * Math.PI) < Math.abs(angleDiff1)) {
+                        angleDiff1 -= Math.sign(angleDiff1) * Math.PI;
+                        _angles.pitch = -_angles.pitch;
+                    }
+                    this.rollAndPitch(angleDiff1, _angles.pitch - angles[1], dt);
+                }
+                break;
         }
     };
     /**
@@ -1552,14 +1606,11 @@ define([
                 /** @type Number[3] */
                 positionVector,
                 relativeTargetDirection,
-                /** @type Number[2] */
-                angles,
                 /** @type Number */
                 targetDistance,
                 ownSize, targetSize, fireThresholdAngle,
                 acceleration, maxDistance, baseDistance,
-                thresholdAngle,
-                range, angleDiff1, angleDiff2,
+                range,
                 /** @type Boolean */
                 facingTarget, hostileTarget,
                 /** @type Array */
@@ -1627,42 +1678,7 @@ define([
                             } else {
                                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                 // orienting into attack position
-                                angles = this._spacecraft.getClass().getAttackVectorAngles();
-                                thresholdAngle = this._spacecraft.getClass().getAttackThresholdAngle();
-                                switch (this._spacecraft.getClass().getTurnStyle()) {
-                                    case classes.SpacecraftTurnStyle.YAW_PITCH:
-                                        if ((Math.abs(_angles.yaw - angles[0]) > thresholdAngle) || (Math.abs(_angles.pitch - angles[1]) > thresholdAngle)) {
-                                            this.turn(_angles.yaw - angles[0], _angles.pitch - angles[1], dt);
-                                        }
-                                        break;
-                                    case classes.SpacecraftTurnStyle.ROLL_YAW:
-                                        vec.getRollAndYaw(_angles, relativeTargetDirection, true);
-                                        angleDiff1 = _angles.roll - angles[0];
-                                        angleDiff2 = _angles.yaw - angles[1];
-                                        if ((Math.abs(angleDiff1) > thresholdAngle) || (Math.abs(angleDiff2) > thresholdAngle)) {
-                                            if (Math.abs(angleDiff2) > utils.HALF_PI) {
-                                                angleDiff1 = 0;
-                                            } else if (Math.abs(angleDiff1) > utils.HALF_PI) {
-                                                angleDiff2 = 0;
-                                            }
-                                            this.rollAndYaw(angleDiff1, angleDiff2, dt);
-                                        }
-                                        break;
-                                    case classes.SpacecraftTurnStyle.ROLL_PITCH:
-                                        vec.getRollAndPitch(_angles, relativeTargetDirection, true);
-                                        angleDiff1 = _angles.roll - angles[0];
-                                        angleDiff2 = _angles.pitch - angles[1];
-                                        if ((Math.abs(angleDiff1) > thresholdAngle) || (Math.abs(angleDiff2) > thresholdAngle)) {
-                                            if (Math.abs(angleDiff2) > utils.HALF_PI) {
-                                                angleDiff1 = 0;
-                                            } else if (Math.abs(angleDiff1 - Math.sign(angleDiff1) * Math.PI) < Math.abs(angleDiff1)) {
-                                                angleDiff1 -= Math.sign(angleDiff1) * Math.PI;
-                                                _angles.pitch = -_angles.pitch;
-                                            }
-                                            this.rollAndPitch(angleDiff1, _angles.pitch - angles[1], dt);
-                                        }
-                                        break;
-                                }
+                                this.orientToAttackPosition(relativeTargetDirection, dt);
                             }
                         }
                         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1696,9 +1712,15 @@ define([
      * or move (unless specifically ordered via a move command), just aim its turrets at the most suitable enemy target and fire.
      * @param {Spacecraft} station The station to control
      * @param {Mission} mission The mission within which this AI will control the station
+     * @param {Boolean} [shouldTurn=false] If true, the station is supposed to turn into attack orientation, but not move
      */
-    function StationAI(station, mission) {
+    function StationAI(station, mission, shouldTurn) {
         SpacecraftAI.call(this, station, mission);
+        /**
+         * Whether the station is supposed to turn into attack orientation
+         * @type Boolean
+         */
+        this._shouldTurn = !!shouldTurn;
     }
     StationAI.prototype = new SpacecraftAI();
     StationAI.prototype.constructor = StationAI;
@@ -1762,8 +1784,8 @@ define([
                         orientationMatrix,
                         vec.diffTranslation3Aux(target.getPhysicalPositionMatrix(), this._spacecraft.getPhysicalPositionMatrix()));
                 targetDistance = vec.extractLength3(relativeTargetDirection);
-                if (hostileTarget) {
-                    vec.getYawAndPitch(_angles, relativeTargetDirection);
+                if (this._shouldTurn && (this._moveCommand === MoveCommand.NONE)) {
+                    this.orientToAttackPosition(relativeTargetDirection, dt);
                 }
                 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 // actions based on weapons
@@ -1798,6 +1820,20 @@ define([
             }
         }
     };
+    // ##############################################################################
+    /**
+     * @class
+     * @extends StationAI
+     * An AI that is suitable to control a sentry gun - that is a spacecraft with the assumption that it should rotate but
+     * not move (unless specifically ordered via a move command), aim its turrets at the most suitable enemy target and fire.
+     * @param {Spacecraft} sentry The sentry to control
+     * @param {Mission} mission The mission within which this AI will control the sentry
+     */
+    function SentryAI(sentry, mission) {
+        StationAI.call(this, sentry, mission, true);
+    }
+    SentryAI.prototype = new StationAI();
+    SentryAI.prototype.constructor = SentryAI;
     // ##############################################################################
     /**
      * @class
@@ -1851,6 +1887,7 @@ define([
     _aiConstructors[FIGHTER_AI_NAME] = FighterAI;
     _aiConstructors[SHIP_AI_NAME] = ShipAI;
     _aiConstructors[STATION_AI_NAME] = StationAI;
+    _aiConstructors[SENTRY_AI_NAME] = SentryAI;
     // creating the default context
     _context = new AIContext(_aiConstructors);
     // caching frequently used configuration values
