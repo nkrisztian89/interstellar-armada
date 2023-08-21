@@ -9416,7 +9416,7 @@
             "attackVector": [0, 0, 1],
             "attackThresholdAngle": 45,
             "turnStyle": "rollPitch",
-            "model": "sentinel",
+            "model": "sentinel-pirate",
             "shader": "ship",
             "texture": "pirate",
             "factionColor": [0.3, 0.3, 0.3, 1],
@@ -9459,6 +9459,12 @@
                         "class": "standardSensors"
                     }
                 }, {
+                    "name": "pirate-light",
+                    "basedOn": "pirate",
+                    "weapons": [{
+                            "class": "damagedPirateTurret"
+                        }]
+                }, {
                     "name": "imperial",
                     "weapons": [{
                             "class": "smallPlasmaTurret"
@@ -9469,6 +9475,12 @@
                     "sensors": {
                         "class": "standardSensors"
                     }
+                }, {
+                    "name": "imperial-light",
+                    "basedOn": "imperial",
+                    "weapons": [{
+                            "class": "damagedSmallPlasmaTurret"
+                        }]
                 }],
             "humSound": {
                 "name": "spacecraftHum",
@@ -9620,6 +9632,8 @@
             "name": "sentinelEmpire",
             "basedOn": "sentinel",
             "showInDatabase": false,
-            "texture": "libra"
+            "model": "sentinel",
+            "texture": "libra",
+            "defaultLoadout": "imperial"
         }]
 }
