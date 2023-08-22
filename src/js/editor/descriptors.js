@@ -2649,6 +2649,9 @@ define([
                             return loadout.name;
                         });
                     }
+                    if (parent.basedOn) {
+                        return classes.getSpacecraftClass(parent.basedOn).getLoadoutNames();
+                    }
                     return [];
                 }
             },
@@ -2659,7 +2662,7 @@ define([
                 return !!data.type && !classes.getSpacecraftType(data.type).isFighterType();
             },
             _hasLoadouts = function (data) {
-                return !!data.loadouts && (data.loadouts.length > 0);
+                return (!!data.loadouts && (data.loadouts.length > 0)) || (data.basedOn && (classes.getSpacecraftClass(data.basedOn).getLoadoutNames().length > 0));
             },
             /**
              * The descriptor object for spacecraft classes, describing their properties

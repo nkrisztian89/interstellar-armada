@@ -8478,6 +8478,233 @@
                     "spotFullIntensityAngle": 5
                 }]
         }, {
+            "name": "sentinelPirate",
+            "type": "station",
+            "description": "An older sentry gun design with a turret mount and light armor. It can be controlled remotely or in a fully automated way. Used to guard installations and other fixed points of interest. A large batch of these found their way to the black market when they became outdated, making them a popular choice for pirates and other criminals.",
+            "hitpoints": 30,
+            "attackVector": [0, 0, 1],
+            "attackThresholdAngle": 45,
+            "turnStyle": "rollPitch",
+            "model": "sentinel-pirate",
+            "shader": "ship",
+            "texture": "pirate",
+            "factionColor": [0.3, 0.3, 0.3, 1],
+            "mass": 30000,
+            "bodies": [{
+                    "position": [0, 0, -1],
+                    "size": [10, 10, 8]
+                }, {
+                    "position": [0, 0, -6],
+                    "size": [4, 4, 3]
+                }, {
+                    "position": [0, 0, 0],
+                    "size": [22.5, 2, 1]
+                }, {
+                    "position": [0, 0, 0],
+                    "size": [2, 22.5, 1]
+                }],
+            "weaponSlots": [{
+                    "position": [0, 0, 3],
+                    "clear": true
+                }],
+            "views": [{
+                    "name": "free",
+                    "position": [0, -30, 0],
+                    "followsOrientation": false,
+                    "turnable": true,
+                    "rotationCenterIsObject": true,
+                    "movable": true,
+                    "distanceRange": [23, 60]
+                }],
+            "loadouts": [{
+                    "name": "pirate",
+                    "weapons": [{
+                            "class": "pirateTurret"
+                        }],
+                    "propulsion": {
+                        "class": "pirateSentry"
+                    },
+                    "sensors": {
+                        "class": "standardSensors"
+                    }
+                }, {
+                    "name": "pirate-light",
+                    "basedOn": "pirate",
+                    "weapons": [{
+                            "class": "damagedPirateTurret"
+                        }]
+                }, {
+                    "name": "imperial",
+                    "weapons": [{
+                            "class": "smallPlasmaTurret"
+                        }],
+                    "propulsion": {
+                        "class": "imperialSentry"
+                    },
+                    "sensors": {
+                        "class": "standardSensors"
+                    }
+                }, {
+                    "name": "imperial-light",
+                    "basedOn": "imperial",
+                    "weapons": [{
+                            "class": "damagedSmallPlasmaTurret"
+                        }]
+                }],
+            "humSound": {
+                "name": "spacecraftHum",
+                "volume": 0.5
+            },
+            "collisionSound": {
+                "name": "collision",
+                "volume": 1.5
+            },
+            "explosion": "bomberExplosion",
+            "showTimeRatioDuringExplosion": 0.25,
+            "defaultLoadout": "pirate",
+            "blinkers": [{
+                    "particle": {
+                        "shader": "particle",
+                        "texture": "flare",
+                        "color": [1, 0, 0, 1],
+                        "size": 3,
+                        "duration": 200
+                    },
+                    "position": [0, 0, -13],
+                    "period": 2000,
+                    "blinks": [0],
+                    "intensity": 100
+                }],
+            "scoreValue": 30,
+            "fullName": "Sentinel",
+            "damageIndicators": [{
+                    "hullIntegrity": 30,
+                    "class": "smallFire"
+                }, {
+                    "hullIntegrity": 10,
+                    "class": "smallFire"
+                }],
+            "thrusterSlots": [{
+                    "group": 1,
+                    "uses": ["rollRight", "lower"],
+                    "thrusters": [{
+                            "position": [10, 0, 1.1],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 2,
+                    "uses": ["raise", "rollLeft"],
+                    "thrusters": [{
+                            "position": [10, 0, -1.1],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 3,
+                    "uses": ["yawRight", "reverse"],
+                    "thrusters": [{
+                            "position": [10, 1.6, 0],
+                            "size": 1.5
+                        }]
+                }, {
+                    "group": 4,
+                    "uses": ["forward", "yawLeft"],
+                    "thrusters": [{
+                            "position": [10, -1.6, 0],
+                            "size": 1.5
+                        }]
+                }, {
+                    "group": 5,
+                    "uses": ["lower", "rollLeft"],
+                    "thrusters": [{
+                            "position": [-10, 0, 1.1],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 6,
+                    "uses": ["raise", "rollRight"],
+                    "thrusters": [{
+                            "position": [-10, 0, -1.1],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 7,
+                    "uses": ["reverse", "yawLeft"],
+                    "thrusters": [{
+                            "position": [-10, 1.6, 0],
+                            "size": 1.5
+                        }]
+                }, {
+                    "group": 8,
+                    "uses": ["forward", "yawRight"],
+                    "thrusters": [{
+                            "position": [-10, -1.6, 0],
+                            "size": 1.5
+                        }]
+                }, {
+                    "group": 9,
+                    "uses": ["lower", "pitchDown"],
+                    "thrusters": [{
+                            "position": [0, 10, 1.1],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 10,
+                    "uses": ["pitchUp", "raise"],
+                    "thrusters": [{
+                            "position": [0, 10, -1.1],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 11,
+                    "uses": ["strafeLeft", "yawLeft"],
+                    "thrusters": [{
+                            "position": [1.6, 10, 0],
+                            "size": 1.5
+                        }]
+                }, {
+                    "group": 12,
+                    "uses": ["strafeRight", "yawRight"],
+                    "thrusters": [{
+                            "position": [-1.6, 10, 0],
+                            "size": 1.5
+                        }]
+                }, {
+                    "group": 13,
+                    "uses": ["lower", "pitchUp"],
+                    "thrusters": [{
+                            "position": [0, -10, 1.1],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 14,
+                    "uses": ["raise", "pitchDown"],
+                    "thrusters": [{
+                            "position": [0, -10, -1.1],
+                            "size": 3
+                        }]
+                }, {
+                    "group": 15,
+                    "uses": ["strafeRight", "yawLeft"],
+                    "thrusters": [{
+                            "position": [-1.6, -10, 0],
+                            "size": 1.5
+                        }]
+                }, {
+                    "group": 16,
+                    "uses": ["strafeLeft", "yawRight"],
+                    "thrusters": [{
+                            "position": [1.6, -10, 0],
+                            "size": 1.5
+                        }]
+                }]
+        }, {
+            "name": "sentinelEmpire",
+            "basedOn": "sentinelPirate",
+            "showInDatabase": false,
+            "model": "sentinel",
+            "texture": "libra",
+            "defaultLoadout": "imperial"
+        }, {
             "name": "buoy",
             "type": "station",
             "fullName": "Navigation Buoy",
@@ -9402,238 +9629,13 @@
             "name": "athensEmpire",
             "basedOn": "athens",
             "showInDatabase": false,
-            "texture": "libra"
+            "texture": "libra",
+            "defaultLoadout": "imperial"
         }, {
             "name": "athensPirate",
             "basedOn": "athens",
             "showInDatabase": false,
-            "texture": "pirate"
-        }, {
-            "name": "sentinel",
-            "type": "station",
-            "description": "An older sentry gun design with a turret mount and light armor. It can be controlled remotely or in a fully automated way. Used to guard installations and other fixed points of interest. A large batch of these found their way to the black market when they became outdated, making them a popular choice for pirates and other criminals.",
-            "hitpoints": 30,
-            "attackVector": [0, 0, 1],
-            "attackThresholdAngle": 45,
-            "turnStyle": "rollPitch",
-            "model": "sentinel-pirate",
-            "shader": "ship",
             "texture": "pirate",
-            "factionColor": [0.3, 0.3, 0.3, 1],
-            "mass": 30000,
-            "bodies": [{
-                    "position": [0, 0, -1],
-                    "size": [10, 10, 8]
-                }, {
-                    "position": [0, 0, -6],
-                    "size": [4, 4, 3]
-                }, {
-                    "position": [0, 0, 0],
-                    "size": [22.5, 2, 1]
-                }, {
-                    "position": [0, 0, 0],
-                    "size": [2, 22.5, 1]
-                }],
-            "weaponSlots": [{
-                    "position": [0, 0, 3],
-                    "clear": true
-                }],
-            "views": [{
-                    "name": "free",
-                    "position": [0, -30, 0],
-                    "followsOrientation": false,
-                    "turnable": true,
-                    "rotationCenterIsObject": true,
-                    "movable": true,
-                    "distanceRange": [23, 60]
-                }],
-            "loadouts": [{
-                    "name": "pirate",
-                    "weapons": [{
-                            "class": "pirateTurret"
-                        }],
-                    "propulsion": {
-                        "class": "pirateSentry"
-                    },
-                    "sensors": {
-                        "class": "standardSensors"
-                    }
-                }, {
-                    "name": "pirate-light",
-                    "basedOn": "pirate",
-                    "weapons": [{
-                            "class": "damagedPirateTurret"
-                        }]
-                }, {
-                    "name": "imperial",
-                    "weapons": [{
-                            "class": "smallPlasmaTurret"
-                        }],
-                    "propulsion": {
-                        "class": "imperialSentry"
-                    },
-                    "sensors": {
-                        "class": "standardSensors"
-                    }
-                }, {
-                    "name": "imperial-light",
-                    "basedOn": "imperial",
-                    "weapons": [{
-                            "class": "damagedSmallPlasmaTurret"
-                        }]
-                }],
-            "humSound": {
-                "name": "spacecraftHum",
-                "volume": 0.5
-            },
-            "collisionSound": {
-                "name": "collision",
-                "volume": 1.5
-            },
-            "explosion": "bomberExplosion",
-            "showTimeRatioDuringExplosion": 0.25,
-            "defaultLoadout": "pirate",
-            "blinkers": [{
-                    "particle": {
-                        "shader": "particle",
-                        "texture": "flare",
-                        "color": [1, 0, 0, 1],
-                        "size": 3,
-                        "duration": 200
-                    },
-                    "position": [0, 0, -13],
-                    "period": 2000,
-                    "blinks": [0],
-                    "intensity": 100
-                }],
-            "scoreValue": 30,
-            "fullName": "Sentinel",
-            "damageIndicators": [{
-                    "hullIntegrity": 30,
-                    "class": "smallFire"
-                }, {
-                    "hullIntegrity": 10,
-                    "class": "smallFire"
-                }],
-            "thrusterSlots": [{
-                    "group": 1,
-                    "uses": ["rollRight", "lower"],
-                    "thrusters": [{
-                            "position": [10, 0, 1.1],
-                            "size": 3
-                        }]
-                }, {
-                    "group": 2,
-                    "uses": ["raise", "rollLeft"],
-                    "thrusters": [{
-                            "position": [10, 0, -1.1],
-                            "size": 3
-                        }]
-                }, {
-                    "group": 3,
-                    "uses": ["yawRight", "reverse"],
-                    "thrusters": [{
-                            "position": [10, 1.6, 0],
-                            "size": 1.5
-                        }]
-                }, {
-                    "group": 4,
-                    "uses": ["forward", "yawLeft"],
-                    "thrusters": [{
-                            "position": [10, -1.6, 0],
-                            "size": 1.5
-                        }]
-                }, {
-                    "group": 5,
-                    "uses": ["lower", "rollLeft"],
-                    "thrusters": [{
-                            "position": [-10, 0, 1.1],
-                            "size": 3
-                        }]
-                }, {
-                    "group": 6,
-                    "uses": ["raise", "rollRight"],
-                    "thrusters": [{
-                            "position": [-10, 0, -1.1],
-                            "size": 3
-                        }]
-                }, {
-                    "group": 7,
-                    "uses": ["reverse", "yawLeft"],
-                    "thrusters": [{
-                            "position": [-10, 1.6, 0],
-                            "size": 1.5
-                        }]
-                }, {
-                    "group": 8,
-                    "uses": ["forward", "yawRight"],
-                    "thrusters": [{
-                            "position": [-10, -1.6, 0],
-                            "size": 1.5
-                        }]
-                }, {
-                    "group": 9,
-                    "uses": ["lower", "pitchDown"],
-                    "thrusters": [{
-                            "position": [0, 10, 1.1],
-                            "size": 3
-                        }]
-                }, {
-                    "group": 10,
-                    "uses": ["pitchUp", "raise"],
-                    "thrusters": [{
-                            "position": [0, 10, -1.1],
-                            "size": 3
-                        }]
-                }, {
-                    "group": 11,
-                    "uses": ["strafeLeft", "yawLeft"],
-                    "thrusters": [{
-                            "position": [1.6, 10, 0],
-                            "size": 1.5
-                        }]
-                }, {
-                    "group": 12,
-                    "uses": ["strafeRight", "yawRight"],
-                    "thrusters": [{
-                            "position": [-1.6, 10, 0],
-                            "size": 1.5
-                        }]
-                }, {
-                    "group": 13,
-                    "uses": ["lower", "pitchUp"],
-                    "thrusters": [{
-                            "position": [0, -10, 1.1],
-                            "size": 3
-                        }]
-                }, {
-                    "group": 14,
-                    "uses": ["raise", "pitchDown"],
-                    "thrusters": [{
-                            "position": [0, -10, -1.1],
-                            "size": 3
-                        }]
-                }, {
-                    "group": 15,
-                    "uses": ["strafeRight", "yawLeft"],
-                    "thrusters": [{
-                            "position": [-1.6, -10, 0],
-                            "size": 1.5
-                        }]
-                }, {
-                    "group": 16,
-                    "uses": ["strafeLeft", "yawRight"],
-                    "thrusters": [{
-                            "position": [1.6, -10, 0],
-                            "size": 1.5
-                        }]
-                }]
-        }, {
-            "name": "sentinelEmpire",
-            "basedOn": "sentinel",
-            "showInDatabase": false,
-            "model": "sentinel",
-            "texture": "libra",
-            "defaultLoadout": "imperial"
+            "defaultLoadout": "pirate"
         }]
 }
