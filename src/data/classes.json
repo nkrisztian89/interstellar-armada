@@ -8228,6 +8228,16 @@
                         "class": "pirateFighterMk1"
                     }
                 }, {
+                    "name": "pirate-tier1-torpedoes",
+                    "basedOn": "pirate-tier1",
+                    "missiles": [{
+                            "class": "lightTorpedo",
+                            "amount": 1
+                        }, {
+                            "class": "lightTorpedo",
+                            "amount": 1
+                        }]
+                }, {
                     "name": "pirate-tier2",
                     "basedOn": "pirate-tier1",
                     "weapons": [{

@@ -3871,9 +3871,17 @@ define([
                     if (instance.single) {
                         result = instance.single;
                     } else if (instance.list) {
-                        result = "list (" + instance.list.length + ")";
+                        if (instance.list.length < 4) {
+                            result = instance.list.join(", ");
+                        } else {
+                            result = "list (" + instance.list.length + ")";
+                        }
                     } else if (instance.squads) {
-                        result = "squads (" + instance.squads.length + ")";
+                        if (instance.squads.length < 4) {
+                            result = instance.squads.join(", ");
+                        } else {
+                            result = instance.squads.length + " squads";
+                        }
                     } else if (instance.none) {
                         result = "none";
                     }
@@ -4325,6 +4333,9 @@ define([
                     }
                     if (instance.actions) {
                         if (instance.actions.length > 1) {
+                            if (instance.trigger && instance.trigger.conditions && (instance.trigger.conditions.length === 1)) {
+                                return CONDITION.getPreviewText(instance.trigger.conditions[0]);
+                            }
                             return instance.actions.length + " actions";
                         } else if (instance.actions.length === 1) {
                             return ACTION.getName(instance.actions[0]);
