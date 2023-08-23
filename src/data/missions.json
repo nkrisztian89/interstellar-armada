@@ -39,6 +39,8 @@
         }, {
             "source": "holdingOut.json"
         }, {
+            "source": "siege.json"
+        }, {
             "source": "tests/test.json"
         }, {
             "source": "tests/cruiserVsBombers.json",

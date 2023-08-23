@@ -512,6 +512,25 @@
                 "overkill2": "They have to give us a promotion after this!"
             }
         },
+        "siege": {
+            "name": "The siege",
+            "messages": {
+                "start": "All looks clear, just 4 fighters patrolling the station. Waiting for the Elba.",
+                "elba": "Alright, people, who wants to watch some fireworks? Approaching the station!",
+                "bombers": "What?! Bombers incoming! Engage! Engage!",
+                "elbaDown": "The Elba is down! Alpha, destroy all enemy fighters and bombers!",
+                "fightersApproach": "The pirate fighters are starting to approach!",
+                "bombersDown": "All bombers eliminated!",
+                "moreFighters": "More fighters incoming!",
+                "fightersDown1": "Good job, Alpha! All fighters and bombers are destroyed. We have found a new way to deal with the station.",
+                "fightersDown2": "We dispatched a wing of bombers, but they are short on torpedoes. You will have to take care of the sentries to give them a clear line of attack at the station.",
+                "fightersDown3": "Once all sentries are gone, we will send them in.",
+                "engagingSentries": "Acknowledged, engaging sentries!",
+                "dontFlyStraight": "Careful, don't fly in a straight line!",
+                "sentriesDown": "All sentries down, get away from the station!",
+                "epsilon": "Epsilon wing reporting! We're engaging the station!"
+            }
+        },
         "test": {
             "name": "Sandbox test",
             "messages": {
@@ -549,7 +568,8 @@
         "raider": "Raider",
         "marauder": "Marauder",
         "bandit": "Bandit",
-        "brigand": "Brigand"
+        "brigand": "Brigand",
+        "sentry": "Sentry"
     },
     "battle": {
         "developmentVersionNotice": "Interstellar Armada: Galactic Ace alpha {version}",

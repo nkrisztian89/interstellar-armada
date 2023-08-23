@@ -406,7 +406,8 @@
         "raider": "Betyár",
         "marauder": "Martalóc",
         "bandit": "Bandita",
-        "brigand": "Haramia"
+        "brigand": "Haramia",
+        "sentry": "Strázsa"
     },
     "mission": {
         "targetPracticeBoxes": {
@@ -573,6 +574,25 @@
                 "almostDone": "Már csak pár másodperc!",
                 "overkill1": "Hihetetlen! Megcsináltuk!",
                 "overkill2": "Ezért tuti jár egy előléptetés!"
+            }
+        },
+        "siege": {
+            "name": "Az ostrom",
+            "messages": {
+                "start": "Minden tiszta. Csak 4 vadász járőrözik az állomás körül. Várjuk az Elbát.",
+                "elba": "Jól van, emberek, ki szeretne tűzijátékot látni? Megközelítem az állomást!",
+                "bombers": "Mi?! Bombázók érkeztek! Szedjük le őket gyorsan!",
+                "elbaDown": "Az Elba megsemmisült! Alfa, lőjenek ki minden vadászt és bombázót!",
+                "fightersApproach": "Az ellenséges vadászok elindultak felénk!",
+                "bombersDown": "Minden bombázó semlegesítve!",
+                "moreFighters": "Újabb vadászok érkeznek!",
+                "fightersDown1": "Szép munka, Alfa! Minden vadász és bombázó megsemmisült. Új megoldást találtunk az állomás elintézésére.",
+                "fightersDown2": "Küldünk egy csapat bombázót, de kevés a torpedójuk. Önöknek kell kilőniük az őrszem védőütegeket az állomás körül, hogy szabad utat adjanak nekik.",
+                "fightersDown3": "Ha minden őrszemet megsemmisítettek, beküldjük a bombázókat.",
+                "engagingSentries": "Értettem, célba vesszük az őrszemeket!",
+                "dontFlyStraight": "Vigyázzatok, ne repüljetek egyenes vonalban!",
+                "sentriesDown": "Minden őrszem kilőve! El az állomástól!",
+                "epsilon": "Epszilon csapat jelentkezik! Megtámadjuk az állomást!"
             }
         },
         "test": {
@@ -1036,7 +1056,7 @@
             "name": "Athén",
             "description": "Sokoldalú, közepes méretű űrállomás. Számos feladatra berendezhető, alkalmazható kereskedelmi, kutatási és diplomáciai célokra is. Felszerelhető fegyverekkel, és 48 vadászgép állomásoztatására képes, így a Galaktikus Birodalom előszeretettel használja katonai támaszpontként olyan szektorok felügyeletére, ahol nincsen szükség komolyabb katonai jelenlétre."
         },
-        "sentinel": {
+        "sentinelPirate": {
             "name": "Őrszem",
             "description": "Egy régebbi tervezésű védelmi platform lövegtoronnyal és könnyű páncélzattal. Távolról vezérelve és automata üzemmódban is képes működni. Űrállomások és más helyhez kötött objektumok védelmére használható. Miután leváltották az újabb modellek, nagy mennyiségben jutott belőle a feketepiacra, így hamar a kalózok és más törvényen kívüliek kedvencévé vált."
         }
