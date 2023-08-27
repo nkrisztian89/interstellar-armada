@@ -1,5 +1,5 @@
 {
-    "description": "",
+    "description": "[p]The time has finally come to strike the pirate base! We expect that this major blow will put an end to their large scale operations in the sector once and for all![p]We have no time to waste. Due to the successful ambush we pulled off thanks to you, it is likely they figured out that we are aware of their base's coordinates and will prepare for the attack or relocate soon. However, if we act quicky, we should still be able to catch them off guard, as they will be unable to muster a heavy defense after the losses they have just incurred.[p]Under normal circumstances, a full strike force would be mobilized for such an important anti-criminal operation. But fleet command has just recently recalled almost all of our ships without an explanation. Thankfully, the [s]Elba[] frigate is still available and its cannons greatly outrange any turrets and sentries that would be protecting the station based on the data you recovered.[p]You will fly [s]Alpha[] squad, get within visual range of the station, designated as [s:h]Tortuga[], and confirm there are no threats present that could jeopardize the mission. Then we will send in the [s]Elba[], and you will escort it into firing range, screening it from any potential fighter patrols that could interfere. [b]Do NOT engage the station yourself![] If all goes according to plan, you should not have to contend with much opposition, just watch as the [s]Elba[] obliterates the station and its sentry guns. However, stay cautious as we do not have detailed information about the exact nature of their defenses. Good luck!",
     "environment": "mera",
     "teams": [{
             "faction": "empire"
@@ -34,7 +34,8 @@
             "rotations": [{
                     "axis": "Z",
                     "degrees": -90
-                }]
+                }],
+            "loadout": "pirate-light"
         }, {
             "squad": "sentry 1",
             "team": "pirates",
@@ -66,7 +67,8 @@
             "rotations": [{
                     "axis": "Z",
                     "degrees": 90
-                }]
+                }],
+            "loadout": "pirate-light"
         }, {
             "squad": "sentry 4",
             "team": "pirates",
@@ -76,13 +78,15 @@
             "rotations": [{
                     "axis": "Z",
                     "degrees": -90
-                }]
+                }],
+            "loadout": "pirate-light"
         }, {
             "squad": "sentry 5",
             "team": "pirates",
             "class": "sentinelPirate",
             "ai": "sentry",
-            "position": [0, 500, 0]
+            "position": [0, 500, 0],
+            "loadout": "pirate-light"
         }, {
             "squad": "sentry 6",
             "team": "pirates",
@@ -92,7 +96,8 @@
             "rotations": [{
                     "axis": "Z",
                     "degrees": 180
-                }]
+                }],
+            "loadout": "pirate-light"
         }, {
             "squad": "epsilon",
             "team": "empire",
@@ -106,7 +111,7 @@
             "team": "pirates",
             "class": "wolf",
             "ai": "fighter",
-            "position": [0, 1000, 0],
+            "position": [-1000, 1000, 0],
             "rotations": [{
                     "axis": "Z",
                     "degrees": -90
@@ -176,7 +181,7 @@
                     }
                 }, {
                     "type": "command",
-                    "delay": 5000,
+                    "delay": 7000,
                     "params": {
                         "command": "jump",
                         "jump": {
@@ -194,7 +199,7 @@
                     }
                 }, {
                     "type": "command",
-                    "delay": 5000,
+                    "delay": 7000,
                     "params": {
                         "command": "target",
                         "target": {
@@ -206,14 +211,14 @@
                     }
                 }, {
                     "type": "message",
-                    "delay": 6500,
+                    "delay": 8500,
                     "params": {
                         "textID": "elba",
                         "source": "Elba"
                     }
                 }, {
                     "type": "command",
-                    "delay": 14000,
+                    "delay": 16000,
                     "params": {
                         "command": "jump",
                         "jump": {
@@ -231,7 +236,7 @@
                     }
                 }, {
                     "type": "command",
-                    "delay": 14000,
+                    "delay": 16000,
                     "params": {
                         "command": "target",
                         "target": {
@@ -244,7 +249,7 @@
                     }
                 }, {
                     "type": "command",
-                    "delay": 14750,
+                    "delay": 16750,
                     "params": {
                         "command": "jump",
                         "jump": {
@@ -262,7 +267,7 @@
                     }
                 }, {
                     "type": "command",
-                    "delay": 14750,
+                    "delay": 16750,
                     "params": {
                         "command": "target",
                         "target": {
@@ -275,7 +280,7 @@
                     }
                 }, {
                     "type": "command",
-                    "delay": 15000,
+                    "delay": 17000,
                     "params": {
                         "command": "target",
                         "target": {
@@ -287,14 +292,14 @@
                     }
                 }, {
                     "type": "message",
-                    "delay": 15000,
+                    "delay": 17000,
                     "params": {
                         "textID": "bombers",
                         "source": "alpha 2"
                     }
                 }, {
                     "type": "command",
-                    "delay": 16000,
+                    "delay": 18000,
                     "params": {
                         "command": "jump",
                         "jump": {
@@ -312,7 +317,7 @@
                     }
                 }, {
                     "type": "command",
-                    "delay": 16000,
+                    "delay": 18000,
                     "params": {
                         "command": "target",
                         "target": {
@@ -430,6 +435,36 @@
                     "type": "message",
                     "params": {
                         "textID": "moreFighters",
+                        "source": "alpha 2"
+                    }
+                }]
+        }, {
+            "trigger": {
+                "conditions": [{
+                        "type": "count",
+                        "subjects": {
+                            "squads": ["wraith", "serpent"]
+                        },
+                        "params": {
+                            "count": 0,
+                            "relation": "above"
+                        }
+                    }, {
+                        "type": "distance",
+                        "subjects": {
+                            "spacecrafts": ["alpha 1"]
+                        },
+                        "params": {
+                            "which": "all",
+                            "target": "Tortuga",
+                            "maxDistance": 2500
+                        }
+                    }]
+            },
+            "actions": [{
+                    "type": "message",
+                    "params": {
+                        "textID": "tooClose",
                         "source": "alpha 2"
                     }
                 }]

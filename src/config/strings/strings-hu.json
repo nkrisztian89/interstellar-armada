@@ -578,14 +578,16 @@
         },
         "siege": {
             "name": "Az ostrom",
+            "description": "[p]Végre eljött az idő, hogy támadást mérjünk a kalózok bázisára! Úgy véljük, ezzel a döntő csapással egyszer és mindenkorra leszámolhatunk a számottevő kalóz jelenléttel a szektorban![p]Nincs vesztegetni való időnk! Az Ön segítségével végrehajtott sikeres rajtaütésünk után valószínűleg már rájöttek, hogy birtokunkban vannak a bázisuk koordinátái, és fel fognak készülni a támadásra, vagy hamarosan elköltöztetik az állomást máshová. Azonban ha gyorsan cselekszünk, még idő előtt elkaphatjuk őket, hiszen az elszenvedett veszteségeik után valószínűtlen, hogy gyorsan komoly védelmet tudnának összeszedni.[p]Normál esetben egy ilyen nagy horderejű bűnüldözési hadművelet számára egy egész csapásmérő osztagot mozgósítanánk. A flottaparancsnokság viszont nemrég magyarázat nélkül visszahívta szinte az összes hadihajónkat. Szerencsére az [s]Elba[] fregatt még a rendelkezésünkre áll, és az ágyúi jóval nagyobb hatótávolsággal rendelkeznek, mint bázis és az azt védő ütegek.[p]Ön az [s]Alfa[] csapattal fog repülni, látótávolságon belülre megközelíti az állomást, mely a [s:h]Tortuga[] hívójellel rendelkezik, és megerősíti, hogy nincsenek a küldetésre veszélyt jelentő elemek a helyszínen. Ezután beküldjük az [s]Elbát[], amit lőtávolságán belülre kísérnek, miközben elhárítanak minden potenciálisan gondot jelentő vadászok általi támadást. [b]NE közelítsék meg túlságosan az állomást![] Ha minden a terv szerint halad, nem sok ellenállással kell majd szembenézniük, páholyból figyelhetik, ahogy az [s]Elba[] leszámol a bázissal és a védőütegekkel. Mindazonáltal maradjon óvatos! Nincsenek részletes információink a védelmük pontos összetételéről. Sok sikert!",
             "messages": {
                 "start": "Minden tiszta. Csak 4 vadász járőrözik az állomás körül. Várjuk az Elbát.",
                 "elba": "Jól van, emberek, ki szeretne tűzijátékot látni? Megközelítem az állomást!",
                 "bombers": "Mi?! Bombázók érkeztek! Szedjük le őket gyorsan!",
-                "elbaDown": "Az Elba megsemmisült! Alfa, lőjenek ki minden vadászt és bombázót!",
+                "elbaDown": "Az Elba megsemmisült! Új terv kell! Alfa, lőjenek ki minden vadászt és bombázót!",
                 "fightersApproach": "Az ellenséges vadászok elindultak felénk!",
                 "bombersDown": "Minden bombázó semlegesítve!",
                 "moreFighters": "Újabb vadászok érkeznek!",
+                "tooClose": "Túl közel vagy! Távolodj az állomástól!",
                 "fightersDown1": "Szép munka, Alfa! Minden vadász és bombázó megsemmisült. Új megoldást találtunk az állomás elintézésére.",
                 "fightersDown2": "Küldünk egy csapat bombázót, de kevés a torpedójuk. Önöknek kell kilőniük az őrszem védőütegeket az állomás körül, hogy szabad utat adjanak nekik.",
                 "fightersDown3": "Ha minden őrszemet megsemmisítettek, beküldjük a bombázókat.",

@@ -9350,6 +9350,24 @@
                     "shield": {
                         "class": "rebelStationMk1"
                     }
+                }, {
+                    "name": "pirate-light",
+                    "basedOn": "pirate",
+                    "weapons": [{
+                            "class": "damagedPirateTurret"
+                        }, {
+                            "class": "damagedPirateTurret"
+                        }, {
+                            "class": "damagedPirateTurret"
+                        }, {
+                            "class": "damagedPirateTurret"
+                        }, {
+                            "class": "damagedPirateTurret",
+                            "slotIndex": 8
+                        }, {
+                            "class": "damagedPirateTurret",
+                            "slotIndex": 9
+                        }]
                 }],
             "humSound": {
                 "name": "spacecraftHum"
