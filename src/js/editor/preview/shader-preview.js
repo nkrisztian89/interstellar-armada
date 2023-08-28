@@ -76,6 +76,16 @@ define([
             return '<tr><td class="shader-line-number">' + index + "</td><td>" + line + "</td></tr>";
         }).join("") + "</tbody>";
     }
+    /**
+     * Returns additional information to be displayed in the info section of the preview
+     * @param {ManagedShader} managedShader
+     * @returns {String}
+     */
+    function _getInfo(managedShader) {
+        return "Attribute vectors: " + managedShader.getNumAttributeVectors() + ", vertex uniform vectors: " + managedShader.getNumVertexUniformVectors() + ", " +
+                "varying vectors: " + managedShader.getNumVaryingVectors() + ", fragment uniform vectors: " + managedShader.getNumFragmentUniformVectors() + "<br>" +
+                "Texture units: " + managedShader.getNumTextureUnits();
+    }
     // ----------------------------------------------------------------------
     // Public Functions
     /**
@@ -94,7 +104,6 @@ define([
             _elements.options.hidden = true;
             _elements.div.hidden = false;
             _elements.canvas.hidden = true;
-            _elements.info.hidden = true;
 
             managedShader = graphics.getManagedShader(_shaderResource.getName());
 
@@ -119,6 +128,9 @@ define([
             fragmentShaderCode.innerHTML = _processCode(code);
             _codeDiv.appendChild(fragmentShaderCode);
             _elements.div.appendChild(_codeDiv);
+
+            _elements.info.innerHTML = _getInfo(managedShader);
+            _elements.info.hidden = !_elements.info.innerHTML;
 
             _elements.div.style.height = (_elements.div.parentNode.clientHeight - (_elements.options.clientHeight + _elements.info.clientHeight)) + "px";
         });

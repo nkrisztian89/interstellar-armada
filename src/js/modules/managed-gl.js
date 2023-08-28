@@ -1540,10 +1540,13 @@ define([
                 VERTEX_SHADER_INDEX = 0,
                 FRAGMENT_SHADER_INDEX = 1,
                 i, k, l, shaderType,
-                sourceLines, words, delimiters, index,
+                sourceLines, words, delimiters, index, removedLines,
                 attributeName, attributeSize, attributeRole,
                 uniform, uniformName, variableType, variableArraySize, arraySizeString, unpacked,
                 defines = {}, sourceChanged, localVariableNames, localVariableSizes = {},
+                lineIsNotRemoved = function (line, index) {
+                    return removedLines.indexOf(index) < 0;
+                },
                 isNotEmptyString = function (s) {
                     return s !== "";
                 },
@@ -1584,6 +1587,7 @@ define([
                     break;
             }
             sourceChanged = false;
+            removedLines = [];
             for (i = 0; i < sourceLines.length; i++) {
                 if (sourceLines[i].length > 0) {
                     words = sourceLines[i].split(/\s+|[\(\)\[\]\{\}\+\?\-!<>=*\/\^\|\&,;]/);
@@ -1712,6 +1716,7 @@ define([
                                     if ((this._uniforms[k].getArraySize() > 0) && (delimiters[index] === "[")) {
                                         if ((parseInt(words[index + 1], 10).toString() === words[index + 1]) && (parseInt(words[index + 1], 10) >= this._uniforms[k].getArraySize())) {
                                             sourceLines[i] = "";
+                                            removedLines.push(i);
                                             sourceChanged = true;
                                             break;
                                         }
@@ -1744,6 +1749,7 @@ define([
                                     if (delimiters[index] === "[") {
                                         if ((parseInt(words[index + 1], 10).toString() === words[index + 1]) && (parseInt(words[index + 1], 10) >= localVariableSizes[words[index]])) {
                                             sourceLines[i] = "";
+                                            removedLines.push(i);
                                             sourceChanged = true;
                                             break;
                                         }
@@ -1755,6 +1761,7 @@ define([
                 }
             }
             if (sourceChanged) {
+                sourceLines = sourceLines.filter(lineIsNotRemoved);
                 switch (shaderType) {
                     case VERTEX_SHADER_INDEX:
                         this._vertexShaderSource = sourceLines.join("\n");
@@ -2066,6 +2073,41 @@ define([
                 (this._numVaryingVectors <= requirements.requiredVaryingVectors) &&
                 (this._numTextureUnits <= requirements.requiredTextureUnits) &&
                 (this._numFragmentUniformVectors <= requirements.requiredFragmentUniformVectors);
+    };
+    /**
+     * The number of attribute vectors used by this shader.
+     * @returns {Number}
+     */
+    ManagedShader.prototype.getNumAttributeVectors = function () {
+        return this._numAttributeVectors;
+    };
+    /**
+     * The number of vertex uniform vectors used by this shader.
+     * @returns {Number}
+     */
+    ManagedShader.prototype.getNumVertexUniformVectors = function () {
+        return this._numVertexUniformVectors;
+    };
+    /**
+     * The number of varying vectors used by this shader.
+     * @returns {Number}
+     */
+    ManagedShader.prototype.getNumVaryingVectors = function () {
+        return this._numVaryingVectors;
+    };
+    /**
+     * The number of texture units used by this shader.
+     * @returns {Number}
+     */
+    ManagedShader.prototype.getNumTextureUnits = function () {
+        return this._numTextureUnits;
+    };
+    /**
+     * The number of fragment uniform vectors used by this shader.
+     * @returns {Number}
+     */
+    ManagedShader.prototype.getNumFragmentUniformVectors = function () {
+        return this._numFragmentUniformVectors;
     };
     // ############################################################################################
     /**

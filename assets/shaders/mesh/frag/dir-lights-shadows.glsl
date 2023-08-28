@@ -73,51 +73,21 @@
                             int shMapIndex = i * u_numRanges + j;
                             for (int k = 0; k < NUM_SHADOW_MAP_SAMPLES; k++) {
                                 vec2 shadowMapSampleOffset = v_shadowMapSampleOffsetTransform[i] * u_shadowMapSampleOffsets[k];
-                                if (shMapIndex == 0) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[0], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 1) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[1], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 2) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[2], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 3) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[3], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 4) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[4], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 5) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[5], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 6) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[6], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 7) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[7], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 8) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[8], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 9) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[9], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 10) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[10], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 11) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[11], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 12) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[12], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 13) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[13], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                } else 
-                                if (shMapIndex == 14) {
-                                    shadowMapTexel[k] = texture2D(u_shadowMaps[14], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
-                                }
+                                if (shMapIndex == 0) shadowMapTexel[k] = texture2D(u_shadowMaps[0], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 1) shadowMapTexel[k] = texture2D(u_shadowMaps[1], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 2) shadowMapTexel[k] = texture2D(u_shadowMaps[2], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 3) shadowMapTexel[k] = texture2D(u_shadowMaps[3], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 4) shadowMapTexel[k] = texture2D(u_shadowMaps[4], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 5) shadowMapTexel[k] = texture2D(u_shadowMaps[5], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 6) shadowMapTexel[k] = texture2D(u_shadowMaps[6], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 7) shadowMapTexel[k] = texture2D(u_shadowMaps[7], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 8) shadowMapTexel[k] = texture2D(u_shadowMaps[8], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 9) shadowMapTexel[k] = texture2D(u_shadowMaps[9], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 10) shadowMapTexel[k] = texture2D(u_shadowMaps[10], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 11) shadowMapTexel[k] = texture2D(u_shadowMaps[11], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 12) shadowMapTexel[k] = texture2D(u_shadowMaps[12], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 13) shadowMapTexel[k] = texture2D(u_shadowMaps[13], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
+                                else if (shMapIndex == 14) shadowMapTexel[k] = texture2D(u_shadowMaps[14], shMapTexCoords + shadowMapSampleOffset / SHADOW_MAP_TEXTURE_SIZE);
                                 // unpacking the depth value
                                 #if !DEPTH_TEXTURES
                                 float texelDepth = dot(shadowMapTexel[k].ba, vec2(1.0 / 255.0, 1.0));

@@ -215,7 +215,12 @@ module.exports = function (grunt) {
                 ["nearDistance", "get", "near"],
                 ["blendMode"],
                 ["vertexShaderSource"],
-                ["fragmentShaderSource"]
+                ["fragmentShaderSource"],
+                ["numAttributeVectors"],
+                ["numVertexUniformVectors"],
+                ["numVaryingVectors"],
+                ["numTextureUnits"],
+                ["numFragmentUniformVectors"]
             ],
             // these getters are to be replaced only in the game (and not the editor) sources
             gettersToReplaceGame = [
