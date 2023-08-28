@@ -2585,7 +2585,7 @@ define([
         getShadowDistances: _context.getShadowDistances.bind(_context),
         getShadowDistance: _context.getShadowDistance.bind(_context),
         setShadowDistance: _context.setShadowDistance.bind(_context),
-        getShadowDepthRatio: _context.getShadowDepthRatio.bind(_context),
+        getNumShadowMapRanges: _context.getNumShadowMapRanges.bind(_context),
         getNumShadowMapSamples: _context.getNumShadowMapSamples.bind(_context),
         getMaxDirLights: _context.getMaxDirLights.bind(_context),
         getPointLightAmounts: _context.getPointLightAmounts.bind(_context),

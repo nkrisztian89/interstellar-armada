@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2022 Krisztián Nagy
+ * Copyright 2014-2023 Krisztián Nagy
  * @file This module manages and provides the in-game database screen.
  * @author Krisztián Nagy [nkrisztian89@gmail.com]
  * @licence GNU GPLv3 <http://www.gnu.org/licenses/>
@@ -765,7 +765,7 @@ define([
             resources.executeOnResourceLoad(this._updateLoadingBoxForResourceLoad.bind(this));
             // set the callback for when the potentially needed additional file resources have been loaded
             resources.executeWhenReady(function () {
-                var visualModel = _currentItem.getVisualModel();
+                var visualModel = _currentItem.getVisualModel(), shadowMapRanges, i, range;
                 if (!visualModel) {
                     game.log("WARNING! No visual item to load for database, loading aborted!");
                     return;
@@ -777,10 +777,12 @@ define([
                 _itemViewScene.getCamera().moveToPosition([0, 0, visualModel.getScaledSize()], 0);
                 // set the shadow mappin ranges manually, adapting to the size of the shown model
                 if (graphics.shouldUseShadowMapping()) {
-                    _itemViewScene.setShadowMapRanges([
-                        0.5 * visualModel.getScaledSize(),
-                        visualModel.getScaledSize()
-                    ]);
+                    shadowMapRanges = new Array(graphics.getNumShadowMapRanges());
+                    range = visualModel.getScaledSize() / shadowMapRanges.length;
+                    for (i = 0; i < shadowMapRanges.length; i++) {
+                        shadowMapRanges[i] = (i + 1) * range;
+                    }
+                    _itemViewScene.setShadowMapRanges(shadowMapRanges);
                     _itemViewScene.enableShadowMapping();
                 } else {
                     _itemViewScene.disableShadowMapping();

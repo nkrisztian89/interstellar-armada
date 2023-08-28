@@ -1,5 +1,5 @@
 {
-    "version": "0.5.4-dev:1168 (2023.08.28.)",
+    "version": "0.5.4-dev:1169 (2023.08.28.)",
     "debugVersion": false,
     "logVerbosity": 1,
     "platform": "web",
@@ -184,7 +184,6 @@
                     "requiredTextureUnitsPer": {
                         "shadowMap": 1
                     },
-                    "requiredFragmentUniformVectors": 3,
                     "requiredFragmentUniformVectorsPer": {
                         "dirLight": 4,
                         "shadowMap": 1,

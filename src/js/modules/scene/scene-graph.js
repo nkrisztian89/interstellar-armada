@@ -87,7 +87,6 @@ define([
             UNIFORM_VIEW_ASPECT_NAME = "aspect",
             UNIFORM_VIEWPORT_SIZE_NAME = "viewportSize",
             UNIFORM_EYE_POSITION_VECTOR_NAME = "eyePos",
-            UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME = "numRanges",
             UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME = "shadowMapRanges",
             UNIFORM_SHADOW_MAPPING_SHADOW_MAPS_ARRAY_NAME = "shadowMaps",
             UNIFORM_SHADOW_MAPPING_SHADOW_MAP_SAMPLE_OFFSET_ARRAY_NAME = "shadowMapSampleOffsets",
@@ -1584,9 +1583,6 @@ define([
         var i;
         // there are some functions that are the same for all contexts, so only set these once, when the first context is chosen
         if (contextIndex === 0) {
-            this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_NUM_RANGES_NAME, function () {
-                return this._shadowMapRanges.length;
-            });
             this.setConstantUniformValueFunction(UNIFORM_SHADOW_MAPPING_RANGES_ARRAY_NAME, function () {
                 return this._shadowMapRanges;
             });

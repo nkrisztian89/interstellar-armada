@@ -20,7 +20,6 @@
 
 uniform highp sampler2D u_shadowMaps[MAX_SHADOW_MAPS];
 uniform float u_shadowMapRanges[MAX_SHADOW_MAP_RANGES];
-uniform int u_numRanges;
 uniform vec2 u_shadowMapSampleOffsets[NUM_SHADOW_MAP_SAMPLES];
 
 varying vec3 v_shadowMapPosition[MAX_DIR_LIGHTS];
