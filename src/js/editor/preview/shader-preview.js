@@ -64,11 +64,18 @@ define([
      * @returns {String}
      */
     function _processCode(code) {
+        var matches;
         code = code.replace(/\/\/(.*?)\n/g, '<span class="glsl-comment">$&</span>');
         code = code.replace(/ {2}/g, "&nbsp;&nbsp;");
+        matches = code.match(new RegExp("#define\\s+\\w+\\s+[^\\n]+", "g"));
         code = _markupCode(code, ["#version", "#define", "#elseif", "#ifdef", "#ifndef", "#endif", "#if", "#else"], "glsl-directive");
-        code = _markupCode(code, ["uniform ", "attribute ", "varying ", "precision ", "lowp ", "mediump ", "highp ", "struct", "return", "discard", "\\bif\\b", "\\belse\\b", "\\bswitch\\b", "\\bcase\\b", "\\bfor\\b", "\\bbreak\\b", "\\bcontinue\\b"], "glsl-keyword");
-        code = _markupCode(code, ["void", "bool", "\\bint\\b", "float", "vec2", "vec3", "vec4", "mat2", "mat3", "mat4", "sampler2D", "samplerCube"], "glsl-type");
+        if (matches) {
+            code = _markupCode(code, matches.map(function (match) {
+                return match.split(" ")[1];
+            }), "glsl-directive");
+        }
+        code = _markupCode(code, ["uniform ", "attribute ", "varying ", "const", "precision ", "lowp ", "mediump ", "highp ", "invariant", "struct", "return", "discard", "\\bif\\b", "\\belse\\b", "\\bswitch\\b", "\\bcase\\b", "\\bfor\\b", "\\bdo\\b", "\\bbreak\\b", "\\bcontinue\\b", "true", "false"], "glsl-keyword");
+        code = _markupCode(code, ["void", "bool", "\\bint\\b", "float", "\\bvec2", "\\bvec3", "\\bvec4", "\\bmat2", "\\bmat3", "\\bmat4", "\\bivec2", "\\bivec3", "\\bivec4", "\\bbvec2", "\\bbvec3", "\\bbvec4", "sampler2D", "samplerCube"], "glsl-type");
         code = _markupCode(code, ["gl_Position", "gl_FragColor"], "glsl-variable");
         code = _markupCode(code, ["dot\\(", "cross\\(", "length\\(", "normalize\\(", "reflect\\(", "abs\\(", "sign\\(", "fract\\(", "min\\(", "max\\(", "pow\\(", "sin\\(", "cos\\(", "mix\\(", "step\\(", "clamp\\(", "texture2D\\(", "textureCube\\("], "glsl-function");
         code = _markupCode(code, ["\\(", "\\)", "\\[", "\\]"], "glsl-operator");
